@@ -1,0 +1,20 @@
+# iter-359 designer: what unsolicited dialers SEND on 8 idle 127.0.0.1 listeners held 70 s (source: designer-foreign-bytes.go.txt); go run . at 17:59, load ~3
+holding 8 listeners 70 s from 17:59:40
+18:00:05.959 accept on 127.0.0.1:49347 from 127.0.0.1:49386: first-read 64 bytes in 0s "GET / HTTP/1.1\r\nHost: 127.0.0.1:49347\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:05.959 accept on 127.0.0.1:49346 from 127.0.0.1:49384: first-read 64 bytes in 0s "GET / HTTP/1.1\r\nHost: 127.0.0.1:49346\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:05.959 accept on 127.0.0.1:49349 from 127.0.0.1:49388: first-read 64 bytes in 0s "GET / HTTP/1.1\r\nHost: 127.0.0.1:49349\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:05.959 accept on 127.0.0.1:49350 from 127.0.0.1:49389: first-read 64 bytes in 0s "GET / HTTP/1.1\r\nHost: 127.0.0.1:49350\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:05.960 accept on 127.0.0.1:49348 from 127.0.0.1:49387: first-read 64 bytes in 0s "GET / HTTP/1.1\r\nHost: 127.0.0.1:49348\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:05.961 accept on 127.0.0.1:49352 from 127.0.0.1:49392: first-read 64 bytes in 0s "GET / HTTP/1.1\r\nHost: 127.0.0.1:49352\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:05.961 accept on 127.0.0.1:49353 from 127.0.0.1:49391: first-read 64 bytes in 0s "GET / HTTP/1.1\r\nHost: 127.0.0.1:49353\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:05.959 accept on 127.0.0.1:49351 from 127.0.0.1:49390: first-read 64 bytes in 2ms "GET / HTTP/1.1\r\nHost: 127.0.0.1:49351\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:37.781 accept on 127.0.0.1:49346 from 127.0.0.1:49459: first-read 64 bytes in 1ms "GET / HTTP/1.1\r\nHost: 127.0.0.1:49346\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:37.781 accept on 127.0.0.1:49347 from 127.0.0.1:49460: first-read 64 bytes in 1ms "GET / HTTP/1.1\r\nHost: 127.0.0.1:49347\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:37.781 accept on 127.0.0.1:49348 from 127.0.0.1:49461: first-read 64 bytes in 1ms "GET / HTTP/1.1\r\nHost: 127.0.0.1:49348\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:37.782 accept on 127.0.0.1:49349 from 127.0.0.1:49462: first-read 64 bytes in 0s "GET / HTTP/1.1\r\nHost: 127.0.0.1:49349\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:37.782 accept on 127.0.0.1:49350 from 127.0.0.1:49464: first-read 64 bytes in 0s "GET / HTTP/1.1\r\nHost: 127.0.0.1:49350\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:37.782 accept on 127.0.0.1:49351 from 127.0.0.1:49463: first-read 64 bytes in 0s "GET / HTTP/1.1\r\nHost: 127.0.0.1:49351\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:37.783 accept on 127.0.0.1:49353 from 127.0.0.1:49466: first-read 64 bytes in 0s "GET / HTTP/1.1\r\nHost: 127.0.0.1:49353\r\nUser-Agent: SunholoHome/1" err=<nil>
+18:00:37.782 accept on 127.0.0.1:49352 from 127.0.0.1:49465: first-read 64 bytes in 1ms "GET / HTTP/1.1\r\nHost: 127.0.0.1:49352\r\nUser-Agent: SunholoHome/1" err=<nil>
+TOTAL accepts=16
+rc=0

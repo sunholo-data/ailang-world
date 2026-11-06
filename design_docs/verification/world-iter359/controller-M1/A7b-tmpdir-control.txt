@@ -1,0 +1,11 @@
+# A7b: is TestDemoProofNoVerifiedSetRefuses red because of the controller TMPDIR override (a dir under ~/dev), not the code? at d29c4155 2026-11-06T18:22:06Z
+$ TMPDIR=/Users/voightkampff/dev/sunholo-data/.ctl-tmp-iter359 AILANG_BIN=~/.pinned-ailang/ailang go test -count=1 -run ^TestDemoProofNoVerifiedSetRefuses$ ./cmd/ailang-worldd/   # instrument control: expect red
+--- FAIL: TestDemoProofNoVerifiedSetRefuses (1.21s)
+        Error: Error MOD010: module 'plain' doesn't match file path 'Users/voightkampff/dev/sunholo-data/.ctl-tmp-iter359/TestDemoProofNoVerifiedSetRefuses2183371081/002/plain'.
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.786s
+$ (default TMPDIR) AILANG_BIN=~/.pinned-ailang/ailang go test -count=1 -run ^TestDemoProofNoVerifiedSetRefuses$ ./cmd/ailang-worldd/
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.503s
+$ (same, at base 1835d8be is not needed: the test and cmd/ailang-worldd are untouched by M1)
+$ git diff --stat 1835d8be HEAD -- cmd/ | tail -1
+(empty = 0 files under cmd/ changed)

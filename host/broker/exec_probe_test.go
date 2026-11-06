@@ -201,8 +201,8 @@ func TestExecProbePassThroughShimFailsEveryConfinementArm(t *testing.T) {
 		if f.Arm != ExecProbeArmNetwork {
 			continue
 		}
-		for _, leg := range []string{"a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\", accepts 2",
-			"a connect through srt's proxy environment: token \"WORLD-PROBE-CONNECTED\", accepts 3", "reverse leg: the host reached"} {
+		for _, leg := range []string{"a raw connect to World's live listener: token \"WORLD-PROBE-CONNECTED\" on attempt 1; accepts in its window: child 1, silent 0,",
+			"a connect through srt's proxy environment: token \"WORLD-PROBE-CONNECTED\" on attempt 1; accepts in its window: child 1, silent 0,", "reverse leg: the host reached"} {
 			if !strings.Contains(f.Why, leg) {
 				t.Errorf("arm 6 under a pass-through srt does not report %q:\n%s", leg, f.Why)
 			}
@@ -577,7 +577,7 @@ func runReverseLeg(t *testing.T, pp *execProber) string {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
-	_, why := pp.reverseLeg(ctx, 1) // port 1: nothing listens there
+	_, why := pp.reverseLeg(ctx, "1:"+strings.Repeat("0", 32)) // port 1: nothing listens there
 	return why
 }
 

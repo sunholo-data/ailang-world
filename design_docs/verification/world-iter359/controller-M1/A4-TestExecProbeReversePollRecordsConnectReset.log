@@ -1,0 +1,10 @@
+=== RUN   TestExecProbeReversePollRecordsConnectReset
+=== RUN   TestExecProbeReversePollRecordsConnectReset/connect-reset
+=== RUN   TestExecProbeReversePollRecordsConnectReset/refused-only
+=== RUN   TestExecProbeReversePollRecordsConnectReset/einval-then-refused
+--- PASS: TestExecProbeReversePollRecordsConnectReset (0.00s)
+    --- PASS: TestExecProbeReversePollRecordsConnectReset/connect-reset (0.00s)
+    --- PASS: TestExecProbeReversePollRecordsConnectReset/refused-only (0.00s)
+    --- PASS: TestExecProbeReversePollRecordsConnectReset/einval-then-refused (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.246s

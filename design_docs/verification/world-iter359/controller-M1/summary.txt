@@ -1,0 +1,40 @@
+# iteration 359 controller gates on d29c4155a365d5078250a54d83219267c1dded54 start 2026-11-06T17:57:21Z load { 3.11 3.11 3.48 }
+go: go version go1.26.6 darwin/arm64; node: v26.12.1; ailang: AILANG v0.41.0
+A1 post-apply hashes rc=0
+A2 gofmt-files-listed=0
+A2 vet rc=0
+A2 build rc=0
+A2 runner bash -n rc=0
+A4 TestExecProbePassThroughShimFailsEveryConfinementArm rc=0 pass=1 skip=0
+A4 TestExecProbeNet6ForeignDialIsRetriedNotRefused rc=0 pass=1 skip=0
+A4 TestExecProbeNet6ChildOrSilentAcceptStillFails rc=0 pass=1 skip=0
+A4 TestExecProbeNet6ForeignEveryAttemptRefuses rc=0 pass=1 skip=0
+A4 TestExecProbeNet6DialClassifier rc=0 pass=1 skip=0
+A4 TestExecProbeNet6BoundBeforeAnyPick rc=0 pass=1 skip=0
+A4 TestExecProbeNet6BindSiteIsBeforeTheFanOut rc=0 pass=1 skip=0
+A4 TestExecProbeReverseLegJudge rc=0 pass=1 skip=0
+A4 TestExecProbeReverseLegChattyForeignHolderIsRetried rc=0 pass=1 skip=0
+A4 TestExecProbeReverseLegExhaustionRefusesDistinctly rc=0 pass=1 skip=0
+A4 TestExecProbeReverseLegRealReachSurvivesAForeignAttempt rc=0 pass=1 skip=0
+A4 TestExecProbeReverseLegNoTokenIsNotRetried rc=0 pass=1 skip=0
+A4 TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse rc=0 pass=1 skip=0
+A4 TestExecProbeReverseLegSilentHolderRefusesSticky rc=0 pass=1 skip=0
+A4 TestExecProbeReverseDialErrIsSilent rc=0 pass=1 skip=0
+A4 TestExecProbeReversePollRecordsConnectReset rc=0 pass=1 skip=0
+A4 TestExecProbeReverseHelloWaitBounds rc=0 pass=1 skip=0
+A4 TestExecProbeReversePollCadence rc=0 pass=1 skip=0
+A4 TestExecProbeChildListenerDrainsTheHello rc=0 pass=1 skip=0
+A4 failures=0
+A6 rc=0    3 --- PASS: TestExecProbeNet6BindSiteIsBeforeTheFanOut;   3 --- PASS: TestExecProbeNet6BoundBeforeAnyPick;   3 --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails;   3 --- PASS: TestExecProbeNet6DialClassifier;   3 --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused;   3 --- PASS: TestExecProbeNet6ForeignEveryAttemptRefuses;   3 --- PASS: TestExecProbePassThroughShimFailsEveryConfinementArm;
+A7 broker rc=0 ok  	github.com/sunholo-data/ailang-world/host/broker	210.631s
+A7 verify_ail rc=0 ✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
+A7 vet rc=0
+A7 verify_go rc=1 FAIL
+A8 rc=0 A8 ok
+tree-status-after-gates: 0 non-evidence changes
+A5 mutation worktree at d29c4155
+A5 runner rc=0 match=177 mismatch=0 restore-ok=177 census=1
+A5 mutation-tree status: 1 changes
+# end 2026-11-06T18:21:54Z
+A7 note: the A7 verify_go rc=1 above is the CONTROLLER TMPDIR override (TMPDIR under ~/dev trips ailang MOD010 in TestDemoProofNoVerifiedSetRefuses), proven by A7b-tmpdir-control.txt (red with the override, ok without; 0 files under cmd/ changed). A7c-verify-go-plain.log: verify_go.sh with default TMPDIR, VERIFY_GO_LEGS=plain → rc=0 (go gate PASSED (plain)). The -race leg runs in CI as its own job.
+A3: relay-source.txt / relay-inputs.json / relay-review.json / verification-log.md (controller review, agrees with executor-relay-check.txt and design V21).

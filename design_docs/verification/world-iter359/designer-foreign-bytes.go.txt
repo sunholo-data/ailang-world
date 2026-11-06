@@ -1,0 +1,45 @@
+// iter-359 designer: what do unsolicited dialers SEND on an idle 127.0.0.1 listener?
+// 8 listeners, 70 s; for each accept log time, peer, first <=64 bytes read within 500 ms, and how the read ended.
+package main
+
+import (
+	"fmt"
+	"net"
+	"sync"
+	"time"
+)
+
+func main() {
+	var mu sync.Mutex
+	n := 0
+	for i := 0; i < 8; i++ {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			panic(err)
+		}
+		go func() {
+			for {
+				c, err := ln.Accept()
+				if err != nil {
+					return
+				}
+				go func() {
+					defer c.Close()
+					_ = c.SetReadDeadline(time.Now().Add(500 * time.Millisecond))
+					buf := make([]byte, 64)
+					t0 := time.Now()
+					k, rerr := c.Read(buf)
+					mu.Lock()
+					n++
+					fmt.Printf("%s accept on %s from %s: first-read %d bytes in %s %q err=%v\n", t0.Format("15:04:05.000"), ln.Addr(), c.RemoteAddr(), k, time.Since(t0).Round(time.Millisecond), buf[:k], rerr)
+					mu.Unlock()
+				}()
+			}
+		}()
+	}
+	fmt.Printf("holding 8 listeners 70 s from %s\n", time.Now().Format("15:04:05"))
+	time.Sleep(70 * time.Second)
+	mu.Lock()
+	fmt.Printf("TOTAL accepts=%d\n", n)
+	mu.Unlock()
+}

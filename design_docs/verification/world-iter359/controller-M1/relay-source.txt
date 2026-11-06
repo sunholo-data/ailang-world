@@ -1,0 +1,2965 @@
+
+FILE dist/sandbox/http-proxy.js
+1: import { Agent, createServer } from 'node:http';
+2: import { request as httpRequest } from 'node:http';
+3: import { request as httpsRequest } from 'node:https';
+4: import { connect } from 'node:net';
+5: import { URL } from 'node:url';
+6: import { logForDebugging } from '../utils/debug.js';
+7: import { encodedCommandFromProxyUser } from './sandbox-utils.js';
+8: import { CRL_PATH } from './mitm-ca.js';
+9: import { decideAndRespond, rawDenied, respondDenied, respondUpstreamError, } from './request-filter.js';
+10: const ALLOWLIST_DENY = [
+11:     'Connection blocked by network allowlist',
+12:     'blocked-by-allowlist',
+13: ];
+14: import { peekForClientHello, terminateAndForward, } from './tls-terminate-proxy.js';
+15: import { prepareBodySubstitution, } from './body-substitution.js';
+16: import { isResolvedAddressDenied } from './resolved-address-guard.js';
+17: import { canonicalizeHost, connectViaParentProxy, directRequestOptions, dialDirect, formatAuthority, openConnectTunnel, proxyAuthHeader, selectParentProxyUrl, shouldBypassParentProxy, stripBrackets, stripHopByHop, } from './parent-proxy.js';
+18: export function createHttpProxyServer(options) {
+19:     const server = createServer();
+20:     // A client that is killed mid-exchange (sandboxed process tree teardown)
+21:     // resets its connection; without a listener that surfaces as an
+22:     // ECONNRESET uncaughtException from node:_http_server and can take down
+23:     // the host process. Parse errors get the RFC-required 400; resets and
+24:     // already-unwritable sockets are just dropped.
+25:     server.on('clientError', (err, socket) => {
+26:         logForDebugging(`Client connection error: ${err.message}`, {
+27:             level: 'error',
+28:         });
+29:         // The peer may reset while the 400 flushes; without a listener that
+30:         // write failure is itself an uncaughtException.
+31:         socket.on('error', () => { });
+32:         if (err.code !== 'ECONNRESET' &&
+33:             socket.writable) {
+34:             // Destroy only after the flush: destroying immediately races the
+35:             // write and can reset the connection before the 400 reaches the
+36:             // client, while end() alone can leave a half-open socket from a
+37:             // client that never closes its side. Under Bun the flush callback
+38:             // may never fire on a parse-errored socket (the 400 is dropped;
+39:             // verified empirically), so back-stop with a timer or the socket
+40:             // leaks.
+41:             const status = err.code === 'HPE_HEADER_OVERFLOW'
+42:                 ? '431 Request Header Fields Too Large'
+43:                 : '400 Bad Request';
+44:             socket.end(`HTTP/1.1 ${status}\r\n\r\n`, () => socket.destroy());
+45:             const backstop = setTimeout(() => socket.destroy(), 1000);
+46:             backstop.unref?.();
+47:             return;
+48:         }
+49:         socket.destroy();
+50:     });
+51:     const checkAuth = (got) => {
+52:         if (!options.proxyAuthToken)
+53:             return { ok: true };
+54:         const m = /^basic\s+([a-z0-9+/=]+)\s*$/i.exec(got ?? '');
+55:         if (!m)
+56:             return { ok: false };
+57:         const decoded = Buffer.from(m[1], 'base64').toString('utf8');
+58:         const sep = decoded.indexOf(':');
+59:         if (sep <= 0 || decoded.slice(sep + 1) !== options.proxyAuthToken) {
+60:             return { ok: false };
+61:         }
+62:         return {
+63:             ok: true,
+64:             encodedCommand: encodedCommandFromProxyUser(decoded.slice(0, sep)),
+65:         };
+66:     };
+67:     // Handle CONNECT requests for HTTPS traffic
+68:     server.on('connect', async (req, socket, head) => {
+69:         // Attach error handler immediately to prevent unhandled errors
+70:         socket.on('error', err => {
+71:             logForDebugging(`Client socket error: ${err.message}`, { level: 'error' });
+72:             // A failed write (e.g. EPIPE to a dead peer) must also release
+73:             // the descriptor: logging alone leaves the fd open for the life
+74:             // of the process, and an open dead-peer fd is what the runtime's
+75:             // EPIPE retry loop spun on (idle-CPU busy-loop incident).
+76:             // destroy() is idempotent, so overlap with the close handlers
+77:             // below is harmless.
+78:             socket.destroy();
+79:         });
+80:         // Track client liveness so we can abort the upstream dial if they bail.
+81:         let clientGone = false;
+82:         socket.once('close', () => {
+83:             clientGone = true;
+84:         });
+85:         // EOF during the decision window is treated as abandonment — a
+86:         // half-closed client cannot run any bidirectional protocol over the
+87:         // tunnel it is waiting for — so close our side immediately, the
+88:         // same close every healthy cycle performs at teardown. Without
+89:         // this, an EOF'd socket survives an arbitrarily long filter await
+90:         // half-open (the host decision may be a model-classifier call or
+91:         // an interactive permission prompt), and the verdict write lands on
+92:         // a dead descriptor. The armed window runs from here through the
+93:         // filter await, the ClientHello peek (MITM path), and the upstream
+94:         // dial; it is disarmed only at tunnel handoff, where established
+95:         // tunnels forward FIN through pipe() and keep half-open semantics —
+96:         // a FIN during the dial tears the connection down rather than
+97:         // half-opening it, which is the cleaner teardown for a client that
+98:         // is gone.
+99:         //
+100:         // Deliberate tradeoff: a hypothetical pipelined send-and-FIN
+101:         // CONNECT client (payload + FIN up front, then read the response
+102:         // across the half-open socket) is also destroyed here. Accepting
+103:         // that means nothing is written once EOF has been observed
+104:         // (checked again at write time via readableEnded). EOF
+105:         // notification is best-effort on a paused socket, so the layered
+106:         // backstop matters: a write that still hits a dead peer errors,
+107:         // and the error handler above destroys the socket, releasing the
+108:         // descriptor. On runtimes whose EPIPE handling spins on dead-peer
+109:         // writes (the incident's Bun builds, pre oven-sh/bun#37076) this
+110:         // narrows the exposure from every abandoned decision to only those
+111:         // whose EOF was never notified.
+112:         const onDecisionWindowEof = () => {
+113:             clientGone = true;
+114:             socket.destroy();
+115:         };
+116:         // 'end' only fires once the stream is being read: on a paused socket
+117:         // (which a CONNECT socket is, between the header parse and the tunnel
+118:         // handoff) a client FIN can sit unobserved for the whole decision.
+119:         // On the opaque path, capture decision-window data to put the socket
+120:         // into flowing mode — making EOF notification reliable across
+121:         // runtimes — and fold anything captured back into `head` at disarm
+122:         // so early tunnel bytes (a client that pipelines its first payload
+123:         // behind the CONNECT) are never lost.
+124:         //
+125:         // Deliberately NOT armed on the mitmCA path: the ClientHello peek
+126:         // and the terminating relay manage this socket's flow themselves
+127:         // (pull-mode reads chosen specifically because pause()/resume()
+128:         // cycles corrupt CONNECT-upgraded sockets under Bun — see
+129:         // relayPaused), and injecting a flowing-mode phase ahead of them
+130:         // breaks the terminating path outright. There, EOF detection during
+131:         // the decision stays best-effort ('close' fires on full close — the
+132:         // incident case — and the peek's own reads surface 'end' once it
+133:         // runs); the write-time guards and the error-handler backstop cover
+134:         // the remainder.
+135:         //
+136:         // Capture is bounded: the paused socket used to give free TCP
+137:         // backpressure, and an untrusted client streaming at line rate for
+138:         // the length of an interactive permission prompt must not balloon
+139:         // host memory. A legitimate pipelined first flight (an SSH banner)
+140:         // is tiny; blowing the cap is abandonment-grade abuse and closes
+141:         // the connection.
+142:         const MAX_DECISION_CAPTURE_BYTES = 64 * 1024;
+143:         let decisionCaptureBytes = 0;
+144:         let capturing = false;
+145:         const decisionData = [];
+146:         const onDecisionData = (chunk) => {
+147:             if (!capturing)
+148:                 return;
+149:             decisionCaptureBytes += chunk.length;
+150:             if (decisionCaptureBytes > MAX_DECISION_CAPTURE_BYTES) {
+151:                 logForDebugging('CONNECT client exceeded pre-establishment capture cap; destroying', { level: 'error' });
+152:                 onDecisionWindowEof();
+153:                 return;
+154:             }
+155:             decisionData.push(chunk);
+156:         };
+157:         if (!options.mitmCA) {
+158:             capturing = true;
+159:             socket.on('data', onDecisionData);
+160:         }
+161:         // EOF may already have been processed before this handler arms (a
+162:         // client that sent CONNECT and FIN together), and an already-emitted
+163:         // 'end' never re-fires — check the flag first.
+164:         if (socket.readableEnded) {
+165:             onDecisionWindowEof();
+166:         }
+167:         else {
+168:             socket.once('end', onDecisionWindowEof);
+169:         }
+170:         // Stop capturing, folding captured bytes into `head`. The listener
+171:         // deliberately STAYS attached as a discarding sink: 'data' events
+172:         // broadcast to every listener, so the real consumer (pipe()) still
+173:         // receives everything, while removing the last listener from a
+174:         // flowing stream would silently DROP bytes arriving before the
+175:         // consumer attaches (e.g. during the awaited upstream dial). No
+176:         // pause() — pause/resume cycles corrupt CONNECT-upgraded sockets
+177:         // under Bun (see relayPaused).
+178:         const disarmDecisionCapture = () => {
+179:             capturing = false;
+180:             if (decisionData.length) {
+181:                 head = Buffer.concat([head, ...decisionData]);
+182:                 decisionData.length = 0;
+183:             }
+184:         };
+185:         const disarmDecisionWindowEof = () => {
+186:             socket.removeListener('end', onDecisionWindowEof);
+187:             disarmDecisionCapture();
+188:         };
+189:         // Decision-phase status writes go through this guard: a verdict for
+190:         // a dead client is dropped, never written. The filter's work is not
+191:         // wasted — host-side allow/deny caches serve the client's retry.
+192:         const endWithStatus = (payload) => {
+193:             if (clientGone ||
+194:                 socket.destroyed ||
+195:                 socket.readableEnded ||
+196:                 !socket.writable) {
+197:                 logForDebugging('CONNECT client gone before status write; dropping verdict and destroying socket');
+198:                 socket.destroy();
+199:                 return;
+200:             }
+201:             // Disarm before writing: a FIN processed while this verdict is
+202:             // still queued (backpressured or slow client) would otherwise
+203:             // fire the armed 'end' handler and destroy() the unflushed write.
+204:             disarmDecisionWindowEof();
+205:             socket.end(payload);
+206:         };
+207:         // A client that sent CONNECT and FIN together (or closed before the
+208:         // handler ran) was destroyed at arm time: return before spending a
+209:         // decision — possibly an interactive permission prompt or a
+210:         // classifier call — on a connection that no longer exists.
+211:         if (clientGone || socket.destroyed) {
+212:             return;
+213:         }
+214:         // Whether the MITM sniff path already wrote the 200 — hoisted so the
+215:         // catch below can see it: once the 200 is out, any HTTP status line
+216:         // would land inside what the client treats as tunnel payload.
+217:         let wrote200 = false;
+218:         try {
+219:             const auth = checkAuth(req.headers['proxy-authorization']);
+220:             if (!auth.ok) {
+221:                 endWithStatus('HTTP/1.1 407 Proxy Authentication Required\r\n' +
+222:                     'Proxy-Authenticate: Basic realm="srt"\r\n\r\n');
+223:                 return;
+224:             }
+225:             const target = parseConnectTarget(req.url);
+226:             if (!target) {
+227:                 logForDebugging(`Invalid CONNECT request: ${req.url}`, {
+228:                     level: 'error',
+229:                 });
+230:                 endWithStatus('HTTP/1.1 400 Bad Request\r\n\r\n');
+231:                 return;
+232:             }
+233:             const { hostname: requestedHost, port } = target;
+234:             const allowed = await options.filter(port, requestedHost, socket, auth.encodedCommand);
+235:             if (!allowed) {
+236:                 logForDebugging(`Connection blocked to ${requestedHost}:${port}`, {
+237:                     level: 'error',
+238:                 });
+239:                 endWithStatus(rawDenied(...ALLOWLIST_DENY));
+240:                 return;
+241:             }
+242:             // The client may have died during the filter await (EOF destroy
+243:             // above, or full close): there is nothing left to establish.
+244:             if (clientGone || socket.destroyed) {
+245:                 socket.destroy();
+246:                 return;
+247:             }
+248:             // From here on, use the spelling the allowlist actually evaluated.
+249:             // The filter canonicalizes before matching (so `Api.Example.com.`,
+250:             // `127.1`, `0x7f.0.0.1` are allowed iff their canonical forms are),
+251:             // and every decision below — TLS-termination exemption, MITM
+252:             // routing, parent-proxy bypass, credential injection, the leaf cert
+253:             // and upstream SNI, the authority we put on the wire — must key off
+254:             // that same spelling. Routing off the raw one let a trailing-dot
+255:             // FQDN pass the allowlist as `api.example.com`, miss every MITM
+256:             // pattern, and dial out directly. Same fallback as the filter for
+257:             // the (already-validated, so practically unreachable) case where
+258:             // canonicalization fails, so the two layers can never disagree.
+259:             const hostname = canonicalizeHost(requestedHost) ?? requestedHost;
+260:             const lookup = options.lookupFor?.(port, auth.encodedCommand);
+261:             // Decide upstream route:
+262:             //   in-process TLS termination
+263:             //   > external MITM unix socket
+264:             //   > parent HTTP proxy
+265:             //   > direct
+266:             // (tlsTerminate and mitmProxy are mutually exclusive at the config
+267:             // layer, so the first two never both apply.)
+268:             if (options.mitmCA &&
+269:                 (options.shouldTerminateTLS?.(hostname, port) ?? true)) {
+270:                 // We can only terminate TLS. CONNECT also carries non-TLS streams —
+271:                 // notably SSH on Linux, where the sandbox's own GIT_SSH_COMMAND
+272:                 // routes `ssh` through this proxy via `socat - PROXY:`. Send 200 so
+273:                 // the client transmits its first bytes, sniff for a ClientHello, and
+274:                 // only terminate if it is one. Non-TLS falls through to the opaque
+275:                 // tunnel below — i.e. base-sandbox behaviour, hostname-allowlisted
+276:                 // but not content-inspected (same as the SOCKS path).
+277:                 socket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+278:                 wrote200 = true;
+279:                 const peeked = await peekForClientHello(socket, head);
+280:                 if (clientGone || socket.destroyed) {
+281:                     socket.destroy();
+282:                     return;
+283:                 }
+284:                 if (peeked.isTLS) {
+285:                     disarmDecisionWindowEof();
+286:                     terminateAndForward(options.mitmCA, options.filterRequest, options.mutateHeaders, options.getBodySubstitutions, socket, peeked.head, {
+287:                         hostname,
+288:                         port,
+289:                         upstreamCA: options.tlsTerminateUpstreamCA,
+290:                         lookup,
+291:                         onFilterRequestDeny: options.onFilterRequestDenied
+292:                             ? (method, url, reason) => options.onFilterRequestDenied({
+293:                                 method,
+294:                                 url,
+295:                                 reason,
+296:                                 encodedCommand: auth.encodedCommand,
+297:                             })
+298:                             : undefined,
+299:                     }, options.planSigv4, options.maxSigv4ResignBodyBytes);
+300:                     return;
+301:                 }
+302:                 logForDebugging(`[tls-terminate] non-TLS bytes on CONNECT ${hostname}:${port}; opaque-tunnelling`);
+303:                 head = peeked.head;
+304:             }
+305:             else if (options.mitmCA) {
+306:                 // Per-host termination opt-out: the policy exempts this host (mTLS
+307:                 // upstream, cert-pinning client), so skip the MITM entirely and
+308:                 // take the opaque tunnel below, exactly as if mitmCA were unset.
+309:                 logForDebugging(`[tls-terminate] policy exempts ${hostname}:${port}; opaque-tunnelling`);
+310:             }
+311:             const mitmSocketPath = options.getMitmSocketPath?.(hostname);
+312:             const parentUrl = !mitmSocketPath &&
+313:                 options.parentProxy &&
+314:                 !shouldBypassParentProxy(options.parentProxy, hostname)
+315:                 ? selectParentProxyUrl(options.parentProxy, { isHttps: true })
+316:                 : undefined;
+317:             let upstream;
+318:             try {
+319:                 if (mitmSocketPath) {
+320:                     logForDebugging(`Routing CONNECT ${hostname}:${port} through MITM proxy at ${mitmSocketPath}`);
+321:                     upstream = await openConnectTunnel({
+322:                         dial: () => connect({ path: mitmSocketPath }),
+323:                         readyEvent: 'connect',
+324:                         destHost: hostname,
+325:                         destPort: port,
+326:                     });
+327:                 }
+328:                 else if (parentUrl) {
+329:                     upstream = await connectViaParentProxy(parentUrl, hostname, port);
+330:                 }
+331:                 else {
+332:                     upstream = await dialDirect(hostname, port, lookup);
+333:                 }
+334:             }
+335:             catch (err) {
+336:                 logForDebugging(`CONNECT tunnel failed: ${err.message}`, {
+337:                     level: 'error',
+338:                 });
+339:                 // If we already sent 200 (mitmCA sniff path), an HTTP status line now
+340:                 // would land inside the tunnel as payload. Just close.
+341:                 if (wrote200)
+342:                     socket.destroy();
+343:                 else if (isResolvedAddressDenied(err)) {
+344:                     endWithStatus(rawDenied(err.message));
+345:                 }
+346:                 else
+347:                     endWithStatus('HTTP/1.1 502 Bad Gateway\r\n\r\n');
+348:                 return;
+349:             }
+350:             if (clientGone || socket.destroyed) {
+351:                 upstream.on('error', () => { }); // swallow post-resolve errors
+352:                 upstream.destroy();
+353:                 socket.destroy();
+354:                 return;
+355:             }
+356:             if (!wrote200) {
+357:                 socket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+358:             }
+359:             disarmDecisionWindowEof();
+360:             // An established tunnel relays each TCP direction independently: a
+361:             // client that half-closes (FIN after its request bytes) must still
+362:             // receive the upstream's reply. Without this, runtimes that default
+363:             // http-server sockets to allowHalfOpen=false auto-close the client
+364:             // side on FIN and the reply is lost.
+365:             socket.allowHalfOpen = true;
+366:             // Forward any bytes the client sent in the same packet as the CONNECT
+367:             // (Node delivers these as the `head` buffer, not via the socket stream),
+368:             // plus anything the ClientHello sniff consumed when mitmCA is on.
+369:             if (head.length)
+370:                 upstream.write(head);
+371:             upstream.pipe(socket);
+372:             socket.pipe(upstream);
+373:             upstream.on('error', err => {
+374:                 logForDebugging(`CONNECT tunnel failed: ${err.message}`, {
+375:                     level: 'error',
+376:                 });
+377:                 socket.destroy();
+378:             });
+379:             socket.on('close', () => upstream.destroy());
+380:             upstream.on('close', () => socket.destroy());
+381:         }
+382:         catch (err) {
+383:             logForDebugging(`Error handling CONNECT: ${err}`, { level: 'error' });
+384:             // Same rule as the 502 path: once the MITM sniff's 200 is out, a
+385:             // status line would corrupt the tunnel byte stream — just close.
+386:             if (wrote200)
+387:                 socket.destroy();
+388:             else
+389:                 endWithStatus('HTTP/1.1 500 Internal Server Error\r\n\r\n');
+390:         }
+391:     });
+392:     // Handle regular HTTP requests
+393:     server.on('request', async (req, res) => {
+394:         // A client abort mid-request destroys req/res with an error; with no
+395:         // listener it escapes as an uncaughtException (the runtime emits it
+396:         // from node:_http_server). `pipe()` does not forward error events, so
+397:         // the body pipelines below never see it either.
+398:         req.on('error', err => {
+399:             logForDebugging(`Client request error: ${err.message}`, {
+400:                 level: 'error',
+401:             });
+402:         });
+403:         res.on('error', err => {
+404:             logForDebugging(`Client response error: ${err.message}`, {
+405:                 level: 'error',
+406:             });
+407:             // A failed response write (EPIPE to a dead peer) must release
+408:             // the descriptor — same rationale as the CONNECT handler's
+409:             // socket error handler. The res 'close' teardown listeners then
+410:             // handle the upstream leg.
+411:             res.socket?.destroy();
+412:         });
+413:         try {
+414:             // Serve the empty CRL for Schannel's revocation check on MITM-minted
+415:             // leaves (see MitmCA.crlDer). CryptoAPI fetches the leaf's
+416:             // cRLDistributionPoints URL over plain HTTP with no
+417:             // Proxy-Authorization, so this must precede both the auth check and
+418:             // the `new URL(req.url)` parse below (which requires absolute-form).
+419:             // Match on pathname so both origin-form (`GET /srt.crl`, what
+420:             // CryptoAPI sends) and absolute-form (`GET http://…/srt.crl`, what a
+421:             // proxy-aware fetcher would send) resolve; the base is ignored for
+422:             // the absolute case.
+423:             if (options.mitmCA &&
+424:                 req.method === 'GET' &&
+425:                 new URL(req.url ?? '', 'http://x').pathname === CRL_PATH) {
+426:                 res.writeHead(200, {
+427:                     'Content-Type': 'application/pkix-crl',
+428:                     'Content-Length': options.mitmCA.crlDer.length,
+429:                 });
+430:                 res.end(options.mitmCA.crlDer);
+431:                 return;
+432:             }
+433:             const auth = checkAuth(req.headers['proxy-authorization']);
+434:             if (!auth.ok) {
+435:                 res.writeHead(407, { 'Proxy-Authenticate': 'Basic realm="srt"' });
+436:                 res.end();
+437:                 return;
+438:             }
+439:             const url = new URL(req.url);
+440:             const isHttps = url.protocol === 'https:';
+441:             const defaultPort = isHttps ? 443 : 80;
+442:             const requestedHost = stripBrackets(url.hostname);
+443:             const port = url.port ? parseInt(url.port, 10) : defaultPort;
+444:             const allowed = await options.filter(port, requestedHost, req.socket, auth.encodedCommand);
+445:             if (!allowed) {
+446:                 logForDebugging(`HTTP request blocked to ${requestedHost}:${port}`, {
+447:                     level: 'error',
+448:                 });
+449:                 // The client may have aborted during the filter await; a
+450:                 // deny for a dead client is dropped, not written. Plain
+451:                 // half-close (EOF after a complete request) is legal HTTP
+452:                 // and still gets its verdict — only a destroyed socket is
+453:                 // dead here.
+454:                 if (req.socket.destroyed || res.destroyed) {
+455:                     res.destroy();
+456:                     return;
+457:                 }
+458:                 respondDenied(res, ...ALLOWLIST_DENY);
+459:                 return;
+460:             }
+461:             // Client may have disconnected while we awaited the filter; bail now
+462:             // rather than dialing an upstream nobody will read from.
+463:             if (req.socket.destroyed)
+464:                 return;
+465:             // Same rule as the CONNECT handler: everything after the allow
+466:             // decision keys off the canonical spelling. The URL parser has
+467:             // already lowercased and IPv4-normalized `url.hostname`; what it
+468:             // leaves behind is the trailing dot, which is exactly the spelling
+469:             // that used to reach getMitmSocketPath / the upstream unchanged.
+470:             const hostname = canonicalizeHost(requestedHost) ?? requestedHost;
+471:             // The authority we forward (request-target and Host header) is rebuilt
+472:             // from the canonical host so the MITM / parent proxy sees the host we
+473:             // allowlist-checked, not the client's spelling of it.
+474:             const authority = formatAuthority(hostname, port, defaultPort);
+475:             const fwdHeaders = { ...stripHopByHop(req.headers), host: authority };
+476:             options.mutateHeadersPlaintext?.(fwdHeaders, hostname);
+477:             // Body-substitution counterpart of mutateHeadersPlaintext (opt-in via
+478:             // the same config gate). May delete content-length from fwdHeaders.
+479:             const bodyTransform = prepareBodySubstitution(options.getBodySubstitutionsPlaintext, req, fwdHeaders, hostname);
+480:             // Decide upstream route: MITM unix socket > parent HTTP proxy > direct.
+481:             const mitmSocketPath = options.getMitmSocketPath?.(hostname);
+482:             const parentUrl = !mitmSocketPath &&
+483:                 options.parentProxy &&
+484:                 !shouldBypassParentProxy(options.parentProxy, hostname)
+485:                 ? selectParentProxyUrl(options.parentProxy, {
+486:                     isHttps,
+487:                 })
+488:                 : undefined;
+489:             // Reconstruct the absolute URI from parsed components rather than
+490:             // forwarding the client's raw req.url. This ensures the upstream proxy
+491:             // sees exactly the host we allowlist-checked, closing URL-parser
+492:             // differential bypasses.
+493:             const absUrl = `${url.protocol}//${authority}${url.pathname}${url.search}`;
+494:             // Per-request filter applies to plain HTTP too — otherwise a sandboxed
+495:             // client could bypass it by using http:// where the upstream serves it.
+496:             let body = req;
+497:             if (options.filterRequest) {
+498:                 const ac = new AbortController();
+499:                 res.once('close', () => ac.abort());
+500:                 const out = await decideAndRespond(options.filterRequest, req, res, absUrl, ac.signal, options.onFilterRequestDenied
+501:                     ? (method, url, reason) => options.onFilterRequestDenied({
+502:                         method,
+503:                         url,
+504:                         reason,
+505:                         encodedCommand: auth.encodedCommand,
+506:                     })
+507:                     : undefined);
+508:                 if (out === null)
+509:                     return;
+510:                 body = out;
+511:                 // The client may have aborted during the filterRequest await —
+512:                 // the tee branch is already destroyed and res 'close' has already
+513:                 // fired, so the teardown listeners attached below would never
+514:                 // run. Don't dial an upstream for a dead client. A COMPLETED
+515:                 // request is also destroyed=true (normal stream lifecycle after
+516:                 // 'end'); only a destroy without a clean end is an abort.
+517:                 if ((req.destroyed && !req.readableEnded) ||
+518:                     res.destroyed ||
+519:                     req.socket.destroyed ||
+520:                     body.destroyed) {
+521:                     body.destroy();
+522:                     return;
+523:                 }
+524:             }
+525:             // When the client declared a body but the forwarded headers carry no
+526:             // framing (chunked TE stripped as hop-by-hop, or a body transform
+527:             // deleted content-length), the upstream leg must re-frame
+528:             // explicitly: for bodyless-method requests the runtime would
+529:             // otherwise write the piped body bytes raw after complete-framed
+530:             // headers — a request-smuggling primitive.
+531:             const clientDeclaredBody = Boolean(req.headers['content-length'] || req.headers['transfer-encoding']);
+532:             if (clientDeclaredBody &&
+533:                 fwdHeaders['content-length'] === undefined &&
+534:                 fwdHeaders['transfer-encoding'] === undefined) {
+535:                 fwdHeaders['transfer-encoding'] = 'chunked';
+536:             }
+537:             const failUpstream = (err) => {
+538:                 logForDebugging(`Proxy request failed: ${err.message}`, {
+539:                     level: 'error',
+540:                 });
+541:                 respondUpstreamError(res, err);
+542:             };
+543:             let proxyReq;
+544:             if (mitmSocketPath) {
+545:                 logForDebugging(`Routing HTTP ${req.method} ${hostname}:${port} through MITM proxy at ${mitmSocketPath}`);
+546:                 const mitmAgent = new Agent({
+547:                     // @ts-expect-error - socketPath is valid but not in types
+548:                     socketPath: mitmSocketPath,
+549:                 });
+550:                 proxyReq = httpRequest({
+551:                     agent: mitmAgent,
+552:                     path: absUrl,
+553:                     method: req.method,
+554:                     headers: fwdHeaders,
+555:                 }, proxyRes => {
+556:                     // The response stream errors independently of proxyReq (e.g.
+557:                     // upstream reset mid-body after headers); pipe() does not
+558:                     // handle source errors.
+559:                     proxyRes.on('error', err => {
+560:                         logForDebugging(`Upstream response error: ${err.message}`, {
+561:                             level: 'error',
+562:                         });
+563:                         res.destroy();
+564:                     });
+565:                     res.writeHead(proxyRes.statusCode, stripHopByHop(proxyRes.headers));
+566:                     proxyRes.pipe(res);
+567:                 });
+568:             }
+569:             else if (parentUrl) {
+570:                 const parentHost = stripBrackets(parentUrl.hostname);
+571:                 const parentPort = Number(parentUrl.port) || (parentUrl.protocol === 'https:' ? 443 : 80);
+572:                 const auth = proxyAuthHeader(parentUrl);
+573:                 const requestFn = parentUrl.protocol === 'https:' ? httpsRequest : httpRequest;
+574:                 proxyReq = requestFn({
+575:                     hostname: parentHost,
+576:                     port: parentPort,
+577:                     path: absUrl,
+578:                     method: req.method,
+579:                     headers: auth
+580:                         ? { ...fwdHeaders, 'proxy-authorization': auth }
+581:                         : fwdHeaders,
+582:                 }, proxyRes => {
+583:                     // The response stream errors independently of proxyReq (e.g.
+584:                     // upstream reset mid-body after headers); pipe() does not
+585:                     // handle source errors.
+586:                     proxyRes.on('error', err => {
+587:                         logForDebugging(`Upstream response error: ${err.message}`, {
+588:                             level: 'error',
+589:                         });
+590:                         res.destroy();
+591:                     });
+592:                     res.writeHead(proxyRes.statusCode, stripHopByHop(proxyRes.headers));
+593:                     proxyRes.pipe(res);
+594:                 });
+595:             }
+596:             else {
+597:                 // Vet and pick the upstream address before any request object exists
+598:                 // (see directRequestOptions); the name stays in Host and, for TLS, SNI.
+599:                 let direct;
+600:                 try {
+601:                     direct = await directRequestOptions(hostname, port, options.lookupFor?.(port, auth.encodedCommand), isHttps);
+602:                 }
+603:                 catch (err) {
+604:                     failUpstream(err);
+605:                     return;
+606:                 }
+607:                 if (res.destroyed || req.socket.destroyed) {
+608:                     // Client went away during the dial.
+609:                     body.destroy();
+610:                     return;
+611:                 }
+612:                 proxyReq = (isHttps ? httpsRequest : httpRequest)({
+613:                     ...direct,
+614:                     path: url.pathname + url.search,
+615:                     method: req.method,
+616:                     headers: fwdHeaders,
+617:                 }, proxyRes => {
+618:                     // The response stream errors independently of proxyReq (e.g.
+619:                     // upstream reset mid-body after headers); pipe() does not
+620:                     // handle source errors.
+621:                     proxyRes.on('error', err => {
+622:                         logForDebugging(`Upstream response error: ${err.message}`, {
+623:                             level: 'error',
+624:                         });
+625:                         res.destroy();
+626:                     });
+627:                     res.writeHead(proxyRes.statusCode, stripHopByHop(proxyRes.headers));
+628:                     proxyRes.pipe(res);
+629:                 });
+630:             }
+631:             proxyReq.on('error', failUpstream);
+632:             // Tear down the upstream request if the client goes away mid-flight.
+633:             res.on('close', () => proxyReq.destroy());
+634:             if (bodyTransform) {
+635:                 // Errors on either side of the extra pipe stage tear the chain
+636:                 // down — a stalled half-open upstream would otherwise wait for the
+637:                 // client.
+638:                 bodyTransform.on('error', err => proxyReq.destroy(err));
+639:                 body.on('error', err => bodyTransform.destroy(err));
+640:                 res.on('close', () => bodyTransform.destroy());
+641:                 body.pipe(bodyTransform).pipe(proxyReq);
+642:             }
+643:             else {
+644:                 // pipe() does not handle source errors. `body` may be a tee branch
+645:                 // from decideAndRespond (not `req` itself), so a client abort
+646:                 // surfaces here as an 'error' that would otherwise escape as an
+647:                 // uncaughtException.
+648:                 body.on('error', err => proxyReq.destroy(err));
+649:                 body.pipe(proxyReq);
+650:             }
+651:         }
+652:         catch (err) {
+653:             logForDebugging(`Error handling HTTP request: ${err}`, { level: 'error' });
+654:             if (!res.headersSent) {
+655:                 res.writeHead(500, { 'Content-Type': 'text/plain' });
+656:                 res.end('Internal Server Error');
+657:             }
+658:             else {
+659:                 res.destroy();
+660:             }
+661:         }
+662:     });
+663:     return server;
+664: }
+665: /**
+666:  * Parse a CONNECT request-target into host + port. Handles both plain
+667:  * `host:port` and bracketed IPv6 `[::1]:port`.
+668:  */
+669: function parseConnectTarget(target) {
+670:     const m = /^\[([^\]]+)\]:(\d+)$/.exec(target) ?? /^([^:]+):(\d+)$/.exec(target);
+671:     if (!m)
+672:         return undefined;
+673:     const port = Number(m[2]);
+674:     if (!Number.isInteger(port) || port < 1 || port > 65535)
+675:         return undefined;
+676:     return { hostname: m[1], port };
+677: }
+678: //# sourceMappingURL=http-proxy.js.map
+
+FILE dist/sandbox/sandbox-manager.js
+1: import { createHttpProxyServer } from './http-proxy.js';
+2: import { createSocksProxyServer } from './socks-proxy.js';
+3: import { createMuxProxyServer } from './mux-proxy.js';
+4: import { listenInRange } from './listen-in-range.js';
+5: import { SentinelRegistry } from './credential-sentinel.js';
+6: import { MaskedFileStore, buildMaskedFileBinds, } from './credential-mask-files.js';
+7: import { buildMaskedEnvVars } from './credential-mask-env.js';
+8: import { AwsPairRegistry, createSigv4Planner, registerAwsPairs, } from './credential-aws-pairs.js';
+9: import { certThumbprint, createMitmCA, CRL_PATH, disposeMitmCA, } from './mitm-ca.js';
+10: import { logForDebugging } from '../utils/debug.js';
+11: import { whichSync } from '../utils/which.js';
+12: import { getPlatform, getWslVersion } from '../utils/platform.js';
+13: import * as fs from 'fs';
+14: import { randomBytes } from 'node:crypto';
+15: import { wrapCommandWithSandboxLinux, initializeLinuxNetworkBridge, checkLinuxDependencies, cleanupBwrapMountPoints, linuxGetCwdMandatoryDenyPaths, } from './linux-sandbox-utils.js';
+16: import { expandReadDenyGlobLinux } from './read-deny-glob.js';
+17: import { wrapCommandWithSandboxMacOS, startMacOSSandboxLogMonitor, } from './macos-sandbox-utils.js';
+18: import { startLinuxSandboxViolationMonitor, } from './linux-violation-monitor.js';
+19: import { checkWindowsDependencies, checkWindowsDependenciesAsync, wrapCommandWithSandboxWindows, parseWindowsBinShell, expandWindowsFsPaths, stampWindowsAcl, restoreWindowsAcl, grantWindowsAcl, revokeWindowsAcl, getWindowsSandboxUserStatusAsync, getWindowsSandboxCaCert, ensurePersistentWindowsCa, verifyWindowsWfpEgress, resolveSrtWin, WindowsSandboxError, DEFAULT_WINDOWS_PROXY_PORT_RANGE, } from './windows-sandbox-utils.js';
+20: import { getDefaultWritePaths, containsGlobChars, globPatternBaseDir, normalizePathForSandbox, removeTrailingGlobSuffix, expandGlobPattern, attributionKeyFor, decodeSandboxedCommand, encodeSandboxedCommand, } from './sandbox-utils.js';
+21: import { SandboxViolationStore, sanitizeUnregisteredCommandKey, shouldIgnoreViolation, } from './sandbox-violation-store.js';
+22: import { canonicalizeHost, isValidHost, redactUrl, resolveParentProxy, } from './parent-proxy.js';
+23: import { matchesDomainPattern, matchesDomainPatternWithPort, stripDomainPatternPort, } from './domain-pattern.js';
+24: import { createResolvedAddressGuard, isResolvedAddressDenied, } from './resolved-address-guard.js';
+25: import { EOL } from 'node:os';
+26: import { dirname } from 'node:path';
+27: import { getJavaProxyAgentJarPathAsync } from './java-proxy-agent.js';
+28: import { getApplySeccompBinaryPathAsync } from './generate-seccomp-filter.js';
+29: // ============================================================================
+30: // Private Module State
+31: // ============================================================================
+32: let config;
+33: let httpProxyServer;
+34: let socksProxyServer;
+35: let muxProxyServer;
+36: let managerContext;
+37: let initializationPromise;
+38: let cleanupRegistered = false;
+39: let logMonitorShutdown;
+40: let linuxMonitor;
+41: let parentProxy;
+42: /** Read live through {@link directLookup}, so a config update applies to the next dial. */
+43: let resolvedAddressGuard = createResolvedAddressGuard();
+44: let mitmCA;
+45: /**
+46:  * Resolved path of the JVM proxy agent jar (see java-proxy-agent.ts); set
+47:  * while a proxy is advertised to the sandbox, undefined if the jar is not
+48:  * shipped/found (JVMs then just aren't proxy-aware, as before).
+49:  */
+50: let javaAgentJarPath;
+51: // Per-session proxy auth token. Generated at proxy start, exported only into
+52: // the sandbox child env, checked on every CONNECT/request — so a host process
+53: // dialing 127.0.0.1:<proxyPort> can't reach the filter callback.
+54: let proxyAuthToken;
+55: // Windows: the resolved access set that was actually applied at
+56: // initialize(). `undefined` means no stamp/grant was applied
+57: // (gates running `acl restore`/`acl revoke` at reset()).
+58: let windowsFsStampedSet;
+59: // The sandbox user SID captured at initialize(). reset() uses this
+60: // so a config change between init and reset can't strand ACEs
+61: // under a different SID.
+62: let windowsFsSbUserSid;
+63: // The RAW config inputs that produced `windowsFsStampedSet`.
+64: // updateConfig() compares these (not the resolved set) so it never
+65: // re-expands globs — see `sameWindowsStampSet`.
+66: let windowsFsRawInputs;
+67: // `verifyWindowsWfpEgress()` is once per PROCESS (it spawns a
+68: // CreateProcessWithLogonW runner; first call may create the sandbox
+69: // user's profile). The WFP fence is install-scoped, not config- or
+70: // session-scoped — reset() does NOT clear this, so updateConfig()'s
+71: // reset+reinit and the test suite's per-test reset() don't re-verify.
+72: let windowsWfpVerified = false;
+73: // Resolved once at initialize() (`resolveSrtWin` stats the disk).
+74: // Captured so wrapWithSandboxArgv/reset() don't re-resolve per call
+75: // and so reset()'s revoke/restore addresses the SAME binary the
+76: // grants/stamps were applied with even if `config` mutated between.
+77: let srtWinSpawn;
+78: const sandboxViolationStore = new SandboxViolationStore();
+79: // Per-session sentinel↔real-value map for masked credentials. Lives only in
+80: // process memory; never written to disk or logged. Cleared on reset().
+81: const sentinelRegistry = new SentinelRegistry();
+82: // Per-session linked AWS credential pairs for SigV4 re-signing, keyed by
+83: // the fake access key id. Same lifecycle and secrecy posture as the
+84: // sentinel registry.
+85: const awsPairRegistry = new AwsPairRegistry();
+86: // Temp dir holding the sentinel-content fake files for masked credential
+87: // files. Created lazily on first masked file; removed on reset().
+88: const maskedFileStore = new MaskedFileStore();
+89: // ============================================================================
+90: // Private Helper Functions (not exported)
+91: // ============================================================================
+92: function registerCleanup() {
+93:     if (cleanupRegistered) {
+94:         return;
+95:     }
+96:     const cleanupHandler = () => reset().catch(e => {
+97:         logForDebugging(`Cleanup failed in registerCleanup ${e}`, {
+98:             level: 'error',
+99:         });
+100:     });
+101:     process.once('exit', cleanupHandler);
+102:     process.once('SIGINT', cleanupHandler);
+103:     process.once('SIGTERM', cleanupHandler);
+104:     cleanupRegistered = true;
+105: }
+106: /**
+107:  * Attribution key to command text for every wrapped invocation, so each
+108:  * producer can report (and ignoreViolations can match) the command an event
+109:  * belongs to rather than the opaque key. Keys are held decoded because that
+110:  * is the form the carriers deliver. Bounded FIFO: the violation store itself
+111:  * only retains the last 100 events, so long-gone invocations need no entry.
+112:  */
+113: const MAX_COMMAND_TEXTS = 1024;
+114: const commandTextsByKey = new Map();
+115: /** Exported for testing. */
+116: export function registerCommandText(command, options) {
+117:     const key = decodeSandboxedCommand(encodeSandboxedCommand(attributionKeyFor(command, options?.commandId)));
+118:     const text = options?.commandText ?? command;
+119:     commandTextsByKey.delete(key);
+120:     commandTextsByKey.set(key, text);
+121:     while (commandTextsByKey.size > MAX_COMMAND_TEXTS) {
+122:         const oldest = commandTextsByKey.keys().next().value;
+123:         if (oldest === undefined)
+124:             break;
+125:         commandTextsByKey.delete(oldest);
+126:     }
+127: }
+128: /**
+129:  * The command text for a decoded attribution key. Keys arrive over carriers
+130:  * the sandboxed process can write (the observe socket's event field, the
+131:  * macOS log tag, the proxy username), so only a key this process registered
+132:  * carries the embedder's own text; anything else is untrusted bytes.
+133:  * Exported for testing.
+134:  */
+135: export function resolveCommandText(decodedKey) {
+136:     return (commandTextsByKey.get(decodedKey) ??
+137:         sanitizeUnregisteredCommandKey(decodedKey));
+138: }
+139: /**
+140:  * Record a proxy-side denial in the violation store so the model sees a
+141:  * structured <sandbox_violations> block alongside the raw 403 / SOCKS
+142:  * failure in stderr — parity with the macOS seatbelt log monitor and the
+143:  * Linux seccomp observer. The proxy is the only component that knows the
+144:  * destination host of a network deny, so neither of those can produce
+145:  * this line. `encodedCommand` (from the proxy username) attributes it to
+146:  * the invocation; without one the event is stored unattributed.
+147:  */
+148: function recordProxyViolation(line, encodedCommand) {
+149:     const command = encodedCommand
+150:         ? resolveCommandText(decodeSandboxedCommand(encodedCommand))
+151:         : undefined;
+152:     // Same suppression the seatbelt / seccomp monitors apply, so a
+153:     // configured ignoreViolations pattern silences the event no matter
+154:     // which producer saw it.
+155:     if (shouldIgnoreViolation(line, command, config?.ignoreViolations)) {
+156:         return;
+157:     }
+158:     sandboxViolationStore.addViolation({
+159:         line,
+160:         encodedCommand,
+161:         command,
+162:         timestamp: new Date(),
+163:     });
+164: }
+165: function recordOutboundDeny(host, port, reason, encodedCommand) {
+166:     recordProxyViolation(`deny network-outbound ${host}:${port} (${reason})`, encodedCommand);
+167: }
+168: /** Direct-dial `lookup` for the proxies: the current guard's, with a refusal recorded as a violation. */
+169: const directLookup = (port, encodedCommand) => (hostname, options, callback) => resolvedAddressGuard.lookupFor(port)(hostname, options, (err, address, family) => {
+170:     if (isResolvedAddressDenied(err)) {
+171:         recordOutboundDeny(hostname, port, err.reason, encodedCommand);
+172:     }
+173:     callback(err, address, family);
+174: });
+175: /**
+176:  * The request URL as it should appear in a model-visible violation line:
+177:  * origin + path, with any query string reduced to a `?…` marker (origin
+178:  * carries no userinfo, so an embedded `name:pass@` is dropped too). Query
+179:  * strings routinely carry credentials (api_key=, access_token=, signed
+180:  * URLs) that the sandboxed client interpolated at runtime and that were
+181:  * never in the model's context, so they must not enter the transcript via
+182:  * the <sandbox_violations> block. The full URL still reaches the embedder's
+183:  * filterRequest callback and its own debug logging.
+184:  */
+185: function redactUrlForViolation(url) {
+186:     try {
+187:         const u = new URL(url);
+188:         return `${u.origin}${u.pathname}${u.search ? '?…' : ''}`;
+189:     }
+190:     catch {
+191:         // Not an absolute URL (shouldn't happen for proxy requests) — drop
+192:         // anything after '?' rather than risk leaking it.
+193:         const q = url.indexOf('?');
+194:         return q === -1 ? url : `${url.slice(0, q)}?…`;
+195:     }
+196: }
+197: async function filterNetworkRequest(port, host, sandboxAskCallback, encodedCommand) {
+198:     const denied = (reason) => {
+199:         recordOutboundDeny(host, port, reason, encodedCommand);
+200:         return false;
+201:     };
+202:     if (!config) {
+203:         logForDebugging('No config available, denying network request');
+204:         return denied('sandbox policy unavailable');
+205:     }
+206:     // Reject hosts containing control characters before pattern matching.
+207:     // `matchesDomainPattern` uses string suffix matching which is trivially
+208:     // fooled by e.g. `evil.com\x00.allowed.com` — the null byte passes
+209:     // `.endsWith()` but truncates at the libc DNS layer. The SOCKS path is the
+210:     // main exposure (DOMAINNAME is unvalidated bytes); HTTP is protected by
+211:     // llhttp/URL parsing, but we check here for defence in depth.
+212:     if (!isValidHost(host)) {
+213:         logForDebugging(`Denying malformed host: ${JSON.stringify(host)}:${port}`, {
+214:             level: 'error',
+215:         });
+216:         return denied('malformed host');
+217:     }
+218:     // Canonicalize so string comparisons match what getaddrinfo() will dial.
+219:     // Without this, inet_aton shorthand like `2852039166` (= 169.254.169.254)
+220:     // or `127.1` slips past a denylist entry for the dotted-decimal form.
+221:     const canonicalHost = canonicalizeHost(host) ?? host;
+222:     // Check denied domains first
+223:     for (const deniedDomain of config.network.deniedDomains) {
+224:         if (matchesDomainPatternWithPort(canonicalHost, port, deniedDomain)) {
+225:             logForDebugging(`Denied by config rule: ${host}:${port}`);
+226:             // The matched entry's own reason when the caller supplied one, so the
+227:             // model reads why this destination is off-limits (and the sanctioned
+228:             // alternative) instead of a generic deny; keyed by the exact entry.
+229:             return denied(config.network.deniedDomainReasons?.[deniedDomain] ??
+230:                 'host is on the deny list');
+231:         }
+232:     }
+233:     // Check allowed domains
+234:     for (const allowedDomain of config.network.allowedDomains) {
+235:         if (matchesDomainPatternWithPort(canonicalHost, port, allowedDomain)) {
+236:             logForDebugging(`Allowed by config rule: ${host}:${port}`);
+237:             return true;
+238:         }
+239:     }
+240:     // No matching rules - ask user or deny. strictAllowlist makes the
+241:     // allowlist deterministic enforcement: never fall through to the callback.
+242:     if (!sandboxAskCallback || config.network.strictAllowlist) {
+243:         logForDebugging(`No matching config rule, denying: ${host}:${port}`);
+244:         return denied('host is not on the allow list');
+245:     }
+246:     logForDebugging(`No matching config rule, asking user: ${host}:${port}`);
+247:     try {
+248:         const userAllowed = await sandboxAskCallback({ host, port });
+249:         if (userAllowed) {
+250:             logForDebugging(`User allowed: ${host}:${port}`);
+251:             return true;
+252:         }
+253:         logForDebugging(`User denied: ${host}:${port}`);
+254:         return denied('user denied');
+255:     }
+256:     catch (error) {
+257:         logForDebugging(`Error in permission callback: ${error}`, {
+258:             level: 'error',
+259:         });
+260:         return denied('permission prompt failed');
+261:     }
+262: }
+263: /**
+264:  * Build the header-mutation callback that substitutes sentinel→real for
+265:  * masked credentials. Returns undefined when no `credentials` block is
+266:  * configured — wiring the seam at all is unnecessary then.
+267:  *
+268:  * Per-host gating happens inside the registry: each sentinel carries its
+269:  * own injectHosts list and substitutes independently, so credential A's
+270:  * sentinel cannot be laundered through credential B's allowed host. The
+271:  * returned closure does not log header values; the registry holds the only
+272:  * copy of the real value.
+273:  */
+274: function buildCredentialInjector() {
+275:     if (!config?.credentials)
+276:         return undefined;
+277:     return (headers, destHost) => {
+278:         sentinelRegistry.substituteInHeaders(headers, destHost, matchesDomainPattern);
+279:     };
+280: }
+281: /**
+282:  * Body counterpart of {@link buildCredentialInjector}: per-destination
+283:  * sentinel→real pairs for streaming substitution in request bodies, with
+284:  * the same per-credential injectHosts gating applied inside the registry.
+285:  */
+286: function buildBodyCredentialInjector() {
+287:     if (!config?.credentials)
+288:         return undefined;
+289:     return destHost => sentinelRegistry.sentinelsForHost(destHost, matchesDomainPattern);
+290: }
+291: /**
+292:  * Build the per-request SigV4 hook for the TLS-terminating proxy.
+293:  * Returns undefined when no `credentials` block is configured. The hook
+294:  * consults {@link awsPairRegistry} at request time, so pairs registered
+295:  * later (wrapWithSandbox runs after the proxy starts) are picked up.
+296:  */
+297: function buildSigv4Planner() {
+298:     if (!config?.credentials)
+299:         return undefined;
+300:     // Re-read the policies per request (not captured at proxy start) so an
+301:     // updateConfig() that changes credentials.sigv4 takes effect without a
+302:     // proxy restart, matching how the injector sees live registry state.
+303:     return (method, requestTarget, headers, destHost) => createSigv4Planner(awsPairRegistry, config?.credentials?.sigv4, matchesDomainPattern)(method, requestTarget, headers, destHost);
+304: }
+305: /**
+306:  * Get the MITM proxy socket path for a given host, if configured.
+307:  * Returns the socket path if the host matches any MITM domain pattern,
+308:  * otherwise returns undefined.
+309:  *
+310:  * Matches the canonicalized hostname, like the allow/deny filter
+311:  * (filterNetworkRequest) and the tlsTerminate exclusion below. This site
+312:  * fails OPEN on a miss — a host that matches no MITM pattern is dialed
+313:  * directly — so it must accept exactly the set of spellings the allowlist
+314:  * accepts: otherwise `api.example.com.` (trailing-dot FQDN, same name to
+315:  * DNS) passes the allowlist as `api.example.com` but misses every MITM
+316:  * pattern and skips the MITM proxy entirely. The proxies already hand this
+317:  * hook the canonical spelling; canonicalizing again here is defence in
+318:  * depth for any other caller.
+319:  */
+320: function getMitmSocketPath(host) {
+321:     if (!config?.network.mitmProxy) {
+322:         return undefined;
+323:     }
+324:     const { socketPath, domains } = config.network.mitmProxy;
+325:     const canonicalHost = canonicalizeHost(host) ?? host;
+326:     for (const pattern of domains) {
+327:         if (matchesDomainPattern(canonicalHost, pattern)) {
+328:             logForDebugging(`Host ${host} matches MITM pattern ${pattern}`);
+329:             return socketPath;
+330:         }
+331:     }
+332:     return undefined;
+333: }
+334: /**
+335:  * Per-host TLS-termination opt-out from network.tlsTerminate.excludeDomains.
+336:  * Only consulted by the HTTP proxy when tlsTerminate is enabled; exempted
+337:  * hosts fall back to the opaque CONNECT tunnel (still allowlist-filtered),
+338:  * so mTLS / cert-pinning clients can complete their own handshake.
+339:  *
+340:  * Matches the canonicalized hostname, like the allow/deny filter
+341:  * (filterNetworkRequest) — otherwise a spelling the allowlist accepts after
+342:  * canonicalization (`127.1`, a trailing-dot FQDN) would dodge the exclusion
+343:  * and get terminated anyway.
+344:  */
+345: function shouldTerminateTLSForHost(host) {
+346:     const excludeDomains = config?.network.tlsTerminate?.excludeDomains;
+347:     if (!excludeDomains?.length)
+348:         return true;
+349:     const canonicalHost = canonicalizeHost(host) ?? host;
+350:     for (const pattern of excludeDomains) {
+351:         if (!matchesDomainPattern(canonicalHost, pattern))
+352:             continue;
+353:         logForDebugging(`Host ${host} matches tlsTerminate.excludeDomains pattern ${pattern}; skipping TLS termination`);
+354:         // Masked-credential substitution only happens on the terminated path,
+355:         // so a credential whose injectHosts cover this host can never be
+356:         // injected here — the upstream gets the placeholder. Config validation
+357:         // rejects the fully-contradictory spellings; this flags the partial
+358:         // ones (e.g. default injectHosts = allowedDomains) at the moment they
+359:         // actually bite.
+360:         const masked = sentinelRegistry.namesInjectableAt(canonicalHost, matchesDomainPattern);
+361:         if (masked.length > 0) {
+362:             logForDebugging(`tlsTerminate.excludeDomains: masked credential(s) ${masked.join(', ')} ` +
+363:                 `are configured for injection at ${host}, but its connections are ` +
+364:                 `not terminated, so the upstream will receive the placeholder`, { level: 'error' });
+365:         }
+366:         return false;
+367:     }
+368:     return true;
+369: }
+370: async function startMuxProxyServer(sandboxAskCallback, portRange) {
+371:     const injectCredentials = buildCredentialInjector();
+372:     const injectBodyCredentials = buildBodyCredentialInjector();
+373:     httpProxyServer = createHttpProxyServer({
+374:         filter: (port, host, _socket, encodedCommand) => filterNetworkRequest(port, host, sandboxAskCallback, encodedCommand),
+375:         getMitmSocketPath,
+376:         mitmCA,
+377:         shouldTerminateTLS: shouldTerminateTLSForHost,
+378:         filterRequest: config?.network.filterRequest,
+379:         onFilterRequestDenied: ({ method, url, reason, encodedCommand }) => {
+380:             recordProxyViolation(`deny http-request ${method} ${redactUrlForViolation(url)} (${reason})`, encodedCommand);
+381:         },
+382:         // TLS-terminated path always gets the injector; the plain-HTTP path
+383:         // only when explicitly opted in. Without the opt-in, a sentinel sent
+384:         // over plain HTTP reaches the upstream unchanged (fails closed).
+385:         mutateHeaders: injectCredentials,
+386:         mutateHeadersPlaintext: config?.credentials?.allowPlaintextInject
+387:             ? injectCredentials
+388:             : undefined,
+389:         getBodySubstitutions: injectBodyCredentials,
+390:         getBodySubstitutionsPlaintext: config?.credentials?.allowPlaintextInject
+391:             ? injectBodyCredentials
+392:             : undefined,
+393:         // SigV4 re-signing is TLS-terminated-path only, like credential
+394:         // injection: the real signature must not travel over plaintext.
+395:         planSigv4: buildSigv4Planner(),
+396:         parentProxy,
+397:         lookupFor: directLookup,
+398:         proxyAuthToken,
+399:     });
+400:     socksProxyServer = createSocksProxyServer({
+401:         filter: (port, host, encodedCommand) => filterNetworkRequest(port, host, sandboxAskCallback, encodedCommand),
+402:         parentProxy,
+403:         lookupFor: directLookup,
+404:         proxyAuthToken,
+405:         probeUnauthenticated: async (port, host) => {
+406:             // Explicit deny rules only: an unauthenticated peer must never reach
+407:             // the ask callback, and a merely off-list host gets the generic
+408:             // cannot-authenticate refusal rather than a policy claim.
+409:             if (!config)
+410:                 return {};
+411:             const canonical = canonicalizeHost(host) ?? host;
+412:             for (const entry of config.network.deniedDomains) {
+413:                 if (matchesDomainPatternWithPort(canonical, port, entry)) {
+414:                     const reason = config.network.deniedDomainReasons?.[entry] ??
+415:                         'host is on the deny list';
+416:                     recordOutboundDeny(host, port, reason);
+417:                     return { deniedReason: reason };
+418:                 }
+419:             }
+420:             return {};
+421:         },
+422:     });
+423:     muxProxyServer = createMuxProxyServer({
+424:         httpServer: httpProxyServer,
+425:         handleSocksConnection: s => socksProxyServer.handleConnection(s),
+426:         httpBackendPortRange: portRange,
+427:     });
+428:     const mux = muxProxyServer;
+429:     // Backend first so the front-end never accepts a connection that would
+430:     // dispatch to an unbound backend. On Windows the backend's port is
+431:     // excluded when binding the front-end in the same WFP range.
+432:     const backendPort = await mux.listenHttpBackend();
+433:     await listenInRange(mux.server, p => mux.server.listen(p, '127.0.0.1'), portRange, backendPort !== undefined ? new Set([backendPort]) : new Set());
+434:     const muxPort = mux.getPort();
+435:     if (muxPort === undefined) {
+436:         throw new Error('Failed to get mux proxy server port');
+437:     }
+438:     mux.unref();
+439:     logForDebugging(`Mux proxy (HTTP+SOCKS) listening on localhost:${muxPort}`);
+440:     return muxPort;
+441: }
+442: // ============================================================================
+443: // Public Module Functions (will be exported via namespace)
+444: // ============================================================================
+445: async function initialize(runtimeConfig, sandboxAskCallback, enableLogMonitor = false) {
+446:     // Return if already initializing
+447:     if (initializationPromise) {
+448:         await initializationPromise;
+449:         return;
+450:     }
+451:     // Store config for use by other functions
+452:     config = runtimeConfig;
+453:     // Resolve parent/upstream proxy from config or HTTP_PROXY env before we
+454:     // start our own listeners (which will later shadow those vars in the child).
+455:     parentProxy = resolveParentProxy(runtimeConfig.network.parentProxy);
+456:     if (parentProxy) {
+457:         logForDebugging(`Parent proxy configured: http=${redactUrl(parentProxy.httpUrl)} ` +
+458:             `https=${redactUrl(parentProxy.httpsUrl)}`);
+459:     }
+460:     resolvedAddressGuard = createResolvedAddressGuard(runtimeConfig.network);
+461:     // Load TLS-termination CA if configured. Throws on unreadable/non-PEM —
+462:     // tlsTerminate is explicit opt-in, so a bad config is a hard error.
+463:     if (runtimeConfig.network.tlsTerminate && runtimeConfig.network.mitmProxy) {
+464:         throw new Error('network.tlsTerminate and network.mitmProxy are mutually exclusive');
+465:     }
+466:     // On Windows with tlsTerminate and no explicit caCertPath/caKeyPath,
+467:     // defer CA creation until the Windows block below has resolved
+468:     // srt-win and fetched user status — the persistent CA is
+469:     // generated-if-absent under windowsStateDir()/ca and
+470:     // trusted in the sandbox user's Root store, then loaded here.
+471:     // Explicit paths (or non-Windows) go straight to createMitmCA.
+472:     const tlsTerminate = runtimeConfig.network.tlsTerminate;
+473:     const useWindowsPersistentCa = getPlatform() === 'windows' &&
+474:         tlsTerminate !== undefined &&
+475:         !tlsTerminate.caCertPath &&
+476:         !tlsTerminate.caKeyPath;
+477:     mitmCA =
+478:         tlsTerminate && !useWindowsPersistentCa
+479:             ? createMitmCA(tlsTerminate)
+480:             : undefined;
+481:     // Check dependencies
+482:     const deps = await checkDependenciesAsync();
+483:     if (deps.errors.length > 0) {
+484:         throw new Error(`Sandbox dependencies not available: ${deps.errors.join(', ')}`);
+485:     }
+486:     // Start log monitor for macOS if enabled
+487:     if (enableLogMonitor && getPlatform() === 'macos') {
+488:         logMonitorShutdown = startMacOSSandboxLogMonitor(sandboxViolationStore.addViolation.bind(sandboxViolationStore), config.ignoreViolations, resolveCommandText);
+489:         logForDebugging('Started macOS sandbox log monitor');
+490:     }
+491:     if (enableLogMonitor && getPlatform() === 'linux') {
+492:         // The monitor compares paths the kernel reported, so its lists are
+493:         // expanded the way the wrapper expands them (getFsWriteConfig folds in
+494:         // the default write paths and drops the globs bwrap cannot take;
+495:         // normalizePathForSandbox resolves `~`, relative spellings and symlinks),
+496:         // plus the built-in write denies the wrapper always applies.
+497:         // It does not reproduce the wrapper's existence and boundary-symlink
+498:         // filters, nor the ripgrep scan for nested dangerous paths; and it still
+499:         // reports writes bwrap permits through `--dev`, `--proc` and the tmpfs
+500:         // over each read-denied directory. Started once, so both lists are fixed
+501:         // at the cwd and configuration of this call.
+502:         const monitoredWrites = getFsWriteConfig();
+503:         linuxMonitor = startLinuxSandboxViolationMonitor(sandboxViolationStore.addViolation.bind(sandboxViolationStore), {
+504:             // apply-seccomp's observer reports every write-intent syscall
+505:             // (allowed or not). Only paths bwrap would actually refuse — outside
+506:             // allowWrite or inside a denyWrite carve-out — go to the store. With
+507:             // the policy on, the default write paths are listed in full rather
+508:             // than as getFsWriteConfig() narrowed them: a home directory it leaves
+509:             // out because it is read-denied sits under that deny's writable
+510:             // tmpfs, so a write there is permitted and is not a violation.
+511:             allowWritePaths: [
+512:                 ...monitoredWrites.allowOnly,
+513:                 ...(config.filesystem.disabled ? [] : getDefaultWritePaths()),
+514:             ].map(p => normalizePathForSandbox(p)),
+515:             denyWritePaths: [
+516:                 ...monitoredWrites.denyWithinAllow.map(p => normalizePathForSandbox(p)),
+517:                 // filesystem.disabled reaches the wrapper as `writeConfig ===
+518:                 // undefined`, which skips every bind and the built-in denies with
+519:                 // them, so the monitor must not judge by them either.
+520:                 ...(config.filesystem.disabled
+521:                     ? []
+522:                     : linuxGetCwdMandatoryDenyPaths(getAllowGitConfig())),
+523:             ],
+524:             ignoreViolations: config.ignoreViolations,
+525:             resolveCommandText,
+526:         });
+527:         // Don't block initialization on listen() — wrap-time checks
+528:         // fs.existsSync(observeSocketPath) and degrades gracefully.
+529:         void linuxMonitor.ready;
+530:         logForDebugging('Started Linux seccomp violation monitor');
+531:     }
+532:     // Register cleanup handlers first time
+533:     registerCleanup();
+534:     // Windows: validate provisioning + filesystem config BEFORE any
+535:     // sandboxed child can be spawned. Doing this at initialize() (not
+536:     // wrap-time) means the host gets a single actionable error before
+537:     // any per-exec work happens, instead of exit-15 on every command.
+538:     if (getPlatform() === 'windows') {
+539:         // Resolve once (stats disk); captured module-level for wrap/reset.
+540:         srtWinSpawn = resolveSrtWin(runtimeConfig.windows?.srtWin);
+541:         const srtWin = srtWinSpawn;
+542:         const u = await getWindowsSandboxUserStatusAsync({ srtWin });
+543:         if (!u.provisioned || !u.credPresent) {
+544:             config = undefined;
+545:             throw new WindowsSandboxError('not_provisioned', `Windows sandbox user is not provisioned (user=` +
+546:                 `${u.provisioned}, cred=${u.credPresent}). Run \`npx ` +
+547:                 `sandbox-runtime windows-install\` (one UAC prompt) to ` +
+548:                 `provision it.`);
+549:         }
+550:         // Behavioral proof the WFP egress fence is active for the
+551:         // sandbox user — BFE enumeration (`wfp status`) is admin-gated,
+552:         // so this is the non-elevated readiness check. Fails closed: a
+553:         // stale install (user provisioned but filters since removed)
+554:         // throws here instead of running every exec with full egress.
+555:         // After the user-status check so the not-provisioned message is
+556:         // the actionable one. Once per process — the fence is install-
+557:         // scoped, not session-scoped.
+558:         if (!windowsWfpVerified) {
+559:             try {
+560:                 await verifyWindowsWfpEgress({
+561:                     proxyPortRange: runtimeConfig.windows?.proxyPortRange,
+562:                     srtWin,
+563:                 });
+564:             }
+565:             catch (e) {
+566:                 config = undefined;
+567:                 throw e;
+568:             }
+569:             windowsWfpVerified = true;
+570:         }
+571:         // Persistent-CA branch (see the deferral comment above).
+572:         // `ensurePersistentWindowsCa` reconciles the registry thumb
+573:         // itself (so initialize() after uninstall→reinstall repairs
+574:         // trust) and may make `u.caCertThumb` stale — hence the
+575:         // explicit-path thumb check below skips this branch.
+576:         if (useWindowsPersistentCa && tlsTerminate) {
+577:             try {
+578:                 const p = await ensurePersistentWindowsCa({ status: u, srtWin });
+579:                 mitmCA = createMitmCA({
+580:                     caCertPem: p.certPem,
+581:                     caKeyPem: p.keyPem,
+582:                     caCertPath: p.certPath,
+583:                     caKeyPath: p.keyPath,
+584:                     extraCaCertPaths: tlsTerminate.extraCaCertPaths,
+585:                 });
+586:             }
+587:             catch (e) {
+588:                 config = undefined;
+589:                 throw e;
+590:             }
+591:         }
+592:         // Explicit-path branch: schannel clients (System32 curl, IWR,
+593:         // .NET, default-backend git) only trust what's in the sandbox
+594:         // user's `CurrentUser\Root` — which `srt-win exec` does not (and
+595:         // must not) write. Compare thumbprints so a stale install-time
+596:         // CA doesn't pass the gate while schannel rejects the session's
+597:         // proxy-minted leaves.
+598:         if (tlsTerminate && mitmCA && !useWindowsPersistentCa) {
+599:             const installed = getWindowsSandboxCaCert(u);
+600:             const sessionThumb = certThumbprint(mitmCA.certPem);
+601:             if (!installed) {
+602:                 config = undefined;
+603:                 throw new WindowsSandboxError('trust_ca_not_installed', `tlsTerminate on Windows requires the sandbox to be ` +
+604:                     `installed with this CA (thumb=${sessionThumb}): run ` +
+605:                     `\`srt-win user trust-ca ${mitmCA.certPath}\`. Per-exec ` +
+606:                     `installs into the sandbox user's Root store are not ` +
+607:                     `supported.`);
+608:             }
+609:             if (installed.thumb !== sessionThumb) {
+610:                 config = undefined;
+611:                 throw new WindowsSandboxError('trust_ca_thumbprint_mismatch', `tlsTerminate on Windows: the sandbox's installed CA ` +
+612:                     `(thumb=${installed.thumb}) doesn't match this ` +
+613:                     `session's CA (thumb=${sessionThumb}). Run \`srt-win ` +
+614:                     `user trust-ca ${mitmCA.certPath}\` to update it.`);
+615:             }
+616:         }
+617:         // Filesystem grants/denies — additive sandbox-user ACEs.
+618:         try {
+619:             const acc = computeWindowsFsAccessSet(runtimeConfig);
+620:             // The trust bundle the CA-trust env vars point at
+621:             // (NODE_EXTRA_CA_CERTS etc.) must be readable by the
+622:             // srt-sandbox child. It's written into the broker's %TEMP%,
+623:             // which the sandbox user has no inherent rights on, so it
+624:             // rides the same session-level `acl grant` read-set as the
+625:             // working tree. Granted on the mkdtemp DIR (not the file)
+626:             // so the (OI)(CI) ACE covers both the file open AND the
+627:             // parent-directory list that cmd's `type`/`FindFirstFile`
+628:             // does before opening. Mirrors the mac/linux
+629:             // `expandedAllowRead` push in wrapWithSandbox.
+630:             if (mitmCA) {
+631:                 acc.grantRead.push(dirname(mitmCA.trustBundlePath));
+632:             }
+633:             // `u` was fetched once above for the provisioning gate; the
+634:             // same status carries the SID — don't re-spawn `srt-win user
+635:             // status` here.
+636:             if (!u.sid) {
+637:                 throw new Error('sandbox user SID missing from `srt-win user status` ' +
+638:                     '(provisioned but in an inconsistent state)');
+639:             }
+640:             const sb = u.sid;
+641:             // Record module-level state BEFORE the first acl call so the
+642:             // catch's best-effort revoke/restore can address whatever
+643:             // partially landed.
+644:             windowsFsSbUserSid = sb;
+645:             // Grant FIRST so the sandbox user has working-tree access by
+646:             // the time the deny stamp runs. The two are independent
+647:             // refcounted state-DB sets keyed on the same holder PID.
+648:             if (acc.grantRead.length > 0 || acc.grantWrite.length > 0) {
+649:                 grantWindowsAcl({
+650:                     sandboxUserSid: sb,
+651:                     read: acc.grantRead,
+652:                     write: acc.grantWrite,
+653:                     srtWin,
+654:                 });
+655:             }
+656:             if (acc.denyRead.length > 0 || acc.denyWrite.length > 0) {
+657:                 stampWindowsAcl({
+658:                     sandboxUserSid: sb,
+659:                     denyRead: acc.denyRead,
+660:                     denyWrite: acc.denyWrite,
+661:                     srtWin,
+662:                 });
+663:             }
+664:             // Only record when something was actually applied — gates
+665:             // running revoke/restore at reset(). Recorded AFTER success —
+666:             // the catch below clears `config`, and a non-undefined
+667:             // stampedSet would leave reset()/updateConfig() seeing state
+668:             // that never landed.
+669:             const anyApplied = acc.grantRead.length > 0 ||
+670:                 acc.grantWrite.length > 0 ||
+671:                 acc.denyRead.length > 0 ||
+672:                 acc.denyWrite.length > 0;
+673:             if (anyApplied) {
+674:                 windowsFsStampedSet = acc;
+675:                 logForDebugging(`[Sandbox Windows] fs applied: ` +
+676:                     `${acc.grantWrite.length} grantWrite, ` +
+677:                     `${acc.grantRead.length} grantRead, ` +
+678:                     `${acc.denyRead.length} denyRead, ` +
+679:                     `${acc.denyWrite.length} denyWrite`);
+680:             }
+681:             windowsFsRawInputs = rawWindowsFsInputs(runtimeConfig);
+682:         }
+683:         catch (e) {
+684:             // Best-effort release of whatever WAS applied before the
+685:             // failure (exit-2 partial stamps/grants the resolvable
+686:             // inputs; harmless if nothing was — no holds for this PID).
+687:             if (windowsFsSbUserSid) {
+688:                 revokeWindowsAcl({ sandboxUserSid: windowsFsSbUserSid, srtWin });
+689:                 restoreWindowsAcl({ sandboxUserSid: windowsFsSbUserSid, srtWin });
+690:             }
+691:             windowsFsSbUserSid = undefined;
+692:             config = undefined;
+693:             throw e;
+694:         }
+695:     }
+696:     // Initialize network infrastructure
+697:     initializationPromise = (async () => {
+698:         try {
+699:             // On Windows the WFP loopback permit covers a fixed port
+700:             // range, so the proxies must bind inside it. Other platforms
+701:             // bake the actual ephemeral port into the sandbox profile, so
+702:             // they keep using port 0.
+703:             const portRange = getPlatform() === 'windows'
+704:                 ? (config.windows?.proxyPortRange ?? DEFAULT_WINDOWS_PROXY_PORT_RANGE)
+705:                 : undefined;
+706:             // The auth token is only set when this process owns the proxy; an
+707:             // external proxy (config.network.httpProxyPort) handles its own auth,
+708:             // and embedding our token in its URL would be wrong.
+709:             proxyAuthToken =
+710:                 config.network.httpProxyPort !== undefined
+711:                     ? undefined
+712:                     : randomBytes(16).toString('hex');
+713:             // The mux front-end serves both protocols on one port. Each side's
+714:             // reported port is the external override if configured, else the mux
+715:             // port — so the public config.network.{http,socks}ProxyPort contract
+716:             // is unchanged. The mux is skipped only when BOTH are external.
+717:             const needLocalProxy = config.network.httpProxyPort === undefined ||
+718:                 config.network.socksProxyPort === undefined;
+719:             const muxPort = needLocalProxy
+720:                 ? await startMuxProxyServer(sandboxAskCallback, portRange)
+721:                 : undefined;
+722:             const httpProxyPort = config.network.httpProxyPort ?? muxPort;
+723:             const socksProxyPort = config.network.socksProxyPort ?? muxPort;
+724:             // JVMs read neither HTTPS_PROXY nor its credential; the agent bridges
+725:             // both. Resolved once here, advertised via JAVA_TOOL_OPTIONS per command.
+726:             // Async: the global-npm fallback spawns `npm root -g`.
+727:             javaAgentJarPath =
+728:                 (await getJavaProxyAgentJarPathAsync(config.javaAgentJarPath)) ??
+729:                     undefined;
+730:             // Leaves are minted lazily per-CONNECT (after this point), so setting
+731:             // the CDP URL now means every leaf carries it. See MitmCA.crlUrl.
+732:             // Windows-only: on Linux the child runs under bwrap --unshare-net and
+733:             // reaches the proxy via a socat bridge on a fixed netns port, so a
+734:             // host-namespace mux port would be unreachable — worse than no CDP,
+735:             // since a Schannel-analog client (Java, OpenSSL with CRL_CHECK) then
+736:             // hard-fails "CRL fetch error" instead of soft-passing "no CDP". macOS
+737:             // has no in-tree Schannel-analog client. Also gated on `muxPort`: an
+738:             // external `network.httpProxyPort` doesn't answer /srt.crl.
+739:             if (mitmCA && muxPort !== undefined && getPlatform() === 'windows') {
+740:                 mitmCA.crlUrl = `http://127.0.0.1:${muxPort}${CRL_PATH}`;
+741:             }
+742:             if (config.network.httpProxyPort !== undefined) {
+743:                 logForDebugging(`Using external HTTP proxy on port ${httpProxyPort}`);
+744:             }
+745:             if (config.network.socksProxyPort !== undefined) {
+746:                 logForDebugging(`Using external SOCKS proxy on port ${socksProxyPort}`);
+747:             }
+748:             // Initialize platform-specific infrastructure
+749:             let linuxBridge;
+750:             if (getPlatform() === 'linux') {
+751:                 linuxBridge = await initializeLinuxNetworkBridge(httpProxyPort, socksProxyPort, config.socatPath);
+752:             }
+753:             const context = {
+754:                 httpProxyPort,
+755:                 socksProxyPort,
+756:                 linuxBridge,
+757:             };
+758:             managerContext = context;
+759:             logForDebugging('Network infrastructure initialized');
+760:             return context;
+761:         }
+762:         catch (error) {
+763:             // Clear state on error so initialization can be retried
+764:             initializationPromise = undefined;
+765:             managerContext = undefined;
+766:             reset().catch(e => {
+767:                 logForDebugging(`Cleanup failed in initializationPromise ${e}`, {
+768:                     level: 'error',
+769:                 });
+770:             });
+771:             throw error;
+772:         }
+773:     })();
+774:     await initializationPromise;
+775: }
+776: function isSupportedPlatform() {
+777:     const platform = getPlatform();
+778:     if (platform === 'linux') {
+779:         // WSL1 doesn't support bubblewrap
+780:         return getWslVersion() !== '1';
+781:     }
+782:     return platform === 'macos' || platform === 'windows';
+783: }
+784: function isSandboxingEnabled() {
+785:     // Sandboxing is enabled if config has been set (via initialize())
+786:     return config !== undefined;
+787: }
+788: /**
+789:  * Platform-independent part of the dependency check. Returns either
+790:  * a finished result (POSIX, unsupported platform, or a Windows
+791:  * srt-win resolution failure) or the inputs for the Windows probe —
+792:  * the only platform where the sync and async variants differ.
+793:  */
+794: function checkDependenciesCommon(ripgrepConfig) {
+795:     if (!isSupportedPlatform()) {
+796:         return { done: { errors: ['Unsupported platform'], warnings: [] } };
+797:     }
+798:     const errors = [];
+799:     const warnings = [];
+800:     const platform = getPlatform();
+801:     if (platform === 'linux') {
+802:         // ripgrep is Linux-only: it's used by linuxGetMandatoryDenyPaths() to
+803:         // expand glob deny-patterns to concrete paths for bwrap. macOS seatbelt
+804:         // profiles take regex patterns directly, so rg is never invoked there.
+805:         const rgToCheck = ripgrepConfig ?? config?.ripgrep ?? { command: 'rg' };
+806:         if (whichSync(rgToCheck.command) === null) {
+807:             errors.push(`ripgrep (${rgToCheck.command}) not found`);
+808:         }
+809:         const linuxDeps = checkLinuxDependencies({
+810:             seccompConfig: config?.seccomp,
+811:             bwrapPath: config?.bwrapPath,
+812:             socatPath: config?.socatPath,
+813:         });
+814:         errors.push(...linuxDeps.errors);
+815:         warnings.push(...linuxDeps.warnings);
+816:     }
+817:     else if (platform === 'windows') {
+818:         let srtWin;
+819:         try {
+820:             srtWin = resolveSrtWin(config?.windows?.srtWin);
+821:         }
+822:         catch (e) {
+823:             errors.push(e.message);
+824:             return { done: { errors, warnings } };
+825:         }
+826:         return {
+827:             windows: {
+828:                 sublayerGuid: config?.windows?.sublayerGuid ?? config?.windows?.wfpSublayerGuid,
+829:                 srtWin,
+830:             },
+831:         };
+832:     }
+833:     return { done: { errors, warnings } };
+834: }
+835: /**
+836:  * Check sandbox dependencies for the current platform
+837:  * @param ripgrepConfig - Ripgrep command to check. If not provided, uses config from initialization or defaults to 'rg'
+838:  * @returns { warnings, errors } - errors mean sandbox cannot run, warnings mean degraded functionality
+839:  */
+840: function checkDependencies(ripgrepConfig) {
+841:     const common = checkDependenciesCommon(ripgrepConfig);
+842:     if ('done' in common)
+843:         return common.done;
+844:     return checkWindowsDependencies(common.windows);
+845: }
+846: /**
+847:  * Async variant of {@link checkDependencies} — same result for the
+848:  * same underlying state. On Windows the srt-win probes run via
+849:  * `spawn` (never blocking the event loop) and concurrently; on other
+850:  * platforms the checks are native and this simply wraps the sync
+851:  * result. Windows callers should prefer this variant.
+852:  */
+853: async function checkDependenciesAsync(ripgrepConfig) {
+854:     // Linux: resolve apply-seccomp first so its global-npm fallback
+855:     // (`npm root -g`) runs off the event loop; the sync check below then
+856:     // hits the shared path cache.
+857:     if (getPlatform() === 'linux' && !config?.seccomp?.argv0) {
+858:         await getApplySeccompBinaryPathAsync(config?.seccomp?.applyPath);
+859:     }
+860:     const common = checkDependenciesCommon(ripgrepConfig);
+861:     if ('done' in common)
+862:         return common.done;
+863:     return checkWindowsDependenciesAsync(common.windows);
+864: }
+865: /**
+866:  * Build the read-deny / env-unset / env-set maps implied by the
+867:  * `credentials` config.
+868:  *
+869:  * Only explicitly declared sources are restricted: `mode: 'deny'` file
+870:  * entries join the read-deny set, `mode: 'deny'` env vars are unset, and
+871:  * `mode: 'mask'` env vars are set to a fake value (whole-value sentinel,
+872:  * the real value with extract-captured spans swapped for sentinels, or a
+873:  * JWT-shaped fake for `decode: 'jwt'` / `maskClaims` entries) registered
+874:  * in {@link sentinelRegistry} — see {@link buildMaskedEnvVars}.
+875:  */
+876: function getCredentialRestrictions(credentials, allowedDomains) {
+877:     if (!credentials) {
+878:         return {
+879:             denyReadPaths: [],
+880:             unsetEnvVars: [],
+881:             setEnvVars: {},
+882:             maskedFileBinds: [],
+883:             maskedFileStoreDir: undefined,
+884:             degradeToDenyPaths: [],
+885:         };
+886:     }
+887:     const denyReadPaths = getCredentialDenyReadPaths(credentials);
+888:     // Default injectHosts (= allowedDomains) is host-scoped: drop any
+889:     // `:port` suffixes, otherwise the sentinel would carry an entry no bare
+890:     // destination host can ever match and the credential would never inject.
+891:     const defaultInjectHosts = [
+892:         ...new Set((allowedDomains ?? []).map(stripDomainPatternPort)),
+893:     ];
+894:     const unsetEnvVars = [];
+895:     for (const v of credentials.envVars ?? []) {
+896:         if (v.mode === 'deny')
+897:             unsetEnvVars.push(v.name);
+898:     }
+899:     // Masked env vars: read the real value from the host environment,
+900:     // register sentinel(s), and set the variable to the fake value inside
+901:     // the sandbox. degradeToUnsetNames carries variables whose extract
+902:     // pattern matched nothing with onExtractNoMatch: "deny" — merged into
+903:     // unsetEnvVars below so the value is withheld rather than exposed.
+904:     const { setEnvVars, degradeToUnsetNames } = buildMaskedEnvVars(credentials.envVars ?? [], defaultInjectHosts, sentinelRegistry);
+905:     unsetEnvVars.push(...degradeToUnsetNames);
+906:     // Link masked AWS credentials into pairs so the proxy can re-sign
+907:     // SigV4 requests (the signature is derived from the secret; header
+908:     // substitution alone cannot fix it).
+909:     registerAwsPairs(credentials.envVars ?? [], credentials.awsPairs, defaultInjectHosts, setEnvVars, awsPairRegistry);
+910:     // Masked files: read the real bytes on the host, register a sentinel,
+911:     // write it to a fake file in the manager-owned temp dir. Missing/unreadable
+912:     // entries are skipped (same posture as an unset masked env var).
+913:     // degradeToDenyPaths carries paths whose extract pattern matched
+914:     // nothing with onExtractNoMatch: "deny" — merged into denyReadPaths
+915:     // below so both the read-deny config and the platform builders see
+916:     // them, and carried separately so they stay literal on the way there.
+917:     const files = credentials.files ?? [];
+918:     const { binds: maskedFileBinds, degradeToDenyPaths } = buildMaskedFileBinds(files, defaultInjectHosts, sentinelRegistry, maskedFileStore);
+919:     return {
+920:         denyReadPaths: [...new Set([...denyReadPaths, ...degradeToDenyPaths])],
+921:         unsetEnvVars: [...new Set(unsetEnvVars)],
+922:         setEnvVars,
+923:         maskedFileBinds,
+924:         maskedFileStoreDir: maskedFileStore.dirPath,
+925:         degradeToDenyPaths,
+926:     };
+927: }
+928: /**
+929:  * Pure (side-effect-free) chokepoint for credential file-deny
+930:  * paths — `credentials.files` entries with `mode: 'deny'`. Any
+931:  * code that needs the credential→denyRead contribution routes
+932:  * through here so a comparison predicate can read it without
+933:  * touching {@link sentinelRegistry}.
+934:  */
+935: function getCredentialDenyReadPaths(credentials) {
+936:     const files = credentials?.files ?? [];
+937:     return [...new Set(files.filter(f => f.mode === 'deny').map(f => f.path))];
+938: }
+939: /**
+940:  * The default write paths under a filesystem policy's read rules, for
+941:  * getFsWriteConfig() and wrapWithSandbox() alike. Fed the entries as
+942:  * configured, through the pure {@link getCredentialDenyReadPaths}: no glob
+943:  * expansion and no credential masking, because getFsWriteConfig() is a
+944:  * getter callers reach from permission checks and render paths. A mask entry
+945:  * that degrades to a deny is a file and cannot cover a directory, so
+946:  * leaving those out changes nothing.
+947:  */
+948: function defaultWritePathsUnder({ denyRead, allowRead, credentials, }) {
+949:     return getDefaultWritePaths({
+950:         denyRead: [...denyRead, ...getCredentialDenyReadPaths(credentials)],
+951:         allowRead,
+952:     });
+953: }
+954: /**
+955:  * Union the explicit `filesystem.denyRead` with credential-derived
+956:  * deny paths. The single source of "what files does this config
+957:  * want read-denied" — all platforms route through here so a new
+958:  * credential kind that contributes deny paths reaches every
+959:  * backend.
+960:  */
+961: function unionDenyReadPaths(denyRead, credentialRestrictions) {
+962:     return [...new Set([...denyRead, ...credentialRestrictions.denyReadPaths])];
+963: }
+964: /**
+965:  * Strip a trailing `/**` from each read-path entry and, on Linux, replace
+966:  * any remaining glob with what `expandGlob` returns for it (bubblewrap takes
+967:  * concrete paths only). Other platforms match globs natively.
+968:  *
+969:  * `literalPaths` are the ones the library resolved itself (a masked
+970:  * credential file that degraded to deny) — each names one file on disk, so
+971:  * it is passed through whatever characters it contains. Expanded as a
+972:  * pattern, a name holding `[` matches nothing and the deny is lost.
+973:  */
+974: function resolveReadPathEntries(paths, expandGlob, literalPaths = []) {
+975:     const literal = new Set(literalPaths);
+976:     return paths.flatMap(p => {
+977:         const stripped = removeTrailingGlobSuffix(p);
+978:         return getPlatform() === 'linux' &&
+979:             !literal.has(p) &&
+980:             containsGlobChars(stripped)
+981:             ? expandGlob(p)
+982:             : [stripped];
+983:     });
+984: }
+985: /**
+986:  * Strip a trailing `/**` and drop what is still a glob on Linux: bwrap needs
+987:  * real paths. macOS subpath matching is recursive, so the strip is harmless
+988:  * there and the filter never fires.
+989:  */
+990: function stripWriteGlobs(paths) {
+991:     return paths
+992:         .map(p => removeTrailingGlobSuffix(p))
+993:         .filter(p => {
+994:         if (getPlatform() === 'linux' && containsGlobChars(p)) {
+995:             logForDebugging(`[Sandbox] Skipping glob write pattern on Linux: ${p}`);
+996:             return false;
+997:         }
+998:         return true;
+999:     });
+1000: }
+1001: function expandAllowReadGlob(pattern) {
+1002:     const expanded = expandGlobPattern(pattern);
+1003:     logForDebugging(`[Sandbox] Expanded allowRead glob pattern "${pattern}" to ${expanded.length} paths on Linux`);
+1004:     return expanded;
+1005: }
+1006: /**
+1007:  * The read policy of the initialized config, for inspection and display.
+1008:  * On Linux, denyRead globs are collapsed to covering directory mounts against
+1009:  * this config's allowRead and {@link getFsWriteConfig}'s allowOnly, so
+1010:  * `denyOnly` is only sound alongside that write config and must not be handed
+1011:  * to wrapCommandWithSandboxLinux with a different one.
+1012:  */
+1013: function getFsReadConfig() {
+1014:     if (!config || config.filesystem.disabled) {
+1015:         return { denyOnly: [], allowWithinDeny: [] };
+1016:     }
+1017:     // Credential deny paths are unioned with the caller's denyRead — never
+1018:     // replacing it — so explicit filesystem restrictions always survive.
+1019:     const credentialRestrictions = getCredentialRestrictions(config.credentials, config.network.allowedDomains);
+1020:     // allowRead (re-allow within denied regions) is resolved first: the
+1021:     // denyRead glob expansion collapses against it.
+1022:     const allowPaths = resolveReadPathEntries(config.filesystem.allowRead ?? [], expandAllowReadGlob);
+1023:     const reExposedPaths = [...allowPaths, ...getFsWriteConfig().allowOnly];
+1024:     const unlistableDenyDirs = new Set();
+1025:     const denyPaths = resolveReadPathEntries(unionDenyReadPaths(config.filesystem.denyRead, credentialRestrictions), pattern => expandReadDenyGlobLinux(pattern, reExposedPaths, unlistableDenyDirs), credentialRestrictions.degradeToDenyPaths);
+1026:     return {
+1027:         denyOnly: denyPaths,
+1028:         allowWithinDeny: allowPaths,
+1029:         unlistableDenyDirs: [...unlistableDenyDirs],
+1030:     };
+1031: }
+1032: function getFsWriteConfig() {
+1033:     if (!config) {
+1034:         return { allowOnly: getDefaultWritePaths(), denyWithinAllow: [] };
+1035:     }
+1036:     if (config.filesystem.disabled) {
+1037:         return { allowOnly: ['/'], denyWithinAllow: [] };
+1038:     }
+1039:     const allowPaths = stripWriteGlobs(config.filesystem.allowWrite);
+1040:     const denyPaths = stripWriteGlobs(config.filesystem.denyWrite);
+1041:     const allowOnly = [
+1042:         ...defaultWritePathsUnder({
+1043:             denyRead: config.filesystem.denyRead,
+1044:             allowRead: config.filesystem.allowRead,
+1045:             credentials: config.credentials,
+1046:         }),
+1047:         ...allowPaths,
+1048:     ];
+1049:     return {
+1050:         allowOnly,
+1051:         denyWithinAllow: denyPaths,
+1052:     };
+1053: }
+1054: /**
+1055:  * Build the Windows file-access set (deny stamps + sandbox-user
+1056:  * grants) from `runtimeConfig`. Globs are expanded to concrete
+1057:  * paths (point-in-time — a path appearing after this returns is NOT
+1058:  * covered). Directory targets are accepted (the `(OI)(CI)` ACEs
+1059:  * cover the subtree).
+1060:  *
+1061:  * The sandbox user has no inherent rights on real-user-owned files,
+1062:  * so `allowWrite` (the working-tree roots) becomes a per-session
+1063:  * `MODIFY_NO_FDC` ALLOW ACE for `<sb-SID>`, `allowRead` a
+1064:  * `READ|EXECUTE` ALLOW ACE, and `denyRead`/`denyWrite` become an
+1065:  * explicit DENY ACE for `<sb-SID>` on the target plus a
+1066:  * `(OI)(CI) FILE_DELETE_CHILD` DENY on its parent.
+1067:  */
+1068: function computeWindowsFsAccessSet(c) {
+1069:     const fs = c.filesystem;
+1070:     // filesystem.disabled bypasses ALL filesystem rule generation —
+1071:     // same as the macOS/Linux wrapWithSandbox path (readConfig /
+1072:     // writeConfig left undefined). On Windows this means no ACL
+1073:     // stamp/grant; credential FILE denies are dropped along with the
+1074:     // rest (credential ENV: mode:'deny' is structural under the
+1075:     // fresh srt-sandbox env; mode:'mask' sentinels are passed via
+1076:     // the --env overlay).
+1077:     if (fs?.disabled) {
+1078:         return { grantRead: [], grantWrite: [], denyRead: [], denyWrite: [] };
+1079:     }
+1080:     const expand = expandWindowsFsPaths;
+1081:     // `mode: 'deny'` — non-existent literals reach srt-win, which
+1082:     // creates a placeholder chain and stamps it (deny lands on the
+1083:     // exact target path). `mode: 'grant'` drops them (a grant on
+1084:     // nothing is meaningless).
+1085:     const denyRead = expand([
+1086:         ...new Set([
+1087:             ...(fs?.denyRead ?? []),
+1088:             ...getCredentialDenyReadPaths(c.credentials),
+1089:         ]),
+1090:     ], { mode: 'deny' });
+1091:     const denyWrite = expand(fs?.denyWrite ?? [], { mode: 'deny' });
+1092:     return {
+1093:         // `allowRead` also serves as `allowWithinDeny`: a file under a
+1094:         // denied dir gets an explicit ALLOW ACE for the sandbox user,
+1095:         // and explicit DENY on the parent doesn't override it because
+1096:         // the recompose chokepoint orders deny-before-allow per-path.
+1097:         grantRead: expand(fs?.allowRead ?? [], { mode: 'grant' }),
+1098:         grantWrite: expand(fs?.allowWrite ?? [], { mode: 'grant' }),
+1099:         denyRead,
+1100:         denyWrite,
+1101:     };
+1102: }
+1103: /**
+1104:  * Snapshot the raw config fields that feed
+1105:  * {@link computeWindowsFsAccessSet}. Used by updateConfig() to
+1106:  * short-circuit the resolved-set diff (which re-runs glob
+1107:  * expansion) when nothing relevant changed.
+1108:  */
+1109: function rawWindowsFsInputs(c) {
+1110:     // Keyed exactly on what {@link computeWindowsFsAccessSet} reads.
+1111:     // `network.allowedDomains` does NOT feed file-deny (only mask
+1112:     // injectHosts), so a network-only updateConfig hits the cache.
+1113:     return {
+1114:         disabled: c.filesystem.disabled ?? false,
+1115:         denyRead: [...c.filesystem.denyRead],
+1116:         denyWrite: [...c.filesystem.denyWrite],
+1117:         allowRead: [...(c.filesystem.allowRead ?? [])],
+1118:         allowWrite: [...c.filesystem.allowWrite],
+1119:         credFiles: getCredentialDenyReadPaths(c.credentials),
+1120:     };
+1121: }
+1122: function setEq(a, b) {
+1123:     if (a.length !== b.length)
+1124:         return false;
+1125:     const s = new Set(a);
+1126:     return b.every(x => s.has(x));
+1127: }
+1128: function sameRawWindowsFsInputs(a, b) {
+1129:     return (a.disabled === b.disabled &&
+1130:         setEq(a.denyRead, b.denyRead) &&
+1131:         setEq(a.denyWrite, b.denyWrite) &&
+1132:         setEq(a.allowRead, b.allowRead) &&
+1133:         setEq(a.allowWrite, b.allowWrite) &&
+1134:         setEq(a.credFiles, b.credFiles));
+1135: }
+1136: /**
+1137:  * True when `newConfig`'s file-deny inputs match what was
+1138:  * stamped at initialize(). Compares raw inputs only (cheap,
+1139:  * order-insensitive); never re-expands globs — updateConfig is
+1140:  * warn-only on Windows and the resolved set wouldn't be used.
+1141:  */
+1142: function sameWindowsStampSet(newConfig) {
+1143:     return (windowsFsRawInputs !== undefined &&
+1144:         sameRawWindowsFsInputs(windowsFsRawInputs, rawWindowsFsInputs(newConfig)));
+1145: }
+1146: function getNetworkRestrictionConfig() {
+1147:     if (!config) {
+1148:         return {};
+1149:     }
+1150:     // Preserve an explicitly-empty allowlist: consumers need to distinguish
+1151:     // "no network restriction configured" (absent) from "allowlist configured
+1152:     // with zero entries" (block-all / ask-only). Stripping the empty array
+1153:     // made a host app's restriction-status UI report an airgapped config as
+1154:     // unrestricted. deniedHosts keeps the strip — an empty denylist and an
+1155:     // absent one are semantically identical.
+1156:     const allowedHosts = config.network.allowedDomains;
+1157:     const deniedHosts = config.network.deniedDomains;
+1158:     return {
+1159:         allowedHosts,
+1160:         ...(deniedHosts.length > 0 && { deniedHosts }),
+1161:     };
+1162: }
+1163: function getAllowUnixSockets() {
+1164:     return config?.network?.allowUnixSockets;
+1165: }
+1166: function getAllowAllUnixSockets() {
+1167:     return config?.network?.allowAllUnixSockets;
+1168: }
+1169: function getAllowLocalBinding() {
+1170:     return config?.network?.allowLocalBinding;
+1171: }
+1172: function getAllowMachLookup() {
+1173:     return config?.network?.allowMachLookup;
+1174: }
+1175: function getIgnoreViolations() {
+1176:     return config?.ignoreViolations;
+1177: }
+1178: function getEnableWeakerNestedSandbox() {
+1179:     return config?.enableWeakerNestedSandbox;
+1180: }
+1181: function getEnableWeakerNetworkIsolation() {
+1182:     return config?.enableWeakerNetworkIsolation;
+1183: }
+1184: function getAllowAppleEvents() {
+1185:     return config?.allowAppleEvents;
+1186: }
+1187: function getRipgrepConfig() {
+1188:     return config?.ripgrep ?? { command: 'rg' };
+1189: }
+1190: function getMandatoryDenySearchDepth() {
+1191:     return config?.mandatoryDenySearchDepth ?? 3;
+1192: }
+1193: function getAllowGitConfig() {
+1194:     return config?.filesystem?.allowGitConfig ?? false;
+1195: }
+1196: /**
+1197:  * Union of session-level and per-call `git.safeDirectories`. Marks
+1198:  * paths as `safe.directory` (dubious-ownership bypass) WITHOUT
+1199:  * touching the write grant — the repo top-level for a subdirectory
+1200:  * launch must NOT go in `filesystem.allowWrite`.
+1201:  */
+1202: function getGitSafeDirectories(customConfig) {
+1203:     return [
+1204:         ...(config?.git?.safeDirectories ?? []),
+1205:         ...(customConfig?.git?.safeDirectories ?? []),
+1206:     ];
+1207: }
+1208: function getSeccompConfig() {
+1209:     return config?.seccomp;
+1210: }
+1211: function getProxyAuthToken() {
+1212:     return proxyAuthToken;
+1213: }
+1214: function getProxyPort() {
+1215:     return managerContext?.httpProxyPort;
+1216: }
+1217: function getSocksProxyPort() {
+1218:     return managerContext?.socksProxyPort;
+1219: }
+1220: function getLinuxHttpSocketPath() {
+1221:     return managerContext?.linuxBridge?.httpSocketPath;
+1222: }
+1223: function getLinuxSocksSocketPath() {
+1224:     return managerContext?.linuxBridge?.socksSocketPath;
+1225: }
+1226: /**
+1227:  * Wait for network initialization to complete if already in progress
+1228:  * Returns true if initialized successfully, false otherwise
+1229:  */
+1230: async function waitForNetworkInitialization() {
+1231:     if (!config) {
+1232:         return false;
+1233:     }
+1234:     if (initializationPromise) {
+1235:         try {
+1236:             await initializationPromise;
+1237:             return true;
+1238:         }
+1239:         catch {
+1240:             return false;
+1241:         }
+1242:     }
+1243:     return managerContext !== undefined;
+1244: }
+1245: async function wrapWithSandbox(command, binShell, customConfig, abortSignal, options) {
+1246:     const platform = getPlatform();
+1247:     const commandId = options?.commandId;
+1248:     registerCommandText(command, options);
+1249:     // filesystem.disabled bypasses ALL filesystem rule generation. Both
+1250:     // platform wrappers treat readConfig/writeConfig === undefined as "no
+1251:     // filesystem restrictions" (seatbelt emits `(allow file-write*)`; bwrap
+1252:     // skips the `--ro-bind / /` root and all path binds).
+1253:     //
+1254:     // Precedence: when a caller passes a per-call filesystem override at all,
+1255:     // its `disabled` (defaulting to false) wins outright. A global
+1256:     // disabled=true must not silently discard a per-call tightening that
+1257:     // omits the new key.
+1258:     const fsDisabled = customConfig?.filesystem !== undefined
+1259:         ? (customConfig.filesystem.disabled ?? false)
+1260:         : (config?.filesystem.disabled ?? false);
+1261:     // Credential env handling is independent of filesystem policy: unsetEnvVars /
+1262:     // setEnvVars must be applied even when fsDisabled (the credential file
+1263:     // deny-reads are dropped, but env scrubbing still happens).
+1264:     const credentialRestrictions = getCredentialRestrictions(customConfig?.credentials ?? config?.credentials, customConfig?.network?.allowedDomains ?? config?.network?.allowedDomains);
+1265:     // Get configs - use custom if provided, otherwise fall back to main config
+1266:     // If neither exists, defaults to empty arrays (most restrictive)
+1267:     // Always include default system write paths (like /dev/null, /tmp/claude)
+1268:     let writeConfig;
+1269:     let readConfig;
+1270:     if (!fsDisabled) {
+1271:         const userAllowWrite = stripWriteGlobs(customConfig?.filesystem?.allowWrite ??
+1272:             config?.filesystem.allowWrite ??
+1273:             []);
+1274:         writeConfig = {
+1275:             allowOnly: [
+1276:                 ...defaultWritePathsUnder({
+1277:                     denyRead: customConfig?.filesystem?.denyRead ??
+1278:                         config?.filesystem.denyRead ??
+1279:                         [],
+1280:                     allowRead: customConfig?.filesystem?.allowRead ?? config?.filesystem.allowRead,
+1281:                     credentials: customConfig?.credentials ?? config?.credentials,
+1282:                 }),
+1283:                 ...userAllowWrite,
+1284:             ],
+1285:             denyWithinAllow: stripWriteGlobs(customConfig?.filesystem?.denyWrite ??
+1286:                 config?.filesystem.denyWrite ??
+1287:                 []),
+1288:         };
+1289:         // Credential deny paths are unioned with the caller's denyRead — never
+1290:         // replacing it — so explicit filesystem restrictions always survive.
+1291:         // allowRead is resolved first: on Linux a denyRead glob's expansion is
+1292:         // collapsed against the paths that re-expose contents under a denied
+1293:         // directory (allowRead + allowWrite), so both must be final here.
+1294:         const expandedAllowRead = resolveReadPathEntries(customConfig?.filesystem?.allowRead ?? config?.filesystem.allowRead ?? [], expandAllowReadGlob);
+1295:         // The TLS-termination CA cert and the trust bundle the env vars point at
+1296:         // (NODE_EXTRA_CA_CERTS etc.) must be readable by the child, even if their
+1297:         // paths fall under a user-configured denyRead.
+1298:         if (mitmCA) {
+1299:             expandedAllowRead.push(mitmCA.certPath, mitmCA.trustBundlePath);
+1300:         }
+1301:         // Likewise the JVM proxy agent jar JAVA_TOOL_OPTIONS points at.
+1302:         if (javaAgentJarPath) {
+1303:             expandedAllowRead.push(javaAgentJarPath);
+1304:         }
+1305:         const reExposedPaths = [...expandedAllowRead, ...writeConfig.allowOnly];
+1306:         const unlistableDenyDirs = new Set();
+1307:         const expandedDenyRead = resolveReadPathEntries(unionDenyReadPaths(customConfig?.filesystem?.denyRead ?? config?.filesystem.denyRead ?? [], credentialRestrictions), pattern => expandReadDenyGlobLinux(pattern, reExposedPaths, unlistableDenyDirs), credentialRestrictions.degradeToDenyPaths);
+1308:         readConfig = {
+1309:             denyOnly: expandedDenyRead,
+1310:             allowWithinDeny: expandedAllowRead,
+1311:             unlistableDenyDirs: [...unlistableDenyDirs],
+1312:         };
+1313:     }
+1314:     // Check if network config is specified - this determines if we need network restrictions
+1315:     // Network restriction is needed when:
+1316:     // 1. customConfig has network.allowedDomains defined (even if empty array = block all)
+1317:     // 2. OR config has network.allowedDomains defined (even if empty array = block all)
+1318:     // An empty allowedDomains array means "no domains allowed" = block all network access
+1319:     const hasNetworkConfig = customConfig?.network?.allowedDomains !== undefined ||
+1320:         config?.network?.allowedDomains !== undefined;
+1321:     // Network RESTRICTION is needed whenever network config is specified
+1322:     // This includes empty allowedDomains which means "block all network"
+1323:     const needsNetworkRestriction = hasNetworkConfig;
+1324:     // Network PROXY is needed whenever network config is specified
+1325:     // Even with empty allowedDomains, we route through proxy so that:
+1326:     // 1. updateConfig() can enable network access for already-running processes
+1327:     // 2. The proxy blocks all requests when allowlist is empty
+1328:     const needsNetworkProxy = hasNetworkConfig;
+1329:     // Wait for network initialization only if proxy is actually needed
+1330:     if (needsNetworkProxy) {
+1331:         await waitForNetworkInitialization();
+1332:     }
+1333:     // Check custom config to allow pseudo-terminal (can be applied dynamically)
+1334:     const allowPty = customConfig?.allowPty ?? config?.allowPty;
+1335:     const gitSafeDirectories = getGitSafeDirectories(customConfig);
+1336:     switch (platform) {
+1337:         case 'macos':
+1338:             // macOS sandbox profile supports glob patterns directly, no ripgrep needed
+1339:             return wrapCommandWithSandboxMacOS({
+1340:                 command,
+1341:                 commandId,
+1342:                 needsNetworkRestriction,
+1343:                 // Only pass proxy ports if proxy is running (when there are domains to filter)
+1344:                 httpProxyPort: needsNetworkProxy ? getProxyPort() : undefined,
+1345:                 socksProxyPort: needsNetworkProxy ? getSocksProxyPort() : undefined,
+1346:                 proxyAuthToken: needsNetworkProxy ? proxyAuthToken : undefined,
+1347:                 caCertPath: mitmCA?.trustBundlePath,
+1348:                 javaAgentJarPath: needsNetworkProxy ? javaAgentJarPath : undefined,
+1349:                 readConfig,
+1350:                 writeConfig,
+1351:                 unsetEnvVars: credentialRestrictions.unsetEnvVars,
+1352:                 setEnvVars: credentialRestrictions.setEnvVars,
+1353:                 maskedFileBinds: credentialRestrictions.maskedFileBinds,
+1354:                 degradeToDenyPaths: credentialRestrictions.degradeToDenyPaths,
+1355:                 allowUnixSockets: getAllowUnixSockets(),
+1356:                 allowAllUnixSockets: getAllowAllUnixSockets(),
+1357:                 allowLocalBinding: getAllowLocalBinding(),
+1358:                 allowMachLookup: getAllowMachLookup(),
+1359:                 ignoreViolations: getIgnoreViolations(),
+1360:                 allowPty,
+1361:                 allowGitConfig: getAllowGitConfig(),
+1362:                 gitSafeDirectories,
+1363:                 enableWeakerNetworkIsolation: getEnableWeakerNetworkIsolation(),
+1364:                 allowAppleEvents: getAllowAppleEvents(),
+1365:                 binShell,
+1366:             });
+1367:         case 'linux':
+1368:             return wrapCommandWithSandboxLinux({
+1369:                 command,
+1370:                 commandId,
+1371:                 needsNetworkRestriction,
+1372:                 // Only pass socket paths if proxy is running (when there are domains to filter)
+1373:                 httpSocketPath: needsNetworkProxy
+1374:                     ? getLinuxHttpSocketPath()
+1375:                     : undefined,
+1376:                 socksSocketPath: needsNetworkProxy
+1377:                     ? getLinuxSocksSocketPath()
+1378:                     : undefined,
+1379:                 httpProxyPort: needsNetworkProxy
+1380:                     ? managerContext?.httpProxyPort
+1381:                     : undefined,
+1382:                 socksProxyPort: needsNetworkProxy
+1383:                     ? managerContext?.socksProxyPort
+1384:                     : undefined,
+1385:                 proxyAuthToken: needsNetworkProxy ? proxyAuthToken : undefined,
+1386:                 caCertPath: mitmCA?.trustBundlePath,
+1387:                 javaAgentJarPath: needsNetworkProxy ? javaAgentJarPath : undefined,
+1388:                 readConfig,
+1389:                 writeConfig,
+1390:                 unsetEnvVars: credentialRestrictions.unsetEnvVars,
+1391:                 setEnvVars: credentialRestrictions.setEnvVars,
+1392:                 maskedFileBinds: credentialRestrictions.maskedFileBinds,
+1393:                 maskedFileStoreDir: credentialRestrictions.maskedFileStoreDir,
+1394:                 enableWeakerNestedSandbox: getEnableWeakerNestedSandbox(),
+1395:                 allowAllUnixSockets: getAllowAllUnixSockets(),
+1396:                 binShell,
+1397:                 ripgrepConfig: getRipgrepConfig(),
+1398:                 mandatoryDenySearchDepth: getMandatoryDenySearchDepth(),
+1399:                 allowGitConfig: getAllowGitConfig(),
+1400:                 gitSafeDirectories,
+1401:                 seccompConfig: getSeccompConfig(),
+1402:                 bwrapPath: config?.bwrapPath,
+1403:                 socatPath: config?.socatPath,
+1404:                 observeSocketPath: linuxMonitor?.observeSocketPath,
+1405:                 abortSignal,
+1406:             });
+1407:         case 'windows':
+1408:             // Windows wraps to an argv array, not a shell string. Forcing
+1409:             // callers through wrapWithSandboxArgv() means they spawn with
+1410:             // {shell:false}, which is the security boundary that keeps the
+1411:             // user's command bytes off the HOST shell.
+1412:             throw new Error('wrapWithSandbox() returns a shell string and is not supported ' +
+1413:                 'on Windows. Use SandboxManager.wrapWithSandboxArgv() and ' +
+1414:                 'spawn the result with {shell: false}.');
+1415:         default:
+1416:             // Unsupported platform - this should not happen since isSandboxingEnabled() checks platform support
+1417:             throw new Error(`Sandbox configuration is not supported on platform: ${platform}`);
+1418:     }
+1419: }
+1420: /**
+1421:  * Wrap `command` for the sandbox and return a spawn descriptor:
+1422:  * `{ argv, env }`, suitable for
+1423:  * `spawn(argv[0], argv.slice(1), {shell: false, env})`.
+1424:  *
+1425:  * On Windows this is the ONLY supported wrap method (see
+1426:  * {@link wrapWithSandbox}); `env` is the broker process's spawn env
+1427:  * — the sandboxed child gets a fresh `srt-sandbox` profile env with
+1428:  * only the `--env` overlay baked into `argv` (see
+1429:  * {@link wrapCommandWithSandboxWindows}). On
+1430:  * macOS/Linux `argv` is `[binShell, '-c', <wrapWithSandbox result>]`
+1431:  * (proxy env is baked into that command) and `env` is the unchanged
+1432:  * `process.env`, so callers can spawn uniformly across platforms.
+1433:  *
+1434:  * @param cwd the working directory the caller will spawn the result
+1435:  *   with. On Windows the child's cwd is whatever the caller passes
+1436:  *   as the spawn `{cwd:}` option (there is no `--cwd` flag), and
+1437:  *   the `safe.directory` git-config injection derives from this — so
+1438:  *   pass the same value here as to `spawn({cwd})`. Defaults to
+1439:  *   `process.cwd()`. Currently unused on macOS/Linux.
+1440:  */
+1441: async function wrapWithSandboxArgv(command, binShell, customConfig, abortSignal, cwd, options) {
+1442:     const platform = getPlatform();
+1443:     if (platform === 'windows') {
+1444:         const hasNetworkConfig = customConfig?.network?.allowedDomains !== undefined ||
+1445:             config?.network?.allowedDomains !== undefined;
+1446:         if (hasNetworkConfig) {
+1447:             await waitForNetworkInitialization();
+1448:         }
+1449:         const credentialRestrictions = getCredentialRestrictions(customConfig?.credentials ?? config?.credentials, customConfig?.network?.allowedDomains ?? config?.network?.allowedDomains);
+1450:         // Per-exec FILE denies (customConfig only — the session-level
+1451:         // config's denies were already stamped at initialize()).
+1452:         // Paths go through `expandWindowsFsPaths` — the SAME
+1453:         // chokepoint the session-level set uses (point-in-time glob
+1454:         // expand, normalize, missing→drop) — so a per-exec entry
+1455:         // resolves identically to its session-level equivalent.
+1456:         // macOS/Linux per-exec already reuses session-level expansion;
+1457:         // Windows now matches.
+1458:         //
+1459:         // The dedup against `windowsFsStampedSet` is an OPTIMIZATION,
+1460:         // not a correctness gate: re-stamping a session-held path
+1461:         // under the exec's distinct holder is refcount-safe but wastes
+1462:         // a SetSecurityInfo round-trip.
+1463:         //
+1464:         // filesystem.disabled bypasses ALL filesystem rule generation
+1465:         // — including credential-derived file denies — same ordering
+1466:         // as session-level `computeWindowsFsAccessSet` (credential
+1467:         // ENV: mode:'deny' is structural under the fresh srt-sandbox
+1468:         // env; mode:'mask' sentinels are passed via the --env
+1469:         // overlay).
+1470:         // Per-exec allowRead/allowWrite throw — `srt-win exec` only
+1471:         // exposes `--deny-*`; per-exec grants are not implemented.
+1472:         const fsCfg = customConfig?.filesystem;
+1473:         let perExecDenyRead = [];
+1474:         let perExecDenyWrite = [];
+1475:         if (!fsCfg?.disabled) {
+1476:             if (fsCfg?.allowRead?.length || fsCfg?.allowWrite?.length) {
+1477:                 throw new Error(`Per-exec filesystem.allowRead/allowWrite is not supported ` +
+1478:                     `on Windows — \`srt-win exec\` only exposes per-exec ` +
+1479:                     `denies. Set them at the session level (initialize()).`);
+1480:             }
+1481:             const rawRead = [
+1482:                 ...(fsCfg?.denyRead ?? []),
+1483:                 ...getCredentialDenyReadPaths(customConfig?.credentials),
+1484:             ];
+1485:             const rawWrite = fsCfg?.denyWrite ?? [];
+1486:             // Skip on the dominant path (no per-exec fs or
+1487:             // credential-file deny).
+1488:             if (rawRead.length > 0 || rawWrite.length > 0) {
+1489:                 const sessRead = new Set(windowsFsStampedSet?.denyRead ?? []);
+1490:                 const sessWrite = new Set(windowsFsStampedSet?.denyWrite ?? []);
+1491:                 const expand = expandWindowsFsPaths;
+1492:                 perExecDenyRead = expand(rawRead, { mode: 'deny' }).filter(p => !sessRead.has(p));
+1493:                 perExecDenyWrite = expand(rawWrite, { mode: 'deny' }).filter(p => !sessRead.has(p) && !sessWrite.has(p));
+1494:             }
+1495:         }
+1496:         // Per-exec deny rides on argv (`acl stamp` reads stdin, but
+1497:         // exec's stdin belongs to the child). The CreateProcessW
+1498:         // length check lives in `wrapCommandWithSandboxWindows`
+1499:         // where the full argv (incl. shell + user command) is known.
+1500:         //
+1501:         // The `denyReadPaths` half of the SESSION-level credentials
+1502:         // is already unioned into the stamp set at initialize() time
+1503:         // via `computeWindowsFsAccessSet`.
+1504:         registerCommandText(command, options);
+1505:         return wrapCommandWithSandboxWindows({
+1506:             command,
+1507:             commandId: options?.commandId,
+1508:             httpProxyPort: hasNetworkConfig ? getProxyPort() : undefined,
+1509:             socksProxyPort: hasNetworkConfig ? getSocksProxyPort() : undefined,
+1510:             proxyAuthToken: hasNetworkConfig ? proxyAuthToken : undefined,
+1511:             // mode:'deny' env vars are structurally absent (fresh
+1512:             // srt-sandbox profile env). mode:'mask' sentinels are
+1513:             // passed via the --env overlay so the sandboxed child sees
+1514:             // the sentinel value, same as macOS/Linux.
+1515:             setEnvVars: credentialRestrictions.setEnvVars,
+1516:             denyRead: perExecDenyRead,
+1517:             denyWrite: perExecDenyWrite,
+1518:             // safe.directory: cwd + the resolved session-level write
+1519:             // grants + explicit git.safeDirectories — the working-tree
+1520:             // roots the sandbox user has MODIFY on plus any repo top-level
+1521:             // the caller marks as safe without granting write.
+1522:             cwd,
+1523:             allowWrite: windowsFsStampedSet?.grantWrite,
+1524:             gitSafeDirectories: getGitSafeDirectories(customConfig),
+1525:             caCertPath: mitmCA?.trustBundlePath,
+1526:             binShell: parseWindowsBinShell(binShell),
+1527:             srtWin: customConfig?.windows?.srtWin
+1528:                 ? resolveSrtWin(customConfig.windows.srtWin)
+1529:                 : (srtWinSpawn ?? resolveSrtWin(config?.windows?.srtWin)),
+1530:         });
+1531:     }
+1532:     // macOS/Linux: delegate to the existing string wrapper, then put
+1533:     // the result behind `<shell> -c` so the caller's argv-spawn works.
+1534:     if (typeof binShell === 'object') {
+1535:         throw new Error('binShell object form is Windows-only; pass a shell path string ' +
+1536:             'on macOS/Linux');
+1537:     }
+1538:     const wrapped = await wrapWithSandbox(command, binShell, customConfig, abortSignal, options);
+1539:     const shell = binShell ?? '/bin/bash';
+1540:     return { argv: [shell, '-c', wrapped], env: process.env };
+1541: }
+1542: /**
+1543:  * Get the current sandbox configuration
+1544:  * @returns The current configuration, or undefined if not initialized
+1545:  */
+1546: function getConfig() {
+1547:     return config;
+1548: }
+1549: /**
+1550:  * Update the sandbox configuration in place.
+1551:  *
+1552:  * **Network/allowlist changes are a live swap**: the running
+1553:  * mux proxy reads `config.network.allowedDomains` /
+1554:  * `deniedDomains` per-request (via `filterNetworkRequest`), so
+1555:  * reassigning `config` here takes effect on the next connection
+1556:  * with no proxy rebind and no port change — on every platform,
+1557:  * including Windows. This is what lets a host enable/deny domains
+1558:  * for already-running sandboxed children.
+1559:  *
+1560:  * Filesystem changes (denyRead/denyWrite) are NOT applied live:
+1561:  * macOS bakes them into the seatbelt profile at wrap time, and
+1562:  * Linux/Windows bake them into the bwrap argv / DENY-ACE set at
+1563:  * wrap time. Call reset() + initialize() to apply a new
+1564:  * filesystem config.
+1565:  *
+1566:  * @param newConfig - The new configuration to use
+1567:  */
+1568: function updateConfig(newConfig) {
+1569:     if (getPlatform() === 'windows' &&
+1570:         config &&
+1571:         !sameWindowsStampSet(newConfig)) {
+1572:         logForDebugging(`[Sandbox Windows] updateConfig: the resolved file-access set ` +
+1573:             `(filesystem.* ∪ credentials.files) changed but the ACL ` +
+1574:             `stamp/grant is session-wide — call reset() then initialize() ` +
+1575:             `to apply. The previously-applied set stays in effect.`, { level: 'warn' });
+1576:     }
+1577:     // Built before anything is swapped, so a malformed range leaves the
+1578:     // previous config fully in effect.
+1579:     const nextGuard = createResolvedAddressGuard(newConfig.network);
+1580:     // Deep clone the config to avoid mutations. structuredClone cannot clone
+1581:     // functions, so pull filterRequest out, clone the rest, and put it back —
+1582:     // a function reference is immutable in the sense that matters here.
+1583:     const { filterRequest, ...rest } = newConfig.network;
+1584:     config = structuredClone({ ...newConfig, network: rest });
+1585:     config.network.filterRequest = filterRequest;
+1586:     resolvedAddressGuard = nextGuard;
+1587:     // Re-resolve parent proxy so hot-reload picks up changes. Note: the proxy
+1588:     // servers capture `parentProxy` by value at creation, so changes here take
+1589:     // effect only on re-initialize. This keeps the state consistent for the
+1590:     // next initialize() call.
+1591:     parentProxy = resolveParentProxy(newConfig.network.parentProxy);
+1592:     logForDebugging('Sandbox configuration updated');
+1593: }
+1594: /**
+1595:  * Lightweight cleanup to call after each sandboxed command completes.
+1596:  *
+1597:  * On Linux, bwrap creates empty files on the host filesystem as mount points
+1598:  * when protecting non-existent deny paths (e.g. ~/.bashrc, ~/.gitconfig).
+1599:  * These persist after bwrap exits. This function removes them.
+1600:  *
+1601:  * Safe to call on any platform — it's a no-op on macOS.
+1602:  * Also called automatically by reset() and on process exit as safety nets.
+1603:  */
+1604: function cleanupAfterCommand() {
+1605:     cleanupBwrapMountPoints();
+1606: }
+1607: /**
+1608:  * How long to wait for a bridge process to exit after SIGTERM before
+1609:  * escalating to SIGKILL.
+1610:  *
+1611:  * socat exits within ~10ms of SIGTERM; this is purely a safety margin.
+1612:  * Keep it well below bun's default 5s test/hook timeout: when a bridge's
+1613:  * `'exit'` event is missed entirely (a Linux-only Bun pidfd notification
+1614:  * bug, oven-sh/bun#30301), this timer is the only thing that lets `reset()`
+1615:  * make progress, and a 5000ms value here loses the race against the hook
+1616:  * timer by a couple of milliseconds — that race was the dominant CI flake.
+1617:  */
+1618: const BRIDGE_EXIT_TIMEOUT_MS = 1500;
+1619: /**
+1620:  * SIGTERM a bridge process and resolve once it has exited.
+1621:  *
+1622:  * Returns immediately if the process has already exited (`.exitCode` /
+1623:  * `.signalCode` set) — registering `.once('exit')` after the event has
+1624:  * already been emitted produces a listener that never fires.
+1625:  *
+1626:  * Falls back to SIGKILL after {@link BRIDGE_EXIT_TIMEOUT_MS}.
+1627:  */
+1628: function killBridgeProcess(proc, label) {
+1629:     // Already exited → 'exit' already emitted → a fresh once('exit') would
+1630:     // never fire. Don't wait on it.
+1631:     if (!proc.pid || proc.exitCode !== null || proc.signalCode !== null) {
+1632:         return Promise.resolve();
+1633:     }
+1634:     try {
+1635:         process.kill(proc.pid, 'SIGTERM');
+1636:         logForDebugging(`Sent SIGTERM to ${label} bridge process`);
+1637:     }
+1638:     catch (err) {
+1639:         if (err.code !== 'ESRCH') {
+1640:             logForDebugging(`Error killing ${label} bridge: ${err}`, {
+1641:                 level: 'error',
+1642:             });
+1643:         }
+1644:         // ESRCH = process already gone; nothing to wait for either way.
+1645:         return Promise.resolve();
+1646:     }
+1647:     return new Promise(resolve => {
+1648:         let settled = false;
+1649:         const done = () => {
+1650:             if (settled)
+1651:                 return;
+1652:             settled = true;
+1653:             clearTimeout(timer);
+1654:             resolve();
+1655:         };
+1656:         proc.once('exit', () => {
+1657:             logForDebugging(`${label} bridge process exited`);
+1658:             done();
+1659:         });
+1660:         const timer = setTimeout(() => {
+1661:             // Re-check liveness — the 'exit' may have raced us.
+1662:             if (proc.exitCode === null && proc.signalCode === null) {
+1663:                 logForDebugging(`${label} bridge did not exit, forcing SIGKILL`, {
+1664:                     level: 'warn',
+1665:                 });
+1666:                 try {
+1667:                     if (proc.pid)
+1668:                         process.kill(proc.pid, 'SIGKILL');
+1669:                 }
+1670:                 catch {
+1671:                     // Process may have already exited
+1672:                 }
+1673:             }
+1674:             done();
+1675:         }, BRIDGE_EXIT_TIMEOUT_MS);
+1676:         // The bridge process is being torn down; this timer must not be the
+1677:         // only thing keeping the event loop alive.
+1678:         timer.unref?.();
+1679:     });
+1680: }
+1681: /**
+1682:  * Forcibly close an http.Server, including any in-flight requests.
+1683:  *
+1684:  * Plain `server.close()` waits for every active request to finish.
+1685:  * The proxy may be mid-upstream-request when reset() runs (e.g. a test's
+1686:  * curl was killed by --max-time while the proxy was still dialing the
+1687:  * real example.com / api.github.com), and `dialDirect()` allows up to
+1688:  * 30s before giving up. Combined with a socat fork that hasn't yet seen
+1689:  * its unix-socket EOF, that leaves a fully-open inbound connection and
+1690:  * `server.close()` never calls back. `closeAllConnections()` (Node 18.2+,
+1691:  * also implemented in Bun) tears down those sockets so `close()` resolves
+1692:  * immediately.
+1693:  */
+1694: function forceCloseHttpServer(server) {
+1695:     return new Promise(resolve => {
+1696:         // Must run *before* close(): in Bun, close() also detaches the
+1697:         // underlying handle, so a closeAllConnections() called afterwards
+1698:         // becomes a no-op and the close callback waits for the in-flight
+1699:         // request to drain — defeating the purpose. With closeAllConnections()
+1700:         // first, the connections are gone by the time close() runs and its
+1701:         // callback fires immediately (Bun reports "Server is not running.",
+1702:         // Node reports no error). Verified against both orderings.
+1703:         if (typeof server.closeAllConnections === 'function') {
+1704:             server.closeAllConnections();
+1705:         }
+1706:         server.close(error => {
+1707:             if (error && error.message !== 'Server is not running.') {
+1708:                 logForDebugging(`Error closing HTTP proxy server: ${error.message}`, {
+1709:                     level: 'error',
+1710:                 });
+1711:             }
+1712:             resolve();
+1713:         });
+1714:     });
+1715: }
+1716: async function reset() {
+1717:     // Windows: release this session's sandbox-user ACEs. Best-effort
+1718:     // — log anomalies rather than throw, so teardown always
+1719:     // completes. Leftover ACEs are recoverable later via
+1720:     // `srt-win acl recover` (which sweeps by trustee SID).
+1721:     if (windowsFsStampedSet && windowsFsSbUserSid) {
+1722:         const sb = windowsFsSbUserSid;
+1723:         // Captured at initialize() — the SAME binary the grants/stamps
+1724:         // were applied with, immune to `config` mutation between.
+1725:         const srtWin = srtWinSpawn;
+1726:         // 'restored'/'alreadyOriginal' are the pre- same-user-removal
+1727:         // srt-win's success vocabulary; 'revoked'/'stillHeld' are the
+1728:         // post-. Either is non-anomalous.
+1729:         const ok = new Set(['revoked', 'stillHeld', 'restored', 'alreadyOriginal']);
+1730:         const log = (kind, e) => {
+1731:             if (!ok.has(e.status)) {
+1732:                 logForDebugging(`[Sandbox Windows] ${kind}: '${e.path}' ${e.status} — ` +
+1733:                     `ACE may be left in place; resolve and run ` +
+1734:                     `\`srt-win acl recover\` to clear`, { level: 'warn' });
+1735:             }
+1736:         };
+1737:         for (const e of revokeWindowsAcl({ sandboxUserSid: sb, srtWin }) ?? []) {
+1738:             log('grant revoke', e);
+1739:         }
+1740:         for (const e of restoreWindowsAcl({ sandboxUserSid: sb, srtWin }) ?? []) {
+1741:             log('deny restore', e);
+1742:         }
+1743:     }
+1744:     windowsFsStampedSet = undefined;
+1745:     windowsFsSbUserSid = undefined;
+1746:     windowsFsRawInputs = undefined;
+1747:     srtWinSpawn = undefined;
+1748:     // windowsWfpVerified is NOT cleared — per-process, not per-session.
+1749:     // Clean up any leftover bwrap mount points. Force past the
+1750:     // active-sandbox counter — reset() means the session is over.
+1751:     cleanupBwrapMountPoints({ force: true });
+1752:     // Stop log monitor
+1753:     if (logMonitorShutdown) {
+1754:         logMonitorShutdown();
+1755:         logMonitorShutdown = undefined;
+1756:     }
+1757:     if (linuxMonitor) {
+1758:         linuxMonitor.stop();
+1759:         linuxMonitor = undefined;
+1760:     }
+1761:     if (managerContext?.linuxBridge) {
+1762:         const { httpSocketPath, socksSocketPath, httpBridgeProcess, socksBridgeProcess, } = managerContext.linuxBridge;
+1763:         // Kill both bridges and wait for them to exit
+1764:         await Promise.all([
+1765:             killBridgeProcess(httpBridgeProcess, 'HTTP'),
+1766:             killBridgeProcess(socksBridgeProcess, 'SOCKS'),
+1767:         ]);
+1768:         // Clean up sockets
+1769:         if (httpSocketPath) {
+1770:             try {
+1771:                 fs.rmSync(httpSocketPath, { force: true });
+1772:                 logForDebugging('Cleaned up HTTP socket');
+1773:             }
+1774:             catch (err) {
+1775:                 logForDebugging(`HTTP socket cleanup error: ${err}`, {
+1776:                     level: 'error',
+1777:                 });
+1778:             }
+1779:         }
+1780:         if (socksSocketPath) {
+1781:             try {
+1782:                 fs.rmSync(socksSocketPath, { force: true });
+1783:                 logForDebugging('Cleaned up SOCKS socket');
+1784:             }
+1785:             catch (err) {
+1786:                 logForDebugging(`SOCKS socket cleanup error: ${err}`, {
+1787:                     level: 'error',
+1788:                 });
+1789:             }
+1790:         }
+1791:     }
+1792:     // Close servers in parallel (only if they exist, i.e., were started by us)
+1793:     const closePromises = [];
+1794:     if (mitmCA) {
+1795:         closePromises.push(disposeMitmCA(mitmCA));
+1796:     }
+1797:     if (muxProxyServer) {
+1798:         closePromises.push(muxProxyServer.close().catch((error) => {
+1799:             logForDebugging(`Error closing mux proxy server: ${error.message}`, {
+1800:                 level: 'error',
+1801:             });
+1802:         }));
+1803:     }
+1804:     if (httpProxyServer) {
+1805:         closePromises.push(forceCloseHttpServer(httpProxyServer));
+1806:     }
+1807:     if (socksProxyServer) {
+1808:         const socksClose = socksProxyServer.close().catch((error) => {
+1809:             logForDebugging(`Error closing SOCKS proxy server: ${error.message}`, {
+1810:                 level: 'error',
+1811:             });
+1812:         });
+1813:         closePromises.push(socksClose);
+1814:     }
+1815:     // Wait for all servers to close
+1816:     await Promise.all(closePromises);
+1817:     // Clear references
+1818:     muxProxyServer = undefined;
+1819:     httpProxyServer = undefined;
+1820:     proxyAuthToken = undefined;
+1821:     socksProxyServer = undefined;
+1822:     managerContext = undefined;
+1823:     initializationPromise = undefined;
+1824:     parentProxy = undefined;
+1825:     resolvedAddressGuard = createResolvedAddressGuard();
+1826:     mitmCA = undefined;
+1827:     javaAgentJarPath = undefined;
+1828:     sentinelRegistry.clear();
+1829:     awsPairRegistry.clear();
+1830:     commandTextsByKey.clear();
+1831:     maskedFileStore.dispose();
+1832: }
+1833: function getSandboxViolationStore() {
+1834:     return sandboxViolationStore;
+1835: }
+1836: function annotateStderrWithSandboxFailures(command, stderr) {
+1837:     if (!config) {
+1838:         return stderr;
+1839:     }
+1840:     const violations = sandboxViolationStore.getViolationsForCommand(command);
+1841:     if (violations.length === 0) {
+1842:         return stderr;
+1843:     }
+1844:     let annotated = stderr;
+1845:     annotated += EOL + '<sandbox_violations>' + EOL;
+1846:     for (const violation of violations) {
+1847:         annotated += violation.line + EOL;
+1848:     }
+1849:     annotated += '</sandbox_violations>';
+1850:     return annotated;
+1851: }
+1852: /**
+1853:  * Returns glob patterns from Edit/Read permission rules that are not
+1854:  * fully supported on Linux. Returns empty array on macOS or when
+1855:  * sandboxing is disabled.
+1856:  *
+1857:  * Patterns ending with /** are excluded since they work as subpaths.
+1858:  */
+1859: function getLinuxGlobPatternWarnings() {
+1860:     // Only warn on Linux/WSL (bubblewrap doesn't support globs)
+1861:     // macOS supports glob patterns via regex conversion
+1862:     if (getPlatform() !== 'linux' || !config || config.filesystem.disabled) {
+1863:         return [];
+1864:     }
+1865:     const globPatterns = [];
+1866:     // Write paths take no globs at all on Linux: bubblewrap binds concrete
+1867:     // paths, and nothing expands them.
+1868:     const allPaths = [
+1869:         ...config.filesystem.allowWrite,
+1870:         ...config.filesystem.denyWrite,
+1871:     ];
+1872:     for (const path of allPaths) {
+1873:         // Strip trailing /** since that's just a subpath (directory and everything under it)
+1874:         const pathWithoutTrailingStar = removeTrailingGlobSuffix(path);
+1875:         // Only warn if there are still glob characters after removing trailing /**
+1876:         if (containsGlobChars(pathWithoutTrailingStar)) {
+1877:             globPatterns.push(path);
+1878:         }
+1879:     }
+1880:     // Read paths are expanded, so a glob there is supported — unless the
+1881:     // pattern has no literal directory for the walk to start from (a wildcard
+1882:     // in its first path component, `/**/*.pem`), which expands to nothing and
+1883:     // leaves the entry unenforced.
+1884:     for (const path of [
+1885:         ...config.filesystem.denyRead,
+1886:         ...(config.filesystem.allowRead ?? []),
+1887:     ]) {
+1888:         const baseDir = globPatternBaseDir(normalizePathForSandbox(path));
+1889:         if (containsGlobChars(removeTrailingGlobSuffix(path)) &&
+1890:             (baseDir === '' || baseDir === '/')) {
+1891:             globPatterns.push(path);
+1892:         }
+1893:     }
+1894:     return globPatterns;
+1895: }
+1896: // ============================================================================
+1897: // Export as Namespace with Interface
+1898: // ============================================================================
+1899: /**
+1900:  * Global sandbox manager that handles both network and filesystem restrictions
+1901:  * for this session. This runs outside of the sandbox, on the host machine.
+1902:  */
+1903: export const SandboxManager = {
+1904:     initialize,
+1905:     isSupportedPlatform,
+1906:     isSandboxingEnabled,
+1907:     checkDependencies,
+1908:     checkDependenciesAsync,
+1909:     getFsReadConfig,
+1910:     getFsWriteConfig,
+1911:     getNetworkRestrictionConfig,
+1912:     getAllowUnixSockets,
+1913:     getAllowLocalBinding,
+1914:     getAllowMachLookup,
+1915:     getIgnoreViolations,
+1916:     getEnableWeakerNestedSandbox,
+1917:     getProxyPort,
+1918:     getProxyAuthToken,
+1919:     getSocksProxyPort,
+1920:     getLinuxHttpSocketPath,
+1921:     getLinuxSocksSocketPath,
+1922:     waitForNetworkInitialization,
+1923:     wrapWithSandbox,
+1924:     wrapWithSandboxArgv,
+1925:     cleanupAfterCommand,
+1926:     reset,
+1927:     getMitmCA: () => mitmCA,
+1928:     getSentinelRegistry: () => sentinelRegistry,
+1929:     getAwsPairRegistry: () => awsPairRegistry,
+1930:     getMaskedFileStore: () => maskedFileStore,
+1931:     getSandboxViolationStore,
+1932:     annotateStderrWithSandboxFailures,
+1933:     getLinuxGlobPatternWarnings,
+1934:     getConfig,
+1935:     updateConfig,
+1936: };
+1937: //# sourceMappingURL=sandbox-manager.js.map
+
+FILE dist/sandbox/mux-proxy.js
+1: import { createServer, connect } from 'node:net';
+2: import { join } from 'node:path';
+3: import { tmpdir } from 'node:os';
+4: import { unlink } from 'node:fs/promises';
+5: import { logForDebugging } from '../utils/debug.js';
+6: import { getPlatform } from '../utils/platform.js';
+7: import { listenInRange } from './listen-in-range.js';
+8: /**
+9:  * First-byte values that select the SOCKS handler. SOCKS5's greeting is
+10:  * `VER NMETHODS METHODS...` with VER=0x05; SOCKS4's CONNECT is
+11:  * `VN CD DSTPORT...` with VN=0x04. Everything else on this port is HTTP:
+12:  * request methods start with an ASCII uppercase letter (>= 0x41 'A'),
+13:  * h2-prior-knowledge starts `PRI ` (0x50), and a stray TLS ClientHello
+14:  * starts 0x16 — none of which collide with 0x04/0x05. A one-byte peek is
+15:  * therefore an unambiguous discriminator.
+16:  */
+17: const SOCKS_FIRST_BYTES = new Set([0x04, 0x05]);
+18: const DEFAULT_FIRST_BYTE_TIMEOUT_MS = 10000;
+19: let backendSeq = 0;
+20: function unixSocketPath() {
+21:     // Keep it short — macOS sun_path is 104 bytes.
+22:     return join(tmpdir(), `srt-mux-${process.pid}-${(backendSeq++).toString(36)}.sock`);
+23: }
+24: /**
+25:  * Single-port proxy front-end that dispatches each connection to either the
+26:  * SOCKS handler or the HTTP proxy based on the first byte the client sends.
+27:  *
+28:  * The HTTP leg cannot use `httpServer.emit('connection', socket)` because
+29:  * Bun's `http.Server` does not implement that injection path (Node does).
+30:  * Instead the HTTP backend listens on a private endpoint — a unix socket on
+31:  * macOS/Linux, a localhost TCP port on Windows — and the mux pipes the
+32:  * client socket to it. SOCKS connections are handed directly to the
+33:  * library's per-connection entry, no extra hop.
+34:  */
+35: export function createMuxProxyServer(opts) {
+36:     const firstByteTimeoutMs = opts.firstByteTimeoutMs ?? DEFAULT_FIRST_BYTE_TIMEOUT_MS;
+37:     const isWindows = getPlatform() === 'windows';
+38:     // Where the HTTP backend listens. Exactly one of these is set after
+39:     // listenHttpBackend() resolves.
+40:     let backendSocketPath;
+41:     let backendTcpPort;
+42:     // Track every accepted client socket so close() can tear them down
+43:     // immediately rather than waiting for in-flight tunnels to drain.
+44:     const openSockets = new Set();
+45:     function dispatchHttp(client) {
+46:         if (backendSocketPath === undefined && backendTcpPort === undefined) {
+47:             // listenHttpBackend() must resolve before the front-end listens; this
+48:             // guard is defense-in-depth in case a future caller reorders them.
+49:             logForDebugging('mux: HTTP dispatch before backend bound; dropping', {
+50:                 level: 'error',
+51:             });
+52:             client.destroy();
+53:             return;
+54:         }
+55:         const upstream = backendSocketPath
+56:             ? connect(backendSocketPath)
+57:             : connect(backendTcpPort, '127.0.0.1');
+58:         upstream.on('error', err => {
+59:             // Surface a 502 with the errno code so callers (and CI logs) can tell
+60:             // *why* the backend was unreachable instead of an opaque empty-reply.
+61:             // Full error (including path) goes to debug logging only — the client
+62:             // is our own sandboxed child, but there's no need to echo host paths.
+63:             const code = err.code ?? 'ERR';
+64:             logForDebugging(`mux: HTTP backend dial failed: ${err.message}`, { level: 'error' });
+65:             if (!client.destroyed) {
+66:                 client.end(`HTTP/1.1 502 Bad Gateway\r\nConnection: close\r\n\r\n` +
+67:                     `mux backend dial failed (${code})\n`);
+68:             }
+69:         });
+70:         client.on('error', () => upstream.destroy());
+71:         client.once('close', () => upstream.destroy());
+72:         upstream.once('close', () => client.destroy());
+73:         client.pipe(upstream);
+74:         upstream.pipe(client);
+75:     }
+76:     const server = createServer(client => {
+77:         openSockets.add(client);
+78:         client.once('close', () => openSockets.delete(client));
+79:         client.on('error', err => logForDebugging(`mux: client socket error: ${err.message}`));
+80:         const timer = setTimeout(() => {
+81:             logForDebugging('mux: first-byte timeout; destroying connection');
+82:             client.destroy();
+83:         }, firstByteTimeoutMs);
+84:         // Don't let a pending sniff keep the process alive.
+85:         if (typeof timer.unref === 'function')
+86:             timer.unref();
+87:         client.once('readable', () => {
+88:             clearTimeout(timer);
+89:             const peek = client.read(1);
+90:             if (!peek || peek.length === 0) {
+91:                 // EOF before any byte — client connected and closed.
+92:                 client.destroy();
+93:                 return;
+94:             }
+95:             client.unshift(peek);
+96:             if (SOCKS_FIRST_BYTES.has(peek[0])) {
+97:                 opts.handleSocksConnection(client);
+98:             }
+99:             else {
+100:                 dispatchHttp(client);
+101:             }
+102:         });
+103:     });
+104:     return {
+105:         server,
+106:         getPort() {
+107:             const addr = server.address();
+108:             return addr && typeof addr === 'object' ? addr.port : undefined;
+109:         },
+110:         async listenHttpBackend() {
+111:             if (!isWindows) {
+112:                 const path = unixSocketPath();
+113:                 // A prior process with the same PID may have crashed without
+114:                 // unlinking; clear any stale file so listen() doesn't EADDRINUSE.
+115:                 await unlink(path).catch(() => { });
+116:                 await new Promise((resolve, reject) => {
+117:                     opts.httpServer.once('error', reject);
+118:                     opts.httpServer.listen(path, () => {
+119:                         opts.httpServer.removeListener('error', reject);
+120:                         resolve();
+121:                     });
+122:                 });
+123:                 backendSocketPath = path;
+124:                 logForDebugging(`mux: HTTP backend listening on ${path}`);
+125:                 return undefined;
+126:             }
+127:             // Windows: AF_UNIX support under Bun is unverified, so the backend
+128:             // listens on a localhost TCP port inside the WFP-permitted range.
+129:             // The mux→backend hop originates from the parent process (not the
+130:             // sandboxed child), so WFP doesn't strictly require it; staying in
+131:             // range just keeps the port surface predictable.
+132:             await listenInRange(opts.httpServer, p => opts.httpServer.listen(p, '127.0.0.1'), opts.httpBackendPortRange, new Set());
+133:             const addr = opts.httpServer.address();
+134:             backendTcpPort = addr && typeof addr === 'object' ? addr.port : undefined;
+135:             logForDebugging(`mux: HTTP backend listening on 127.0.0.1:${backendTcpPort}`);
+136:             return backendTcpPort;
+137:         },
+138:         async close() {
+139:             for (const s of openSockets)
+140:                 s.destroy();
+141:             openSockets.clear();
+142:             await new Promise(resolve => server.close(() => resolve()));
+143:             // The mux owns httpServer's listen lifecycle, so it owns close too.
+144:             // sandbox-manager.reset() additionally calls forceCloseHttpServer()
+145:             // for closeAllConnections() semantics; double-close is a no-op.
+146:             await new Promise(resolve => opts.httpServer.close(() => resolve()));
+147:             if (backendSocketPath) {
+148:                 await unlink(backendSocketPath).catch(() => { });
+149:                 backendSocketPath = undefined;
+150:             }
+151:             backendTcpPort = undefined;
+152:         },
+153:         unref() {
+154:             server.unref();
+155:             opts.httpServer.unref();
+156:         },
+157:     };
+158: }
+159: //# sourceMappingURL=mux-proxy.js.map
+
+WORLD SETTINGS
+package broker
+
+// Row 140 M2 (design_docs/planned/w-workspace-exec-toolchain-effect.md §4.4):
+// the srt settings World renders per episode × project at
+// <state>/exec/<ep>.<project>.srt.json (0600). The shape is M0's measured one
+// (design_docs/verification/world-row140-m0/m0_matrix.py): srt 0.0.78
+// requires network.deniedDomains, and enableWeakerNetworkIsolation and
+// allowAppleEvents are TOP-LEVEL keys. srt has no `summary` command, so
+// World verifies the file itself: re-read, byte-compare with its canonical
+// rendering, digest, and refuse a file it did not write.
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+)
+
+// execSettingsSpec is everything one rendering depends on; every path is
+// canonical (symlinks resolved) and absolute.
+type execSettingsSpec struct {
+	Worktree      string   // the episode worktree: writable, readable
+	Cache         string   // <state>/exec-cache/<ep>/<project>: writable, readable
+	OperatorHome  string   // denied for reading; anchors srt's two $HOME write defaults
+	StateDir      string   // World's state dir: denied for reading
+	WorkspaceRoot string   // every episode's parent: denied, so siblings are unreadable
+	Protected     []string // canonical profile patterns
+	ReadRoots     []string // the profile's read_roots plus each one's realpath
+	SeccompDir    string   // linux only: the archived seccomp helper dir [M0, V43/V44]
+	GOOS          string
+}
+
+type execSettingsFS struct {
+	DenyRead   []string `json:"denyRead"`
+	AllowRead  []string `json:"allowRead"`
+	AllowWrite []string `json:"allowWrite"`
+	DenyWrite  []string `json:"denyWrite"`
+}
+
+type execSettingsNet struct {
+	AllowedDomains      []string `json:"allowedDomains"`
+	DeniedDomains       []string `json:"deniedDomains"`
+	AllowLocalBinding   bool     `json:"allowLocalBinding"`
+	AllowAllUnixSockets bool     `json:"allowAllUnixSockets"`
+}
+
+type execSettings struct {
+	Filesystem                   execSettingsFS  `json:"filesystem"`
+	Network                      execSettingsNet `json:"network"`
+	EnableWeakerNetworkIsolation bool            `json:"enableWeakerNetworkIsolation"`
+	AllowAppleEvents             bool            `json:"allowAppleEvents"`
+}
+
+// execDenyNames are World's episode deny names (§4.4: the AILANG policy's
+// names, plus `.git`, which srt's own list covers only in part, V5): each is
+// denied as an absolute path under the worktree, a dir or a file alike.
+//
+// `.git/hooks` and `.git/config` come FIRST, before `.git` ([M2-linux], V50).
+// When an episode's .git is a DIRECTORY, srt on Linux adds both to its own
+// deny and stubs each absent one with a bind mount; a stub emitted after the
+// read-only bind of .git makes bwrap abort ("Can't create file at
+// …/.git/hooks: Read-only file system") and nothing runs. srt emits World's
+// denies in order, before its own, so listed here the stubs are mounted while
+// .git is still writable, and srt's later entries for them are duplicates.
+// With a .git pointer file both are skipped (nothing can exist under a file).
+func execDenyNames() []string {
+	names := []string{".git/hooks", ".git/config", ".git"}
+	names = append(names, episodeDenyDirs...)
+	return append(names, episodeDenyFiles...)
+}
+
+// srtDefaultWritePaths are the paths srt always allows writing (V4); World
+// denies each. /private/tmp/claude is darwin's alias of /tmp/claude.
+func srtDefaultWritePaths(home, goos string) []string {
+	paths := []string{"/tmp/claude"}
+	if goos == "darwin" {
+		paths = append(paths, "/private/tmp/claude")
+	}
+	return append(paths, filepath.Join(home, ".npm", "_logs"), filepath.Join(home, ".claude", "debug"))
+}
+
+func hostGOOS() string { return runtime.GOOS }
+
+// renderExecSettings is the canonical rendering (§4.4): reads fenced by
+// path list (D-140-1 = A), no network (D-140-2 = A), writes only to the
+// worktree and the episode's exec cache, World's deny list and srt's four
+// defaults closed.
+func renderExecSettings(spec execSettingsSpec) ([]byte, error) {
+	for _, p := range append([]string{spec.Worktree, spec.Cache, spec.OperatorHome, spec.StateDir, spec.WorkspaceRoot}, spec.ReadRoots...) {
+		if !cleanAbs(p) {
+			return nil, fmt.Errorf("broker: exec settings path %q is not clean and absolute", p)
+		}
+	}
+	var denyWrite []string
+	for _, n := range execDenyNames() {
+		denyWrite = append(denyWrite, filepath.Join(spec.Worktree, n))
+	}
+	denyWrite = append(denyWrite, srtDefaultWritePaths(spec.OperatorHome, spec.GOOS)...)
+	denyWrite = append(denyWrite, renderSrtProtected(spec.Protected, spec.Worktree, spec.GOOS)...)
+	allowRead := dedupe(append([]string{spec.Worktree, spec.Cache}, spec.ReadRoots...))
+	if spec.GOOS == "linux" {
+		if !cleanAbs(spec.SeccompDir) {
+			return nil, fmt.Errorf("broker: exec settings: linux needs the archived seccomp helper dir, got %q", spec.SeccompDir)
+		}
+		allowRead = append(allowRead, spec.SeccompDir)
+	}
+	s := execSettings{
+		Filesystem: execSettingsFS{
+			DenyRead:   []string{spec.OperatorHome, spec.StateDir, spec.WorkspaceRoot},
+			AllowRead:  allowRead,
+			AllowWrite: []string{spec.Worktree, spec.Cache},
+			DenyWrite:  denyWrite,
+		},
+		Network: execSettingsNet{AllowedDomains: []string{}, DeniedDomains: []string{}},
+	}
+	data, err := json.MarshalIndent(s, "", " ")
+	if err != nil {
+		return nil, err
+	}
+	return append(data, '\n'), nil
+}
+
+func dedupe(xs []string) []string {
+	seen := map[string]bool{}
+	out := make([]string, 0, len(xs))
+	for _, x := range xs {
+		if !seen[x] {
+			seen[x] = true
+			out = append(out, x)
+		}
+	}
+	return out
+}
+
+// ExecSettingsError reports a settings file that is not the one World wrote:
+// the call fails (recorded `failed`) and nothing runs under it.
+type ExecSettingsError struct {
+	Path string
+	Why  string
+}
+
+func (e *ExecSettingsError) Error() string {
+	return fmt.Sprintf("broker: exec settings %s is not World's rendering: %s", e.Path, e.Why)
+}
+
+// writeExecSettings writes data at path (0600, atomically), then verifies it
+// and returns the settings_digest.
+func writeExecSettings(path string, data []byte) (string, error) {
+	if err := writeFileAtomic(path, data); err != nil {
+		return "", fmt.Errorf("broker: write exec settings: %w", err)
+	}
+	if err := verifyExecSettings(path, data); err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(data)
+	return "sha256:" + hex.EncodeToString(sum[:]), nil
+}
+
+// verifyExecSettings refuses anything but a regular 0600 file holding
+// exactly World's canonical bytes.
+func verifyExecSettings(path string, canonical []byte) error {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return &ExecSettingsError{Path: path, Why: err.Error()}
+	}
+	if !info.Mode().IsRegular() || info.Mode().Perm() != 0o600 {
+		return &ExecSettingsError{Path: path, Why: fmt.Sprintf("mode %v, want a regular 0600 file", info.Mode())}
+	}
+	got, err := os.ReadFile(path)
+	if err != nil {
+		return &ExecSettingsError{Path: path, Why: err.Error()}
+	}
+	if !bytes.Equal(got, canonical) {
+		return &ExecSettingsError{Path: path, Why: "its bytes differ from the canonical rendering"}
+	}
+	return nil
+}
+
+host/broker/exec_settings.go:45: 	AllowedDomains      []string `json:"allowedDomains"`

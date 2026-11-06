@@ -1,0 +1,62 @@
+{
+  "doc": "design_docs/planned/w-exec-probe-foreign-dial-false-refusal.md",
+  "iso_ts": "2026-11-06T17:35:31Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.076356,
+      "tokens_in": 18049,
+      "tokens_out": 208,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "Two mutants (MUT-PENDING-AS-FOREIGN and MUT-CONTROL-ANY-ACCEPT) survive the test suite, and the multi-run stability check (-count=3 in V12) was not re-run on the r2 prototype after refactoring the shared reader and judge.",
+        "catch": "In M1, run `go test -count=3 -run '^(TestExecProbePassThroughShimFailsEveryConfinementArm|TestExecProbeNet6.*)$' -v ./host/broker/` on the applied r2 patch so the multi-run stability proof from V12 is verified on the refactored code.",
+        "proposed_fix": "Add `-count=3` on the arm-6 and reverse-leg test subset to M1's verification steps before running the full test suite."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.1014538,
+      "tokens_in": 17159,
+      "tokens_out": 17598,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The control leg's new 'waits up to 2 s' (§3.4) is the only bound in the design that is not in §3.5's constants list, has no derivation, and is pinned by no test — and HEAD's own control-wait bound is never logged (V2 greps show the accepts==1 check at :669 but not its wait), so the reader cannot tell whether r2 shortens it. If HEAD's bound exceeds 2 s, the patch reintroduces the exact false-refusal class this item exists to remove, on the one leg that runs before every window, under the doc's own measured load range (2.9–9.8, V1). It is fail-closed (a too-short control can only refuse, never pass), so it is a residual-risk gap rather than a fail-open one — the closest concern this round, not a blocker: every load-bearing codebase premise (V2, V15, V16, V17, V18), the reuse analysis (§3.6, answering kimi), and the acceptance gate (§7, answering glm) are now measured, and all waits are bounded with named, invariant-pinned constants except this one.",
+        "catch": "Two items: (1) §3.4's 2 s control wait needs a Verification Log row establishing HEAD's control() bound at 1835d8be (read :659–674; bank the output in designer-greps.txt), a named constant in §3.5 with a stated relation to execProbeWindowWait, and a TC pin matching the standard the doc itself sets for execProbeWindowWait (MUT-WINDOW-WAIT-NOT-ABOVE). (2) §5 asserts 'They are proven to PASS on Linux, not merely run' as present-tense fact for a CI run that has not happened; the §10 UNMEASURED row correctly lists it, so the prose overclaims its own evidence — reword to the step's requirement.",
+        "proposed_fix": "Add a V20 row: claim 'HEAD control() wait bound', command: sed-read exec_probe.go:659–674 at 1835d8be plus grep for the wait/deadline constant, output banked in $V/designer-greps.txt. Then either (a) if 2 s is HEAD's existing bound, add one sentence to §3.4 ('the 2 s is HEAD's control bound, unchanged') citing V20; or (b) if it is new, name it execProbeControlWait in §3.5 with the derivation 'execProbeControlWait \u003e= execProbeWindowWait, so the control's own classified accept can always complete inside the wait', add a second TC assertion line pinning the relation, and add a MUT-CONTROL-WAIT row (bound set to execProbeHelloWait; TC red) to the §5 table. Separately, replace the §5 sentence with: 'So placing the four names on :247 puts them on the same real-srt verbose list as TestExecSrtStartupProbePasses; the step asserts --- PASS for every name, so a SKIP fails it — their Linux PASS is measured only when the §7 gate runs.'"
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.19569299999999998,
+      "tokens_in": 16971,
+      "tokens_out": 9652,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "R2 is a deliberate, quantified weakening of a fail-closed escape gate whose only mitigation is an explicitly unverified premise. Claim B / §6 R2 admit the design converts HEAD's per-run pass probability (1 − p) for an intermittent byte-altering relay into (1 − p³) — strictly weaker on the gate that exists (per the doc's own §3.1 rejection of direction (a)) precisely because World must not trust relay behavior. The mitigation offered is one sentence: 'No known srt path alters tunnel bytes… reasoned, not measured.' Yet the doc itself proves byte-prepending relays are in-scope (§3.2 names PROXY-protocol prepending; TC even pins that exact shape as foreign→retry), and row 230's ratified foreign-retry rule was for the reverse leg, where World is the dialer — it is not a ratified precedent for retrying escape-path accepts on the forward legs. Worst, the design's stated acceptance gate cannot see this class: the §7 CI step runs the honest srt path (CONNECT to 127.0.0.1 denied → empty window), and no test or V-row measures what the pinned srt proxy actually delivers upstream. A fail-closed gate's verdict path is being relaxed on an assertion the acceptance procedure never exercises.",
+        "catch": "Verify, don't assert, the byte-fidelity premise — the srt install is pinned (ci.yml:226), so the executor or CI can grep the pinned srt source for the CONNECT/200 tunnel path and record verbatim-relay vs. any prepend/rewrite as a V-log row; absent that, the quorum must explicitly ratify the (1−p) → (1−p³) regression as an accepted weakening of arm 6. Also: r2's refactored code (shared readProbeLine/judgeLeg, renamed bound) is validated by a single −count=1 run (V17, load 1.17); the −count=3 stability run (V12) and the HEAD positive control (V8) are r1 artifacts on code r2 replaced — re-run both on the r2 prototype before quorum.",
+        "proposed_fix": "Add to §7 acceptance, before the CI gate: 'Executor verification (blocking): with the pinned srt install, grep/inspect the proxy's CONNECT handler and record in the sprint Verification Log (a) whether bytes after a 200 are relayed verbatim in both directions, (b) whether any header/banner is prepended or appended upstream. If any alteration exists, the design reverts to fail-at-first-foreign (no retry on windows containing byte-bearing accepts; retry only zero-accept-… no — retry only nothing), i.e. reclassify any accept carrying bytes that begin neither expected line as silent.' Add to §11 round-2 asks: 'Quorum must explicitly ratify R2 as a quantified 1−p³ vs 1−p weakening, not merely note it.' And re-run on the r2 prototype: the −count=3 stability suite (V12's command) and the HEAD positive control (V8's command), appending both as new V rows; r1's results must not stand in for r2 code."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2 answers both r1 blocks: CI real-srt list measured by the controller and cited (V15/V16); shared readProbeLine/judgeLeg/constants factored across forward and reverse legs, reverse-leg tests green, shared-piece mutants. R2 weakening (1-p^3 vs 1-p) still stated."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: R2 is a deliberate, quantified weakening of a fail-closed escape gate whose only mitigation is an explicitly unverified premise. Claim B / §6 R2 admit the design converts HEAD's per-run pass probability (1 − p) for an intermittent byte-altering relay into (1 − p³) — strictly weaker on the gate that exists (per the doc's own §3.1 rejection of direction (a)) precisely because World must not trust relay behavior. The mitigation offered is one sentence: 'No known srt path alters tunnel bytes… reasoned, not measured.' Yet the doc itself proves byte-prepending relays are in-scope (§3.2 names PROXY-protocol prepending; TC even pins that exact shape as foreign→retry), and row 230's ratified foreign-retry rule was for the reverse leg, where World is the dialer — it is not a ratified precedent for retrying escape-path accepts on the forward legs. Worst, the design's stated acceptance gate cannot see this class: the §7 CI step runs the honest srt path (CONNECT to 127.0.0.1 denied → empty window), and no test or V-row measures what the pinned srt proxy actually delivers upstream. A fail-closed gate's verdict path is being relaxed on an assertion the acceptance procedure never exercises."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.37350279999999997,
+    "total_tokens_in": 52179,
+    "total_tokens_out": 27458
+  }
+}

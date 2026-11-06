@@ -2548,3 +2548,110 @@ Gate stamp `gate-3b` ran before this commit (rc=0). Gate stamp `gate-5` and the 
 - **Bar-moving check:** the last 3 landings (356, 357, 358) moved no clause. No DRIFT line, because no UNMET clause has a routable row: all 7 are MET.
 - **Attended ruling in flight, NOT acted on:** PR #507 (`mission/attended-d-world-108`, opened 13:26:44Z, after this fire's Gate 0 and Gate 2) files rows 255–257 and flips D-WORLD-108 to RESOLVED through `mission_answer.sh --commit`: **B, widened** — row 250, then 255 → 257, in queue order, stopping when a release row is routable; rows 244–249 stay under rule (d); D-WORLD-105 unanswered. A third commit (`89a92ea0`, 13:30:22Z) files **D-WORLD-109** (OPEN, default C): A = after 108's scope, rows 201 then 243, plus folding rows 244–249, 251 and 254 into one `w-hygiene-triage` row; B = the fold only; C = neither. The second judge surfaced that third commit; the controller had read #507 when it had two. It was still OPEN and unmerged when this note was written, so `dev`'s ledger still reads D-WORLD-108 OPEN, and this fire's no-pick call and its digest's "(unchanged)" were correct for `dev`. The unattended loop does not merge an attended ruling or act on an unmerged one. **Next fire:** if #507 has merged, run `mission_ledger_provenance.sh --id D-WORLD-108` (Gate 0 rule (b)), acknowledge the attended ruling in the report, and take row 250 as the pick under its scope. If it is still open, keep the block report and mention it.
 - **Next fire:** #449 should read 29 at Gate 0 (this report was the 29th comment; the landing posts none), with `transcript=2`. Entry 358's **Next** line already says 29. Monday 2026-11-09's first fire owes the weekly sweep and thread rotation.
+
+## 359 — 2026-11-06 — row 250 built: arm 6 classifies each loopback accept (child / foreign / silent), so a local dialer no longer refuses the exec startup probe; design r3 via a controller carve-out; judge PASS 91 [PRODUCT-HYGIENE]
+
+**Pick:** row 250 `w-exec-probe-foreign-dial-false-refusal`, the first row under Mark's attended ruling **D-WORLD-108 = B** (2026-11-06: rows 250, then 255 → 257, stopping as soon as a release row is routable). This ends the run of rule-(d) block reports (341–358).
+- **Attended rulings acknowledged.** D-WORLD-108 = B was resolved in-session by Mark. Its provenance is `verdict=attended`, flip `cd15c9dc`, creation `e9ec3059`. D-WORLD-109 = A was also resolved in-session (`verdict=attended`, flip `61e2411a`). Under 109, after 255 → 257 the loop takes row 201, then row 243, through the normal route, and builds against fakes and test keys only. Rows 244–249, 251 and 254 are folded into row 258 `w-hygiene-triage`, under rule (d). A judge's non-blocking note or a single CI red is now logged here, not filed, and a flake becomes a row at its 3rd instance. Control: D-WORLD-105 reads `never-resolved`.
+- Clause map: 1–7 MET, no UNMET clause.
+- Release rows are not routable at `1835d8be`:
+  - Row 150: subjects in `2606f155..1835d8be` matching `row ?150|A1\b|marketing` → 0 of 15 (control 9).
+  - Row 151: `N2d|N4a` since 2026-10-01 → 0 (N2c control 2). Non-test `.go` files naming `file.json` → 0 (control 109).
+- Dev was green at `1835d8be` (3/3 on attempt 1; the last 8 dev CI runs were all success).
+
+**Gate 0:**
+- Stamped first (rc 0). `gh` is `sunholo-voight-kampff`. Billing check CLEAN. No kill switch.
+- Directives: 0 allowlisted on #449 (29 comments; there is no watermark file, so all were read) and 0 on #366 since `2026-10-27T09:03:42Z` (35 comments).
+- Self-notices: 0 crash notices (control 107:4). `transcript=2`, the two old notices of fires 348 and 349. #449 = 29, as iteration 358 predicted.
+- Inbox: 55 unread. 54 are this loop's own `[claim]` notes. 1 is a `mission-fleet` `harness-resolved` reply (`inbox_1793981139896_28cc4981`, signature `driver:idle-fire-writes-full-block-report`, ailang #2160 → `d08031597b3f`):
+  - The driver now snapshots a product mission's inputs, and after an idle human-gated no-pick fire a Gate-5 `idle-fingerprint.sh --record` lets the next fire exit IDLE while the inputs are unchanged.
+  - No World queue row carries this ticket; it is the companion proposal named in D-WORLD-109's evidence. Nothing to unpark.
+  - It does not apply to this fire, which picked. Noted for future no-pick fires: do not mail `[claim]` self-notes on a no-pick fire, because that changes the snapshot.
+  - It is acked after this record merges.
+- Ledger valid, 96 rows, OPEN: D-WORLD-105 only.
+- Upstream predicates: 32/32 closed (controls fired). This fire's STATUS stamp names ailang #2160 (a merged fleet PR), so the next fire's charter count should read 33, all closed.
+- Skill drift: 0 of 14 files against the driver clone's `origin/dev` `5d7b2efe7`, fetched first (negative control fired).
+- Weekly sweep and rotation are not due; the next boundary is Monday 2026-11-09.
+- Died-mid-flight traces: 0 open PRs at Gate 0. The iteration-358 worktrees are 358's record and landing trees.
+- Evidence: `verification/world-iter359/gate1-2-readings.txt`.
+
+**Premise** (`controller-premise.txt`), at `1835d8be`:
+- Arm 6 counts every accept and requires exactly 1 after each leg (`exec_probe.go:544–558`, `:651`).
+- 8 idle 127.0.0.1 listeners got exactly 2 unsolicited accepts each in 75 s, and the start page process is live.
+
+**Design** (`w-exec-probe-foreign-dial-false-refusal`). Resolver: `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus`, per the 318–340 precedent and the operator's standing request. The rotation pointer is unchanged.
+- **r1** (361 lines, 21 min). Every probe dial writes `WORLD-PROBE-DIAL <nonce>`, and each accept is classified by its first line:
+  - child or silent fails the leg at once;
+  - a foreign-only window is retried, at most 3 attempts.
+  - New finding: the start page sends `GET / … User-Agent: SunholoHome/1` within 2 ms on 16/16 accepts, so it is provably foreign.
+  - It honestly states one weakening, R2: an escape that is both byte-altering and intermittent passes with 1 − p³ against HEAD's 1 − p.
+- **Quorum r1 BLOCKED** ($0.3073). Seats: gemini-4-argon pass, oc-glm-5-3 reject, oc-kimi-k3 reject. Claude was benched as the author's vendor; `absent_reviewers` `[]`.
+  - glm: the claim that `TestExecSrtStartupProbePasses` runs real srt in CI had no Verification Log row. The controller measured it (`controller-r1-srt-ci.txt`): it is true, at `ci.yml:246`, in the bubblewrap verbose step, which asserts `--- PASS` per name.
+  - kimi: no reuse analysis against the reverse leg's classifier, and an unnamed 1.5 s bound.
+- **r2** (508 lines, 17 min). A shared `readProbeLine`, `judgeLeg`, `execProbeHelloWait` and `execProbeAttempts` serve both legs, plus `execProbeWindowWait` with its invariant pinned by TC. The 12 reverse-leg tests stay green, and the `MUT-SHARED-*` mutants are red from both legs.
+- **Quorum r2 BLOCKED** ($0.3735; same seats, none absent; gemini and glm pass). kimi rejected on R2: a quantified weakening resting on an unverified premise that srt does not alter tunnel bytes. Its own text: "Verify, don't assert … absent that, the quorum must explicitly ratify."
+- **r3**, the controller's narrow-refinement carve-out. Every remaining blocking objection carried a concrete fix, and none disputed the direction. The controller measured first:
+  - **V21** (`controller-r2-srt-relay.txt`): a static read of the PINNED srt 0.0.78 (`npm pack`, `cli.js` digest equal to `pin.json`). The CONNECT route terminates TLS, uses a MITM socket or uses a parent proxy only behind the config keys `network.tlsTerminate`, `mitmProxy` or `parentProxy`. Otherwise it relays `upstream.pipe(socket)` and `socket.pipe(upstream)` with no transform. World's `execSettingsNet` has 4 fields, none of those keys (grep 0, control 1).
+  - **V22** (`controller-r2-stability.txt`): `-count=3` on the r2 prototype, 13 tests × 3 PASS.
+  - **V20**: HEAD's `control()` bound is 2 s and is unchanged (`exec_probe.go:663`, `:668`).
+  - Applied verbatim: kimi's executor relay check and its fail-at-first-foreign fallback (§7), glm's §5 wording, and gemini's `-count=3` command.
+- Fable/Opus diet: one doc, the initial run plus one protocol revision. r3 was controller-authored.
+
+**Plan** (`f832533d`). Resolver: `recipe codex:gpt-6.1-sol declared:planner-lane-default-pin`; `derive-planner-lane.sh` agrees; codex probe rc 0.
+- Ran in the detached planner worktree `.planner-wt-iter359` at `b6a35f04`, removed afterwards.
+- `plan-M1.diff.txt` is byte-identical to the designer patch (sha256 `7fb25372…`, 5 files).
+- Acceptance A0–A9, including the A3 relay receipt and A9, the Linux real-srt CI gate.
+- A 177-row mutation runner.
+- Planner findings F1–F4 are in the plan:
+  - F1: the probe writes `/tmp/claude`.
+  - F2: the relay fallback conflicts with byte-exact scope if the check ever disagrees.
+  - F3: "pending is unreachable" depends on scheduling, not a mathematical bound.
+  - F4: the claims assume i.i.d. attempts.
+
+**Executor.** Resolver: `recipe codex:gpt-6.1-sol declared:provider-pin`; 30-min cap.
+- Pre and post hashes match for all 5 files.
+- In the sandbox: gofmt, vet, `go build ./...` and T2 all rc 0. No socket tests were run inside the sandbox.
+- Relay check against the pinned package: verbatim, no banner.
+- Left uncommitted; the controller committed M1 `d29c4155`.
+
+**Controller gates outside the sandbox** (`controller-M1/summary.txt`, sequential, on `d29c4155`):
+- A1: hashes ok. A2: gofmt 0, vet 0, build 0, runner `bash -n` 0.
+- A3: relay receipt (`relay-review.json`), agreeing with the executor and V21.
+- A4: 19/19 named tests pass alone, no SKIP.
+- A6: `-count=3`, 3/3 each.
+- A7:
+  - broker `ok` in 210.6 s; `verify_ail.sh` rc 0 (16 identities, 40 named tests, 503 se-tools).
+  - `verify_go.sh` run 1 was rc 1, on `TestDemoProofNoVerifiedSetRefuses` MOD010. **This is the controller's own instrument:** it had set `TMPDIR` under `~/dev`. `A7b-tmpdir-control.txt` shows the test red with the override and `ok` without, and no file under `cmd/` changed. A re-run with the default TMPDIR and `VERIFY_GO_LEGS=plain` gave rc 0. The `-race` leg is CI's own job.
+- A8: CI wiring ok.
+- A5: in its own detached worktree, 177/177 `EXPECTATION MATCH`, 177 restores verified, no extra `.go` files (only the runner's own log dir remained).
+
+**Independent evaluator:** REQUIRED. Agent `sonnet` (`agent-tool sonnet declared:alias-pin`), in its own detached worktree `.judge-wt-iter359` at `adc19bd7`, foreground.
+- Verdict: **PASS 91/100**, zero blocking findings (`evaluator-r1.md`). It found no fail-open path beyond R2, and the reverse-leg verdicts are unchanged.
+- It ran 4 mutants of its own: X8, X9 and X10 went red, X3 survived.
+- **X3 survivor, reproduced by the controller** (`controller-judge-repro.txt`): deleting `tok = r.token(0)` in `net6Leg`'s retry loop (`exec_probe.go:689`) keeps the Net6 tests and the pass-through test green, both unmutated and mutated. The production code is correct; the gap is a missing test variant (a retry run whose token is not a refusal). Under D-WORLD-109 it is logged here, not filed (instance 1).
+- Other notes: the 500 ms read deadline is shared with the reverse leg, so on a loaded rig a late child line refuses (fail-closed). Linux real srt and `-race` rely on CI.
+
+**CI:** PR #511. The Linux real-srt step is acceptance gate A9. Gate 3b's verdict on the merge is recorded in the follow-through.
+
+**Routing evidence:** base=`1835d8be3cdaf107a84db5edd8c00dcf4b689289@2026-11-06T16:50:56Z` (Gate 1).
+- Controller: `claude:claude-opus-5-5` (tok: not reported).
+- Designer: Agent `opus` (r1 211,585 tok; r2 160,828 tok).
+- Planner: `codex:gpt-6.1-sol` (148,527 tok).
+- Executor: `codex:gpt-6.1-sol` (80,512 tok).
+- Evaluator: Agent `sonnet` (67,587 tok).
+- Quorum: gemini-4-argon, oc-glm-5-3, oc-kimi-k3 ($0.6808 over two rounds).
+- Driver env: `MISSION_DESIGNER_RESOLVED=claude:claude-opus-5-5`, `MISSION_PLANNER_RESOLVED=codex:gpt-6.1-sol`, `MISSION_EXECUTOR_RESOLVED=codex:gpt-6.1-sol`, `MISSION_EVALUATOR_RESOLVED=sonnet`, `MISSION_OVER_RATION` empty. None fell back.
+- Generator ≠ judge: opus designer and codex planner/executor vs the sonnet judge.
+
+**Ruled out:**
+- Rows 255–257 before 250: D-WORLD-108 fixes the order.
+- Rows 201 and 243: D-WORLD-109 places them after 255 → 257.
+- Row 258: under rule (d).
+- Row 233: D-WORLD-105 is still OPEN.
+- Rows 150 and 151: re-measured above.
+- Re-asking D-WORLD-108 or 109: both are attended rulings and are never re-asked.
+
+**Retro:**
+1. **The controller's own TMPDIR override produced a false red** (`verify_go` MOD010). A planner gate set `TMPDIR` inside the tree, and the controller moved it to a sibling under `~/dev`. ailang's module-path check reads that location. Proven by control and not filed (instance 1). Next time, leave TMPDIR at its default for `verify_go`.
+2. **A carve-out premise check was cheap and decisive.** kimi's r2 objection named a premise ("srt alters tunnel bytes?") that the pinned package source answers in a few minutes with `npm pack`, not executed. Measuring it turned a third round, or a park, into a verified r3. This is the gate-3-route rule (b) working.
+3. **The quorum asked for re-runs on r2 code.** The r1 stability run (V12) and the HEAD positive control (V8) did not cover r2's refactor. MUT-RAW-COUNT on r2's tests is the HEAD rule in the new structure; cite it rather than re-running the whole HEAD file, which no longer compiles against r2's tests.

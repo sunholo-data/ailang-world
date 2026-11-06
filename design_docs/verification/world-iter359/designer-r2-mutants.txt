@@ -1,0 +1,218 @@
+== CONTROL load averages: 4.53 3.96 3.95 tests=FWD+REV
+rc=0
+pass=17 fail=0
+applied MUT-SHARED-READ-SHORT
+== MUT-SHARED-READ-SHORT load averages: 6.16 4.50 4.15 tests=FWD+REV
+rc=1
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child
+   1     --- FAIL: TestExecProbeNet6DialClassifier/child
+   1     --- FAIL: TestExecProbeNet6DialClassifier/child-then-more
+   1     --- FAIL: TestExecProbeNet6DialClassifier/control
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/none
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy
+   1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child
+   1 --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails
+   1 --- FAIL: TestExecProbeNet6DialClassifier
+   1 --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused
+   1 --- FAIL: TestExecProbePassThroughShimFailsEveryConfinementArm
+   1 --- FAIL: TestExecProbeReverseHelloWaitBounds
+   1 --- FAIL: TestExecProbeReverseLegRealReachSurvivesAForeignAttempt
+pass=11 fail=6
+applied MUT-SHARED-JUDGE-SILENT-RETRIED
+== MUT-SHARED-JUDGE-SILENT-RETRIED load averages: 9.43 5.63 4.59 tests=FWD+REV
+rc=1
+   1     --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent
+   1     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/reset-holder
+   1     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-after-chatty
+   1     --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky/silent-attempt-1
+   1 --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse
+   1 --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails
+   1 --- FAIL: TestExecProbeReverseLegJudge
+   1 --- FAIL: TestExecProbeReverseLegSilentHolderRefusesSticky
+pass=13 fail=4
+applied MUT-SHARED-WAIT-1500MS
+== MUT-SHARED-WAIT-1500MS load averages: 7.92 5.80 4.70 tests=FWD+REV
+rc=1
+   1     --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse/silent
+   1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child
+   1     --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-mux
+   1 --- FAIL: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse
+   1 --- FAIL: TestExecProbeReverseHelloWaitBounds
+pass=15 fail=2
+applied MUT-SHARED-ATTEMPTS-2
+== MUT-SHARED-ATTEMPTS-2 load averages: 6.92 5.80 4.74 tests=FWD+REV
+rc=1
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy
+   1     --- FAIL: TestExecProbeReverseLegExhaustionRefusesDistinctly/chatty-every-time
+   1     --- FAIL: TestExecProbeReverseLegExhaustionRefusesDistinctly/child-eaddrinuse
+   1 --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused
+   1 --- FAIL: TestExecProbeNet6ForeignEveryAttemptRefuses
+   1 --- FAIL: TestExecProbeReverseLegExhaustionRefusesDistinctly
+pass=14 fail=3
+applied MUT-WINDOW-WAIT-NOT-ABOVE
+== MUT-WINDOW-WAIT-NOT-ABOVE load averages: 5.08 5.46 4.66 tests=FWD+REV
+rc=1
+   1 --- FAIL: TestExecProbeNet6DialClassifier
+pass=16 fail=1
+applied MUT-RAW-COUNT
+== MUT-RAW-COUNT load averages: 4.38 5.25 4.61 tests=FWD
+rc=1
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy
+   1 --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails
+   1 --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused
+   1 --- FAIL: TestExecProbeNet6ForeignEveryAttemptRefuses
+pass=2 fail=3
+applied MUT-SILENT-AS-FOREIGN
+== MUT-SILENT-AS-FOREIGN load averages: 4.99 5.36 4.67 tests=FWD
+rc=1
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent
+   1     --- FAIL: TestExecProbeNet6DialClassifier/connect-close
+   1     --- FAIL: TestExecProbeNet6DialClassifier/held-silent
+   1     --- FAIL: TestExecProbeNet6DialClassifier/prefix-held
+   1     --- FAIL: TestExecProbeNet6DialClassifier/prefix-then-close
+   1 --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails
+   1 --- FAIL: TestExecProbeNet6DialClassifier
+pass=3 fail=2
+applied MUT-PREFIX-AS-FOREIGN
+== MUT-PREFIX-AS-FOREIGN load averages: 4.64 5.23 4.64 tests=FWD
+rc=1
+   1     --- FAIL: TestExecProbeNet6DialClassifier/prefix-held
+   1     --- FAIL: TestExecProbeNet6DialClassifier/prefix-then-close
+   1 --- FAIL: TestExecProbeNet6DialClassifier
+pass=4 fail=1
+applied MUT-CHILD-AS-FOREIGN
+== MUT-CHILD-AS-FOREIGN load averages: 4.03 5.06 4.59 tests=FWD
+rc=1
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child
+   1     --- FAIL: TestExecProbeNet6DialClassifier/child
+   1     --- FAIL: TestExecProbeNet6DialClassifier/child-then-more
+   1 --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails
+   1 --- FAIL: TestExecProbeNet6DialClassifier
+   1 --- FAIL: TestExecProbePassThroughShimFailsEveryConfinementArm
+pass=2 fail=3
+applied MUT-CHILD-AS-CONTROL
+== MUT-CHILD-AS-CONTROL load averages: 4.39 5.04 4.60 tests=FWD
+rc=1
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child
+   1     --- FAIL: TestExecProbeNet6DialClassifier/child
+   1     --- FAIL: TestExecProbeNet6DialClassifier/child-then-more
+   1 --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails
+   1 --- FAIL: TestExecProbeNet6DialClassifier
+   1 --- FAIL: TestExecProbePassThroughShimFailsEveryConfinementArm
+pass=2 fail=3
+applied MUT-TOKEN-ONLY
+== MUT-TOKEN-ONLY load averages: 3.76 4.84 4.54 tests=FWD
+rc=1
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy
+   1 --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails
+   1 --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused
+   1 --- FAIL: TestExecProbeNet6ForeignEveryAttemptRefuses
+   1 --- FAIL: TestExecProbePassThroughShimFailsEveryConfinementArm
+pass=1 fail=4
+applied MUT-RETRY-CHILD
+== MUT-RETRY-CHILD load averages: 3.47 4.71 4.49 tests=FWD
+rc=1
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child
+   1 --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails
+pass=4 fail=1
+applied MUT-RETRY-SILENT
+== MUT-RETRY-SILENT load averages: 3.20 4.56 4.45 tests=FWD
+rc=1
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent
+   1 --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails
+pass=4 fail=1
+applied MUT-EXHAUST-PASSES
+== MUT-EXHAUST-PASSES load averages: 3.27 4.47 4.41 tests=FWD
+rc=1
+   1 --- FAIL: TestExecProbeNet6ForeignEveryAttemptRefuses
+pass=4 fail=1
+applied MUT-UNBOUNDED
+== MUT-UNBOUNDED load averages: 4.08 4.57 4.45 tests=FWD
+rc=1
+   1 --- FAIL: TestExecProbeNet6ForeignEveryAttemptRefuses
+pass=4 fail=1
+applied MUT-FROM-NOT-ADVANCED
+== MUT-FROM-NOT-ADVANCED load averages: 4.12 4.55 4.45 tests=FWD
+rc=1
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/none
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy
+   1 --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused
+   1 --- FAIL: TestExecProbePassThroughShimFailsEveryConfinementArm
+pass=3 fail=2
+applied MUT-WINDOW-AT-JUDGE
+== MUT-WINDOW-AT-JUDGE load averages: 4.28 4.56 4.46 tests=FWD
+rc=1
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan
+   1     --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/proxy
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw
+   1     --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy
+   1 --- FAIL: TestExecProbeNet6ChildOrSilentAcceptStillFails
+   1 --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused
+   1 --- FAIL: TestExecProbeNet6ForeignEveryAttemptRefuses
+   1 --- FAIL: TestExecProbePassThroughShimFailsEveryConfinementArm
+pass=1 fail=4
+applied MUT-PENDING-AS-FOREIGN
+== MUT-PENDING-AS-FOREIGN load averages: 4.33 4.56 4.46 tests=FWD
+rc=0
+pass=5 fail=0
+applied MUT-CONTROL-ANY-ACCEPT
+== MUT-CONTROL-ANY-ACCEPT load averages: 6.21 4.95 4.60 tests=FWD
+rc=0
+pass=5 fail=0
+applied MUT-CLIENT-NO-LINE
+== MUT-CLIENT-NO-LINE load averages: 5.18 4.79 4.55 tests=FWD
+rc=1
+   1 --- FAIL: TestExecProbePassThroughShimFailsEveryConfinementArm
+pass=4 fail=1
+# restored r2 exec_probe.go (cmp ok)
+
+# excerpt: MUT-RETRY-CHILD's false pass, verbatim
+exec_probe_net6_dial_test.go:229: arm 6 = "", want it to contain "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0,"
+# excerpt: MUT-SHARED-READ-SHORT on the reverse side
+    exec_probe_test.go:914: an answer 250ms after the hello: seen {child:false foreign:true silent:false} (wrote "WORLD-PROBE-HELLO\n"); want {child:true foreign:false silent:false}, not silent
+=== RUN   TestExecProbeReverseHelloWaitBounds/slow-mux
+--
+    --- FAIL: TestExecProbeReverseHelloWaitBounds/slow-child (0.00s)
+# excerpt: MUT-WINDOW-WAIT-NOT-ABOVE
+exec_probe_net6_dial_test.go:255: execProbeWindowWait 500ms must exceed the line-read deadline execProbeHelloWait 500ms

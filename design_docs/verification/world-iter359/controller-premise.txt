@@ -1,0 +1,21 @@
+# Iteration 359 controller premise re-check for row 250 at 1835d8be (2026-11-06T16:53:46Z)
+$ pgrep -fl homepage/serve.py | wc -l
+2
+$ python3 -I dialer_check.py   # 8 idle 127.0.0.1 listeners, 75 s, count unsolicited accepts
+listeners=8 seconds=75 unsolicited_accepts_per_listener=[2, 2, 2, 2, 2, 2, 2, 2] total=16
+
+## dialer_check.py
+import socket, time, sys, threading
+# Bind N idle loopback listeners, count unsolicited accepts for T seconds.
+N, T = 8, 75
+socks, counts = [], [0]*8
+for i in range(N):
+    s = socket.socket(); s.bind(("127.0.0.1", 0)); s.listen(16); s.settimeout(0.2); socks.append(s)
+end = time.time() + T
+while time.time() < end:
+    for i, s in enumerate(socks):
+        try:
+            c, _ = s.accept(); counts[i] += 1; c.close()
+        except socket.timeout:
+            pass
+print(f"listeners={N} seconds={T} unsolicited_accepts_per_listener={counts} total={sum(counts)}")

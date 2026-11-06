@@ -1,0 +1,23 @@
+# designer r2: the r2 patch is byte-exact against 1835d8be
+$ (patchtree) git diff --numstat
+1	1	.github/workflows/ci.yml
+237	53	host/broker/exec_probe.go
+305	0	host/broker/exec_probe_net6_dial_test.go
+1	1	host/broker/exec_probe_net6_test.go
+3	3	host/broker/exec_probe_test.go
+$ git archive 1835d8be | tar -x -C applycheck2; git apply designer-proto.patch.txt && echo APPLY-OK   (fresh re-run; the cmps below are on applycheck, the first apply)
+APPLY-OK
+$ cmp each file against the r2 prototype
+same host/broker/exec_probe.go
+same host/broker/exec_probe_test.go
+same host/broker/exec_probe_net6_test.go
+same host/broker/exec_probe_net6_dial_test.go
+same .github/workflows/ci.yml
+$ shasum -a 256 (prefix 16)
+host/broker/exec_probe.go 110fffc3f31a10d7
+host/broker/exec_probe_test.go ee59ba2cc5742855
+host/broker/exec_probe_net6_test.go 8ec970891599257a
+host/broker/exec_probe_net6_dial_test.go 8c7f9602c1105bdc
+.github/workflows/ci.yml 4efb18438d736bb4
+patch      821 lines, sha256 7fb2537268498db0
+     305 host/broker/exec_probe_net6_dial_test.go

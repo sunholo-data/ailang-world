@@ -1,0 +1,22 @@
+# designer r2: where the four new names land, in the patched tree (git archive 1835d8be + designer-proto.patch.txt r2)
+$ grep -n -o -E "TestExecProbeNet6(ForeignDialIsRetriedNotRefused|ChildOrSilentAcceptStillFails|ForeignEveryAttemptRefuses|DialClassifier)|TestExecSrtStartupProbePasses|TestExecProbePassThroughShimFailsEveryConfinementArm|TestExecProbeNet6BoundBeforeAnyPick" .github/workflows/ci.yml
+246:TestExecSrtStartupProbePasses
+246:TestExecProbePassThroughShimFailsEveryConfinementArm
+247:TestExecProbeNet6BoundBeforeAnyPick
+247:TestExecProbeNet6ForeignDialIsRetriedNotRefused
+247:TestExecProbeNet6ChildOrSilentAcceptStillFails
+247:TestExecProbeNet6ForeignEveryAttemptRefuses
+247:TestExecProbeNet6DialClassifier
+$ awk "NR>=238 && NR<=260 && /- name:|tests=|PASS: \\$t|go test/" .github/workflows/ci.yml | cut -c1-140
+      - name: Row 140 Workspace.Exec real-srt tests, verbose (linux bubblewrap)
+          tests="TestExecSrtGoTest TestExecSrtExitStatusAndArgv TestExecSrtRefusalsSpawnNothing TestExecSrtConfinementMatrix TestExecSrtGitH
+          tests="$tests TestExecSrtStartupProbePasses TestExecSrtProbeRefusesAPackageOnlySandbox TestExecProbePassThroughShimFailsEveryConfi
+          tests="$tests TestExecProbeReverseLegJudge TestExecProbeReverseLegChattyForeignHolderIsRetried TestExecProbeReverseLegExhaustionRe
+          tests="$tests TestExecStartupRefusalTable TestExecSrtMCPEndToEnd TestExecSrtMCPGrantAndBudget TestExecSrtReplayIsByteEqual TestExe
+          go test ./host/broker/ ./host/daemon/ -count=1 -p 1 -timeout 600s -v \
+            grep -q -- "^--- PASS: $t " "$log" \
+$ grep -c "TestExecProbeNet6DialClassifier" .github/workflows/ci.yml  (each name exactly once: no second list)
+1
+$ grep -n "probeNode(t)\|func probeNode" host/broker/exec_probe_net6_dial_test.go host/broker/exec_probe_test.go | head
+host/broker/exec_probe_test.go:52:func probeNode(t *testing.T) string {
+host/broker/exec_probe_test.go:94:	node := probeNode(t)

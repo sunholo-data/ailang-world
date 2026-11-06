@@ -1,0 +1,32 @@
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 54.121625ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 49569:38a03cbc2895242b424af97e2f1134d4" "proxy 49569:38a03cbc2895242b424af97e2f1134d4"] dials ["child:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.614334ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 49576:027372d1389fd743c6e7e904c0cabb57" "proxy 49576:027372d1389fd743c6e7e904c0cabb57"] dials ["" "child:ok"]; arm 6 = "a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 54.125916ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 49582:9600e891a61ed0abbb0005be9bdfbcb9" "proxy 49582:9600e891a61ed0abbb0005be9bdfbcb9"] dials ["silent:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 0, silent 1, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.127416ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 49591:f74cf9033cdcbf9e3453a8f7e9ab61d2" "proxy 49591:f74cf9033cdcbf9e3453a8f7e9ab61d2"] dials ["scan:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 0, silent 1, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 52.815792ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 49597:e7695df64b9dd0149bd0f2c9b723d9da" "proxy 49597:e7695df64b9dd0149bd0f2c9b723d9da"] dials ["" "silent:ok"]; arm 6 = "a connect through srt's proxy environment: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 0, silent 1, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 53.257042ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 49618:1b32c1152b53168607e0e12508f0865f" "proxy 49618:1b32c1152b53168607e0e12508f0865f"] dials ["foreign:ok+child:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0, foreign 1 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+=== RUN   TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry
+    exec_probe_net6_dial_test.go:225: TIMING ArchiveExecSandbox took 52.48925ms
+    exec_probe_net6_dial_test.go:227: ops ["connect 49626:85bba0126dd6082ecad75e61944f7e87" "connect 49626:85bba0126dd6082ecad75e61944f7e87" "proxy 49626:85bba0126dd6082ecad75e61944f7e87"] dials ["foreign:ok" "child:ok" ""]; arm 6 = "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 2; accepts in its window: child 1, silent 0, foreign 0 (want a refusal and no accept from the child or silent; exit 0; stderr \"\")"
+--- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails (9.34s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child (1.14s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-child (1.08s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-silent (1.73s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-scan (1.08s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/proxy-silent (1.79s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-foreign-and-child (1.14s)
+    --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails/raw-child-on-retry (1.39s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	9.588s

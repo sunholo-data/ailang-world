@@ -1,0 +1,358 @@
+EXPECTATION MATCH: CONTROL tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: CONTROL tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: CONTROL tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: CONTROL tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: CONTROL tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: CONTROL tests=TestExecProbeReverseLegJudge expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeReverseLegJudge
+EXPECTATION MATCH: CONTROL tests=TestExecProbeReverseLegChattyForeignHolderIsRetried expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeReverseLegChattyForeignHolderIsRetried
+EXPECTATION MATCH: CONTROL tests=TestExecProbeReverseLegExhaustionRefusesDistinctly expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeReverseLegExhaustionRefusesDistinctly
+EXPECTATION MATCH: CONTROL tests=TestExecProbeReverseLegRealReachSurvivesAForeignAttempt expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeReverseLegRealReachSurvivesAForeignAttempt
+EXPECTATION MATCH: CONTROL tests=TestExecProbeReverseLegNoTokenIsNotRetried expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeReverseLegNoTokenIsNotRetried
+EXPECTATION MATCH: CONTROL tests=TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse
+EXPECTATION MATCH: CONTROL tests=TestExecProbeReverseLegSilentHolderRefusesSticky expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeReverseLegSilentHolderRefusesSticky
+EXPECTATION MATCH: CONTROL tests=TestExecProbeReverseDialErrIsSilent expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeReverseDialErrIsSilent
+EXPECTATION MATCH: CONTROL tests=TestExecProbeReversePollRecordsConnectReset expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeReversePollRecordsConnectReset
+EXPECTATION MATCH: CONTROL tests=TestExecProbeReverseHelloWaitBounds expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeReverseHelloWaitBounds
+EXPECTATION MATCH: CONTROL tests=TestExecProbeReversePollCadence expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeReversePollCadence
+EXPECTATION MATCH: CONTROL tests=TestExecProbeChildListenerDrainsTheHello expected_rc=0 actual_rc=0
+RESTORE cmp ok: CONTROL tests=TestExecProbeChildListenerDrainsTheHello
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeNet6DialClassifier expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseLegJudge expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseLegJudge
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseLegChattyForeignHolderIsRetried expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseLegChattyForeignHolderIsRetried
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseLegExhaustionRefusesDistinctly expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseLegExhaustionRefusesDistinctly
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseLegRealReachSurvivesAForeignAttempt expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseLegRealReachSurvivesAForeignAttempt
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseLegNoTokenIsNotRetried expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseLegNoTokenIsNotRetried
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseLegSilentHolderRefusesSticky expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseLegSilentHolderRefusesSticky
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseDialErrIsSilent expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseDialErrIsSilent
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeReversePollRecordsConnectReset expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeReversePollRecordsConnectReset
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseHelloWaitBounds expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeReverseHelloWaitBounds
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeReversePollCadence expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeReversePollCadence
+EXPECTATION MATCH: MUT-SHARED-READ-SHORT tests=TestExecProbeChildListenerDrainsTheHello expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-READ-SHORT tests=TestExecProbeChildListenerDrainsTheHello
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseLegJudge expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseLegJudge
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseLegChattyForeignHolderIsRetried expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseLegChattyForeignHolderIsRetried
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseLegExhaustionRefusesDistinctly expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseLegExhaustionRefusesDistinctly
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseLegRealReachSurvivesAForeignAttempt expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseLegRealReachSurvivesAForeignAttempt
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseLegNoTokenIsNotRetried expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseLegNoTokenIsNotRetried
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseLegSilentHolderRefusesSticky expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseLegSilentHolderRefusesSticky
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseDialErrIsSilent expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseDialErrIsSilent
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReversePollRecordsConnectReset expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReversePollRecordsConnectReset
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseHelloWaitBounds expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReverseHelloWaitBounds
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReversePollCadence expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeReversePollCadence
+EXPECTATION MATCH: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeChildListenerDrainsTheHello expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-JUDGE-SILENT-RETRIED tests=TestExecProbeChildListenerDrainsTheHello
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseLegJudge expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseLegJudge
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseLegChattyForeignHolderIsRetried expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseLegChattyForeignHolderIsRetried
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseLegExhaustionRefusesDistinctly expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseLegExhaustionRefusesDistinctly
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseLegRealReachSurvivesAForeignAttempt expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseLegRealReachSurvivesAForeignAttempt
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseLegNoTokenIsNotRetried expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseLegNoTokenIsNotRetried
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseLegSilentHolderRefusesSticky expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseLegSilentHolderRefusesSticky
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseDialErrIsSilent expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseDialErrIsSilent
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReversePollRecordsConnectReset expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReversePollRecordsConnectReset
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseHelloWaitBounds expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReverseHelloWaitBounds
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReversePollCadence expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeReversePollCadence
+EXPECTATION MATCH: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeChildListenerDrainsTheHello expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-ATTEMPTS-2 tests=TestExecProbeChildListenerDrainsTheHello
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseLegJudge expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseLegJudge
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseLegChattyForeignHolderIsRetried expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseLegChattyForeignHolderIsRetried
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseLegExhaustionRefusesDistinctly expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseLegExhaustionRefusesDistinctly
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseLegRealReachSurvivesAForeignAttempt expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseLegRealReachSurvivesAForeignAttempt
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseLegNoTokenIsNotRetried expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseLegNoTokenIsNotRetried
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseLegSilentHolderRefusesSticky expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseLegSilentHolderRefusesSticky
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseDialErrIsSilent expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseDialErrIsSilent
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReversePollRecordsConnectReset expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReversePollRecordsConnectReset
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseHelloWaitBounds expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReverseHelloWaitBounds
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReversePollCadence expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeReversePollCadence
+EXPECTATION MATCH: MUT-SHARED-WAIT-1500MS tests=TestExecProbeChildListenerDrainsTheHello expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SHARED-WAIT-1500MS tests=TestExecProbeChildListenerDrainsTheHello
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeNet6DialClassifier expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseLegJudge expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseLegJudge
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseLegChattyForeignHolderIsRetried expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseLegChattyForeignHolderIsRetried
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseLegExhaustionRefusesDistinctly expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseLegExhaustionRefusesDistinctly
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseLegRealReachSurvivesAForeignAttempt expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseLegRealReachSurvivesAForeignAttempt
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseLegNoTokenIsNotRetried expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseLegNoTokenIsNotRetried
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseLegSilentHolderRefusesSticky expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseLegSilentHolderRefusesSticky
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseDialErrIsSilent expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseDialErrIsSilent
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReversePollRecordsConnectReset expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReversePollRecordsConnectReset
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseHelloWaitBounds expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReverseHelloWaitBounds
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReversePollCadence expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeReversePollCadence
+EXPECTATION MATCH: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeChildListenerDrainsTheHello expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-WAIT-NOT-ABOVE tests=TestExecProbeChildListenerDrainsTheHello
+EXPECTATION MATCH: MUT-RAW-COUNT tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-RAW-COUNT tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-RAW-COUNT tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-RAW-COUNT tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-RAW-COUNT tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-RAW-COUNT tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-RAW-COUNT tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-RAW-COUNT tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-RAW-COUNT tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-RAW-COUNT tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-SILENT-AS-FOREIGN tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SILENT-AS-FOREIGN tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-SILENT-AS-FOREIGN tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SILENT-AS-FOREIGN tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-SILENT-AS-FOREIGN tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SILENT-AS-FOREIGN tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-SILENT-AS-FOREIGN tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-SILENT-AS-FOREIGN tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-SILENT-AS-FOREIGN tests=TestExecProbeNet6DialClassifier expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-SILENT-AS-FOREIGN tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-PREFIX-AS-FOREIGN tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-PREFIX-AS-FOREIGN tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-PREFIX-AS-FOREIGN tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-PREFIX-AS-FOREIGN tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-PREFIX-AS-FOREIGN tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-PREFIX-AS-FOREIGN tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-PREFIX-AS-FOREIGN tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-PREFIX-AS-FOREIGN tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-PREFIX-AS-FOREIGN tests=TestExecProbeNet6DialClassifier expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-PREFIX-AS-FOREIGN tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-CHILD-AS-FOREIGN tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-CHILD-AS-FOREIGN tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-CHILD-AS-FOREIGN tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CHILD-AS-FOREIGN tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-CHILD-AS-FOREIGN tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-CHILD-AS-FOREIGN tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-CHILD-AS-FOREIGN tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CHILD-AS-FOREIGN tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-CHILD-AS-FOREIGN tests=TestExecProbeNet6DialClassifier expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-CHILD-AS-FOREIGN tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-CHILD-AS-CONTROL tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-CHILD-AS-CONTROL tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-CHILD-AS-CONTROL tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CHILD-AS-CONTROL tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-CHILD-AS-CONTROL tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-CHILD-AS-CONTROL tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-CHILD-AS-CONTROL tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CHILD-AS-CONTROL tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-CHILD-AS-CONTROL tests=TestExecProbeNet6DialClassifier expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-CHILD-AS-CONTROL tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-TOKEN-ONLY tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-TOKEN-ONLY tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-TOKEN-ONLY tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-TOKEN-ONLY tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-TOKEN-ONLY tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-TOKEN-ONLY tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-TOKEN-ONLY tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-TOKEN-ONLY tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-TOKEN-ONLY tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-TOKEN-ONLY tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-RETRY-CHILD tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-RETRY-CHILD tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-RETRY-CHILD tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-RETRY-CHILD tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-RETRY-CHILD tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-RETRY-CHILD tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-RETRY-CHILD tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-RETRY-CHILD tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-RETRY-CHILD tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-RETRY-CHILD tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-RETRY-SILENT tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-RETRY-SILENT tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-RETRY-SILENT tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-RETRY-SILENT tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-RETRY-SILENT tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-RETRY-SILENT tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-RETRY-SILENT tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-RETRY-SILENT tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-RETRY-SILENT tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-RETRY-SILENT tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-EXHAUST-PASSES tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-EXHAUST-PASSES tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-EXHAUST-PASSES tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-EXHAUST-PASSES tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-EXHAUST-PASSES tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-EXHAUST-PASSES tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-EXHAUST-PASSES tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-EXHAUST-PASSES tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-EXHAUST-PASSES tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-EXHAUST-PASSES tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-UNBOUNDED tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-UNBOUNDED tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-UNBOUNDED tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-UNBOUNDED tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-UNBOUNDED tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-UNBOUNDED tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-UNBOUNDED tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-UNBOUNDED tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-UNBOUNDED tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-UNBOUNDED tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-FROM-NOT-ADVANCED tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-FROM-NOT-ADVANCED tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-FROM-NOT-ADVANCED tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-FROM-NOT-ADVANCED tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-FROM-NOT-ADVANCED tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-FROM-NOT-ADVANCED tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-FROM-NOT-ADVANCED tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-FROM-NOT-ADVANCED tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-FROM-NOT-ADVANCED tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-FROM-NOT-ADVANCED tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-WINDOW-AT-JUDGE tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-WINDOW-AT-JUDGE tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-WINDOW-AT-JUDGE tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-WINDOW-AT-JUDGE tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-WINDOW-AT-JUDGE tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-WINDOW-AT-JUDGE tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-WINDOW-AT-JUDGE tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-WINDOW-AT-JUDGE tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-WINDOW-AT-JUDGE tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-WINDOW-AT-JUDGE tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-CLIENT-NO-LINE tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=1 actual_rc=1
+RESTORE cmp ok: MUT-CLIENT-NO-LINE tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-CLIENT-NO-LINE tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CLIENT-NO-LINE tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-CLIENT-NO-LINE tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CLIENT-NO-LINE tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-CLIENT-NO-LINE tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CLIENT-NO-LINE tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-CLIENT-NO-LINE tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CLIENT-NO-LINE tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-PENDING-AS-FOREIGN tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-PENDING-AS-FOREIGN tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-PENDING-AS-FOREIGN tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-PENDING-AS-FOREIGN tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-PENDING-AS-FOREIGN tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-PENDING-AS-FOREIGN tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-PENDING-AS-FOREIGN tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-PENDING-AS-FOREIGN tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-PENDING-AS-FOREIGN tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-PENDING-AS-FOREIGN tests=TestExecProbeNet6DialClassifier
+EXPECTATION MATCH: MUT-CONTROL-ANY-ACCEPT tests=TestExecProbePassThroughShimFailsEveryConfinementArm expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CONTROL-ANY-ACCEPT tests=TestExecProbePassThroughShimFailsEveryConfinementArm
+EXPECTATION MATCH: MUT-CONTROL-ANY-ACCEPT tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CONTROL-ANY-ACCEPT tests=TestExecProbeNet6ForeignDialIsRetriedNotRefused
+EXPECTATION MATCH: MUT-CONTROL-ANY-ACCEPT tests=TestExecProbeNet6ChildOrSilentAcceptStillFails expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CONTROL-ANY-ACCEPT tests=TestExecProbeNet6ChildOrSilentAcceptStillFails
+EXPECTATION MATCH: MUT-CONTROL-ANY-ACCEPT tests=TestExecProbeNet6ForeignEveryAttemptRefuses expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CONTROL-ANY-ACCEPT tests=TestExecProbeNet6ForeignEveryAttemptRefuses
+EXPECTATION MATCH: MUT-CONTROL-ANY-ACCEPT tests=TestExecProbeNet6DialClassifier expected_rc=0 actual_rc=0
+RESTORE cmp ok: MUT-CONTROL-ANY-ACCEPT tests=TestExecProbeNet6DialClassifier
+Mutation summary: 177 named-test rows; 0 mismatches; 21 scenarios
+RESTORE cmp ok: exit cleanup
+GO FILE CENSUS unchanged; no extra .go files remain
+Mutation evidence: /Users/voightkampff/dev/sunholo-data/.mut-wt-iter359/.plan-mutants.WMWakS (logs retained; pristine and runtime caches removed)

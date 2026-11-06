@@ -1,0 +1,5 @@
+=== RUN   TestExecProbeNet6ForeignEveryAttemptRefuses
+    exec_probe_net6_dial_test.go:241: TIMING ArchiveExecSandbox took 53.429542ms
+--- PASS: TestExecProbeNet6ForeignEveryAttemptRefuses (1.80s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	2.048s

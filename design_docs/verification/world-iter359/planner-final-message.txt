@@ -1,0 +1,20 @@
+Created:
+
+- [design_docs/planned/w-exec-probe-foreign-dial-false-refusal-sprint-plan.md](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter359/design_docs/planned/w-exec-probe-foreign-dial-false-refusal-sprint-plan.md) — 502 lines
+- [design_docs/planned/sprint_w-exec-probe-foreign-dial-false-refusal.json](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter359/design_docs/planned/sprint_w-exec-probe-foreign-dial-false-refusal.json) — 32 lines
+- [design_docs/verification/world-iter359/plan-M1.diff.txt](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter359/design_docs/verification/world-iter359/plan-M1.diff.txt) — 821 lines
+- [design_docs/verification/world-iter359/plan-mutants.sh.txt](/Users/voightkampff/dev/sunholo-data/.planner-wt-iter359/design_docs/verification/world-iter359/plan-mutants.sh.txt) — 362 lines; **177 mutation rows**
+
+Diff SHA256: `7fb2537268498db0b6db58d05b59cb0d52add1bb20178d16c3025dbfb3eeaf85`. `cmp` confirms byte identity; scratch application succeeded.
+
+| File | Pre-apply SHA256 | Post-apply SHA256 |
+|---|---|---|
+| `.github/workflows/ci.yml` | `41a0a58611565fe148faaac0327dc34793550f12ddef74e7cc3c33a250c4697d` | `4efb18438d736bb41a0770b3d4fd0b12e3ff5360e89dc8bc156e2ab44f67521f` |
+| `host/broker/exec_probe.go` | `19de369381579387bd9d83aceae28a5912717dab00b283454ca0067d41d087bd` | `110fffc3f31a10d71a024b3e02f66b0864178ce59e44e3e5b5be2c82ac11c79f` |
+| `host/broker/exec_probe_net6_dial_test.go` | ABSENT | `8c7f9602c1105bdca99af2326a6e51851d7011e1ccb875f18a293f4f91838b0e` |
+| `host/broker/exec_probe_net6_test.go` | `400faf0ffc25a3f0a79302cc9436349da6e445b998744b5767f6d706475a64aa` | `8ec970891599257aa280436f78cfac427ebaccc1cf5cd33d404904cf60ec3b26` |
+| `host/broker/exec_probe_test.go` | `bbfccede19236d17b81d40401cc079aeb9987ff356c6a08affe6bc2a159e80d0` | `ee59ba2cc5742855f6aa172cb7873484a5c07abf2f1b73d5792d8673c45e7366` |
+
+Vet/build returned rc 0 on base and applied scratch; formatting and static artifact checks returned rc 0. No listener tests or mutation runner executed. Scratch removed; implementation unchanged.
+
+Findings recorded: fixed `/tmp/claude` writes prevent literal process-wide root confinement; relay fallback conflicts with byte-exact scope; duration bounds cannot guarantee scheduler progress; security claims need R2’s qualification and probability assumptions.

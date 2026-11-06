@@ -1,0 +1,4 @@
+=== RUN   TestExecProbeNet6BindSiteIsBeforeTheFanOut
+--- PASS: TestExecProbeNet6BindSiteIsBeforeTheFanOut (0.01s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.259s

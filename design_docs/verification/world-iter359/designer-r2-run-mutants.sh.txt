@@ -1,0 +1,18 @@
+#!/bin/bash
+# iter-359 designer r2: each mutant on a pristine copy of the r2 prototype's exec_probe.go; restore + cmp after each.
+S=/Users/voightkampff/dev/sunholo-data/.designer-scratch-iter359-r2
+cd $S/proto
+cp host/broker/exec_probe.go $S/exec_probe.go.r2
+FWD='TestExecProbePassThroughShimFailsEveryConfinementArm|TestExecProbeNet6ForeignDialIsRetriedNotRefused|TestExecProbeNet6ChildOrSilentAcceptStillFails|TestExecProbeNet6ForeignEveryAttemptRefuses|TestExecProbeNet6DialClassifier'
+REV='TestExecProbeReverseLegJudge|TestExecProbeReverseLegChattyForeignHolderIsRetried|TestExecProbeReverseLegExhaustionRefusesDistinctly|TestExecProbeReverseLegRealReachSurvivesAForeignAttempt|TestExecProbeReverseLegNoTokenIsNotRetried|TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReverseDialErrIsSilent|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseHelloWaitBounds|TestExecProbeReversePollCadence|TestExecProbeChildListenerDrainsTheHello'
+for m in CONTROL MUT-SHARED-READ-SHORT MUT-SHARED-JUDGE-SILENT-RETRIED MUT-SHARED-WAIT-1500MS MUT-SHARED-ATTEMPTS-2 MUT-WINDOW-WAIT-NOT-ABOVE MUT-RAW-COUNT MUT-SILENT-AS-FOREIGN MUT-PREFIX-AS-FOREIGN MUT-CHILD-AS-FOREIGN MUT-CHILD-AS-CONTROL MUT-TOKEN-ONLY MUT-RETRY-CHILD MUT-RETRY-SILENT MUT-EXHAUST-PASSES MUT-UNBOUNDED MUT-FROM-NOT-ADVANCED MUT-WINDOW-AT-JUDGE MUT-PENDING-AS-FOREIGN MUT-CONTROL-ANY-ACCEPT MUT-CLIENT-NO-LINE; do
+  cp $S/exec_probe.go.r2 host/broker/exec_probe.go
+  [ $m != CONTROL ] && python3 -I $S/scripts/mutate-r2.py $m host/broker/exec_probe.go
+  case $m in CONTROL|MUT-SHARED-*|MUT-WINDOW-WAIT-NOT-ABOVE) T="^($FWD|$REV)\$";; *) T="^($FWD)\$";; esac
+  echo "== $m $(uptime | sed 's/.*load/load/') tests=$([ ${#T} -gt 400 ] && echo FWD+REV || echo FWD)"
+  go test -count=1 -timeout 300s -run "$T" -v ./host/broker/ > $S/mut-$m.log 2>&1; echo "rc=$?"
+  grep -E '^--- FAIL|^    --- FAIL' $S/mut-$m.log | sed 's/ (.*//' | sort | uniq -c
+  echo "pass=$(grep -c '^--- PASS' $S/mut-$m.log) fail=$(grep -c '^--- FAIL' $S/mut-$m.log)"
+done
+cp $S/exec_probe.go.r2 host/broker/exec_probe.go
+cmp $S/exec_probe.go.r2 host/broker/exec_probe.go && echo "# restored r2 exec_probe.go (cmp ok)"

@@ -1,0 +1,30 @@
+# r2 prototype, load averages: 1.17 3.01 3.62
+$ go test -count=1 -v -run '^(TestExecProbeReverseLegJudge|TestExecProbeReverseLegChattyForeignHolderIsRetried|TestExecProbeReverseLegExhaustionRefusesDistinctly|TestExecProbeReverseLegRealReachSurvivesAForeignAttempt|TestExecProbeReverseLegNoTokenIsNotRetried|TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse|TestExecProbeReverseLegSilentHolderRefusesSticky|TestExecProbeReverseDialErrIsSilent|TestExecProbeReversePollRecordsConnectReset|TestExecProbeReverseHelloWaitBounds|TestExecProbeReversePollCadence|TestExecProbeChildListenerDrainsTheHello|TestExecProbePassThroughShimFailsEveryConfinementArm|TestExecProbeNet6.*)$' ./host/broker/
+--- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused (6.12s)
+--- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails (9.89s)
+--- PASS: TestExecProbeNet6ForeignEveryAttemptRefuses (1.82s)
+--- PASS: TestExecProbeNet6DialClassifier (1.01s)
+--- PASS: TestExecProbeNet6BoundBeforeAnyPick (2.92s)
+--- PASS: TestExecProbeNet6BindSiteIsBeforeTheFanOut (0.02s)
+--- PASS: TestExecProbePassThroughShimFailsEveryConfinementArm (1.83s)
+--- PASS: TestExecProbeReverseLegJudge (0.00s)
+--- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried (1.48s)
+--- PASS: TestExecProbeReverseLegExhaustionRefusesDistinctly (0.45s)
+--- PASS: TestExecProbeReverseLegNoTokenIsNotRetried (0.40s)
+--- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky (1.40s)
+--- PASS: TestExecProbeReverseLegRealReachSurvivesAForeignAttempt (1.27s)
+--- PASS: TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse (5.45s)
+--- PASS: TestExecProbeReverseDialErrIsSilent (0.00s)
+--- PASS: TestExecProbeReversePollRecordsConnectReset (0.00s)
+--- PASS: TestExecProbeReverseHelloWaitBounds (0.00s)
+--- PASS: TestExecProbeChildListenerDrainsTheHello (0.00s)
+--- PASS: TestExecProbeReversePollCadence (1.04s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	35.461s
+# on applycheck (identical files, cmp in designer-r2-apply.txt)
+$ gofmt -l host/broker/ | wc -l
+       0
+$ go vet ./host/broker/ && echo VET-OK
+VET-OK
+$ go build ./... && echo BUILD-OK
+BUILD-OK

@@ -1,0 +1,4 @@
+=== RUN   TestExecProbeChildListenerDrainsTheHello
+--- PASS: TestExecProbeChildListenerDrainsTheHello (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.248s

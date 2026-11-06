@@ -1,0 +1,362 @@
+#!/bin/bash
+# Controller only, OUTSIDE the planner sandbox. Compatible with Bash 3.2.
+# Usage: bash /path/to/plan-mutants.sh.txt TREE_ROOT
+# 21 scenarios (CONTROL + all 20 measured r2 mutants), 177 independent rows.
+# Run sequentially with no concurrent source edits or test suites.
+# Runner-owned writes stay under $1. Existing probes hard-code /tmp/claude;
+# literal process-wide write confinement needs OS path isolation (plan finding F1).
+set -euo pipefail
+if [ "$#" -ne 1 ]; then
+  echo 'usage: bash plan-mutants.sh.txt TREE_ROOT' >&2
+  exit 2
+fi
+root=$(cd "$1" && pwd -P)
+cd "$root"
+src=host/broker/exec_probe.go
+[ -f go.mod ] && [ -f "$src" ] && [ -f host/broker/exec_probe_net6_dial_test.go ]
+[ ! -L host ] && [ ! -L host/broker ] && [ ! -L "$src" ]
+command -v python3 >/dev/null
+command -v go >/dev/null
+state=$(mktemp -d "$root/.plan-mutants.XXXXXX")
+runtime="$state/runtime"
+mkdir "$runtime"
+cp "$src" "$state/exec_probe.go.pristine"
+restore() {
+  cp "$state/exec_probe.go.pristine" "$src" || return 1
+  cmp "$state/exec_probe.go.pristine" "$src" || return 1
+}
+finish() {
+  saved_rc=$?
+  trap - EXIT HUP INT TERM
+  if restore; then
+    echo 'RESTORE cmp ok: exit cleanup'
+  else
+    echo 'RESTORE MISMATCH: exit cleanup' >&2
+    saved_rc=3
+  fi
+  # Module/toolchain caches can contain .go sources. Remove ALL of them, even
+  # on failure, before any repo-wide source scan or later suite can run.
+  chmod -R u+w "$runtime" 2>/dev/null || true
+  rm -rf "$runtime" || saved_rc=3
+  rm -f "$state/exec_probe.go.pristine" || saved_rc=3
+  if ! python3 -I - "$root" "$state/go-files-before.json" <<'CENSUS'
+from pathlib import Path
+import json, sys
+root, saved = Path(sys.argv[1]), Path(sys.argv[2])
+before = set(json.loads(saved.read_text()))
+after = {str(p.relative_to(root)) for p in root.rglob('*.go') if p.is_file()}
+if after != before:
+    raise SystemExit('GO FILE CENSUS MISMATCH: added=%r removed=%r' % (sorted(after-before), sorted(before-after)))
+print('GO FILE CENSUS unchanged; no extra .go files remain')
+CENSUS
+  then saved_rc=3; fi
+  echo "Mutation evidence: $state (logs retained; pristine and runtime caches removed)"
+  exit "$saved_rc"
+}
+# Save only non-.go artifacts; never duplicate a Go declaration under this tree.
+python3 -I - "$root" "$state/go-files-before.json" <<'CENSUS'
+from pathlib import Path
+import json, sys
+root = Path(sys.argv[1])
+Path(sys.argv[2]).write_text(json.dumps(sorted(str(p.relative_to(root)) for p in root.rglob('*.go') if p.is_file()))+'\n')
+CENSUS
+trap finish EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+trap 'exit 129' HUP
+mkdir "$runtime/tmp" "$runtime/gocache" "$runtime/modcache" "$runtime/gopath" "$runtime/config" "$runtime/cache" "$runtime/telemetry"
+export TMPDIR="$runtime/tmp" GOTMPDIR="$runtime/tmp"
+export GOCACHE="$runtime/gocache" GOMODCACHE="$runtime/modcache" GOPATH="$runtime/gopath"
+export XDG_CONFIG_HOME="$runtime/config" XDG_CACHE_HOME="$runtime/cache" GOTELEMETRYDIR="$runtime/telemetry"
+export GOENV=off GOWORK=off GOFLAGS= GOCACHEPROG=
+# Leave GOTOOLCHAIN selection to Go's default; go.mod requires go 1.26.6.
+python3 -I - "$root" <<'PINS'
+from pathlib import Path
+import hashlib, sys
+root=Path(sys.argv[1])
+pins={'.github/workflows/ci.yml': '4efb18438d736bb41a0770b3d4fd0b12e3ff5360e89dc8bc156e2ab44f67521f',
+ 'host/broker/exec_probe.go': '110fffc3f31a10d71a024b3e02f66b0864178ce59e44e3e5b5be2c82ac11c79f',
+ 'host/broker/exec_probe_net6_dial_test.go': '8c7f9602c1105bdca99af2326a6e51851d7011e1ccb875f18a293f4f91838b0e',
+ 'host/broker/exec_probe_net6_test.go': '8ec970891599257aa280436f78cfac427ebaccc1cf5cd33d404904cf60ec3b26',
+ 'host/broker/exec_probe_test.go': 'ee59ba2cc5742855f6aa172cb7873484a5c07abf2f1b73d5792d8673c45e7366'}
+for name,want in pins.items():
+    got=hashlib.sha256((root/name).read_bytes()).hexdigest()
+    if got != want:
+        raise SystemExit('applied input hash mismatch: %s got %s want %s' % (name,got,want))
+PINS
+mutate() {
+  python3 -I - "$root/$src" "$1" <<'MUTATE'
+from pathlib import Path
+import sys
+p, name = Path(sys.argv[1]), sys.argv[2]
+# Same edit pairs as designer-r2-mutate.py.txt; require each anchor exactly once.
+M={'MUT-RAW-COUNT': [('reverseSeen{child: w.child > 0, foreign: w.foreign > 0, silent: w.silent > 0}',
+                    'reverseSeen{child: w.child > 0, silent: w.silent+w.foreign > 0}')],
+ 'MUT-SILENT-AS-FOREIGN': [('\t\treturn net6Foreign\n\t}\n\treturn net6Silent\n}',
+                            '\t\treturn net6Foreign\n\t}\n\treturn net6Foreign\n}')],
+ 'MUT-PREFIX-AS-FOREIGN': [('\tcase !strings.HasPrefix(wantCtl, s) && !strings.HasPrefix(wantChild, '
+                            's):\n',
+                            '\tcase len(s) > 0:\n')],
+ 'MUT-CHILD-AS-FOREIGN': [('\tcase s == wantChild:\n\t\treturn net6Child',
+                           '\tcase s == wantChild:\n\t\treturn net6Foreign')],
+ 'MUT-CHILD-AS-CONTROL': [('\tcase s == wantChild:\n\t\treturn net6Child',
+                           '\tcase s == wantChild:\n\t\treturn net6Control')],
+ 'MUT-TOKEN-ONLY': [('\t\tw, next := l.window(*from)\n',
+                     '\t\t_, next := l.window(*from)\n\t\tvar w net6Window\n')],
+ 'MUT-RETRY-CHILD': [('reverseSeen{child: w.child > 0, foreign: w.foreign > 0,',
+                      'reverseSeen{child: false, foreign: w.foreign+w.child > 0,')],
+ 'MUT-RETRY-SILENT': [('foreign: w.foreign > 0, silent: w.silent > 0}',
+                       'foreign: w.foreign+w.silent > 0}')],
+ 'MUT-EXHAUST-PASSES': [('\t\tif attempt == execProbeAttempts {\n',
+                         '\t\tif attempt == execProbeAttempts {\n'
+                         '\t\t\tif true {\n'
+                         '\t\t\t\treturn ""\n'
+                         '\t\t\t}\n')],
+ 'MUT-UNBOUNDED': [('\t\tif attempt == execProbeAttempts {\n',
+                    '\t\tif attempt == execProbeAttempts && false {\n')],
+ 'MUT-FROM-NOT-ADVANCED': [('\t\t*from = next\n', '\t\t_ = next\n')],
+ 'MUT-WINDOW-AT-JUDGE': [('\t\tw, next := l.window(*from)\n',
+                          '\t\tw, next := l.window(max(*from, l.mark()))\n')],
+ 'MUT-PENDING-AS-FOREIGN': [('\t\t\t\tcase net6Foreign:\n\t\t\t\t\tw.foreign++',
+                             '\t\t\t\tcase net6Foreign, net6Pending:\n\t\t\t\t\tw.foreign++')],
+ 'MUT-CONTROL-ANY-ACCEPT': [('\t\tok := slices.Contains(l.seen, net6Control)\n',
+                             '\t\tok := len(l.seen) >= 1\n')],
+ 'MUT-CLIENT-NO-LINE': [("s.on('connect',()=>{clearTimeout(t);s.end(dial(nonce));",
+                         "s.on('connect',()=>{clearTimeout(t);s.destroy();")],
+ 'MUT-SHARED-READ-SHORT': [('\tfor len(buf) < most {\n', '\tfor len(buf) < most-1 {\n')],
+ 'MUT-SHARED-JUDGE-SILENT-RETRIED': [('\tcase seen.silent:\n\t\treturn revSilent\n',
+                                      '\tcase seen.silent:\n\t\treturn revInconclusive\n')],
+ 'MUT-SHARED-WAIT-1500MS': [('const execProbeHelloWait = 500 * time.Millisecond\n',
+                             'const execProbeHelloWait = 1500 * time.Millisecond\n')],
+ 'MUT-SHARED-ATTEMPTS-2': [('const execProbeAttempts = 3\n', 'const execProbeAttempts = 2\n')],
+ 'MUT-WINDOW-WAIT-NOT-ABOVE': [('const execProbeWindowWait = execProbeHelloWait + time.Second\n',
+                                'const execProbeWindowWait = execProbeHelloWait\n')]}
+s=p.read_text()
+for old,new in ([] if name=='CONTROL' else M[name]):
+    if s.count(old)!=1:
+        raise SystemExit('mutation anchor mismatch: %s %r count=%d' % (name,old,s.count(old)))
+    s=s.replace(old,new)
+p.write_text(s)
+MUTATE
+}
+rows=0
+mismatches=0
+run_row() { # mutant, exactly one top-level test, expected rc (0 green / 1 red), assertion text
+  mut=$1
+  name=$2
+  expected=$3
+  needle=$4
+  restore || { echo "RESTORE MISMATCH: $mut $name precondition" >&2; exit 3; }
+  mutate "$mut"
+  log="$state/$mut.$name.log"
+  rc=0
+  go test -count=1 -run "^(${name})$" ./host/broker/ -v -timeout 300s > "$log" 2>&1 || rc=$?
+  matched=1
+  [ "$rc" -eq "$expected" ] || matched=0
+  if [ "$expected" -eq 0 ]; then
+    /usr/bin/grep -Fq -- "--- PASS: $name " "$log" || matched=0
+  else
+    /usr/bin/grep -Fq -- "--- FAIL: $name " "$log" || matched=0
+    /usr/bin/grep -Fq -- "$needle" "$log" || matched=0
+  fi
+  # A build error, missing test, SKIP, timeout or crash is never an expected red.
+  if /usr/bin/grep -Eq -- '--- SKIP:|\[build failed\]|^panic:|^fatal error:|no tests to run' "$log"; then
+    matched=0
+  fi
+  rows=$((rows+1))
+  if [ "$matched" -eq 1 ]; then
+    echo "EXPECTATION MATCH: $mut tests=$name expected_rc=$expected actual_rc=$rc"
+  else
+    mismatches=$((mismatches+1))
+    echo "EXPECTATION MISMATCH: $mut tests=$name expected_rc=$expected actual_rc=$rc log=$log"
+    cat "$log"
+  fi
+  restore || { echo "RESTORE MISMATCH: $mut $name" >&2; exit 3; }
+  echo "RESTORE cmp ok: $mut tests=$name"
+}
+# All five forward tests per scenario; all twelve reverse tests only where
+# the designer measured them. Shared-piece forward/reverse kills are separate rows.
+while IFS='|' read -r mutant test_name expected_rc assertion_text; do
+  run_row "$mutant" "$test_name" "$expected_rc" "$assertion_text"
+done <<'ROWS'
+CONTROL|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+CONTROL|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+CONTROL|TestExecProbeNet6ChildOrSilentAcceptStillFails|0|
+CONTROL|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+CONTROL|TestExecProbeNet6DialClassifier|0|
+CONTROL|TestExecProbeReverseLegJudge|0|
+CONTROL|TestExecProbeReverseLegChattyForeignHolderIsRetried|0|
+CONTROL|TestExecProbeReverseLegExhaustionRefusesDistinctly|0|
+CONTROL|TestExecProbeReverseLegRealReachSurvivesAForeignAttempt|0|
+CONTROL|TestExecProbeReverseLegNoTokenIsNotRetried|0|
+CONTROL|TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse|0|
+CONTROL|TestExecProbeReverseLegSilentHolderRefusesSticky|0|
+CONTROL|TestExecProbeReverseDialErrIsSilent|0|
+CONTROL|TestExecProbeReversePollRecordsConnectReset|0|
+CONTROL|TestExecProbeReverseHelloWaitBounds|0|
+CONTROL|TestExecProbeReversePollCadence|0|
+CONTROL|TestExecProbeChildListenerDrainsTheHello|0|
+MUT-SHARED-READ-SHORT|TestExecProbePassThroughShimFailsEveryConfinementArm|1|does not report
+MUT-SHARED-READ-SHORT|TestExecProbeNet6ForeignDialIsRetriedNotRefused|1|arm 6 refused on foreign dials alone
+MUT-SHARED-READ-SHORT|TestExecProbeNet6ChildOrSilentAcceptStillFails|1|want it to contain
+MUT-SHARED-READ-SHORT|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-SHARED-READ-SHORT|TestExecProbeNet6DialClassifier|1|classifyNet6Dial(
+MUT-SHARED-READ-SHORT|TestExecProbeReverseLegJudge|0|
+MUT-SHARED-READ-SHORT|TestExecProbeReverseLegChattyForeignHolderIsRetried|0|
+MUT-SHARED-READ-SHORT|TestExecProbeReverseLegExhaustionRefusesDistinctly|0|
+MUT-SHARED-READ-SHORT|TestExecProbeReverseLegRealReachSurvivesAForeignAttempt|1|and 2
+MUT-SHARED-READ-SHORT|TestExecProbeReverseLegNoTokenIsNotRetried|0|
+MUT-SHARED-READ-SHORT|TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse|0|
+MUT-SHARED-READ-SHORT|TestExecProbeReverseLegSilentHolderRefusesSticky|0|
+MUT-SHARED-READ-SHORT|TestExecProbeReverseDialErrIsSilent|0|
+MUT-SHARED-READ-SHORT|TestExecProbeReversePollRecordsConnectReset|0|
+MUT-SHARED-READ-SHORT|TestExecProbeReverseHelloWaitBounds|1|an answer
+MUT-SHARED-READ-SHORT|TestExecProbeReversePollCadence|0|
+MUT-SHARED-READ-SHORT|TestExecProbeChildListenerDrainsTheHello|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeNet6ChildOrSilentAcceptStillFails|1|want it to contain
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeNet6DialClassifier|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeReverseLegJudge|1|judgeReverse(
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeReverseLegChattyForeignHolderIsRetried|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeReverseLegExhaustionRefusesDistinctly|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeReverseLegRealReachSurvivesAForeignAttempt|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeReverseLegNoTokenIsNotRetried|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse|1|arm 6 must carry the silent refusal
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeReverseLegSilentHolderRefusesSticky|1|want the sticky silent refusal
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeReverseDialErrIsSilent|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeReversePollRecordsConnectReset|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeReverseHelloWaitBounds|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeReversePollCadence|0|
+MUT-SHARED-JUDGE-SILENT-RETRIED|TestExecProbeChildListenerDrainsTheHello|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeNet6ForeignDialIsRetriedNotRefused|1|arm 6 refused on foreign dials alone
+MUT-SHARED-ATTEMPTS-2|TestExecProbeNet6ChildOrSilentAcceptStillFails|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeNet6ForeignEveryAttemptRefuses|1|connect runs
+MUT-SHARED-ATTEMPTS-2|TestExecProbeNet6DialClassifier|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeReverseLegJudge|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeReverseLegChattyForeignHolderIsRetried|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeReverseLegExhaustionRefusesDistinctly|1|want inconclusive after 3 attempts
+MUT-SHARED-ATTEMPTS-2|TestExecProbeReverseLegRealReachSurvivesAForeignAttempt|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeReverseLegNoTokenIsNotRetried|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeReverseLegSilentHolderRefusesSticky|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeReverseDialErrIsSilent|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeReversePollRecordsConnectReset|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeReverseHelloWaitBounds|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeReversePollCadence|0|
+MUT-SHARED-ATTEMPTS-2|TestExecProbeChildListenerDrainsTheHello|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeNet6ChildOrSilentAcceptStillFails|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeNet6DialClassifier|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeReverseLegJudge|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeReverseLegChattyForeignHolderIsRetried|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeReverseLegExhaustionRefusesDistinctly|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeReverseLegRealReachSurvivesAForeignAttempt|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeReverseLegNoTokenIsNotRetried|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse|1|arm 6 must carry the silent refusal
+MUT-SHARED-WAIT-1500MS|TestExecProbeReverseLegSilentHolderRefusesSticky|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeReverseDialErrIsSilent|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeReversePollRecordsConnectReset|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeReverseHelloWaitBounds|1|hello deadline at set+
+MUT-SHARED-WAIT-1500MS|TestExecProbeReversePollCadence|0|
+MUT-SHARED-WAIT-1500MS|TestExecProbeChildListenerDrainsTheHello|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeNet6ChildOrSilentAcceptStillFails|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeNet6DialClassifier|1|must exceed the line-read deadline
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeReverseLegJudge|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeReverseLegChattyForeignHolderIsRetried|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeReverseLegExhaustionRefusesDistinctly|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeReverseLegRealReachSurvivesAForeignAttempt|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeReverseLegNoTokenIsNotRetried|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeReverseLegSilentHolderRefusesSticky|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeReverseDialErrIsSilent|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeReversePollRecordsConnectReset|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeReverseHelloWaitBounds|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeReversePollCadence|0|
+MUT-WINDOW-WAIT-NOT-ABOVE|TestExecProbeChildListenerDrainsTheHello|0|
+MUT-RAW-COUNT|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-RAW-COUNT|TestExecProbeNet6ForeignDialIsRetriedNotRefused|1|arm 6 refused on foreign dials alone
+MUT-RAW-COUNT|TestExecProbeNet6ChildOrSilentAcceptStillFails|1|want it to contain
+MUT-RAW-COUNT|TestExecProbeNet6ForeignEveryAttemptRefuses|1|connect runs
+MUT-RAW-COUNT|TestExecProbeNet6DialClassifier|0|
+MUT-SILENT-AS-FOREIGN|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-SILENT-AS-FOREIGN|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-SILENT-AS-FOREIGN|TestExecProbeNet6ChildOrSilentAcceptStillFails|1|want it to contain
+MUT-SILENT-AS-FOREIGN|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-SILENT-AS-FOREIGN|TestExecProbeNet6DialClassifier|1|classifyNet6Dial(
+MUT-PREFIX-AS-FOREIGN|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-PREFIX-AS-FOREIGN|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-PREFIX-AS-FOREIGN|TestExecProbeNet6ChildOrSilentAcceptStillFails|0|
+MUT-PREFIX-AS-FOREIGN|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-PREFIX-AS-FOREIGN|TestExecProbeNet6DialClassifier|1|classifyNet6Dial(
+MUT-CHILD-AS-FOREIGN|TestExecProbePassThroughShimFailsEveryConfinementArm|1|does not report
+MUT-CHILD-AS-FOREIGN|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-CHILD-AS-FOREIGN|TestExecProbeNet6ChildOrSilentAcceptStillFails|1|want it to contain
+MUT-CHILD-AS-FOREIGN|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-CHILD-AS-FOREIGN|TestExecProbeNet6DialClassifier|1|classifyNet6Dial(
+MUT-CHILD-AS-CONTROL|TestExecProbePassThroughShimFailsEveryConfinementArm|1|does not report
+MUT-CHILD-AS-CONTROL|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-CHILD-AS-CONTROL|TestExecProbeNet6ChildOrSilentAcceptStillFails|1|want it to contain
+MUT-CHILD-AS-CONTROL|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-CHILD-AS-CONTROL|TestExecProbeNet6DialClassifier|1|classifyNet6Dial(
+MUT-TOKEN-ONLY|TestExecProbePassThroughShimFailsEveryConfinementArm|1|does not report
+MUT-TOKEN-ONLY|TestExecProbeNet6ForeignDialIsRetriedNotRefused|1|runs =
+MUT-TOKEN-ONLY|TestExecProbeNet6ChildOrSilentAcceptStillFails|1|want it to contain
+MUT-TOKEN-ONLY|TestExecProbeNet6ForeignEveryAttemptRefuses|1|connect runs
+MUT-TOKEN-ONLY|TestExecProbeNet6DialClassifier|0|
+MUT-RETRY-CHILD|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-RETRY-CHILD|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-RETRY-CHILD|TestExecProbeNet6ChildOrSilentAcceptStillFails|1|want it to contain
+MUT-RETRY-CHILD|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-RETRY-CHILD|TestExecProbeNet6DialClassifier|0|
+MUT-RETRY-SILENT|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-RETRY-SILENT|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-RETRY-SILENT|TestExecProbeNet6ChildOrSilentAcceptStillFails|1|want it to contain
+MUT-RETRY-SILENT|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-RETRY-SILENT|TestExecProbeNet6DialClassifier|0|
+MUT-EXHAUST-PASSES|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-EXHAUST-PASSES|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-EXHAUST-PASSES|TestExecProbeNet6ChildOrSilentAcceptStillFails|0|
+MUT-EXHAUST-PASSES|TestExecProbeNet6ForeignEveryAttemptRefuses|1|connect runs
+MUT-EXHAUST-PASSES|TestExecProbeNet6DialClassifier|0|
+MUT-UNBOUNDED|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-UNBOUNDED|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-UNBOUNDED|TestExecProbeNet6ChildOrSilentAcceptStillFails|0|
+MUT-UNBOUNDED|TestExecProbeNet6ForeignEveryAttemptRefuses|1|connect runs
+MUT-UNBOUNDED|TestExecProbeNet6DialClassifier|0|
+MUT-FROM-NOT-ADVANCED|TestExecProbePassThroughShimFailsEveryConfinementArm|1|does not report
+MUT-FROM-NOT-ADVANCED|TestExecProbeNet6ForeignDialIsRetriedNotRefused|1|arm 6 refused on foreign dials alone
+MUT-FROM-NOT-ADVANCED|TestExecProbeNet6ChildOrSilentAcceptStillFails|0|
+MUT-FROM-NOT-ADVANCED|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-FROM-NOT-ADVANCED|TestExecProbeNet6DialClassifier|0|
+MUT-WINDOW-AT-JUDGE|TestExecProbePassThroughShimFailsEveryConfinementArm|1|does not report
+MUT-WINDOW-AT-JUDGE|TestExecProbeNet6ForeignDialIsRetriedNotRefused|1|runs =
+MUT-WINDOW-AT-JUDGE|TestExecProbeNet6ChildOrSilentAcceptStillFails|1|want it to contain
+MUT-WINDOW-AT-JUDGE|TestExecProbeNet6ForeignEveryAttemptRefuses|1|connect runs
+MUT-WINDOW-AT-JUDGE|TestExecProbeNet6DialClassifier|0|
+MUT-CLIENT-NO-LINE|TestExecProbePassThroughShimFailsEveryConfinementArm|1|does not report
+MUT-CLIENT-NO-LINE|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-CLIENT-NO-LINE|TestExecProbeNet6ChildOrSilentAcceptStillFails|0|
+MUT-CLIENT-NO-LINE|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-CLIENT-NO-LINE|TestExecProbeNet6DialClassifier|0|
+MUT-PENDING-AS-FOREIGN|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-PENDING-AS-FOREIGN|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-PENDING-AS-FOREIGN|TestExecProbeNet6ChildOrSilentAcceptStillFails|0|
+MUT-PENDING-AS-FOREIGN|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-PENDING-AS-FOREIGN|TestExecProbeNet6DialClassifier|0|
+MUT-CONTROL-ANY-ACCEPT|TestExecProbePassThroughShimFailsEveryConfinementArm|0|
+MUT-CONTROL-ANY-ACCEPT|TestExecProbeNet6ForeignDialIsRetriedNotRefused|0|
+MUT-CONTROL-ANY-ACCEPT|TestExecProbeNet6ChildOrSilentAcceptStillFails|0|
+MUT-CONTROL-ANY-ACCEPT|TestExecProbeNet6ForeignEveryAttemptRefuses|0|
+MUT-CONTROL-ANY-ACCEPT|TestExecProbeNet6DialClassifier|0|
+ROWS
+[ "$rows" -eq 177 ]
+echo "Mutation summary: $rows named-test rows; $mismatches mismatches; 21 scenarios"
+[ "$mismatches" -eq 0 ]

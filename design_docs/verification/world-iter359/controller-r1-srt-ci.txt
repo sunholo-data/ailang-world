@@ -1,0 +1,57 @@
+# Controller measurement for quorum r1 (glm): is TestExecSrtStartupProbePasses on the CI list, and does CI run real srt? at 4721da68
+$ grep -n -o "TestExecSrtStartupProbePasses" .github/workflows/ci.yml
+246:TestExecSrtStartupProbePasses
+$ (control) grep -n -o TestExecProbeNet6BoundBeforeAnyPick .github/workflows/ci.yml
+247:TestExecProbeNet6BoundBeforeAnyPick
+$ grep -nE "bwrap|bubblewrap|sandbox-runtime|WORLD_EXEC_SRT|srt" .github/workflows/ci.yml | cut -c1-220
+119:    # bubblewrap 0.11.1, where srt 0.0.78 returns PARTIAL token=None on every confinement arm,
+194:      # Row 140 M0 (w-workspace-exec-toolchain-effect §6 AC0.2, V43–V49): srt's confinement under
+195:      # bubblewrap, measured with the same matrix the macOS rig runs. The pin (version + cli.js
+197:      # Rendering = the amended §4.4 (only srt's in-sandbox seccomp helper dir re-allowed for read).
+198:      - name: Row 140 srt confinement matrix (linux bubblewrap)
+204:          sudo apt-get install -y -qq bubblewrap socat ripgrep
+208:          mkdir -p "$RUNNER_TEMP/srt"
+209:          ( cd "$RUNNER_TEMP/srt" && npm init -y >/dev/null && npm install --no-audit --no-fund "@anthropic-ai/sandbox-runtime@$V" )
+210:          GOT=$(sha256sum "$RUNNER_TEMP/srt/node_modules/@anthropic-ai/sandbox-runtime/dist/cli.js" | cut -d' ' -f1)
+211:          echo "srt $V cli.js sha256 $GOT (pinned $WANT)"
+212:          [ "$GOT" = "$WANT" ] || { echo "::error::srt cli.js digest drifted from pin.json"; exit 1; }
+214:          # Row 156 M0b: measure protected writes with the verified srt install.
+217:            --srt-node-modules "$RUNNER_TEMP/srt/node_modules" --node "$(command -v node)" --seccomp-read allowread \
+222:            --srt-node-modules "$RUNNER_TEMP/srt/node_modules" \
+224:          # Row 140 M2: the real-srt handler tests read the same pinned install and node, in
+226:          echo "WORLD_EXEC_SRT_NODE_MODULES=$RUNNER_TEMP/srt/node_modules" >> "$GITHUB_ENV"
+230:      # Workspace.Exec handler against the REAL pinned srt under bubblewrap. Those tests skip when
+231:      # WORLD_EXEC_SRT_NODE_MODULES is unset, and verify_go.sh has no -v, so a SKIP would read as a
+234:      # Row 140 M3 (§6 AC3.1–AC3.5) adds the startup probe against srt shims and the real srt,
+235:      # the QUICKSTART §10 refusal table (whose probe-package-only row needs the real srt, so its
+238:      - name: Row 140 Workspace.Exec real-srt tests, verbose (linux bubblewrap)
+243:          [ -n "${WORLD_EXEC_SRT_NODE_MODULES:-}" ] || { echo "::error::WORLD_EXEC_SRT_NODE_MODULES is unset"; exit 1; }
+249:          log="$RUNNER_TEMP/exec-srt-verbose.log"
+421:    # bubblewrap 0.11.1, where srt 0.0.78 returns PARTIAL token=None on every confinement arm,
+$ grep -n "func TestExecSrtStartupProbePasses" -r host
+host/broker/exec_probe_srt_test.go:25:func TestExecSrtStartupProbePasses(t *testing.T) {
+      - name: Row 140 Workspace.Exec real-srt tests, verbose (linux bubblewrap)
+        timeout-minutes: 12
+        run: |
+          set -euo pipefail
+          [ "${RUNNER_OS:-}" = Linux ] || { echo "::error::this step must run on linux"; exit 1; }
+          [ -n "${WORLD_EXEC_SRT_NODE_MODULES:-}" ] || { echo "::error::WORLD_EXEC_SRT_NODE_MODULES is unset"; exit 1; }
+          [ -n "${AILANG_BIN:-}" ] || { echo "::error::AILANG_BIN is unset"; exit 1; }
+          tests="TestExecSrtGoTest TestExecSrtExitStatusAndArgv TestExecSrtRefusalsSpawnNothing TestExecSrtConfinementMatrix TestExecSrtGitHeadIsNotWritable TestExecSrtTimeoutKillsTheGroup TestExecSrtPycacheStaysOutOfTheWorktree TestExecSrtProfileEnvNeverReachesTheHostNode"
+          tests="$tests TestExecSrtStartupProbePasses TestExecSrtProbeRefusesAPackageOnlySandbox TestExecProbePassThroughShimFailsEveryConfinementArm TestExecProbeNoopShimFailsArm1 TestExecProbeZeroShimFailsArm5 TestExecProbeFailingToolchainFailsArm7 TestExecProbeMissingClientFailsTheRefusalArms TestQuickstartSection10ProfilesLoad"
+          tests="$tests TestExecProbeReverseLegJudge TestExecProbeReverseLegChattyForeignHolderIsRetried TestExecProbeReverseLegExhaustionRefusesDistinctly TestExecProbeReverseLegRealReachSurvivesAForeignAttempt TestExecProbeReverseLegNoTokenIsNotRetried TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse TestExecProbeReverseLegSilentHolderRefusesSticky TestExecProbeReverseDialErrIsSilent TestExecProbeReversePollRecordsConnectReset TestExecProbeReverseHelloWaitBounds TestExecProbeReversePollCadence TestExecProbeChildListenerDrainsTheHello TestExecProbeNet6BoundBeforeAnyPick TestExecProbeNet6BindSiteIsBeforeTheFanOut"
+          tests="$tests TestExecStartupRefusalTable TestExecSrtMCPEndToEnd TestExecSrtMCPGrantAndBudget TestExecSrtReplayIsByteEqual TestExecSrtWorktreeDelta"
+          log="$RUNNER_TEMP/exec-srt-verbose.log"
+          rc=0
+          go test ./host/broker/ ./host/daemon/ -count=1 -p 1 -timeout 600s -v \
+            -run "^(${tests// /|})\$" >"$log" 2>&1 || rc=$?
+          cat "$log"
+          [ "$rc" -eq 0 ] || exit "$rc"
+          for t in $tests; do
+            grep -q -- "^--- PASS: $t " "$log" \
+              || { echo "::error::$t did not PASS on linux (SKIP?)"; exit 1; }
+          done
+          grep -q -- "^    --- PASS: TestExecStartupRefusalTable/probe-package-only " "$log" \
+            || { echo "::error::TestExecStartupRefusalTable/probe-package-only did not PASS on linux (SKIP?)"; exit 1; }
+
+      - name: Row 149 workbench live script tests, verbose (node required)
