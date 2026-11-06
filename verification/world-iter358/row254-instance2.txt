@@ -1,0 +1,64 @@
+# Row 254 instance 2 — iteration 358 landing PR #508 head 68493501 (controller, 2026-11-06T14:02:15Z)
+
+## The diff under test is log-only
+$ git diff --stat 374eca52 68493501
+ design_docs/world-mission-log.md | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+## Run, attempt 1: per-job conclusions
+$ gh run view 42225873806 --attempt 1 --json jobs
+go race gate (go test -race, own job): failure
+go host build + test gate: success
+ailang-code verify gate: success
+
+## Failing lines (attempt 1, race job)
+$ gh run view 42225873806 --attempt 1 --log-failed | grep -E 'FAIL|supervisor_test.go'
+--- FAIL: TestMarketingSupervisorFakeDaemonCleanup (37.46s)
+    --- FAIL: TestMarketingSupervisorFakeDaemonCleanup/shell-wait (35.01s)
+        supervisor_test.go:706: terminated trap must exit 143 after supervised cleanup: signal: killed
+        supervisor_test.go:710: shell trap cleanup exceeded bound: 29.938736549s
+        supervisor_test.go:716: shell wait daemon must be dead after bounded cleanup (pid 34301)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	182.981s
+FAIL
+
+## Mechanism: the fixed bound
+$ sed -n 706,716p scripts/marketingcheck/supervisor_test.go
+					t.Errorf("%v trap must exit %d after supervised cleanup: %v", tc.sig, tc.code, err)
+				}
+			}
+			if elapsed := time.Since(start); elapsed > 10*time.Second {
+				t.Errorf("shell trap cleanup exceeded bound: %s", elapsed)
+			}
+			ids := recordedPIDs(pids)
+			if len(ids) != 1 {
+				t.Fatalf("shell daemon PID missing: %v, %s", ids, readFile(t, outputPath))
+			}
+			assertDead(t, ids[0], "shell "+mode+" daemon")
+
+## Package time for scripts/marketingcheck by job (field 1 = job, last field = time)
+$ (green comparison) run 42221405272 for 21ba99cb
+go host build + test gate 42.775s
+go race gate (go test -race, own job) 134.101s
+$ (green comparison) run 42223469020 for 374eca52
+go race gate (go test -race, own job) 125.624s
+go host build + test gate 42.281s
+$ (red) run 42225873806 attempt 1
+go race gate (go test -race, own job) 182.981s
+go host build + test gate 34.972s
+$ (re-run) run 42225873806 attempt 2
+go race gate (go test -race, own job) 205.528s
+go host build + test gate 34.972s
+(note: only the failed race job re-ran on attempt 2; the host-job line above is attempt 1, carried over)
+
+## Re-run verdict
+$ gh run view 42225873806 --json attempt,status,conclusion,updatedAt
+attempt=2 completed success updatedAt=2026-11-06T14:01:45Z
+$ commits/68493501/check-runs (latest per name)
+  ailang-code verify gate: success
+  go host build + test gate: success
+  go race gate (go test -race, own job): success
+
+## Instance 1 for comparison (charter row 254, iteration 351)
+$ grep -oE 'exceeded bound: [0-9.]+s' (row 254)
+exceeded bound: 29.88462059s
