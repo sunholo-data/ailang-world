@@ -1,0 +1,19 @@
+# A9 — Linux real-srt CI acceptance on the PR head (controller, 2026-11-06T19:14:41Z)
+$ gh run view 42272728028 --json headSha,conclusion,url,jobs (the real-srt step)
+27affeff681ab725f5d088eb36c0b4a737d62ad8 success https://github.com/sunholo-data/ailang-world/actions/runs/42272728028
+step: Row 140 Workspace.Exec real-srt tests, verbose (linux bubblewrap) => success
+$ gh run view 42272728028 --log | grep -c -- "--- PASS: <name> " / "--- SKIP: <name> "
+TestExecSrtStartupProbePasses pass=1 skip=0
+TestExecProbeNet6ForeignDialIsRetriedNotRefused pass=1 skip=0
+TestExecProbeNet6ChildOrSilentAcceptStillFails pass=1 skip=0
+TestExecProbeNet6ForeignEveryAttemptRefuses pass=1 skip=0
+TestExecProbeNet6DialClassifier pass=1 skip=0
+TestExecProbePassThroughShimFailsEveryConfinementArm pass=1 skip=0
+
+# Merge commit e2e2c7cc CI
+$ gh run list --commit e2e2c7cc --workflow CI
+run=42275318828 attempt=1 success
+$ check-runs on e2e2c7cc
+  go host build + test gate: success
+  go race gate (go test -race, own job): success
+  ailang-code verify gate: success

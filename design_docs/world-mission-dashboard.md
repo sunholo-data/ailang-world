@@ -1,8 +1,8 @@
 # World mission dashboard — iteration 359 (2026-11-06)
 
-- **This fire:** row 250 BUILT (`w-exec-probe-foreign-dial-false-refusal`), PR #511. It is the first pick under Mark's attended ruling **D-WORLD-108 = B** (rows 250, then 255 → 257). Arm 6 of the exec startup probe now classifies each accept on its loopback listener as child, foreign or silent. A local dialer that sends bytes (the rig's start page) no longer refuses startup. The probe still fails closed on a child or silent reach.
+- **This fire:** row 250 LANDED (`w-exec-probe-foreign-dial-false-refusal`), PR #511, merge `e2e2c7cc`, with CI 3/3 on attempt 1. The Linux real-srt step passes the new tests. It is the first pick under Mark's attended ruling **D-WORLD-108 = B** (rows 250, then 255 → 257). Arm 6 of the exec startup probe now classifies each accept on its loopback listener as child, foreign or silent. A local dialer that sends bytes (the rig's start page) no longer refuses startup. The probe still fails closed on a child or silent reach.
 - **Review:** design quorum r1 and r2 BLOCKED, then an r3 controller carve-out. The independent judge, Agent `sonnet`, gave PASS 91 with zero blocking findings.
-- **Dev:** green at `1835d8be` (3/3 on attempt 1) before this fire. PR #511's CI is the acceptance gate for the Linux real-srt step.
+- **Dev:** green at `e2e2c7cc` (3/3 on attempt 1).
 - **Clauses:** 1–7 MET; goal unmoved. Release order (D-WORLD-81): 150 → 151 → v1.0.0.
 - **Row 150:** 23/23 milestones built; waits on the **attended A1**.
 - **Row 151:** needs row 188 N2d and N4a, after the attended rows 219 → 217 → 218.
