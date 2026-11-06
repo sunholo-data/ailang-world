@@ -99,7 +99,7 @@ verdict: 0 crash notice(s) since 2026-10-27T09:03:42Z on #449,#366 — no death 
 
 ## Died-mid-flight traces
 $ gh pr list --state open
-$ git worktree list | grep -E "iter3(50|51)"
+$ git worktree list | grep -E "iter3(54|55)"   [label corrected in the judge follow-through: the script printed iter3(50|51) here, a stale label; the command that ran and produced the 2 lines below is this one]
 /Users/voightkampff/.ailang/state/world-iter354-record                                                                               61d8c856 [mission/world-iter354-landed]
 /Users/voightkampff/.ailang/state/world-iter355-record                                                                               20f0cc93 [mission/world-iter355-record]
 $ git ls-remote --heads origin "*iter355*"
