@@ -1,0 +1,78 @@
+# Controller measurement for quorum r2 (kimi): does the PINNED srt relay CONNECT-tunnel bytes verbatim under World config? (2026-11-06T17:40:18Z)
+# Static read of the pinned package source (not executed): npm pack @anthropic-ai/sandbox-runtime@0.0.78 (pin.json version), extracted without install scripts.
+$ jq -r .version,.cli_sha256 design_docs/verification/world-row140-m0/pin.json
+0.0.78
+3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e
+$ shasum -a 256 package/dist/cli.js   # must equal the pin
+3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e
+
+## CONNECT route decision: TLS termination only when options.mitmCA is set AND the first bytes are a TLS ClientHello; MITM socket only when getMitmSocketPath(host); parent proxy only when options.parentProxy; else dialDirect.
+$ sed -n 262,268p http-proxy.js
+            //   in-process TLS termination
+            //   > external MITM unix socket
+            //   > parent HTTP proxy
+            //   > direct
+            // (tlsTerminate and mitmProxy are mutually exclusive at the config
+            // layer, so the first two never both apply.)
+            if (options.mitmCA &&
+$ sed -n 300,306p http-proxy.js
+                    return;
+                }
+                logForDebugging(`[tls-terminate] non-TLS bytes on CONNECT ${hostname}:${port}; opaque-tunnelling`);
+                head = peeked.head;
+            }
+            else if (options.mitmCA) {
+                // Per-host termination opt-out: the policy exempts this host (mTLS
+
+## Tunnel relay after the 200 (http-proxy.js:355-372): head forwarded, then pipe both ways, no transform
+            }
+            if (!wrote200) {
+                socket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+            }
+            disarmDecisionWindowEof();
+            // An established tunnel relays each TCP direction independently: a
+            // client that half-closes (FIN after its request bytes) must still
+            // receive the upstream's reply. Without this, runtimes that default
+            // http-server sockets to allowHalfOpen=false auto-close the client
+            // side on FIN and the reply is lost.
+            socket.allowHalfOpen = true;
+            // Forward any bytes the client sent in the same packet as the CONNECT
+            // (Node delivers these as the `head` buffer, not via the socket stream),
+            // plus anything the ClientHello sniff consumed when mitmCA is on.
+            if (head.length)
+                upstream.write(head);
+            upstream.pipe(socket);
+            socket.pipe(upstream);
+
+## Those options come only from srt config keys network.tlsTerminate / network.mitmProxy / network.parentProxy
+$ grep -nE "network\.(tlsTerminate|mitmProxy|parentProxy)" sandbox-manager.js
+321:    if (!config?.network.mitmProxy) {
+324:    const { socketPath, domains } = config.network.mitmProxy;
+335: * Per-host TLS-termination opt-out from network.tlsTerminate.excludeDomains.
+346:    const excludeDomains = config?.network.tlsTerminate?.excludeDomains;
+455:    parentProxy = resolveParentProxy(runtimeConfig.network.parentProxy);
+463:    if (runtimeConfig.network.tlsTerminate && runtimeConfig.network.mitmProxy) {
+464:        throw new Error('network.tlsTerminate and network.mitmProxy are mutually exclusive');
+472:    const tlsTerminate = runtimeConfig.network.tlsTerminate;
+1591:    parentProxy = resolveParentProxy(newConfig.network.parentProxy);
+
+## World never emits those keys: its srt settings network struct has exactly four fields
+$ sed -n 44,49p host/broker/exec_settings.go
+type execSettingsNet struct {
+	AllowedDomains      []string `json:"allowedDomains"`
+	DeniedDomains       []string `json:"deniedDomains"`
+	AllowLocalBinding   bool     `json:"allowLocalBinding"`
+	AllowAllUnixSockets bool     `json:"allowAllUnixSockets"`
+}
+$ grep -rnE "tlsTerminate|mitmProxy|parentProxy" --include=*.go host cmd | grep -v _test.go | wc -l
+0
+$ (positive control) grep -rnE "allowedDomains" --include=*.go host | grep -v _test.go | wc -l
+1
+
+## SOCKS path (mux-proxy.js:72-75)
+        upstream.once('close', () => client.destroy());
+        client.pipe(upstream);
+        upstream.pipe(client);
+    }
+
+VERDICT: under World config the pinned srt 0.0.78 CONNECT tunnel is opaque and relays bytes verbatim in both directions (static source read; not exercised dynamically on Linux here).

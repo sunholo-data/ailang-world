@@ -1,6 +1,6 @@
 # w-exec-probe-foreign-dial-false-refusal — judge arm 6's forward legs on the child's own line, so a local loopback dialer no longer refuses startup
 
-- **Status**: Planned (designed iteration 359, **r2** after quorum round 1 BLOCKED; §11). Queue
+- **Status**: Planned (designed iteration 359, **r3**: r2 after quorum round 1 BLOCKED, then the controller's narrow-refinement carve-out applying quorum round 2's verbatim fixes; §11). Queue
   row 250, routed by D-WORLD-108 = B (attended 2026-11-06: rows 250, then 255 → 257). The row says
   it "needs its own design and quorum"; this is that design. It builds on row 242
   (`w-exec-probe-cross-profile-net6-hoist.md`, whose §6 R1/R2 first measured this residual) and
@@ -147,6 +147,12 @@ accepts, World can read a line from an accepted dial, and the classifier recogni
 A foreign accept that lands before the control (row 242 V16's window) no longer satisfies it, and it
 no longer refuses anything: it falls before the raw window's `mark()`. That is provably not the
 child, because no child of this probe exists before Run A is spawned (statement order in `probe`).
+
+**[r3]** The 2 s is HEAD's control bound, unchanged (V20): HEAD's `control()` dials with
+`net.DialTimeout(…, 2*time.Second)` and waits `for deadline := time.Now().Add(2 * time.Second)`
+(`exec_probe.go:664`, `:669`), and the patch keeps that deadline line byte-for-byte as context. So
+r3 neither shortens nor lengthens the control's wait, and the control cannot become a new source of
+the false-refusal class this item removes.
 
 ### 3.5 The patch (the planner pins these bytes: V13)
 
@@ -311,7 +317,8 @@ client unsandboxed, so every other arm passes and `err == nil` means arm 6 passe
   set. It runs the whole list with `go test ./host/broker/ ./host/daemon/ -count=1 -p 1 -v -run …`,
   then requires `--- PASS: <t>` for **every** name, so a SKIP fails the step (V15, V16). So placing
   the four names on `:247` puts them on the same real-srt verbose list as
-  `TestExecSrtStartupProbePasses`. They are proven to **PASS** on Linux, not merely run. Each name
+  `TestExecSrtStartupProbePasses`; the step asserts --- PASS for every name, so a SKIP fails it —
+  their Linux PASS is measured only when the §7 gate runs **[r3, glm's verbatim text]**. Each name
   appears once; no other list is needed, because this step's `go test` is the CI run that is
   checked by name.
 
@@ -380,6 +387,19 @@ r2. They are stated above with their reasons, and no seam is added to kill them.
   deterministic one still refuses (TE). The alternative, failing at once on foreign, would keep the
   start page's false refusals. The design takes the reverse leg's precedent (row 230: foreign →
   retry, bounded) over that.
+  **[r3] The byte-fidelity premise is now verified, not asserted (V21).** The controller read the
+  PINNED srt 0.0.78 source (`npm pack`, `cli.js` sha256 equal to `pin.json`): a CONNECT is
+  TLS-terminated only when `network.tlsTerminate` is configured and the first bytes are a TLS
+  ClientHello, routed to a MITM socket only when `network.mitmProxy` is configured, and sent to a
+  parent proxy only when `network.parentProxy` is configured; otherwise it dials direct, writes the
+  200, forwards `head`, and `pipe`s both directions with no transform (`http-proxy.js:355–372`; the
+  SOCKS path is likewise `pipe` both ways). World's srt settings `network` struct has exactly four
+  fields (`allowedDomains`, `deniedDomains`, `allowLocalBinding`, `allowAllUnixSockets`) and no
+  `.go` file outside tests names any of those three keys (0; control `allowedDomains` 1). So under
+  World's configuration the pinned srt relays tunnel bytes verbatim, and the byte-altering class R2
+  describes has no instance in the pinned srt. R2 stays stated because a future srt pin or a
+  configuration change could create one; §7's executor step re-checks it, and its fallback is the
+  fail-at-first-foreign rule. This is a static source read, not a dynamic Linux measurement.
 - **R3, latency.** A clean probe adds no wait: `window()` returns as soon as nothing is pending, and
   a foreign accept is classified at its first byte. Each inconclusive window adds one small run plus
   the 200 ms settle. That measured about 0.3 s per retry (`raw` 1.50 s against `none` 1.21 s, V9).
@@ -412,6 +432,20 @@ r2. They are stated above with their reasons, and no seam is added to kill them.
 
   Then run `./scripts/verify_ail.sh` (no `.ail` changes) and `go build ./... && go vet ./host/broker/
   && go test ./...` under the pinned `AILANG_BIN`.
+
+  **[r3] Stability, on the applied patch (gemini, verbatim):** run `go test -count=3 -run
+  '^(TestExecProbePassThroughShimFailsEveryConfinementArm|TestExecProbeNet6.*)$' -v ./host/broker/`
+  on the applied r2 patch so the multi-run stability proof from V12 is verified on the refactored
+  code (the controller already ran it on the r2 prototype with the reverse-leg tests added: V22).
+
+  **[r3] Executor verification (blocking; kimi's fix, verbatim):** with the pinned srt install,
+  grep/inspect the proxy's CONNECT handler and record in the sprint Verification Log (a) whether
+  bytes after a 200 are relayed verbatim in both directions, (b) whether any header/banner is
+  prepended or appended upstream. If any alteration exists, the design reverts to
+  fail-at-first-foreign (no retry on windows containing byte-bearing accepts; retry only nothing),
+  i.e. reclassify any accept carrying bytes that begin neither expected line as silent. The
+  controller's own reading of the pinned 0.0.78 source (V21) found no alteration; the executor
+  confirms it against the pin the patch is built with and records the result.
 
   **[r2] Acceptance gate: the Linux real-srt CI step.** Real srt and `bwrap` are absent locally, so
   the item is **not accepted** until the PR's CI step "Row 140 Workspace.Exec real-srt tests, verbose
@@ -467,6 +501,9 @@ page.
 | V17 | **[r2]** The r2 prototype is green, including all 12 reverse-leg tests (the refactor keeps their verdicts) | r2 proto copy (load 1.17), `go test -count=1 -timeout 400s -v -run '^(<the 12 reverse-leg names on ci.yml:247>\|TestExecProbePassThroughShimFailsEveryConfinementArm\|TestExecProbeNet6.*)$' ./host/broker/`; `go vet ./host/broker/`; `gofmt -l host/broker/` → `$V/designer-r2-green.txt` | 19 of 19 `--- PASS` (TF, TS, TE, TC, row 242's T1/T2, `TP`, and `TestExecProbeReverseLegJudge`, `…ChattyForeignHolderIsRetried`, `…ExhaustionRefusesDistinctly`, `…NoTokenIsNotRetried`, `…SilentHolderRefusesSticky`, `…RealReachSurvivesAForeignAttempt`, `TestExecProbeForeignListenerOnTheReversePortDoesNotRefuse`, `TestExecProbeReverseDialErrIsSilent`, `…PollRecordsConnectReset`, `…HelloWaitBounds`, `…PollCadence`, `TestExecProbeChildListenerDrainsTheHello`); `ok … 35.461s`; `VET-OK`; `gofmt -l` empty |
 | V18 | **[r2]** The shared names and their call sites; the rename touches no test | `$V/designer-r2-greps.txt`: at `1835d8be`, `grep -rn --include=*_test.go execProbeReverseAttempts host \| wc -l` with control `… execProbeHelloWait host`; `grep … "judgeReverse(\|classifyReverseDial(" host`; in `applycheck`, `grep -n "readProbeLine(\|judgeLeg(\|execProbeAttempts\|execProbeWindowWait\|execProbeNet6Wait\|execProbeNet6Attempts\|execProbeReverseAttempts" …` | `0` against the control's 2 hits (`exec_probe_test.go:668`, `:889`); `judgeReverse` called at `:610` and by its table test `exec_probe_test.go:452`. Patched tree: `readProbeLine` called at `:838` (forward) and `:899` (reverse); `judgeLeg` at `:177` (through `judgeReverse`) and `:675` (`net6Leg`); `execProbeAttempts` at `:618` (reverse) and `:683` (forward); `execProbeWindowWait` `:157`, used at `:772`, asserted at dial test `:254`. `execProbeNet6Wait`, `execProbeNet6Attempts` and `execProbeReverseAttempts` give **no** hits in the same call that matches the others |
 | V19 | **[r2]** The mutation table on r2, including the shared-piece mutants | `$V/designer-r2-run-mutants.sh.txt` + `$V/designer-r2-mutate.py.txt` → `$V/designer-r2-mutants.txt` (loads 3.2–9.4); r2's edits to the r1 prototype are `$V/designer-r2-edit.py.txt` | as §5. CONTROL `pass=17 fail=0`; `MUT-SHARED-READ-SHORT` `pass=11 fail=6` (both legs); `MUT-SHARED-JUDGE-SILENT-RETRIED` `pass=13 fail=4` (both legs); `MUT-SHARED-ATTEMPTS-2` `pass=14 fail=3` (both legs); `MUT-SHARED-WAIT-1500MS` `pass=15 fail=2` (reverse only); `MUT-WINDOW-WAIT-NOT-ABOVE` `fail=1` (TC); the two survivors `rc=0 pass=5 fail=0`; `# restored r2 exec_probe.go (cmp ok)`; MUT-RETRY-CHILD's false pass verbatim: `arm 6 = "", want it to contain "a raw connect to World's live listener: token \"WORLD-PROBE-REFUSED ECONNREFUSED\" on attempt 1; accepts in its window: child 1, silent 0,"` |
+| V20 | **[r3]** HEAD `control()` wait bound (glm r2) | at `1835d8be`: `sed -n 659,674p host/broker/exec_probe.go`; `grep -n "2 \* time.Second" $V/designer-proto.patch.txt` | `c, err := net.DialTimeout("tcp", l.ln.Addr().String(), 2*time.Second)` (`:664`) and `for deadline := time.Now().Add(2 * time.Second); …` (`:669`); in the r2 patch that deadline line appears only as an unchanged context line (patch line 373). HEAD's bound is 2 s and r3 keeps it |
+| V21 | **[r3]** The pinned srt relays CONNECT-tunnel bytes verbatim under World's config (kimi r2) | `$V/controller-r2-srt-relay.txt`: `npm pack @anthropic-ai/sandbox-runtime@0.0.78`, extracted without install scripts, `cli.js` sha256 checked against `pin.json`; `sed` of `http-proxy.js:262–268, 300–306, 355–372`, `mux-proxy.js:72–75`; `grep -nE "network\.(tlsTerminate\|mitmProxy\|parentProxy)" sandbox-manager.js`; `sed -n 44,49p host/broker/exec_settings.go`; `grep -rnE "tlsTerminate\|mitmProxy\|parentProxy" --include=*.go host cmd \| grep -v _test.go \| wc -l` with control `allowedDomains` | digest equal to the pin; termination/MITM/parent-proxy routes are each gated on a config key; otherwise `upstream.write(head)`, `upstream.pipe(socket)`, `socket.pipe(upstream)`; World's `execSettingsNet` has 4 fields, none of the three keys; grep 0, control 1. Static read; not run on Linux |
+| V22 | **[r3]** `-count=3` stability on the **r2** prototype, with the reverse-leg tests (gemini r2, kimi r2) | `$V/controller-r2-stability.txt`: r2 patch applied to `git archive 1835d8be`, go1.26.6, load 3.88; `go test -count=3 -timeout 600s -v -run "^(TestExecProbePassThroughShimFailsEveryConfinementArm\|TestExecProbeNet6.*\|TestExecProbeReverseLeg.*)$" ./host/broker/` | rc 0; 13 tests × 3 `--- PASS` each (TF, TS, TE, TC, row 242's T1/T2, TP, and 6 `TestExecProbeReverseLeg*`). The HEAD positive control on r2's test file is MUT-RAW-COUNT in V19 (HEAD's raw counting under r2's tests: TF red on `raw`, `proxy`, `raw-twice-proxy`; TS `raw-child-on-retry` red; TE red) |
 | — | **UNMEASURED** | — | the full `go test ./...` under the pinned `AILANG_BIN` (the executor runs it; r2 ran `go build ./...` and `go vet ./host/broker/` only, V17); Linux; real srt (R4: the §7 acceptance gate is the CI step); whether TF/TS/TE/TC PASS rather than SKIP on the CI runner (the step asserts it); silent foreign dialers on other hosts (R1); a startup-level false-refusal count, before or after; r2's HEAD positive control was not re-run (r1's V8 stands, and r2 changed no TF/TS/TE assertion) |
 
 ## 11. Quorum log
@@ -505,4 +542,31 @@ page.
   gemini's "verify `TestExecSrtStartupProbePasses` on CI" is now §7's acceptance gate; the
   controller's R2 note is kept plain (§4 Claim B, §6 R2: 1 − p³ against HEAD's 1 − p).
 
-Round 2: (filled by the controller)
+**Round 2 (r2, `50afe67e`): BLOCKED, $0.3735.** Same seats: gemini-4-argon **PASS**, oc-glm-5-3
+**PASS**, oc-kimi-k3 **REJECT**; claude benched; no seat absent.
+
+- **kimi (blocking): R2 is a quantified weakening (1 − p³ vs 1 − p) resting on an unverified
+  premise** that no srt path alters tunnel bytes; the §7 CI step cannot see that class. Proposed
+  fix: an executor verification of the pinned srt's CONNECT relay with a fail-at-first-foreign
+  fallback, plus re-running the `-count=3` stability run and the HEAD positive control on r2 code.
+  Its catch: "Verify, don't assert, the byte-fidelity premise … absent that, the quorum must
+  explicitly ratify the regression."
+- **glm (pass, closest concern):** the control's 2 s wait had no Verification Log row and might
+  differ from HEAD's; and §5 stated the Linux PASS in the present tense.
+- **gemini (pass):** re-run `-count=3` on the refactored code in M1.
+
+**r3 — the controller's narrow-refinement carve-out** (gate-2 rule: after the one re-quorum, every
+remaining blocking objection carries a concrete reviewer-authored fix and none disputes the
+design's direction; kimi's objection is about verifying a premise, and its own text says
+verification answers it). Applied, verbatim where the reviewers wrote text, after running the
+measurements they named:
+- kimi: the controller **verified** the premise first-party (V21: the pinned srt relays verbatim
+  under World's config; static source read). kimi's executor step and fallback are in §7 verbatim;
+  §6 R2 now cites V21 and keeps the 1 − p³ statement. The `-count=3` run on r2 code is V22 (13
+  tests × 3 PASS), and the HEAD positive control on r2's tests is MUT-RAW-COUNT (V19, cited in V22).
+- glm: V20 records HEAD's 2 s control bound, and §3.4 says it is unchanged (glm's option (a)); §5's
+  sentence is replaced with glm's text.
+- gemini: §7 carries its `-count=3` command verbatim.
+
+No design direction changed and the prototype patch is unchanged from r2
+(`designer-proto.patch.txt`, sha256 prefix `7fb2537268498db0`).

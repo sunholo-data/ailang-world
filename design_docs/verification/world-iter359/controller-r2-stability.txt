@@ -1,0 +1,17 @@
+# controller -count=3 stability on the r2 prototype (designer-proto.patch.txt sha256 7fb2537268498db0) applied to git archive 1835d8be; 2026-11-06T17:38:25Z; load { 3.88 3.67 4.03 }
+$ go test -count=3 -timeout 600s -v -run "^(TestExecProbePassThroughShimFailsEveryConfinementArm|TestExecProbeNet6.*|TestExecProbeReverseLeg.*)$" ./host/broker/ | grep -E "^(--- |ok|FAIL)" | sort | uniq -c
+rc=0
+   3 --- PASS: TestExecProbeNet6BindSiteIsBeforeTheFanOut
+   3 --- PASS: TestExecProbeNet6BoundBeforeAnyPick
+   3 --- PASS: TestExecProbeNet6ChildOrSilentAcceptStillFails
+   3 --- PASS: TestExecProbeNet6DialClassifier
+   3 --- PASS: TestExecProbeNet6ForeignDialIsRetriedNotRefused
+   3 --- PASS: TestExecProbeNet6ForeignEveryAttemptRefuses
+   3 --- PASS: TestExecProbePassThroughShimFailsEveryConfinementArm
+   3 --- PASS: TestExecProbeReverseLegChattyForeignHolderIsRetried
+   3 --- PASS: TestExecProbeReverseLegExhaustionRefusesDistinctly
+   3 --- PASS: TestExecProbeReverseLegJudge
+   3 --- PASS: TestExecProbeReverseLegNoTokenIsNotRetried
+   3 --- PASS: TestExecProbeReverseLegRealReachSurvivesAForeignAttempt
+   3 --- PASS: TestExecProbeReverseLegSilentHolderRefusesSticky
+   1 ok  	github.com/sunholo-data/ailang-world/host/broker
