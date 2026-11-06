@@ -1,0 +1,25 @@
+MISSION-ROLE: executor
+
+You are the SPRINT EXECUTOR for Ailang World mission iteration 359, running unattended under a codex workspace-write sandbox. Your working directory is the sprint worktree (branch sprint/world-iter359-foreign-dial). Implement milestone M1 of the approved sprint plan — and nothing else.
+
+GIT: run NO git write operations at all (no add, commit, stash, checkout, reset, branch, restore). The CONTROLLER builds the commit from your uncommitted worktree diff. Read-only git (status, diff, log, show, rev-parse) is fine. A `git apply` of the plan diff onto the working tree is the one allowed write-to-tree git command (it writes files, not git state).
+
+READ FIRST
+- design_docs/planned/w-exec-probe-foreign-dial-false-refusal-sprint-plan.md (the plan; M1)
+- design_docs/planned/sprint_w-exec-probe-foreign-dial-false-refusal.json
+- design_docs/planned/w-exec-probe-foreign-dial-false-refusal.md §3, §7 and §11 (the design, r3)
+
+DO
+1. Verify the pre-change sha256 of every file the plan lists (the new test file must be ABSENT). If any differs, STOP and report — do not proceed.
+2. Verify `shasum -a 256 design_docs/verification/world-iter359/plan-M1.diff.txt` equals the plan's value, then `git apply design_docs/verification/world-iter359/plan-M1.diff.txt` at the worktree root.
+3. Verify the post-change sha256 of every touched file equals the plan's value. Do NOT run gofmt -w, do not edit, reformat or "improve" any applied file; the bytes are pinned by the quorum.
+4. Run, and report each rc: `gofmt -l host/broker/` (expect no output), `go vet ./host/broker/`, `go build ./...`, and `go test -count=1 -run '^TestExecProbeNet6BindSiteIsBeforeTheFanOut$' ./host/broker/` (a source-parse test that opens no socket).
+5. The design's r3 executor relay check (design §7, kimi's text): inspect the PINNED srt's CONNECT handler and record (a) whether bytes after a 200 are relayed verbatim in both directions, (b) whether any header/banner is prepended or appended upstream. You cannot download inside the sandbox; use the already-extracted pinned package at /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package (read-only; it is npm pack of @anthropic-ai/sandbox-runtime@0.0.78 — verify `shasum -a 256 dist/cli.js` equals cli_sha256 in design_docs/verification/world-row140-m0/pin.json first) and World's srt settings (host/broker/exec_settings.go). Write your finding, with every command and its output, to design_docs/verification/world-iter359/executor-relay-check.txt. If you find ANY alteration, STOP and report it prominently — do not change the code; the controller decides.
+6. Write design_docs/verification/world-iter359/executor-M1.txt: every command you ran in steps 1–5 with its rc and the relevant output lines.
+
+SANDBOX RULES
+- Loopback socket binds are denied inside your sandbox, so every host/broker test that opens a listener (all the exec-probe behaviour tests, the package suite, the mutation runner) is UNINFORMATIVE UNDER SANDBOX. Do NOT run them; do NOT report them as pass or fail. The controller runs them outside the sandbox.
+- A gate you find red BEFORE applying the diff is a finding to report, not an obstacle to work around.
+- Write nothing outside this worktree except Go's build caches. Do not touch tools/launchd/, any skill file, or ~/.ailang.
+
+FINAL MESSAGE (short): pre/post sha256 match (yes/no per file); each gate rc; the relay-check verdict; anything that surprised you.

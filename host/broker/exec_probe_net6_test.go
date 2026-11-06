@@ -107,7 +107,7 @@ exit 1`)
 	// Each profile's net6 port, from its own Run A's connect target.
 	logged, _ := os.ReadFile(clientLog)
 	net6 := map[int]bool{}
-	for _, m := range regexp.MustCompile(`(?m) connect (\d+)$`).FindAllStringSubmatch(string(logged), -1) {
+	for _, m := range regexp.MustCompile(`(?m) connect (\d+):[0-9a-f]{32}$`).FindAllStringSubmatch(string(logged), -1) {
 		port, _ := strconv.Atoi(m[1])
 		net6[port] = true
 	}

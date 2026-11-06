@@ -1,0 +1,1661 @@
+Iteration 359 — M1 executor verification
+Scope: exact approved five-file patch; sandbox-safe checks and pinned srt source review only.
+All commands below run at the sprint worktree root unless noted.
+
+$ git rev-parse 'b6a35f0414515724d539e090d313b3cbc486e628^{commit}'
+rc=0
+b6a35f0414515724d539e090d313b3cbc486e628
+
+$ test '!' -e host/broker/exec_probe_net6_dial_test.go
+rc=0
+(no output)
+
+$ test '!' -L host/broker/exec_probe_net6_dial_test.go
+rc=0
+(no output)
+
+$ shasum -a 256 -c <<'SHA'
+41a0a58611565fe148faaac0327dc34793550f12ddef74e7cc3c33a250c4697d  .github/workflows/ci.yml
+19de369381579387bd9d83aceae28a5912717dab00b283454ca0067d41d087bd  host/broker/exec_probe.go
+400faf0ffc25a3f0a79302cc9436349da6e445b998744b5767f6d706475a64aa  host/broker/exec_probe_net6_test.go
+bbfccede19236d17b81d40401cc079aeb9987ff356c6a08affe6bc2a159e80d0  host/broker/exec_probe_test.go
+SHA
+rc=0
+.github/workflows/ci.yml: OK
+host/broker/exec_probe.go: OK
+host/broker/exec_probe_net6_test.go: OK
+host/broker/exec_probe_test.go: OK
+
+$ cmp design_docs/verification/world-iter359/designer-proto.patch.txt design_docs/verification/world-iter359/plan-M1.diff.txt
+rc=0
+(no output)
+
+$ shasum -a 256 -c <<'SHA'
+7fb2537268498db0b6db58d05b59cb0d52add1bb20178d16c3025dbfb3eeaf85  design_docs/verification/world-iter359/plan-M1.diff.txt
+SHA
+rc=0
+design_docs/verification/world-iter359/plan-M1.diff.txt: OK
+
+$ git apply design_docs/verification/world-iter359/plan-M1.diff.txt
+rc=0
+(no output)
+
+$ shasum -a 256 -c <<'SHA'
+4efb18438d736bb41a0770b3d4fd0b12e3ff5360e89dc8bc156e2ab44f67521f  .github/workflows/ci.yml
+110fffc3f31a10d71a024b3e02f66b0864178ce59e44e3e5b5be2c82ac11c79f  host/broker/exec_probe.go
+8c7f9602c1105bdca99af2326a6e51851d7011e1ccb875f18a293f4f91838b0e  host/broker/exec_probe_net6_dial_test.go
+8ec970891599257aa280436f78cfac427ebaccc1cf5cd33d404904cf60ec3b26  host/broker/exec_probe_net6_test.go
+ee59ba2cc5742855f6aa172cb7873484a5c07abf2f1b73d5792d8673c45e7366  host/broker/exec_probe_test.go
+SHA
+rc=0
+.github/workflows/ci.yml: OK
+host/broker/exec_probe.go: OK
+host/broker/exec_probe_net6_dial_test.go: OK
+host/broker/exec_probe_net6_test.go: OK
+host/broker/exec_probe_test.go: OK
+
+Step 4 environment: TMPDIR=/Users/voightkampff/dev/sunholo-data/.wt-world-iter359-sprint/design_docs/verification/world-iter359/executor-tmp; GOTELEMETRY=off. Go uses its configured build/module caches.
+
+$ gofmt -l host/broker/
+rc=0
+(no output)
+
+$ go vet ./host/broker/
+rc=0
+(no output)
+
+$ go build ./...
+rc=0
+(no output)
+
+$ go test -count=1 -run '^TestExecProbeNet6BindSiteIsBeforeTheFanOut$' ./host/broker/
+rc=0
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.389s
+
+$ cat design_docs/verification/world-row140-m0/pin.json
+rc=0
+{
+ "package": "@anthropic-ai/sandbox-runtime",
+ "version": "0.0.78",
+ "cli_sha256": "3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e"
+}
+
+$ shasum -a 256 /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/cli.js
+rc=0
+3c3092bd26b3924046f38d793c716b513dde619cf792ec50b181e2c7cd40d96e  /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/cli.js
+
+$ python3 -I -c 'import json; from pathlib import Path; p=Path('"'"'/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package'"'"'); pin=json.loads(Path('"'"'design_docs/verification/world-row140-m0/pin.json'"'"').read_text()); pkg=json.loads((p/'"'"'package.json'"'"').read_text()); print('"'"'package='"'"'+pkg['"'"'name'"'"']+'"'"'; version='"'"'+pkg['"'"'version'"'"']); assert pkg['"'"'name'"'"']==pin['"'"'package'"'"']; assert pkg['"'"'version'"'"']==pin['"'"'version'"'"']; print('"'"'Pinned package and version MATCH; cli_sha256 checked above MATCH'"'"')'
+rc=0
+package=@anthropic-ai/sandbox-runtime; version=0.0.78
+Pinned package and version MATCH; cli_sha256 checked above MATCH
+
+$ rg --files /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist -g http-proxy.js -g sandbox-manager.js -g mux-proxy.js
+rc=0
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js
+
+$ wc -l /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js
+rc=0
+     677 /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js
+    1936 /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js
+     158 /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js
+    2771 total
+
+$ shasum -a 256 /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js host/broker/exec_settings.go
+rc=0
+fbf1184b57d41400f5c73b5f0626df901caae0278b7b37103263a587e9c0cda4  /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js
+0859cd5ab36bf57d8774ae7787f20caa5e2daf461b93e7bcc736ff7ce74be6aa  /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js
+07d6eb4bab65e9abcf6e52f45216903cc82cba890139a149a771733b6f50088a  /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js
+e34a57ff118a4f340f056be675a2ffc58b3aa2a0bc252705d6c38741ecfd006d  host/broker/exec_settings.go
+
+$ rg -n 'CONNECT|connect|pipe|write|tlsTerminate|mitmProxy|parentProxy|tunnel|head' /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js
+rc=0
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:1:import { createServer, connect } from 'node:net';
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:10: * `VER NMETHODS METHODS...` with VER=0x05; SOCKS4's CONNECT is
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:25: * Single-port proxy front-end that dispatches each connection to either the
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:28: * The HTTP leg cannot use `httpServer.emit('connection', socket)` because
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:31: * macOS/Linux, a localhost TCP port on Windows — and the mux pipes the
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:32: * client socket to it. SOCKS connections are handed directly to the
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:33: * library's per-connection entry, no extra hop.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:43:    // immediately rather than waiting for in-flight tunnels to drain.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:56:            ? connect(backendSocketPath)
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:57:            : connect(backendTcpPort, '127.0.0.1');
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:73:        client.pipe(upstream);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:74:        upstream.pipe(client);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:81:            logForDebugging('mux: first-byte timeout; destroying connection');
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js:91:                // EOF before any byte — client connected and closed.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:4:import { connect } from 'node:net';
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:17:import { canonicalizeHost, connectViaParentProxy, directRequestOptions, dialDirect, formatAuthority, openConnectTunnel, proxyAuthHeader, selectParentProxyUrl, shouldBypassParentProxy, stripBrackets, stripHopByHop, } from './parent-proxy.js';
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:21:    // resets its connection; without a listener that surfaces as an
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:26:        logForDebugging(`Client connection error: ${err.message}`, {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:30:        // write failure is itself an uncaughtException.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:35:            // write and can reset the connection before the 400 reaches the
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:67:    // Handle CONNECT requests for HTTPS traffic
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:68:    server.on('connect', async (req, socket, head) => {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:72:            // A failed write (e.g. EPIPE to a dead peer) must also release
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:87:        // tunnel it is waiting for — so close our side immediately, the
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:91:        // an interactive permission prompt), and the verdict write lands on
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:94:        // dial; it is disarmed only at tunnel handoff, where established
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:95:        // tunnels forward FIN through pipe() and keep half-open semantics —
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:96:        // a FIN during the dial tears the connection down rather than
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:100:        // Deliberate tradeoff: a hypothetical pipelined send-and-FIN
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:101:        // CONNECT client (payload + FIN up front, then read the response
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:104:        // (checked again at write time via readableEnded). EOF
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:106:        // backstop matters: a write that still hits a dead peer errors,
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:109:        // writes (the incident's Bun builds, pre oven-sh/bun#37076) this
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:117:        // (which a CONNECT socket is, between the header parse and the tunnel
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:121:        // runtimes — and fold anything captured back into `head` at disarm
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:122:        // so early tunnel bytes (a client that pipelines its first payload
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:123:        // behind the CONNECT) are never lost.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:128:        // cycles corrupt CONNECT-upgraded sockets under Bun — see
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:129:        // relayPaused), and injecting a flowing-mode phase ahead of them
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:133:        // runs); the write-time guards and the error-handler backstop cover
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:139:        // host memory. A legitimate pipelined first flight (an SSH banner)
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:141:        // the connection.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:151:                logForDebugging('CONNECT client exceeded pre-establishment capture cap; destroying', { level: 'error' });
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:162:        // client that sent CONNECT and FIN together), and an already-emitted
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:170:        // Stop capturing, folding captured bytes into `head`. The listener
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:172:        // broadcast to every listener, so the real consumer (pipe()) still
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:176:        // pause() — pause/resume cycles corrupt CONNECT-upgraded sockets
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:181:                head = Buffer.concat([head, ...decisionData]);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:189:        // Decision-phase status writes go through this guard: a verdict for
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:197:                logForDebugging('CONNECT client gone before status write; dropping verdict and destroying socket');
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:203:            // fire the armed 'end' handler and destroy() the unflushed write.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:207:        // A client that sent CONNECT and FIN together (or closed before the
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:210:        // classifier call — on a connection that no longer exists.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:216:        // would land inside what the client treats as tunnel payload.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:219:            const auth = checkAuth(req.headers['proxy-authorization']);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:227:                logForDebugging(`Invalid CONNECT request: ${req.url}`, {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:266:            // (tlsTerminate and mitmProxy are mutually exclusive at the config
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:270:                // We can only terminate TLS. CONNECT also carries non-TLS streams —
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:275:                // tunnel below — i.e. base-sandbox behaviour, hostname-allowlisted
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:277:                socket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:279:                const peeked = await peekForClientHello(socket, head);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:286:                    terminateAndForward(options.mitmCA, options.filterRequest, options.mutateHeaders, options.getBodySubstitutions, socket, peeked.head, {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:289:                        upstreamCA: options.tlsTerminateUpstreamCA,
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:302:                logForDebugging(`[tls-terminate] non-TLS bytes on CONNECT ${hostname}:${port}; opaque-tunnelling`);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:303:                head = peeked.head;
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:308:                // take the opaque tunnel below, exactly as if mitmCA were unset.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:309:                logForDebugging(`[tls-terminate] policy exempts ${hostname}:${port}; opaque-tunnelling`);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:313:                options.parentProxy &&
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:314:                !shouldBypassParentProxy(options.parentProxy, hostname)
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:315:                ? selectParentProxyUrl(options.parentProxy, { isHttps: true })
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:320:                    logForDebugging(`Routing CONNECT ${hostname}:${port} through MITM proxy at ${mitmSocketPath}`);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:322:                        dial: () => connect({ path: mitmSocketPath }),
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:323:                        readyEvent: 'connect',
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:329:                    upstream = await connectViaParentProxy(parentUrl, hostname, port);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:336:                logForDebugging(`CONNECT tunnel failed: ${err.message}`, {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:340:                // would land inside the tunnel as payload. Just close.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:357:                socket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:360:            // An established tunnel relays each TCP direction independently: a
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:366:            // Forward any bytes the client sent in the same packet as the CONNECT
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:367:            // (Node delivers these as the `head` buffer, not via the socket stream),
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:369:            if (head.length)
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:370:                upstream.write(head);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:371:            upstream.pipe(socket);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:372:            socket.pipe(upstream);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:374:                logForDebugging(`CONNECT tunnel failed: ${err.message}`, {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:383:            logForDebugging(`Error handling CONNECT: ${err}`, { level: 'error' });
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:385:            // status line would corrupt the tunnel byte stream — just close.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:396:        // from node:_http_server). `pipe()` does not forward error events, so
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:397:        // the body pipelines below never see it either.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:407:            // A failed response write (EPIPE to a dead peer) must release
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:408:            // the descriptor — same rationale as the CONNECT handler's
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:426:                res.writeHead(200, {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:433:            const auth = checkAuth(req.headers['proxy-authorization']);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:435:                res.writeHead(407, { 'Proxy-Authenticate': 'Basic realm="srt"' });
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:461:            // Client may have disconnected while we awaited the filter; bail now
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:465:            // Same rule as the CONNECT handler: everything after the allow
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:471:            // The authority we forward (request-target and Host header) is rebuilt
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:475:            const fwdHeaders = { ...stripHopByHop(req.headers), host: authority };
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:483:                options.parentProxy &&
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:484:                !shouldBypassParentProxy(options.parentProxy, hostname)
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:485:                ? selectParentProxyUrl(options.parentProxy, {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:525:            // When the client declared a body but the forwarded headers carry no
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:529:            // otherwise write the piped body bytes raw after complete-framed
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:530:            // headers — a request-smuggling primitive.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:531:            const clientDeclaredBody = Boolean(req.headers['content-length'] || req.headers['transfer-encoding']);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:554:                    headers: fwdHeaders,
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:557:                    // upstream reset mid-body after headers); pipe() does not
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:565:                    res.writeHead(proxyRes.statusCode, stripHopByHop(proxyRes.headers));
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:566:                    proxyRes.pipe(res);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:579:                    headers: auth
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:584:                    // upstream reset mid-body after headers); pipe() does not
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:592:                    res.writeHead(proxyRes.statusCode, stripHopByHop(proxyRes.headers));
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:593:                    proxyRes.pipe(res);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:616:                    headers: fwdHeaders,
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:619:                    // upstream reset mid-body after headers); pipe() does not
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:627:                    res.writeHead(proxyRes.statusCode, stripHopByHop(proxyRes.headers));
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:628:                    proxyRes.pipe(res);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:635:                // Errors on either side of the extra pipe stage tear the chain
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:641:                body.pipe(bodyTransform).pipe(proxyReq);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:644:                // pipe() does not handle source errors. `body` may be a tee branch
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:649:                body.pipe(proxyReq);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:654:            if (!res.headersSent) {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:655:                res.writeHead(500, { 'Content-Type': 'text/plain' });
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js:666: * Parse a CONNECT request-target into host + port. Handles both plain
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:41:let parentProxy;
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:52:// the sandbox child env, checked on every CONNECT/request — so a host process
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:130: * the sandboxed process can write (the observe socket's event field, the
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:264: * Build the header-mutation callback that substitutes sentinel→real for
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:271: * returned closure does not log header values; the registry holds the only
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:277:    return (headers, destHost) => {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:278:        sentinelRegistry.substituteInHeaders(headers, destHost, matchesDomainPattern);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:303:    return (method, requestTarget, headers, destHost) => createSigv4Planner(awsPairRegistry, config?.credentials?.sigv4, matchesDomainPattern)(method, requestTarget, headers, destHost);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:311: * (filterNetworkRequest) and the tlsTerminate exclusion below. This site
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:321:    if (!config?.network.mitmProxy) {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:324:    const { socketPath, domains } = config.network.mitmProxy;
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:335: * Per-host TLS-termination opt-out from network.tlsTerminate.excludeDomains.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:336: * Only consulted by the HTTP proxy when tlsTerminate is enabled; exempted
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:337: * hosts fall back to the opaque CONNECT tunnel (still allowlist-filtered),
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:346:    const excludeDomains = config?.network.tlsTerminate?.excludeDomains;
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:353:        logForDebugging(`Host ${host} matches tlsTerminate.excludeDomains pattern ${pattern}; skipping TLS termination`);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:362:            logForDebugging(`tlsTerminate.excludeDomains: masked credential(s) ${masked.join(', ')} ` +
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:363:                `are configured for injection at ${host}, but its connections are ` +
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:396:        parentProxy,
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:402:        parentProxy,
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:429:    // Backend first so the front-end never accepts a connection that would
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:455:    parentProxy = resolveParentProxy(runtimeConfig.network.parentProxy);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:456:    if (parentProxy) {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:457:        logForDebugging(`Parent proxy configured: http=${redactUrl(parentProxy.httpUrl)} ` +
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:458:            `https=${redactUrl(parentProxy.httpsUrl)}`);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:462:    // tlsTerminate is explicit opt-in, so a bad config is a hard error.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:463:    if (runtimeConfig.network.tlsTerminate && runtimeConfig.network.mitmProxy) {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:464:        throw new Error('network.tlsTerminate and network.mitmProxy are mutually exclusive');
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:466:    // On Windows with tlsTerminate and no explicit caCertPath/caKeyPath,
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:472:    const tlsTerminate = runtimeConfig.network.tlsTerminate;
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:474:        tlsTerminate !== undefined &&
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:475:        !tlsTerminate.caCertPath &&
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:476:        !tlsTerminate.caKeyPath;
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:478:        tlsTerminate && !useWindowsPersistentCa
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:479:            ? createMitmCA(tlsTerminate)
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:494:        // the default write paths and drops the globs bwrap cannot take;
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:496:        // plus the built-in write denies the wrapper always applies.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:499:        // reports writes bwrap permits through `--dev`, `--proc` and the tmpfs
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:504:            // apply-seccomp's observer reports every write-intent syscall
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:507:            // the policy on, the default write paths are listed in full rather
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:510:            // tmpfs, so a write there is permitted and is not a violation.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:517:                // filesystem.disabled reaches the wrapper as `writeConfig ===
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:576:        if (useWindowsPersistentCa && tlsTerminate) {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:584:                    extraCaCertPaths: tlsTerminate.extraCaCertPaths,
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:595:        // must not) write. Compare thumbprints so a stale install-time
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:598:        if (tlsTerminate && mitmCA && !useWindowsPersistentCa) {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:603:                throw new WindowsSandboxError('trust_ca_not_installed', `tlsTerminate on Windows requires the sandbox to be ` +
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:611:                throw new WindowsSandboxError('trust_ca_thumbprint_mismatch', `tlsTerminate on Windows: the sandbox's installed CA ` +
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:652:                    write: acc.grantWrite,
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:730:            // Leaves are minted lazily per-CONNECT (after this point), so setting
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:907:    // SigV4 requests (the signature is derived from the secret; header
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:911:    // write it to a fake file in the manager-owned temp dir. Missing/unreadable
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:940: * The default write paths under a filesystem policy's read rules, for
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:995:            logForDebugging(`[Sandbox] Skipping glob write pattern on Linux: ${p}`);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1010: * `denyOnly` is only sound alongside that write config and must not be handed
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1072:    // writeConfig left undefined). On Windows this means no ACL
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1199: * touching the write grant — the repo top-level for a subdirectory
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1250:    // platform wrappers treat readConfig/writeConfig === undefined as "no
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1251:    // filesystem restrictions" (seatbelt emits `(allow file-write*)`; bwrap
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1267:    // Always include default system write paths (like /dev/null, /tmp/claude)
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1268:    let writeConfig;
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1274:        writeConfig = {
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1305:        const reExposedPaths = [...expandedAllowRead, ...writeConfig.allowOnly];
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1350:                writeConfig,
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1389:                writeConfig,
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1518:            // safe.directory: cwd + the resolved session-level write
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1521:            // the caller marks as safe without granting write.
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1555: * reassigning `config` here takes effect on the next connection
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1588:    // servers capture `parentProxy` by value at creation, so changes here take
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1591:    parentProxy = resolveParentProxy(newConfig.network.parentProxy);
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1689: * its unix-socket EOF, that leaves a fully-open inbound connection and
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1700:        // first, the connections are gone by the time close() runs and its
+/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js:1824:    parentProxy = undefined;
+
+$ nl -ba host/broker/exec_settings.go
+rc=0
+     1	package broker
+     2	
+     3	// Row 140 M2 (design_docs/planned/w-workspace-exec-toolchain-effect.md §4.4):
+     4	// the srt settings World renders per episode × project at
+     5	// <state>/exec/<ep>.<project>.srt.json (0600). The shape is M0's measured one
+     6	// (design_docs/verification/world-row140-m0/m0_matrix.py): srt 0.0.78
+     7	// requires network.deniedDomains, and enableWeakerNetworkIsolation and
+     8	// allowAppleEvents are TOP-LEVEL keys. srt has no `summary` command, so
+     9	// World verifies the file itself: re-read, byte-compare with its canonical
+    10	// rendering, digest, and refuse a file it did not write.
+    11	
+    12	import (
+    13		"bytes"
+    14		"crypto/sha256"
+    15		"encoding/hex"
+    16		"encoding/json"
+    17		"fmt"
+    18		"os"
+    19		"path/filepath"
+    20		"runtime"
+    21	)
+    22	
+    23	// execSettingsSpec is everything one rendering depends on; every path is
+    24	// canonical (symlinks resolved) and absolute.
+    25	type execSettingsSpec struct {
+    26		Worktree      string   // the episode worktree: writable, readable
+    27		Cache         string   // <state>/exec-cache/<ep>/<project>: writable, readable
+    28		OperatorHome  string   // denied for reading; anchors srt's two $HOME write defaults
+    29		StateDir      string   // World's state dir: denied for reading
+    30		WorkspaceRoot string   // every episode's parent: denied, so siblings are unreadable
+    31		Protected     []string // canonical profile patterns
+    32		ReadRoots     []string // the profile's read_roots plus each one's realpath
+    33		SeccompDir    string   // linux only: the archived seccomp helper dir [M0, V43/V44]
+    34		GOOS          string
+    35	}
+    36	
+    37	type execSettingsFS struct {
+    38		DenyRead   []string `json:"denyRead"`
+    39		AllowRead  []string `json:"allowRead"`
+    40		AllowWrite []string `json:"allowWrite"`
+    41		DenyWrite  []string `json:"denyWrite"`
+    42	}
+    43	
+    44	type execSettingsNet struct {
+    45		AllowedDomains      []string `json:"allowedDomains"`
+    46		DeniedDomains       []string `json:"deniedDomains"`
+    47		AllowLocalBinding   bool     `json:"allowLocalBinding"`
+    48		AllowAllUnixSockets bool     `json:"allowAllUnixSockets"`
+    49	}
+    50	
+    51	type execSettings struct {
+    52		Filesystem                   execSettingsFS  `json:"filesystem"`
+    53		Network                      execSettingsNet `json:"network"`
+    54		EnableWeakerNetworkIsolation bool            `json:"enableWeakerNetworkIsolation"`
+    55		AllowAppleEvents             bool            `json:"allowAppleEvents"`
+    56	}
+    57	
+    58	// execDenyNames are World's episode deny names (§4.4: the AILANG policy's
+    59	// names, plus `.git`, which srt's own list covers only in part, V5): each is
+    60	// denied as an absolute path under the worktree, a dir or a file alike.
+    61	//
+    62	// `.git/hooks` and `.git/config` come FIRST, before `.git` ([M2-linux], V50).
+    63	// When an episode's .git is a DIRECTORY, srt on Linux adds both to its own
+    64	// deny and stubs each absent one with a bind mount; a stub emitted after the
+    65	// read-only bind of .git makes bwrap abort ("Can't create file at
+    66	// …/.git/hooks: Read-only file system") and nothing runs. srt emits World's
+    67	// denies in order, before its own, so listed here the stubs are mounted while
+    68	// .git is still writable, and srt's later entries for them are duplicates.
+    69	// With a .git pointer file both are skipped (nothing can exist under a file).
+    70	func execDenyNames() []string {
+    71		names := []string{".git/hooks", ".git/config", ".git"}
+    72		names = append(names, episodeDenyDirs...)
+    73		return append(names, episodeDenyFiles...)
+    74	}
+    75	
+    76	// srtDefaultWritePaths are the paths srt always allows writing (V4); World
+    77	// denies each. /private/tmp/claude is darwin's alias of /tmp/claude.
+    78	func srtDefaultWritePaths(home, goos string) []string {
+    79		paths := []string{"/tmp/claude"}
+    80		if goos == "darwin" {
+    81			paths = append(paths, "/private/tmp/claude")
+    82		}
+    83		return append(paths, filepath.Join(home, ".npm", "_logs"), filepath.Join(home, ".claude", "debug"))
+    84	}
+    85	
+    86	func hostGOOS() string { return runtime.GOOS }
+    87	
+    88	// renderExecSettings is the canonical rendering (§4.4): reads fenced by
+    89	// path list (D-140-1 = A), no network (D-140-2 = A), writes only to the
+    90	// worktree and the episode's exec cache, World's deny list and srt's four
+    91	// defaults closed.
+    92	func renderExecSettings(spec execSettingsSpec) ([]byte, error) {
+    93		for _, p := range append([]string{spec.Worktree, spec.Cache, spec.OperatorHome, spec.StateDir, spec.WorkspaceRoot}, spec.ReadRoots...) {
+    94			if !cleanAbs(p) {
+    95				return nil, fmt.Errorf("broker: exec settings path %q is not clean and absolute", p)
+    96			}
+    97		}
+    98		var denyWrite []string
+    99		for _, n := range execDenyNames() {
+   100			denyWrite = append(denyWrite, filepath.Join(spec.Worktree, n))
+   101		}
+   102		denyWrite = append(denyWrite, srtDefaultWritePaths(spec.OperatorHome, spec.GOOS)...)
+   103		denyWrite = append(denyWrite, renderSrtProtected(spec.Protected, spec.Worktree, spec.GOOS)...)
+   104		allowRead := dedupe(append([]string{spec.Worktree, spec.Cache}, spec.ReadRoots...))
+   105		if spec.GOOS == "linux" {
+   106			if !cleanAbs(spec.SeccompDir) {
+   107				return nil, fmt.Errorf("broker: exec settings: linux needs the archived seccomp helper dir, got %q", spec.SeccompDir)
+   108			}
+   109			allowRead = append(allowRead, spec.SeccompDir)
+   110		}
+   111		s := execSettings{
+   112			Filesystem: execSettingsFS{
+   113				DenyRead:   []string{spec.OperatorHome, spec.StateDir, spec.WorkspaceRoot},
+   114				AllowRead:  allowRead,
+   115				AllowWrite: []string{spec.Worktree, spec.Cache},
+   116				DenyWrite:  denyWrite,
+   117			},
+   118			Network: execSettingsNet{AllowedDomains: []string{}, DeniedDomains: []string{}},
+   119		}
+   120		data, err := json.MarshalIndent(s, "", " ")
+   121		if err != nil {
+   122			return nil, err
+   123		}
+   124		return append(data, '\n'), nil
+   125	}
+   126	
+   127	func dedupe(xs []string) []string {
+   128		seen := map[string]bool{}
+   129		out := make([]string, 0, len(xs))
+   130		for _, x := range xs {
+   131			if !seen[x] {
+   132				seen[x] = true
+   133				out = append(out, x)
+   134			}
+   135		}
+   136		return out
+   137	}
+   138	
+   139	// ExecSettingsError reports a settings file that is not the one World wrote:
+   140	// the call fails (recorded `failed`) and nothing runs under it.
+   141	type ExecSettingsError struct {
+   142		Path string
+   143		Why  string
+   144	}
+   145	
+   146	func (e *ExecSettingsError) Error() string {
+   147		return fmt.Sprintf("broker: exec settings %s is not World's rendering: %s", e.Path, e.Why)
+   148	}
+   149	
+   150	// writeExecSettings writes data at path (0600, atomically), then verifies it
+   151	// and returns the settings_digest.
+   152	func writeExecSettings(path string, data []byte) (string, error) {
+   153		if err := writeFileAtomic(path, data); err != nil {
+   154			return "", fmt.Errorf("broker: write exec settings: %w", err)
+   155		}
+   156		if err := verifyExecSettings(path, data); err != nil {
+   157			return "", err
+   158		}
+   159		sum := sha256.Sum256(data)
+   160		return "sha256:" + hex.EncodeToString(sum[:]), nil
+   161	}
+   162	
+   163	// verifyExecSettings refuses anything but a regular 0600 file holding
+   164	// exactly World's canonical bytes.
+   165	func verifyExecSettings(path string, canonical []byte) error {
+   166		info, err := os.Lstat(path)
+   167		if err != nil {
+   168			return &ExecSettingsError{Path: path, Why: err.Error()}
+   169		}
+   170		if !info.Mode().IsRegular() || info.Mode().Perm() != 0o600 {
+   171			return &ExecSettingsError{Path: path, Why: fmt.Sprintf("mode %v, want a regular 0600 file", info.Mode())}
+   172		}
+   173		got, err := os.ReadFile(path)
+   174		if err != nil {
+   175			return &ExecSettingsError{Path: path, Why: err.Error()}
+   176		}
+   177		if !bytes.Equal(got, canonical) {
+   178			return &ExecSettingsError{Path: path, Why: "its bytes differ from the canonical rendering"}
+   179		}
+   180		return nil
+   181	}
+
+$ rg -n 'tlsTerminate|mitmProxy|parentProxy|allowedDomains' host cmd -g '*.go' -g '!*_test.go'
+rc=0
+host/broker/exec_settings.go:45:	AllowedDomains      []string `json:"allowedDomains"`
+
+$ python3 -I -c 'from pathlib import Path; p=Path('"'"'/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js'"'"'); print('"'"'FILE '"'"'+str(p)); print('"'"''"'"'.join(f'"'"'{i}: {line}'"'"' for i,line in enumerate(p.read_text().splitlines(keepends=True),1) if i<=391))'
+rc=0
+FILE /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/http-proxy.js
+1: import { Agent, createServer } from 'node:http';
+2: import { request as httpRequest } from 'node:http';
+3: import { request as httpsRequest } from 'node:https';
+4: import { connect } from 'node:net';
+5: import { URL } from 'node:url';
+6: import { logForDebugging } from '../utils/debug.js';
+7: import { encodedCommandFromProxyUser } from './sandbox-utils.js';
+8: import { CRL_PATH } from './mitm-ca.js';
+9: import { decideAndRespond, rawDenied, respondDenied, respondUpstreamError, } from './request-filter.js';
+10: const ALLOWLIST_DENY = [
+11:     'Connection blocked by network allowlist',
+12:     'blocked-by-allowlist',
+13: ];
+14: import { peekForClientHello, terminateAndForward, } from './tls-terminate-proxy.js';
+15: import { prepareBodySubstitution, } from './body-substitution.js';
+16: import { isResolvedAddressDenied } from './resolved-address-guard.js';
+17: import { canonicalizeHost, connectViaParentProxy, directRequestOptions, dialDirect, formatAuthority, openConnectTunnel, proxyAuthHeader, selectParentProxyUrl, shouldBypassParentProxy, stripBrackets, stripHopByHop, } from './parent-proxy.js';
+18: export function createHttpProxyServer(options) {
+19:     const server = createServer();
+20:     // A client that is killed mid-exchange (sandboxed process tree teardown)
+21:     // resets its connection; without a listener that surfaces as an
+22:     // ECONNRESET uncaughtException from node:_http_server and can take down
+23:     // the host process. Parse errors get the RFC-required 400; resets and
+24:     // already-unwritable sockets are just dropped.
+25:     server.on('clientError', (err, socket) => {
+26:         logForDebugging(`Client connection error: ${err.message}`, {
+27:             level: 'error',
+28:         });
+29:         // The peer may reset while the 400 flushes; without a listener that
+30:         // write failure is itself an uncaughtException.
+31:         socket.on('error', () => { });
+32:         if (err.code !== 'ECONNRESET' &&
+33:             socket.writable) {
+34:             // Destroy only after the flush: destroying immediately races the
+35:             // write and can reset the connection before the 400 reaches the
+36:             // client, while end() alone can leave a half-open socket from a
+37:             // client that never closes its side. Under Bun the flush callback
+38:             // may never fire on a parse-errored socket (the 400 is dropped;
+39:             // verified empirically), so back-stop with a timer or the socket
+40:             // leaks.
+41:             const status = err.code === 'HPE_HEADER_OVERFLOW'
+42:                 ? '431 Request Header Fields Too Large'
+43:                 : '400 Bad Request';
+44:             socket.end(`HTTP/1.1 ${status}\r\n\r\n`, () => socket.destroy());
+45:             const backstop = setTimeout(() => socket.destroy(), 1000);
+46:             backstop.unref?.();
+47:             return;
+48:         }
+49:         socket.destroy();
+50:     });
+51:     const checkAuth = (got) => {
+52:         if (!options.proxyAuthToken)
+53:             return { ok: true };
+54:         const m = /^basic\s+([a-z0-9+/=]+)\s*$/i.exec(got ?? '');
+55:         if (!m)
+56:             return { ok: false };
+57:         const decoded = Buffer.from(m[1], 'base64').toString('utf8');
+58:         const sep = decoded.indexOf(':');
+59:         if (sep <= 0 || decoded.slice(sep + 1) !== options.proxyAuthToken) {
+60:             return { ok: false };
+61:         }
+62:         return {
+63:             ok: true,
+64:             encodedCommand: encodedCommandFromProxyUser(decoded.slice(0, sep)),
+65:         };
+66:     };
+67:     // Handle CONNECT requests for HTTPS traffic
+68:     server.on('connect', async (req, socket, head) => {
+69:         // Attach error handler immediately to prevent unhandled errors
+70:         socket.on('error', err => {
+71:             logForDebugging(`Client socket error: ${err.message}`, { level: 'error' });
+72:             // A failed write (e.g. EPIPE to a dead peer) must also release
+73:             // the descriptor: logging alone leaves the fd open for the life
+74:             // of the process, and an open dead-peer fd is what the runtime's
+75:             // EPIPE retry loop spun on (idle-CPU busy-loop incident).
+76:             // destroy() is idempotent, so overlap with the close handlers
+77:             // below is harmless.
+78:             socket.destroy();
+79:         });
+80:         // Track client liveness so we can abort the upstream dial if they bail.
+81:         let clientGone = false;
+82:         socket.once('close', () => {
+83:             clientGone = true;
+84:         });
+85:         // EOF during the decision window is treated as abandonment — a
+86:         // half-closed client cannot run any bidirectional protocol over the
+87:         // tunnel it is waiting for — so close our side immediately, the
+88:         // same close every healthy cycle performs at teardown. Without
+89:         // this, an EOF'd socket survives an arbitrarily long filter await
+90:         // half-open (the host decision may be a model-classifier call or
+91:         // an interactive permission prompt), and the verdict write lands on
+92:         // a dead descriptor. The armed window runs from here through the
+93:         // filter await, the ClientHello peek (MITM path), and the upstream
+94:         // dial; it is disarmed only at tunnel handoff, where established
+95:         // tunnels forward FIN through pipe() and keep half-open semantics —
+96:         // a FIN during the dial tears the connection down rather than
+97:         // half-opening it, which is the cleaner teardown for a client that
+98:         // is gone.
+99:         //
+100:         // Deliberate tradeoff: a hypothetical pipelined send-and-FIN
+101:         // CONNECT client (payload + FIN up front, then read the response
+102:         // across the half-open socket) is also destroyed here. Accepting
+103:         // that means nothing is written once EOF has been observed
+104:         // (checked again at write time via readableEnded). EOF
+105:         // notification is best-effort on a paused socket, so the layered
+106:         // backstop matters: a write that still hits a dead peer errors,
+107:         // and the error handler above destroys the socket, releasing the
+108:         // descriptor. On runtimes whose EPIPE handling spins on dead-peer
+109:         // writes (the incident's Bun builds, pre oven-sh/bun#37076) this
+110:         // narrows the exposure from every abandoned decision to only those
+111:         // whose EOF was never notified.
+112:         const onDecisionWindowEof = () => {
+113:             clientGone = true;
+114:             socket.destroy();
+115:         };
+116:         // 'end' only fires once the stream is being read: on a paused socket
+117:         // (which a CONNECT socket is, between the header parse and the tunnel
+118:         // handoff) a client FIN can sit unobserved for the whole decision.
+119:         // On the opaque path, capture decision-window data to put the socket
+120:         // into flowing mode — making EOF notification reliable across
+121:         // runtimes — and fold anything captured back into `head` at disarm
+122:         // so early tunnel bytes (a client that pipelines its first payload
+123:         // behind the CONNECT) are never lost.
+124:         //
+125:         // Deliberately NOT armed on the mitmCA path: the ClientHello peek
+126:         // and the terminating relay manage this socket's flow themselves
+127:         // (pull-mode reads chosen specifically because pause()/resume()
+128:         // cycles corrupt CONNECT-upgraded sockets under Bun — see
+129:         // relayPaused), and injecting a flowing-mode phase ahead of them
+130:         // breaks the terminating path outright. There, EOF detection during
+131:         // the decision stays best-effort ('close' fires on full close — the
+132:         // incident case — and the peek's own reads surface 'end' once it
+133:         // runs); the write-time guards and the error-handler backstop cover
+134:         // the remainder.
+135:         //
+136:         // Capture is bounded: the paused socket used to give free TCP
+137:         // backpressure, and an untrusted client streaming at line rate for
+138:         // the length of an interactive permission prompt must not balloon
+139:         // host memory. A legitimate pipelined first flight (an SSH banner)
+140:         // is tiny; blowing the cap is abandonment-grade abuse and closes
+141:         // the connection.
+142:         const MAX_DECISION_CAPTURE_BYTES = 64 * 1024;
+143:         let decisionCaptureBytes = 0;
+144:         let capturing = false;
+145:         const decisionData = [];
+146:         const onDecisionData = (chunk) => {
+147:             if (!capturing)
+148:                 return;
+149:             decisionCaptureBytes += chunk.length;
+150:             if (decisionCaptureBytes > MAX_DECISION_CAPTURE_BYTES) {
+151:                 logForDebugging('CONNECT client exceeded pre-establishment capture cap; destroying', { level: 'error' });
+152:                 onDecisionWindowEof();
+153:                 return;
+154:             }
+155:             decisionData.push(chunk);
+156:         };
+157:         if (!options.mitmCA) {
+158:             capturing = true;
+159:             socket.on('data', onDecisionData);
+160:         }
+161:         // EOF may already have been processed before this handler arms (a
+162:         // client that sent CONNECT and FIN together), and an already-emitted
+163:         // 'end' never re-fires — check the flag first.
+164:         if (socket.readableEnded) {
+165:             onDecisionWindowEof();
+166:         }
+167:         else {
+168:             socket.once('end', onDecisionWindowEof);
+169:         }
+170:         // Stop capturing, folding captured bytes into `head`. The listener
+171:         // deliberately STAYS attached as a discarding sink: 'data' events
+172:         // broadcast to every listener, so the real consumer (pipe()) still
+173:         // receives everything, while removing the last listener from a
+174:         // flowing stream would silently DROP bytes arriving before the
+175:         // consumer attaches (e.g. during the awaited upstream dial). No
+176:         // pause() — pause/resume cycles corrupt CONNECT-upgraded sockets
+177:         // under Bun (see relayPaused).
+178:         const disarmDecisionCapture = () => {
+179:             capturing = false;
+180:             if (decisionData.length) {
+181:                 head = Buffer.concat([head, ...decisionData]);
+182:                 decisionData.length = 0;
+183:             }
+184:         };
+185:         const disarmDecisionWindowEof = () => {
+186:             socket.removeListener('end', onDecisionWindowEof);
+187:             disarmDecisionCapture();
+188:         };
+189:         // Decision-phase status writes go through this guard: a verdict for
+190:         // a dead client is dropped, never written. The filter's work is not
+191:         // wasted — host-side allow/deny caches serve the client's retry.
+192:         const endWithStatus = (payload) => {
+193:             if (clientGone ||
+194:                 socket.destroyed ||
+195:                 socket.readableEnded ||
+196:                 !socket.writable) {
+197:                 logForDebugging('CONNECT client gone before status write; dropping verdict and destroying socket');
+198:                 socket.destroy();
+199:                 return;
+200:             }
+201:             // Disarm before writing: a FIN processed while this verdict is
+202:             // still queued (backpressured or slow client) would otherwise
+203:             // fire the armed 'end' handler and destroy() the unflushed write.
+204:             disarmDecisionWindowEof();
+205:             socket.end(payload);
+206:         };
+207:         // A client that sent CONNECT and FIN together (or closed before the
+208:         // handler ran) was destroyed at arm time: return before spending a
+209:         // decision — possibly an interactive permission prompt or a
+210:         // classifier call — on a connection that no longer exists.
+211:         if (clientGone || socket.destroyed) {
+212:             return;
+213:         }
+214:         // Whether the MITM sniff path already wrote the 200 — hoisted so the
+215:         // catch below can see it: once the 200 is out, any HTTP status line
+216:         // would land inside what the client treats as tunnel payload.
+217:         let wrote200 = false;
+218:         try {
+219:             const auth = checkAuth(req.headers['proxy-authorization']);
+220:             if (!auth.ok) {
+221:                 endWithStatus('HTTP/1.1 407 Proxy Authentication Required\r\n' +
+222:                     'Proxy-Authenticate: Basic realm="srt"\r\n\r\n');
+223:                 return;
+224:             }
+225:             const target = parseConnectTarget(req.url);
+226:             if (!target) {
+227:                 logForDebugging(`Invalid CONNECT request: ${req.url}`, {
+228:                     level: 'error',
+229:                 });
+230:                 endWithStatus('HTTP/1.1 400 Bad Request\r\n\r\n');
+231:                 return;
+232:             }
+233:             const { hostname: requestedHost, port } = target;
+234:             const allowed = await options.filter(port, requestedHost, socket, auth.encodedCommand);
+235:             if (!allowed) {
+236:                 logForDebugging(`Connection blocked to ${requestedHost}:${port}`, {
+237:                     level: 'error',
+238:                 });
+239:                 endWithStatus(rawDenied(...ALLOWLIST_DENY));
+240:                 return;
+241:             }
+242:             // The client may have died during the filter await (EOF destroy
+243:             // above, or full close): there is nothing left to establish.
+244:             if (clientGone || socket.destroyed) {
+245:                 socket.destroy();
+246:                 return;
+247:             }
+248:             // From here on, use the spelling the allowlist actually evaluated.
+249:             // The filter canonicalizes before matching (so `Api.Example.com.`,
+250:             // `127.1`, `0x7f.0.0.1` are allowed iff their canonical forms are),
+251:             // and every decision below — TLS-termination exemption, MITM
+252:             // routing, parent-proxy bypass, credential injection, the leaf cert
+253:             // and upstream SNI, the authority we put on the wire — must key off
+254:             // that same spelling. Routing off the raw one let a trailing-dot
+255:             // FQDN pass the allowlist as `api.example.com`, miss every MITM
+256:             // pattern, and dial out directly. Same fallback as the filter for
+257:             // the (already-validated, so practically unreachable) case where
+258:             // canonicalization fails, so the two layers can never disagree.
+259:             const hostname = canonicalizeHost(requestedHost) ?? requestedHost;
+260:             const lookup = options.lookupFor?.(port, auth.encodedCommand);
+261:             // Decide upstream route:
+262:             //   in-process TLS termination
+263:             //   > external MITM unix socket
+264:             //   > parent HTTP proxy
+265:             //   > direct
+266:             // (tlsTerminate and mitmProxy are mutually exclusive at the config
+267:             // layer, so the first two never both apply.)
+268:             if (options.mitmCA &&
+269:                 (options.shouldTerminateTLS?.(hostname, port) ?? true)) {
+270:                 // We can only terminate TLS. CONNECT also carries non-TLS streams —
+271:                 // notably SSH on Linux, where the sandbox's own GIT_SSH_COMMAND
+272:                 // routes `ssh` through this proxy via `socat - PROXY:`. Send 200 so
+273:                 // the client transmits its first bytes, sniff for a ClientHello, and
+274:                 // only terminate if it is one. Non-TLS falls through to the opaque
+275:                 // tunnel below — i.e. base-sandbox behaviour, hostname-allowlisted
+276:                 // but not content-inspected (same as the SOCKS path).
+277:                 socket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+278:                 wrote200 = true;
+279:                 const peeked = await peekForClientHello(socket, head);
+280:                 if (clientGone || socket.destroyed) {
+281:                     socket.destroy();
+282:                     return;
+283:                 }
+284:                 if (peeked.isTLS) {
+285:                     disarmDecisionWindowEof();
+286:                     terminateAndForward(options.mitmCA, options.filterRequest, options.mutateHeaders, options.getBodySubstitutions, socket, peeked.head, {
+287:                         hostname,
+288:                         port,
+289:                         upstreamCA: options.tlsTerminateUpstreamCA,
+290:                         lookup,
+291:                         onFilterRequestDeny: options.onFilterRequestDenied
+292:                             ? (method, url, reason) => options.onFilterRequestDenied({
+293:                                 method,
+294:                                 url,
+295:                                 reason,
+296:                                 encodedCommand: auth.encodedCommand,
+297:                             })
+298:                             : undefined,
+299:                     }, options.planSigv4, options.maxSigv4ResignBodyBytes);
+300:                     return;
+301:                 }
+302:                 logForDebugging(`[tls-terminate] non-TLS bytes on CONNECT ${hostname}:${port}; opaque-tunnelling`);
+303:                 head = peeked.head;
+304:             }
+305:             else if (options.mitmCA) {
+306:                 // Per-host termination opt-out: the policy exempts this host (mTLS
+307:                 // upstream, cert-pinning client), so skip the MITM entirely and
+308:                 // take the opaque tunnel below, exactly as if mitmCA were unset.
+309:                 logForDebugging(`[tls-terminate] policy exempts ${hostname}:${port}; opaque-tunnelling`);
+310:             }
+311:             const mitmSocketPath = options.getMitmSocketPath?.(hostname);
+312:             const parentUrl = !mitmSocketPath &&
+313:                 options.parentProxy &&
+314:                 !shouldBypassParentProxy(options.parentProxy, hostname)
+315:                 ? selectParentProxyUrl(options.parentProxy, { isHttps: true })
+316:                 : undefined;
+317:             let upstream;
+318:             try {
+319:                 if (mitmSocketPath) {
+320:                     logForDebugging(`Routing CONNECT ${hostname}:${port} through MITM proxy at ${mitmSocketPath}`);
+321:                     upstream = await openConnectTunnel({
+322:                         dial: () => connect({ path: mitmSocketPath }),
+323:                         readyEvent: 'connect',
+324:                         destHost: hostname,
+325:                         destPort: port,
+326:                     });
+327:                 }
+328:                 else if (parentUrl) {
+329:                     upstream = await connectViaParentProxy(parentUrl, hostname, port);
+330:                 }
+331:                 else {
+332:                     upstream = await dialDirect(hostname, port, lookup);
+333:                 }
+334:             }
+335:             catch (err) {
+336:                 logForDebugging(`CONNECT tunnel failed: ${err.message}`, {
+337:                     level: 'error',
+338:                 });
+339:                 // If we already sent 200 (mitmCA sniff path), an HTTP status line now
+340:                 // would land inside the tunnel as payload. Just close.
+341:                 if (wrote200)
+342:                     socket.destroy();
+343:                 else if (isResolvedAddressDenied(err)) {
+344:                     endWithStatus(rawDenied(err.message));
+345:                 }
+346:                 else
+347:                     endWithStatus('HTTP/1.1 502 Bad Gateway\r\n\r\n');
+348:                 return;
+349:             }
+350:             if (clientGone || socket.destroyed) {
+351:                 upstream.on('error', () => { }); // swallow post-resolve errors
+352:                 upstream.destroy();
+353:                 socket.destroy();
+354:                 return;
+355:             }
+356:             if (!wrote200) {
+357:                 socket.write('HTTP/1.1 200 Connection Established\r\n\r\n');
+358:             }
+359:             disarmDecisionWindowEof();
+360:             // An established tunnel relays each TCP direction independently: a
+361:             // client that half-closes (FIN after its request bytes) must still
+362:             // receive the upstream's reply. Without this, runtimes that default
+363:             // http-server sockets to allowHalfOpen=false auto-close the client
+364:             // side on FIN and the reply is lost.
+365:             socket.allowHalfOpen = true;
+366:             // Forward any bytes the client sent in the same packet as the CONNECT
+367:             // (Node delivers these as the `head` buffer, not via the socket stream),
+368:             // plus anything the ClientHello sniff consumed when mitmCA is on.
+369:             if (head.length)
+370:                 upstream.write(head);
+371:             upstream.pipe(socket);
+372:             socket.pipe(upstream);
+373:             upstream.on('error', err => {
+374:                 logForDebugging(`CONNECT tunnel failed: ${err.message}`, {
+375:                     level: 'error',
+376:                 });
+377:                 socket.destroy();
+378:             });
+379:             socket.on('close', () => upstream.destroy());
+380:             upstream.on('close', () => socket.destroy());
+381:         }
+382:         catch (err) {
+383:             logForDebugging(`Error handling CONNECT: ${err}`, { level: 'error' });
+384:             // Same rule as the 502 path: once the MITM sniff's 200 is out, a
+385:             // status line would corrupt the tunnel byte stream — just close.
+386:             if (wrote200)
+387:                 socket.destroy();
+388:             else
+389:                 endWithStatus('HTTP/1.1 500 Internal Server Error\r\n\r\n');
+390:         }
+391:     });
+
+
+$ python3 -I -c 'from pathlib import Path; p=Path('"'"'/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js'"'"'); print('"'"'FILE '"'"'+str(p)); print('"'"''"'"'.join(f'"'"'{i}: {line}'"'"' for i,line in enumerate(p.read_text().splitlines(keepends=True),1) if True))'
+rc=0
+FILE /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/mux-proxy.js
+1: import { createServer, connect } from 'node:net';
+2: import { join } from 'node:path';
+3: import { tmpdir } from 'node:os';
+4: import { unlink } from 'node:fs/promises';
+5: import { logForDebugging } from '../utils/debug.js';
+6: import { getPlatform } from '../utils/platform.js';
+7: import { listenInRange } from './listen-in-range.js';
+8: /**
+9:  * First-byte values that select the SOCKS handler. SOCKS5's greeting is
+10:  * `VER NMETHODS METHODS...` with VER=0x05; SOCKS4's CONNECT is
+11:  * `VN CD DSTPORT...` with VN=0x04. Everything else on this port is HTTP:
+12:  * request methods start with an ASCII uppercase letter (>= 0x41 'A'),
+13:  * h2-prior-knowledge starts `PRI ` (0x50), and a stray TLS ClientHello
+14:  * starts 0x16 — none of which collide with 0x04/0x05. A one-byte peek is
+15:  * therefore an unambiguous discriminator.
+16:  */
+17: const SOCKS_FIRST_BYTES = new Set([0x04, 0x05]);
+18: const DEFAULT_FIRST_BYTE_TIMEOUT_MS = 10000;
+19: let backendSeq = 0;
+20: function unixSocketPath() {
+21:     // Keep it short — macOS sun_path is 104 bytes.
+22:     return join(tmpdir(), `srt-mux-${process.pid}-${(backendSeq++).toString(36)}.sock`);
+23: }
+24: /**
+25:  * Single-port proxy front-end that dispatches each connection to either the
+26:  * SOCKS handler or the HTTP proxy based on the first byte the client sends.
+27:  *
+28:  * The HTTP leg cannot use `httpServer.emit('connection', socket)` because
+29:  * Bun's `http.Server` does not implement that injection path (Node does).
+30:  * Instead the HTTP backend listens on a private endpoint — a unix socket on
+31:  * macOS/Linux, a localhost TCP port on Windows — and the mux pipes the
+32:  * client socket to it. SOCKS connections are handed directly to the
+33:  * library's per-connection entry, no extra hop.
+34:  */
+35: export function createMuxProxyServer(opts) {
+36:     const firstByteTimeoutMs = opts.firstByteTimeoutMs ?? DEFAULT_FIRST_BYTE_TIMEOUT_MS;
+37:     const isWindows = getPlatform() === 'windows';
+38:     // Where the HTTP backend listens. Exactly one of these is set after
+39:     // listenHttpBackend() resolves.
+40:     let backendSocketPath;
+41:     let backendTcpPort;
+42:     // Track every accepted client socket so close() can tear them down
+43:     // immediately rather than waiting for in-flight tunnels to drain.
+44:     const openSockets = new Set();
+45:     function dispatchHttp(client) {
+46:         if (backendSocketPath === undefined && backendTcpPort === undefined) {
+47:             // listenHttpBackend() must resolve before the front-end listens; this
+48:             // guard is defense-in-depth in case a future caller reorders them.
+49:             logForDebugging('mux: HTTP dispatch before backend bound; dropping', {
+50:                 level: 'error',
+51:             });
+52:             client.destroy();
+53:             return;
+54:         }
+55:         const upstream = backendSocketPath
+56:             ? connect(backendSocketPath)
+57:             : connect(backendTcpPort, '127.0.0.1');
+58:         upstream.on('error', err => {
+59:             // Surface a 502 with the errno code so callers (and CI logs) can tell
+60:             // *why* the backend was unreachable instead of an opaque empty-reply.
+61:             // Full error (including path) goes to debug logging only — the client
+62:             // is our own sandboxed child, but there's no need to echo host paths.
+63:             const code = err.code ?? 'ERR';
+64:             logForDebugging(`mux: HTTP backend dial failed: ${err.message}`, { level: 'error' });
+65:             if (!client.destroyed) {
+66:                 client.end(`HTTP/1.1 502 Bad Gateway\r\nConnection: close\r\n\r\n` +
+67:                     `mux backend dial failed (${code})\n`);
+68:             }
+69:         });
+70:         client.on('error', () => upstream.destroy());
+71:         client.once('close', () => upstream.destroy());
+72:         upstream.once('close', () => client.destroy());
+73:         client.pipe(upstream);
+74:         upstream.pipe(client);
+75:     }
+76:     const server = createServer(client => {
+77:         openSockets.add(client);
+78:         client.once('close', () => openSockets.delete(client));
+79:         client.on('error', err => logForDebugging(`mux: client socket error: ${err.message}`));
+80:         const timer = setTimeout(() => {
+81:             logForDebugging('mux: first-byte timeout; destroying connection');
+82:             client.destroy();
+83:         }, firstByteTimeoutMs);
+84:         // Don't let a pending sniff keep the process alive.
+85:         if (typeof timer.unref === 'function')
+86:             timer.unref();
+87:         client.once('readable', () => {
+88:             clearTimeout(timer);
+89:             const peek = client.read(1);
+90:             if (!peek || peek.length === 0) {
+91:                 // EOF before any byte — client connected and closed.
+92:                 client.destroy();
+93:                 return;
+94:             }
+95:             client.unshift(peek);
+96:             if (SOCKS_FIRST_BYTES.has(peek[0])) {
+97:                 opts.handleSocksConnection(client);
+98:             }
+99:             else {
+100:                 dispatchHttp(client);
+101:             }
+102:         });
+103:     });
+104:     return {
+105:         server,
+106:         getPort() {
+107:             const addr = server.address();
+108:             return addr && typeof addr === 'object' ? addr.port : undefined;
+109:         },
+110:         async listenHttpBackend() {
+111:             if (!isWindows) {
+112:                 const path = unixSocketPath();
+113:                 // A prior process with the same PID may have crashed without
+114:                 // unlinking; clear any stale file so listen() doesn't EADDRINUSE.
+115:                 await unlink(path).catch(() => { });
+116:                 await new Promise((resolve, reject) => {
+117:                     opts.httpServer.once('error', reject);
+118:                     opts.httpServer.listen(path, () => {
+119:                         opts.httpServer.removeListener('error', reject);
+120:                         resolve();
+121:                     });
+122:                 });
+123:                 backendSocketPath = path;
+124:                 logForDebugging(`mux: HTTP backend listening on ${path}`);
+125:                 return undefined;
+126:             }
+127:             // Windows: AF_UNIX support under Bun is unverified, so the backend
+128:             // listens on a localhost TCP port inside the WFP-permitted range.
+129:             // The mux→backend hop originates from the parent process (not the
+130:             // sandboxed child), so WFP doesn't strictly require it; staying in
+131:             // range just keeps the port surface predictable.
+132:             await listenInRange(opts.httpServer, p => opts.httpServer.listen(p, '127.0.0.1'), opts.httpBackendPortRange, new Set());
+133:             const addr = opts.httpServer.address();
+134:             backendTcpPort = addr && typeof addr === 'object' ? addr.port : undefined;
+135:             logForDebugging(`mux: HTTP backend listening on 127.0.0.1:${backendTcpPort}`);
+136:             return backendTcpPort;
+137:         },
+138:         async close() {
+139:             for (const s of openSockets)
+140:                 s.destroy();
+141:             openSockets.clear();
+142:             await new Promise(resolve => server.close(() => resolve()));
+143:             // The mux owns httpServer's listen lifecycle, so it owns close too.
+144:             // sandbox-manager.reset() additionally calls forceCloseHttpServer()
+145:             // for closeAllConnections() semantics; double-close is a no-op.
+146:             await new Promise(resolve => opts.httpServer.close(() => resolve()));
+147:             if (backendSocketPath) {
+148:                 await unlink(backendSocketPath).catch(() => { });
+149:                 backendSocketPath = undefined;
+150:             }
+151:             backendTcpPort = undefined;
+152:         },
+153:         unref() {
+154:             server.unref();
+155:             opts.httpServer.unref();
+156:         },
+157:     };
+158: }
+159: //# sourceMappingURL=mux-proxy.js.map
+
+$ python3 -I -c 'from pathlib import Path; p=Path('"'"'/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js'"'"'); print('"'"'FILE '"'"'+str(p)); print('"'"''"'"'.join(f'"'"'{i}: {line}'"'"' for i,line in enumerate(p.read_text().splitlines(keepends=True),1) if i<=110 or 300<=i<=485))'
+rc=0
+FILE /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/sandbox-manager.js
+1: import { createHttpProxyServer } from './http-proxy.js';
+2: import { createSocksProxyServer } from './socks-proxy.js';
+3: import { createMuxProxyServer } from './mux-proxy.js';
+4: import { listenInRange } from './listen-in-range.js';
+5: import { SentinelRegistry } from './credential-sentinel.js';
+6: import { MaskedFileStore, buildMaskedFileBinds, } from './credential-mask-files.js';
+7: import { buildMaskedEnvVars } from './credential-mask-env.js';
+8: import { AwsPairRegistry, createSigv4Planner, registerAwsPairs, } from './credential-aws-pairs.js';
+9: import { certThumbprint, createMitmCA, CRL_PATH, disposeMitmCA, } from './mitm-ca.js';
+10: import { logForDebugging } from '../utils/debug.js';
+11: import { whichSync } from '../utils/which.js';
+12: import { getPlatform, getWslVersion } from '../utils/platform.js';
+13: import * as fs from 'fs';
+14: import { randomBytes } from 'node:crypto';
+15: import { wrapCommandWithSandboxLinux, initializeLinuxNetworkBridge, checkLinuxDependencies, cleanupBwrapMountPoints, linuxGetCwdMandatoryDenyPaths, } from './linux-sandbox-utils.js';
+16: import { expandReadDenyGlobLinux } from './read-deny-glob.js';
+17: import { wrapCommandWithSandboxMacOS, startMacOSSandboxLogMonitor, } from './macos-sandbox-utils.js';
+18: import { startLinuxSandboxViolationMonitor, } from './linux-violation-monitor.js';
+19: import { checkWindowsDependencies, checkWindowsDependenciesAsync, wrapCommandWithSandboxWindows, parseWindowsBinShell, expandWindowsFsPaths, stampWindowsAcl, restoreWindowsAcl, grantWindowsAcl, revokeWindowsAcl, getWindowsSandboxUserStatusAsync, getWindowsSandboxCaCert, ensurePersistentWindowsCa, verifyWindowsWfpEgress, resolveSrtWin, WindowsSandboxError, DEFAULT_WINDOWS_PROXY_PORT_RANGE, } from './windows-sandbox-utils.js';
+20: import { getDefaultWritePaths, containsGlobChars, globPatternBaseDir, normalizePathForSandbox, removeTrailingGlobSuffix, expandGlobPattern, attributionKeyFor, decodeSandboxedCommand, encodeSandboxedCommand, } from './sandbox-utils.js';
+21: import { SandboxViolationStore, sanitizeUnregisteredCommandKey, shouldIgnoreViolation, } from './sandbox-violation-store.js';
+22: import { canonicalizeHost, isValidHost, redactUrl, resolveParentProxy, } from './parent-proxy.js';
+23: import { matchesDomainPattern, matchesDomainPatternWithPort, stripDomainPatternPort, } from './domain-pattern.js';
+24: import { createResolvedAddressGuard, isResolvedAddressDenied, } from './resolved-address-guard.js';
+25: import { EOL } from 'node:os';
+26: import { dirname } from 'node:path';
+27: import { getJavaProxyAgentJarPathAsync } from './java-proxy-agent.js';
+28: import { getApplySeccompBinaryPathAsync } from './generate-seccomp-filter.js';
+29: // ============================================================================
+30: // Private Module State
+31: // ============================================================================
+32: let config;
+33: let httpProxyServer;
+34: let socksProxyServer;
+35: let muxProxyServer;
+36: let managerContext;
+37: let initializationPromise;
+38: let cleanupRegistered = false;
+39: let logMonitorShutdown;
+40: let linuxMonitor;
+41: let parentProxy;
+42: /** Read live through {@link directLookup}, so a config update applies to the next dial. */
+43: let resolvedAddressGuard = createResolvedAddressGuard();
+44: let mitmCA;
+45: /**
+46:  * Resolved path of the JVM proxy agent jar (see java-proxy-agent.ts); set
+47:  * while a proxy is advertised to the sandbox, undefined if the jar is not
+48:  * shipped/found (JVMs then just aren't proxy-aware, as before).
+49:  */
+50: let javaAgentJarPath;
+51: // Per-session proxy auth token. Generated at proxy start, exported only into
+52: // the sandbox child env, checked on every CONNECT/request — so a host process
+53: // dialing 127.0.0.1:<proxyPort> can't reach the filter callback.
+54: let proxyAuthToken;
+55: // Windows: the resolved access set that was actually applied at
+56: // initialize(). `undefined` means no stamp/grant was applied
+57: // (gates running `acl restore`/`acl revoke` at reset()).
+58: let windowsFsStampedSet;
+59: // The sandbox user SID captured at initialize(). reset() uses this
+60: // so a config change between init and reset can't strand ACEs
+61: // under a different SID.
+62: let windowsFsSbUserSid;
+63: // The RAW config inputs that produced `windowsFsStampedSet`.
+64: // updateConfig() compares these (not the resolved set) so it never
+65: // re-expands globs — see `sameWindowsStampSet`.
+66: let windowsFsRawInputs;
+67: // `verifyWindowsWfpEgress()` is once per PROCESS (it spawns a
+68: // CreateProcessWithLogonW runner; first call may create the sandbox
+69: // user's profile). The WFP fence is install-scoped, not config- or
+70: // session-scoped — reset() does NOT clear this, so updateConfig()'s
+71: // reset+reinit and the test suite's per-test reset() don't re-verify.
+72: let windowsWfpVerified = false;
+73: // Resolved once at initialize() (`resolveSrtWin` stats the disk).
+74: // Captured so wrapWithSandboxArgv/reset() don't re-resolve per call
+75: // and so reset()'s revoke/restore addresses the SAME binary the
+76: // grants/stamps were applied with even if `config` mutated between.
+77: let srtWinSpawn;
+78: const sandboxViolationStore = new SandboxViolationStore();
+79: // Per-session sentinel↔real-value map for masked credentials. Lives only in
+80: // process memory; never written to disk or logged. Cleared on reset().
+81: const sentinelRegistry = new SentinelRegistry();
+82: // Per-session linked AWS credential pairs for SigV4 re-signing, keyed by
+83: // the fake access key id. Same lifecycle and secrecy posture as the
+84: // sentinel registry.
+85: const awsPairRegistry = new AwsPairRegistry();
+86: // Temp dir holding the sentinel-content fake files for masked credential
+87: // files. Created lazily on first masked file; removed on reset().
+88: const maskedFileStore = new MaskedFileStore();
+89: // ============================================================================
+90: // Private Helper Functions (not exported)
+91: // ============================================================================
+92: function registerCleanup() {
+93:     if (cleanupRegistered) {
+94:         return;
+95:     }
+96:     const cleanupHandler = () => reset().catch(e => {
+97:         logForDebugging(`Cleanup failed in registerCleanup ${e}`, {
+98:             level: 'error',
+99:         });
+100:     });
+101:     process.once('exit', cleanupHandler);
+102:     process.once('SIGINT', cleanupHandler);
+103:     process.once('SIGTERM', cleanupHandler);
+104:     cleanupRegistered = true;
+105: }
+106: /**
+107:  * Attribution key to command text for every wrapped invocation, so each
+108:  * producer can report (and ignoreViolations can match) the command an event
+109:  * belongs to rather than the opaque key. Keys are held decoded because that
+110:  * is the form the carriers deliver. Bounded FIFO: the violation store itself
+300:     // Re-read the policies per request (not captured at proxy start) so an
+301:     // updateConfig() that changes credentials.sigv4 takes effect without a
+302:     // proxy restart, matching how the injector sees live registry state.
+303:     return (method, requestTarget, headers, destHost) => createSigv4Planner(awsPairRegistry, config?.credentials?.sigv4, matchesDomainPattern)(method, requestTarget, headers, destHost);
+304: }
+305: /**
+306:  * Get the MITM proxy socket path for a given host, if configured.
+307:  * Returns the socket path if the host matches any MITM domain pattern,
+308:  * otherwise returns undefined.
+309:  *
+310:  * Matches the canonicalized hostname, like the allow/deny filter
+311:  * (filterNetworkRequest) and the tlsTerminate exclusion below. This site
+312:  * fails OPEN on a miss — a host that matches no MITM pattern is dialed
+313:  * directly — so it must accept exactly the set of spellings the allowlist
+314:  * accepts: otherwise `api.example.com.` (trailing-dot FQDN, same name to
+315:  * DNS) passes the allowlist as `api.example.com` but misses every MITM
+316:  * pattern and skips the MITM proxy entirely. The proxies already hand this
+317:  * hook the canonical spelling; canonicalizing again here is defence in
+318:  * depth for any other caller.
+319:  */
+320: function getMitmSocketPath(host) {
+321:     if (!config?.network.mitmProxy) {
+322:         return undefined;
+323:     }
+324:     const { socketPath, domains } = config.network.mitmProxy;
+325:     const canonicalHost = canonicalizeHost(host) ?? host;
+326:     for (const pattern of domains) {
+327:         if (matchesDomainPattern(canonicalHost, pattern)) {
+328:             logForDebugging(`Host ${host} matches MITM pattern ${pattern}`);
+329:             return socketPath;
+330:         }
+331:     }
+332:     return undefined;
+333: }
+334: /**
+335:  * Per-host TLS-termination opt-out from network.tlsTerminate.excludeDomains.
+336:  * Only consulted by the HTTP proxy when tlsTerminate is enabled; exempted
+337:  * hosts fall back to the opaque CONNECT tunnel (still allowlist-filtered),
+338:  * so mTLS / cert-pinning clients can complete their own handshake.
+339:  *
+340:  * Matches the canonicalized hostname, like the allow/deny filter
+341:  * (filterNetworkRequest) — otherwise a spelling the allowlist accepts after
+342:  * canonicalization (`127.1`, a trailing-dot FQDN) would dodge the exclusion
+343:  * and get terminated anyway.
+344:  */
+345: function shouldTerminateTLSForHost(host) {
+346:     const excludeDomains = config?.network.tlsTerminate?.excludeDomains;
+347:     if (!excludeDomains?.length)
+348:         return true;
+349:     const canonicalHost = canonicalizeHost(host) ?? host;
+350:     for (const pattern of excludeDomains) {
+351:         if (!matchesDomainPattern(canonicalHost, pattern))
+352:             continue;
+353:         logForDebugging(`Host ${host} matches tlsTerminate.excludeDomains pattern ${pattern}; skipping TLS termination`);
+354:         // Masked-credential substitution only happens on the terminated path,
+355:         // so a credential whose injectHosts cover this host can never be
+356:         // injected here — the upstream gets the placeholder. Config validation
+357:         // rejects the fully-contradictory spellings; this flags the partial
+358:         // ones (e.g. default injectHosts = allowedDomains) at the moment they
+359:         // actually bite.
+360:         const masked = sentinelRegistry.namesInjectableAt(canonicalHost, matchesDomainPattern);
+361:         if (masked.length > 0) {
+362:             logForDebugging(`tlsTerminate.excludeDomains: masked credential(s) ${masked.join(', ')} ` +
+363:                 `are configured for injection at ${host}, but its connections are ` +
+364:                 `not terminated, so the upstream will receive the placeholder`, { level: 'error' });
+365:         }
+366:         return false;
+367:     }
+368:     return true;
+369: }
+370: async function startMuxProxyServer(sandboxAskCallback, portRange) {
+371:     const injectCredentials = buildCredentialInjector();
+372:     const injectBodyCredentials = buildBodyCredentialInjector();
+373:     httpProxyServer = createHttpProxyServer({
+374:         filter: (port, host, _socket, encodedCommand) => filterNetworkRequest(port, host, sandboxAskCallback, encodedCommand),
+375:         getMitmSocketPath,
+376:         mitmCA,
+377:         shouldTerminateTLS: shouldTerminateTLSForHost,
+378:         filterRequest: config?.network.filterRequest,
+379:         onFilterRequestDenied: ({ method, url, reason, encodedCommand }) => {
+380:             recordProxyViolation(`deny http-request ${method} ${redactUrlForViolation(url)} (${reason})`, encodedCommand);
+381:         },
+382:         // TLS-terminated path always gets the injector; the plain-HTTP path
+383:         // only when explicitly opted in. Without the opt-in, a sentinel sent
+384:         // over plain HTTP reaches the upstream unchanged (fails closed).
+385:         mutateHeaders: injectCredentials,
+386:         mutateHeadersPlaintext: config?.credentials?.allowPlaintextInject
+387:             ? injectCredentials
+388:             : undefined,
+389:         getBodySubstitutions: injectBodyCredentials,
+390:         getBodySubstitutionsPlaintext: config?.credentials?.allowPlaintextInject
+391:             ? injectBodyCredentials
+392:             : undefined,
+393:         // SigV4 re-signing is TLS-terminated-path only, like credential
+394:         // injection: the real signature must not travel over plaintext.
+395:         planSigv4: buildSigv4Planner(),
+396:         parentProxy,
+397:         lookupFor: directLookup,
+398:         proxyAuthToken,
+399:     });
+400:     socksProxyServer = createSocksProxyServer({
+401:         filter: (port, host, encodedCommand) => filterNetworkRequest(port, host, sandboxAskCallback, encodedCommand),
+402:         parentProxy,
+403:         lookupFor: directLookup,
+404:         proxyAuthToken,
+405:         probeUnauthenticated: async (port, host) => {
+406:             // Explicit deny rules only: an unauthenticated peer must never reach
+407:             // the ask callback, and a merely off-list host gets the generic
+408:             // cannot-authenticate refusal rather than a policy claim.
+409:             if (!config)
+410:                 return {};
+411:             const canonical = canonicalizeHost(host) ?? host;
+412:             for (const entry of config.network.deniedDomains) {
+413:                 if (matchesDomainPatternWithPort(canonical, port, entry)) {
+414:                     const reason = config.network.deniedDomainReasons?.[entry] ??
+415:                         'host is on the deny list';
+416:                     recordOutboundDeny(host, port, reason);
+417:                     return { deniedReason: reason };
+418:                 }
+419:             }
+420:             return {};
+421:         },
+422:     });
+423:     muxProxyServer = createMuxProxyServer({
+424:         httpServer: httpProxyServer,
+425:         handleSocksConnection: s => socksProxyServer.handleConnection(s),
+426:         httpBackendPortRange: portRange,
+427:     });
+428:     const mux = muxProxyServer;
+429:     // Backend first so the front-end never accepts a connection that would
+430:     // dispatch to an unbound backend. On Windows the backend's port is
+431:     // excluded when binding the front-end in the same WFP range.
+432:     const backendPort = await mux.listenHttpBackend();
+433:     await listenInRange(mux.server, p => mux.server.listen(p, '127.0.0.1'), portRange, backendPort !== undefined ? new Set([backendPort]) : new Set());
+434:     const muxPort = mux.getPort();
+435:     if (muxPort === undefined) {
+436:         throw new Error('Failed to get mux proxy server port');
+437:     }
+438:     mux.unref();
+439:     logForDebugging(`Mux proxy (HTTP+SOCKS) listening on localhost:${muxPort}`);
+440:     return muxPort;
+441: }
+442: // ============================================================================
+443: // Public Module Functions (will be exported via namespace)
+444: // ============================================================================
+445: async function initialize(runtimeConfig, sandboxAskCallback, enableLogMonitor = false) {
+446:     // Return if already initializing
+447:     if (initializationPromise) {
+448:         await initializationPromise;
+449:         return;
+450:     }
+451:     // Store config for use by other functions
+452:     config = runtimeConfig;
+453:     // Resolve parent/upstream proxy from config or HTTP_PROXY env before we
+454:     // start our own listeners (which will later shadow those vars in the child).
+455:     parentProxy = resolveParentProxy(runtimeConfig.network.parentProxy);
+456:     if (parentProxy) {
+457:         logForDebugging(`Parent proxy configured: http=${redactUrl(parentProxy.httpUrl)} ` +
+458:             `https=${redactUrl(parentProxy.httpsUrl)}`);
+459:     }
+460:     resolvedAddressGuard = createResolvedAddressGuard(runtimeConfig.network);
+461:     // Load TLS-termination CA if configured. Throws on unreadable/non-PEM —
+462:     // tlsTerminate is explicit opt-in, so a bad config is a hard error.
+463:     if (runtimeConfig.network.tlsTerminate && runtimeConfig.network.mitmProxy) {
+464:         throw new Error('network.tlsTerminate and network.mitmProxy are mutually exclusive');
+465:     }
+466:     // On Windows with tlsTerminate and no explicit caCertPath/caKeyPath,
+467:     // defer CA creation until the Windows block below has resolved
+468:     // srt-win and fetched user status — the persistent CA is
+469:     // generated-if-absent under windowsStateDir()/ca and
+470:     // trusted in the sandbox user's Root store, then loaded here.
+471:     // Explicit paths (or non-Windows) go straight to createMitmCA.
+472:     const tlsTerminate = runtimeConfig.network.tlsTerminate;
+473:     const useWindowsPersistentCa = getPlatform() === 'windows' &&
+474:         tlsTerminate !== undefined &&
+475:         !tlsTerminate.caCertPath &&
+476:         !tlsTerminate.caKeyPath;
+477:     mitmCA =
+478:         tlsTerminate && !useWindowsPersistentCa
+479:             ? createMitmCA(tlsTerminate)
+480:             : undefined;
+481:     // Check dependencies
+482:     const deps = await checkDependenciesAsync();
+483:     if (deps.errors.length > 0) {
+484:         throw new Error(`Sandbox dependencies not available: ${deps.errors.join(', ')}`);
+485:     }
+
+
+$ rg -n 'resolveParentProxy|dialDirect|function.*Proxy|process.env' /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/parent-proxy.js
+rc=0
+43: * child's* environment to point at itself — but process.env here reflects the
+46:export function resolveParentProxy(cfg) {
+47:    const http = cfg?.http ?? process.env.HTTP_PROXY ?? process.env.http_proxy ?? undefined;
+49:        process.env.HTTPS_PROXY ??
+50:        process.env.https_proxy ??
+54:    const noProxyRaw = cfg?.noProxy ?? process.env.NO_PROXY ?? process.env.no_proxy ?? '';
+86:function parseNoProxy(raw) {
+137:export function shouldBypassParentProxy(resolved, host) {
+164:export function selectParentProxyUrl(resolved, opts) {
+248:export function connectViaParentProxy(proxyUrl, destHost, destPort) {
+382: * route. The name is dialed exactly as a tunnel would be ({@link dialDirect}:
+399:        const probe = await dialDirect(host, port, lookup);
+422:export function dialDirect(host, port, lookup, timeoutMs = CONNECT_TIMEOUT_MS) {
+
+$ rg -n 'HTTP_PROXY|HTTPS_PROXY|NO_PROXY|buildExecEnv|execEnv|\.Env =|--settings|srtSpawn|srtArgs' host/broker -g 'exec*.go' -g '!*_test.go'
+rc=0
+host/broker/exec_probe.go:86:function proxy(port,nonce){const u=process.env.HTTPS_PROXY||process.env.https_proxy||process.env.HTTP_PROXY||process.env.http_proxy;
+host/broker/exec_profile.go:55:	execEnvNamePattern   = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+host/broker/exec_profile.go:231:		if err := execEnvNameOk("env", name); err != nil {
+host/broker/exec_profile.go:306:		if err := execEnvNameOk("caches", name); err != nil {
+host/broker/exec_profile.go:327:// execEnvNameOk refuses a variable name outside the grammar or one World
+host/broker/exec_profile.go:330:func execEnvNameOk(field, name string) error {
+host/broker/exec_profile.go:333:	case !execEnvNamePattern.MatchString(name):
+host/broker/exec_profile.go:334:		return profileErr(field, "%q is not a variable name (%s)", name, execEnvNamePattern)
+host/broker/exec_profile.go:335:	case slices.Contains(execWorldEnv, name), name == "SANDBOX_RUNTIME", upper == "NO_PROXY",
+
+$ shasum -a 256 /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/parent-proxy.js
+rc=0
+aab4cc0a75a9f98ffe9a8a65d7be2158190a3f327b3bfd1b7bdd4e7247016390  /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/parent-proxy.js
+
+$ python3 -I -c 'from pathlib import Path; p=Path('"'"'/Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/parent-proxy.js'"'"'); print('"'"'FILE '"'"'+str(p)); print('"'"''"'"'.join(f'"'"'{i}: {line}'"'"' for i,line in enumerate(p.read_text().splitlines(keepends=True),1) if i<=175 or 410<=i<=475))'
+rc=0
+FILE /Users/voightkampff/dev/sunholo-data/.srt-pack-iter359/pkg/package/dist/sandbox/parent-proxy.js
+1: /**
+2:  * Parent/upstream HTTP proxy support.
+3:  *
+4:  * When SRT runs in an environment that requires an HTTP proxy for outbound
+5:  * internet access (e.g. inside a VM on a host behind a corporate proxy),
+6:  * SRT's own proxies must chain through that upstream rather than connecting
+7:  * directly.
+8:  *
+9:  * This module provides:
+10:  *   - config resolution (explicit config -> HTTP_PROXY/HTTPS_PROXY/NO_PROXY env)
+11:  *   - NO_PROXY matching (hostname suffix + CIDR via net.BlockList). Follows
+12:  *     golang.org/x/net/http/httpproxy semantics for suffix matching. Note:
+13:  *     port-specific NO_PROXY entries (e.g. `host:8080`) are matched by host
+14:  *     only; the port is ignored.
+15:  *   - a generic CONNECT-tunnel helper that works over Unix socket, TCP, or TLS
+16:  */
+17: import { BlockList, connect as netConnect, isIP } from 'node:net';
+18: import { connect as tlsConnect } from 'node:tls';
+19: import { URL } from 'node:url';
+20: import { logForDebugging } from '../utils/debug.js';
+21: import { addRange, addressInSet, isLoopbackAddress, mappedIPv4, } from './address.js';
+22: const CONNECT_TIMEOUT_MS = 30000;
+23: /**
+24:  * Hop-by-hop headers per RFC 7230 §6.1, plus proxy-specific headers that
+25:  * MUST NOT be forwarded to the upstream. `transfer-encoding` is included
+26:  * because we re-frame bodies via Node's client; Content-Length is preserved
+27:  * end-to-end (Node's llhttp already rejects the TE+CL smuggling vector).
+28:  */
+29: const HOP_BY_HOP = new Set([
+30:     'connection',
+31:     'keep-alive',
+32:     'proxy-authenticate',
+33:     'proxy-authorization',
+34:     'proxy-connection',
+35:     'te',
+36:     'trailer',
+37:     'transfer-encoding',
+38:     'upgrade',
+39: ]);
+40: /**
+41:  * Resolve the parent proxy config, falling back to the SRT process's own
+42:  * environment. Note: SRT later overwrites HTTP_PROXY etc. in the *sandboxed
+43:  * child's* environment to point at itself — but process.env here reflects the
+44:  * environment SRT itself was launched with, which is what we want.
+45:  */
+46: export function resolveParentProxy(cfg) {
+47:     const http = cfg?.http ?? process.env.HTTP_PROXY ?? process.env.http_proxy ?? undefined;
+48:     const https = cfg?.https ??
+49:         process.env.HTTPS_PROXY ??
+50:         process.env.https_proxy ??
+51:         // Fall back to HTTP_PROXY for HTTPS if HTTPS_PROXY is unset — this is
+52:         // the de-facto behaviour of curl and most tooling.
+53:         http;
+54:     const noProxyRaw = cfg?.noProxy ?? process.env.NO_PROXY ?? process.env.no_proxy ?? '';
+55:     if (!http && !https)
+56:         return undefined;
+57:     const parse = (u) => {
+58:         if (!u)
+59:             return undefined;
+60:         // Accept schemeless `host:port` like curl does, but reject any scheme
+61:         // other than http/https.
+62:         const hasScheme = /^[a-z][a-z0-9+.-]*:\/\//i.test(u);
+63:         const withScheme = hasScheme ? u : `http://${u}`;
+64:         try {
+65:             const parsed = new URL(withScheme);
+66:             if ((parsed.protocol !== 'http:' && parsed.protocol !== 'https:') ||
+67:                 !parsed.hostname) {
+68:                 throw new Error('unsupported scheme or empty host');
+69:             }
+70:             return parsed;
+71:         }
+72:         catch {
+73:             logForDebugging(`Invalid parent proxy URL, ignoring: ${redactUserinfo(u)}`, { level: 'error' });
+74:             return undefined;
+75:         }
+76:     };
+77:     const httpUrl = parse(http);
+78:     const httpsUrl = parse(https);
+79:     // If both parsed to undefined, behave as if no parent proxy was configured
+80:     // rather than returning a husk object that makes callers do bypass checks
+81:     // for nothing.
+82:     if (!httpUrl && !httpsUrl)
+83:         return undefined;
+84:     return { httpUrl, httpsUrl, noProxy: parseNoProxy(noProxyRaw) };
+85: }
+86: function parseNoProxy(raw) {
+87:     const rules = {
+88:         all: false,
+89:         suffixes: [],
+90:         cidr: new BlockList(),
+91:     };
+92:     for (let entry of raw.split(',')) {
+93:         entry = entry.trim();
+94:         if (!entry)
+95:             continue;
+96:         if (entry === '*') {
+97:             rules.all = true;
+98:             continue;
+99:         }
+100:         // CIDR? A malformed one is ignored (do NOT treat as suffix; `/` isn't
+101:         // a valid hostname char).
+102:         if (entry.includes('/')) {
+103:             addRange(rules.cidr, entry);
+104:             continue;
+105:         }
+106:         // Hostname suffix. Normalise: lowercase, strip brackets (handling the
+107:         // `[v6]:port` form), strip leading `*.`, strip a trailing `:port` (unless
+108:         // the entry is an IP literal — IPv6 addresses contain colons).
+109:         let v = entry.toLowerCase();
+110:         const bracketed = /^\[([^\]]+)\](?::\d+)?$/.exec(v);
+111:         if (bracketed)
+112:             v = bracketed[1];
+113:         if (v.startsWith('*.'))
+114:             v = v.slice(1);
+115:         if (!isIP(v)) {
+116:             const colon = v.lastIndexOf(':');
+117:             if (colon !== -1 && /^\d+$/.test(v.slice(colon + 1))) {
+118:                 v = v.slice(0, colon);
+119:             }
+120:         }
+121:         else if (addRange(rules.cidr, v)) {
+122:             // Bare IP literal — an exact-match /32 or /128 rule, so lookups go
+123:             // through BlockList rather than string suffix matching.
+124:             continue;
+125:         }
+126:         rules.suffixes.push(v);
+127:     }
+128:     return rules;
+129: }
+130: /**
+131:  * Returns true if the given host should bypass the parent proxy and connect
+132:  * directly. Always bypasses loopback.
+133:  *
+134:  * NB: the port is not consulted. NO_PROXY entries of the form `host:port` are
+135:  * matched by host only (the port suffix is stripped during parsing).
+136:  */
+137: export function shouldBypassParentProxy(resolved, host) {
+138:     const h = stripBrackets(host.toLowerCase().replace(/\.$/, ''));
+139:     // Always bypass loopback — chaining localhost through an upstream proxy is
+140:     // never what you want. Covers the whole 127/8 block and IPv4-mapped forms.
+141:     if (h === 'localhost' || isLoopbackAddress(h))
+142:         return true;
+143:     if (resolved.noProxy.all)
+144:         return true;
+145:     if (addressInSet(resolved.noProxy.cidr, h))
+146:         return true;
+147:     for (const v of resolved.noProxy.suffixes) {
+148:         if (v.startsWith('.')) {
+149:             // .example.com matches foo.example.com and example.com
+150:             if (h === v.slice(1) || h.endsWith(v))
+151:                 return true;
+152:         }
+153:         else {
+154:             // example.com matches example.com and foo.example.com (golang semantics)
+155:             if (h === v || h.endsWith('.' + v))
+156:                 return true;
+157:         }
+158:     }
+159:     return false;
+160: }
+161: /**
+162:  * Pick which parent proxy URL to use for a given destination.
+163:  */
+164: export function selectParentProxyUrl(resolved, opts) {
+165:     if (opts.isHttps)
+166:         return resolved.httpsUrl ?? resolved.httpUrl;
+167:     // For plain HTTP we only fall back to HTTPS_PROXY if it was explicitly set
+168:     // — matches curl's behaviour where HTTP requests go direct if only
+169:     // HTTPS_PROXY is configured.
+170:     return resolved.httpUrl;
+171: }
+172: /**
+173:  * Generic CONNECT-tunnel: dial a proxy transport (unix/tcp/tls), send
+174:  * `CONNECT host:port`, wait for a 2xx, and resolve with the tunnelled socket.
+175:  * Validates destHost to prevent CRLF injection from untrusted callers.
+410:         ...(tls && !isIP(host) ? { servername: host } : {}),
+411:         agent: false,
+412:     };
+413: }
+414: /**
+415:  * Dial `host:port` directly with a bounded timeout. Shared by the HTTP and
+416:  * SOCKS direct-connect paths so they get the same timeout behaviour as the
+417:  * CONNECT-tunnelled paths. `lookup` is the resolved-address guard's (see
+418:  * resolved-address-guard.ts); the runtime dials what it returns. It is a
+419:  * required argument so no direct dial omits it by accident — pass
+420:  * `undefined` explicitly to use the runtime's resolver unguarded.
+421:  */
+422: export function dialDirect(host, port, lookup, timeoutMs = CONNECT_TIMEOUT_MS) {
+423:     return new Promise((resolve, reject) => {
+424:         const s = netConnect({ port, host, lookup });
+425:         let settled = false;
+426:         const done = (err) => {
+427:             if (settled)
+428:                 return;
+429:             settled = true;
+430:             s.setTimeout(0);
+431:             if (err) {
+432:                 s.destroy();
+433:                 reject(err);
+434:             }
+435:             else {
+436:                 resolve(s);
+437:             }
+438:         };
+439:         s.setTimeout(timeoutMs, () => done(new Error('connect timed out')));
+440:         s.once('connect', () => done());
+441:         s.once('error', done);
+442:         s.once('close', () => done(new Error('socket closed before connect')));
+443:     });
+444: }
+445: //# sourceMappingURL=parent-proxy.js.map
+
+SOURCE-REVIEW VERDICT: relay premise confirmed for the pinned package under World settings.
+(a) YES: once CONNECT succeeds, tunnel payload bytes are relayed verbatim in both directions.
+(b) NO: no generated header/banner is prepended or appended upstream on this route. The HTTP/1.1 200 response goes only toward the client; upstream receives original head bytes and piped client payload.
+World does not enable TLS termination or external MITM routing. An environment-derived parent proxy is bypassed for loopback by the pinned implementation.
+The mux restores its sniffed byte and pipes the stream without rewriting it. Direct dialing writes no preamble. Pre-establishment capture preserves the original head/data ordering.
+This is a static source/config inspection, not a runtime socket or Linux real-srt measurement. The optional TLS/HTTP content-mutating routes in srt are not enabled by World's rendered settings.
+No alteration found on the applicable CONNECT relay route; no fallback or code change made.
+
+Review receipt:
+{
+  "verbatim_both_directions": true,
+  "upstream_header_or_banner": false,
+  "world_config_enables_altering_route": false,
+  "reviewer": "Codex sprint executor, iteration 359",
+  "evidence": "Pinned npm package @anthropic-ai/sandbox-runtime@0.0.78; dist/cli.js sha256 matches pin.json. http-proxy.js:68-391 CONNECT handler; :178-183 preserves captured head bytes in order; :311-333 selects direct routing under World settings; :356-372 sends 200 only to the client, forwards the original head upstream, then upstream.pipe(socket) and socket.pipe(upstream). mux-proxy.js:73-74 pipes both directions and :87-100 reads then unshifts its first byte. sandbox-manager.js:320-332 returns no MITM path without config.network.mitmProxy; :373-399 passes the route options; :472-480 leaves mitmCA undefined without tlsTerminate. exec_settings.go:44-56 defines only the four network policy fields; :111-124 renders empty allow/deny domain lists with binding/unix-socket flags false and no TLS termination, MITM, or parent-proxy config. parent-proxy.js:137-142 always bypasses parent proxies for loopback, including 127.0.0.1 even if an HTTP(S)_PROXY environment variable exists; :422-442 dialDirect opens a TCP socket with no payload write."
+}
+
+Final pinned-byte recheck:
+$ shasum -a 256 -c <<'SHA'
+4efb18438d736bb41a0770b3d4fd0b12e3ff5360e89dc8bc156e2ab44f67521f  .github/workflows/ci.yml
+110fffc3f31a10d71a024b3e02f66b0864178ce59e44e3e5b5be2c82ac11c79f  host/broker/exec_probe.go
+8c7f9602c1105bdca99af2326a6e51851d7011e1ccb875f18a293f4f91838b0e  host/broker/exec_probe_net6_dial_test.go
+8ec970891599257aa280436f78cfac427ebaccc1cf5cd33d404904cf60ec3b26  host/broker/exec_probe_net6_test.go
+ee59ba2cc5742855f6aa172cb7873484a5c07abf2f1b73d5792d8673c45e7366  host/broker/exec_probe_test.go
+SHA
+rc=0
+.github/workflows/ci.yml: OK
+host/broker/exec_probe.go: OK
+host/broker/exec_probe_net6_dial_test.go: OK
+host/broker/exec_probe_net6_test.go: OK
+host/broker/exec_probe_test.go: OK
+
+$ git diff --stat
+rc=0
+ .github/workflows/ci.yml            |   2 +-
+ host/broker/exec_probe.go           | 290 +++++++++++++++++++++++++++++-------
+ host/broker/exec_probe_net6_test.go |   2 +-
+ host/broker/exec_probe_test.go      |   6 +-
+ 4 files changed, 242 insertions(+), 58 deletions(-)
+
+$ git status --short
+rc=0
+ M .github/workflows/ci.yml
+ M host/broker/exec_probe.go
+ M host/broker/exec_probe_net6_test.go
+ M host/broker/exec_probe_test.go
+?? design_docs/verification/world-iter359/executor-M1.txt
+?? design_docs/verification/world-iter359/executor-relay-check.txt
+?? host/broker/exec_probe_net6_dial_test.go
+
+Completion: all five preconditions (including new-file ABSENT) and all five post-change hashes match; diff bank identity matches; git apply rc=0.
+Gates: gofmt -l host/broker/ rc=0, empty output; go vet ./host/broker/ rc=0; go build ./... rc=0; the single source-parse test rc=0.
+No pre-application gate failure was observed. No unexpected gate result or relay alteration. The pinned parent-proxy environment fallback was checked explicitly and bypasses loopback.
+No listener-opening behaviour tests, package suite, stability suite, mutation runner, or Linux real-srt tests were run. These are UNINFORMATIVE UNDER SANDBOX and remain controller work outside the sandbox. M1 acceptance remains pending the controller gates, including Linux real-srt CI.
+No git state write operation was run; the sole git write-to-tree command was the authorized git apply. No applied file was edited, reformatted, or improved.

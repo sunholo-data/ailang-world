@@ -61,8 +61,10 @@ const ExecProbeArmProtectedWrite = "arm8-protected-write"
 
 // execProbeScript is the fixed probe client World's node runs (`node -e
 // <it> -- op arg …`): one token line per op. write/read try the path;
-// connect dials 127.0.0.1:<port>; proxy sends an HTTP CONNECT for it through
-// srt's proxy environment (a direct dial when there is none, as curl would);
+// connect dials 127.0.0.1:<port> (arg "<port>:<nonce>") and, connected,
+// writes "WORLD-PROBE-DIAL <nonce>" (row 250); proxy sends an HTTP CONNECT
+// for it through srt's proxy environment and writes the same line through a
+// 200 (a direct dial when there is no proxy, as curl would);
 // listen binds 127.0.0.1:<port> for <ms> (arg "<port>:<ms>:<nonce>"), and
 // answers every accept with "WORLD-PROBE-NONCE <nonce>".
 //
@@ -76,18 +78,19 @@ const ExecProbeArmProtectedWrite = "arm8-protected-write"
 // TestExecProbeChildListenerDrainsTheHello pins the handler.
 const execProbeScript = `const fs=require('fs'),net=require('net');
 const say=s=>process.stdout.write(s+'\n');const code=e=>(e&&e.code)||'EUNKNOWN';
-function connect(port){return new Promise(r=>{const s=net.connect(+port,'127.0.0.1');
+const dial=n=>'WORLD-PROBE-DIAL '+n+'\n';
+function connect(port,nonce){return new Promise(r=>{const s=net.connect(+port,'127.0.0.1');
 const t=setTimeout(()=>{s.destroy();r('WORLD-PROBE-REFUSED ETIMEDOUT')},3000);
-s.on('connect',()=>{clearTimeout(t);s.destroy();r('WORLD-PROBE-CONNECTED')});
+s.on('connect',()=>{clearTimeout(t);s.end(dial(nonce));r('WORLD-PROBE-CONNECTED')});
 s.on('error',e=>{clearTimeout(t);r('WORLD-PROBE-REFUSED '+code(e))})})}
-function proxy(port){const u=process.env.HTTPS_PROXY||process.env.https_proxy||process.env.HTTP_PROXY||process.env.http_proxy;
-if(!u)return connect(port);return new Promise(r=>{let p;try{p=new URL(u)}catch(e){return r('WORLD-PROBE-REFUSED EBADPROXY')}
+function proxy(port,nonce){const u=process.env.HTTPS_PROXY||process.env.https_proxy||process.env.HTTP_PROXY||process.env.http_proxy;
+if(!u)return connect(port,nonce);return new Promise(r=>{let p;try{p=new URL(u)}catch(e){return r('WORLD-PROBE-REFUSED EBADPROXY')}
 const s=net.connect(+(p.port||80),p.hostname);const t=setTimeout(()=>{s.destroy();r('WORLD-PROBE-REFUSED ETIMEDOUT')},3000);
 s.on('connect',()=>{let h='CONNECT 127.0.0.1:'+port+' HTTP/1.1\r\nHost: 127.0.0.1:'+port+'\r\n';
 if(p.username)h+='Proxy-Authorization: Basic '+Buffer.from(decodeURIComponent(p.username)+':'+decodeURIComponent(p.password)).toString('base64')+'\r\n';
 s.write(h+'\r\n')});let b='';
-s.on('data',d=>{b+=d;const i=b.indexOf('\r\n');if(i<0)return;clearTimeout(t);s.destroy();const st=b.slice(0,i).split(' ')[1]||'';
-r(st==='200'?'WORLD-PROBE-CONNECTED':'WORLD-PROBE-REFUSED HTTP-'+st)});
+s.on('data',d=>{b+=d;const i=b.indexOf('\r\n');if(i<0)return;clearTimeout(t);const st=b.slice(0,i).split(' ')[1]||'';
+if(st==='200')s.end(dial(nonce));else s.destroy();r(st==='200'?'WORLD-PROBE-CONNECTED':'WORLD-PROBE-REFUSED HTTP-'+st)});
 s.on('error',e=>{clearTimeout(t);r('WORLD-PROBE-REFUSED '+code(e))});s.on('close',()=>{clearTimeout(t);r('WORLD-PROBE-REFUSED ECLOSED')})})}
 function listen(port,ms,nonce){return new Promise(r=>{const v=net.createServer(c=>{c.resume();c.end('WORLD-PROBE-NONCE '+nonce+'\n')});
 v.on('error',e=>r('WORLD-PROBE-REFUSED '+code(e)));
@@ -95,7 +98,7 @@ v.listen(+port,'127.0.0.1',()=>{say('WORLD-PROBE-BOUND');setTimeout(()=>{v.close
 (async()=>{const a=process.argv.slice(1);for(let i=0;i<a.length;i+=2){const op=a[i],x=a[i+1];let t;try{
 if(op==='write'){try{fs.writeFileSync(x,'WORLD-PROBE');t='WORLD-PROBE-WROTE'}catch(e){t='WORLD-PROBE-REFUSED '+code(e)}}
 else if(op==='read'){try{fs.readFileSync(x);t='WORLD-PROBE-READ'}catch(e){t='WORLD-PROBE-REFUSED '+code(e)}}
-else if(op==='connect')t=await connect(x);else if(op==='proxy')t=await proxy(x);
+else if(op==='connect'||op==='proxy'){const q=x.split(':');t=await (op==='connect'?connect:proxy)(q[0],q[1])}
 else if(op==='listen'){const q=x.split(':');t=await listen(q[0],q[1],q[2])}else t='WORLD-PROBE-ERROR EBADOP'}
 catch(e){t='WORLD-PROBE-ERROR '+code(e)}if(t)say(t)}})();
 `
@@ -107,8 +110,12 @@ const execProbeRunBudget = 8 * time.Second
 // execProbeListenMS is how long the reverse leg's child holds its listener.
 const execProbeListenMS = 1000
 
-// execProbeReverseAttempts bounds the reverse leg's fresh-port retries.
-const execProbeReverseAttempts = 3
+// execProbeAttempts bounds arm 6's retries on an inconclusive attempt, on
+// every leg that has them: the reverse leg's fresh-port retries (row 230)
+// and each forward leg's re-runs after a window whose only accepts were
+// foreign (row 250). One bound, so the odds an intermittent escape gets
+// (row 250 §6 R2) cannot drift between the legs.
+const execProbeAttempts = 3
 
 // execProbeHello is what the reverse leg's poll writes on every connected
 // dial: the child's listener answers it with its nonce; srt's mux answers
@@ -125,10 +132,29 @@ const execProbeHello = "WORLD-PROBE-HELLO\n"
 //     and its deadline must fall inside the hold, or a silent holder's exit
 //     reads as a clean EOF (foreign, retried) instead of silent. The poll
 //     ignores ctx, so the ceiling also bounds stop()'s wait.
+//
+// It is the deadline of every probe line read (readProbeLine), so it also
+// bounds the read of the line on each accept of arm 6's live listener
+// (row 250). There a late line reads as silent, which refuses: the wait can
+// delay a pass but never make one. Its ceiling there is execProbeWindowWait.
 const execProbeHelloWait = 500 * time.Millisecond
 
 // execProbePollEvery is the reverse leg's dial cadence (pollLoopback).
 const execProbePollEvery = 50 * time.Millisecond
+
+// execProbeDialPrefix starts the one line every dial to arm 6's live
+// listener is read for (row 250): the probe client's carries the probe's
+// child nonce, World's own control dial its control nonce.
+const execProbeDialPrefix = "WORLD-PROBE-DIAL "
+
+// execProbeWindowWait bounds how long a forward leg's window waits for its
+// accepts to be classified (probeListener.window). Each classifier's read
+// deadline is execProbeHelloWait, set when its goroutine starts after the
+// accept; the extra second covers that goroutine's scheduling delay on a
+// loaded rig. So an accept still pending at this bound is a stalled
+// classifier, not a slow line, and window counts it silent. Invariant:
+// execProbeWindowWait > execProbeHelloWait (TestExecProbeNet6DialClassifier).
+const execProbeWindowWait = execProbeHelloWait + time.Second
 
 // reverseSeen is what one reverse-leg attempt's dials observed.
 type reverseSeen struct{ child, foreign, silent bool }
@@ -144,18 +170,27 @@ const (
 	revInconclusive
 )
 
-// judgeReverse is the reverse leg's whole decision for one attempt, in the
-// design's §4.2 order: a nonce always wins; a missing token names itself; a
-// silent peer refuses; a foreign answer or the child's EADDRINUSE retries.
+// judgeReverse is the reverse leg's whole decision for one attempt: its
+// good tokens are the listen op's BOUND or a refusal, and the child's
+// EADDRINUSE retries as a foreign answer does (judgeLeg).
 func judgeReverse(tok string, seen reverseSeen) revVerdict {
+	return judgeLeg(tok == "WORLD-PROBE-BOUND" || strings.HasPrefix(tok, "WORLD-PROBE-REFUSED "), seen, tok == "WORLD-PROBE-REFUSED EADDRINUSE")
+}
+
+// judgeLeg is arm 6's one rule for an attempt of any leg that classifies
+// what it saw (row 230 §4.2, reused by row 250's forward legs), in this
+// order: the child's line always wins; a token that is not the op's good
+// token names itself; a silent peer refuses for good; a foreign one, or a
+// token the leg retries (retryTok), makes the attempt inconclusive.
+func judgeLeg(tokOK bool, seen reverseSeen, retryTok bool) revVerdict {
 	switch {
 	case seen.child:
 		return revReached
-	case tok != "WORLD-PROBE-BOUND" && !strings.HasPrefix(tok, "WORLD-PROBE-REFUSED "):
+	case !tokOK:
 		return revNoToken
 	case seen.silent:
 		return revSilent
-	case seen.foreign || tok == "WORLD-PROBE-REFUSED EADDRINUSE":
+	case seen.foreign || retryTok:
 		return revInconclusive
 	}
 	return revPass
@@ -491,16 +526,17 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, net6 *probeL
 	// connect is accepted, so the listener is proved live before any refusal
 	// counts.
 	netCtl := net6.control()
+	from := net6.mark()
 
 	// Run A, with the trampoline: arms 1–4 and arm 6's raw connect.
 	argv := []string{pp.client, "-e", execProbeScript, "--", "write", inside, "write", outside}
 	for _, d := range env.decoys {
 		argv = append(argv, "read", d)
 	}
-	argv = append(argv, "write", tmpClaude, "connect", strconv.Itoa(net6.port))
+	argv = append(argv, "write", tmpClaude, "connect", net6.arg())
 	a := pp.run(ctx, argv, true, execProbeRunBudget)
 	time.Sleep(200 * time.Millisecond)
-	acceptsA := net6.accepts.Load()
+	rawWhy := pp.net6Leg(ctx, net6, &from, "connect", true, "a raw connect to World's live listener", a, a.token(6))
 
 	if got, ok := fileText(inside); a.token(0) != "WORLD-PROBE-WROTE" || !ok || got != "WORLD-PROBE" {
 		pp.fail(ExecProbeArmWriteInside, "a write inside the scratch worktree: token %q, read back %q (%s)", a.token(0), got, a.describe())
@@ -539,23 +575,19 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, net6 *probeL
 	// binds must be unreachable from the host, V46) while World dials it.
 	// reverseLeg retries a port another host process holds (w-exec-probe-
 	// reverse-leg-port-race): only the child's nonce counts as a reach.
-	c, revWhy := pp.reverseLeg(ctx, net6.port)
+	c, revWhy := pp.reverseLeg(ctx, net6.arg())
 	time.Sleep(200 * time.Millisecond)
-	acceptsC := net6.accepts.Load()
+	proxyWhy := pp.net6Leg(ctx, net6, &from, "proxy", false, "a connect through srt's proxy environment", c, c.token(0))
 	// Every leg is judged and every failing one named: one leg must never
 	// hide another (the reverse leg would otherwise mask a vacuous connect).
 	var legs []string
-	raw, proxy := a.token(6), c.token(0)
 	if netCtl != nil {
 		legs = append(legs, fmt.Sprintf("control: World's live listener did not accept an unsandboxed connect: %v", netCtl))
 	}
-	if !strings.HasPrefix(raw, "WORLD-PROBE-REFUSED ") || acceptsA != 1 {
-		legs = append(legs, fmt.Sprintf("a raw connect to World's live listener: token %q, accepts %d (want a refusal and still 1; %s)",
-			raw, acceptsA, a.describe()))
-	}
-	if !strings.HasPrefix(proxy, "WORLD-PROBE-REFUSED ") || acceptsC != 1 {
-		legs = append(legs, fmt.Sprintf("a connect through srt's proxy environment: token %q, accepts %d (want a refusal and still 1; %s)",
-			proxy, acceptsC, c.describe()))
+	for _, why := range []string{rawWhy, proxyWhy} {
+		if why != "" {
+			legs = append(legs, why)
+		}
 	}
 	if revWhy != "" {
 		legs = append(legs, revWhy)
@@ -573,17 +605,17 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, net6 *probeL
 }
 
 // reverseLeg is arm 6's reverse leg (design §4.2): up to
-// execProbeReverseAttempts attempts, each on a fresh port with a fresh
+// execProbeAttempts attempts, each on a fresh port with a fresh
 // nonce. Attempt 1 is Run C (proxy, then listen), so first carries the
 // proxy leg's token at index 0. why is "" when the leg passes.
-func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first execProbeRun, why string) {
+func (pp *execProber) reverseLeg(ctx context.Context, proxyArg string) (first execProbeRun, why string) {
 	pick := pp.pickPort
 	if pick == nil {
 		pick = freeLoopbackPort
 	}
-	proxyArgv := []string{pp.client, "-e", execProbeScript, "--", "proxy", strconv.Itoa(proxyPort)}
+	proxyArgv := []string{pp.client, "-e", execProbeScript, "--", "proxy", proxyArg}
 	var tried []string
-	for attempt := 1; attempt <= execProbeReverseAttempts; attempt++ {
+	for attempt := 1; attempt <= execProbeAttempts; attempt++ {
 		port, err := pick()
 		var nonce string
 		if err == nil {
@@ -626,16 +658,75 @@ func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first exec
 	return first, fmt.Sprintf("reverse leg: inconclusive after %d attempts: a listener the child did not bind held each port (%s)", len(tried), strings.Join(tried, ", "))
 }
 
-// probeListener is arm 6's World-owned live listener with an accept count.
+// net6Leg judges one of arm 6's forward legs on World's live listener (row
+// 250) on the accepts in its own window, from *from to now. r is the run
+// that made attempt 1 and tok its token. A token that is not a refusal, or a
+// window with an accept from the child or a silent one, fails at once. A
+// window whose only accepts are foreign is inconclusive: the leg runs op
+// again, alone, up to execProbeAttempts, and refuses when every attempt
+// was inconclusive. So the leg passes only on an attempt whose window had no
+// accept at all, the pass condition arm 6 had before row 250. The decision
+// is judgeLeg's, the reverse leg's rule. why is "" when the leg passes.
+func (pp *execProber) net6Leg(ctx context.Context, l *probeListener, from *int, op string, trampoline bool, what string, r execProbeRun, tok string) (why string) {
+	var foreign []string
+	for attempt := 1; ; attempt++ {
+		w, next := l.window(*from)
+		*from = next
+		switch judgeLeg(strings.HasPrefix(tok, "WORLD-PROBE-REFUSED "), reverseSeen{child: w.child > 0, foreign: w.foreign > 0, silent: w.silent > 0}, false) {
+		case revPass:
+			return ""
+		case revReached, revNoToken, revSilent:
+			return fmt.Sprintf("%s: token %q on attempt %d; accepts in its window: child %d, silent %d, foreign %d (want a refusal and no accept from the child or silent; %s)",
+				what, tok, attempt, w.child, w.silent, w.foreign, r.describe())
+		}
+		foreign = append(foreign, strconv.Itoa(w.foreign))
+		if attempt == execProbeAttempts {
+			return fmt.Sprintf("%s: inconclusive after %d attempts: every attempt's window held an accept that was not the child's (foreign %s)",
+				what, attempt, strings.Join(foreign, ", "))
+		}
+		r = pp.run(ctx, []string{pp.client, "-e", execProbeScript, "--", op, l.arg()}, trampoline, execProbeRunBudget)
+		time.Sleep(200 * time.Millisecond)
+		tok = r.token(0)
+	}
+}
+
+// net6Class is what one accept on arm 6's live listener carried.
+type net6Class int
+
+const (
+	net6Pending net6Class = iota // accepted, not yet classified
+	net6Control                  // World's own control dial
+	net6Child                    // the probe client's line: a reach
+	net6Foreign                  // bytes that begin neither line
+	net6Silent                   // no line and no proof it is foreign
+)
+
+// net6Window counts one leg attempt's accepts by class; a control (World
+// dials it once, before the first window) or a pending one counts as silent.
+type net6Window struct{ child, silent, foreign int }
+
+// probeListener is arm 6's World-owned live listener (row 250): every accept
+// is classified by the first line it carries (classifyNet6Dial), in accept
+// order, so each leg is judged on the accepts in its own window.
 type probeListener struct {
-	ln      net.Listener
-	port    int
-	accepts atomic.Int64
-	err     error
+	ln         net.Listener
+	port       int
+	ctl, child string // nonces: World's control dial, the probe client's
+	err        error
+	mu         sync.Mutex
+	seen       []net6Class // by accept order
 }
 
 func newProbeListener() *probeListener {
 	l := &probeListener{}
+	var err error
+	if l.ctl, err = randomHex(16); err == nil {
+		l.child, err = randomHex(16)
+	}
+	if err != nil {
+		l.err = err
+		return l
+	}
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		l.err = err
@@ -648,14 +739,62 @@ func newProbeListener() *probeListener {
 			if err != nil {
 				return
 			}
-			l.accepts.Add(1)
-			_ = c.Close()
+			l.mu.Lock()
+			i := len(l.seen)
+			l.seen = append(l.seen, net6Pending)
+			l.mu.Unlock()
+			go func() {
+				k := classifyNet6Dial(c, l.ctl, l.child)
+				_ = c.Close()
+				l.mu.Lock()
+				l.seen[i] = k
+				l.mu.Unlock()
+			}()
 		}
 	}()
 	return l
 }
 
-// control dials the listener unsandboxed and waits for the accept count 1.
+// arg is the connect and proxy ops' argument: "<port>:<child nonce>".
+func (l *probeListener) arg() string { return strconv.Itoa(l.port) + ":" + l.child }
+
+// mark is the number of accepts so far: where the next window starts.
+func (l *probeListener) mark() int {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return len(l.seen)
+}
+
+// window counts the accepts from from to now, once each is classified, and
+// returns where the next window starts. An accept still pending after
+// execProbeWindowWait counts as silent.
+func (l *probeListener) window(from int) (net6Window, int) {
+	deadline := time.Now().Add(execProbeWindowWait)
+	for {
+		l.mu.Lock()
+		seen := slices.Clone(l.seen[min(from, len(l.seen)):])
+		l.mu.Unlock()
+		if !slices.Contains(seen, net6Pending) || time.Now().After(deadline) {
+			var w net6Window
+			for _, k := range seen {
+				switch k {
+				case net6Child:
+					w.child++
+				case net6Foreign:
+					w.foreign++
+				default:
+					w.silent++
+				}
+			}
+			return w, from + len(seen)
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+}
+
+// control dials the listener unsandboxed with World's control line and
+// waits until an accept is classified as that control (V37; row 250): the
+// listener accepts and its classifier reads a line, so a refusal counts.
 func (l *probeListener) control() error {
 	if l.err != nil {
 		return l.err
@@ -664,19 +803,48 @@ func (l *probeListener) control() error {
 	if err != nil {
 		return err
 	}
+	_, werr := io.WriteString(c, execProbeDialPrefix+l.ctl+"\n")
 	_ = c.Close()
+	if werr != nil {
+		return werr
+	}
 	for deadline := time.Now().Add(2 * time.Second); time.Now().Before(deadline); time.Sleep(10 * time.Millisecond) {
-		if l.accepts.Load() == 1 {
+		l.mu.Lock()
+		ok := slices.Contains(l.seen, net6Control)
+		l.mu.Unlock()
+		if ok {
 			return nil
 		}
 	}
-	return fmt.Errorf("accept count %d after one connect, want 1", l.accepts.Load())
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return fmt.Errorf("World's own dial was not read back as its control line within 2 s (accepts %d)", len(l.seen))
 }
 
 func (l *probeListener) close() {
 	if l.ln != nil {
 		_ = l.ln.Close()
 	}
+}
+
+// classifyNet6Dial reads one accepted connection's first line with
+// readProbeLine (no hello: on this listener the dialer speaks first). The
+// control or child line, whole, is that class. Bytes that can begin neither
+// line are foreign (readProbeLine stops at the first such byte). Everything
+// else, no bytes (EOF, reset, deadline) or a strict prefix of a line, is
+// silent: it carries no proof that the child did not make it.
+func classifyNet6Dial(c net.Conn, ctl, child string) net6Class {
+	wantCtl, wantChild := execProbeDialPrefix+ctl+"\n", execProbeDialPrefix+child+"\n"
+	buf, _, _ := readProbeLine(c, "", wantCtl, wantChild)
+	switch s := string(buf); {
+	case s == wantCtl:
+		return net6Control
+	case s == wantChild:
+		return net6Child
+	case !strings.HasPrefix(wantCtl, s) && !strings.HasPrefix(wantChild, s):
+		return net6Foreign
+	}
+	return net6Silent
 }
 
 // freeLoopbackPort is a port nothing listens on at the time of the call.
@@ -689,23 +857,30 @@ func freeLoopbackPort() (int, error) {
 	return port, ln.Close()
 }
 
-// classifyReverseDial writes World's hello on a connected dial, then reads
-// at most len(want)+1 bytes up to '\n' within execProbeHelloWait. The line
-// want+"\n" is the child; any other bytes, or a clean EOF after a written
-// hello, is foreign; zero bytes otherwise (deadline, reset, a failed hello
-// write) is silent.
-func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
+// readProbeLine is arm 6's one line reader, shared by the reverse leg's
+// dials (classifyReverseDial) and the forward legs' accepts
+// (classifyNet6Dial, row 250). Within execProbeHelloWait it writes hello
+// when it is not "", then reads one byte at a time until '\n', the longest
+// line in wants, a read error or the deadline, or the first byte at which
+// what it read begins none of wants (it can then equal none of them). werr
+// and rerr are the hello write's and the last read's errors.
+func readProbeLine(c net.Conn, hello string, wants ...string) (buf []byte, werr, rerr error) {
 	_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))
-	_, werr := io.WriteString(c, execProbeHello)
-	buf := make([]byte, 0, len(want)+1)
+	if hello != "" {
+		_, werr = io.WriteString(c, hello)
+	}
+	most := 0
+	for _, w := range wants {
+		most = max(most, len(w))
+	}
+	buf = make([]byte, 0, most)
 	one := make([]byte, 1)
-	var rerr error
-	for len(buf) < len(want)+1 {
+	for len(buf) < most {
 		var n int
 		n, rerr = c.Read(one)
 		if n == 1 {
 			buf = append(buf, one[0])
-			if one[0] == '\n' {
+			if one[0] == '\n' || !slices.ContainsFunc(wants, func(w string) bool { return strings.HasPrefix(w, string(buf)) }) {
 				break
 			}
 		}
@@ -713,6 +888,15 @@ func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
 			break
 		}
 	}
+	return buf, werr, rerr
+}
+
+// classifyReverseDial writes World's hello on a connected dial and reads
+// the answer with readProbeLine. The line want+"\n" is the child; any other
+// bytes, or a clean EOF after a written hello, is foreign; zero bytes
+// otherwise (deadline, reset, a failed hello write) is silent.
+func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
+	buf, werr, rerr := readProbeLine(c, execProbeHello, want+"\n")
 	switch {
 	case string(buf) == want+"\n":
 		return true, false
