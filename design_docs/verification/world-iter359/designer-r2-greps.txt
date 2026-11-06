@@ -1,0 +1,40 @@
+# designer r2 greps, at 1835d8be (worktree code = 1835d8be; git diff --stat 1835d8be HEAD -- host .github is empty)
+$ git diff --stat 1835d8be HEAD -- host .github | wc -l
+       0
+$ grep -rn --include=*_test.go execProbeReverseAttempts host | wc -l   (rename touches no test)
+       0
+$ (control, same call shape) grep -rn --include=*_test.go execProbeHelloWait host
+host/broker/exec_probe_test.go:668:			if w := fmt.Sprintf("answered nothing to World's hello within %d ms;", execProbeHelloWait.Milliseconds()); !strings.Contains(why, w) {
+host/broker/exec_probe_test.go:889:// T10 (row 230 design §3.1): execProbeHelloWait is pinned from both sides.
+$ grep -rn --include=*.go "judgeReverse(\|classifyReverseDial(" host
+host/broker/exec_probe.go:150:func judgeReverse(tok string, seen reverseSeen) revVerdict {
+host/broker/exec_probe.go:610:		switch judgeReverse(tok, seen) {
+host/broker/exec_probe.go:697:func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
+host/broker/exec_probe.go:753:				switch isChild, isForeign := classifyReverseDial(c, want); {
+host/broker/exec_probe_test.go:452:		if got := judgeReverse(row.tok, row.seen); got != row.want {
+host/broker/exec_probe_test.go:453:			t.Errorf("%s: judgeReverse(%q, %+v) = %d, want %d", row.name, row.tok, row.seen, got, row.want)
+
+# in the r2 patched tree (applycheck): every shared piece's call sites
+$ grep -n "readProbeLine(\|judgeLeg(\|execProbeAttempts\|execProbeWindowWait\|execProbeNet6Wait\|execProbeNet6Attempts\|execProbeReverseAttempts" host/broker/exec_probe.go host/broker/exec_probe_net6_dial_test.go
+host/broker/exec_probe_net6_dial_test.go:192:				if got := rig.count(op); got < want || got > execProbeAttempts {
+host/broker/exec_probe_net6_dial_test.go:193:					t.Errorf("%s runs = %d, want %d (at most %d)", op, got, want, execProbeAttempts)
+host/broker/exec_probe_net6_dial_test.go:254:	if execProbeWindowWait <= execProbeHelloWait {
+host/broker/exec_probe_net6_dial_test.go:255:		t.Fatalf("execProbeWindowWait %s must exceed the line-read deadline execProbeHelloWait %s", execProbeWindowWait, execProbeHelloWait)
+host/broker/exec_probe.go:113:// execProbeAttempts bounds arm 6's retries on an inconclusive attempt, on
+host/broker/exec_probe.go:118:const execProbeAttempts = 3
+host/broker/exec_probe.go:139:// delay a pass but never make one. Its ceiling there is execProbeWindowWait.
+host/broker/exec_probe.go:150:// execProbeWindowWait bounds how long a forward leg's window waits for its
+host/broker/exec_probe.go:156:// execProbeWindowWait > execProbeHelloWait (TestExecProbeNet6DialClassifier).
+host/broker/exec_probe.go:157:const execProbeWindowWait = execProbeHelloWait + time.Second
+host/broker/exec_probe.go:177:	return judgeLeg(tok == "WORLD-PROBE-BOUND" || strings.HasPrefix(tok, "WORLD-PROBE-REFUSED "), seen, tok == "WORLD-PROBE-REFUSED EADDRINUSE")
+host/broker/exec_probe.go:185:func judgeLeg(tokOK bool, seen reverseSeen, retryTok bool) revVerdict {
+host/broker/exec_probe.go:608:// execProbeAttempts attempts, each on a fresh port with a fresh
+host/broker/exec_probe.go:618:	for attempt := 1; attempt <= execProbeAttempts; attempt++ {
+host/broker/exec_probe.go:666:// again, alone, up to execProbeAttempts, and refuses when every attempt
+host/broker/exec_probe.go:675:		switch judgeLeg(strings.HasPrefix(tok, "WORLD-PROBE-REFUSED "), reverseSeen{child: w.child > 0, foreign: w.foreign > 0, silent: w.silent > 0}, false) {
+host/broker/exec_probe.go:683:		if attempt == execProbeAttempts {
+host/broker/exec_probe.go:770:// execProbeWindowWait counts as silent.
+host/broker/exec_probe.go:772:	deadline := time.Now().Add(execProbeWindowWait)
+host/broker/exec_probe.go:838:	buf, _, _ := readProbeLine(c, "", wantCtl, wantChild)
+host/broker/exec_probe.go:867:func readProbeLine(c net.Conn, hello string, wants ...string) (buf []byte, werr, rerr error) {
+host/broker/exec_probe.go:899:	buf, werr, rerr := readProbeLine(c, execProbeHello, want+"\n")

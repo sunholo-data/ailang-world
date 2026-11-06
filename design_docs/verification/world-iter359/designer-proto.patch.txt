@@ -12,7 +12,7 @@ index c0f0330..08cf2a3 100644
            log="$RUNNER_TEMP/exec-srt-verbose.log"
            rc=0
 diff --git a/host/broker/exec_probe.go b/host/broker/exec_probe.go
-index 0bcbf32..100c2c5 100644
+index 0bcbf32..24934d2 100644
 --- a/host/broker/exec_probe.go
 +++ b/host/broker/exec_probe.go
 @@ -61,8 +61,10 @@ const ExecProbeArmProtectedWrite = "arm8-protected-write"
@@ -63,7 +63,32 @@ index 0bcbf32..100c2c5 100644
  else if(op==='listen'){const q=x.split(':');t=await listen(q[0],q[1],q[2])}else t='WORLD-PROBE-ERROR EBADOP'}
  catch(e){t='WORLD-PROBE-ERROR '+code(e)}if(t)say(t)}})();
  `
-@@ -130,6 +133,21 @@ const execProbeHelloWait = 500 * time.Millisecond
+@@ -107,8 +110,12 @@ const execProbeRunBudget = 8 * time.Second
+ // execProbeListenMS is how long the reverse leg's child holds its listener.
+ const execProbeListenMS = 1000
+ 
+-// execProbeReverseAttempts bounds the reverse leg's fresh-port retries.
+-const execProbeReverseAttempts = 3
++// execProbeAttempts bounds arm 6's retries on an inconclusive attempt, on
++// every leg that has them: the reverse leg's fresh-port retries (row 230)
++// and each forward leg's re-runs after a window whose only accepts were
++// foreign (row 250). One bound, so the odds an intermittent escape gets
++// (row 250 §6 R2) cannot drift between the legs.
++const execProbeAttempts = 3
+ 
+ // execProbeHello is what the reverse leg's poll writes on every connected
+ // dial: the child's listener answers it with its nonce; srt's mux answers
+@@ -125,11 +132,30 @@ const execProbeHello = "WORLD-PROBE-HELLO\n"
+ //     and its deadline must fall inside the hold, or a silent holder's exit
+ //     reads as a clean EOF (foreign, retried) instead of silent. The poll
+ //     ignores ctx, so the ceiling also bounds stop()'s wait.
++//
++// It is the deadline of every probe line read (readProbeLine), so it also
++// bounds the read of the line on each accept of arm 6's live listener
++// (row 250). There a late line reads as silent, which refuses: the wait can
++// delay a pass but never make one. Its ceiling there is execProbeWindowWait.
+ const execProbeHelloWait = 500 * time.Millisecond
+ 
  // execProbePollEvery is the reverse leg's dial cadence (pollLoopback).
  const execProbePollEvery = 50 * time.Millisecond
  
@@ -72,20 +97,52 @@ index 0bcbf32..100c2c5 100644
 +// child nonce, World's own control dial its control nonce.
 +const execProbeDialPrefix = "WORLD-PROBE-DIAL "
 +
-+// execProbeNet6Wait bounds the read of that line on each accept. It only
-+// decides between silent and the other classes: a late line reads as
-+// silent, which refuses, so it can delay a pass but never make one.
-+const execProbeNet6Wait = 500 * time.Millisecond
-+
-+// execProbeNet6Attempts bounds a forward leg's runs when every extra accept
-+// in its window was foreign (row 250), as execProbeReverseAttempts does for
-+// the reverse leg.
-+const execProbeNet6Attempts = 3
++// execProbeWindowWait bounds how long a forward leg's window waits for its
++// accepts to be classified (probeListener.window). Each classifier's read
++// deadline is execProbeHelloWait, set when its goroutine starts after the
++// accept; the extra second covers that goroutine's scheduling delay on a
++// loaded rig. So an accept still pending at this bound is a stalled
++// classifier, not a slow line, and window counts it silent. Invariant:
++// execProbeWindowWait > execProbeHelloWait (TestExecProbeNet6DialClassifier).
++const execProbeWindowWait = execProbeHelloWait + time.Second
 +
  // reverseSeen is what one reverse-leg attempt's dials observed.
  type reverseSeen struct{ child, foreign, silent bool }
  
-@@ -491,16 +509,17 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, net6 *probeL
+@@ -144,18 +170,27 @@ const (
+ 	revInconclusive
+ )
+ 
+-// judgeReverse is the reverse leg's whole decision for one attempt, in the
+-// design's §4.2 order: a nonce always wins; a missing token names itself; a
+-// silent peer refuses; a foreign answer or the child's EADDRINUSE retries.
++// judgeReverse is the reverse leg's whole decision for one attempt: its
++// good tokens are the listen op's BOUND or a refusal, and the child's
++// EADDRINUSE retries as a foreign answer does (judgeLeg).
+ func judgeReverse(tok string, seen reverseSeen) revVerdict {
++	return judgeLeg(tok == "WORLD-PROBE-BOUND" || strings.HasPrefix(tok, "WORLD-PROBE-REFUSED "), seen, tok == "WORLD-PROBE-REFUSED EADDRINUSE")
++}
++
++// judgeLeg is arm 6's one rule for an attempt of any leg that classifies
++// what it saw (row 230 §4.2, reused by row 250's forward legs), in this
++// order: the child's line always wins; a token that is not the op's good
++// token names itself; a silent peer refuses for good; a foreign one, or a
++// token the leg retries (retryTok), makes the attempt inconclusive.
++func judgeLeg(tokOK bool, seen reverseSeen, retryTok bool) revVerdict {
+ 	switch {
+ 	case seen.child:
+ 		return revReached
+-	case tok != "WORLD-PROBE-BOUND" && !strings.HasPrefix(tok, "WORLD-PROBE-REFUSED "):
++	case !tokOK:
+ 		return revNoToken
+ 	case seen.silent:
+ 		return revSilent
+-	case seen.foreign || tok == "WORLD-PROBE-REFUSED EADDRINUSE":
++	case seen.foreign || retryTok:
+ 		return revInconclusive
+ 	}
+ 	return revPass
+@@ -491,16 +526,17 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, net6 *probeL
  	// connect is accepted, so the listener is proved live before any refusal
  	// counts.
  	netCtl := net6.control()
@@ -105,7 +162,7 @@ index 0bcbf32..100c2c5 100644
  
  	if got, ok := fileText(inside); a.token(0) != "WORLD-PROBE-WROTE" || !ok || got != "WORLD-PROBE" {
  		pp.fail(ExecProbeArmWriteInside, "a write inside the scratch worktree: token %q, read back %q (%s)", a.token(0), got, a.describe())
-@@ -539,23 +558,19 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, net6 *probeL
+@@ -539,23 +575,19 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, net6 *probeL
  	// binds must be unreachable from the host, V46) while World dials it.
  	// reverseLeg retries a port another host process holds (w-exec-probe-
  	// reverse-leg-port-race): only the child's nonce counts as a reach.
@@ -135,8 +192,12 @@ index 0bcbf32..100c2c5 100644
  	}
  	if revWhy != "" {
  		legs = append(legs, revWhy)
-@@ -576,12 +591,12 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, net6 *probeL
- // execProbeReverseAttempts attempts, each on a fresh port with a fresh
+@@ -573,17 +605,17 @@ func (pp *execProber) probe(ctx context.Context, env *execProbeEnv, net6 *probeL
+ }
+ 
+ // reverseLeg is arm 6's reverse leg (design §4.2): up to
+-// execProbeReverseAttempts attempts, each on a fresh port with a fresh
++// execProbeAttempts attempts, each on a fresh port with a fresh
  // nonce. Attempt 1 is Run C (proxy, then listen), so first carries the
  // proxy leg's token at index 0. why is "" when the leg passes.
 -func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first execProbeRun, why string) {
@@ -148,9 +209,12 @@ index 0bcbf32..100c2c5 100644
 -	proxyArgv := []string{pp.client, "-e", execProbeScript, "--", "proxy", strconv.Itoa(proxyPort)}
 +	proxyArgv := []string{pp.client, "-e", execProbeScript, "--", "proxy", proxyArg}
  	var tried []string
- 	for attempt := 1; attempt <= execProbeReverseAttempts; attempt++ {
+-	for attempt := 1; attempt <= execProbeReverseAttempts; attempt++ {
++	for attempt := 1; attempt <= execProbeAttempts; attempt++ {
  		port, err := pick()
-@@ -626,16 +641,75 @@ func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first exec
+ 		var nonce string
+ 		if err == nil {
+@@ -626,16 +658,75 @@ func (pp *execProber) reverseLeg(ctx context.Context, proxyPort int) (first exec
  	return first, fmt.Sprintf("reverse leg: inconclusive after %d attempts: a listener the child did not bind held each port (%s)", len(tried), strings.Join(tried, ", "))
  }
  
@@ -160,24 +224,24 @@ index 0bcbf32..100c2c5 100644
 +// that made attempt 1 and tok its token. A token that is not a refusal, or a
 +// window with an accept from the child or a silent one, fails at once. A
 +// window whose only accepts are foreign is inconclusive: the leg runs op
-+// again, alone, up to execProbeNet6Attempts, and refuses when every attempt
++// again, alone, up to execProbeAttempts, and refuses when every attempt
 +// was inconclusive. So the leg passes only on an attempt whose window had no
-+// accept at all, the pass condition arm 6 had before row 250. why is "" when
-+// the leg passes.
++// accept at all, the pass condition arm 6 had before row 250. The decision
++// is judgeLeg's, the reverse leg's rule. why is "" when the leg passes.
 +func (pp *execProber) net6Leg(ctx context.Context, l *probeListener, from *int, op string, trampoline bool, what string, r execProbeRun, tok string) (why string) {
 +	var foreign []string
 +	for attempt := 1; ; attempt++ {
 +		w, next := l.window(*from)
 +		*from = next
-+		switch {
-+		case !strings.HasPrefix(tok, "WORLD-PROBE-REFUSED ") || w.child > 0 || w.silent > 0:
++		switch judgeLeg(strings.HasPrefix(tok, "WORLD-PROBE-REFUSED "), reverseSeen{child: w.child > 0, foreign: w.foreign > 0, silent: w.silent > 0}, false) {
++		case revPass:
++			return ""
++		case revReached, revNoToken, revSilent:
 +			return fmt.Sprintf("%s: token %q on attempt %d; accepts in its window: child %d, silent %d, foreign %d (want a refusal and no accept from the child or silent; %s)",
 +				what, tok, attempt, w.child, w.silent, w.foreign, r.describe())
-+		case w.foreign == 0:
-+			return ""
 +		}
 +		foreign = append(foreign, strconv.Itoa(w.foreign))
-+		if attempt == execProbeNet6Attempts {
++		if attempt == execProbeAttempts {
 +			return fmt.Sprintf("%s: inconclusive after %d attempts: every attempt's window held an accept that was not the child's (foreign %s)",
 +				what, attempt, strings.Join(foreign, ", "))
 +		}
@@ -231,7 +295,7 @@ index 0bcbf32..100c2c5 100644
  	ln, err := net.Listen("tcp", "127.0.0.1:0")
  	if err != nil {
  		l.err = err
-@@ -648,14 +722,63 @@ func newProbeListener() *probeListener {
+@@ -648,14 +739,62 @@ func newProbeListener() *probeListener {
  			if err != nil {
  				return
  			}
@@ -266,10 +330,9 @@ index 0bcbf32..100c2c5 100644
 +
 +// window counts the accepts from from to now, once each is classified, and
 +// returns where the next window starts. An accept still pending after
-+// execProbeNet6Wait plus a second (the classifier's own read deadline is
-+// execProbeNet6Wait) counts as silent.
++// execProbeWindowWait counts as silent.
 +func (l *probeListener) window(from int) (net6Window, int) {
-+	deadline := time.Now().Add(execProbeNet6Wait + time.Second)
++	deadline := time.Now().Add(execProbeWindowWait)
 +	for {
 +		l.mu.Lock()
 +		seen := slices.Clone(l.seen[min(from, len(l.seen)):])
@@ -298,7 +361,7 @@ index 0bcbf32..100c2c5 100644
  func (l *probeListener) control() error {
  	if l.err != nil {
  		return l.err
-@@ -664,13 +787,22 @@ func (l *probeListener) control() error {
+@@ -664,13 +803,22 @@ func (l *probeListener) control() error {
  	if err != nil {
  		return err
  	}
@@ -323,38 +386,26 @@ index 0bcbf32..100c2c5 100644
  }
  
  func (l *probeListener) close() {
-@@ -679,6 +811,38 @@ func (l *probeListener) close() {
+@@ -679,6 +827,26 @@ func (l *probeListener) close() {
  	}
  }
  
-+// classifyNet6Dial reads one accepted connection's first line, at most
-+// len(WORLD-PROBE-DIAL <nonce>\n) bytes, within execProbeNet6Wait. The
++// classifyNet6Dial reads one accepted connection's first line with
++// readProbeLine (no hello: on this listener the dialer speaks first). The
 +// control or child line, whole, is that class. Bytes that can begin neither
-+// line are foreign, decided at the first such byte. Everything else, no
-+// bytes (EOF, reset, deadline) or a strict prefix of a line, is silent: it
-+// carries no proof that the child did not make it.
++// line are foreign (readProbeLine stops at the first such byte). Everything
++// else, no bytes (EOF, reset, deadline) or a strict prefix of a line, is
++// silent: it carries no proof that the child did not make it.
 +func classifyNet6Dial(c net.Conn, ctl, child string) net6Class {
 +	wantCtl, wantChild := execProbeDialPrefix+ctl+"\n", execProbeDialPrefix+child+"\n"
-+	_ = c.SetReadDeadline(time.Now().Add(execProbeNet6Wait))
-+	buf := make([]byte, 0, max(len(wantCtl), len(wantChild)))
-+	one := make([]byte, 1)
-+	for len(buf) < cap(buf) {
-+		n, err := c.Read(one)
-+		if n == 1 {
-+			buf = append(buf, one[0])
-+			if !strings.HasPrefix(wantCtl, string(buf)) && !strings.HasPrefix(wantChild, string(buf)) {
-+				return net6Foreign
-+			}
-+		}
-+		if err != nil {
-+			break
-+		}
-+	}
-+	switch string(buf) {
-+	case wantCtl:
++	buf, _, _ := readProbeLine(c, "", wantCtl, wantChild)
++	switch s := string(buf); {
++	case s == wantCtl:
 +		return net6Control
-+	case wantChild:
++	case s == wantChild:
 +		return net6Child
++	case !strings.HasPrefix(wantCtl, s) && !strings.HasPrefix(wantChild, s):
++		return net6Foreign
 +	}
 +	return net6Silent
 +}
@@ -362,12 +413,70 @@ index 0bcbf32..100c2c5 100644
  // freeLoopbackPort is a port nothing listens on at the time of the call.
  func freeLoopbackPort() (int, error) {
  	ln, err := net.Listen("tcp", "127.0.0.1:0")
+@@ -689,23 +857,30 @@ func freeLoopbackPort() (int, error) {
+ 	return port, ln.Close()
+ }
+ 
+-// classifyReverseDial writes World's hello on a connected dial, then reads
+-// at most len(want)+1 bytes up to '\n' within execProbeHelloWait. The line
+-// want+"\n" is the child; any other bytes, or a clean EOF after a written
+-// hello, is foreign; zero bytes otherwise (deadline, reset, a failed hello
+-// write) is silent.
+-func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
++// readProbeLine is arm 6's one line reader, shared by the reverse leg's
++// dials (classifyReverseDial) and the forward legs' accepts
++// (classifyNet6Dial, row 250). Within execProbeHelloWait it writes hello
++// when it is not "", then reads one byte at a time until '\n', the longest
++// line in wants, a read error or the deadline, or the first byte at which
++// what it read begins none of wants (it can then equal none of them). werr
++// and rerr are the hello write's and the last read's errors.
++func readProbeLine(c net.Conn, hello string, wants ...string) (buf []byte, werr, rerr error) {
+ 	_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))
+-	_, werr := io.WriteString(c, execProbeHello)
+-	buf := make([]byte, 0, len(want)+1)
++	if hello != "" {
++		_, werr = io.WriteString(c, hello)
++	}
++	most := 0
++	for _, w := range wants {
++		most = max(most, len(w))
++	}
++	buf = make([]byte, 0, most)
+ 	one := make([]byte, 1)
+-	var rerr error
+-	for len(buf) < len(want)+1 {
++	for len(buf) < most {
+ 		var n int
+ 		n, rerr = c.Read(one)
+ 		if n == 1 {
+ 			buf = append(buf, one[0])
+-			if one[0] == '\n' {
++			if one[0] == '\n' || !slices.ContainsFunc(wants, func(w string) bool { return strings.HasPrefix(w, string(buf)) }) {
+ 				break
+ 			}
+ 		}
+@@ -713,6 +888,15 @@ func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
+ 			break
+ 		}
+ 	}
++	return buf, werr, rerr
++}
++
++// classifyReverseDial writes World's hello on a connected dial and reads
++// the answer with readProbeLine. The line want+"\n" is the child; any other
++// bytes, or a clean EOF after a written hello, is foreign; zero bytes
++// otherwise (deadline, reset, a failed hello write) is silent.
++func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {
++	buf, werr, rerr := readProbeLine(c, execProbeHello, want+"\n")
+ 	switch {
+ 	case string(buf) == want+"\n":
+ 		return true, false
 diff --git a/host/broker/exec_probe_net6_dial_test.go b/host/broker/exec_probe_net6_dial_test.go
 new file mode 100644
-index 0000000..4f6357f
+index 0000000..ddbe7f4
 --- /dev/null
 +++ b/host/broker/exec_probe_net6_dial_test.go
-@@ -0,0 +1,299 @@
+@@ -0,0 +1,305 @@
 +package broker
 +
 +// Row 250 (design_docs/planned/w-exec-probe-foreign-dial-false-refusal.md):
@@ -559,8 +668,8 @@ index 0000000..4f6357f
 +			}
 +			// A rig dialer (the start page, design V3) can add a retry, never remove one.
 +			for op, want := range row.calls {
-+				if got := rig.count(op); got < want || got > execProbeNet6Attempts {
-+					t.Errorf("%s runs = %d, want %d (at most %d)", op, got, want, execProbeNet6Attempts)
++				if got := rig.count(op); got < want || got > execProbeAttempts {
++					t.Errorf("%s runs = %d, want %d (at most %d)", op, got, want, execProbeAttempts)
 +				}
 +			}
 +			for _, d := range rig.dials {
@@ -616,8 +725,14 @@ index 0000000..4f6357f
 +	}
 +}
 +
-+// The classifier, on every byte shape, through a real loopback pair.
++// The classifier, on every byte shape, through a real loopback pair. It
++// also pins window's bound above the classifier's read deadline: a
++// classifier still pending at the bound must be a stall, never a read that
++// was still allowed to finish (design §3.5).
 +func TestExecProbeNet6DialClassifier(t *testing.T) {
++	if execProbeWindowWait <= execProbeHelloWait {
++		t.Fatalf("execProbeWindowWait %s must exceed the line-read deadline execProbeHelloWait %s", execProbeWindowWait, execProbeHelloWait)
++	}
 +	ctl, child := strings.Repeat("c", 32), strings.Repeat("d", 32)
 +	for _, row := range []struct {
 +		name, send string
@@ -649,7 +764,7 @@ index 0000000..4f6357f
 +				defer c.Close()
 +				_, _ = io.WriteString(c, row.send)
 +				if row.hold {
-+					time.Sleep(execProbeNet6Wait + 200*time.Millisecond)
++					time.Sleep(execProbeHelloWait + 200*time.Millisecond)
 +				}
 +			}()
 +			c, err := ln.Accept()
@@ -661,7 +776,7 @@ index 0000000..4f6357f
 +			if got := classifyNet6Dial(c, ctl, child); got != row.want {
 +				t.Fatalf("classifyNet6Dial(%q) = %d, want %d", row.send, got, row.want)
 +			}
-+			if el := time.Since(start); el > execProbeNet6Wait+250*time.Millisecond {
++			if el := time.Since(start); el > execProbeHelloWait+250*time.Millisecond {
 +				t.Fatalf("classification took %s, beyond its read deadline", el)
 +			}
 +		})

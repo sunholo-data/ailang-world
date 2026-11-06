@@ -1,0 +1,34 @@
+# iter-359 designer r2: apply one named mutant to the r2 prototype copy's exec_probe.go.
+import sys
+P = sys.argv[2]
+M = {
+ # r1 mutants, re-anchored on r2
+ 'MUT-RAW-COUNT': [("reverseSeen{child: w.child > 0, foreign: w.foreign > 0, silent: w.silent > 0}", "reverseSeen{child: w.child > 0, silent: w.silent+w.foreign > 0}")],
+ 'MUT-SILENT-AS-FOREIGN': [("\t\treturn net6Foreign\n\t}\n\treturn net6Silent\n}", "\t\treturn net6Foreign\n\t}\n\treturn net6Foreign\n}")],
+ 'MUT-PREFIX-AS-FOREIGN': [("\tcase !strings.HasPrefix(wantCtl, s) && !strings.HasPrefix(wantChild, s):\n", "\tcase len(s) > 0:\n")],
+ 'MUT-CHILD-AS-FOREIGN': [("\tcase s == wantChild:\n\t\treturn net6Child", "\tcase s == wantChild:\n\t\treturn net6Foreign")],
+ 'MUT-CHILD-AS-CONTROL': [("\tcase s == wantChild:\n\t\treturn net6Child", "\tcase s == wantChild:\n\t\treturn net6Control")],
+ 'MUT-TOKEN-ONLY': [("\t\tw, next := l.window(*from)\n", "\t\t_, next := l.window(*from)\n\t\tvar w net6Window\n")],
+ 'MUT-RETRY-CHILD': [("reverseSeen{child: w.child > 0, foreign: w.foreign > 0,", "reverseSeen{child: false, foreign: w.foreign+w.child > 0,")],
+ 'MUT-RETRY-SILENT': [("foreign: w.foreign > 0, silent: w.silent > 0}", "foreign: w.foreign+w.silent > 0}")],
+ 'MUT-EXHAUST-PASSES': [("\t\tif attempt == execProbeAttempts {\n", "\t\tif attempt == execProbeAttempts {\n\t\t\tif true {\n\t\t\t\treturn \"\"\n\t\t\t}\n")],
+ 'MUT-UNBOUNDED': [("\t\tif attempt == execProbeAttempts {\n", "\t\tif attempt == execProbeAttempts && false {\n")],
+ 'MUT-FROM-NOT-ADVANCED': [("\t\t*from = next\n", "\t\t_ = next\n")],
+ 'MUT-WINDOW-AT-JUDGE': [("\t\tw, next := l.window(*from)\n", "\t\tw, next := l.window(max(*from, l.mark()))\n")],
+ 'MUT-PENDING-AS-FOREIGN': [("\t\t\t\tcase net6Foreign:\n\t\t\t\t\tw.foreign++", "\t\t\t\tcase net6Foreign, net6Pending:\n\t\t\t\t\tw.foreign++")],
+ 'MUT-CONTROL-ANY-ACCEPT': [("\t\tok := slices.Contains(l.seen, net6Control)\n", "\t\tok := len(l.seen) >= 1\n")],
+ 'MUT-CLIENT-NO-LINE': [("s.on('connect',()=>{clearTimeout(t);s.end(dial(nonce));", "s.on('connect',()=>{clearTimeout(t);s.destroy();")],
+ # r2: the shared pieces, each must go red from BOTH legs' tests
+ 'MUT-SHARED-READ-SHORT': [("\tfor len(buf) < most {\n", "\tfor len(buf) < most-1 {\n")],
+ 'MUT-SHARED-JUDGE-SILENT-RETRIED': [("\tcase seen.silent:\n\t\treturn revSilent\n", "\tcase seen.silent:\n\t\treturn revInconclusive\n")],
+ 'MUT-SHARED-WAIT-1500MS': [("const execProbeHelloWait = 500 * time.Millisecond\n", "const execProbeHelloWait = 1500 * time.Millisecond\n")],
+ 'MUT-SHARED-ATTEMPTS-2': [("const execProbeAttempts = 3\n", "const execProbeAttempts = 2\n")],
+ 'MUT-WINDOW-WAIT-NOT-ABOVE': [("const execProbeWindowWait = execProbeHelloWait + time.Second\n", "const execProbeWindowWait = execProbeHelloWait\n")],
+}
+name = sys.argv[1]
+s = open(P).read()
+for a, b in M[name]:
+    assert s.count(a) == 1, (name, a[:80], s.count(a))
+    s = s.replace(a, b)
+open(P, 'w').write(s)
+print('applied', name)

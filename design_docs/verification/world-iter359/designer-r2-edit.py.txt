@@ -1,0 +1,275 @@
+# r2edit.py: applied to the r1 prototype (git archive 1835d8be + r1 designer-proto.patch.txt) to make r2
+# iter-359 designer r2: turn the r1 prototype into r2 (shared reader, shared judge, shared constants).
+import sys
+D = sys.argv[1]  # .../proto/host/broker
+def edit(fn, pairs):
+    p = D + '/' + fn
+    s = open(p).read()
+    for a, b in pairs:
+        assert s.count(a) == 1, (fn, a[:90], s.count(a))
+        s = s.replace(a, b)
+    open(p, 'w').write(s)
+
+edit('exec_probe.go', [
+# 1. one attempt bound for both legs
+("// execProbeReverseAttempts bounds the reverse leg's fresh-port retries.\nconst execProbeReverseAttempts = 3\n",
+ "// execProbeAttempts bounds arm 6's retries on an inconclusive attempt, on\n"
+ "// every leg that has them: the reverse leg's fresh-port retries (row 230)\n"
+ "// and each forward leg's re-runs after a window whose only accepts were\n"
+ "// foreign (row 250). One bound, so the odds an intermittent escape gets\n"
+ "// (row 250 §6 R2) cannot drift between the legs.\n"
+ "const execProbeAttempts = 3\n"),
+("	for attempt := 1; attempt <= execProbeReverseAttempts; attempt++ {\n",
+ "	for attempt := 1; attempt <= execProbeAttempts; attempt++ {\n"),
+("// execProbeReverseAttempts attempts, each on a fresh port with a fresh\n",
+ "// execProbeAttempts attempts, each on a fresh port with a fresh\n"),
+# 2. hello wait now bounds every probe line read
+("//     ignores ctx, so the ceiling also bounds stop()'s wait.\nconst execProbeHelloWait = 500 * time.Millisecond\n",
+ "//     ignores ctx, so the ceiling also bounds stop()'s wait.\n"
+ "//\n"
+ "// It is the deadline of every probe line read (readProbeLine), so it also\n"
+ "// bounds the read of the line on each accept of arm 6's live listener\n"
+ "// (row 250). There a late line reads as silent, which refuses: the wait can\n"
+ "// delay a pass but never make one. Its ceiling there is execProbeWindowWait.\n"
+ "const execProbeHelloWait = 500 * time.Millisecond\n"),
+("// execProbeNet6Wait bounds the read of that line on each accept. It only\n"
+ "// decides between silent and the other classes: a late line reads as\n"
+ "// silent, which refuses, so it can delay a pass but never make one.\n"
+ "const execProbeNet6Wait = 500 * time.Millisecond\n\n"
+ "// execProbeNet6Attempts bounds a forward leg's runs when every extra accept\n"
+ "// in its window was foreign (row 250), as execProbeReverseAttempts does for\n"
+ "// the reverse leg.\n"
+ "const execProbeNet6Attempts = 3\n",
+ "// execProbeWindowWait bounds how long a forward leg's window waits for its\n"
+ "// accepts to be classified (probeListener.window). Each classifier's read\n"
+ "// deadline is execProbeHelloWait, set when its goroutine starts after the\n"
+ "// accept; the extra second covers that goroutine's scheduling delay on a\n"
+ "// loaded rig. So an accept still pending at this bound is a stalled\n"
+ "// classifier, not a slow line, and window counts it silent. Invariant:\n"
+ "// execProbeWindowWait > execProbeHelloWait (TestExecProbeNet6DialClassifier).\n"
+ "const execProbeWindowWait = execProbeHelloWait + time.Second\n"),
+# 3. shared judge
+("// judgeReverse is the reverse leg's whole decision for one attempt, in the\n"
+ "// design's §4.2 order: a nonce always wins; a missing token names itself; a\n"
+ "// silent peer refuses; a foreign answer or the child's EADDRINUSE retries.\n"
+ "func judgeReverse(tok string, seen reverseSeen) revVerdict {\n"
+ "	switch {\n"
+ "	case seen.child:\n"
+ "		return revReached\n"
+ "	case tok != \"WORLD-PROBE-BOUND\" && !strings.HasPrefix(tok, \"WORLD-PROBE-REFUSED \"):\n"
+ "		return revNoToken\n"
+ "	case seen.silent:\n"
+ "		return revSilent\n"
+ "	case seen.foreign || tok == \"WORLD-PROBE-REFUSED EADDRINUSE\":\n"
+ "		return revInconclusive\n"
+ "	}\n"
+ "	return revPass\n"
+ "}\n",
+ "// judgeReverse is the reverse leg's whole decision for one attempt: its\n"
+ "// good tokens are the listen op's BOUND or a refusal, and the child's\n"
+ "// EADDRINUSE retries as a foreign answer does (judgeLeg).\n"
+ "func judgeReverse(tok string, seen reverseSeen) revVerdict {\n"
+ "	return judgeLeg(tok == \"WORLD-PROBE-BOUND\" || strings.HasPrefix(tok, \"WORLD-PROBE-REFUSED \"), seen, tok == \"WORLD-PROBE-REFUSED EADDRINUSE\")\n"
+ "}\n\n"
+ "// judgeLeg is arm 6's one rule for an attempt of any leg that classifies\n"
+ "// what it saw (row 230 §4.2, reused by row 250's forward legs), in this\n"
+ "// order: the child's line always wins; a token that is not the op's good\n"
+ "// token names itself; a silent peer refuses for good; a foreign one, or a\n"
+ "// token the leg retries (retryTok), makes the attempt inconclusive.\n"
+ "func judgeLeg(tokOK bool, seen reverseSeen, retryTok bool) revVerdict {\n"
+ "	switch {\n"
+ "	case seen.child:\n"
+ "		return revReached\n"
+ "	case !tokOK:\n"
+ "		return revNoToken\n"
+ "	case seen.silent:\n"
+ "		return revSilent\n"
+ "	case seen.foreign || retryTok:\n"
+ "		return revInconclusive\n"
+ "	}\n"
+ "	return revPass\n"
+ "}\n"),
+# 4. net6Leg uses judgeLeg and execProbeAttempts
+("// window whose only accepts are foreign is inconclusive: the leg runs op\n"
+ "// again, alone, up to execProbeNet6Attempts, and refuses when every attempt\n",
+ "// window whose only accepts are foreign is inconclusive: the leg runs op\n"
+ "// again, alone, up to execProbeAttempts, and refuses when every attempt\n"),
+("// accept at all, the pass condition arm 6 had before row 250. why is \"\" when\n"
+ "// the leg passes.\n",
+ "// accept at all, the pass condition arm 6 had before row 250. The decision\n"
+ "// is judgeLeg's, the reverse leg's rule. why is \"\" when the leg passes.\n"),
+("		switch {\n"
+ "		case !strings.HasPrefix(tok, \"WORLD-PROBE-REFUSED \") || w.child > 0 || w.silent > 0:\n"
+ "			return fmt.Sprintf(",
+ "		switch judgeLeg(strings.HasPrefix(tok, \"WORLD-PROBE-REFUSED \"), reverseSeen{child: w.child > 0, foreign: w.foreign > 0, silent: w.silent > 0}, false) {\n"
+ "		case revPass:\n"
+ "			return \"\"\n"
+ "		case revReached, revNoToken, revSilent:\n"
+ "			return fmt.Sprintf("),
+("				what, tok, attempt, w.child, w.silent, w.foreign, r.describe())\n"
+ "		case w.foreign == 0:\n"
+ "			return \"\"\n"
+ "		}\n",
+ "				what, tok, attempt, w.child, w.silent, w.foreign, r.describe())\n"
+ "		}\n"),
+("		if attempt == execProbeNet6Attempts {\n", "		if attempt == execProbeAttempts {\n"),
+# 5. window bound is the named constant
+("// window counts the accepts from from to now, once each is classified, and\n"
+ "// returns where the next window starts. An accept still pending after\n"
+ "// execProbeNet6Wait plus a second (the classifier's own read deadline is\n"
+ "// execProbeNet6Wait) counts as silent.\n"
+ "func (l *probeListener) window(from int) (net6Window, int) {\n"
+ "	deadline := time.Now().Add(execProbeNet6Wait + time.Second)\n",
+ "// window counts the accepts from from to now, once each is classified, and\n"
+ "// returns where the next window starts. An accept still pending after\n"
+ "// execProbeWindowWait counts as silent.\n"
+ "func (l *probeListener) window(from int) (net6Window, int) {\n"
+ "	deadline := time.Now().Add(execProbeWindowWait)\n"),
+# 6. classifyNet6Dial uses the shared reader
+("// classifyNet6Dial reads one accepted connection's first line, at most\n"
+ "// len(WORLD-PROBE-DIAL <nonce>\\n) bytes, within execProbeNet6Wait. The\n"
+ "// control or child line, whole, is that class. Bytes that can begin neither\n"
+ "// line are foreign, decided at the first such byte. Everything else, no\n"
+ "// bytes (EOF, reset, deadline) or a strict prefix of a line, is silent: it\n"
+ "// carries no proof that the child did not make it.\n"
+ "func classifyNet6Dial(c net.Conn, ctl, child string) net6Class {\n"
+ "	wantCtl, wantChild := execProbeDialPrefix+ctl+\"\\n\", execProbeDialPrefix+child+\"\\n\"\n"
+ "	_ = c.SetReadDeadline(time.Now().Add(execProbeNet6Wait))\n"
+ "	buf := make([]byte, 0, max(len(wantCtl), len(wantChild)))\n"
+ "	one := make([]byte, 1)\n"
+ "	for len(buf) < cap(buf) {\n"
+ "		n, err := c.Read(one)\n"
+ "		if n == 1 {\n"
+ "			buf = append(buf, one[0])\n"
+ "			if !strings.HasPrefix(wantCtl, string(buf)) && !strings.HasPrefix(wantChild, string(buf)) {\n"
+ "				return net6Foreign\n"
+ "			}\n"
+ "		}\n"
+ "		if err != nil {\n"
+ "			break\n"
+ "		}\n"
+ "	}\n"
+ "	switch string(buf) {\n"
+ "	case wantCtl:\n"
+ "		return net6Control\n"
+ "	case wantChild:\n"
+ "		return net6Child\n"
+ "	}\n"
+ "	return net6Silent\n"
+ "}\n",
+ "// classifyNet6Dial reads one accepted connection's first line with\n"
+ "// readProbeLine (no hello: on this listener the dialer speaks first). The\n"
+ "// control or child line, whole, is that class. Bytes that can begin neither\n"
+ "// line are foreign (readProbeLine stops at the first such byte). Everything\n"
+ "// else, no bytes (EOF, reset, deadline) or a strict prefix of a line, is\n"
+ "// silent: it carries no proof that the child did not make it.\n"
+ "func classifyNet6Dial(c net.Conn, ctl, child string) net6Class {\n"
+ "	wantCtl, wantChild := execProbeDialPrefix+ctl+\"\\n\", execProbeDialPrefix+child+\"\\n\"\n"
+ "	buf, _, _ := readProbeLine(c, \"\", wantCtl, wantChild)\n"
+ "	switch s := string(buf); {\n"
+ "	case s == wantCtl:\n"
+ "		return net6Control\n"
+ "	case s == wantChild:\n"
+ "		return net6Child\n"
+ "	case !strings.HasPrefix(wantCtl, s) && !strings.HasPrefix(wantChild, s):\n"
+ "		return net6Foreign\n"
+ "	}\n"
+ "	return net6Silent\n"
+ "}\n"),
+# 7. classifyReverseDial uses the shared reader
+("// classifyReverseDial writes World's hello on a connected dial, then reads\n"
+ "// at most len(want)+1 bytes up to '\\n' within execProbeHelloWait. The line\n"
+ "// want+\"\\n\" is the child; any other bytes, or a clean EOF after a written\n"
+ "// hello, is foreign; zero bytes otherwise (deadline, reset, a failed hello\n"
+ "// write) is silent.\n"
+ "func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {\n"
+ "	_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))\n"
+ "	_, werr := io.WriteString(c, execProbeHello)\n"
+ "	buf := make([]byte, 0, len(want)+1)\n"
+ "	one := make([]byte, 1)\n"
+ "	var rerr error\n"
+ "	for len(buf) < len(want)+1 {\n"
+ "		var n int\n"
+ "		n, rerr = c.Read(one)\n"
+ "		if n == 1 {\n"
+ "			buf = append(buf, one[0])\n"
+ "			if one[0] == '\\n' {\n"
+ "				break\n"
+ "			}\n"
+ "		}\n"
+ "		if rerr != nil {\n"
+ "			break\n"
+ "		}\n"
+ "	}\n"
+ "	switch {\n",
+ "// readProbeLine is arm 6's one line reader, shared by the reverse leg's\n"
+ "// dials (classifyReverseDial) and the forward legs' accepts\n"
+ "// (classifyNet6Dial, row 250). Within execProbeHelloWait it writes hello\n"
+ "// when it is not \"\", then reads one byte at a time until '\\n', the longest\n"
+ "// line in wants, a read error or the deadline, or the first byte at which\n"
+ "// what it read begins none of wants (it can then equal none of them). werr\n"
+ "// and rerr are the hello write's and the last read's errors.\n"
+ "func readProbeLine(c net.Conn, hello string, wants ...string) (buf []byte, werr, rerr error) {\n"
+ "	_ = c.SetDeadline(time.Now().Add(execProbeHelloWait))\n"
+ "	if hello != \"\" {\n"
+ "		_, werr = io.WriteString(c, hello)\n"
+ "	}\n"
+ "	most := 0\n"
+ "	for _, w := range wants {\n"
+ "		most = max(most, len(w))\n"
+ "	}\n"
+ "	buf = make([]byte, 0, most)\n"
+ "	one := make([]byte, 1)\n"
+ "	for len(buf) < most {\n"
+ "		var n int\n"
+ "		n, rerr = c.Read(one)\n"
+ "		if n == 1 {\n"
+ "			buf = append(buf, one[0])\n"
+ "			if one[0] == '\\n' || !slices.ContainsFunc(wants, func(w string) bool { return strings.HasPrefix(w, string(buf)) }) {\n"
+ "				break\n"
+ "			}\n"
+ "		}\n"
+ "		if rerr != nil {\n"
+ "			break\n"
+ "		}\n"
+ "	}\n"
+ "	return buf, werr, rerr\n"
+ "}\n\n"
+ "// classifyReverseDial writes World's hello on a connected dial and reads\n"
+ "// the answer with readProbeLine. The line want+\"\\n\" is the child; any other\n"
+ "// bytes, or a clean EOF after a written hello, is foreign; zero bytes\n"
+ "// otherwise (deadline, reset, a failed hello write) is silent.\n"
+ "func classifyReverseDial(c net.Conn, want string) (child, foreign bool) {\n"
+ "	buf, werr, rerr := readProbeLine(c, execProbeHello, want+\"\\n\")\n"
+ "	switch {\n"),
+])
+
+edit('exec_probe_net6_dial_test.go', [
+("				if got := rig.count(op); got < want || got > execProbeNet6Attempts {\n"
+ "					t.Errorf(\"%s runs = %d, want %d (at most %d)\", op, got, want, execProbeNet6Attempts)\n",
+ "				if got := rig.count(op); got < want || got > execProbeAttempts {\n"
+ "					t.Errorf(\"%s runs = %d, want %d (at most %d)\", op, got, want, execProbeAttempts)\n"),
+("					time.Sleep(execProbeNet6Wait + 200*time.Millisecond)\n",
+ "					time.Sleep(execProbeHelloWait + 200*time.Millisecond)\n"),
+("			if el := time.Since(start); el > execProbeNet6Wait+250*time.Millisecond {\n",
+ "			if el := time.Since(start); el > execProbeHelloWait+250*time.Millisecond {\n"),
+])
+print('r2 edits applied')
+
+# r2edit2.py: TC's invariant line
+import sys
+p = sys.argv[1] + '/exec_probe_net6_dial_test.go'
+s = open(p).read()
+a = ("// The classifier, on every byte shape, through a real loopback pair.\n"
+     "func TestExecProbeNet6DialClassifier(t *testing.T) {\n")
+b = ("// The classifier, on every byte shape, through a real loopback pair. It\n"
+     "// also pins window's bound above the classifier's read deadline: a\n"
+     "// classifier still pending at the bound must be a stall, never a read that\n"
+     "// was still allowed to finish (design §3.5).\n"
+     "func TestExecProbeNet6DialClassifier(t *testing.T) {\n"
+     "	if execProbeWindowWait <= execProbeHelloWait {\n"
+     "		t.Fatalf(\"execProbeWindowWait %s must exceed the line-read deadline execProbeHelloWait %s\", execProbeWindowWait, execProbeHelloWait)\n"
+     "	}\n")
+assert s.count(a) == 1
+open(p, 'w').write(s.replace(a, b))
+print('ok')

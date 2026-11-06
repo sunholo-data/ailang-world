@@ -1,0 +1,62 @@
+{
+  "doc": "design_docs/planned/w-exec-probe-foreign-dial-false-refusal.md",
+  "iso_ts": "2026-11-06T17:16:03Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.048535999999999996,
+      "tokens_in": 11049,
+      "tokens_out": 217,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "Two mutants (`MUT-PENDING-AS-FOREIGN` and `MUT-CONTROL-ANY-ACCEPT`) survive the mutation suite, though the doc explicitly justifies `MUT-PENDING-AS-FOREIGN` as unreachable by construction (1.5s window bound \u003e 500ms read deadline) and `MUT-CONTROL-ANY-ACCEPT` as independently pinned by `TP` and `TC`.",
+        "catch": "In Milestone 1, ensure the executor verifies `TestExecSrtStartupProbePasses` on CI (since real `srt` and `bwrap` are unmeasured locally per R4) and confirms that `window()`'s 1.5s bound vs `execProbeNet6Wait` (500ms) holds under high CI load without leaking goroutines when `close()` is called."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.09151060000000001,
+      "tokens_in": 10327,
+      "tokens_out": 17512,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc's only real-srt verification path is an asserted, unlogged premise: R4 claims TestExecSrtStartupProbePasses is 'already on the ci.yml:247 list' and is 'the first real-srt run of this patch', but no verification row supports it — V15's command is grep -n 'TestExecProbeNet6' .github/workflows/ci.yml, a pattern that cannot match that test name, and the observed excerpt elides the middle of the line. The pinned patch (V13, ci.yml +1/-1) adds only the four Net6 names, so if the premise is false the patch ships with the new s.end(line) tunnel write never measured anywhere: local runs skip real srt (no bwrap, WORLD_EXEC_SRT_NODE_MODULES unset, final UNMEASURED row), and the executor's full go test ./... also skips it. Every other consequential claim in this doc carries a V row; the one that props up the doc's largest UNMEASURED surface does not, and its falsehood would silently void R4's stated mitigation while leaving the byte-exact patch incomplete.",
+        "catch": "Two secondary items to fix in the same revision: (1) the window() bound of 1.5 s is load-bearing — Claim A's pending-to-silent mapping and the MUT-PENDING-AS-FOREIGN row both depend on it — yet it is never stated in §3; it first appears inside the §5 mutation table, so a reader of the design body cannot reconstruct it (§3.5's constants list omits it). (2) 'Unreachable by construction' for MUT-PENDING-AS-FOREIGN is overstated: a dial accepted in the final ~second of an extended window wait can still be pending at the bound (accept taken after W+1000 with a 500 ms deadline past W+1500). The design still fails closed (pending maps to silent) and the survivor is benign, but the stated justification is arithmetically wrong and should be corrected rather than hand-waved.",
+        "proposed_fix": "Add a V16 row: grep -n 'TestExecSrtStartupProbePasses' .github/workflows/ci.yml (or paste ci.yml:247 in full) to $V/designer-greps.txt. If present, cite the exact line in R4. If absent, the patch must append it to the tests= list as a fifth name (ci.yml becomes two added names), with V13's ci.yml sha and numstat re-measured and §8 updated — do not let M1 merge on the current byte-exact patch until this is resolved. Additionally, in §3.3 name the bound as a constant (e.g. execProbeNet6WindowWait = 3 x execProbeNet6Wait = 1.5 s, with its reason: strictly exceeds the classifier deadline so a fully-arrived accept is always classified, and pending-at-bound fails closed as silent), and rewrite MUT-PENDING-AS-FOREIGN's rationale as: reachable only by a dial accepted in the last wait-interval of an already-extended window; the design maps pending to silent and fails closed, and the mutant's delta is confined to late-landing foreign dials (inconclusive-retry instead of fail), which still cannot pass a deterministic dialer because attempt 3 fails per TE — the survivor is benign for its behavior, not because it is unreachable."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.167271,
+      "tokens_in": 10267,
+      "tokens_out": 9098,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Gate 2 failure: the design transplants the reverse leg's exact classification rule (row 230: child/foreign/silent, foreign-retried, silent-sticky, nonce-in-op-arg) yet implements it as a wholly parallel stack — new types `net6Class`, `net6Window`, `net6Leg`, `classifyNet6Dial`, plus mark/window bookkeeping — without one sentence justifying why the reverse leg's existing classifier and bounded-retry machinery in the same file cannot be reused or factored. 'Reuses the vocabulary' is not a reuse analysis. Two nonce-line classifiers with independently chosen constants (500 ms read deadline vs. the reverse leg's deadlines; an unnamed 1.5 s `window()` bound that appears for the first time in the mutation table and is absent from the §3.5 constants list) create a silent-divergence hazard on a fail-closed gate: a future fix to one classifier need not reach the other, and TS/TC pin only the new one. On a reject-by-default rubric, the most-similar existing machinery in the codebase is precisely the thing the doc never analyzes.",
+        "catch": "Ask the author to (a) add a conflict-surface paragraph covering the reverse leg's classifier implementation (not just its semantics): enumerate its entry points, deadlines and retry driver, and justify duplication vs. factoring a shared line-classifier; (b) pin every timing constant — §5's mutant table references a `window()` bound of 1.5 s that §3.5 never lists as a constant (only `execProbeDialPrefix`, `execProbeNet6Wait` 500 ms, `execProbeNet6Attempts` 3) — either name it (`execProbeNet6WindowWait`) with its derivation from the 500 ms read deadline, or correct the mutant-table text; (c) confirm via grep that the reverse leg's deadlines are untouched so the two stacks' parameters are stated side by side, proving divergence is deliberate, not accidental.",
+        "proposed_fix": "Add a new §3.1.1 'Why the reverse leg's machinery is not reused': 'The reverse leg (row 230) classifies one inbound line inside a fixed post-connect handshake with its own read deadline and a leg-scoped retry loop; it holds no notion of multi-accept windows, cumulative ordering across three forward legs, or per-attempt windows. The forward legs need accept-order windows spanning Run A through the proxy leg's last sample, so the window/mark bookkeeping has no reverse-leg analogue. The byte-level decision — exact expected line vs. first-diverging byte vs. EOF/deadline — is, however, identical to the reverse leg's. Factor that into a shared helper `classifyDialLine(conn, want []string, deadline) ` called by both legs; the forward-specific mapping (foreign→window inconclusive→bounded re-run, silent→fail) stays in `net6Leg`, exactly as the reverse leg keeps its own sticky mapping. If factoring is rejected at quorum, record the reverse leg's deadline values here and state that the 500 ms/1.5 s/3-attempt constants were chosen independently, with a grep row proving the reverse leg's parameters are unchanged.' Additionally: add `execProbeNet6WindowWait` (1.5 s, derived as \u003e 2×`execProbeNet6Wait` so no accept can be pending at the bound — the MUT-PENDING-AS-FOREIGN reachability argument depends on it) to the §3.5 constants list, and add verification row V16: `grep -n 'execProbe.*Wait\\|Deadline' host/broker/exec_probe.go` showing both legs' constants on one screen, confirming no silent edits to the reverse leg."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Direction sound: per-window HEAD pass condition kept; silent and child fail at once; foreign-only windows retried at most 3. Watch R2 (intermittent byte-altering escape passes 1-p^3 vs HEAD 1-p) and whether the classifier read deadline/pending-accept handling is airtight."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The doc's only real-srt verification path is an asserted, unlogged premise: R4 claims TestExecSrtStartupProbePasses is 'already on the ci.yml:247 list' and is 'the first real-srt run of this patch', but no verification row supports it — V15's command is grep -n 'TestExecProbeNet6' .github/workflows/ci.yml, a pattern that cannot match that test name, and the observed excerpt elides the middle of the line. The pinned patch (V13, ci.yml +1/-1) adds only the four Net6 names, so if the premise is false the patch ships with the new s.end(line) tunnel write never measured anywhere: local runs skip real srt (no bwrap, WORLD_EXEC_SRT_NODE_MODULES unset, final UNMEASURED row), and the executor's full go test ./... also skips it. Every other consequential claim in this doc carries a V row; the one that props up the doc's largest UNMEASURED surface does not, and its falsehood would silently void R4's stated mitigation while leaving the byte-exact patch incomplete.",
+      "oc-kimi-k3: Gate 2 failure: the design transplants the reverse leg's exact classification rule (row 230: child/foreign/silent, foreign-retried, silent-sticky, nonce-in-op-arg) yet implements it as a wholly parallel stack — new types `net6Class`, `net6Window`, `net6Leg`, `classifyNet6Dial`, plus mark/window bookkeeping — without one sentence justifying why the reverse leg's existing classifier and bounded-retry machinery in the same file cannot be reused or factored. 'Reuses the vocabulary' is not a reuse analysis. Two nonce-line classifiers with independently chosen constants (500 ms read deadline vs. the reverse leg's deadlines; an unnamed 1.5 s `window()` bound that appears for the first time in the mutation table and is absent from the §3.5 constants list) create a silent-divergence hazard on a fail-closed gate: a future fix to one classifier need not reach the other, and TS/TC pin only the new one. On a reject-by-default rubric, the most-similar existing machinery in the codebase is precisely the thing the doc never analyzes."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.3073176,
+    "total_tokens_in": 31643,
+    "total_tokens_out": 26827
+  }
+}
