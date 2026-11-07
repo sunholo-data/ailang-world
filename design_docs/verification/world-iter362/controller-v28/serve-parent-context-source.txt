@@ -1,0 +1,6 @@
+1322: 		return newDaemon(startupCtx, ctx, registry, cfg)
+1326: func Run(ctx context.Context, cfg Config, announce io.Writer) error {
+1388: 	d.startTemplateMaintenance(ctx)
+1389: 	d.startSurfaceFollow(ctx)
+1402: 	case <-ctx.Done():
+StartupCtx is lexical to startDaemon closure and never rebound into Run. Listen and announce are synchronous; Run’s ctx.Done watch owns stopping serving.

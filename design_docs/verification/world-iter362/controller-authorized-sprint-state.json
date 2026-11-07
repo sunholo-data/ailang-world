@@ -1,0 +1,1262 @@
+{
+  "sprint_id": "W-DAEMON-STARTUP-UNDER-LOAD",
+  "title": "Row 256: isolated registry startup clock and honest exclusion diagnostics",
+  "created": "2026-11-07T05:44:02.907915+00:00",
+  "status": "ready_for_executor_with_explicit_inherited_red_criterion_correction",
+  "passes": null,
+  "started": null,
+  "completed": null,
+  "iteration": 362,
+  "queue_row": 256,
+  "planner": {
+    "declared": "codex:gpt-6.1-sol",
+    "resolved": "codex:gpt-6.1-sol",
+    "resolver_basis": "declared:planner-lane-default-pin",
+    "authorship": "this provider-pinned planner invocation; no delegated author or sub-agents",
+    "runtime_receipt_owner": "supervisor; actual model/rc/CLI token receipt not fabricated here"
+  },
+  "plan_file": "design_docs/planned/sprint-plan-w-daemon-startup-under-load.md",
+  "sprint_plan": "design_docs/planned/sprint-plan-w-daemon-startup-under-load.md",
+  "design_doc": "design_docs/planned/w-daemon-startup-under-load.md",
+  "design_commit": "caee00cae7dd6938c9017f1977209f4b61ef7c92",
+  "implementation_base_commit": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+  "design_sha256": "94f8bf9d7d1f3ac51a848c89e4a1595f892c2991984dc11778ffa0f539d6430a",
+  "patch_path": "design_docs/planned/w-daemon-startup-under-load.patch",
+  "patch_sha256": "90c6df45c6b4dcf09fd241d76eb87294f5b84d688eb9f2ff90d0eca1de09db16",
+  "review_copy": "design_docs/verification/world-iter362/planner-sprint-state.json",
+  "handoff_file": "design_docs/verification/world-iter362/planner-handoff.json",
+  "github_issues": [],
+  "github_issue_note": "No feature issue import; bookkeeping issue is not a feature issue. No messages or network writes authorized.",
+  "rulings": [
+    "D-WORLD-108 attended B widened to 250 then 255, 256, 257; row 256 only here",
+    "r1 BLOCKED 3/3; r2 BLOCKED 1/3; all reviewers present",
+    "r3 approved refinement under design section 11; no third quorum; r2 did not pass",
+    "Single M1 expressly owns each of AC1, AC2, AC3, AC4, AC5, AC6, AC7, AC8, AC9 (design section 7 and user ruling)",
+    "No human design-freeze decision remains; controller owns commits/routing/executor launch"
+  ],
+  "single_milestone_exception": {
+    "source": "approved r3 design section 7 and explicit planner directive",
+    "reason": "One indivisible frozen patch; splitting creates intermediate broken context/diagnostic/test states and invalidates byte-identity reuse. Bounded executor run is 75 minutes, full suites remain controller/CI work. Generic minimum-two validator rule is overridden; do not edit shared validator or fabricate M2."
+  },
+  "velocity": {
+    "target_loc_per_day": 881,
+    "estimated_total_loc": 881,
+    "estimated_days": 1,
+    "estimated_hours": 6,
+    "executor_minutes": 75,
+    "observed_loc_per_day": 1647,
+    "sample_scope": "two recent comparable M1 commits on 2026-11-06 only; authoring time not measured",
+    "recent_samples": [
+      {
+        "commit": "d29c4155",
+        "date": "2026-11-06",
+        "files": 4,
+        "added": 546,
+        "deleted": 57
+      },
+      {
+        "commit": "fa5b9183",
+        "date": "2026-11-06",
+        "files": 22,
+        "added": 1101,
+        "deleted": 37
+      }
+    ],
+    "method": "bounded max-80 path-scoped local git history, then numstat of the two newest M1 feature commits; HOST_CHANGELOG is release-level, not recent daily velocity",
+    "buffer": "60-minute executor work budget + 15 minutes (25%); one day including roughly 3-5 controller/evaluation hours and CI queue uncertainty"
+  },
+  "registry_reuse": [
+    {
+      "milestone": "M1",
+      "package": null,
+      "action": "none",
+      "reason": "No package-like capability is introduced: this is Go host constructor context ownership and existing probe/doctor plumbing, design section 3.6. AILANG packages cannot replace this boundary. No dependencies added or version changes.",
+      "inspection_scope": "Existing local evidence and checked-in package surfaces only; no online registry query or canonical registry mutation authorized.",
+      "search_terms": [
+        "startup",
+        "exec probe",
+        "doctor",
+        "registry phase"
+      ],
+      "pkg_search_status": "not run: no package-like deliverable and user restricts this invocation to local evidence",
+      "local_sources": [
+        "packages/world-core/ailang.toml",
+        "packages/world-core/CHANGELOG.md",
+        "packages/se-tools/transitions.json",
+        "design_docs/verification/world-iter362/record-registry.txt"
+      ],
+      "packages_inspected": [
+        {
+          "name": "world/core",
+          "version": "0.1.1",
+          "surface": "pure semantic core, empty effect ceiling; cannot own Go startup contexts"
+        },
+        {
+          "name": "se-tools",
+          "version": null,
+          "surface": "existing transition descriptors; no host constructor capability"
+        }
+      ],
+      "pkg_info_docs_status": "local manifest/descriptors inspected; no live pkg info/docs claim",
+      "record_registry_scope": "record-registry.txt lists isolated World mission workdir/driver routing, not an AILANG package-search result and not canonical/main registry state"
+    }
+  ],
+  "dependencies": [],
+  "external_prerequisites": [
+    "BLOCKED: controller pristine full verify_go rc 1, two inherited failures; report/STOP before application",
+    "review outside-worktree writes before executing any gate outside sandbox",
+    "pinned released interpreter and resolved toolchain available; run.py preserves TMPDIR/GOTMPDIR",
+    "controller and CI available for remaining full-suite and Linux obligations"
+  ],
+  "implementation_files": [
+    {
+      "path": "cmd/ailang-worldd/doctor.go",
+      "owner": "M1",
+      "added": 23,
+      "deleted": 1,
+      "kind": "implementation",
+      "base_sha256": "a51ce69723882368b19fe780743bad2eea2ad8b5a9bbce60351353a57baf9a2d",
+      "sha256": "759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1",
+      "post_apply_lines": 538
+    },
+    {
+      "path": "cmd/ailang-worldd/doctor_exec_profiles_test.go",
+      "owner": "M1",
+      "added": 100,
+      "deleted": 0,
+      "kind": "test",
+      "base_sha256": "absent",
+      "sha256": "e86d3964b1c9df32e9383f2b35a2e2b3a938455248eb3018153f6ec62ae34dcb",
+      "post_apply_lines": 100
+    },
+    {
+      "path": "cmd/ailang-worldd/doctor_hosts.go",
+      "owner": "M1",
+      "added": 1,
+      "deleted": 1,
+      "kind": "implementation",
+      "base_sha256": "6869cf7ca278bf692e79de085930655745e906ae82d88142d993f8681fbe0755",
+      "sha256": "e6beb0bf3ffe2751ef060d14eb234c3fb98baa63fb9c9e606e8b45c420f9fc8c",
+      "post_apply_lines": 264
+    },
+    {
+      "path": "docs/QUICKSTART.md",
+      "owner": "M1",
+      "added": 5,
+      "deleted": 1,
+      "kind": "documentation",
+      "base_sha256": "715d845827cac15fbdb6f0f7dd80146b28ddda9fc342087133683e0da8833387",
+      "sha256": "be414d27e865c3965720ea441987a8a4a6654fe68950fc23c959d7b5e0af6f0a",
+      "post_apply_lines": 1771
+    },
+    {
+      "path": "host/broker/exec_probe.go",
+      "owner": "M1",
+      "added": 31,
+      "deleted": 4,
+      "kind": "implementation",
+      "base_sha256": "110fffc3f31a10d71a024b3e02f66b0864178ce59e44e3e5b5be2c82ac11c79f",
+      "sha256": "e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1",
+      "post_apply_lines": 1129
+    },
+    {
+      "path": "host/broker/exec_probe_out_of_time_test.go",
+      "owner": "M1",
+      "added": 108,
+      "deleted": 0,
+      "kind": "test",
+      "base_sha256": "absent",
+      "sha256": "769447b26c7191ac37d6ea3deca70dfa0324498a78992012d9b306b105646e59",
+      "post_apply_lines": 108
+    },
+    {
+      "path": "host/broker/exec_startup.go",
+      "owner": "M1",
+      "added": 8,
+      "deleted": 1,
+      "kind": "implementation",
+      "base_sha256": "396a9898a46be63405fb79dde03089a47fae703b47416cff466af0993e15b4c2",
+      "sha256": "8663aac66b6af14299f7af7e52c076de37afb7e2fc1c94b23e094a4417435b0d",
+      "post_apply_lines": 690
+    },
+    {
+      "path": "host/daemon/daemon.go",
+      "owner": "M1",
+      "added": 54,
+      "deleted": 10,
+      "kind": "implementation",
+      "base_sha256": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668",
+      "sha256": "600080956ba673dedcedbb11cdb2093668dff67b32bb258bd2a684e08498d3a9",
+      "post_apply_lines": 1410
+    },
+    {
+      "path": "host/daemon/startup_callers_test.go",
+      "owner": "M1",
+      "added": 225,
+      "deleted": 0,
+      "kind": "test",
+      "base_sha256": "absent",
+      "sha256": "3a92fa604a38da88d93081f2e9502860f28e122adc3d39db1ee5c402507e8094",
+      "post_apply_lines": 225
+    },
+    {
+      "path": "host/daemon/startup_under_load_test.go",
+      "owner": "M1",
+      "added": 314,
+      "deleted": 0,
+      "kind": "test",
+      "base_sha256": "absent",
+      "sha256": "46bb766519c9c368beba972c7a6124dc873bc671e1818a021e0c0c40517a96fb",
+      "post_apply_lines": 314
+    },
+    {
+      "path": "host/daemon/workspace.go",
+      "owner": "M1",
+      "added": 12,
+      "deleted": 2,
+      "kind": "implementation",
+      "base_sha256": "1a178f8bc1e39f8981bcb6bd07f1d8d87574d1876c82ea649f9adbf472b3ad5a",
+      "sha256": "94d4da1952fe0a6be4536c4cfb161b684c0eb2871a06ddede43624126b5bb082",
+      "post_apply_lines": 802
+    }
+  ],
+  "patch_statistics": {
+    "files": 11,
+    "added": 881,
+    "deleted": 20,
+    "net": 861,
+    "patch_lines": 1088,
+    "implementation_added": 129,
+    "tests_added": 747,
+    "documentation_added": 5,
+    "new_test_files": 4
+  },
+  "presence_guards": [
+    "host/daemon/startup_callers_test.go",
+    "host/daemon/startup_under_load_test.go",
+    "host/broker/exec_probe_out_of_time_test.go",
+    "cmd/ailang-worldd/doctor_exec_profiles_test.go"
+  ],
+  "new_test_name_floor": 13,
+  "new_test_names": [
+    "TestDoctorNamesLeftOutExecProfiles",
+    "TestDoctorLateRefusalObservationAndReasonCap",
+    "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+    "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+    "TestDaemonConstructorCallerInventory",
+    "TestDaemonCallerInventoryAliasControl",
+    "TestServeStartsWhenTheProbeSpendsTheStartupClock",
+    "TestRegistryPhaseHasItsOwnClock",
+    "TestRegistryPhaseClockIsBounded",
+    "TestServeStartupClocksArePinned",
+    "TestRegistryPhasePreservesParentCancellation",
+    "TestExecExclusionLogIsObservationOnly",
+    "TestHealthExecExclusionIsAdditive"
+  ],
+  "existing_neighbours": [
+    "TestStartupCallerCancellation",
+    "TestStartupBudgetQuarantinesPostCutoffBootstrap",
+    "TestStartupBudgetHeldConnectionSettles",
+    "TestHealthReportsBuildToolCredentialsAndProfiles",
+    "TestProfileForResolutionOrder",
+    "TestExecProfilesDirProbeFailureIsolatesOneProfile",
+    "TestDoctorDaemonVsForeignListener",
+    "TestDoctorHelpAndAPIKeyGuard",
+    "TestDoctorExecToolsWithAnM3Daemon",
+    "TestProductionContextRoots"
+  ],
+  "features": [
+    {
+      "id": "M1",
+      "description": "Apply and verify the frozen two-clock startup and exclusion-diagnostic patch",
+      "estimated_loc": 881,
+      "estimated_implementation_loc": 129,
+      "estimated_test_loc": 747,
+      "estimated_documentation_loc": 5,
+      "estimated_hours": 1.25,
+      "dependencies": [],
+      "files": [
+        "cmd/ailang-worldd/doctor.go",
+        "cmd/ailang-worldd/doctor_exec_profiles_test.go",
+        "cmd/ailang-worldd/doctor_hosts.go",
+        "docs/QUICKSTART.md",
+        "host/broker/exec_probe.go",
+        "host/broker/exec_probe_out_of_time_test.go",
+        "host/broker/exec_startup.go",
+        "host/daemon/daemon.go",
+        "host/daemon/startup_callers_test.go",
+        "host/daemon/startup_under_load_test.go",
+        "host/daemon/workspace.go"
+      ],
+      "acceptance_criteria": [
+        "AC1: The registry bootstrap, template report and integrity sweep use a fresh parent-derived 9 s context; startup remains 9 s. Run announces, answers health and shuts down in the slow-client fixture. No whole-startup wall-time bound is claimed.",
+        "AC2: All failed profiles, including a genuine refusal recorded late, are excluded with reasons retained and no implicit default; a failed explicit --exec-profile refuses startup. The episode receives the existing named refusal.",
+        "AC3: Log, health comments, doctor, help and QUICKSTART report only recording times, retain genuine refusal reasons and advise review before conditional restart. Doctor names every exclusion as an exec failure (exit 13), including --quick.",
+        "AC4: OutOfTime is true only for a nonempty failed-arm set all recorded at/after the deadline. Mixed, no-failure and no-deadline rows remain false; late genuine refusal may be true. R3/R9 retain both ambiguous directions and establish no scheduling bound.",
+        "AC5: Inventory the actual Go sources, preserving imported/local function-value and direct-call detection plus alias/nested/shadow controls. Expect 60 test New references, zero production New references after apply, and four internal production construction edges. A new compatibility caller requires reviewed design, never an allowlist expansion to hide red.",
+        "AC6: False exclusion JSON retains old bytes via omitempty; true adds out_of_time. Doctor reason is one line and at most 240 bytes including the 3-byte ellipsis (237-byte prefix); project, file and fixed prose are outside this cap.",
+        "AC7: Fresh-phase cancellation reaches registry-bootstrap with context.Canceled, settlement is bounded and writer authority reopens. Existing cancellation/settlement/context-root neighbours remain green. Mutating startup clocks and execStartupHook are serial; successful T1 lifecycle must be exercised outside sandbox under race.",
+        "AC8: Apply the frozen 11-file patch byte-exact, assert all four new files and all thirteen new named tests, preserve docs/help and existing neighbours. Current-head focused gates, controller full gates, independent evaluation and PR/merge Linux plain/race CI are required; sandbox socket verdicts are uninformative. V27/V29 archive receipts are reusable only after all eleven hashes match.",
+        "AC9: Listen, announce, serving, maintenance and shutdown remain owned by Run's original parent, never its spent startup clock. Require successful announced-service health plus the compiling serve-parent mutation killed at the health assertion."
+      ],
+      "acceptance_ids": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4",
+        "AC5",
+        "AC6",
+        "AC7",
+        "AC8",
+        "AC9"
+      ],
+      "verify_commands": [
+        "apply-exact",
+        "identity-candidate",
+        "build-candidate",
+        "vet-candidate",
+        "gofmt-candidate",
+        "named-candidate",
+        "reuse-v28-v29"
+      ],
+      "completion_requires": [
+        "all AC evidence on implementation head",
+        "controller full gates",
+        "independent evaluation",
+        "PR and merge Linux CI"
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "Execution held on observed pristine full Go baseline rc 1; no implementation applied, all AC passes pending."
+    }
+  ],
+  "acceptance_checks": [
+    {
+      "id": "AC1",
+      "owner": "M1",
+      "title": "Fresh bounded registry phase and successful Run",
+      "criterion": "The registry bootstrap, template report and integrity sweep use a fresh parent-derived 9 s context; startup remains 9 s. Run announces, answers health and shuts down in the slow-client fixture. No whole-startup wall-time bound is claimed.",
+      "tests": [
+        "TestServeStartsWhenTheProbeSpendsTheStartupClock",
+        "TestRegistryPhaseHasItsOwnClock",
+        "TestRegistryPhaseClockIsBounded",
+        "TestServeStartupClocksArePinned"
+      ],
+      "production_mutants": [
+        "MUT-RUN-HEAD-SHAPE",
+        "MUT-SHARED-PARENT",
+        "MUT-REGISTRY-UNBOUNDED",
+        "MUT-SWEEP-ON-STARTUP-CLOCK",
+        "MUT-REGISTRY-BUDGET-30S",
+        "MUT-STARTUP-BUDGET-5S"
+      ],
+      "files": [
+        "host/daemon/daemon.go",
+        "host/daemon/startup_under_load_test.go"
+      ],
+      "passes": null,
+      "evidence_status": "pending on implementation head; empirical reuse conditional on eleven exact hashes"
+    },
+    {
+      "id": "AC2",
+      "owner": "M1",
+      "title": "All failures remain excluded",
+      "criterion": "All failed profiles, including a genuine refusal recorded late, are excluded with reasons retained and no implicit default; a failed explicit --exec-profile refuses startup. The episode receives the existing named refusal.",
+      "tests": [
+        "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+        "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+        "TestRegistryPhaseHasItsOwnClock"
+      ],
+      "production_mutants": [
+        "MUT-LATE-STILL-SERVED",
+        "MUT-FLAG-NOT-CARRIED",
+        "MUT-SERVE-SPENT",
+        "MUT-SPENT-STILL-SERVED"
+      ],
+      "files": [
+        "host/broker/exec_startup.go",
+        "host/broker/exec_probe_out_of_time_test.go",
+        "host/daemon/startup_under_load_test.go"
+      ],
+      "passes": null,
+      "evidence_status": "pending on implementation head; empirical reuse conditional on eleven exact hashes"
+    },
+    {
+      "id": "AC3",
+      "owner": "M1",
+      "title": "Observation-only operator surfaces",
+      "criterion": "Log, health comments, doctor, help and QUICKSTART report only recording times, retain genuine refusal reasons and advise review before conditional restart. Doctor names every exclusion as an exec failure (exit 13), including --quick.",
+      "tests": [
+        "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+        "TestDoctorNamesLeftOutExecProfiles",
+        "TestDoctorLateRefusalObservationAndReasonCap",
+        "TestExecExclusionLogIsObservationOnly"
+      ],
+      "production_mutants": [
+        "MUT-CAUSAL-OBSERVATION",
+        "MUT-LOG-CAUSE",
+        "MUT-DOCTOR-CAUSE",
+        "MUT-DOCTOR-NO-REVIEW",
+        "MUT-DOCTOR-NOT-CALLED",
+        "MUT-DOCTOR-WARN",
+        "MUT-DOCTOR-CLASS",
+        "MUT-DOCTOR-ONE-FIX"
+      ],
+      "files": [
+        "host/broker/exec_probe.go",
+        "host/daemon/workspace.go",
+        "cmd/ailang-worldd/doctor.go",
+        "cmd/ailang-worldd/doctor_hosts.go",
+        "docs/QUICKSTART.md",
+        "host/broker/exec_probe_out_of_time_test.go",
+        "host/daemon/startup_under_load_test.go",
+        "cmd/ailang-worldd/doctor_exec_profiles_test.go"
+      ],
+      "passes": null,
+      "evidence_status": "pending on implementation head; empirical reuse conditional on eleven exact hashes"
+    },
+    {
+      "id": "AC4",
+      "owner": "M1",
+      "title": "Nonempty ALL-after timestamp rule",
+      "criterion": "OutOfTime is true only for a nonempty failed-arm set all recorded at/after the deadline. Mixed, no-failure and no-deadline rows remain false; late genuine refusal may be true. R3/R9 retain both ambiguous directions and establish no scheduling bound.",
+      "tests": [
+        "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+        "TestExecProbeGenuineRefusalRecordedAfterDeadline"
+      ],
+      "production_mutants": [
+        "MUT-SPENT-ANY",
+        "MUT-LATE-NEVER-SPENT",
+        "MUT-FAIL-NEVER-SPENT",
+        "MUT-DEADLINE-UNSET"
+      ],
+      "files": [
+        "host/broker/exec_probe.go",
+        "host/broker/exec_probe_out_of_time_test.go"
+      ],
+      "passes": null,
+      "evidence_status": "pending on implementation head; empirical reuse conditional on eleven exact hashes"
+    },
+    {
+      "id": "AC5",
+      "owner": "M1",
+      "title": "Actual caller census and forward guard",
+      "criterion": "Inventory the actual Go sources, preserving imported/local function-value and direct-call detection plus alias/nested/shadow controls. Expect 60 test New references, zero production New references after apply, and four internal production construction edges. A new compatibility caller requires reviewed design, never an allowlist expansion to hide red.",
+      "tests": [
+        "TestDaemonConstructorCallerInventory",
+        "TestDaemonCallerInventoryAliasControl"
+      ],
+      "production_mutants": [
+        "MUT-CALLER-IMPORTED-ALIAS",
+        "MUT-CALLER-DIRECT",
+        "MUT-CALLER-LOCAL-ALIAS"
+      ],
+      "files": [
+        "host/daemon/startup_callers_test.go",
+        "host/daemon/daemon.go"
+      ],
+      "passes": null,
+      "evidence_status": "pending on implementation head; empirical reuse conditional on eleven exact hashes"
+    },
+    {
+      "id": "AC6",
+      "owner": "M1",
+      "title": "Additive JSON and bounded reason",
+      "criterion": "False exclusion JSON retains old bytes via omitempty; true adds out_of_time. Doctor reason is one line and at most 240 bytes including the 3-byte ellipsis (237-byte prefix); project, file and fixed prose are outside this cap.",
+      "tests": [
+        "TestHealthExecExclusionIsAdditive",
+        "TestDoctorLateRefusalObservationAndReasonCap"
+      ],
+      "production_mutants": [
+        "MUT-HEALTH-NO-OMITEMPTY",
+        "MUT-REASON-CAP-240-PREFIX",
+        "MUT-HEALTH-DROPS-FLAG"
+      ],
+      "files": [
+        "host/daemon/daemon.go",
+        "host/daemon/workspace.go",
+        "host/daemon/startup_under_load_test.go",
+        "cmd/ailang-worldd/doctor.go",
+        "cmd/ailang-worldd/doctor_exec_profiles_test.go"
+      ],
+      "passes": null,
+      "evidence_status": "pending on implementation head; empirical reuse conditional on eleven exact hashes"
+    },
+    {
+      "id": "AC7",
+      "owner": "M1",
+      "title": "Parent cancellation, writer release and serial race coverage",
+      "criterion": "Fresh-phase cancellation reaches registry-bootstrap with context.Canceled, settlement is bounded and writer authority reopens. Existing cancellation/settlement/context-root neighbours remain green. Mutating startup clocks and execStartupHook are serial; successful T1 lifecycle must be exercised outside sandbox under race.",
+      "tests": [
+        "TestRegistryPhasePreservesParentCancellation",
+        "TestServeStartsWhenTheProbeSpendsTheStartupClock"
+      ],
+      "production_mutants": [
+        "MUT-PARENT-CANCEL-DETACHED"
+      ],
+      "files": [
+        "host/daemon/daemon.go",
+        "host/daemon/startup_under_load_test.go"
+      ],
+      "passes": null,
+      "evidence_status": "pending on implementation head; empirical reuse conditional on eleven exact hashes"
+    },
+    {
+      "id": "AC8",
+      "owner": "M1",
+      "title": "Exact delivery and complete verification",
+      "criterion": "Apply the frozen 11-file patch byte-exact, assert all four new files and all thirteen new named tests, preserve docs/help and existing neighbours. Current-head focused gates, controller full gates, independent evaluation and PR/merge Linux plain/race CI are required; sandbox socket verdicts are uninformative. V27/V29 archive receipts are reusable only after all eleven hashes match.",
+      "tests": [
+        "TestServeStartsWhenTheProbeSpendsTheStartupClock",
+        "TestRegistryPhaseHasItsOwnClock",
+        "TestRegistryPhaseClockIsBounded",
+        "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+        "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+        "TestDoctorNamesLeftOutExecProfiles",
+        "TestDoctorLateRefusalObservationAndReasonCap",
+        "TestServeStartupClocksArePinned",
+        "TestRegistryPhasePreservesParentCancellation",
+        "TestDaemonConstructorCallerInventory",
+        "TestDaemonCallerInventoryAliasControl",
+        "TestExecExclusionLogIsObservationOnly",
+        "TestHealthExecExclusionIsAdditive"
+      ],
+      "production_mutants": [],
+      "files": [
+        "cmd/ailang-worldd/doctor.go",
+        "cmd/ailang-worldd/doctor_exec_profiles_test.go",
+        "cmd/ailang-worldd/doctor_hosts.go",
+        "docs/QUICKSTART.md",
+        "host/broker/exec_probe.go",
+        "host/broker/exec_probe_out_of_time_test.go",
+        "host/broker/exec_startup.go",
+        "host/daemon/daemon.go",
+        "host/daemon/startup_callers_test.go",
+        "host/daemon/startup_under_load_test.go",
+        "host/daemon/workspace.go"
+      ],
+      "passes": null,
+      "evidence_status": "pending on implementation head; empirical reuse conditional on eleven exact hashes"
+    },
+    {
+      "id": "AC9",
+      "owner": "M1",
+      "title": "Serve lifetime retains the original parent",
+      "criterion": "Listen, announce, serving, maintenance and shutdown remain owned by Run's original parent, never its spent startup clock. Require successful announced-service health plus the compiling serve-parent mutation killed at the health assertion.",
+      "tests": [
+        "TestServeStartsWhenTheProbeSpendsTheStartupClock"
+      ],
+      "production_mutants": [
+        "MUT-SERVE-ON-STARTUP-CLOCK"
+      ],
+      "files": [
+        "host/daemon/daemon.go",
+        "host/daemon/startup_under_load_test.go"
+      ],
+      "passes": null,
+      "evidence_status": "pending on implementation head; empirical reuse conditional on eleven exact hashes"
+    }
+  ],
+  "verify_commands": [
+    {
+      "id": "identity-baseline",
+      "owner": "controller_outside_sandbox",
+      "phase": "baseline",
+      "deadline_seconds": 120,
+      "argv": null,
+      "program": "identity",
+      "program_args": [
+        "{state}",
+        "baseline"
+      ],
+      "acceptance": "11 base hashes match; four new files absent; frozen input hashes match",
+      "passes": null
+    },
+    {
+      "id": "build-baseline",
+      "owner": "controller_outside_sandbox",
+      "phase": "baseline",
+      "deadline_seconds": 300,
+      "argv": [
+        "go",
+        "build",
+        "./..."
+      ],
+      "program": null,
+      "program_args": [],
+      "acceptance": "rc 0 on pristine World base",
+      "passes": null
+    },
+    {
+      "id": "vet-baseline",
+      "owner": "controller_outside_sandbox",
+      "phase": "baseline",
+      "deadline_seconds": 300,
+      "argv": [
+        "go",
+        "vet",
+        "./host/broker/",
+        "./host/daemon/",
+        "./cmd/ailang-worldd/"
+      ],
+      "program": null,
+      "program_args": [],
+      "acceptance": "rc 0",
+      "passes": null
+    },
+    {
+      "id": "gofmt-baseline",
+      "owner": "controller_outside_sandbox",
+      "phase": "baseline",
+      "deadline_seconds": 120,
+      "argv": null,
+      "program": "gofmt",
+      "program_args": [
+        "{state}",
+        "baseline"
+      ],
+      "acceptance": "six existing Go files clean",
+      "passes": null
+    },
+    {
+      "id": "named-baseline",
+      "owner": "controller_outside_sandbox",
+      "phase": "baseline",
+      "deadline_seconds": 1200,
+      "argv": null,
+      "program": "named_tests",
+      "program_args": [
+        "{state}",
+        "baseline"
+      ],
+      "acceptance": "ten existing neighbours pass; thirteen absent new tests explicitly pending, not passed",
+      "passes": null
+    },
+    {
+      "id": "verify-go-baseline",
+      "owner": "controller_outside_sandbox",
+      "phase": "baseline",
+      "deadline_seconds": 1800,
+      "argv": [
+        "env",
+        "VERIFY_GO_LEGS=plain",
+        "./scripts/verify_go.sh"
+      ],
+      "program": null,
+      "program_args": [],
+      "acceptance": "Record baseline rc1 two exact inherited diagnostic failures; compare candidate identical command/environment with zero additional failures; full Linux plain/race/AIL CI must all pass. See explicit controller correction.",
+      "passes": null
+    },
+    {
+      "id": "verify-ail-baseline",
+      "owner": "controller_outside_sandbox",
+      "phase": "baseline",
+      "deadline_seconds": 1800,
+      "argv": [
+        "./scripts/verify_ail.sh"
+      ],
+      "program": null,
+      "program_args": [],
+      "acceptance": "pinned released interpreter, named identity checks and rc 0",
+      "passes": null
+    },
+    {
+      "id": "apply-exact",
+      "owner": "controller_outside_sandbox",
+      "phase": "implementation",
+      "deadline_seconds": 180,
+      "argv": null,
+      "program": "apply",
+      "program_args": [
+        "{state}"
+      ],
+      "acceptance": "git apply --check then once-only exact application; four presence guards and eleven candidate hashes",
+      "passes": null
+    },
+    {
+      "id": "identity-candidate",
+      "owner": "controller_outside_sandbox",
+      "phase": "focused",
+      "deadline_seconds": 120,
+      "argv": null,
+      "program": "identity",
+      "program_args": [
+        "{state}",
+        "candidate"
+      ],
+      "acceptance": "all eleven frozen hashes + four files; changed premise STOP",
+      "passes": null
+    },
+    {
+      "id": "build-candidate",
+      "owner": "controller_outside_sandbox",
+      "phase": "focused",
+      "deadline_seconds": 300,
+      "argv": [
+        "go",
+        "build",
+        "./..."
+      ],
+      "program": null,
+      "program_args": [],
+      "acceptance": "rc 0",
+      "passes": null
+    },
+    {
+      "id": "vet-candidate",
+      "owner": "controller_outside_sandbox",
+      "phase": "focused",
+      "deadline_seconds": 300,
+      "argv": [
+        "go",
+        "vet",
+        "./host/broker/",
+        "./host/daemon/",
+        "./cmd/ailang-worldd/"
+      ],
+      "program": null,
+      "program_args": [],
+      "acceptance": "rc 0",
+      "passes": null
+    },
+    {
+      "id": "gofmt-candidate",
+      "owner": "controller_outside_sandbox",
+      "phase": "focused",
+      "deadline_seconds": 120,
+      "argv": null,
+      "program": "gofmt",
+      "program_args": [
+        "{state}",
+        "candidate"
+      ],
+      "acceptance": "all ten touched Go files clean",
+      "passes": null
+    },
+    {
+      "id": "named-candidate",
+      "owner": "controller_outside_sandbox",
+      "phase": "focused",
+      "deadline_seconds": 1200,
+      "argv": null,
+      "program": "named_tests",
+      "program_args": [
+        "{state}",
+        "candidate"
+      ],
+      "acceptance": "23 exact top-level PASS identities once, including thirteen-new-test floor; no skip/fail/race",
+      "passes": null
+    },
+    {
+      "id": "reuse-v28-v29",
+      "owner": "controller_outside_sandbox",
+      "phase": "focused",
+      "deadline_seconds": 120,
+      "argv": null,
+      "program": "reuse",
+      "program_args": [
+        "{state}"
+      ],
+      "acceptance": "eleven candidate hashes and frozen receipt hashes; only named empirical obligations reused",
+      "passes": null
+    },
+    {
+      "id": "verify-go-candidate",
+      "owner": "controller_outside_sandbox",
+      "phase": "controller_full",
+      "deadline_seconds": 1800,
+      "argv": [
+        "env",
+        "VERIFY_GO_LEGS=plain",
+        "./scripts/verify_go.sh"
+      ],
+      "program": null,
+      "program_args": [],
+      "acceptance": "Record baseline rc1 two exact inherited diagnostic failures; compare candidate identical command/environment with zero additional failures; full Linux plain/race/AIL CI must all pass. See explicit controller correction.",
+      "passes": null
+    },
+    {
+      "id": "verify-ail-candidate",
+      "owner": "controller_outside_sandbox",
+      "phase": "controller_full",
+      "deadline_seconds": 1800,
+      "argv": [
+        "./scripts/verify_ail.sh"
+      ],
+      "program": null,
+      "program_args": [],
+      "acceptance": "full pinned-language gate rc 0; no .ail changes is not a waiver",
+      "passes": null
+    }
+  ],
+  "gates_binding_on_every_milestone": [
+    "apply-exact",
+    "identity-candidate",
+    "build-candidate",
+    "vet-candidate",
+    "gofmt-candidate",
+    "named-candidate",
+    "reuse-v28-v29"
+  ],
+  "validation_programs": {
+    "identity": "import hashlib,json,subprocess,sys\nfrom pathlib import Path\ns=json.loads(Path(sys.argv[1]).read_text()); mode=sys.argv[2]\ndef digest(p):\n p=Path(p); return hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else 'absent'\nassert Path(subprocess.check_output(['git','rev-parse','--show-toplevel'],text=True).strip()).resolve()==Path.cwd().resolve(), 'STOP: wrong Git root'\nartifact_root=Path(sys.argv[1]).resolve().parents[3]\nfor name,key in [('design_doc','design_sha256'),('patch_path','patch_sha256')]:\n assert digest(artifact_root/s[name])==s[key], 'STOP: frozen input changed'\nkey='base_sha256' if mode=='baseline' else 'sha256'\nassert mode in ('baseline','candidate')\nfor f in s['implementation_files']:\n assert digest(f['path'])==f[key], 'STOP: changed premise: '+f['path']\nif mode=='candidate':\n for name in s['presence_guards']:\n  subprocess.run(['test','-f',name],check=True,timeout=10)\nprint('IDENTITY '+mode+': 11/11 exact; four presence guards required on candidate; no empirical reuse on baseline')\n",
+    "apply": "import hashlib,json,subprocess,sys\nfrom pathlib import Path\ns=json.loads(Path(sys.argv[1]).read_text())\nassert not s['execution_hold']['active'], s['execution_hold']['reason']\ndef digest(p):\n p=Path(p); return hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else 'absent'\nassert Path(subprocess.check_output(['git','rev-parse','--show-toplevel'],text=True).strip()).resolve()==Path.cwd().resolve(), 'STOP: wrong Git root'\nsubprocess.run(['git','merge-base','--is-ancestor',s['design_commit'],'HEAD'],check=True,timeout=10) # controller may commit planning artifacts; frozen source identities still bind\nfor path,key in [(s['design_doc'],'design_sha256'),(s['patch_path'],'patch_sha256')]:\n assert digest(path)==s[key], 'STOP: frozen input changed'\nbase=all(digest(f['path'])==f['base_sha256'] for f in s['implementation_files'])\ncandidate=all(digest(f['path'])==f['sha256'] for f in s['implementation_files'])\nassert base or candidate, 'STOP: partial application or changed premise'\nif base:\n subprocess.run(['git','apply','--check',s['patch_path']],check=True,timeout=30)\n subprocess.run(['git','apply',s['patch_path']],check=True,timeout=30)\nelse:\n print('Already applied exactly; no second application')\nsubprocess.run(['test','-f','host/daemon/startup_callers_test.go'],check=True,timeout=10)\nsubprocess.run(['test','-f','host/daemon/startup_under_load_test.go'],check=True,timeout=10)\nsubprocess.run(['test','-f','host/broker/exec_probe_out_of_time_test.go'],check=True,timeout=10)\nsubprocess.run(['test','-f','cmd/ailang-worldd/doctor_exec_profiles_test.go'],check=True,timeout=10)\nfor f in s['implementation_files']:\n assert digest(f['path'])==f['sha256'], 'STOP: applied hash mismatch: '+f['path']\nprint('APPLIED 11/11 exact; four presence guards; V28/V29 reuse premise established, acceptance still pending')\n",
+    "gofmt": "import json,subprocess,sys\nfrom pathlib import Path\ns=json.loads(Path(sys.argv[1]).read_text()); mode=sys.argv[2]\npaths=[f['path'] for f in s['implementation_files'] if f['path'].endswith('.go') and (mode!='baseline' or f['base_sha256']!='absent')]\nassert len(paths)==(6 if mode=='baseline' else 10)\nr=subprocess.run(['gofmt','-l',*paths],capture_output=True,text=True,timeout=60)\nprint(r.stdout,end=''); print(r.stderr,end='')\nassert r.returncode==0 and not r.stdout.strip(), 'STOP: touched Go files are not gofmt clean'\nprint('gofmt clean; no source rewrite')\n",
+    "named_tests": "import collections,json,re,subprocess,sys\nfrom pathlib import Path\ns=json.loads(Path(sys.argv[1]).read_text()); mode=sys.argv[2]\nassert mode in ('baseline','candidate')\nexpected=s['existing_neighbours'] if mode=='baseline' else s['new_test_names']+s['existing_neighbours']\n# Baseline requests the SAME complete acceptance regex; absent new names are an explicit gap.\npattern='^('+'|'.join(s['new_test_names']+s['existing_neighbours'])+')$'\ncmd=['go','test','-race','-count=1','-p','1','-parallel','1','-timeout','240s','-v','-run',pattern,'./host/daemon/','./host/broker/','./cmd/ailang-worldd/','./host/store/']\nprint('exact_test_command='+repr(cmd),flush=True)\nr=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,timeout=1100)\nprint(r.stdout,end='',flush=True)\nassert r.returncode==0, 'STOP: named gate red; report baseline or candidate failure'\npasses=re.findall(r'^--- PASS: (Test[^ ]+) ',r.stdout,re.M)\ncounts=collections.Counter(passes)\nassert set(counts)==set(expected) and all(v==1 for v in counts.values()), 'STOP: missing/duplicate named tests: '+repr(set(expected)-set(counts))\nassert not re.search(r'^--- (SKIP|FAIL):|WARNING: DATA RACE',r.stdout,re.M), 'STOP: skip/failure/race'\nif mode=='baseline':\n assert not set(s['new_test_names'])&set(counts)\n print('BASELINE: 10 existing names pass; 13 new tests ABSENT EXPECTED GAP, never a new-test pass')\nelse:\n assert len(set(s['new_test_names'])&set(counts))==13\n print('CANDIDATE: 23/23 named passes including 13/13 new; serial mutable seams')\n",
+    "reuse": "import hashlib,json,re,sys\nfrom pathlib import Path\ns=json.loads(Path(sys.argv[1]).read_text()); a=Path(sys.argv[1]).resolve().parents[3]\nfor f in s['implementation_files']:\n p=Path(f['path']); assert p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest()==f['sha256'], 'STOP: changed premise; cannot inherit empirical evidence: '+f['path']\nfor name,expected in s['reusable_evidence']['files_sha256'].items():\n assert hashlib.sha256((a/name).read_bytes()).hexdigest()==expected, 'STOP: empirical receipt changed: '+name\nsummary=json.loads((a/s['reusable_evidence']['summary_path']).read_text())\nassert summary['new_and_neighbour_race']=={'pass':17,'fail':0}\nassert summary['historical_mutants']['named']==19 and summary['historical_mutants']['killed']==18\nassert summary['historical_mutants']['survivor']=='MUT-TEMPLATES-ON-STARTUP-CLOCK'\nassert summary['revision_mutants']=={'named':14,'killed':14} and summary['restore']=='11/11 exact'\nprint('REUSE AUTHORIZED: Darwin empirical race/lifecycle + 19 historical names (18 kills, template survivor) + 14 revision kills + V29 serve-parent kill; no full-suite/Linux discharge')\n"
+  },
+  "gate_execution": {
+    "runner": "design_docs/verification/world-iter362/run.py",
+    "maximum_deadline_seconds": 1800,
+    "environment": {
+      "PATH": "/opt/homebrew/bin:$PATH",
+      "AILANG_BIN": "$HOME/.pinned-ailang/ailang",
+      "TMPDIR": "unchanged",
+      "GOTMPDIR": "unchanged"
+    },
+    "serial": true,
+    "baseline_rule": "same command/gate before candidate; new test absences are recorded gaps, never green",
+    "no_background_jobs": true,
+    "controller_full_gate_order": [
+      "STOP: observed pristine verify_go rc 1; controller reports/parks, no apply/candidate gates until a genuine rc-0 pristine baseline receipt exists",
+      "remaining pristine gates",
+      "apply-exact",
+      "focused gates",
+      "verify-go-candidate",
+      "verify-ail-candidate",
+      "independent evaluator",
+      "PR Linux CI",
+      "merge Linux CI"
+    ]
+  },
+  "reusable_evidence": {
+    "status": "conditional; not exercised by planner",
+    "all_eleven_hashes_required": true,
+    "changed_premise_action": "STOP/report; do not silently inherit or launch fresh mutation runs",
+    "summary_path": "design_docs/verification/world-iter362/controller-v28/summary.json",
+    "manifest_path": "design_docs/verification/world-iter362/prototype-manifest.json",
+    "files_sha256": {
+      "design_docs/verification/world-iter362/controller-v28/application.txt": "5dd1289814b25140b0b9c2d7b3c7b6c5bb0dc5f58c16ddabecdbf7da623b7634",
+      "design_docs/verification/world-iter362/controller-v28/final-dated-race.txt": "30eb1357f351b3c1c7a2ebea4cdad9c6015184a5c1c400ba4f1dbb2209c2a3a5",
+      "design_docs/verification/world-iter362/controller-v28/historical-console.txt": "bafbd831c9ffa772df06fd2ad2de686a42707310169a1d282835b0c3de31cff4",
+      "design_docs/verification/world-iter362/controller-v28/historical-mutation-results.txt": "63d206d6f518d5781ff6ede517d2b7c9c91b3291f5a14ae2a6cb48d43bbc90b5",
+      "design_docs/verification/world-iter362/controller-v28/historical-no-log-console.txt": "90a23e95722c1b6acaab9f7b32b7e2bfaa7899ed8708933c2f81dc6a5998f4d4",
+      "design_docs/verification/world-iter362/controller-v28/historical-no-log-repaired-results.txt": "982f41df6ec7129aee1e5b75afcc825aa02852464efe7b0cac1fe77bea8d4592",
+      "design_docs/verification/world-iter362/controller-v28/historical-no-log-repaired.py": "0ddb6611e1e7ff297b0ccf92a994690b58fbb3159dcb10206d47f9e2c89080fc",
+      "design_docs/verification/world-iter362/controller-v28/historical-runner-current-bytes.py": "069e87c9733aabe3c27b70a9f15166009be9056c2eb0117750f782908b69c5d2",
+      "design_docs/verification/world-iter362/controller-v28/historical-runner.rc": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+      "design_docs/verification/world-iter362/controller-v28/new-and-neighbour-race.txt": "62f209732070108075f5731876eab8f0f004fb13d9da9174bf5fb2079cfdca47",
+      "design_docs/verification/world-iter362/controller-v28/required-test-names.json": "adf8a214cb37bad304578e25fa60587a1dbfe2485366616a424d522246208c78",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/console.txt": "abd51a8ef01c4990c3718c6b42e1359efe1a4f4b5e2fdc5e1aef8753378bfa9a",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutate-current-outside.py": "e28b1ec4b28f68ab9deb38d0dcc001c85296ffc4a8acf8f9d6e6d9fd360a26d2",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-CONTROL.txt": "825d6e8dae0899a08cb19ce324da98e50618d1a92e443fdd33eb47395778c01d",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-CALLER-DIRECT.txt": "179b66cd44b012b7e864ffd319d5f057df9a87b7dd6833f430956696d7bf7b42",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-CALLER-IMPORTED-ALIAS.txt": "74f98d48fe360264987d8af7fd18cbb45018b00e36201cf8179e35c027752f23",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-CALLER-LOCAL-ALIAS.txt": "e9c8f801f56c80ae7cf829cf53f3ac3ff1f5e0c5b7a585ee98b0e300afa3eaa2",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-CAUSAL-OBSERVATION.txt": "ce37d7bd0b39e5f8bc2e1adfa6c8c90e14e29ac88f4760270fb5f703e6f9f996",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-DOCTOR-CAUSE.txt": "4f4435b904bb0230dec411fdec490b6f182f71a06c4f84c076bd08ef7213a587",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-DOCTOR-NO-REVIEW.txt": "cedeb6d9be01f7ca1761749ad56b39691775a13c8fe30896f82982d55b4f3989",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-FLAG-NOT-CARRIED.txt": "9d621d1c3541f561d0d70f255a22899fb36341a3ee474e33983713b5ae88c55e",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-HEALTH-NO-OMITEMPTY.txt": "0de35091d8456d73cf44241f2ab422c7c61ab0bb6ca9b7e4fe753bceaf43331f",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-LATE-NEVER-SPENT.txt": "19b4351ea6982eb151176cd9c29ea6b034db457231f0dc0657ab7184bc65ab6b",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-LATE-STILL-SERVED.txt": "ae30b4e37ded8dc2066047e84330504f1afc78384cabd42abbfe3e0ecceb1c34",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-LOG-CAUSE.txt": "2821ee59be78e62556807087ac1b9b1efc3783e67520e0fbcc155b72d82f68aa",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-PARENT-CANCEL-DETACHED.txt": "a925a33c94e37a27ee9f9a440e9177b7b071ea4c00aa387e08689cbded70154a",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-REASON-CAP-240-PREFIX.txt": "c445d083348a6264a6f867e77bc0ef725da5fa470c754fb14aa6f6529924e07c",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-SPENT-ANY.txt": "9acbb9facd6aa0db672cefcbd1ebacdb5578d2c9c6cfe6eeb35faaa9af332c95",
+      "design_docs/verification/world-iter362/controller-v28/revision-replay/mutations.json": "18ed55ec1ed4db72323c5236c7afb30cd655157d5fa81fb4530f51a216e5d10d",
+      "design_docs/verification/world-iter362/controller-v28/serve-parent-context-source.txt": "fab9b1f859558db2395a49c4536da92845ca1e33f7af4aa559574143e9e43b30",
+      "design_docs/verification/world-iter362/controller-v28/serve-parent-control.txt": "0739a3a363811a54de9d5a5f24fa2a9ac4ef527b3a9e098157b6d7f907564740",
+      "design_docs/verification/world-iter362/controller-v28/serve-parent-mutant-build.txt": "710c77724c293d511f1a62f3997f85a140f01ea465a9d7c965592b760870b36a",
+      "design_docs/verification/world-iter362/controller-v28/serve-parent-mutant.txt": "bd33ada70387193afbf87b1a1f28b8aeb5e6b73668e8e1742a0a331401c5965e",
+      "design_docs/verification/world-iter362/controller-v28/summary.json": "8c234a5f7d90d5e1fb035c903001b4b6ec2c07642d0a802b28cb616f66d121fc",
+      "design_docs/verification/world-iter362/prototype-manifest.json": "20623e2b510158e3170837c12fbafdb8534ce905fc2335338eb043c367672c4f",
+      "design_docs/verification/world-iter362/fresh-apply.txt": "410f6542e81283633064c5be8e50eeb18d10da3781323c156b79ac18a5fe16ff",
+      "design_docs/verification/world-iter362/run.py": "1b29dcb9fcc02a84a68c592291be35795e91b6a559df6250be30271081b921d2",
+      "design_docs/verification/world-iter362/baseline-build-vet.txt": "756574c1c677e3cef7b16000c9296150d4e1ad8ffb11494fcfb62dafc833c4d3",
+      "design_docs/verification/world-iter362/fresh-build-vet.txt": "29587a310456427de9da8c2c3dc6567502aea5d9db2987d8ab407638eb15dc30"
+    },
+    "discharges": [
+      "V28 seventeen named Darwin outside-sandbox race/lifecycle tests",
+      "V28 nineteen historical production mutant names: eighteen killed, known template survivor disclosed",
+      "V28 fourteen revision production mutants killed after compile controls",
+      "V29 successful serve-parent control and compiling mutation killed at health assertion",
+      "V27 independent fresh archive application plus V29 fourth presence check, conditional on candidate identity"
+    ],
+    "does_not_discharge": [
+      "candidate full verify_go in real checkout",
+      "candidate verify_ail",
+      "all six additional current-head neighbours beyond the seventeen-name V28 run",
+      "independent evaluation",
+      "PR/merge Linux plain/race CI and real Linux srt",
+      "template-clock mutant gap",
+      "real high-load startup or service/launchd end-to-end wall-time claims"
+    ]
+  },
+  "mutation_coverage": {
+    "historical": [
+      {
+        "name": "MUT-RUN-HEAD-SHAPE",
+        "production_file": "host/daemon/daemon.go",
+        "test": "TestServeStartsWhenTheProbeSpendsTheStartupClock",
+        "assertion": "Run announces instead of registry-bootstrap expiry",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-SHARED-PARENT",
+        "production_file": "host/daemon/daemon.go",
+        "test": "TestServeStartsWhenTheProbeSpendsTheStartupClock",
+        "assertion": "Run announces; T2 construction also succeeds",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-REGISTRY-UNBOUNDED",
+        "production_file": "host/daemon/daemon.go",
+        "test": "TestRegistryPhaseClockIsBounded",
+        "assertion": "1 ns clock returns registry-bootstrap deadline",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-SWEEP-ON-STARTUP-CLOCK",
+        "production_file": "host/daemon/daemon.go",
+        "test": "TestRegistryPhaseHasItsOwnClock",
+        "assertion": "integrity sweep complete with no scan hole",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-TEMPLATES-ON-STARTUP-CLOCK",
+        "production_file": "host/daemon/daemon.go",
+        "test": null,
+        "assertion": "known survivor: no interpreter archive, reportTemplates returns at d.arch == nil",
+        "observed": "survived (disclosed gap)",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-SERVE-SPENT",
+        "production_file": "host/broker/exec_startup.go",
+        "test": "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+        "assertion": "only clean profile remains served",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-SPENT-STILL-SERVED",
+        "production_file": "host/broker/exec_startup.go",
+        "test": "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+        "assertion": "only clean profile remains served",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-FAIL-NEVER-SPENT",
+        "production_file": "host/broker/exec_probe.go",
+        "test": "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+        "assertion": "failure recorded after deadline is marked spent",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-DEADLINE-UNSET",
+        "production_file": "host/broker/exec_probe.go",
+        "test": "TestServeStartsWhenTheProbeSpendsTheStartupClock",
+        "assertion": "health exclusion is flagged",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-SPENT-ANY",
+        "production_file": "host/broker/exec_probe.go",
+        "test": "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+        "assertion": "mixed recording times false",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-FLAG-NOT-CARRIED",
+        "production_file": "host/broker/exec_startup.go",
+        "test": "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+        "assertion": "excluded entry is flagged",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-HEALTH-DROPS-FLAG",
+        "production_file": "host/daemon/workspace.go",
+        "test": "TestServeStartsWhenTheProbeSpendsTheStartupClock",
+        "assertion": "health carries true flag",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-NO-LOG-LINE",
+        "production_file": "host/daemon/workspace.go",
+        "test": "TestServeStartsWhenTheProbeSpendsTheStartupClock",
+        "assertion": "startup log contains exact observation/review advice; moved anchor repaired",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-DOCTOR-NOT-CALLED",
+        "production_file": "cmd/ailang-worldd/doctor.go",
+        "test": "TestDoctorNamesLeftOutExecProfiles",
+        "assertion": "two exclusion lines and exit 13",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-DOCTOR-WARN",
+        "production_file": "cmd/ailang-worldd/doctor.go",
+        "test": "TestDoctorNamesLeftOutExecProfiles",
+        "assertion": "exec profiles line is failure mark",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-DOCTOR-CLASS",
+        "production_file": "cmd/ailang-worldd/doctor_hosts.go",
+        "test": "TestDoctorNamesLeftOutExecProfiles",
+        "assertion": "exec exit class is 13",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-DOCTOR-ONE-FIX",
+        "production_file": "cmd/ailang-worldd/doctor.go",
+        "test": "TestDoctorNamesLeftOutExecProfiles",
+        "assertion": "true and false flags have distinct conditional advice",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-REGISTRY-BUDGET-30S",
+        "production_file": "host/daemon/daemon.go",
+        "test": "TestServeStartupClocksArePinned",
+        "assertion": "registry clock is exactly 9 s",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      },
+      {
+        "name": "MUT-STARTUP-BUDGET-5S",
+        "production_file": "host/daemon/daemon.go",
+        "test": "TestServeStartupClocksArePinned",
+        "assertion": "startup clock is exactly 9 s",
+        "observed": "killed after compile control",
+        "evidence": "V28 historical replay; repaired no-log receipt where applicable; conditional reuse"
+      }
+    ],
+    "revision": [
+      {
+        "name": "MUT-LATE-NEVER-SPENT",
+        "production_file": "host/broker/exec_probe.go",
+        "test": "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+        "assertion": "late genuine refusal permits OutOfTime=true",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-SPENT-ANY",
+        "production_file": "host/broker/exec_probe.go",
+        "test": "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+        "assertion": "mixed recording times must yield false",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-LATE-STILL-SERVED",
+        "production_file": "host/broker/exec_startup.go",
+        "test": "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+        "assertion": "late refusal leaves served set empty and Only nil",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-FLAG-NOT-CARRIED",
+        "production_file": "host/broker/exec_startup.go",
+        "test": "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+        "assertion": "excluded late entry remains flagged",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-CAUSAL-OBSERVATION",
+        "production_file": "host/broker/exec_probe.go",
+        "test": "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+        "assertion": "shared diagnostic equals observation-only sentence",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-LOG-CAUSE",
+        "production_file": "host/daemon/workspace.go",
+        "test": "TestExecExclusionLogIsObservationOnly",
+        "assertion": "log preserves reason and exact observation/review advice",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-DOCTOR-CAUSE",
+        "production_file": "cmd/ailang-worldd/doctor.go",
+        "test": "TestDoctorLateRefusalObservationAndReasonCap",
+        "assertion": "late doctor detail contains observation-only text",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-DOCTOR-NO-REVIEW",
+        "production_file": "cmd/ailang-worldd/doctor.go",
+        "test": "TestDoctorLateRefusalObservationAndReasonCap",
+        "assertion": "doctor advises review before restart",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-REASON-CAP-240-PREFIX",
+        "production_file": "cmd/ailang-worldd/doctor.go",
+        "test": "TestDoctorLateRefusalObservationAndReasonCap",
+        "assertion": "one-line reason cap includes ellipsis and no 241-byte suffix",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-HEALTH-NO-OMITEMPTY",
+        "production_file": "host/daemon/daemon.go",
+        "test": "TestHealthExecExclusionIsAdditive",
+        "assertion": "false form equals exact existing JSON bytes",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-PARENT-CANCEL-DETACHED",
+        "production_file": "host/daemon/daemon.go",
+        "test": "TestRegistryPhasePreservesParentCancellation",
+        "assertion": "canceled phase parent returns registry-bootstrap cancellation",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-CALLER-IMPORTED-ALIAS",
+        "production_file": "cmd/ailang-worldd/startup_caller_mutant.go",
+        "test": "TestDaemonConstructorCallerInventory",
+        "assertion": "unreviewed production startup caller is rejected",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-CALLER-DIRECT",
+        "production_file": "cmd/ailang-worldd/startup_caller_mutant.go",
+        "test": "TestDaemonConstructorCallerInventory",
+        "assertion": "unreviewed production startup caller is rejected",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      },
+      {
+        "name": "MUT-CALLER-LOCAL-ALIAS",
+        "production_file": "host/daemon/startup_caller_mutant.go",
+        "test": "TestDaemonConstructorCallerInventory",
+        "assertion": "unreviewed production startup caller is rejected",
+        "evidence": "V28 revision replay: compile control, rc 1, exact restore; conditional reuse only"
+      }
+    ],
+    "serve_parent": {
+      "name": "MUT-SERVE-ON-STARTUP-CLOCK",
+      "production_file": "host/daemon/daemon.go",
+      "test": "TestServeStartsWhenTheProbeSpendsTheStartupClock",
+      "assertion": "announced daemon answers GET /v1/health; mutant connection refused",
+      "evidence": "V29 control rc 0, build rc 0, mutant rc 1; exact restoration; conditional reuse"
+    },
+    "policy": "Reuse exact-byte V28/V29; no planner mutation runs. Changed premise STOP. Any controller-authorized replay must prove edit, compile, named firing assertion, unmutated control and byte-exact restoration serially."
+  },
+  "remaining_obligations": [
+    {
+      "id": "BASELINE",
+      "owner": "controller",
+      "description": "Observed pristine real-checkout verify_go rc 1; report/STOP on two inherited tests. verify_ail baseline rc 0. No implementation until controller establishes a genuine green baseline without masking red.",
+      "passes": null,
+      "completed": null,
+      "observed_rc": 1,
+      "status": "blocked_preexisting_red"
+    },
+    {
+      "id": "CANDIDATE",
+      "owner": "controller",
+      "description": "Exact byte application, focused build/vet/gofmt and all 23 named tests outside sandbox",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "FULL-GO",
+      "owner": "controller",
+      "description": "VERIFY_GO_LEGS=plain ./scripts/verify_go.sh in real candidate checkout after rc-0 pristine baseline",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "FULL-AIL",
+      "owner": "controller",
+      "description": "./scripts/verify_ail.sh with fixed released AILANG_BIN",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "EVALUATION",
+      "owner": "independent evaluator",
+      "description": "Independent evaluation after controller full gates; no mutation overlap with suites",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "PR-LINUX",
+      "owner": "controller/CI",
+      "description": "PR head ailang-code verify, Linux plain host build+test, Linux race, real-srt verbose gates; missing/skipped new names never pass",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "MERGE-LINUX",
+      "owner": "controller/CI",
+      "description": "Repeat all required CI checks on merge head; do not inherit Darwin or PR-head verdict as merge verdict",
+      "passes": null,
+      "completed": null
+    }
+  ],
+  "syntax_and_examples": {
+    "ail_files_touched": 0,
+    "prompt_loading": "not applicable: no .ail authored or reviewed for syntax claims",
+    "contracts": "skip: no pure core/.ail change; Go truth tables and named mutations cover timestamp/context rules",
+    "effects": "skip: no .ail effect row; change stays in existing Go host boundary",
+    "inline_tests": "skip: no .ail demo module; thirteen real Go tests are required",
+    "usage_example": "existing docs/QUICKSTART.md profiles-directory paragraph and doctor --help updated by exact patch; existing runnable CLI quickstart unchanged, no new code block or fabricated .ail example",
+    "coverage": "named behavior and mutation obligations; no unmeasured numerical coverage percentage claimed or coverage command run"
+  },
+  "stop_conditions": [
+    "ACTIVE STOP: controller pristine full verify_go finished rc 1 at 2026-11-07T05:39:00.911689Z; TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter and TestCheckSourceUnderPinnedInterpreter fail outside frozen patch. Do not apply or run candidate gates. Planner deliverables remain reviewable; implementation is pending.",
+    "STOP: preserve current files, report BLOCKED: <specific changed premise, preexisting red, or new judgment call>, and end the run. Do not commit or dispatch; controller owns commits and routing.",
+    "Any design/patch hash mismatch, non-base/non-candidate implementation hash, partial apply, missing required file or changed empirical receipt stops reuse and execution; do not repair or regenerate the frozen patch.",
+    "Every acceptance command is baselined in a separate pristine real checkout. Any preexisting red or timeout is reported/STOP; never widen scope, change test/environment policy, seed Git history, override TMPDIR/GOTMPDIR or weaken a gate to hide it.",
+    "Baseline absence of thirteen new tests is an explicit expected feature gap, not a passed test, and is distinguished from any existing-neighbour red. Candidate missing/skip/duplicate tests stop.",
+    "Socket results inside workspace-write, green or red, are UNINFORMATIVE UNDER SANDBOX. Controller outside-sandbox rerun is required for verdicts.",
+    "Review writes outside the worktree before any outside-sandbox execution. Observe real artifacts only by sha256 and line count, absent valid, never seed/truncate. Unknown real-state writes stop; rehearse risky setup only under a synthetic root after review.",
+    "Do not run mutations or broad suites concurrently with the controller pristine baseline or each other. No background jobs, stress spinners, CPU/I/O contention experiment or parallel seam mutations.",
+    "No human-decision gates remain in row 256. D-WORLD-105 belongs to parked row 233, D-WORLD-110 to row 255. Genuine new policy/direction judgment parks with terminal STOP; helper names and evidence layout do not reopen approval."
+  ],
+  "human_decision_gates": [],
+  "planner_scope": {
+    "production_applied": false,
+    "implementation_gates_run": false,
+    "mutation_runs": false,
+    "coverage_run": false,
+    "messages_sent": false,
+    "commits_created": false,
+    "subagents_used": false,
+    "background_jobs_started": false
+  },
+  "execution_hold": {
+    "active": false,
+    "reason": "Local impossible criterion repaired explicitly per mission3e(a); comparison plus full remote green required, see controller_criterion_correction",
+    "original_hold_preserved_in": "planner-sprint-state.json",
+    "not_a_gate_pass": true
+  },
+  "controller_criterion_correction": {
+    "authority": "verification-protocol.md §3e(a)",
+    "path": "design_docs/verification/world-iter362/controller-plan-criterion-correction.md",
+    "original_state_sha256": "8fe2977e9da1e2faed9ed554d0f6458de46641652a1dc10e07e72ad4250cced8",
+    "permitted_baseline_failures": [
+      "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter",
+      "TestCheckSourceUnderPinnedInterpreter"
+    ],
+    "full_linux_ci_required": true,
+    "independent_adjudication_required": true
+  }
+}

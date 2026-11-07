@@ -1,0 +1,73 @@
+start_utc=2026-11-07T05:12:15.527194+00:00
+deadline_utc=2026-11-07T05:15:15.527194+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256
+command=python3 design_docs/verification/world-iter362/fresh_apply.py
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:12  4 users, load averages: 5.16 5.12 4.81
+
+go version go1.26.6 darwin/arm64
+
+operation_deadline_utc=2026-11-07T05:14:15.570427+00:00
+command=['git', 'rev-parse', 'HEAD']
+61a8d1c47b45fffc0f36137d29a5285c32da0145
+rc=0
+baseline_sha=61a8d1c47b45fffc0f36137d29a5285c32da0145
+revised_patch_sha256=90c6df45c6b4dcf09fd241d76eb87294f5b84d688eb9f2ff90d0eca1de09db16
+command=['git', 'init', '-q']
+rc=0
+command=['git', 'apply', '--check', '/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/planned/w-daemon-startup-under-load.patch']
+rc=0
+command=['git', 'apply', '/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/planned/w-daemon-startup-under-load.patch']
+rc=0
+command=['test', '-f', 'host/daemon/startup_under_load_test.go']
+rc=0
+PRESENCE_ASSERTED=host/daemon/startup_under_load_test.go
+command=['test', '-f', 'host/broker/exec_probe_out_of_time_test.go']
+rc=0
+PRESENCE_ASSERTED=host/broker/exec_probe_out_of_time_test.go
+command=['test', '-f', 'cmd/ailang-worldd/doctor_exec_profiles_test.go']
+rc=0
+PRESENCE_ASSERTED=cmd/ailang-worldd/doctor_exec_profiles_test.go
+applied_sha256=759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1 cmd/ailang-worldd/doctor.go
+applied_sha256=e86d3964b1c9df32e9383f2b35a2e2b3a938455248eb3018153f6ec62ae34dcb cmd/ailang-worldd/doctor_exec_profiles_test.go
+applied_sha256=e6beb0bf3ffe2751ef060d14eb234c3fb98baa63fb9c9e606e8b45c420f9fc8c cmd/ailang-worldd/doctor_hosts.go
+applied_sha256=be414d27e865c3965720ea441987a8a4a6654fe68950fc23c959d7b5e0af6f0a docs/QUICKSTART.md
+applied_sha256=e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1 host/broker/exec_probe.go
+applied_sha256=769447b26c7191ac37d6ea3deca70dfa0324498a78992012d9b306b105646e59 host/broker/exec_probe_out_of_time_test.go
+applied_sha256=8663aac66b6af14299f7af7e52c076de37afb7e2fc1c94b23e094a4417435b0d host/broker/exec_startup.go
+applied_sha256=600080956ba673dedcedbb11cdb2093668dff67b32bb258bd2a684e08498d3a9 host/daemon/daemon.go
+applied_sha256=3a92fa604a38da88d93081f2e9502860f28e122adc3d39db1ee5c402507e8094 host/daemon/startup_callers_test.go
+applied_sha256=46bb766519c9c368beba972c7a6124dc873bc671e1818a021e0c0c40517a96fb host/daemon/startup_under_load_test.go
+applied_sha256=94d4da1952fe0a6be4536c4cfb161b684c0eb2871a06ddede43624126b5bb082 host/daemon/workspace.go
+command=['git', 'apply', '--stat', '/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/planned/w-daemon-startup-under-load.patch']
+ cmd/ailang-worldd/doctor.go                    |   24 ++
+ cmd/ailang-worldd/doctor_exec_profiles_test.go |  100 ++++++++
+ cmd/ailang-worldd/doctor_hosts.go              |    2 
+ docs/QUICKSTART.md                             |    6 
+ host/broker/exec_probe.go                      |   35 ++-
+ host/broker/exec_probe_out_of_time_test.go     |  108 ++++++++
+ host/broker/exec_startup.go                    |    9 +
+ host/daemon/daemon.go                          |   64 ++++-
+ host/daemon/startup_callers_test.go            |  225 +++++++++++++++++
+ host/daemon/startup_under_load_test.go         |  314 ++++++++++++++++++++++++
+ host/daemon/workspace.go                       |   14 +
+ 11 files changed, 881 insertions(+), 20 deletions(-)
+rc=0
+command=['git', 'apply', '--numstat', '/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/planned/w-daemon-startup-under-load.patch']
+23	1	cmd/ailang-worldd/doctor.go
+100	0	cmd/ailang-worldd/doctor_exec_profiles_test.go
+1	1	cmd/ailang-worldd/doctor_hosts.go
+5	1	docs/QUICKSTART.md
+31	4	host/broker/exec_probe.go
+108	0	host/broker/exec_probe_out_of_time_test.go
+8	1	host/broker/exec_startup.go
+54	10	host/daemon/daemon.go
+225	0	host/daemon/startup_callers_test.go
+314	0	host/daemon/startup_under_load_test.go
+12	2	host/daemon/workspace.go
+rc=0
+all patched files match the measured prototype byte-exact
+rc=0
+end_utc=2026-11-07T05:12:16.754182+00:00
+ 6:12  4 users, load averages: 5.16 5.12 4.81
+

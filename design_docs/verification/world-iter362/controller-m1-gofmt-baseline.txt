@@ -1,0 +1,23 @@
+start_utc=2026-11-07T05:45:15.188297+00:00
+deadline_utc=2026-11-07T05:47:15.188297+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.base-world-iter362
+command=python3 -c 'import json,subprocess,sys
+from pathlib import Path
+s=json.loads(Path(sys.argv[1]).read_text()); mode=sys.argv[2]
+paths=[f['"'"'path'"'"'] for f in s['"'"'implementation_files'"'"'] if f['"'"'path'"'"'].endswith('"'"'.go'"'"') and (mode!='"'"'baseline'"'"' or f['"'"'base_sha256'"'"']!='"'"'absent'"'"')]
+assert len(paths)==(6 if mode=='"'"'baseline'"'"' else 10)
+r=subprocess.run(['"'"'gofmt'"'"','"'"'-l'"'"',*paths],capture_output=True,text=True,timeout=60)
+print(r.stdout,end='"'"''"'"'); print(r.stderr,end='"'"''"'"')
+assert r.returncode==0 and not r.stdout.strip(), '"'"'STOP: touched Go files are not gofmt clean'"'"'
+print('"'"'gofmt clean; no source rewrite'"'"')
+' /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/planner-sprint-state.json baseline
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:45  up 6 days, 12:04, 4 users, load averages: 2.43 4.19 5.79
+
+go version go1.26.6 darwin/arm64
+
+gofmt clean; no source rewrite
+rc=0
+end_utc=2026-11-07T05:45:15.324894+00:00
+ 6:45  up 6 days, 12:04, 4 users, load averages: 2.43 4.19 5.79
+

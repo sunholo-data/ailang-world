@@ -1,0 +1,1 @@
+Actual executor CLI rc 0; probe rc 0. Both process groups absent after bounded TERM/KILL cleanup. No role-owned background jobs. Controller owns any subsequently running candidate gates.

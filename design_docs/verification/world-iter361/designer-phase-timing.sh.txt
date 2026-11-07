@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# iter-361 designer: time each phase of HEAD's New on this rig with the home
+# service's REAL flags (real srt, node, both pinned ~100 MB binaries, the five
+# home exec profiles) but a SCRATCH store, credentials db and workspace root.
+# The binary is HEAD (61a8d1c4) plus PhaseMark lines only (instrumentation copy,
+# never shipped). The home store is only read once, by cp, for a realistic
+# registry head; the home service is never touched.
+set -u
+S=/Users/voightkampff/dev/sunholo-data/.wt-world-iter361-row256/.design-scratch
+RUN=$S/run; BIN=$S/worldd-instr
+label=$1
+mkdir -p $RUN/ws
+[ -f $RUN/world.db ] || cp ~/.ailang/world/world.db $RUN/world.db
+echo "== $label  $(date -u +%FT%TZ)  $(uptime | sed 's/.*load/load/')"
+start=$(python3 -c 'import time;print(time.time())')
+$BIN serve --db $RUN/world.db --credentials-db $RUN/credentials.db --bind 127.0.0.1:0 \
+  --ailang-bin ~/.pinned-ailang/ailang --workspace-root $RUN/ws \
+  --tool-ailang-bin ~/.pinned-ailang-tools/v0.54.15/ailang \
+  --exec-sandbox ~/.ailang-world-exec/srt/node_modules \
+  --exec-profiles-dir ~/.ailang-world-exec/profiles --exec-node /opt/homebrew/bin/node \
+  > $RUN/$label.out 2>&1 &
+pid=$!
+for i in $(seq 1 600); do
+  if grep -q 'listening on\|daemon startup failed' $RUN/$label.out 2>/dev/null; then break; fi
+  sleep 0.1
+done
+end=$(python3 -c 'import time;print(time.time())')
+kill $pid 2>/dev/null; wait $pid 2>/dev/null
+grep -E '^PHASE|listening|left out|startup failed' $RUN/$label.out | cut -c1-260
+python3 -c "print('wall to listen line: %.0f ms' % (($end-$start)*1000))"

@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# iter-361 designer: premise readings at the base commit, each negative paired
+# with a positive control in the same command. Run from the worktree root.
+set -u
+B=61a8d1c4
+g() { git show $B:"$1" | grep -n "$2"; }
+echo "== base"; git rev-parse --short HEAD; git rev-parse --short $B
+echo; echo "== P1 one startup clock wraps the whole of New (daemon.go)"
+g host/daemon/daemon.go 'func startBounded\|context.WithTimeout(ctx, budget)\|startBounded(ctx, cfg, 9\*time.Second, New)'
+echo; echo "== P2 New's order: configureRunCaps, configureExec, interpreter archive, bootstrapRegistry, templates, sweep (all on ctx)"
+g host/daemon/daemon.go 'archiveToolBinary(archive.New\|workspace.configureRunCaps(ctx\|workspace.configureExec(ctx\|a.Archive(cfg.AilangBin)\|d.bootstrapRegistry(ctx, release)\|d.reportTemplates(ctx)\|d.scanIntegrity(ctx)'
+echo; echo "== P3 a deadline in bootstrap -> abortBudget(StageRegistry)"
+g host/daemon/daemon.go 'errors.Is(ctx.Err(), context.DeadlineExceeded)\|return d.abortBudget(StageRegistry'
+echo; echo "== P4 a probe run clamps to the ctx deadline and reads 'the startup budget is spent'"
+g host/broker/exec_probe.go 'budget = min(budget, time.Until(dl))\|the startup budget is spent\|const execProbeRunBudget'
+echo; echo "== P5 a failed directory profile is left out with errs[i].Error(); a failed --exec-profile refuses startup"
+g host/broker/exec_startup.go 'errors.Join(errs\[:flagged\]...)\|Reason: errs\[i\].Error()\|delete(st.Profiles, p.Project)'
+echo; echo "== P6 the probe is not cause-typed: no BudgetSpent/spent anywhere in host/ (control: Reason in exec_startup.go)"
+echo -n "BudgetSpent|spent bool in host/*.go at base: "; git grep -c 'BudgetSpent\|spent bool' $B -- 'host/*.go' | wc -l
+echo -n "control Reason: in exec_startup.go: "; git show $B:host/broker/exec_startup.go | grep -c 'Reason'
+echo; echo "== P7 /v1/health already carries exec_profiles_excluded (daemon.go), filled from healthProfiles"
+g host/daemon/daemon.go 'exec_profiles_excluded\|body.ExecProfiles, body.ExecProfilesExcluded = d.workspace.healthProfiles()'
+echo; echo "== P8 doctor never reads it (cmd/ailang-worldd/doctor*.go), control: exec_tool_status in the same files"
+echo -n "excluded|exec_profiles|ExecProfilesExcluded in doctor*.go: "; git grep -ic 'excluded\|exec_profiles\|ExecProfilesExcluded' $B -- 'cmd/ailang-worldd/doctor*.go' | awk -F: '{s+=$NF} END {print s+0}'
+echo -n "control exec_tool_status|ExecToolStatus in doctor*.go: "; git grep -c 'exec_tool_status\|ExecToolStatus' $B -- 'cmd/ailang-worldd/doctor*.go' | awk -F: '{s+=$NF} END {print s+0}'
+echo; echo "== P9 candidate 4: the refusal and its CALLERS (non-test)"
+git grep -n 'ExecProfileNotLoadedRefusal(\|w.exec.profileFor(\|return broker.ExecRefusalHandler{Why: why}' $B -- 'host/*.go' | grep -v _test.go
+echo "test pinning it:"; git grep -n 'strings.Contains(why, "left out")' $B -- 'host/daemon/*_test.go'
+echo; echo "== P10 the bind-time 10 s is a different budget (workspace.go)"
+g host/daemon/workspace.go 'workspaceHandlerBudget = \|runCapsStartupBudget = \|context.WithTimeout(context.Background(), workspaceHandlerBudget)\|context.WithTimeout(parent, runCapsStartupBudget)'
+g host/broker/handlers.go 'handler subprocess timed out after'
+echo; echo "== P11 service start's 30 s health wait and the home plist"
+g cmd/ailang-worldd/service.go 'wait: 30 \* time.Second\|within 30 s; service stopped\|end := time.Now().Add(e.wait)'
+plutil -p ~/Library/LaunchAgents/com.sunholo.ailang-world.worldd.plist | grep -E 'KeepAlive|ThrottleInterval|exec-profiles-dir|ailang-bin'
+echo; echo "== P12 the archive step has no ctx (its only timeout is --version's)"
+g host/archive/archive.go 'func (a \*Archive) Archive(execPath string)\|const probeTimeout\|io.Copy(tmp, io.TeeReader(src, hasher))'
+echo; echo "== P13 the home log, 2026-11-03 (read only): the first arm of every profile already found the budget spent"
+grep -c 'left out: exec startup probe failed' ~/Library/Logs/ailang-world/worldd.log
+grep 'left out: exec startup probe failed' ~/Library/Logs/ailang-world/worldd.log | sed -E 's/.*profile "([^"]+)" \(([0-9]+) of 7 arms\): arm1-write-inside: ([^;]*;).*/\1 \2-of-7 arm1: \3/' | cut -c1-200
+grep -n 'daemon startup failed at registry-bootstrap\|workspace tools unavailable' ~/Library/Logs/ailang-world/worldd.log | cut -c1-220
+echo; echo "== P14 context-root census: no new Background/WithoutCancel root is needed (pins live in host/store)"
+git show $B:host/store/context_roots_test.go | grep -n 'host/daemon/daemon.go|'

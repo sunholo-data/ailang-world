@@ -1,0 +1,13 @@
+start_utc=2026-11-07T05:04:13.126501+00:00
+deadline_utc=2026-11-07T05:08:13.126501+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/fresh
+command=/bin/bash -c 'go build ./... && go vet ./host/broker/ ./host/daemon/ ./cmd/ailang-worldd/ && test -z "$(gofmt -l host cmd)"'
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:04  4 users, load averages: 5.68 7.31 5.22
+
+go version go1.26.6 darwin/arm64
+
+rc=0
+end_utc=2026-11-07T05:04:15.957033+00:00
+ 6:04  4 users, load averages: 6.51 7.46 5.29
+

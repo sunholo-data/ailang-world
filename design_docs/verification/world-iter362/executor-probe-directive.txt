@@ -1,0 +1,2 @@
+MISSION-ROLE: executor
+Provider-pin probe only for codex:gpt-6.1-sol. Perform no tools, edits, implementation, delegation, dispatch, commits, or background work. This probe checks actual model availability before a separate bounded implementation invocation. Reply only EXECUTOR_PROBE_OK.

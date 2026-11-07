@@ -1,0 +1,225 @@
+start_utc=2026-11-07T05:14:09.633748+00:00
+deadline_utc=2026-11-07T05:16:09.633748+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256
+command=python3 design_docs/verification/world-iter362/premises.py
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:14  4 users, load averages: 2.89 4.37 4.56
+
+go version go1.26.6 darwin/arm64
+
+SOURCE base/host/daemon/daemon.go:140-154
+140: 	// It must stay well below writeTimeout: the 503 must be writable inside the
+141: 	// connection's remaining write window. At 10 s against a 30 s writeTimeout,
+142: 	// a read that consumes the whole deadline still leaves 20 s to write the
+143: 	// error. TestBoundedWaitsAndBodyLimit pins the literal.
+144: 	readDeadline = 10 * time.Second
+145: 
+146: 	// commitBudget bounds POST /v1/commit's store work: connection acquisition
+147: 	// and every statement up to the cancellation cutoff (row 23 bound table B6,
+148: 	// ratified D-WORLD-40: busy_timeout + 1 s). Expiry before the cutoff is 503
+149: 	// Timeout (not committed); after it, 503 CommitUncertain (reconcile).
+150: 	commitBudget = 3 * time.Second
+151: 
+152: 	// credentialBudget bounds the session middleware's credential lookup
+153: 	// (row 23 bound table B4, ratified D-WORLD-40). Expiry is 503 Timeout,
+154: 	// never 401: a timeout is not an authentication failure.
+SOURCE base/host/daemon/daemon.go:607-652
+607: // HealthResponse is the GET /v1/health body: daemon version, db path and the
+608: // archived-interpreter HashRef + verbatim `ailang --version` recorded in the
+609: // archive manifest (frozen route table, Decision 3).
+610: // TestFrozenV1RouteTableMatchesMux and TestDaemonDependencyAllowlist: additive health data only.
+611: type HealthResponse struct {
+612: 	StartedAt      int64                            `json:"started_at"`
+613: 	Supervisor     string                           `json:"supervisor"`
+614: 	Active         HealthActive                     `json:"active"`
+615: 	ExecTools      map[string]string                `json:"exec_tools"`
+616: 	ExecToolStatus map[string]broker.ExecToolStatus `json:"exec_tool_status,omitempty"`
+617: 	Status         string                           `json:"status"`
+618: 	// DaemonVersion is this package's Version.
+619: 	DaemonVersion string `json:"daemon_version"`
+620: 	// DBPath is the configured store database path.
+621: 	DBPath string `json:"db_path"`
+622: 	// InterpreterRef is the archived interpreter's canonical "algo:digest", or
+623: 	// "" when serve was started without --ailang-bin.
+624: 	InterpreterRef string `json:"interpreter_ref"`
+625: 	// InterpreterVersion is the verbatim `ailang --version` STDOUT captured in
+626: 	// the archive manifest, or "" when no interpreter was archived. STDOUT
+627: 	// specifically: the archive probe captures the two streams separately so
+628: 	// interpreter chatter on stderr never becomes part of a content-addressed
+629: 	// artifact's recorded identity, nor of the epoch-registry candidate
+630: 	// releaseFromVersion derives from this same string.
+631: 	InterpreterVersion string `json:"interpreter_version"`
+632: 	// DegradedEpisodes (row 185) names, in lexical order, each episode
+633: 	// directory under --workspace-root that is not a git worktree: one
+634: 	// `session new --allow-non-git` adopted. Absent when there is none, or
+635: 	// when serve has no --workspace-root, so the body is otherwise unchanged.
+636: 	DegradedEpisodes []string `json:"degraded_episodes,omitempty"`
+637: 
+638: 	// Row 189 M3 (AC3): what `episode start` compares before it mints.
+639: 	// Build is this daemon binary's build identity (build.go).
+640: 	Build BuildIdentity `json:"build"`
+641: 	// ToolRef is the archived workspace tool binary's "sha256:<hex>"
+642: 	// (--tool-ailang-bin), "" when serve has none.
+643: 	ToolRef string `json:"tool_ref"`
+644: 	// CredentialsDB is the credentials store this daemon resolves sessions
+645: 	// from: a mint into any other file is invisible to it.
+646: 	CredentialsDB string `json:"credentials_db"`
+647: 	// ExecProfiles are the loaded exec profiles with their digests, by
+648: 	// project; ExecProfilesExcluded the profiles directory's left-out ones
+649: 	// with the reason (row 189 M2).
+650: 	ExecProfiles         []HealthExecProfile   `json:"exec_profiles"`
+651: 	ExecProfilesExcluded []HealthExecExclusion `json:"exec_profiles_excluded,omitempty"`
+652: }
+SOURCE base/host/daemon/daemon.go:1271-1289
+1271: //
+1272: // The announcement is written AFTER the socket is bound and BEFORE serving, so
+1273: // a caller that reads the line is guaranteed the port is already accepting.
+1274: // Run returns a non-nil error when the drain did not finish, so the process can
+1275: // exit non-zero on an incomplete shutdown.
+1276: func startBounded(ctx context.Context, cfg Config, budget time.Duration, construct func(context.Context, Config) (*Daemon, error)) (*Daemon, error) {
+1277: 	startupCtx, cancel := context.WithTimeout(ctx, budget)
+1278: 	defer cancel()
+1279: 	return construct(startupCtx, cfg)
+1280: }
+1281: 
+1282: func Run(ctx context.Context, cfg Config, announce io.Writer) error {
+1283: 	_ = CurrentBuild() // Freeze executable bytes before any listener accepts.
+1284: 	d, err := startBounded(ctx, cfg, 9*time.Second, New)
+1285: 	if err != nil {
+1286: 		return err
+1287: 	}
+1288: 	defer func() { _ = d.Close() }()
+1289: 
+SOURCE base/host/daemon/daemon_test.go:205-245
+205: // The named constants are themselves pinned against the D7 table, so editing a
+206: // constant to match a drifted server (or vice versa) still turns this red.
+207: func TestBoundedWaitsAndBodyLimit(t *testing.T) {
+208: 	// The D7 table (design_docs/planned/w-worldd-m2.md, Decision 7), restated
+209: 	// as literals so the constants cannot be silently retuned.
+210: 	t.Run("constants match the D7 table", func(t *testing.T) {
+211: 		for _, c := range []struct {
+212: 			name string
+213: 			got  time.Duration
+214: 			want time.Duration
+215: 		}{
+216: 			{"readHeaderTimeout", readHeaderTimeout, 5 * time.Second},
+217: 			{"readTimeout", readTimeout, 30 * time.Second},
+218: 			{"writeTimeout", writeTimeout, 30 * time.Second},
+219: 			{"idleTimeout", idleTimeout, 120 * time.Second},
+220: 			{"defaultClientTimeout", defaultClientTimeout, 30 * time.Second},
+221: 			{"shutdownTimeout", shutdownTimeout, 10 * time.Second},
+222: 			// D7 addendum (w-daemon-read-cancellation): the elapsed-time bound
+223: 			// on every store read a GET handler performs. The four http.Server
+224: 			// timeouts above bound the transport; this one bounds the wait
+225: 			// below it, inside database/sql.
+226: 			{"readDeadline", readDeadline, 10 * time.Second},
+227: 			// Row 23 bound table B6 (ratified D-WORLD-40).
+228: 			{"commitBudget", commitBudget, 3 * time.Second},
+229: 			// Row 23 bound table B4 (ratified D-WORLD-40).
+230: 			{"credentialBudget", credentialBudget, 3 * time.Second},
+231: 		} {
+232: 			if c.got != c.want {
+233: 				t.Errorf("%s = %s, want %s (D7 table)", c.name, c.got, c.want)
+234: 			}
+235: 		}
+236: 		if DefaultClientTimeout != defaultClientTimeout {
+237: 			t.Errorf("DefaultClientTimeout = %s, want %s — the CLI must not carry a second deadline",
+238: 				DefaultClientTimeout, defaultClientTimeout)
+239: 		}
+240: 		// The read deadline must stay well below WriteTimeout: a read that
+241: 		// consumes the whole deadline still has to be able to WRITE its 503
+242: 		// inside the connection's write window. Asserted as an inequality, not
+243: 		// a literal, so retuning either constant into an unwritable combination
+244: 		// reds here rather than in production.
+245: 		if readDeadline >= writeTimeout {
+SOURCE base/cmd/ailang-worldd/mcpclient.go:659-666
+659: func oneLine(s string, n int) string {
+660: 	s = strings.Join(strings.Fields(s), " ")
+661: 	if len(s) > n {
+662: 		return strings.ToValidUTF8(s[:n], "") + "…"
+663: 	}
+664: 	return s
+665: }
+SOURCE fresh/cmd/ailang-worldd/doctor.go:348-368
+348: // doctorExecProfiles names each exec profile the daemon left out at startup
+349: // (row 256): its exec calls refuse, so it is a failure. Timestamps establish
+350: // no cause: review the reasons even when every failure was recorded late.
+351: func doctorExecProfiles(r *doctorReport, excluded []daemon.HealthExecExclusion) {
+352: 	for _, x := range excluded {
+353: 		detail := fmt.Sprintf("%s (%s) was left out at startup: %s", x.Project, x.File, oneLine(x.Reason, 240-len("…")))
+354: 		fix := "review " + x.File + " and the failure reasons; correct the profile if needed, then restart World if appropriate (ailang-worldd service stop, then service start; or restart serve)"
+355: 		if x.OutOfTime {
+356: 			detail = fmt.Sprintf("%s (%s) was left out at startup: %s Reason: %s",
+357: 				x.Project, x.File, broker.ExecProbeDeadlineObservation, oneLine(x.Reason, 240-len("…")))
+358: 			fix = "Review the failure reasons and restart World if appropriate (ailang-worldd service stop, then service start; or restart serve)"
+359: 		}
+360: 		r.add(markFail, "exec profiles", detail, fix)
+361: 	}
+362: }
+363: 
+364: func firstLine(s string) string {
+365: 	s, _, _ = strings.Cut(strings.TrimSpace(s), "\n")
+366: 	return s
+367: }
+368: 
+SOURCE base/host/daemon/context_thread_test.go:1-43
+1: package daemon
+2: 
+3: import (
+4: 	"context"
+5: 	"errors"
+6: 	"io"
+7: 	"path/filepath"
+8: 	"testing"
+9: )
+10: 
+11: func TestStartupCallerCancellation(t *testing.T) {
+12: 	for _, viaRun := range []bool{false, true} {
+13: 		t.Run(map[bool]string{false: "New", true: "Run"}[viaRun], func(t *testing.T) {
+14: 			cfg := Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost}
+15: 			ctx, cancel := context.WithCancel(boundedTestContext(t))
+16: 			cancel()
+17: 			var err error
+18: 			if viaRun {
+19: 				err = Run(ctx, cfg, io.Discard)
+20: 			} else {
+21: 				var d *Daemon
+22: 				d, err = New(ctx, cfg)
+23: 				if d != nil {
+24: 					d.Close()
+25: 				}
+26: 			}
+27: 			var se *StartupError
+28: 			if !errors.Is(err, context.Canceled) || !errors.As(err, &se) || se.Stage != StageRegistry {
+29: 				t.Fatalf("startup must observe cancelled ctx at registry: %v", err)
+30: 			}
+31: 			d, err := New(boundedTestContext(t), cfg)
+32: 			if err != nil {
+33: 				t.Fatalf("live control/released writer: %v", err)
+34: 			}
+35: 			d.Close()
+36: 		})
+37: 	}
+38: }
+base new test presence={'host/daemon/startup_under_load_test.go': False, 'host/broker/exec_probe_out_of_time_test.go': False, 'cmd/ailang-worldd/doctor_exec_profiles_test.go': False, 'host/daemon/startup_callers_test.go': False}
+fresh new test presence={'host/daemon/startup_under_load_test.go': True, 'host/broker/exec_probe_out_of_time_test.go': True, 'cmd/ailang-worldd/doctor_exec_profiles_test.go': True, 'host/daemon/startup_callers_test.go': True}
+fresh/host/daemon/startup_under_load_test.go: t.Parallel occurrences=0; t.Run control=1
+fresh/host/broker/exec_probe_out_of_time_test.go: t.Parallel occurrences=0; t.Run control=0
+fresh/cmd/ailang-worldd/doctor_exec_profiles_test.go: t.Parallel occurrences=0; t.Run control=0
+fresh/host/daemon/startup_callers_test.go: t.Parallel occurrences=0; t.Run control=0
+PATCH_PATH=cmd/ailang-worldd/doctor.go
+PATCH_PATH=cmd/ailang-worldd/doctor_exec_profiles_test.go
+PATCH_PATH=cmd/ailang-worldd/doctor_hosts.go
+PATCH_PATH=docs/QUICKSTART.md
+PATCH_PATH=host/broker/exec_probe.go
+PATCH_PATH=host/broker/exec_probe_out_of_time_test.go
+PATCH_PATH=host/broker/exec_startup.go
+PATCH_PATH=host/daemon/daemon.go
+PATCH_PATH=host/daemon/startup_callers_test.go
+PATCH_PATH=host/daemon/startup_under_load_test.go
+PATCH_PATH=host/daemon/workspace.go
+patch scope: 10 Go files, QUICKSTART only; no .ail, frozen machinery, row255 record/handler, row257 seed files
+rc=0
+end_utc=2026-11-07T05:14:09.678487+00:00
+ 6:14  4 users, load averages: 2.89 4.37 4.56
+

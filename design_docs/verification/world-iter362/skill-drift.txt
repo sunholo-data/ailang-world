@@ -1,0 +1,21 @@
+Running skill source: /Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control
+Driver source /Users/voightkampff/dev/sunholo-data/ailang
+Driver root /Users/voightkampff/.ailang-driver-pin/world
+Fetch performed before comparisons.
+Source origin/dev: a3bb8629106a4b8459df5aa33f867b4ed4dd84a5
+MATCH SKILL.md
+MATCH ci-health.md
+MATCH codex-lane-false-greens.md
+MATCH gate-0-preflight.md
+MATCH gate-1-observe.md
+MATCH gate-2-pick.md
+MATCH gate-3-route.md
+MATCH gate-3-triage.md
+MATCH gate-3b-ci-green.md
+MATCH gate-4-record.md
+MATCH gate-5-retro.md
+MATCH ref-drift.md
+MATCH role-spawn-routing.md
+MATCH verification-protocol.md
+negative mismatch control fired
+CWD-local skill absent (no copy). Resolved source governs all reads.

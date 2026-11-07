@@ -1,0 +1,21 @@
+{
+  "base": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+  "gate_running": false,
+  "observed_failures_so_far": [
+    "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter",
+    "TestCheckSourceUnderPinnedInterpreter"
+  ],
+  "condition": "pinned interpreter emits trace exporter deprecation warning; archive.outputHead caps at400bytes, LDR001 absent from retained diagnostic",
+  "code_scope": "host/archive/check.go and cmd/world-publish/transitions_test.go unchanged by row256 patch",
+  "ailang_gate": "baseline-verify-ail-real.txt rc0",
+  "environment_modified": false,
+  "rc": 1,
+  "observed_failures": [
+    "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter",
+    "TestCheckSourceUnderPinnedInterpreter"
+  ],
+  "failed_packages": [
+    "github.com/sunholo-data/ailang-world/cmd/world-publish",
+    "github.com/sunholo-data/ailang-world/host/archive"
+  ]
+}

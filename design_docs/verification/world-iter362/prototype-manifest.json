@@ -1,0 +1,57 @@
+[
+  {
+    "path": "cmd/ailang-worldd/doctor.go",
+    "sha256": "759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1",
+    "lines": 538
+  },
+  {
+    "path": "cmd/ailang-worldd/doctor_exec_profiles_test.go",
+    "sha256": "e86d3964b1c9df32e9383f2b35a2e2b3a938455248eb3018153f6ec62ae34dcb",
+    "lines": 100
+  },
+  {
+    "path": "cmd/ailang-worldd/doctor_hosts.go",
+    "sha256": "e6beb0bf3ffe2751ef060d14eb234c3fb98baa63fb9c9e606e8b45c420f9fc8c",
+    "lines": 264
+  },
+  {
+    "path": "docs/QUICKSTART.md",
+    "sha256": "be414d27e865c3965720ea441987a8a4a6654fe68950fc23c959d7b5e0af6f0a",
+    "lines": 1771
+  },
+  {
+    "path": "host/broker/exec_probe.go",
+    "sha256": "e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1",
+    "lines": 1129
+  },
+  {
+    "path": "host/broker/exec_probe_out_of_time_test.go",
+    "sha256": "769447b26c7191ac37d6ea3deca70dfa0324498a78992012d9b306b105646e59",
+    "lines": 108
+  },
+  {
+    "path": "host/broker/exec_startup.go",
+    "sha256": "8663aac66b6af14299f7af7e52c076de37afb7e2fc1c94b23e094a4417435b0d",
+    "lines": 690
+  },
+  {
+    "path": "host/daemon/daemon.go",
+    "sha256": "600080956ba673dedcedbb11cdb2093668dff67b32bb258bd2a684e08498d3a9",
+    "lines": 1410
+  },
+  {
+    "path": "host/daemon/startup_callers_test.go",
+    "sha256": "3a92fa604a38da88d93081f2e9502860f28e122adc3d39db1ee5c402507e8094",
+    "lines": 225
+  },
+  {
+    "path": "host/daemon/startup_under_load_test.go",
+    "sha256": "46bb766519c9c368beba972c7a6124dc873bc671e1818a021e0c0c40517a96fb",
+    "lines": 314
+  },
+  {
+    "path": "host/daemon/workspace.go",
+    "sha256": "94d4da1952fe0a6be4536c4cfb161b684c0eb2871a06ddede43624126b5bb082",
+    "lines": 802
+  }
+]

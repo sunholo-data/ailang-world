@@ -1,0 +1,8 @@
+== run 2026-11-07T05:26:25Z  tree=/Users/voightkampff/dev/sunholo-data/.probe-world-iter362-quorum  load=(9.515625, 8.77880859375, 6.73876953125)
+CONTROL: explicit go build rc=0
+CONTROL: rc=0 pass=15 red=- expected=- missing=-  MATCH (8s)
+    |     context_roots_test.go:201: root references: Background=37 TODO=0 WithoutCancel=5
+    |     context_roots_test.go:205: root census: 40 named roots, 217 production files
+MUT-NO-LOG-LINE: explicit go build rc=0
+MUT-NO-LOG-LINE: rc=1 pass=14 red=Serve expected=Serve missing=-  MATCH (12s)
+== done: 2 MATCH, 0 MISMATCH

@@ -1,0 +1,4 @@
+design-quorum: author codex:gpt-6.1-sol — seated oc-kimi-k3,gemini-4-argon,oc-glm-5-3; reserve none; sitting out none
+models registry: source=embedded version=0d042f9b179e6355
+GOOGLE_CLOUD_LOCATION is unset; using deprecated default global. Set GOOGLE_CLOUD_LOCATION. v1.0.0 will refuse to start without it.
+quorum artifact: /Users/voightkampff/.ailang/state/mission-quorum-world/w-daemon-startup-under-load-2026-11-07T05-17-29Z.json
