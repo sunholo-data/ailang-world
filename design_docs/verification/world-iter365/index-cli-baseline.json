@@ -1,0 +1,17 @@
+{
+  "at_utc": "2026-11-07T17:01:30.128007+00:00",
+  "argv": [
+    "ailang",
+    "mission",
+    "rotate-log",
+    "world",
+    "--index-only"
+  ],
+  "ephemeral_registry": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-registry-baseline-6n6u3z9x",
+  "target": "/Users/voightkampff/dev/sunholo-data/.base-world-iter365",
+  "rc": 1,
+  "stdout": "",
+  "stderr": "Error: AILANG_MISSION_REGISTRY: /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-registry-baseline-6n6u3z9x/world.toml: schedule.mode is required (\"keepalive\" or \"interval\")\n",
+  "index_byte_identical": true,
+  "base_porcelain": ""
+}
