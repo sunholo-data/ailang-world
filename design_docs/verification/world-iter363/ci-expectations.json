@@ -1,0 +1,16 @@
+{
+  "workflow": "CI",
+  "workflow_path": ".github/workflows/ci.yml",
+  "expected_checks": [
+    "ailang-code verify gate",
+    "go host build + test gate",
+    "go race gate (go test -race, own job)"
+  ],
+  "workflow_jobs": [
+    "ailang-verify",
+    "go-verify",
+    "go-race-verify"
+  ],
+  "non_vacuity_floor": 3,
+  "required": "each expected check completed success on exact40char PR head and merge SHA; no product PR515 landing"
+}

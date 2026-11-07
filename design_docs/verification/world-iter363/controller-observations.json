@@ -1,0 +1,236 @@
+{
+  "ledger": {
+    "command": [
+      "bash",
+      "scripts/mission_decisions.sh",
+      "--check",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "stdout": "decision ledger valid: 99 rows\n",
+    "stderr": ""
+  },
+  "open": {
+    "command": [
+      "bash",
+      "scripts/mission_decisions.sh",
+      "--open",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "stdout": "D-WORLD-105\tOPEN\t**Row 233 (`w-exec-probe-holder-exit-reset`) parked after quorum r2: should World excuse a reverse-leg reset that closely follows a foreign answer, inside the fail-closed exec probe?** The design (r1) turns a sticky startup refusal into a retry when srt's mux, colliding on the probe port, exits mid-poll. Measured under load on Linux with real srt this happens in 49\u201354 of 100 collided cycles (collisions themselves are rare: one CI instance on record). `gpt6-1-sol` rejects: the safety proof needs \"a reachable child never resets a connection before its listener closes\", which is unmeasured on darwin and on Linux rests on an unenforced kernel setting; a wrong premise could let a broken sandbox pass on a later attempt. **A:** build r1 plus kimi's verbatim wiring fix (a testable `reverseLeg` seam and T13) and accept gpt's premise as a documented residual. Startup survives mux collisions; a small, unmeasured soundness risk in a security gate. **B:** before building, the loop measures the pre-close-reset premise on darwin and Linux (listen-queue overflow, accepted-socket teardown) and designs enforcement, then re-quorums. Probably several iterations; the outcome may still be no. **C (recommended):** close row 233 for 1.0 and keep today's behaviour: a mux collision refuses startup (fails closed) and the operator retries. The gate's soundness outranks availability on a rare event; the design and measurements stay as reference. **Default while unanswered:** C (nothing is built; row 233 stays PARKED).\nD-WORLD-110\tOPEN\t**Row 255's compatibility policy: may a store that holds a failure line refuse older World binaries, and must the read verbs match the daemon's build?** Row 255 records a failed `workspace-exec` call's reason in a new optional `failure` field on `world/effect-record/v1`. Every pre-change binary decodes records strictly, so none can read a record that has the field, and no carrier exists that old readers tolerate (the record law rules out reusing `denial` or `resultRef`). As built, just before the first such record the store's schema version is raised from 5 to 6, so an older binary refuses the store cleanly at open. A failed raise returns a write error and writes no record. No written store-compatibility or rollback policy exists in the charter, DESIGN.md, coding-standards or docs (measured), so the loop asks rather than asserts. **A (recommended):** ratify as built. After a store's first failure line, a `service upgrade` rollback to a build from before row 255 stops the service with `schema version future \u2026 use a compatible binary` instead of serving. An older `why` or `call` pointed at a newer daemon marks that one effect link \u2717, naming the unknown field. **B:** A, plus a new row making `why` and `call` refuse a daemon of a different build, as `episode start` already does (`episode.go:330`). That makes a mixed install fail loudly up front, at the cost of one more build check on every read verb. **C:** revert row 255's record field before the next release. Failed exec calls go back to recording no reason, and the 2026-11-03 failure class stays unattributable. **Default while unanswered: A** (it is what `dev` holds after row 255 lands).\nD-WORLD-111\tOPEN\t**Row 256 is implemented but independent judge FAIL 85: should its local validation contract be retained or explicitly redesigned before resuming?** Both candidate full suites have additional failures beyond two permitted baseline diagnostic failures. The filter failure reproduces at base; publish counter and net6 remain unattributed. **A:** retain the exact-two-failures criterion and keep PR #515 parked until it is met. No source or gate change. **B (recommended):** authorize a subsequent iteration to specify and independently judge an attribution-based criterion: every additional failure must reproduce at the pinned base under paired same-environment arms (at least 100 each), or receive a causal in-scope repair; unmeasured or candidate-only failures still block. Existing full runs remain evidence and Linux PR/merge CI remains required. This is permission to design/measure, not to waive a failure or merge. **Default while unanswered: A**, effective now; row 256 remains needs-human-review and later dependent rows wait.\nD-WORLD-112\tOPEN\t**Rotate/revoke the six credentials actually exposed by the evaluator's environment command?** Affected names: ZAI_API_KEY, TYPESAFE_API_KEY, LYCEUM_API_KEY, OLLAMA_API_KEY, GOOGLE_API_KEY, GEMINI_AGENTS_API_KEY. **A (recommended):** perform attended rotation/revocation and update authoritative vault entries and consumers; invalidates any exposed values but requires provider access. **B:** retain current credentials and explicitly accept possible OpenRouter/MiniMax exposure. **Default while unanswered:** no autonomous credential change; incident stays OPEN immediately and product work remains parked. Stored artifacts have been sanitized, which does not undo provider exposure.\n",
+    "stderr": ""
+  },
+  "dev-checks": {
+    "command": [
+      "gh",
+      "api",
+      "repos/sunholo-data/ailang-world/commits/565609ab51c9300924831087aa98308dcdd418b0/check-runs",
+      "--jq",
+      "{total_count,checks:[.check_runs[]|{name,status,conclusion}]}"
+    ],
+    "rc": 0,
+    "stdout": "{\"checks\":[{\"conclusion\":\"success\",\"name\":\"go host build + test gate\",\"status\":\"completed\"},{\"conclusion\":\"success\",\"name\":\"go race gate (go test -race, own job)\",\"status\":\"completed\"},{\"conclusion\":\"success\",\"name\":\"ailang-code verify gate\",\"status\":\"completed\"}],\"total_count\":3}\n",
+    "stderr": ""
+  },
+  "dev-CI": {
+    "command": [
+      "gh",
+      "run",
+      "list",
+      "-R",
+      "sunholo-data/ailang-world",
+      "--workflow",
+      "CI",
+      "--branch",
+      "dev",
+      "--limit",
+      "1",
+      "--json",
+      "conclusion,status,headSha,databaseId"
+    ],
+    "rc": 0,
+    "stdout": "[{\"conclusion\":\"success\",\"databaseId\":42349328842,\"headSha\":\"565609ab51c9300924831087aa98308dcdd418b0\",\"status\":\"completed\"}]\n",
+    "stderr": ""
+  },
+  "product-pr": {
+    "command": [
+      "gh",
+      "pr",
+      "view",
+      "515",
+      "-R",
+      "sunholo-data/ailang-world",
+      "--json",
+      "number,state,isDraft,headRefOid,mergeable,mergeStateStatus,statusCheckRollup"
+    ],
+    "rc": 0,
+    "stdout": "{\"headRefOid\":\"7655388936b80bea9c4843f0a2e0abc085e52c0f\",\"isDraft\":true,\"mergeStateStatus\":\"DIRTY\",\"mergeable\":\"CONFLICTING\",\"number\":515,\"state\":\"OPEN\",\"statusCheckRollup\":[{\"__typename\":\"CheckRun\",\"completedAt\":\"2026-11-07T05:56:51Z\",\"conclusion\":\"SUCCESS\",\"detailsUrl\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42344789832/job/128320074785\",\"name\":\"ailang-code verify gate\",\"startedAt\":\"2026-11-07T05:56:11Z\",\"status\":\"COMPLETED\",\"workflowName\":\"CI\"},{\"__typename\":\"CheckRun\",\"completedAt\":\"2026-11-07T06:09:17Z\",\"conclusion\":\"SUCCESS\",\"detailsUrl\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42344789832/job/128320074671\",\"name\":\"go host build + test gate\",\"startedAt\":\"2026-11-07T05:56:11Z\",\"status\":\"COMPLETED\",\"workflowName\":\"CI\"},{\"__typename\":\"CheckRun\",\"completedAt\":\"2026-11-07T06:05:28Z\",\"conclusion\":\"SUCCESS\",\"detailsUrl\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42344789832/job/128320074801\",\"name\":\"go race gate (go test -race, own job)\",\"startedAt\":\"2026-11-07T05:56:11Z\",\"status\":\"COMPLETED\",\"workflowName\":\"CI\"}]}\n",
+    "stderr": ""
+  },
+  "previous-directives": {
+    "command": [
+      "bash",
+      "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_directives.sh",
+      "--issue",
+      "366",
+      "--repo",
+      "sunholo-data/ailang-world",
+      "--watermark-file",
+      "/Users/voightkampff/.ailang/state/mission-366-last-seen"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": "\u001b[1;33m\u26a0 mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-366-last-seen (bare timestamp, no processed ids, written before #981) \u2014 the first --mark upgrades it\u001b[0m\n\u001b[1;33mmission_directives: #366 \u2014 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 35 comments; the rest are public feedback, never directives)\u001b[0m\n"
+  },
+  "issue-thread": {
+    "command": [
+      "gh",
+      "issue",
+      "view",
+      "449",
+      "-R",
+      "sunholo-data/ailang-world",
+      "--json",
+      "createdAt,comments",
+      "--jq",
+      "{createdAt,comments:(.comments|length)}"
+    ],
+    "rc": 0,
+    "stdout": "{\"comments\":34,\"createdAt\":\"2026-11-02T08:01:35Z\"}\n",
+    "stderr": ""
+  },
+  "release-subjects": {
+    "command": [
+      "git",
+      "log",
+      "61a8d1c4..565609ab",
+      "--format=%h %s"
+    ],
+    "rc": 0,
+    "stdout": "565609ab Merge pull request #516 from sunholo-data/mission/world-iter362-record\n6068ed30 Distinguish flat-rate quorum imputation from metered usage in iteration 362\nb783307a Bank independent record PASS98 with caveats and exact final spend\n11b7a569 Record iteration 362 independent failure, parked row 256 and credential incident\n533a8fb3 Bank both failed local full-suite attempts and paired controls for independent review\nb4717214 Plan row 256 M1 and record explicit inherited-red acceptance correction\ne40f675f Design row 256 startup clock isolation with current-byte evidence\n",
+    "stderr": ""
+  },
+  "row151-milestones": {
+    "command": [
+      "git",
+      "log",
+      "565609ab",
+      "--since=2026-10-01",
+      "--format=%h %s",
+      "--extended-regexp",
+      "--grep=N2d|N4a"
+    ],
+    "rc": 0,
+    "stdout": "0148cddb docs(mission): record World iteration 344 \u2014 no pick, rule (d) block report 16; rows 250/244\u2013249 wait on D-WORLD-108; dev green at e8027417\nfc1834c1 docs(mission): record World iteration 343 \u2014 no pick, rule (d) block report 15; rows 250/244\u2013249 wait on D-WORLD-108; dev green at e74cd740\n5c92bc2e docs(mission): record World iteration 342 \u2014 no pick, rule (d) block report 14; rows 250/244\u2013249 wait on D-WORLD-108; dev green at 05b5b05e\n09e8f032 docs(mission): record World iteration 341 \u2014 no pick, rule (d) block report 13; rows 250/244\u2013249 wait on D-WORLD-108; dev green at 41298533\nfe9c891e docs(mission): record World iteration 319 \u2014 no pick (rule (d) block report 2); release rows wait on attended steps; dev green\n92495b60 docs(mission): record World iteration 317 \u2014 no pick (rule (d) block report); row 232 premise re-measured; D-WORLD-102 filed\nbe184351 roadmap: all of Mark's agent work through World \u2014 goal doc, rows 217-222 NEXT; file D-WORLD-94/95 OPEN\ndc719822 docs(design): w-world-surface-outputs r0 \u2014 the front card's outputs, every file type, and work in other programs\n",
+    "stderr": ""
+  },
+  "row151-control": {
+    "command": [
+      "git",
+      "log",
+      "565609ab",
+      "--since=2026-10-01",
+      "--format=%h %s",
+      "--grep=N2c"
+    ],
+    "rc": 0,
+    "stdout": "5c83f339 design(row 220): w-surface-index-follow r0 \u2014 the daemon follows local branches and running episodes; friction 46 (w220d, Codex)\n1e7b3cd3 Merge pull request #374 from sunholo-data/trial/row188-n2c-surface-live\n6f2ba039 feat(row 188 N2c): live refresh in the World app over AG-UI (w188l, 3 rounds)\n41e6424e feat(row 188 N2b): the World app at /surface, the approved v3 working copy on live data\n",
+    "stderr": ""
+  },
+  "provenance-108": {
+    "command": [
+      "bash",
+      "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_ledger_provenance.sh",
+      "--id",
+      "D-WORLD-108",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "stdout": "D-WORLD-108 verdict=attended flip=cd15c9dce6cd020266acd2a9ff99b384cf610421 creation=e9ec30595407531121ac02a52dfd24395dc411ab\n",
+    "stderr": ""
+  },
+  "provenance-109": {
+    "command": [
+      "bash",
+      "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_ledger_provenance.sh",
+      "--id",
+      "D-WORLD-109",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "stdout": "D-WORLD-109 verdict=attended flip=61e2411aaa8c02bbc2058a5c8cafa1431454baf6 creation=89a92ea028464466542277f72ce69f809b42b7e8\n",
+    "stderr": ""
+  },
+  "provenance-105": {
+    "command": [
+      "bash",
+      "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_ledger_provenance.sh",
+      "--id",
+      "D-WORLD-105",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "stdout": "D-WORLD-105 verdict=never-resolved flip=none creation=c59fab19b735f5066fa9a4e8269af19f9400127e\n",
+    "stderr": ""
+  },
+  "provenance-110": {
+    "command": [
+      "bash",
+      "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_ledger_provenance.sh",
+      "--id",
+      "D-WORLD-110",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "stdout": "D-WORLD-110 verdict=never-resolved flip=none creation=33c8cd41c8d59b9a6de79a0d6dbbfc4bac2dcbcb\n",
+    "stderr": ""
+  },
+  "provenance-111": {
+    "command": [
+      "bash",
+      "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_ledger_provenance.sh",
+      "--id",
+      "D-WORLD-111",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "stdout": "D-WORLD-111 verdict=never-resolved flip=none creation=11b7a56902cf7935d506c7ccd157cc916499ee8a\n",
+    "stderr": ""
+  },
+  "provenance-112": {
+    "command": [
+      "bash",
+      "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_ledger_provenance.sh",
+      "--id",
+      "D-WORLD-112",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "stdout": "D-WORLD-112 verdict=never-resolved flip=none creation=11b7a56902cf7935d506c7ccd157cc916499ee8a\n",
+    "stderr": ""
+  },
+  "release-subject-counts": {
+    "all": 1058,
+    "N2d_N4a": 0,
+    "N2c_control": 1,
+    "note": "Counts are over subjects only. Separate --grep command in row151-milestones searches commit bodies too and has unrelated prose matches; those matches are not milestone implementation evidence.",
+    "command": [
+      "git",
+      "log",
+      "565609ab51c9300924831087aa98308dcdd418b0",
+      "--since=2026-10-01",
+      "--format=%h %s"
+    ],
+    "implementation_pattern": "\\b(?:N2d|N4a)\\b",
+    "control_pattern": "N2c"
+  }
+}

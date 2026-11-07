@@ -1,0 +1,29 @@
+{
+  "stage": 2,
+  "base": "565609ab51c9300924831087aa98308dcdd418b0",
+  "worktree_head_at_check": "e4dea7729c64821abd9f2a4c33ed15c1adebadb9",
+  "checks": {
+    "ledger_bytes_unchanged": true,
+    "queue_suffix_unchanged": true,
+    "old_log_exact_prefix": true,
+    "one_new_entry363": true,
+    "dashboard_within40": true,
+    "no_source_or_unrelated_tracked_changes": true,
+    "new_untracked_paths_within_scope": true,
+    "diff_check": true,
+    "canonical_stamps_363_362_360": true,
+    "charter_line_arithmetic": true,
+    "one_moved_stamp": true,
+    "archive_retains_prefix_and_exact_moved_stamp": true,
+    "archive_gains_two_lines": true,
+    "current_goal_has_363_park": true
+  },
+  "file_sha256": {
+    "design_docs/world-mission.md": "8b28285f948a6e0c8dda8296de62723e150a641f283598c0b46a8d9e0d67df2f",
+    "design_docs/world-mission-log.md": "85e2a1793d0ecd2e9a47d3222755d0bff803b9eb03f7f02bb446db9afeb780f8",
+    "design_docs/world-mission-status-archive.md": "4fd9933012fb700471f11757f8586950d80dada396719cce26f6ea368d05c582",
+    "design_docs/world-mission-index.md": "b1e4b346db2c723fdbc7ac32006cb84bece7e9b3c79f42235dafa94b5da4dc82",
+    "design_docs/world-mission-dashboard.md": "e42aa1fb0e20e9ce1aba1734530544bbbd041bd86e99ef8c245e8f135407131f"
+  },
+  "scope": "ADMIN record structural checks; no product acceptance or independent verdict"
+}

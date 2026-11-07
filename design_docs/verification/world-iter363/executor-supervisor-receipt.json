@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "role": "executor",
+  "routing": "recipe codex:gpt-6.1-sol declared:provider-pin",
+  "agent_supervisor": "/root/executor",
+  "agent_model_override_unavailable": true,
+  "actual_pinned_cli": "codex:gpt-6.1-sol",
+  "base": "565609ab51c9300924831087aa98308dcdd418b0",
+  "gate4_receipt": "565609ab51c9300924831087aa98308dcdd418b0@2026-11-07T09:02:59Z",
+  "probe": {
+    "rc": 0,
+    "timeout_seconds": 120,
+    "actual_provider": "openai",
+    "actual_model": "gpt-6.1-sol",
+    "provider_tokens_used_literal": "17.649",
+    "normalized_tokens": null,
+    "token_note": "Locale-formatted raw footer retained; no grouping normalized without independent numeric event receipt.",
+    "stdin": "DEVNULL",
+    "OPENAI_API_KEY_removed": true,
+    "sandbox": "workspace-write",
+    "features.multi_agent_v2.expose_spawn_agent_model_overrides": false,
+    "external_log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world363-executor-as_3bqlb/probe.log"
+  },
+  "run": {
+    "rc": 0,
+    "timeout_seconds": 900,
+    "actual_provider": "openai",
+    "actual_model": "gpt-6.1-sol",
+    "provider_tokens_used_literal": "146.380",
+    "normalized_tokens": null,
+    "token_note": "Locale-formatted raw footer retained; no grouping normalized without independent numeric event receipt.",
+    "stdin": "DEVNULL",
+    "OPENAI_API_KEY_removed": true,
+    "sandbox": "workspace-write",
+    "features.multi_agent_v2.expose_spawn_agent_model_overrides": false,
+    "external_log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world363-executor-as_3bqlb/real.log"
+  },
+  "no_pending_launched_work": true,
+  "modified_record_files": [
+    "design_docs/world-mission-dashboard.md",
+    "design_docs/world-mission-log.md",
+    "design_docs/world-mission.md",
+    "design_docs/world-mission-status-archive.md"
+  ],
+  "index_modified": false,
+  "milestones": {
+    "ADMIN-363-M1": "implemented, local criteria satisfied; controller acceptance pending",
+    "ADMIN-363-M2": "implemented, local criteria satisfied; controller acceptance pending",
+    "ADMIN-363-M3": "controller owned; executor did not invoke index writer"
+  },
+  "tests_run": false,
+  "git_writes": false,
+  "new_evidence": {
+    "executor-structural-proof.json": {
+      "bytes": 21172,
+      "sha256": "5bed1944aa1f0c9791be08b4317a2c30dda8265a1910f820b32118b829f4644d"
+    },
+    "executor-summary.md": {
+      "bytes": 3711,
+      "sha256": "07502fd5f622d13480fa71d7130cb516b173b669561a4f7337514a358e70b4b4"
+    }
+  },
+  "snapshots": {
+    "ADMIN-363-M1": {
+      "manifest": ".snap/ADMIN-363-M1/manifest.json",
+      "manifest_sha256": "78c08548309dda68fdd126dedbfb63069a0f96d675de153d23cb6422564b0cbd",
+      "all_five_snapshot_hashes_match_manifest": true
+    },
+    "ADMIN-363-M2": {
+      "manifest": ".snap/ADMIN-363-M2/manifest.json",
+      "manifest_sha256": "756e896ce54eb5d9efb75059d5447467ac7f0c56f589311ecf3a9186917319fa",
+      "all_five_snapshot_hashes_match_manifest": true
+    }
+  },
+  "independent_evaluator": "prospective; not a self-verdict",
+  "executor_cautious_verdict": "FAILED_EVIDENCE_PRESERVATION due to observed concurrent parent-owned evidence drift; no mission/source structural failure",
+  "parent_attribution_received": "Controller confirmed controller-index-context mutation was additive effective_fields/descriptor_source only, same private registry and identical World.workdir; metered-spend, planner normalization and evaluator preflight are parent-owned additions. Frozen authored plan/designer/planner receipts unchanged. No repair/retest required by parent; final disposition belongs to controller.",
+  "supervisor_mission_edits": false
+}

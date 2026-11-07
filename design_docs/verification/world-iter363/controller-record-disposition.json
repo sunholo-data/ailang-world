@@ -1,0 +1,19 @@
+{
+  "base": "565609ab51c9300924831087aa98308dcdd418b0",
+  "M1": "snapshot verified and committed e4dea7729c64821abd9f2a4c33ed15c1adebadb9",
+  "M2": "snapshot verified and committed 1530e37dd6f9b855917d063b5bd9b3011f82bf8f",
+  "M3": "index-only executed against correct record Workdir; original main/source streams unchanged",
+  "narrow_record_test_rc": 0,
+  "executor_failure_preserved": true,
+  "context_original_bytes_restored": true,
+  "original_executor_inputs_equal": 22,
+  "independent_review": "pending, no self-issued acceptance",
+  "product256": "needs-human-review; prior FAIL85 and local criterion UNMET remain",
+  "decisions_resolved": [],
+  "quota_tokens": {
+    "designer": 120699,
+    "planner": 193975,
+    "executor": 164029
+  },
+  "known_codex_total": 478703
+}

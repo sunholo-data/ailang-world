@@ -1,0 +1,15 @@
+{
+  "command": [
+    "ailang",
+    "mission",
+    "rotate-log",
+    "world",
+    "--index-only"
+  ],
+  "rc": 0,
+  "stdout": "INDEX      /Users/voightkampff/.ailang/state/world-iter363-record/design_docs/world-mission-index.md\n  351 iterations, complete history \u2014 grep this before picking work\norphan rows preserved: 361\n",
+  "stderr": "",
+  "original_main_hashes_unchanged": true,
+  "source_stream_hashes_unchanged": true,
+  "index_in_record_worktree": true
+}

@@ -1,0 +1,22 @@
+{
+  "default_command": [
+    "git",
+    "diff",
+    "--cached",
+    "--check"
+  ],
+  "default_rc": 2,
+  "default_stdout": "design_docs/verification/world-iter363/record-plan.md:170: new blank line at EOF.\n",
+  "narrow_command": [
+    "git",
+    "-c",
+    "core.whitespace=-blank-at-eof",
+    "diff",
+    "--cached",
+    "--check"
+  ],
+  "narrow_rc": 0,
+  "narrow_stdout": "",
+  "disposition": "Original planner artifact intentionally retained byte-exact; one existing extra EOF blank line. All other whitespace errors absent under named narrowed check. Default check is NOT claimed green. Independent record judge must assess this explicit nonsemantic artifact-format deviation. No source/test/product gate changed.",
+  "original_plan_sha256": "0cce8485a9fcb3cf58c013a4b17c0a782aa2e2b326ee59afe2aafc09eb829801"
+}

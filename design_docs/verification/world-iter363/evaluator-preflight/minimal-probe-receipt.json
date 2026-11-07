@@ -1,0 +1,32 @@
+{
+  "model_requested": "openrouter/minimax/minimax-m3",
+  "actual_models": [
+    "minimax/minimax-m3"
+  ],
+  "rc": 0,
+  "elapsed_seconds": 1.798,
+  "turn_end_count": 1,
+  "usage_counting": "turn_end only; no message_end duplicates",
+  "usage": [
+    {
+      "input": 1250,
+      "output": 3,
+      "cacheRead": 128,
+      "cacheWrite": 0,
+      "reasoning": 0,
+      "totalTokens": 1381,
+      "cost": {
+        "input": 0.000375,
+        "output": 3.6e-06,
+        "cacheRead": 7.68e-06,
+        "cacheWrite": 0,
+        "total": 0.00038627999999999997
+      }
+    }
+  ],
+  "exact_ok": true,
+  "child_complete": true,
+  "private_output_bytes": 3305,
+  "stderr_bytes": 0,
+  "environment_receipt": "minimal-environment-names.json"
+}

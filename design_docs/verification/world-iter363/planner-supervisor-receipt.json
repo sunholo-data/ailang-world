@@ -1,0 +1,51 @@
+{
+  "role": "planner",
+  "routing": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin",
+  "agent_supervisor": "/root/planner",
+  "agent_model_override_unavailable": true,
+  "actual_pinned_cli": "codex:gpt-6.1-sol",
+  "base": "565609ab51c9300924831087aa98308dcdd418b0",
+  "receipts": {
+    "probe": {
+      "kind": "probe",
+      "model": "gpt-6.1-sol",
+      "rc": 0,
+      "elapsed_seconds": 4.04,
+      "log": "/tmp/world_iter363_planner_probe.log",
+      "provider_model_header": "gpt-6.1-sol",
+      "provider_tokens_used_literal": "5.637",
+      "stdin": "DEVNULL",
+      "subscription_openai_api_key_removed": true
+    },
+    "run": {
+      "kind": "run",
+      "model": "gpt-6.1-sol",
+      "rc": 0,
+      "elapsed_seconds": 378.31,
+      "log": "/tmp/world_iter363_planner_run.log",
+      "provider_model_header": "gpt-6.1-sol",
+      "provider_tokens_used_literal": "188.338",
+      "stdin": "DEVNULL",
+      "subscription_openai_api_key_removed": true
+    }
+  },
+  "artifacts": {
+    "record-plan.md": {
+      "bytes": 23757,
+      "sha256": "0cce8485a9fcb3cf58c013a4b17c0a782aa2e2b326ee59afe2aafc09eb829801"
+    },
+    "record-state.json": {
+      "bytes": 19474,
+      "sha256": "d032b2dd971844aacbf4903bc5d11db5f465b771bdb586b5316abba959614850"
+    }
+  },
+  "gate_status": "PLAN ONLY; independent evaluator and exact PR/merge CI pending",
+  "supervisor_notes": [
+    "Actual authored plan preserved byte-exact.",
+    "Controller supplies safe ephemeral external registry descriptor with World.workdir absolute record tree; no installed-registry edit, no record/missions creation. Controller owns index writer.",
+    "Controller may rerun exact TestMissionConfigRealCharter outside sandbox after edits per controller evidence; no executor tests or full retries.",
+    "No external handoff sent because parent controller owns authorized routing.",
+    "Text CLI prints locale-formatted token footer; raw provider literals retained without invented normalized totals."
+  ],
+  "worktree_removal": "completed; git worktree remove --force rc0; path absent"
+}
