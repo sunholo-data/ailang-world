@@ -54,6 +54,9 @@ line per check: ✓ fine, ! worth knowing (with a fix), ✗ broken (with a fix).
                digests (never executed); stale tarballs and old binaries noted
   daemon       what answers at --addr: a worldd (its store and interpreter),
                a foreign listener, or nothing
+  exec profiles  each exec profile the daemon left out at startup, with its
+               reason: ✗, because that project's exec calls refuse; a probe
+               recorded after its deadline gets observation-only advice
   service      installed service, supervisor and build identity (full pass only)
   store        exists (never created), writer lock held or free, world head
                and transition registry present
@@ -68,7 +71,8 @@ the pin directories of 'setup', --examples-dir ~/.ailang/examples.
 --host runs the host's --version (the only exec in --quick), with a 5 s
 timeout and an empty environment except PATH and HOME, and verifies launch digests.
 --profile resolves commands through its path and checks startup exec tool paths.
---quick checks only daemon, session and host; healthy checks finish under 2 s.
+--quick checks only daemon (and its left-out exec profiles), session and host;
+healthy checks finish under 2 s.
 --json prints JSON lines plus {"failed": n}.
 Exit: 0 no ✗; daemon 10, session 11, host 12, exec 13, otherwise 1.
 The first failing dependency class wins in daemon, session, host, exec order.
@@ -319,6 +323,7 @@ func doctorDaemon(r *doctorReport, addr, db string) string {
 		ExecTools          map[string]string                `json:"exec_tools"`
 		ExecToolStatus     map[string]broker.ExecToolStatus `json:"exec_tool_status"`
 		CredentialsDB      string                           `json:"credentials_db"`
+		ExecExcluded       []daemon.HealthExecExclusion     `json:"exec_profiles_excluded"`
 	}
 	if status != http.StatusOK || json.Unmarshal(body, &h) != nil || h.DaemonVersion == "" {
 		r.add(markFail, "daemon", fmt.Sprintf("something that is not ailang-worldd answers at %s (HTTP %d)", addr, status),
@@ -336,7 +341,24 @@ func doctorDaemon(r *doctorReport, addr, db string) string {
 		return h.DBPath
 	}
 	r.add(markOK, "daemon", detail, "")
+	doctorExecProfiles(r, h.ExecExcluded)
 	return h.DBPath
+}
+
+// doctorExecProfiles names each exec profile the daemon left out at startup
+// (row 256): its exec calls refuse, so it is a failure. Timestamps establish
+// no cause: review the reasons even when every failure was recorded late.
+func doctorExecProfiles(r *doctorReport, excluded []daemon.HealthExecExclusion) {
+	for _, x := range excluded {
+		detail := fmt.Sprintf("%s (%s) was left out at startup: %s", x.Project, x.File, oneLine(x.Reason, 240-len("…")))
+		fix := "review " + x.File + " and the failure reasons; correct the profile if needed, then restart World if appropriate (ailang-worldd service stop, then service start; or restart serve)"
+		if x.OutOfTime {
+			detail = fmt.Sprintf("%s (%s) was left out at startup: %s Reason: %s",
+				x.Project, x.File, broker.ExecProbeDeadlineObservation, oneLine(x.Reason, 240-len("…")))
+			fix = "Review the failure reasons and restart World if appropriate (ailang-worldd service stop, then service start; or restart serve)"
+		}
+		r.add(markFail, "exec profiles", detail, fix)
+	}
 }
 
 func firstLine(s string) string {

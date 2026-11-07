@@ -272,7 +272,11 @@ The daemon side, once: start `serve` with `--exec-sandbox <srt node_modules>` an
 `--exec-profile`, and it loads every `<project>.json` in `~/.ailang-world-exec/profiles/`
 (`--exec-profiles-dir` names another; `*.proposed.json` is skipped until you rename it). A
 profile there that fails to parse or probe is left out, named on stderr and in `/v1/health`
-(`exec_profiles_excluded`), and the rest serve. `ailang-worldd episode start --help` has every flag.
+(`exec_profiles_excluded`), and the rest serve. `ailang-worldd doctor` (also `--quick`) shows each
+left-out profile as a ✗ `exec profiles` line with its reason (exec class, exit 13).
+`"out_of_time": true` in `/v1/health` means every failed arm was recorded at or after the startup
+deadline; startup timeout may have contributed. This establishes neither a cause nor a scheduling
+bound. Review the failure reasons and restart if appropriate. The profile stays excluded. `ailang-worldd episode start --help` has every flag.
 
 **Propose a profile instead of writing one.** `profile init` (row 189) drafts the profile from
 the repo's own files. It needs no daemon and no terminal, and it never activates anything:
