@@ -1,0 +1,16 @@
+{
+  "command": [
+    "ailang",
+    "messages",
+    "list",
+    "--inbox",
+    "mission-world",
+    "--unread",
+    "--limit",
+    "1000",
+    "--json"
+  ],
+  "rc": 0,
+  "stdout": "null\n",
+  "stderr": "2026/11/07 21:51:11 Google Cloud OpenTelemetry Trace exporter for Go is deprecated and will be archived after January 1st, 2027. Please migrate to the OpenTelemetry OTLP exporters. For migration details, see https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/blob/main/MIGRATION.md\n"
+}

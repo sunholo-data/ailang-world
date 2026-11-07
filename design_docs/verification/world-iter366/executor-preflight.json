@@ -1,0 +1,32 @@
+{
+  "role": "executor",
+  "iteration": 366,
+  "resolved_route": "recipe codex:gpt-6.1-sol declared:provider-pin",
+  "interface": "actual codex exec CLI; Agent supervisor cannot set model override",
+  "agent_model_override_available": false,
+  "command": [
+    "/opt/homebrew/bin/codex",
+    "exec",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+    "reply with exactly: ok"
+  ],
+  "stdin": "/dev/null",
+  "OPENAI_API_KEY": "stripped by name",
+  "deadline_seconds": 120,
+  "exit_code": 0,
+  "runtime_seconds": 4.372,
+  "timed_out": false,
+  "model_requested": "gpt-6.1-sol",
+  "model_observed": "gpt-6.1-sol",
+  "multi_agent_model_overrides": false,
+  "token_footer_raw": "6.199",
+  "tokens_used": 6199,
+  "response_ok": true,
+  "preflight_only": true,
+  "implementation_executed": false,
+  "acceptance_claimed": false,
+  "timestamp_utc": "2026-11-07T21:02:44.298782+00:00"
+}

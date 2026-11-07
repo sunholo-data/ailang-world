@@ -1,0 +1,15 @@
+{
+  "command": [
+    "gh",
+    "issue",
+    "view",
+    "449",
+    "-R",
+    "sunholo-data/ailang-world",
+    "--json",
+    "number,state,createdAt,comments"
+  ],
+  "rc": 0,
+  "stdout": "{\"createdAt\": \"2026-11-02T08:01:35Z\", \"number\": 449, \"state\": \"OPEN\", \"comments_count\": 37}",
+  "stderr": ""
+}

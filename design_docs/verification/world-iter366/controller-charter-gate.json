@@ -1,0 +1,16 @@
+{
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.world-iter366-record",
+  "command": [
+    "go",
+    "test",
+    "./host/verifygate",
+    "-run",
+    "^TestMissionConfigRealCharter$",
+    "-count=1"
+  ],
+  "platform": "darwin/arm64 outside sandbox",
+  "rc": 0,
+  "stdout": "ok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.364s\n",
+  "stderr": "",
+  "seconds": 1.369
+}

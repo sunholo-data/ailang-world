@@ -1,0 +1,12 @@
+{
+  "command": [
+    "bash",
+    "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_decisions.sh",
+    "--check",
+    "--file",
+    "design_docs/world-mission.md"
+  ],
+  "rc": 0,
+  "stdout": "decision ledger valid: 99 rows\n",
+  "stderr": ""
+}

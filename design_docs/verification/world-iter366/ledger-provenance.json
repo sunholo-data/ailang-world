@@ -1,0 +1,67 @@
+[
+  {
+    "decision": "D-WORLD-48",
+    "command": [
+      "bash",
+      "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_ledger_provenance.sh",
+      "--id",
+      "D-WORLD-48",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "safe_fields": []
+  },
+  {
+    "decision": "D-WORLD-108",
+    "command": [
+      "bash",
+      "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_ledger_provenance.sh",
+      "--id",
+      "D-WORLD-108",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "safe_fields": []
+  },
+  {
+    "decision": "D-WORLD-109",
+    "command": [
+      "bash",
+      "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_ledger_provenance.sh",
+      "--id",
+      "D-WORLD-109",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "safe_fields": []
+  },
+  {
+    "decision": "D-WORLD-111",
+    "command": [
+      "bash",
+      "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_ledger_provenance.sh",
+      "--id",
+      "D-WORLD-111",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "safe_fields": []
+  },
+  {
+    "decision": "D-WORLD-112",
+    "command": [
+      "bash",
+      "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_ledger_provenance.sh",
+      "--id",
+      "D-WORLD-112",
+      "--file",
+      "design_docs/world-mission.md"
+    ],
+    "rc": 0,
+    "safe_fields": []
+  }
+]

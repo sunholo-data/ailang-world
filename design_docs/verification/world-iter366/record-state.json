@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "sprint_id": "WORLD-ITER366-ADMIN",
+  "iteration": 366,
+  "scope": "ADMIN record only; explicit controller quorum exception; no human approval awaited",
+  "design_doc": "design_docs/verification/world-iter366/record-design.md",
+  "sprint_plan": "design_docs/verification/world-iter366/record-plan.md",
+  "state_path": "design_docs/verification/world-iter366/record-state.json",
+  "base": "1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4",
+  "planner_head": "adb4fb80b9d7600ad9118aa15a29fb2e4a4e7c89",
+  "planner_checkout": "detached; committed planning inputs; distinct from canonical product base",
+  "planner_lane": {
+    "pin": "codex:gpt-6.1-sol",
+    "provenance": "Supplied invocation and controller routing-resolvers.json; no independent probe",
+    "resolver_reason": "anthropic-fallback:fail-closed:no-doc"
+  },
+  "estimated_hours": 1,
+  "estimated_product_loc": 0,
+  "estimated_test_loc": 0,
+  "registry_reuse": [
+    {
+      "milestone": "M1_ADMIN_RECORD_366",
+      "action": "none",
+      "reason": "Administrative bookkeeping; no package capability, registry search or dependency needed"
+    }
+  ],
+  "features": [
+    {
+      "id": "M1_ADMIN_RECORD_366",
+      "description": "Prepare the five exact administrative updates, new executor proof and execution state, and cumulative M1 snapshot; preserve history and authority; controller owns final review and delivery",
+      "design_doc": "design_docs/verification/world-iter366/record-design.md",
+      "sprint_plan": "design_docs/verification/world-iter366/record-plan.md",
+      "dependencies": [],
+      "acceptance_criteria": [
+        "AC-G1-SCOPE: read-only Git census confirms the two full base identities above and records actual executor HEAD separately; canonical baseline census nonzero,6,442 paths and5/5 allowlist controls. Audit tracked diff and untracked paths/types separately; only enumerated owned writes allowed, with existing local census and NEW untouched controller evidence recognized.",
+        "AC-G2-TRANSFORM: construct expected charter/archive/index bytes in memory from canonical base and compare whole outputs. STATUS366/365/364 present, exact363 pair transferred once, route365→366 once; archive old prefix and every old index byte preserved. Entire marked ledger (start through end marker plus following newline) and unique Queue-header-through-EOF suffix remain byte-exact (designer O7 hashes).",
+        "AC-G3-COUNTS: log has full old prefix and exactly one canonical366 heading,40 entries with no rotation; log archive unchanged. Charter6,345 lines; status archive732; dashboard≤40 physical lines.",
+        "AC-G4-PRESERVE: recheck all individually frozen immutable inputs and every protected baseline path/hash/type/mode; input drift is a finding. Verify editable baseline hashes before edits and exact expected outputs afterward. Preserve all earlier evidence; snapshot and controller reconstruction match the explicit payload manifest byte-for-byte.",
+        "AC-G5-TRUTH: record actual role/model provenance, degradation, runtime/token/cost usage or explicit unknowns, retro, unchanged goal/asks/next. Attribute Gate0/1, clauses and base CI green to inherited controller receipts; no invented role probe, acceptance, landing or product completion. ADMIN success never accepts256 or clears111/112.",
+        "AC-G6-WHITESPACE: run both `git diff --check` and `git diff --check 1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4 --`; explicitly inspect NEW owned text outputs using `git diff --no-index --check /dev/null <path>`. Record rc and diagnostics separately: new-file rc1 denotes content differences, not automatically a whitespace error. Pair empty diagnostics with nonempty path controls. Report inherited base reds without repair or waiver; whole old archive whitespace style is not an acceptance gate.",
+        "AC-G7-BOUNDARY: no child test verdict or Go suite acceptance. Inherited pristine baseline charter rc0 is provenance only. Any required `go test ./host/verifygate -run '^TestMissionConfigRealCharter$' -count=1` belongs to controller outside sandbox, only if authorized after side-effect inspection and pristine baseline. Sandbox denial is **UNINFORMATIVE UNDER SANDBOX**, never a product verdict.",
+        "AC-G8-DELIVERY: controller obtains independent final-record judgment covering all material changes, reconstructs/commits from snapshot, and verifies all3 terminal-success CI jobs at exact full40 PR-head AND merge-head with run URLs: ailang-code verify, Go race, Go host build/test. Controller owns external delivery and landing. Prior/base/product greens do not substitute; no future completion claimed."
+      ],
+      "passes": false,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "owned_existing_outputs": [
+    "design_docs/world-mission.md",
+    "design_docs/world-mission-status-archive.md",
+    "design_docs/world-mission-log.md",
+    "design_docs/world-mission-index.md",
+    "design_docs/world-mission-dashboard.md"
+  ],
+  "owned_new_evidence": [
+    "design_docs/verification/world-iter366/executor-proof.json",
+    "design_docs/verification/world-iter366/execution-state.json"
+  ],
+  "execution_state_contract": {
+    "path": "design_docs/verification/world-iter366/execution-state.json",
+    "creation": "Executor creates this NEW output at M1 preparation completion; require both new outputs and .snap/M1/ absent before creation; never overwrite another role's artifact",
+    "required_content": "Actual preparation passes, preparation completion timestamp and notes; distinguish prepared AC-G1 through AC-G7 from pending AC-G8",
+    "pending_boundaries": "Independent final-record review, exact-head CI and external delivery/landing remain controller-owned and explicitly pending; preparation passes never claims G8 completion",
+    "planning_receipt": "Original record-state.json is immutable, including all progress fields; its milestone passes remains false forever"
+  },
+  "snapshot": {
+    "root": ".snap/M1/",
+    "payload_paths": [
+      "design_docs/world-mission.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-index.md",
+      "design_docs/world-mission-dashboard.md",
+      "design_docs/verification/world-iter366/executor-proof.json",
+      "design_docs/verification/world-iter366/execution-state.json"
+    ],
+    "path_mapping": "Mirror each repository-relative payload path under .snap/M1/",
+    "manifest": ".snap/M1/manifest.json",
+    "manifest_fields": [
+      "path",
+      "snapshot_path",
+      "type",
+      "mode",
+      "sha256"
+    ],
+    "manifest_entries": 7,
+    "manifest_excludes_self": true,
+    "exclusions": "Consumed original design/plan/planning-state, receipts, controller files, raw census and earlier evidence; no directory-wide snapshot",
+    "verification": "Check all seven payload types/modes/hashes against live final bytes before handoff and controller reconstruction afterward",
+    "tracking": "Bulky .snap/M1/ remains local-only, never tracked; controller reconstruction commit plus manifest suffices"
+  },
+  "input_sha256": {
+    "design_docs/verification/world-iter366/record-design.md": "cb625155d298e01d53f6835e9df6e834a8def626910ea4a32afd43689ba829d2",
+    "design_docs/verification/world-iter366/designer-receipt.json": "b57bcbd0e363b04440c182d7a685b0cd56833706d7e9b13f09aefd08a3cfa016",
+    "design_docs/verification/world-iter366/controller-observations.json": "835c7b1e8f043ffdd665b50ead1c01746b68dcfc16e1ababca81fb96ce5025b2",
+    "design_docs/verification/world-iter366/controller-gate4-base.json": "6dead0affd47d93a35c117d7ee8048ab80dc3ab3bf3fdd7a6b39f0cf547400c3",
+    "design_docs/verification/world-iter366/base-files.json": "cd7c4b01521f5dcf05cc28ee0eca9a2ed9c16df5a725ad76799e97774b8b8be0",
+    "design_docs/verification/world-iter366/base-checks.json": "ed89adb7157be4912a51bfb33705d2d2690455714e951730221f6a168907d2e7",
+    "design_docs/verification/world-iter366/baseline-charter-gate.json": "115a490fa241735e1eaa3d5618d2f51a6508984c731d81a076f7f2ba8f018b36",
+    "design_docs/verification/world-iter366/baseline-index-cli.json": "25355aeea1426966a16db9c2b24546ea7cdf91998fa3d74c14df755a0e4652cc",
+    "design_docs/verification/world-iter366/baseline-privacy.json": "200e5988087719a6e33c1de336986fa04e8b7f192c5c81c4b0d107346fce64ac",
+    "design_docs/verification/world-iter366/worktree-census-original.json": "0ba05080b812ca077c0f62ef11b8c20a44d85acaae228c8eb7ec9fb6f809854b",
+    "design_docs/verification/world-iter366/worktree-census.txt": "188fa00923b82119a0cc3cd6a6b64717891b9dfc62bf9e6775e7422f505cab97",
+    "design_docs/verification/world-iter366/routing-resolvers.json": "4943e2eac7548d9415838ddb9e65dfb0fb030e77905440fef185f058ce89877c",
+    "CLAUDE.md": "68f6fd16ede4c598a93590c3de20a2fc661a128c241eed747fab4d68d74a9141",
+    "design_docs/world-mission.md": "24225ebebd46c9829b508b279baca0d0195d93fb0ed4961c442daa46c6df5e82",
+    "design_docs/world-mission-log.md": "a829fe7f26991b7765082829615ba151cd4bdbfcc7192ac843b5d06384470359",
+    "design_docs/world-mission-index.md": "a27f891f0f8b7dadaf022eebcdbcc4bb81a2b5e9295000c335cbfc08dbb9fdd7",
+    "design_docs/world-mission-dashboard.md": "e12a54622d072419c98e84892ecbe8815f73eb0a44ea323cc752a0359f373dd6",
+    "design_docs/world-mission-status-archive.md": "1829cc1e1a02022496c7ec7537368a9d0202daa43ad6bd65aef3b58fc1bc39e7",
+    "design_docs/world-mission-log-archive.md": "32c90181c7c0ad86e8981e1992c3dfd2f57a4f5a43dd6de022d9eaa5b22bbcce",
+    "design_docs/coding-standards.md": "a6951ab19b301c821dabc6eadc5061e6dded79c8af749ae080454e50e80239e4",
+    "design_docs/DESIGN.md": "a8b87a7ca9cec01676d6d6eb00f2116bd60114638df4bab286189a46dfa17836",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/SKILL.md": "b4bcb489e2767930acc1c5cfc74fc54c43a67435a1fba4de7d3fd090e58c83fe",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/resources/registry_reuse_gate.md": "35d3ba5f3718fae9abd547915f4fe99f5a50452ad3fe3abbebf24b9012269110",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-3-route.md": "3d6cde1a7051e11c29ffcea3ca23b0b26b1e976796dc32c2b279ba1eddf71d53",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md": "fce81ea64a500f1707c3730d535fc56a9dba9b455aaf07fd9d18a461b806ff0c",
+    "design_docs/verification/world-iter366/record-plan.md": "6fd6323243087e08719c36a9db11cac30765e4eb7c9339bee56e4ed7f6b0d761"
+  },
+  "supplied_input_paths": [
+    "design_docs/verification/world-iter366/record-design.md",
+    "design_docs/verification/world-iter366/designer-receipt.json",
+    "design_docs/verification/world-iter366/controller-observations.json",
+    "design_docs/verification/world-iter366/controller-gate4-base.json",
+    "design_docs/verification/world-iter366/base-files.json",
+    "design_docs/verification/world-iter366/base-checks.json",
+    "design_docs/verification/world-iter366/baseline-charter-gate.json",
+    "design_docs/verification/world-iter366/baseline-index-cli.json",
+    "design_docs/verification/world-iter366/baseline-privacy.json",
+    "design_docs/verification/world-iter366/worktree-census-original.json",
+    "design_docs/verification/world-iter366/worktree-census.txt",
+    "design_docs/verification/world-iter366/routing-resolvers.json",
+    "CLAUDE.md",
+    "design_docs/world-mission.md",
+    "design_docs/world-mission-log.md",
+    "design_docs/world-mission-index.md",
+    "design_docs/world-mission-dashboard.md",
+    "design_docs/world-mission-status-archive.md",
+    "design_docs/world-mission-log-archive.md"
+  ],
+  "freeze_policy": {
+    "editable_preflight_baselines": [
+      "design_docs/world-mission.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-index.md",
+      "design_docs/world-mission-dashboard.md"
+    ],
+    "immutable_consumed_paths": [
+      "design_docs/verification/world-iter366/record-design.md",
+      "design_docs/verification/world-iter366/designer-receipt.json",
+      "design_docs/verification/world-iter366/controller-observations.json",
+      "design_docs/verification/world-iter366/controller-gate4-base.json",
+      "design_docs/verification/world-iter366/base-files.json",
+      "design_docs/verification/world-iter366/base-checks.json",
+      "design_docs/verification/world-iter366/baseline-charter-gate.json",
+      "design_docs/verification/world-iter366/baseline-index-cli.json",
+      "design_docs/verification/world-iter366/baseline-privacy.json",
+      "design_docs/verification/world-iter366/worktree-census-original.json",
+      "design_docs/verification/world-iter366/worktree-census.txt",
+      "design_docs/verification/world-iter366/routing-resolvers.json",
+      "CLAUDE.md",
+      "design_docs/world-mission-log-archive.md",
+      "design_docs/coding-standards.md",
+      "design_docs/DESIGN.md",
+      "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/SKILL.md",
+      "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/resources/registry_reuse_gate.md",
+      "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-3-route.md",
+      "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md",
+      "design_docs/verification/world-iter366/record-plan.md",
+      "design_docs/verification/world-iter366/record-state.json"
+    ],
+    "timing": "All input hashes must match before edits. Five owned output hashes are consumed baseline bytes; afterward verify their exact expected transformations. All other input hashes remain fixed. Controller freezes consumed original record-state.json bytes at execution launch with an external hash receipt.",
+    "concurrency": "Genuinely NEW controller evidence may arrive untouched; not input drift. Never freeze/hash/copy entire world-iter366 directory.",
+    "state_integrity": "No cyclic state hash: controller records the launch freeze externally. Original planning receipt is entirely immutable, including passes, started, completed and notes; no executor edits are permitted.",
+    "executor_writable_json_pointers": [],
+    "completion_rule": "Original planning milestone passes=false forever; retain original null progress fields. Executor records actual M1 preparation passes, completion timestamp and notes only in NEW execution-state.json, with G1-G7 prepared and G8 independent review/CI/delivery explicitly pending"
+  },
+  "controller_obligations": [
+    "Git writes, snapshot reconstruction and commits",
+    "Any authorized narrow charter Go test outside sandbox only after side-effect inspection and pristine baseline",
+    "Independent final-record judgment and material-change coverage",
+    "Exact full40 PR-head and merge-head all3 terminal-success CI with run URLs",
+    "External delivery and landing"
+  ],
+  "authority": {
+    "row256": "PARKED needs-human-review; independent MiniMax FAIL85; LOCAL_CRITERION UNMET; draft PR515",
+    "open_decisions": [
+      "D-WORLD-105",
+      "D-WORLD-110",
+      "D-WORLD-111",
+      "D-WORLD-112"
+    ],
+    "defaults": {
+      "D-WORLD-105": "C:233 parked/fail closed",
+      "D-WORLD-110": "A:255 as built",
+      "D-WORLD-111": "A:exactly two named baseline failures; no additional failures",
+      "D-WORLD-112": "No autonomous credential change"
+    },
+    "independent_holds": [
+      "D-WORLD-111",
+      "D-WORLD-112"
+    ],
+    "conditional_order": [
+      250,
+      255,
+      256,
+      257,
+      201,
+      243
+    ],
+    "autonomous_skip256": false,
+    "clauses_1_7": "MET inherited; no remeasurement",
+    "goal": "unchanged"
+  },
+  "planning_verification": {
+    "supplied_hashes_verified": 19,
+    "base_manifest_parsed_entries": 6442,
+    "census_original_text_and_sha256_match": true,
+    "milestone_execution_performed": false,
+    "tests_run": false,
+    "git_writes": false,
+    "network": false,
+    "external_messaging": false,
+    "subagents": false
+  },
+  "finding_discipline": "Report base reds without repair or waiver; preserve original raw census failure and bytes. No whole-old-archive whitespace acceptance. Sandbox denial UNINFORMATIVE UNDER SANDBOX; no product verdict. No TMPDIR/GOTMPDIR overrides.",
+  "progress_wording_recommendation": "**Progress**: 1.0: clauses 1–7 MET (inherited assessment); goal unmoved.",
+  "handoff": "Ready for controller to route; no automatic external handoff, user wait or claimed execution"
+}

@@ -1,0 +1,16 @@
+{
+  "members": 7,
+  "payload_paths": [
+    "design_docs/verification/world-iter366/execution-state.json",
+    "design_docs/verification/world-iter366/executor-proof.json",
+    "design_docs/world-mission-dashboard.md",
+    "design_docs/world-mission-index.md",
+    "design_docs/world-mission-log.md",
+    "design_docs/world-mission-status-archive.md",
+    "design_docs/world-mission.md"
+  ],
+  "hashes_modes_types_match": true,
+  "copied_from_snapshot": true,
+  "local_snapshot_unchanged": true,
+  "recoverability": "M1 reconstruction commit contains all seven members; tracked snapshot-manifest.json preserves original manifest; bulky snapshot local only"
+}

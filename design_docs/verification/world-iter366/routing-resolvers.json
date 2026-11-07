@@ -1,0 +1,22 @@
+{
+  "designer": {
+    "rc": 0,
+    "stdout": "recipe codex:gpt-6.1-sol declared:provider-pin\n",
+    "stderr": ""
+  },
+  "planner": {
+    "rc": 0,
+    "stdout": "recipe codex:gpt-6.1-sol anthropic-fallback:fail-closed:no-doc\n",
+    "stderr": ""
+  },
+  "executor": {
+    "rc": 0,
+    "stdout": "recipe codex:gpt-6.1-sol declared:provider-pin\n",
+    "stderr": ""
+  },
+  "evaluator": {
+    "rc": 0,
+    "stdout": "recipe claude:claude-sonnet-4-6 declared:provider-pin\n",
+    "stderr": ""
+  }
+}

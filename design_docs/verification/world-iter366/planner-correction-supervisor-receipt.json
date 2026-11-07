@@ -1,0 +1,64 @@
+{
+  "role": "planner",
+  "lane": "codex:gpt-6.1-sol",
+  "agent_api_model_override": "unavailable; Agent supervisor delegates actual pinned provider CLI",
+  "private_raw_dir": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world366-planner-0mlj1fxk",
+  "subscription_key_stripped": true,
+  "correction": {
+    "reason": "Controller clarified immutable planning state and new executor execution-state ownership while initial actual child was already running",
+    "command": [
+      "/opt/homebrew/bin/codex",
+      "exec",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "--sandbox",
+      "workspace-write",
+      "--add-dir",
+      "/Users/voightkampff/Library/Caches/go-build",
+      "--add-dir",
+      "/Users/voightkampff/go/pkg/mod",
+      "-C",
+      "/Users/voightkampff/dev/sunholo-data/.world-iter366-planner-correction",
+      "-o",
+      "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world366-planner-0mlj1fxk/correction-last.txt",
+      "MISSION-ROLE: planner\nNarrow correction to your iteration366 ADMIN plan/state only. Existing untracked design_docs/verification/world-iter366/record-plan.md and record-state.json are your own prior deliverables copied intact. Read them and record-design.md; do not expand scope or reread giant manifests. Controller clarified after initial launch: original record-state.json is an IMMUTABLE planning receipt with passes=false forever. Remove all permission to edit progress fields there. Executor creates a separate NEW design_docs/verification/world-iter366/execution-state.json at M1 completion with actual preparation passes, completion timestamp and notes and explicit pending independent review/CI/delivery boundaries. Do not make M1 preparation passes claim controller-owned G8 completion. Original all8 AC names may remain in planning state with passes=false; execution state distinguishes prepared G1-G7 from pending G8. Executor-owned new outputs are executor-proof.json AND execution-state.json, plus five existing admin files, exactly7 snapshot payload files in .snap/M1/ and one self-excluding manifest. Update sole-evidence/six-payload language accordingly. Snapshot excludes consumed plan/state/design/controller files. Controller reconstruction commit+manifest suffices; bulky .snap directory remains local-only, never tracked. Freeze execution consumed original planning-state by controller at execution launch, no cyclic hash in state. Retain concise plan <=100 lines, explicit existing freeze map, no new gates/scripts or tests. Update input_sha256 entry for corrected record-plan.md to its exact new SHA after writing; preserve all other input hashes and original role references, milestone passes=false. Add progress wording recommendation: **Progress**: 1.0: clauses 1\u20137 MET (inherited assessment); goal unmoved. Keep all authority defaults, scope and byte-preservation requirements. Change only your two plan/state files; no Git writes, tests, network, shared state, credentials or nested agents. Finish concise.\n"
+    ],
+    "base": "adb4fb80b9d7600ad9118aa15a29fb2e4a4e7c89",
+    "closed_stdin": true,
+    "deadline_seconds": 600,
+    "returncode": 0,
+    "wall_seconds": 83.919,
+    "timed_out": false,
+    "footer_literal": "26.699",
+    "footer_tokens": 26699,
+    "model_header_present": true
+  },
+  "initial_receipt": {
+    "path": "design_docs/verification/world-iter366/planner-supervisor-receipt.json",
+    "sha256": "0d18a28d55eb20dc293a359317f943655eb742a30c7d9e8fe1a8830a6791e060",
+    "initial_artifacts": {
+      "record-plan.md": {
+        "bytes": 8532,
+        "sha256": "c83f38e286939fa9060ed3b42a9eae3d9212e6b8accf83f9cf0444072e9f7526"
+      },
+      "record-state.json": {
+        "bytes": 15188,
+        "sha256": "83d2e5d9133137aaef3cbb598bc69d96157a0797d8360a06fb4fa7b2049c15ca"
+      }
+    }
+  },
+  "artifacts": {
+    "record-plan.md": {
+      "bytes": 9310,
+      "sha256": "6fd6323243087e08719c36a9db11cac30765e4eb7c9339bee56e4ed7f6b0d761"
+    },
+    "record-state.json": {
+      "bytes": 16661,
+      "sha256": "28bb418fe3d873a1d8be1273d7cb6a476791a1a2aa92023d846e6a3543a354e9"
+    }
+  },
+  "completion": "Actual child exited rc0; both actual planner artifacts validated, frozen inputs stable, exact bytes copied to unused controller-owned evidence paths. One real M1 with passes=false and nonvacuous acceptance criteria. Narrow pinned correction preserves immutable planning state and adds separate new execution-state.json plus seven-member local snapshot; final exact artifact hashes supersede initial artifact hashes, which remain preserved above and original raw bytes retained in private_raw_dir.",
+  "preservation_note": "Initial supervisor receipt restored byte-for-byte via its original preserved fields/ordering before handoff; correction banked separately after controller clarification. Original initial plan/state raw bytes preserved privately, not destroyed."
+}

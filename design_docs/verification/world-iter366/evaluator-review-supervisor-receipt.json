@@ -1,0 +1,54 @@
+{
+  "role": "evaluator",
+  "transport": "ailang mission codex-exec managed daemon",
+  "model": "gpt-6.1-sol",
+  "judge_independence": "same-model-fresh-context",
+  "authority": "D-WORLD-48 amended",
+  "reviewed_full_sha": "57b449d2339cd16d115b280d56676e91c3aef454",
+  "actual_rc": 0,
+  "runtime_seconds": 675.57,
+  "timeout_seconds": 900,
+  "stdin": "closed",
+  "openai_api_key_stripped": true,
+  "model_override_exposure": false,
+  "sandbox": "workspace-write",
+  "cache_adddirs": false,
+  "transport_limitation": "Managed daemon CLI rejects --add-dir and does not accept -o; retry removed unsupported switches, preserving isolated workspace-write; no Go suite authorized. Initial rc1 launch receipt preserved.",
+  "command_without_prompt": [
+    "ailang",
+    "mission",
+    "codex-exec",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+    "--sandbox",
+    "workspace-write",
+    "-C",
+    "/Users/voightkampff/dev/sunholo-data/.world-iter366-evaluator"
+  ],
+  "directive_bytes": 5925,
+  "raw_output_private": true,
+  "token_footer_safe_matches": [],
+  "usage_note": "Managed daemon emitted no numeric terminal usage footer; actual runtime=675.57seconds, current evaluator tokens/metered USD unknown. No estimate or substitution from historical examples.",
+  "actual_terminal_tokens": null,
+  "token_footer_parser": "Anchored numeric footer only; original broad r2 match was historical quoted text, not usage. Original r2 receipt retained unchanged.",
+  "terminal_marker": "EVALUATION_VERDICT: PASS score=96",
+  "actual_artifacts": [
+    {
+      "path": "design_docs/verification/world-iter366/evaluator-report.md",
+      "bytes": 18107,
+      "sha256": "d58311898df08f1b979fadabd0cc0949d27bc94ae88c986280c0892e3463001b"
+    },
+    {
+      "path": "design_docs/verification/world-iter366/evaluator-result.json",
+      "bytes": 28533,
+      "sha256": "1ecdd453212eeb9938b51950e7c58193238536a448881a0c31fcc6048e8e3dae"
+    }
+  ],
+  "actual_result_parse": "valid nonempty JSON",
+  "tracked_worktree_unchanged": true,
+  "original_failed_launch_receipt": "evaluator-supervisor-receipt.json",
+  "original_retry_receipt": "evaluator-supervisor-r2-receipt.json",
+  "review_scope": "Prepared ADMIN only; G8 exact PR+merge CI/delivery pending; no product acceptance"
+}

@@ -1,0 +1,35 @@
+{
+  "role": "designer",
+  "agent_api_model_override": "unavailable; Agent supervisor delegates actual pinned provider CLI",
+  "lane": "codex:gpt-6.1-sol",
+  "private_raw_dir": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world366-designer-rqnz_vem",
+  "subscription_key_stripped": true,
+  "probe": {
+    "returncode": 0,
+    "wall_seconds": 4.902,
+    "timed_out": false,
+    "footer_tokens": 6,
+    "model_header_present": true
+  },
+  "actual": {
+    "returncode": 0,
+    "wall_seconds": 244.603,
+    "timed_out": false,
+    "footer_tokens": 97445,
+    "model_header_present": true,
+    "original_parser_value": 97,
+    "footer_literal": "97.445",
+    "footer_parse_note": "Actual CLI footer uses period thousands grouping; corrected initial integer-prefix parse before handoff."
+  },
+  "artifacts": {
+    "record-design.md": {
+      "exists": true,
+      "bytes": 7953
+    },
+    "designer-receipt.json": {
+      "exists": true,
+      "bytes": 8812
+    }
+  },
+  "completion": "Actual child exited rc0 and both deliverables nonempty;102 combined lines.18 input hashes stable at child completion. No existing tracked edits."
+}

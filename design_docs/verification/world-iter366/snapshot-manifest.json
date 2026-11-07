@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "milestone": "M1_ADMIN_RECORD_366",
+  "payload_count": 7,
+  "manifest_excludes_self": true,
+  "controller_reconstruction": "PENDING",
+  "files": [
+    {
+      "path": "design_docs/world-mission.md",
+      "snapshot_path": ".snap/M1/design_docs/world-mission.md",
+      "type": "file",
+      "mode": "0644",
+      "sha256": "8888e17aa5a81f97b65b320c947783ae95c90759435846a91dbdd93cc238dcf3"
+    },
+    {
+      "path": "design_docs/world-mission-status-archive.md",
+      "snapshot_path": ".snap/M1/design_docs/world-mission-status-archive.md",
+      "type": "file",
+      "mode": "0644",
+      "sha256": "2bedadd7e79e9befa2b141d35049ea3f82b9dc26aea44eab3478f8f17100569b"
+    },
+    {
+      "path": "design_docs/world-mission-log.md",
+      "snapshot_path": ".snap/M1/design_docs/world-mission-log.md",
+      "type": "file",
+      "mode": "0644",
+      "sha256": "e981946c71107973538388363e496a6670231ae7a895f49f1e2c4c2c8d977b97"
+    },
+    {
+      "path": "design_docs/world-mission-index.md",
+      "snapshot_path": ".snap/M1/design_docs/world-mission-index.md",
+      "type": "file",
+      "mode": "0644",
+      "sha256": "4dd52a91b130d330ccb9e12da15feb537fbc6f452673610aa640eedbe860669c"
+    },
+    {
+      "path": "design_docs/world-mission-dashboard.md",
+      "snapshot_path": ".snap/M1/design_docs/world-mission-dashboard.md",
+      "type": "file",
+      "mode": "0644",
+      "sha256": "4710305d66a0d7d69e863242c55d3ef7af7ccf7cb284d7e9ff1c9440b6d74ea8"
+    },
+    {
+      "path": "design_docs/verification/world-iter366/executor-proof.json",
+      "snapshot_path": ".snap/M1/design_docs/verification/world-iter366/executor-proof.json",
+      "type": "file",
+      "mode": "0644",
+      "sha256": "102ae527b384febbef9ebd696839ccad86c2d1f05f17d64527e33c3008d75f2e"
+    },
+    {
+      "path": "design_docs/verification/world-iter366/execution-state.json",
+      "snapshot_path": ".snap/M1/design_docs/verification/world-iter366/execution-state.json",
+      "type": "file",
+      "mode": "0644",
+      "sha256": "85403b8d84d765979a6e9c22136bb6cc9541fff8619cf7ec10cb9cdb3b25007f"
+    }
+  ]
+}

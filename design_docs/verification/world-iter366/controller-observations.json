@@ -1,0 +1,40 @@
+{
+  "at": "2026-11-07T20:51:09.176442+00:00",
+  "base": "1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4",
+  "kill_switch": false,
+  "billing": "CLEAN (specific presence checks rc0)",
+  "gate0": "0 allowlisted directives #449 at37 comments; no driver crash notices; watermarks1/2 degraded; control107:4 fired",
+  "routing_note": "lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `pi:openrouter/minimax/minimax-m3`; `evaluator`: **pi** lane `openrouter/minimax/minimax-m3` unusable (probe rc=`75`) \u2192 advanced to `claude:claude-sonnet-4-6`",
+  "clause_map": {
+    "1": "MET (inherited ratified assessment; no remeasurement)",
+    "2": "MET (inherited ratified assessment; no remeasurement)",
+    "3": "MET (inherited ratified assessment; no remeasurement)",
+    "4": "MET (inherited ratified assessment; no remeasurement)",
+    "5": "MET (inherited ratified assessment; no remeasurement)",
+    "6": "MET (inherited ratified assessment; no remeasurement)",
+    "7": "MET (inherited ratified assessment; no remeasurement)"
+  },
+  "next": "ADMIN only; row256 human parked, independent FAIL85/local criterion UNMET; no product skip",
+  "index_recent": "| 365 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |\n| 364 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |\n| 363 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |\n| 362 | 2026-11-07 | row 256 implemented but PARKED: independent MiniMax FAIL 85, corrected local gate UNMET; evaluator credential incident escalated [PRODUCT] |\n| 361 | 2026-11-07 | orphan: row 256 r1 design/quorum artifacts recovered and credited by iteration 362; no commit, landing or independent execution verdict [ADMIN] |\n| 360 | 2026-11-06 | row 255 built: a failed workspace-exec call records, returns and logs one bounded failure line; lazy store schema mark guards older binaries; desig... |",
+  "release_probe": {
+    "new_A1_subjects": 0,
+    "N2d_N4a_subjects": 0,
+    "positive_control_N2c": 2
+  },
+  "worktrees": 101,
+  "orphan": "361 previously credited by362; open product515 held human-gated; no later own record PR open",
+  "skill_currency": "authoritative resolved directory matches fetched AILANG origin/dev:14/14; negative control fired; no cwd skill copy",
+  "weekly_boundary": "next2026-11-09T07:00:00+01:00, issue449 <80 comments; not due",
+  "retro": {
+    "harness_last20": 0,
+    "last3_product_landings": [
+      "360:none",
+      "359:none",
+      "340:none"
+    ],
+    "routable_unmet": 0
+  },
+  "upstream_predicates": "33/33 closed, fresh issue reads; each response identity checked",
+  "self_notices": "0 crash,2 historic transcript notices; shared authoritative helper rc0,1/2 watermarks",
+  "agent_interface": "model override unavailable: four Agent supervisors route actual roles via pinned CLI recipes; generator/evaluator never same context"
+}

@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 366 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |
 | 365 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |
 | 364 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |
 | 363 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |

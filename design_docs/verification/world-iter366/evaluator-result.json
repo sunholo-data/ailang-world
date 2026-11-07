@@ -1,0 +1,724 @@
+{
+  "schema_version": 1,
+  "iteration": 366,
+  "role": "independent-evaluator",
+  "verdict": "PASS",
+  "score": 96,
+  "score_exact": 96.25,
+  "score_max": 100,
+  "pass_threshold": 70,
+  "substantive_failures": 0,
+  "blocking_findings": [],
+  "nonblocking_findings": [
+    {
+      "id": "N1",
+      "severity": "FLAG",
+      "title": "judge-independence:same-model-fresh-context",
+      "detail": "Separate fresh evaluator role on supplied codex:gpt-6.1-sol invocation, same model as generators. Sonnet and opus quota preflightsrc1; OpenRouter over-rationrc75 with no inference. D48 amended fallback permits this; no cross-vendor independence claimed."
+    },
+    {
+      "id": "N2",
+      "severity": "INFO",
+      "title": "Original instrument failures remain visible",
+      "detail": "Lossless census packaging retains original staged-whitespacerc2; fresh no-index check reproduces EOF diagnosticrc3. Empty first provenance filter and correctedr2, initial planner receipt plus correction, and child array comparison error plus corrected value comparator remain recorded. Designer footer97 prefix parse corrected to97445 with original retained. None constitutes a product verdict or waiver."
+    },
+    {
+      "id": "N3",
+      "severity": "PENDING",
+      "title": "Controller delivery is unfinished",
+      "detail": "No final PR/merge exact-head CI or external landing accepted by this review. G8 pending is expected;3.75 acceptance points reserved rather than treating it as a substantive failure."
+    },
+    {
+      "id": "N4",
+      "severity": "LIMIT",
+      "title": "Current evaluator terminal usage unavailable",
+      "detail": "Preexisting local evaluator-supervisor-receipt.json records an unsuccessful managed transport attempt (rc1,0.05s, empty footer), not this ongoing judge's terminal outcome. It was preserved and excluded from candidate evidence. Current evaluator tokens/runtime/cost and controller/supervisor aggregate usage remain unknown."
+    }
+  ],
+  "reviewed_full_sha": "57b449d2339cd16d115b280d56676e91c3aef454",
+  "canonical_product_base": "1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4",
+  "original_M1_full_sha": "b371cdcec9d391e0c56a7f2d3f447d5471000738",
+  "execution_head": "e3f746457213857c5654654e2188d05d7dcf751a",
+  "planner_checkout": "adb4fb80b9d7600ad9118aa15a29fb2e4a4e7c89",
+  "evaluated_at": "2026-11-07T21:26:33.706318+00:00",
+  "independence": {
+    "flag": "judge-independence:same-model-fresh-context",
+    "actual_role": "Separate fresh independent judge",
+    "invocation_lane": "codex:gpt-6.1-sol (supplied invocation; no new model probe)",
+    "cross_vendor": false,
+    "controller_verdict_supplied": false,
+    "generator_work_authored_by_judge": false,
+    "no_nested_agents": true,
+    "authority": "D-WORLD-48 amended; separate judge explicitly required by user"
+  },
+  "scope": {
+    "classification": "Prepared ADMIN record only",
+    "baseline_paths": 6442,
+    "candidate_paths": 6486,
+    "protected_paths": 6437,
+    "earlier_evidence_paths": 4831,
+    "earlier365_evidence_paths": 47,
+    "changed_existing_paths": [
+      "design_docs/world-mission.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-index.md",
+      "design_docs/world-mission-dashboard.md"
+    ],
+    "new_candidate_paths": [
+      "design_docs/verification/world-iter366/base-checks.json",
+      "design_docs/verification/world-iter366/base-confirmation.json",
+      "design_docs/verification/world-iter366/base-files.json",
+      "design_docs/verification/world-iter366/baseline-charter-gate.json",
+      "design_docs/verification/world-iter366/baseline-index-cli.json",
+      "design_docs/verification/world-iter366/baseline-privacy.json",
+      "design_docs/verification/world-iter366/controller-charter-gate.json",
+      "design_docs/verification/world-iter366/controller-gate4-base.json",
+      "design_docs/verification/world-iter366/controller-index-cli.json",
+      "design_docs/verification/world-iter366/controller-observations.json",
+      "design_docs/verification/world-iter366/controller-privacy.json",
+      "design_docs/verification/world-iter366/controller-snapshot-reconstruction.json",
+      "design_docs/verification/world-iter366/controller-structural-check.json",
+      "design_docs/verification/world-iter366/designer-receipt.json",
+      "design_docs/verification/world-iter366/designer-supervisor-receipt.json",
+      "design_docs/verification/world-iter366/evaluator-preflight.json",
+      "design_docs/verification/world-iter366/execution-launch-inputs.json",
+      "design_docs/verification/world-iter366/execution-state.json",
+      "design_docs/verification/world-iter366/executor-preflight.json",
+      "design_docs/verification/world-iter366/executor-proof.json",
+      "design_docs/verification/world-iter366/executor-supervisor-receipt.json",
+      "design_docs/verification/world-iter366/inbox.json",
+      "design_docs/verification/world-iter366/issue.json",
+      "design_docs/verification/world-iter366/ledger-check.json",
+      "design_docs/verification/world-iter366/ledger-open.json",
+      "design_docs/verification/world-iter366/ledger-provenance-r2.json",
+      "design_docs/verification/world-iter366/ledger-provenance.json",
+      "design_docs/verification/world-iter366/messaging-store-control.json",
+      "design_docs/verification/world-iter366/open-pr-record-comparison.json",
+      "design_docs/verification/world-iter366/planner-correction-supervisor-receipt.json",
+      "design_docs/verification/world-iter366/planner-supervisor-receipt.json",
+      "design_docs/verification/world-iter366/previous-directives.json",
+      "design_docs/verification/world-iter366/product-pr515.json",
+      "design_docs/verification/world-iter366/ready-inputs.json",
+      "design_docs/verification/world-iter366/record-design.md",
+      "design_docs/verification/world-iter366/record-plan.md",
+      "design_docs/verification/world-iter366/record-state.json",
+      "design_docs/verification/world-iter366/routing-resolvers.json",
+      "design_docs/verification/world-iter366/shared-main-baseline.json",
+      "design_docs/verification/world-iter366/shared-self-notices.json",
+      "design_docs/verification/world-iter366/snapshot-manifest.json",
+      "design_docs/verification/world-iter366/upstream-predicates.json",
+      "design_docs/verification/world-iter366/worktree-census-original.json",
+      "design_docs/verification/world-iter366/worktree-statuses.json"
+    ],
+    "removed_paths": [],
+    "candidate_disk_blob_type_mode_drift": [],
+    "protected_drift": [],
+    "baseline_manifest_mismatches": [],
+    "physical_file_modes": {
+      "0644": 6407,
+      "0755": 79
+    },
+    "all_baseline_types": "file",
+    "preexisting_local_inputs": [
+      ".snap/M1/(seven mirrored payloads and manifest.json)",
+      "design_docs/verification/world-iter366/worktree-census.txt",
+      "design_docs/verification/world-iter366/evaluator-supervisor-receipt.json"
+    ],
+    "judge_persistent_outputs": [
+      "design_docs/verification/world-iter366/evaluator-report.md",
+      "design_docs/verification/world-iter366/evaluator-result.json"
+    ],
+    "product_acceptance": false,
+    "performance_acceptance": false
+  },
+  "rubric_adaptation": {
+    "explicit": true,
+    "tests": {
+      "points": 20,
+      "max": 20,
+      "basis": "Independent preservation/structural comparisons plus40negativecontrols. NoGo/producttestclaim."
+    },
+    "lint": {
+      "points": 10,
+      "max": 10,
+      "basis": "Changed-line/new-outputwhitespace;strictJSONandsemanticstate/manifestschemas;noGoLintclaim."
+    },
+    "acceptance": {
+      "points": 26.25,
+      "max": 30,
+      "basis": "7/8actuallydischarged;G8reservedpendingcontrollerdelivery.Honestpendingdoesnottriggerhardfailure.Immutableplanningpasses=falseisintentional."
+    },
+    "code_quality": {
+      "points": 15,
+      "max": 15,
+      "basis": "Administrativeownership,stage-boundimmutableinputs,separatepreparationstateandacyclic7-membersnapshot.Noapplicablecodefunction-sizeorproductLOCdeductions;giantmanifestsandprotectedhistoricaldocsarenotnewsource."
+    },
+    "documentation": {
+      "points": 15,
+      "max": 15,
+      "basis": "5iterationlog/indexasADMINchangelog;5proof/snapshot/reconstructionevidenceasADMINexamples;5honestdesign/planning/preparationstatus.NoCHANGELOGorfeatureexamplerequirement."
+    },
+    "design_fidelity": {
+      "points": 10,
+      "max": 10,
+      "basis": "Exactfive-filetransformsandallauthorityboundariesmatchapprovedADMINcontract."
+    },
+    "conditional_regression_surface": "Nottriggered:noproduct/compiler/testpathschanged",
+    "conditional_performance": "Nottriggered:noperformancegoaloracceptance",
+    "rounding": "96.25roundedtonearestinteger96",
+    "hard_fail_rule": "Any substantive failure would FAIL irrespective of score"
+  },
+  "acceptance_criteria": [
+    {
+      "id": "AC-G1-SCOPE",
+      "status": "MET",
+      "evidence": "Independent Git trees: 6442 baseline, 6486 candidate; exactly five existing paths changed, 44 new366 evidence paths, zero removals. All candidate disk blobs/types/Git modes match. Ten preexisting local input files enumerated separately."
+    },
+    {
+      "id": "AC-G2-TRANSFORM",
+      "status": "MET",
+      "evidence": "Whole expected charter/archive/index buffers equal candidate. Exact 209-byte STATUS363 plus blank transfer; new STATUS366 then365/364; one route365 to366. Ledger219711 and queue992586 bytes identical; old index bytes/order including361 retained."
+    },
+    {
+      "id": "AC-G3-COUNTS",
+      "status": "MET",
+      "evidence": "Complete506990-byte old log prefix retained;39 to40 canonical entries, one366, unchanged log archive, no rotation. Charter6345, status archive732, index368, log3083, dashboard24 physical lines."
+    },
+    {
+      "id": "AC-G4-PRESERVE",
+      "status": "MET",
+      "evidence": "All6437 protected baseline paths and4831 earlier evidence paths preserved. All6442 manifest hashes independently regenerated from Git blobs. State26, ready25, launch7, executor union38 and designer18 frozen-input checks pass. Original planning bytes unchanged since launch. Seven snapshot members match original M1 bytes/types/modes/hashes, exact manifest and file set; raw census JSON round-trip exact."
+    },
+    {
+      "id": "AC-G5-TRUTH",
+      "status": "MET",
+      "evidence": "Role models, measured degradations, inherited usage and explicit unknowns supported by receipts; no supplied controller verdict adopted. All four decisions stayOPEN, row256 parkedFAIL85/localUNMET/draft515, route and goal unchanged. D48 historical creation distinguished from new self-resolution. Original instrument errors retained."
+    },
+    {
+      "id": "AC-G6-WHITESPACE",
+      "status": "MET",
+      "evidence": "Default/base-relative/explicit candidate diff --check allrc0. All44 new candidate files no-index check rc1 with empty diagnostics and nonempty controls.42 tracked JSON artifacts plus one preexisting local supervisor JSON strictly parse. Raw census known EOF diagnostic reproducedrc3 without editing; original stagedrc2 preserved."
+    },
+    {
+      "id": "AC-G7-BOUNDARY",
+      "status": "MET",
+      "evidence": "Judge ran noGo, suite, product gate, helper with shared-state writes, network, inbox, credential read, registry operation, Git write or nested agent. Controller baseline/narrow checks are inherited provenance only. Sandbox bind denial would be UNINFORMATIVE UNDER SANDBOX; none measured here."
+    },
+    {
+      "id": "AC-G8-DELIVERY",
+      "status": "PENDING_CONTROLLER",
+      "evidence": "This report supplies independent candidate review and independently proves originalM1 recovery; allG8 is not complete. Exact full40 PR-head and merge-head all3 terminal-success CI with run URLs and external delivery/landing remain future controller obligations. Honest deferral is not a substantive defect."
+    }
+  ],
+  "criteria_met": 7,
+  "criteria_pending": [
+    "AC-G8-DELIVERY"
+  ],
+  "all_eight_reviewed": true,
+  "comparisons": {
+    "status363_pair": {
+      "bytes": 209,
+      "sha256": "47c176790ec63fad66aeaf56ba117b3fe2f09d8ab2e07946e32616f349123afe",
+      "exact_transfer": true
+    },
+    "ledger": {
+      "bytes": 219711,
+      "rows": 99,
+      "sha256": "58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01",
+      "unchanged": true
+    },
+    "queue": {
+      "bytes": 992586,
+      "sha256": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4",
+      "unchanged": true
+    },
+    "log": {
+      "old_prefix_bytes": 506990,
+      "entries_before": 39,
+      "entries_after": 40,
+      "canonical366": 1,
+      "rotation": false,
+      "archive_unchanged": true
+    },
+    "lines": {
+      "charter": 6345,
+      "status_archive": 732,
+      "index": 368,
+      "log": 3083,
+      "dashboard": 24
+    },
+    "freeze_counts": {
+      "planning_input_map": 26,
+      "ready_inputs": 25,
+      "execution_launch": 7,
+      "executor_union": 38,
+      "designer_consumed": 18
+    },
+    "freeze_mismatches": [],
+    "planning_state_sha256": "28bb418fe3d873a1d8be1273d7cb6a476791a1a2aa92023d846e6a3543a354e9",
+    "planning_progress": {
+      "passes": false,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    "preparation_status": "PREPARED_G1_G7_PENDING_G8"
+  },
+  "recovery": {
+    "compared_against": "b371cdcec9d391e0c56a7f2d3f447d5471000738",
+    "seven_original_members_match_bytes_type_mode_sha256": true,
+    "manifest_exact": true,
+    "manifest_self_excluded": true,
+    "manifest_sha256": "35cef6a086a8b3608758ac2d73b95472882e9a303eb98682692f0a95e6a8a029",
+    "local_file_count_including_manifest": 8,
+    "later_annotated_members": [
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-dashboard.md"
+    ],
+    "original_proof_and_execution_state_unchanged": true,
+    "census_lossless_utf8_roundtrip": true,
+    "census_sha256": "188fa00923b82119a0cc3cd6a6b64717891b9dfc62bf9e6775e7422f505cab97",
+    "original_staged_whitespace_rc": 2,
+    "fresh_no_index_whitespace_rc": 3,
+    "fresh_diagnostic": "line404:newblanklineatEOF",
+    "no_repair_or_waiver": true
+  },
+  "provenance": {
+    "contract": "Gate0(b)appliestorowschangedsincewatermark;fleetonnon-squashresolutionflipisself-resolution.Historicalunchangedcreationdoesnotestablishnewself-resolutionin366.",
+    "previous_watermark": "2026-10-27T09:03:42Z",
+    "D48": {
+      "helper_verdict": "fleet",
+      "independent_verdict": "fleet",
+      "creation": "54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e",
+      "flip": "54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e",
+      "date": "2026-10-01T17:15:53+02:00",
+      "row_change_commits": 2,
+      "unchanged_this_fire": true,
+      "new_self_resolution": false,
+      "reopened": false
+    },
+    "D108": {
+      "verdict": "attended",
+      "flip": "cd15c9dce6cd020266acd2a9ff99b384cf610421",
+      "creation": "e9ec30595407531121ac02a52dfd24395dc411ab"
+    },
+    "D109": {
+      "verdict": "attended",
+      "flip": "61e2411aaa8c02bbc2058a5c8cafa1431454baf6",
+      "creation": "89a92ea028464466542277f72ce69f809b42b7e8"
+    },
+    "D111": {
+      "verdict": "never-resolved",
+      "creation": "11b7a56902cf7935d506c7ccd157cc916499ee8a"
+    },
+    "D112": {
+      "verdict": "never-resolved",
+      "creation": "11b7a56902cf7935d506c7ccd157cc916499ee8a"
+    },
+    "all_relevant_rows_unchanged_base_to_candidate": true,
+    "authority_open": [
+      "D-WORLD-105",
+      "D-WORLD-110",
+      "D-WORLD-111",
+      "D-WORLD-112"
+    ],
+    "conditional_order": [
+      250,
+      255,
+      256,
+      257,
+      201,
+      243
+    ],
+    "no_new_urgent_ask": true,
+    "no_self_resolution": true,
+    "clauses_1_7": "METinherited;notremeasured",
+    "goal": "unchanged"
+  },
+  "commands": [
+    {
+      "command": "git rev-parse HEAD",
+      "result": "57b449d2339cd16d115b280d56676e91c3aef454",
+      "rc": 0
+    },
+    {
+      "command": "git diff --stat 1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4 57b449d2339cd16d115b280d56676e91c3aef454",
+      "result": "49 changed paths:5existing plus44new366",
+      "rc": 0
+    },
+    {
+      "command": "git log --format='%H %s' 1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4..HEAD",
+      "result": "Four-commit chain:design,plan,M1,annotations",
+      "rc": 0
+    },
+    {
+      "command": "git --no-optional-locks ls-tree -rz <base|candidate|M1|execution-head>",
+      "result": "Full path/type/mode/blob inventories;6442/6486 tracked path positive controls",
+      "rc": 0
+    },
+    {
+      "command": "git cat-file --batch",
+      "result": "Independently read every6442 baseline blob, SHA256 compared to base-files.json;0mismatches",
+      "rc": 0
+    },
+    {
+      "command": "git --no-optional-locks show <full-sha>:<explicit-path>",
+      "result": "Base expected buffers, stage history and originalM1 payload recovery",
+      "rc": 0
+    },
+    {
+      "command": "git --no-optional-locks ls-files --others -z",
+      "result": "10preexisting local files including ignored paths;exact snapshot7+manifest,census,local supervisor",
+      "rc": 0
+    },
+    {
+      "command": "git ls-files -z",
+      "result": "6486regular tracked files;6407mode0644,79mode0755;no physical mode exceptions",
+      "rc": 0
+    },
+    {
+      "command": "git --no-optional-locks log --full-history -m --no-renames --reverse --topo-order --format=%H -G '^\\| D-WORLD-<id> \\|' <candidate> -- design_docs/world-mission.md",
+      "result": "Independent creation/resolution history for48,108,109,111,112; Git names classified internally without email output",
+      "rc": 0
+    },
+    {
+      "command": "git --no-optional-locks rev-list --parents -n 1 <history-sha>",
+      "result": "Parent transitions distinguished from creation and inherited resolution",
+      "rc": 0
+    },
+    {
+      "command": "git --no-optional-locks show -s --format=%an%n%cn%n%aI <flip-or-creation-sha>",
+      "result": "In-memory identity classification; onlyverdict,SHAs,date emitted",
+      "rc": 0
+    },
+    {
+      "command": "git diff --numstat b371cdcec9d391e0c56a7f2d3f447d5471000738 57b449d2339cd16d115b280d56676e91c3aef454",
+      "result": "Onlylog+6lines,dashboard3replacements; all otherM1members unchanged",
+      "rc": 0
+    },
+    {
+      "command": "git diff b371cdcec9d391e0c56a7f2d3f447d5471000738 57b449d2339cd16d115b280d56676e91c3aef454 -- design_docs/world-mission-log.md design_docs/world-mission-dashboard.md",
+      "result": "Reviewed all later annotation hunks against staged receipts",
+      "rc": 0
+    },
+    {
+      "command": "git diff --check",
+      "result": "Emptydiagnostics",
+      "rc": 0
+    },
+    {
+      "command": "git diff --check 1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4 --",
+      "result": "Emptydiagnostics",
+      "rc": 0
+    },
+    {
+      "command": "git diff --check 1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4 57b449d2339cd16d115b280d56676e91c3aef454 --",
+      "result": "Emptydiagnostics",
+      "rc": 0
+    },
+    {
+      "command": "git diff --no-index --check /dev/null <each44newcandidatepath>",
+      "result": "44rc1,emptydiagnostics;eachnonemptyregularfile",
+      "rc": 1
+    },
+    {
+      "command": "git diff --no-index --check /dev/null design_docs/verification/world-iter366/worktree-census.txt",
+      "result": "line404:new blank line atEOF; original bytes kept; not a candidate whitespace acceptance failure",
+      "rc": 3
+    },
+    {
+      "command": "python3 - (independently authored inline byte/tree/freeze/recovery checks)",
+      "result": "Allpositivecomparisons passed after correcting evaluator read-only hash instrument",
+      "rc": 0
+    },
+    {
+      "command": "python3 - (independently authored inline history/strict-JSON checks)",
+      "result": "Fivehistoryresults and43JSONparses passed; receipt summary corrected for check_runs object schema",
+      "rc": 0
+    },
+    {
+      "command": "python3 - (independent in-memory structural mutation validator)",
+      "result": "Positivecandidate accepted;34mutantsrejected,0survivors",
+      "rc": 0
+    },
+    {
+      "command": "python3 - (independent whitespace/strict-JSON mutation controls)",
+      "result": "44positivefiles accepted;6mutantsrejected,0survivors",
+      "rc": 0
+    },
+    {
+      "command": "python3 - (physical mode and executor/designer consumed-input checks)",
+      "result": "38executorand18designerhashespass;all6486regulartrackedfilesexact0644or0755",
+      "rc": 0
+    }
+  ],
+  "controls": {
+    "method": "IndependentlydevelopedPythonvalidatorsandin-memorysyntheticviews;noondiskmutations,nocontrollerprivatechecker",
+    "positive_candidate_passed": true,
+    "rejected": 40,
+    "survivors": 0,
+    "mutations": [
+      {
+        "name": "empty baseline enumeration",
+        "guard": "baseline-enumeration",
+        "rejected": true
+      },
+      {
+        "name": "omit one baseline manifest member",
+        "guard": "baseline-enumeration",
+        "rejected": true
+      },
+      {
+        "name": "empty candidate census",
+        "guard": "missing-path",
+        "rejected": true
+      },
+      {
+        "name": "remove protected baseline path",
+        "guard": "missing-path",
+        "rejected": true
+      },
+      {
+        "name": "remove one owned output",
+        "guard": "missing-path",
+        "rejected": true
+      },
+      {
+        "name": "add unauthorized root output",
+        "guard": "new-path-boundary",
+        "rejected": true
+      },
+      {
+        "name": "add product source",
+        "guard": "new-path-boundary",
+        "rejected": true
+      },
+      {
+        "name": "change earlier tracked bytes",
+        "guard": "protected-identity",
+        "rejected": true
+      },
+      {
+        "name": "change earlier mode executable",
+        "guard": "protected-identity",
+        "rejected": true
+      },
+      {
+        "name": "change protected type symlink",
+        "guard": "protected-identity",
+        "rejected": true
+      },
+      {
+        "name": "new evidence symlink",
+        "guard": "new-type-mode",
+        "rejected": true
+      },
+      {
+        "name": "new evidence executable",
+        "guard": "new-type-mode",
+        "rejected": true
+      },
+      {
+        "name": "route rollback365",
+        "guard": "charter-transform",
+        "rejected": true
+      },
+      {
+        "name": "new self-resolution111",
+        "guard": "charter-transform",
+        "rejected": true
+      },
+      {
+        "name": "reopen historical D48",
+        "guard": "charter-transform",
+        "rejected": true
+      },
+      {
+        "name": "queue suffix byte drift",
+        "guard": "charter-transform",
+        "rejected": true
+      },
+      {
+        "name": "missing exact363 blank transfer",
+        "guard": "archive-transfer",
+        "rejected": true
+      },
+      {
+        "name": "edit prior archived bytes",
+        "guard": "archive-transfer",
+        "rejected": true
+      },
+      {
+        "name": "delete orphan361 index row",
+        "guard": "index-insert-history",
+        "rejected": true
+      },
+      {
+        "name": "rotate old log prefix",
+        "guard": "log-prefix",
+        "rejected": true
+      },
+      {
+        "name": "append duplicate366 heading",
+        "guard": "log-count-no-rotation",
+        "rejected": true
+      },
+      {
+        "name": "dashboard41 lines",
+        "guard": "line-limits",
+        "rejected": true
+      },
+      {
+        "name": "frozen consumed design byte drift",
+        "guard": "frozen-input",
+        "rejected": true
+      },
+      {
+        "name": "planning passes rewritten true",
+        "guard": "planning-immutable-progress",
+        "rejected": true
+      },
+      {
+        "name": "claim G8 complete",
+        "guard": "delivery-pending",
+        "rejected": true
+      },
+      {
+        "name": "clear independent human hold",
+        "guard": "authority-defaults-route",
+        "rejected": true
+      },
+      {
+        "name": "skip256 conditional order",
+        "guard": "authority-defaults-route",
+        "rejected": true
+      },
+      {
+        "name": "erase honest judge independence FLAG",
+        "guard": "judge-flag-no-verdict",
+        "rejected": true
+      },
+      {
+        "name": "snapshot missing member",
+        "guard": "snapshot-enumeration",
+        "rejected": true
+      },
+      {
+        "name": "snapshot duplicated member",
+        "guard": "snapshot-enumeration",
+        "rejected": true
+      },
+      {
+        "name": "snapshot path traversal",
+        "guard": "snapshot-path-mapping",
+        "rejected": true
+      },
+      {
+        "name": "snapshot type symlink",
+        "guard": "snapshot-type-mode",
+        "rejected": true
+      },
+      {
+        "name": "snapshot mode executable",
+        "guard": "snapshot-type-mode",
+        "rejected": true
+      },
+      {
+        "name": "snapshot substituted payload hash",
+        "guard": "snapshot-original-hash",
+        "rejected": true
+      },
+      {
+        "name": "trailing space",
+        "guard": "text-whitespace",
+        "rejected": true
+      },
+      {
+        "name": "trailing tab",
+        "guard": "text-whitespace",
+        "rejected": true
+      },
+      {
+        "name": "new blank EOF",
+        "guard": "text-whitespace",
+        "rejected": true
+      },
+      {
+        "name": "malformed JSON",
+        "guard": "strict-json",
+        "rejected": true
+      },
+      {
+        "name": "duplicate JSON authority key",
+        "guard": "strict-json",
+        "rejected": true
+      },
+      {
+        "name": "nonfinite JSON value",
+        "guard": "strict-json",
+        "rejected": true
+      }
+    ]
+  },
+  "judge_instrument_events": [
+    {
+      "event": "Initialscopecheckerinvokedread-onlygithash-object--stdinwithoutanexplicitinputbuffer",
+      "observed": "rc128shortread;enclosingPythonrc1",
+      "correction": "Removedunnecessarycall,closedchildstdin;computedGitblobidentitydirectlyusingSHA1headerandbytes;fullcomparisonrerunrc0",
+      "persistent_changes": false,
+      "product_verdict": false
+    },
+    {
+      "event": "Receiptsummaryassumedbase-checksstdoutwaslist",
+      "observed": "AttributeErrorafterfivehistoryresultsand43JSONparses",
+      "correction": "Parsedactualobjectcheck_runsarray;summaryandremainingreceiptcheckspass",
+      "persistent_changes": false,
+      "product_verdict": false
+    }
+  ],
+  "usage": {
+    "current_evaluator_tokens": null,
+    "current_evaluator_terminal_runtime_seconds": null,
+    "current_evaluator_metered_usd": null,
+    "current_evaluator_usage_source": "Notavailableinongoinginvocation;donotusefailedmanaged-transportreceiptascurrentterminalusage",
+    "inherited_roles": {
+      "designer_tokens": 97451,
+      "designer_actual_tokens": 97445,
+      "designer_probe_tokens": 6,
+      "designer_actual_seconds": 244.603,
+      "planner_tokens": 120602,
+      "planner_components": [
+        6207,
+        87696,
+        26699
+      ],
+      "planner_initial_seconds": 238.31,
+      "planner_correction_seconds": 83.919,
+      "executor_tokens": 134744,
+      "executor_actual_tokens": 128545,
+      "executor_probe_tokens": 6199,
+      "executor_actual_seconds": 433.096,
+      "known_role_subtotal": 352797,
+      "metered_usd": 0
+    },
+    "controller_and_supervisor_usage": "unreported",
+    "currency_conversion_performed": false
+  },
+  "limits": [
+    "StrictADMINreview;noevaluator_sprint.sh,fullGo,suite,producttestorperformanceacceptance.",
+    "Controllernarrowdarwin/arm64charterandprivacy/indexreceiptsareinheritedprovenance,nofreshjudgeproductverdict.",
+    "BasethreeterminalsuccessCIjobsverifiedfromstoredJSONonly;noonlinerevalidation,noexactcandidatePRormergeCIacceptance.",
+    "Shared-main6056-entrymanifestand103-rowworktree-statusreceiptparsedonly;nootherworktreeorcanonicalcloneaccess;controllernoninterferencenotfreshlyremeasured.",
+    "InitialplannerrawartifactprivatecopiesandproviderrawCLIlogsnotopened;preservationestablishedfortrackedinitialreceipt,correctionreceipt,hashreferencesandfrozenGitstagebytes.",
+    "Preexistinglocalsupervisorreceiptbelongsfailedmanagedattempt;currentjudgeusageandfooterunknown.",
+    "Factsaboutactualreview/usage/CIcanbeappendedlater;materialchangesrequirefurtherreview."
+  ],
+  "final_output_checks": {
+    "expected_new_outputs": 2,
+    "no_trailing_whitespace": true,
+    "strict_json": true,
+    "tracked_worktree_unchanged": true,
+    "no_other_new_persistent_outputs": true
+  }
+}

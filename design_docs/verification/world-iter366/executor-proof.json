@@ -1,0 +1,543 @@
+{
+  "schema_version": 1,
+  "iteration": 366,
+  "role": "executor",
+  "milestone": "M1_ADMIN_RECORD_366",
+  "status": "PREPARED_G1_G7_PENDING_G8",
+  "actual_lane": "codex:gpt-6.1-sol",
+  "lane_provenance": "Supplied actual CLI invocation plus executor-preflight.json; no new independent probe",
+  "canonical_product_base": "1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4",
+  "planner_checkout": "adb4fb80b9d7600ad9118aa15a29fb2e4a4e7c89",
+  "actual_execution_head": "e3f746457213857c5654654e2188d05d7dcf751a",
+  "routing_base": "base=1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4@2026-11-07T20:55:57Z",
+  "planning_state_immutable": true,
+  "planning_passes": false,
+  "checks": {
+    "AC-G1-SCOPE": {
+      "prepared": true,
+      "rc": 0,
+      "commands": [
+        "git --no-optional-locks rev-parse HEAD",
+        "git --no-optional-locks ls-tree -r 1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4",
+        "git --no-optional-locks ls-files -z",
+        "git --no-optional-locks diff --name-status 1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4 --",
+        "git --no-optional-locks diff --name-only HEAD --",
+        "git --no-optional-locks ls-files --others --exclude-standard -z"
+      ],
+      "canonical_paths": 6442,
+      "execution_tracked_paths": 6476,
+      "allowlist_present": 5,
+      "baseline_vs_HEAD_added_controller_paths": 34,
+      "changed_existing_paths": [
+        "design_docs/world-mission-dashboard.md",
+        "design_docs/world-mission-index.md",
+        "design_docs/world-mission-log.md",
+        "design_docs/world-mission-status-archive.md",
+        "design_docs/world-mission.md"
+      ],
+      "initial_untracked": [
+        "design_docs/verification/world-iter366/worktree-census.txt"
+      ],
+      "new_paths_required_absent": [
+        "design_docs/verification/world-iter366/executor-proof.json",
+        "design_docs/verification/world-iter366/execution-state.json",
+        ".snap/M1/"
+      ],
+      "new_paths_absence_verified": true,
+      "tracked_types_modes_checked": 6476,
+      "concurrent_controller_artifacts": "NEW controller evidence allowed untouched; no directory-wide freeze",
+      "new_concurrent_controller_paths_observed_untouched": [
+        "design_docs/verification/world-iter366/messaging-store-control.json"
+      ],
+      "untracked_audit": {
+        "rc": 0,
+        "initial_count": 1,
+        "at_snapshot_payload_stage": 11,
+        "owned_payload_copies": 7,
+        "new_owned_evidence": 2,
+        "untouched_initial_census": 1,
+        "new_controller_evidence": [
+          "design_docs/verification/world-iter366/messaging-store-control.json"
+        ],
+        "all_observed_types": "file",
+        "all_observed_modes": "0644",
+        "snapshot_ignored": false,
+        "snapshot_tracking": "local-only; no Git add/commit performed"
+      }
+    },
+    "AC-G2-TRANSFORM": {
+      "prepared": true,
+      "rc": 0,
+      "comparison": "git show <canonical-base>:<each-five-path> byte-matched pre-edit baselines; construct expected charter/archive/index in memory and compare complete final bytes; compare all five final buffers",
+      "whole_expected_matches": 5,
+      "status_iterations": [
+        366,
+        365,
+        364
+      ],
+      "route_replacements": 1,
+      "exact363_pair": {
+        "bytes": 209,
+        "sha256": "47c176790ec63fad66aeaf56ba117b3fe2f09d8ab2e07946e32616f349123afe",
+        "transfers": 1
+      },
+      "ledger": {
+        "bytes": 219711,
+        "rows": 99,
+        "sha256": "58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01",
+        "boundary": "start marker through end marker plus following newline"
+      },
+      "queue": {
+        "bytes": 992586,
+        "sha256": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4",
+        "boundary": "unique Queue header through EOF"
+      },
+      "archive_old_prefix_exact": true,
+      "index_all_old_bytes_and_order_preserved": true,
+      "index_orphan361_retained": true
+    },
+    "AC-G3-COUNTS": {
+      "prepared": true,
+      "rc": 0,
+      "comparison": "byte prefix equality; anchored canonical log headings; physical newline counts",
+      "lines": {
+        "design_docs/world-mission.md": 6345,
+        "design_docs/world-mission-status-archive.md": 732,
+        "design_docs/world-mission-log.md": 3077,
+        "design_docs/world-mission-index.md": 368,
+        "design_docs/world-mission-dashboard.md": 24
+      },
+      "log_headings_before": 39,
+      "log_headings_after": 40,
+      "canonical366_headings": 1,
+      "rotation": false,
+      "rotation_threshold": "above40",
+      "log_archive_unchanged": true
+    },
+    "AC-G4-PRESERVE": {
+      "prepared": true,
+      "rc": 0,
+      "comparison": "SHA256 + lstat type/mode for every canonical baseline path; Git HEAD diff + tracked lstat metadata; each explicit immutable freeze rechecked before/after; editable five baseline hashes before and exact expected bytes after",
+      "baseline_paths_before": 6442,
+      "protected_paths_after": 6437,
+      "earlier_evidence_paths": 4831,
+      "explicit_input_count": 38,
+      "editable_preflight_baselines": 5,
+      "immutable_inputs_after": 33,
+      "input_drift": [],
+      "baseline_drift": [],
+      "snapshot_local_check": {
+        "verified": true,
+        "payloads": 7,
+        "comparison": "full bytes + lstat type/mode + SHA256",
+        "finalization": "All seven copies compared successfully; final evidence copies and self-excluding manifest rechecked after receipt finalization",
+        "controller_reconstruction": "PENDING"
+      },
+      "controller_reconstruction": "PENDING; not claimed"
+    },
+    "AC-G5-TRUTH": {
+      "prepared": true,
+      "rc": 0,
+      "comparison": "record and dashboard checked against explicit frozen controller, role, launch and baseline receipts; driver routing note copied verbatim",
+      "driver_MISSION_ROUTING_NOTE": "lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` — quota-limited) → handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` — quota-limited) → handed to `pi:openrouter/minimax/minimax-m3`; `evaluator`: **pi** lane `openrouter/minimax/minimax-m3` unusable (probe rc=`75`) → advanced to `claude:claude-sonnet-4-6`",
+      "authority": {
+        "row256": "PARKED needs-human-review; independent MiniMax FAIL85; LOCAL_CRITERION UNMET; draft PR515",
+        "open_decisions": [
+          "D-WORLD-105",
+          "D-WORLD-110",
+          "D-WORLD-111",
+          "D-WORLD-112"
+        ],
+        "defaults": {
+          "D-WORLD-105": "C:233 parked/fail closed",
+          "D-WORLD-110": "A:255 as built",
+          "D-WORLD-111": "A:exactly two named baseline failures; no additional failures",
+          "D-WORLD-112": "No autonomous credential change"
+        },
+        "independent_holds": [
+          "D-WORLD-111",
+          "D-WORLD-112"
+        ],
+        "conditional_order": [
+          250,
+          255,
+          256,
+          257,
+          201,
+          243
+        ],
+        "autonomous_skip256": false,
+        "clauses_1_7": "MET inherited; no remeasurement",
+        "goal": "unchanged"
+      },
+      "product_pr515": "OPEN draft CONFLICTING/DIRTY, inherited receipt",
+      "D48": "ancient fleet creation, unchanged this fire",
+      "D108_D109": "attended, inherited corrected r2 receipt",
+      "D111_D112": "never-resolved independent holds; sanitization does not resolve112 or undo exposure",
+      "progress": "**Progress**: 1.0: clauses 1–7 MET (inherited assessment); goal unmoved.",
+      "inherited_metrics": {
+        "harness_last20": 0,
+        "last3_product_landings": [
+          "360:none",
+          "359:none",
+          "340:none"
+        ],
+        "routable_UNMET": 0,
+        "upstream_fresh_closed": 33,
+        "base_terminal_success_CI": 3,
+        "fresh_directives_inbox": 0
+      },
+      "historical_transcript_notices": {
+        "count": 2,
+        "fires": [
+          "world-1793825318-10110",
+          "world-1793839743-21731"
+        ],
+        "source": "design_docs/verification/world-iter366/shared-self-notices.json",
+        "recurrence_claimed": false
+      },
+      "roles": "All4 Agent supervisors spawned per supplied authority; Agent model override unavailable; actual designer/planner/executor pinned CLI; separate fresh actual Codex judge PENDING, FLAGsame-model-fresh-context; controller has no verdict",
+      "availability": "Preferred Sonnet/opus preflights rc1 quota; OpenRouter over ration; no probe is a review",
+      "usage": {
+        "designer_tokens": 97451,
+        "designer_components": [
+          6,
+          97445
+        ],
+        "designer_actual_seconds": 244.603,
+        "planner_tokens": 120602,
+        "planner_components": [
+          6207,
+          87696,
+          26699
+        ],
+        "planner_initial_seconds": 238.31,
+        "planner_correction_seconds": 83.919,
+        "executor_probe_tokens": 6199,
+        "executor_terminal_tokens": null,
+        "executor_terminal_runtime_seconds": null,
+        "evaluator_controller_supervisor_usage": "unreported",
+        "metered_usd": 0,
+        "imputed_cost": "unreported",
+        "quorum": "none; explicit ADMIN exception"
+      }
+    },
+    "AC-G6-WHITESPACE": {
+      "prepared": true,
+      "baseline": [
+        {
+          "name": "default",
+          "command": "git --no-optional-locks diff --check",
+          "rc": 0,
+          "diagnostics": ""
+        },
+        {
+          "name": "base",
+          "command": "git --no-optional-locks diff --check 1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4 --",
+          "rc": 0,
+          "diagnostics": ""
+        }
+      ],
+      "final_tracked": [
+        {
+          "name": "default",
+          "command": "git --no-optional-locks diff --check",
+          "rc": 0,
+          "diagnostics": ""
+        },
+        {
+          "name": "base",
+          "command": "git --no-optional-locks diff --check 1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4 --",
+          "rc": 0,
+          "diagnostics": ""
+        }
+      ],
+      "new_owned_outputs": [
+        {
+          "path": "design_docs/verification/world-iter366/executor-proof.json",
+          "command": "git --no-optional-locks diff --no-index --check /dev/null design_docs/verification/world-iter366/executor-proof.json",
+          "rc": 1,
+          "diagnostics": "",
+          "positive_control": {
+            "type": "file",
+            "nonempty": true
+          }
+        },
+        {
+          "path": "design_docs/verification/world-iter366/execution-state.json",
+          "command": "git --no-optional-locks diff --no-index --check /dev/null design_docs/verification/world-iter366/execution-state.json",
+          "rc": 1,
+          "diagnostics": "",
+          "positive_control": {
+            "type": "file",
+            "nonempty": true
+          }
+        }
+      ],
+      "new_file_rc_interpretation": "rc1 with empty diagnostics means content difference, not a whitespace finding; nonempty regular-file path controls required",
+      "inherited_census_failure": {
+        "rc": 2,
+        "sha256": "188fa00923b82119a0cc3cd6a6b64717891b9dfc62bf9e6775e7422f505cab97",
+        "original_text_roundtrip": true,
+        "original_failure_preserved": true,
+        "repaired": false,
+        "waived": false
+      },
+      "whole_old_archive_gate_run": false,
+      "final_checks_after_receipt_finalization": [
+        {
+          "name": "default",
+          "rc": 0,
+          "diagnostics": ""
+        },
+        {
+          "name": "base",
+          "rc": 0,
+          "diagnostics": ""
+        },
+        {
+          "name": "design_docs/verification/world-iter366/executor-proof.json",
+          "rc": 1,
+          "diagnostics": ""
+        },
+        {
+          "name": "design_docs/verification/world-iter366/execution-state.json",
+          "rc": 1,
+          "diagnostics": ""
+        },
+        {
+          "name": "snapshot_manifest",
+          "rc": 1,
+          "diagnostics": ""
+        }
+      ]
+    },
+    "AC-G7-BOUNDARY": {
+      "prepared": true,
+      "rc": 0,
+      "Go_suites_run": false,
+      "child_test_verdict": false,
+      "pristine_baseline_charter_rc": 0,
+      "baseline_provenance": "INHERITED_CONTROLLER_RECEIPT only; not fresh acceptance",
+      "controller_command": "go test ./host/verifygate -run '^TestMissionConfigRealCharter$' -count=1",
+      "controller_prerequisites": "outside sandbox, side-effect inspection and pristine baseline; controller owns execution",
+      "sandbox_denial": "UNINFORMATIVE UNDER SANDBOX",
+      "denials_observed": false
+    },
+    "AC-G8-DELIVERY": {
+      "status": "PENDING",
+      "owner": "controller",
+      "independent_review": "PENDING; all material changes must be covered",
+      "reconstruction_commit": "PENDING",
+      "exact_full40_PR_and_merge_heads": "PENDING; each needs ailang-code verify, Go race and Go host build/test terminal success with run URLs",
+      "external_delivery_and_landing": "PENDING",
+      "base_prior_product_greens_substitute": false
+    }
+  },
+  "input_sha256": {
+    "design_docs/verification/world-iter366/record-design.md": "cb625155d298e01d53f6835e9df6e834a8def626910ea4a32afd43689ba829d2",
+    "design_docs/verification/world-iter366/designer-receipt.json": "b57bcbd0e363b04440c182d7a685b0cd56833706d7e9b13f09aefd08a3cfa016",
+    "design_docs/verification/world-iter366/controller-observations.json": "835c7b1e8f043ffdd665b50ead1c01746b68dcfc16e1ababca81fb96ce5025b2",
+    "design_docs/verification/world-iter366/controller-gate4-base.json": "6dead0affd47d93a35c117d7ee8048ab80dc3ab3bf3fdd7a6b39f0cf547400c3",
+    "design_docs/verification/world-iter366/base-files.json": "cd7c4b01521f5dcf05cc28ee0eca9a2ed9c16df5a725ad76799e97774b8b8be0",
+    "design_docs/verification/world-iter366/base-checks.json": "ed89adb7157be4912a51bfb33705d2d2690455714e951730221f6a168907d2e7",
+    "design_docs/verification/world-iter366/baseline-charter-gate.json": "115a490fa241735e1eaa3d5618d2f51a6508984c731d81a076f7f2ba8f018b36",
+    "design_docs/verification/world-iter366/baseline-index-cli.json": "25355aeea1426966a16db9c2b24546ea7cdf91998fa3d74c14df755a0e4652cc",
+    "design_docs/verification/world-iter366/baseline-privacy.json": "200e5988087719a6e33c1de336986fa04e8b7f192c5c81c4b0d107346fce64ac",
+    "design_docs/verification/world-iter366/worktree-census-original.json": "0ba05080b812ca077c0f62ef11b8c20a44d85acaae228c8eb7ec9fb6f809854b",
+    "design_docs/verification/world-iter366/worktree-census.txt": "188fa00923b82119a0cc3cd6a6b64717891b9dfc62bf9e6775e7422f505cab97",
+    "design_docs/verification/world-iter366/routing-resolvers.json": "4943e2eac7548d9415838ddb9e65dfb0fb030e77905440fef185f058ce89877c",
+    "CLAUDE.md": "68f6fd16ede4c598a93590c3de20a2fc661a128c241eed747fab4d68d74a9141",
+    "design_docs/world-mission.md": "24225ebebd46c9829b508b279baca0d0195d93fb0ed4961c442daa46c6df5e82",
+    "design_docs/world-mission-log.md": "a829fe7f26991b7765082829615ba151cd4bdbfcc7192ac843b5d06384470359",
+    "design_docs/world-mission-index.md": "a27f891f0f8b7dadaf022eebcdbcc4bb81a2b5e9295000c335cbfc08dbb9fdd7",
+    "design_docs/world-mission-dashboard.md": "e12a54622d072419c98e84892ecbe8815f73eb0a44ea323cc752a0359f373dd6",
+    "design_docs/world-mission-status-archive.md": "1829cc1e1a02022496c7ec7537368a9d0202daa43ad6bd65aef3b58fc1bc39e7",
+    "design_docs/world-mission-log-archive.md": "32c90181c7c0ad86e8981e1992c3dfd2f57a4f5a43dd6de022d9eaa5b22bbcce",
+    "design_docs/coding-standards.md": "a6951ab19b301c821dabc6eadc5061e6dded79c8af749ae080454e50e80239e4",
+    "design_docs/DESIGN.md": "a8b87a7ca9cec01676d6d6eb00f2116bd60114638df4bab286189a46dfa17836",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/SKILL.md": "b4bcb489e2767930acc1c5cfc74fc54c43a67435a1fba4de7d3fd090e58c83fe",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/resources/registry_reuse_gate.md": "35d3ba5f3718fae9abd547915f4fe99f5a50452ad3fe3abbebf24b9012269110",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-3-route.md": "3d6cde1a7051e11c29ffcea3ca23b0b26b1e976796dc32c2b279ba1eddf71d53",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md": "fce81ea64a500f1707c3730d535fc56a9dba9b455aaf07fd9d18a461b806ff0c",
+    "design_docs/verification/world-iter366/record-plan.md": "6fd6323243087e08719c36a9db11cac30765e4eb7c9339bee56e4ed7f6b0d761",
+    "design_docs/verification/world-iter366/record-state.json": "28bb418fe3d873a1d8be1273d7cb6a476791a1a2aa92023d846e6a3543a354e9",
+    "design_docs/verification/world-iter366/designer-supervisor-receipt.json": "e1f63e2eac8b5a7aea094d9ef60f34f77ead62e1f6f753c970c709d8cc310df7",
+    "design_docs/verification/world-iter366/planner-supervisor-receipt.json": "0d18a28d55eb20dc293a359317f943655eb742a30c7d9e8fe1a8830a6791e060",
+    "design_docs/verification/world-iter366/planner-correction-supervisor-receipt.json": "9f3188161e9a7c089a5f5b8ebffad5757da05237625a1f0ac01c1b17bb58935b",
+    "design_docs/verification/world-iter366/executor-preflight.json": "67215626d66d9f7491994a6595a7dc82d28eaeb380898ac2e83457ad0fd89332",
+    "design_docs/verification/world-iter366/execution-launch-inputs.json": "007fc5d9719cbde0b4d13c280f66ff50f321664d42f32e262a86af34a0cd6ac1",
+    "design_docs/verification/world-iter366/shared-self-notices.json": "3176fb19c64320f9d5c39898956bc7de1388a7d9e02fe1a82eb5be6e5d08c67a",
+    "design_docs/verification/world-iter366/evaluator-preflight.json": "c6f2f019187d4eafce5c37e56c80716859675301b7b0112ffeeed679812ec536",
+    "design_docs/verification/world-iter366/product-pr515.json": "df229593aa63f07f8a8745a5353d46a8c1af37b1fca681e2de63dc5b1e44ccf3",
+    "design_docs/verification/world-iter366/ledger-provenance.json": "e26a43a31dd6881b3307ae75020df59e0af6c1003667365d91cf7fd1994325c8",
+    "design_docs/verification/world-iter366/ledger-provenance-r2.json": "2a2822a07b05134c8a8fd4346a290c12b15e5533db268b54473561b3336d0219",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-executor/SKILL.md": "cc4e87fbc2d308312b25956fad591706ccd6d02d902fc2d1cd1d4607011a56f8"
+  },
+  "input_type_mode": {
+    "count": 38,
+    "common": {
+      "type": "file",
+      "mode": "0644"
+    },
+    "exceptions": {}
+  },
+  "editable_final": {
+    "design_docs/world-mission.md": {
+      "type": "file",
+      "mode": "0644",
+      "sha256": "8888e17aa5a81f97b65b320c947783ae95c90759435846a91dbdd93cc238dcf3"
+    },
+    "design_docs/world-mission-status-archive.md": {
+      "type": "file",
+      "mode": "0644",
+      "sha256": "2bedadd7e79e9befa2b141d35049ea3f82b9dc26aea44eab3478f8f17100569b"
+    },
+    "design_docs/world-mission-log.md": {
+      "type": "file",
+      "mode": "0644",
+      "sha256": "e981946c71107973538388363e496a6670231ae7a895f49f1e2c4c2c8d977b97"
+    },
+    "design_docs/world-mission-index.md": {
+      "type": "file",
+      "mode": "0644",
+      "sha256": "4dd52a91b130d330ccb9e12da15feb537fbc6f452673610aa640eedbe860669c"
+    },
+    "design_docs/world-mission-dashboard.md": {
+      "type": "file",
+      "mode": "0644",
+      "sha256": "4710305d66a0d7d69e863242c55d3ef7af7ccf7cb284d7e9ff1c9440b6d74ea8"
+    }
+  },
+  "negative_controls": {
+    "scope": "in-memory byte/vector controls for the prescribed administrative comparisons; no source/test mutations or product acceptance claims",
+    "controls": [
+      {
+        "name": "charter route365 rollback",
+        "detected": true,
+        "method": "in-memory byte/vector comparison only"
+      },
+      {
+        "name": "ledger byte drift",
+        "detected": true,
+        "method": "in-memory byte/vector comparison only"
+      },
+      {
+        "name": "queue byte drift",
+        "detected": true,
+        "method": "in-memory byte/vector comparison only"
+      },
+      {
+        "name": "archive prefix drift",
+        "detected": true,
+        "method": "in-memory byte/vector comparison only"
+      },
+      {
+        "name": "missing exact363 transfer",
+        "detected": true,
+        "method": "in-memory byte/vector comparison only"
+      },
+      {
+        "name": "index older row361 removed",
+        "detected": true,
+        "method": "in-memory byte/vector comparison only"
+      },
+      {
+        "name": "log old-prefix drift",
+        "detected": true,
+        "method": "in-memory byte/vector comparison only"
+      },
+      {
+        "name": "extra canonical log heading",
+        "detected": true,
+        "method": "in-memory byte/vector comparison only"
+      },
+      {
+        "name": "launch map byte drift",
+        "detected": true,
+        "method": "in-memory byte/vector comparison only"
+      },
+      {
+        "name": "protected baseline byte drift",
+        "detected": true,
+        "method": "in-memory byte/vector comparison only"
+      },
+      {
+        "name": "snapshot payload byte drift",
+        "detected": true,
+        "method": "in-memory byte/vector comparison only"
+      },
+      {
+        "name": "snapshot mode drift",
+        "detected": true,
+        "method": "in-memory byte/vector comparison only"
+      }
+    ],
+    "detected": 12,
+    "survivors": 0
+  },
+  "positive_controls": {
+    "canonical_paths": 6442,
+    "allowlist": 5,
+    "earlier_evidence": 4831,
+    "nonempty_ledger_bytes": 219711,
+    "nonempty_queue_bytes": 992586,
+    "new_output_nonempty_paths": "recorded with explicit no-index checks"
+  },
+  "snapshot": {
+    "root": ".snap/M1/",
+    "payload_paths": [
+      "design_docs/world-mission.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-index.md",
+      "design_docs/world-mission-dashboard.md",
+      "design_docs/verification/world-iter366/executor-proof.json",
+      "design_docs/verification/world-iter366/execution-state.json"
+    ],
+    "manifest": ".snap/M1/manifest.json",
+    "manifest_excludes_self": true,
+    "local_payload_identity_check": {
+      "verified": true,
+      "payloads": 7,
+      "rc": 0,
+      "method": "Compare each mirrored full file against live payload by bytes, type, mode and SHA256; enumerate exact seven payloads; self-excluding manifest finalized afterward"
+    },
+    "controller_reconstruction": "PENDING",
+    "self_hash_policy": "No receipt self hash; final proof SHA256 belongs to the external snapshot manifest",
+    "finalization_boundary": "Final proof/state copies and manifest rechecked after receipt finalization; manifest owns their final SHA256, avoiding cyclic receipt hashes. Controller reconstruction remains PENDING.",
+    "exact_file_set": {
+      "payloads": 7,
+      "manifest": 1,
+      "total": 8,
+      "comparison": "sorted newline-joined repository-relative file paths; exact equality",
+      "rc": 0
+    }
+  },
+  "performed": {
+    "existing_files_modified": 5,
+    "new_evidence_files": 2,
+    "product_LOC": 0,
+    "test_LOC": 0,
+    "git_writes": false,
+    "network": false,
+    "external_messaging": false,
+    "nested_agents": false,
+    "shared_state_writes": false,
+    "credential_actions": false,
+    "environment_values_read": false,
+    "TMPDIR_override": false,
+    "GOTMPDIR_override": false
+  },
+  "diagnostics": {
+    "preflight_and_preparation_comparisons": "rc0; empty tracked whitespace diagnostics; no product verdict",
+    "instruction_search": "Two optional ancestor .agents/.codex paths absent (rg rc2); nine applicable AGENTS.md paths explicitly absent; nonempty CLAUDE.md positive control",
+    "inherited_census": "original bytes and original staged-whitespace failure retained; no repair or waiver",
+    "final_file_set_comparison": {
+      "initial": "JavaScript deepStrictEqual raised same-structure/not-reference-equal on cross-realm arrays with identical eight paths; wrapper exception, no command return code or verdict",
+      "correction": "sorted newline-joined path-list bytes compared equal; no payload or authority change",
+      "corrected": true
+    }
+  },
+  "preparation_completed_at": "2026-11-07T21:13:06.426Z"
+}

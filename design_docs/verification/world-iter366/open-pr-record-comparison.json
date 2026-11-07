@@ -1,0 +1,13 @@
+{
+  "observations": {
+    "origin/sprint/world-iter362-row256": {
+      "rc": 0,
+      "newest_canonical_iteration": 360
+    },
+    "origin/dev": {
+      "rc": 0,
+      "newest_canonical_iteration": 365
+    }
+  },
+  "disposition": "Product515 has no newer mission record; origin/dev365 stays Gate1 truth;515 remains human parked"
+}

@@ -1,0 +1,17 @@
+{
+  "command": [
+    "ailang",
+    "messages",
+    "list",
+    "--inbox",
+    "mission-world",
+    "--unread",
+    "--limit",
+    "1"
+  ],
+  "store_override": "not-a-real-store",
+  "rc": 2,
+  "stdout": "",
+  "stderr": "Error: invalid storage selection: AILANG_STORAGE_MESSAGING=\"not-a-real-store\" (valid: local, gcp)\n",
+  "disposition": "negative control only, no message sent"
+}

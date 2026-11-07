@@ -1,0 +1,111 @@
+{
+  "role": "evaluator",
+  "stage": "preflight-only",
+  "review_verdict": null,
+  "agent_supervisor": "/root/evaluator",
+  "model_override_available": false,
+  "chain_remaining": "opus",
+  "over_ration": "openrouter",
+  "attempts": [
+    {
+      "role": "evaluator",
+      "lane": "claude:claude-sonnet-4-6",
+      "subscription_guard": "CLEAN",
+      "timeout_seconds": 120,
+      "stdin": "closed",
+      "command": [
+        "env",
+        "-u",
+        "ANTHROPIC_API_KEY",
+        "-u",
+        "ANTHROPIC_AUTH_TOKEN",
+        "claude-sub",
+        "-p",
+        "Reply with exactly: ok",
+        "--model",
+        "claude-sonnet-4-6",
+        "--max-turns",
+        "1",
+        "--permission-mode",
+        "bypassPermissions"
+      ],
+      "elapsed_seconds": 1.8,
+      "rc": 1,
+      "safe_error": "Subscription quota limit reached",
+      "raw_output_private": true,
+      "dead_ledger_rc": 0,
+      "fallback": "advance declared remaining chain"
+    },
+    {
+      "role": "evaluator",
+      "lane": "opus",
+      "subscription_guard": "CLEAN",
+      "timeout_seconds": 120,
+      "stdin": "closed",
+      "command": [
+        "env",
+        "-u",
+        "ANTHROPIC_API_KEY",
+        "-u",
+        "ANTHROPIC_AUTH_TOKEN",
+        "claude-sub",
+        "-p",
+        "Reply with exactly: ok",
+        "--model",
+        "opus",
+        "--max-turns",
+        "1",
+        "--permission-mode",
+        "bypassPermissions"
+      ],
+      "elapsed_seconds": 1.78,
+      "rc": 1,
+      "safe_error": "Subscription quota limit reached",
+      "raw_output_private": true,
+      "dead_ledger_rc": 0,
+      "fallback": "advance declared remaining chain"
+    },
+    {
+      "role": "evaluator",
+      "lane": "codex:gpt-6.1-sol",
+      "authority": "D-WORLD-48 amended",
+      "command": [
+        "env",
+        "-u",
+        "OPENAI_API_KEY",
+        "ailang",
+        "mission",
+        "codex-exec",
+        "-c",
+        "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+        "--skip-git-repo-check",
+        "--model",
+        "gpt-6.1-sol",
+        "reply with exactly: ok"
+      ],
+      "timeout_seconds": 120,
+      "stdin": "closed",
+      "elapsed_seconds": 3.52,
+      "rc": 0,
+      "safe_error": "probe completed",
+      "raw_output_private": true,
+      "fallback": "none; all declared cross-vendor lanes unavailable"
+    }
+  ],
+  "over_ration_skips": [
+    {
+      "lane": "pi:openrouter/minimax/minimax-m3",
+      "rc": 75,
+      "reason": "MISSION_OVER_RATION=openrouter; no inference probe",
+      "evidence": "MISSION_ROUTING_NOTE driver evaluator rc75"
+    }
+  ],
+  "resolution": {
+    "lane": "codex:gpt-6.1-sol",
+    "status": "ready-for-separate-review",
+    "judge_independence": "same-model-fresh-context",
+    "flagged": true,
+    "review_verdict": null,
+    "requirement": "Actual review must be a fresh separate model context with the full rubric; supervisor and probes are not verdicts."
+  }
+}
