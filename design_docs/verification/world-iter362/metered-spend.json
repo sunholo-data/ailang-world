@@ -62,23 +62,29 @@
           "cost_usd": 0.171702,
           "tokens_in": 16719,
           "tokens_out": 8103,
-          "present": true
+          "present": true,
+          "cost_basis": "flat-rate Ollama Cloud imputation"
         },
         {
           "model": "gemini-4-argon",
           "cost_usd": 0.078,
           "tokens_in": 18275,
           "tokens_out": 245,
-          "present": true
+          "present": true,
+          "cost_basis": "metered Google usage estimate"
         },
         {
           "model": "oc-glm-5-3",
           "cost_usd": 0.0918388,
           "tokens_in": 16932,
           "tokens_out": 15485,
-          "present": true
+          "present": true,
+          "cost_basis": "flat-rate Ollama Cloud imputation"
         }
-      ]
+      ],
+      "metered_usd": 0.078,
+      "ollama_flat_rate_imputed_usd": 0.2635408,
+      "cost_basis": "reviewer cap-accounted; split Google metered and Ollama imputed"
     },
     {
       "role": "evaluator-r1",
@@ -125,6 +131,9 @@
       }
     }
   ],
-  "total_usd": 0.9214963599999999,
-  "usage_count_rule": "turn_end events once; duplicate message_end usage in historical probe artifact is not summed"
+  "total_usd": 0.92149636,
+  "usage_count_rule": "turn_end events once; duplicate message_end usage in historical probe artifact is not summed",
+  "metered_total_usd": 0.65795556,
+  "ollama_flat_rate_imputed_usd": 0.2635408,
+  "total_usd_basis": "conservative cap-accounted total, not metered invoice; includes Ollama flat-rate imputation"
 }

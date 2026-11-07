@@ -12,7 +12,6 @@
   "implementation_merged": false,
   "criterion_rewritten_after_judge": false,
   "further_full_suite_retries": 0,
-  "metered_before_record_judge_usd": 0.65550268,
   "quota_tokens_known": 624157,
   "controller_and_supervisor_tokens": "not reported",
   "record_review": {
@@ -23,5 +22,9 @@
     "nonblocking_count_fix": "95\u219297 numeric regex corrected",
     "factual_caveats": "record-evaluator/controller-factual-annotations.md"
   },
-  "metered_total_usd": 0.92149636
+  "metered_total_usd": 0.65795556,
+  "cap_accounted_before_record_judge_usd": 0.65550268,
+  "metered_before_record_judge_usd": 0.39196188,
+  "ollama_flat_rate_imputed_usd": 0.2635408,
+  "cap_accounted_total_usd": 0.92149636
 }

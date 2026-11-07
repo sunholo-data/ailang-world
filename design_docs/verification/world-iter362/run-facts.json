@@ -110,5 +110,7 @@
     "probe_tokens": 1372,
     "cost_usd": 0.26599368
   },
-  "metered_total_usd": 0.92149636
+  "metered_total_usd": 0.65795556,
+  "ollama_flat_rate_imputed_usd": 0.2635408,
+  "cap_accounted_total_usd": 0.92149636
 }

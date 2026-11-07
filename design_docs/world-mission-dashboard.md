@@ -10,7 +10,7 @@
 - **Banked order:** resolve row 256 validation first, then 257 (cache seed), then 201 → 243 (D-WORLD-109; fakes/test keys only, real-key exits attended). Stop when a release becomes routable.
 - **Parked on Mark:** D-WORLD-105 holder reset (default C, fail closed); D-WORLD-110 row-255 compatibility (default A, as built); D-WORLD-111 row-256 validation policy (default A, stay parked); D-WORLD-112 credential rotation (default: no autonomous credential changes, incident stays open).
 - **Routing:** Agent supervisors for all four required roles; designer/planner/executor actual Codex Sol, product judge actual PI MiniMax M3. Driver quota reroutes disclosed in log.
-- **Final cost:** $0.92149636 metered; Codex subscription 624,157 reported tokens including probes; controller/supervisor tokens unreported. $5 ceiling.
+- **Final cost:** $0.65795556 metered + $0.2635408 flat-rate Ollama imputed = $0.92149636 cap-accounted; Codex subscription 624,157 reported tokens including probes; controller/supervisor tokens unreported. $5 ceiling.
 - **Cadence:** one iteration per fire; next weekly sweep/thread rotation Monday Nov 9 at 07:00 local. Harness 0/20; no skill/routing-policy edit.
 - **Evidence:** world-mission-log.md entry 362 and verification/world-iter362/. Orphan 361's artifacts are credited and retained.
 - **Record-only review:** actual PI MiniMax PASS98; minor count corrected, factual report caveats retained. Product FAIL85 unchanged. Record PR516 requires its own PR+merge CI.
