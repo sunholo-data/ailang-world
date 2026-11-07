@@ -1,22 +1,21 @@
 # World mission dashboard — iteration 365 (2026-11-07)
 
-- **ADMIN M1:** five record files plus owned structural proof and one cumulative .snap/M1; no product acceptance or automatic product pick. Execution proof: verification/world-iter365/executor-structural-proof.json.
-- **Product:** row256 PARKED needs-human-review; independent MiniMax FAIL85; LOCAL_CRITERION UNMET; draft PR515 OPEN, fresh controller CONFLICTING/DIRTY, head7655388936b80bea9c4843f0a2e0abc085e52c0f.
-- **Four OPEN defaults:** D105 C: build nothing,233 parked/fail closed; D110 A:255 as built; D111 A: exactly two named baseline failures, no additional failures; D112: no autonomous credential change.
-- **Human gates / incident:**111 and112 clear independently by attended ruling. Sanitization does not undo exposure. Publish-counter/net6 unattributed; nonrecurrence is not attribution. Human asks unchanged; no new decision.
-- **Conditional attended order:**250 →255 →256 →257 →201 →243; no autonomous skip257/201/243. Release150/151 priority only when routable.201/243 use fakes/test keys; real-key exits attended.
-- **Release/controller:**0 new A1 or N2d/N4a, known positive controls;150 waits attended A1,151 waits188 N2d/N4a. Upstream33/33 closed; census98 worktrees at observation time; orphan361 already credited362.
-- **Gate0/controller:** billing CLEAN,36 comments/0 directives, crash0/transcript2 old fires, degraded watermarks1/2;20 historical self-claim messages acknowledged by controller. No executor inbox/network reads.
-- **Currency / CI:** controller skill14/14 current,drift0; exact base dev CI3/3 run42379267599 inherited. No new product tests or final365 CI claim.
-- **Routing evidence:** base=b9816aefab82dc09cf9e3a9cec5e8191fb58a9de@2026-11-07T16:58:29Z; durable controller Gate4 helper. Dedicated pristine narrow baseline rc0 is controller-owned outside sandbox.
-- **Roles:** all4 Agent supervisors required; API has no model override, actual roles run pinned CLI. Designer/planner actual Codex gpt-6.1-sol completed; this actual executor pinned same lane per invocation. Evaluator pending separate fresh Codex gpt-6.1-sol.
-- **Degrade/judge:** actual Sonnet/opus preflight rc1 weekly limit, resets Nov9 06:00 Europe/Copenhagen; OpenRouter over ration. D48 FLAG judge-independence:same-model-fresh-context. Supplied verbatim MISSION_ROUTING_NOTE is in log365; permitted environment lookup absent.
-- **Usage:** designer101755 subscription tokens (probe11039/run90716), planner71529 (probe11069/run60460), known173284, metered$0 per controller. Imputed cost unreported; executor/evaluator final usage/runtime pending supervisor receipts. Controller/Agent-supervisor exact usage unreported.
-- **Preservation:**6395 baseline paths,6390 protected, all47 prior364 files; ledger99 and queue byte-exact. Charter6345, status365/364/363; exact362 pair archive728→730. Full log base prefix38→39, no rotation; log archive unchanged; single365 index row retains orphan361.
-- **Evidence limits:** current controller-observations.json/dedicated-baseline.json/skill-currency.json; clauses1–7 MET inherited. Record364 PASS92 with bounded clarification inherited, distinct from product FAIL85. ADMIN acceptance cannot accept product256.
-- **History/process:** original FAILED_INPUT_PRESERVATION and controller concurrent31→33 disclosure retained. Existing365 inputs individually frozen; new controller evidence allowed untouched. Freeze explicit inputs, absolute paths, safe diagnostics; no shared-skill/routing-policy edits.
-- **Retro:** harness0/20; last3 product360/359/340 moved no UNMET; none currently routable, no drift. NO idle fingerprint: quota fallback/degraded watermarks.
-- **Progress:**1.0 clauses7/7 MET inherited; goal unmoved.
-- **Next:** attended111/112 independently; preserve105/110 defaults, no automatic product pick. Weekly sweep/thread rotation2026-11-09 07:00 Europe/Copenhagen; one iteration per fire.
-- **Pending/controller:** narrow charter test outside sandbox, reconstruction, final independent review/material-change coverage. Sandbox socket verdict UNINFORMATIVE UNDER SANDBOX; no Go/full suite here. Exact full40 PR-head and merge-head each require3 terminal-success CI checks/URLs: ailang-code verify, Go race, Go host build/test. No judge acceptance or landing yet.
-- **Index/addendum:** later controller existing-CLI index-only reconciliation permitted with ephemeral registry; final bytes exactly base plus365 row. Initial registry rejection and corrected r2 remain original evidence; installed registry untouched.
+- **ADMIN:** one record milestone prepared; no product acceptance. Row256 remains PARKED needs-human-review, independent FAIL85, LOCAL_CRITERION UNMET, draft PR515.
+- **Human gates:** D111 validation and D112 credential incident are independent. Both remain OPEN; no autonomous skip257/201/243 or credential change.
+- **OPEN defaults:** D105 C (233 parked/fail closed); D110 A (255 as built); D111 A (exactly two named baseline failures, no additional failures); D112 no autonomous credential change.
+- **Incident/causality:** sanitization does not undo exposure. Publish-counter/net6 remain unattributed; nonrecurrence is not attribution.
+- **Conditional order:**250 →255 →256 →257 →201 →243; release150/151 first when routable. Real-key and no-terminal exits remain attended.
+- **Release:** no new attended A1 or188 N2d/N4a; known controls fired. Upstream33/33 closed. Clauses1–7 MET are inherited assessment; goal unmoved.
+- **Fresh observations:** dev base b9816aef CI3/3; skill14/14 current. Ledger99;0 directives; crash0/transcript2 old notices; watermarks degraded1/2.
+- **Inbox correction:** default20 was one batch; explicit limit1000 covered56 historical self claims, all acknowledged; subsequent null/empty means0 remaining. Original receipts preserved.
+- **Roles:** all4 Agent supervisors spawned. Actual Codex gpt-6.1-sol designer/planner/executor complete; independent fresh-context actual Codex evaluator pending.
+- **Degrade:** Sonnet/opus weekly limit untilNov9 06:00 Copenhagen; OpenRouter over ration. D48 fallback FLAG judge-independence:same-model-fresh-context; controller does not judge.
+- **Known usage:** designer101755 / planner71529 / executor218481 =391765 subscription tokens before judge; metered$0/imputed$0; controller/supervisor usage unreported.
+- **M1:** dcad0ab148969feb3f9d98b5a3cfba6ee4bb58fa, six local snapshot members attested by tracked manifest and recoverable from that commit. Snapshot remains immutable.
+- **Preservation:**6390 protected base paths,47 prior364 files,25 original inputs and6056 shared-checkout tracked files unchanged. Ledger/queue exact;39 log entries; status365/364/363; archive730; orphan361 retained.
+- **Stop retained:** initial executor transport0 stopped on archive whole-file no-index rc3; base728/candidate730 paired diagnostic retained. Exact-session continuation finished required comparisons and snapshot,9/9 controls detected. Judge must assess attribution.
+- **Controller gate:** narrow charter test outside sandbox PASS; staged/base-relative whitespace PASS. No full product suite or source/gate/harness change.
+- **Retro:** harness0/20; latest3 product landings moved no UNMET clause; none routable, no DRIFT. Freeze inputs, explicit inbox bounds, absolute paths, safe errors. No idle fingerprint under fallback/degradation.
+- **Review/delivery:** actual independent evaluator and exact final PR/merge3/3 CI required. Delivery receipts go to issue449; ADMIN success cannot accept product256.
+- **Next:** attended111/112; preserve105/110 defaults. No automatic product pick. Weekly sweep/rotation2026-11-09 07:00 Europe/Copenhagen.
+- **Evidence:** verification/world-iter365/; original STOP/completion/supervisor receipts and full log365 are separate immutable stages.

@@ -1,0 +1,5 @@
+{
+  "regex_range_no_final_newline": "c52deeaabfe33a94ecbb71bb2cb190f3ffb686a49f45b89986d794b34bc8f00a",
+  "design_range_with_final_newline": "58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01",
+  "verdict": "Both scoped digests verified; whole baseline/actual marked ledger bytes unchanged."
+}

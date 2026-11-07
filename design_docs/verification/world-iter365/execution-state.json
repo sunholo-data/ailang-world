@@ -1,0 +1,54 @@
+{
+  "at_utc": "2026-11-07T17:25:08.701411+00:00",
+  "sprint_id": "WORLD-ITER365-ADMIN",
+  "design_doc": "design_docs/verification/world-iter365/record-design.md",
+  "plan": "design_docs/verification/world-iter365/record-plan.md",
+  "status": "execution_completed_review_and_delivery_pending",
+  "features": [
+    {
+      "id": "M1",
+      "execution_passes": true,
+      "execution_completed": "2026-11-07T17:25:08.701703+00:00",
+      "acceptance_pending": [
+        "independent final-record evaluation",
+        "exact final PR-head and merge-head CI"
+      ],
+      "notes": "Original immutable planning state and stopped proof are historical; completed preparation in executor-completion-proof.json; no product acceptance."
+    }
+  ],
+  "roles": {
+    "designer": {
+      "lane": "codex:gpt-6.1-sol",
+      "quota_tokens": 101755
+    },
+    "planner": {
+      "lane": "codex:gpt-6.1-sol",
+      "quota_tokens": 71529
+    },
+    "executor": {
+      "lane": "codex:gpt-6.1-sol",
+      "quota_tokens": 218481,
+      "initial_outcome": "stopped",
+      "continuation": "exact original session; completed"
+    },
+    "evaluator": {
+      "lane": "codex:gpt-6.1-sol",
+      "status": "pending",
+      "independence": "same-model-fresh-context"
+    },
+    "controller": {
+      "lane": "Codex exact model not reported",
+      "tokens": "not reported"
+    }
+  },
+  "known_subscription_tokens": 391765,
+  "metered_usd": 0,
+  "imputed_usd": 0,
+  "product": "PARKED needs-human-review; FAIL85; local criterion UNMET",
+  "open_decisions": [
+    "D-WORLD-105",
+    "D-WORLD-110",
+    "D-WORLD-111",
+    "D-WORLD-112"
+  ]
+}
