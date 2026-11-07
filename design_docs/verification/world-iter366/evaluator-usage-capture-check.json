@@ -1,0 +1,16 @@
+{
+  "role": "evaluator-supervisor",
+  "stage": "post-terminal usage capture check",
+  "actual_model": "gpt-6.1-sol",
+  "actual_rc": 0,
+  "runtime_seconds": 675.57,
+  "captured_mode": "human-readable managed daemon stdout; --json not requested",
+  "inspection": "Each captured line parsed as JSON when possible; searched provider event types turn.completed, turn.failed, thread.started, response.completed, token_count and structured numeric usage input_tokens/output_tokens/cached_input_tokens/total_tokens; also checked anchored numeric token footer.",
+  "provider_usage_envelopes": 0,
+  "structured_numeric_usage_candidates": 0,
+  "numeric_token_footer_present": false,
+  "current_evaluator_tokens": null,
+  "current_evaluator_metered_usd": null,
+  "disposition": "Not reported; no estimates or zero substituted.",
+  "original_reports_unchanged": true
+}
