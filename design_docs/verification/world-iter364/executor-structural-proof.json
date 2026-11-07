@@ -474,6 +474,429 @@
           }
         }
       }
+    },
+    {
+      "stage": "M2",
+      "observed_at_utc": "2026-11-07T13:12:40.414727+00:00",
+      "scope": {
+        "changed_existing_paths": [
+          "design_docs/world-mission-dashboard.md",
+          "design_docs/world-mission-log.md",
+          "design_docs/world-mission-status-archive.md",
+          "design_docs/world-mission.md"
+        ],
+        "cumulative_paths_since_mission_base": [
+          "design_docs/verification/world-iter364/base-ci.json",
+          "design_docs/verification/world-iter364/base-full-checks.json",
+          "design_docs/verification/world-iter364/baseline-charter-gate.txt",
+          "design_docs/verification/world-iter364/controller-brief.json",
+          "design_docs/verification/world-iter364/controller-designer-disposition.json",
+          "design_docs/verification/world-iter364/controller-gate4-base.json",
+          "design_docs/verification/world-iter364/controller-observations.json",
+          "design_docs/verification/world-iter364/controller-plan-addendum.md",
+          "design_docs/verification/world-iter364/design-gate.md",
+          "design_docs/verification/world-iter364/designer-receipt.json",
+          "design_docs/verification/world-iter364/designer-supervisor-receipt.json",
+          "design_docs/verification/world-iter364/executor-structural-proof.json",
+          "design_docs/verification/world-iter364/executor-summary.md",
+          "design_docs/verification/world-iter364/inbox-summary.json",
+          "design_docs/verification/world-iter364/ledger-check.txt",
+          "design_docs/verification/world-iter364/legacy-directives.txt",
+          "design_docs/verification/world-iter364/main-tracked-baseline.json",
+          "design_docs/verification/world-iter364/open-decisions.txt",
+          "design_docs/verification/world-iter364/planner-supervisor-receipt.json",
+          "design_docs/verification/world-iter364/previous-directives.txt",
+          "design_docs/verification/world-iter364/product-pr515-fresh.json",
+          "design_docs/verification/world-iter364/product-pr515.json",
+          "design_docs/verification/world-iter364/record-plan.md",
+          "design_docs/verification/world-iter364/record-state.json",
+          "design_docs/verification/world-iter364/release-predicates.json",
+          "design_docs/verification/world-iter364/retro-counts.json",
+          "design_docs/verification/world-iter364/skill-currency.json",
+          "design_docs/verification/world-iter364/thread.json",
+          "design_docs/verification/world-iter364/upstream-predicates.json",
+          "design_docs/verification/world-iter364/worktree-census.json",
+          "design_docs/verification/world-iter364/worktree-list-captured.json",
+          "design_docs/world-mission-dashboard.md",
+          "design_docs/world-mission-log.md",
+          "design_docs/world-mission-status-archive.md",
+          "design_docs/world-mission.md"
+        ],
+        "only_authorized_paths": true,
+        "frozen_input_files": 29,
+        "frozen_input_hashes": {
+          "design_docs/verification/world-iter364/base-ci.json": "7feed8fc8db7588189498f0b66eb391ecae1e7e46798a0bb333b39ce06252abe",
+          "design_docs/verification/world-iter364/base-full-checks.json": "5b175824b03f2c9e3b132f032a345c95ffd5b726cc8cfef8bc7faa0931fe3fda",
+          "design_docs/verification/world-iter364/baseline-charter-gate.txt": "315c67d6cd76a2815b41c9b08bf62af5e835c98452bdb4e5ce0cb47d14b0e9dc",
+          "design_docs/verification/world-iter364/controller-brief.json": "2d5d003e91f7f6c52fdd60b9a79bbbcfc7b2c204a1512a51328328e8a23ed809",
+          "design_docs/verification/world-iter364/controller-designer-disposition.json": "cbbcdac6e4279b475e9d3c1f0b3e90f04b47c9c56a9254dce0125850b8c7756b",
+          "design_docs/verification/world-iter364/controller-gate4-base.json": "6b8fd7ab1a217c2a97aa7f5c48f610cb4c669ea856f48a8f22523b5cc8df4f98",
+          "design_docs/verification/world-iter364/controller-observations.json": "b745eb6c1c2c6a0c7370473f30b1caa511c6b31eb670eab8de2c1922121004b2",
+          "design_docs/verification/world-iter364/controller-plan-addendum.md": "16927036fba6dafa33f6410f6fb3f7c01649db47f9c9c8f00fd369df7ffb71fb",
+          "design_docs/verification/world-iter364/design-gate.md": "61dfa5381a19292a329ce00ce54a249f3c79200158486861edeadbbb924611cc",
+          "design_docs/verification/world-iter364/designer-receipt.json": "781e0b95968302743939349c435e1a446f09013e32f3f434af612d14f49930a9",
+          "design_docs/verification/world-iter364/designer-supervisor-receipt.json": "e800b6c418f04b11abfac7a755b0df46b725eac1e6d673d834c5e02882bd5d55",
+          "design_docs/verification/world-iter364/inbox-summary.json": "ed3450018d8461b535e5098b76526d9480da2c9bd8029b739311bd44532bf57f",
+          "design_docs/verification/world-iter364/ledger-check.txt": "b7bba0836c56d150f455579e13037510c7101eb822e6a7c4f897deb3f8c91dc1",
+          "design_docs/verification/world-iter364/legacy-directives.txt": "97954099ba35b76541c1c328bbc9b33e7f3f4a992959d945a1eb0647fa91a488",
+          "design_docs/verification/world-iter364/main-tracked-baseline.json": "b120ee6959d5531e3669d0c218f569ca684f86dbe99ebb1d2a35a6281984fc01",
+          "design_docs/verification/world-iter364/open-decisions.txt": "9109ff023e8e7f1215d3600d3196c761c919d074852d56a502b1dcca5e9abfbb",
+          "design_docs/verification/world-iter364/planner-supervisor-receipt.json": "01b2e7eb70861eb8e604276317082e314147a18d446b5f83f37d3c7d9ea2b769",
+          "design_docs/verification/world-iter364/previous-directives.txt": "d78a35bfb65cd2f2a2203308c09fbe6eafc9553544c5bec0601cf63377631b59",
+          "design_docs/verification/world-iter364/product-pr515-fresh.json": "594e44bb3c20418f27425ce57a5b030031e61997b44fbe060212ed65d9fde7cc",
+          "design_docs/verification/world-iter364/product-pr515.json": "3d48345493c78cd6cd38712d3b2a1e5d494fc4832dd6c6e8405e43a8e2d8d486",
+          "design_docs/verification/world-iter364/record-plan.md": "f984bd074414a886a2b26edc3ceae5955de42148248205738d0e91cea8d3e4cd",
+          "design_docs/verification/world-iter364/record-state.json": "a36f37a8563b747e2df0570292b56e7aa43c0406e8f991f6dcc415ca82895611",
+          "design_docs/verification/world-iter364/release-predicates.json": "9371cc33b6a5130b6af886c7b5058368c77522bf7c40e8acc104ccdcbe50f86b",
+          "design_docs/verification/world-iter364/retro-counts.json": "400b1d3ba12c5de81841c2053de604e94ff6fc6032782970fcc20cabaad82458",
+          "design_docs/verification/world-iter364/skill-currency.json": "0544cad7bcb46a10fc694c783ae611cac87f32f42bc78eb6376f1254ad33c708",
+          "design_docs/verification/world-iter364/thread.json": "7f8ec2f2364dc033bbc7a243ce42b9e680d8cc651a004853861ac6d6fcd8222a",
+          "design_docs/verification/world-iter364/upstream-predicates.json": "c1b27ce0d4da28665be31c2cb556302e0ed277e3828993e11eb21899bd7953b1",
+          "design_docs/verification/world-iter364/worktree-census.json": "45ed880f5894e18f9dba73ae6d3fd369591be9b07a9805c250ab2e68383dd430",
+          "design_docs/verification/world-iter364/worktree-list-captured.json": "d31267fc97367a0f58b184a26a455d4dc7767252f6b4857264e965ad36ddd279"
+        },
+        "all_frozen_inputs_unchanged": true,
+        "other_tracked_file_count": 6373,
+        "other_tracked_aggregate_sha256": "8889c60441f1ee646153ebbd0926bc156ddfa257c521b902f39e1537cd5b90f7",
+        "all_other_tracked_bytes_unchanged": true,
+        "head_unchanged": true
+      },
+      "dashboard": {
+        "bytes": 3033,
+        "sha256": "f703c105e0e3ea4cdcde1a3b89f2aa90473756ca575cf9a28e1d27c1c6a7033d",
+        "physical_lines": 18
+      },
+      "log": {
+        "before": {
+          "bytes": 474166,
+          "sha256": "b23484ad293cbcbd49fa57b28f93bc1da503146c44409d4e68ad05c0798d4b9e",
+          "physical_lines": 2905
+        },
+        "after": {
+          "bytes": 482011,
+          "sha256": "7a62880198d97c99fe8a862aa29df341bed4d2433a593bee5582046a99d232bb",
+          "physical_lines": 2950
+        },
+        "old_exact_prefix": true,
+        "entries_before": 37,
+        "entries_after": 38,
+        "canonical_title_count": 1,
+        "appended_physical_lines": 45,
+        "archive_unchanged": true,
+        "archive_sha256": "32c90181c7c0ad86e8981e1992c3dfd2f57a4f5a43dd6de022d9eaa5b22bbcce"
+      },
+      "charter": {
+        "before": {
+          "bytes": 1392046,
+          "sha256": "8b28285f948a6e0c8dda8296de62723e150a641f283598c0b46a8d9e0d67df2f",
+          "physical_lines": 6345
+        },
+        "after": {
+          "bytes": 1388850,
+          "sha256": "e0c746e3c49ee2e02d151d5835292d03c47ce7d3d9b914b9ebc2e9426e117d04",
+          "physical_lines": 6345
+        },
+        "status_stamps": [
+          364,
+          363,
+          362
+        ],
+        "exact_stage_operations_only": true,
+        "route_substitution_only": true,
+        "other_prose_delta_bytes": 0,
+        "ledger_rows": 99,
+        "open_decisions": [
+          "D-WORLD-105",
+          "D-WORLD-110",
+          "D-WORLD-111",
+          "D-WORLD-112"
+        ],
+        "ledger_section": {
+          "bytes": 220998,
+          "sha256": "302e2264c72d23ecc2f59a7322f22f90e1a9321591f9249ef99ccec8ecb1648c",
+          "physical_lines": 127
+        },
+        "ledger_section_unchanged": true,
+        "queue_suffix": {
+          "bytes": 992586,
+          "sha256": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4",
+          "physical_lines": 4539
+        },
+        "queue_suffix_unchanged": true
+      },
+      "status_archive": {
+        "before": {
+          "bytes": 1620307,
+          "sha256": "4fd9933012fb700471f11757f8586950d80dada396719cce26f6ea368d05c582",
+          "physical_lines": 726
+        },
+        "after": {
+          "bytes": 1623856,
+          "sha256": "33697b13222054fe70d4f892819b3a6a15f1b4bff59413c1037dcb54631cb599",
+          "physical_lines": 728
+        },
+        "original_exact_prefix": true,
+        "exact_360_pair_appended": true,
+        "pair_sha256": "ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530",
+        "pair_bytes": 3549,
+        "359_positive_control": true
+      },
+      "index": {
+        "unchanged": true,
+        "sha256": "d93595ccdecbdf38589c321d7c971fa3a18e26ca6c1fd485e3c6821337403bd1",
+        "owner": "controller M3; eventual independent .snap/M3"
+      },
+      "negative_controls_in_memory": {
+        "immutable_input_mutation": true,
+        "unauthorized_scope": true,
+        "log_prefix_mutation": true,
+        "log_duplicate_title_count": true,
+        "ledger_byte_mutation": true,
+        "queue_byte_mutation": true,
+        "index_mutation": true,
+        "log_archive_mutation": true,
+        "safe3_pair_hash_mutation": true,
+        "archive_prefix_mutation": true,
+        "archive_extra_bytes": true,
+        "archive_359_removal": true,
+        "retained_363_removal": true,
+        "retained_362_removal": true,
+        "charter_line_arithmetic": true,
+        "current_goal_other_prose_mutation": true,
+        "only_authorized_charter_operations": true
+      },
+      "whitespace": [
+        {
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "rc": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "git",
+            "diff",
+            "--check",
+            "374696c0536809d7c7080d07339208570d5130cb"
+          ],
+          "rc": 0,
+          "stdout": "",
+          "stderr": ""
+        },
+        {
+          "command": [
+            "git",
+            "diff",
+            "--no-index",
+            "--check",
+            "/dev/null",
+            "design_docs/verification/world-iter364/executor-summary.md"
+          ],
+          "rc": 1,
+          "stdout": "",
+          "stderr": "",
+          "interpretation": "Raw rc1 retained: new-file content difference; zero whitespace diagnostics."
+        },
+        {
+          "command": [
+            "git",
+            "diff",
+            "--no-index",
+            "--check",
+            "/dev/null",
+            "design_docs/verification/world-iter364/executor-structural-proof.json"
+          ],
+          "rc": 1,
+          "stdout": "",
+          "stderr": "",
+          "interpretation": "Raw rc1 retained: new-file content difference; zero whitespace diagnostics."
+        }
+      ],
+      "manifest": {
+        "stage": "M2",
+        "base": "374696c0536809d7c7080d07339208570d5130cb",
+        "file_count": 34,
+        "excludes": [
+          "design_docs/verification/world-iter364/executor-structural-proof.json",
+          ".snap/**"
+        ],
+        "files": {
+          "design_docs/verification/world-iter364/base-ci.json": {
+            "bytes": 179,
+            "sha256": "7feed8fc8db7588189498f0b66eb391ecae1e7e46798a0bb333b39ce06252abe",
+            "physical_lines": 1
+          },
+          "design_docs/verification/world-iter364/base-full-checks.json": {
+            "bytes": 753,
+            "sha256": "5b175824b03f2c9e3b132f032a345c95ffd5b726cc8cfef8bc7faa0931fe3fda",
+            "physical_lines": 1
+          },
+          "design_docs/verification/world-iter364/baseline-charter-gate.txt": {
+            "bytes": 65,
+            "sha256": "315c67d6cd76a2815b41c9b08bf62af5e835c98452bdb4e5ce0cb47d14b0e9dc",
+            "physical_lines": 1
+          },
+          "design_docs/verification/world-iter364/controller-brief.json": {
+            "bytes": 1515,
+            "sha256": "2d5d003e91f7f6c52fdd60b9a79bbbcfc7b2c204a1512a51328328e8a23ed809",
+            "physical_lines": 37
+          },
+          "design_docs/verification/world-iter364/controller-designer-disposition.json": {
+            "bytes": 1507,
+            "sha256": "cbbcdac6e4279b475e9d3c1f0b3e90f04b47c9c56a9254dce0125850b8c7756b",
+            "physical_lines": 17
+          },
+          "design_docs/verification/world-iter364/controller-gate4-base.json": {
+            "bytes": 426,
+            "sha256": "6b8fd7ab1a217c2a97aa7f5c48f610cb4c669ea856f48a8f22523b5cc8df4f98",
+            "physical_lines": 9
+          },
+          "design_docs/verification/world-iter364/controller-observations.json": {
+            "bytes": 3155,
+            "sha256": "b745eb6c1c2c6a0c7370473f30b1caa511c6b31eb670eab8de2c1922121004b2",
+            "physical_lines": 130
+          },
+          "design_docs/verification/world-iter364/controller-plan-addendum.md": {
+            "bytes": 1825,
+            "sha256": "16927036fba6dafa33f6410f6fb3f7c01649db47f9c9c8f00fd369df7ffb71fb",
+            "physical_lines": 11
+          },
+          "design_docs/verification/world-iter364/design-gate.md": {
+            "bytes": 5718,
+            "sha256": "61dfa5381a19292a329ce00ce54a249f3c79200158486861edeadbbb924611cc",
+            "physical_lines": 24
+          },
+          "design_docs/verification/world-iter364/designer-receipt.json": {
+            "bytes": 11084,
+            "sha256": "781e0b95968302743939349c435e1a446f09013e32f3f434af612d14f49930a9",
+            "physical_lines": 200
+          },
+          "design_docs/verification/world-iter364/designer-supervisor-receipt.json": {
+            "bytes": 2433,
+            "sha256": "e800b6c418f04b11abfac7a755b0df46b725eac1e6d673d834c5e02882bd5d55",
+            "physical_lines": 73
+          },
+          "design_docs/verification/world-iter364/executor-summary.md": {
+            "bytes": 4796,
+            "sha256": "907e4aebe1be70c64758f76370ba0f812cc7aa269e62d8cc2331e067c86b9e80",
+            "physical_lines": 21
+          },
+          "design_docs/verification/world-iter364/inbox-summary.json": {
+            "bytes": 161,
+            "sha256": "ed3450018d8461b535e5098b76526d9480da2c9bd8029b739311bd44532bf57f",
+            "physical_lines": 9
+          },
+          "design_docs/verification/world-iter364/ledger-check.txt": {
+            "bytes": 31,
+            "sha256": "b7bba0836c56d150f455579e13037510c7101eb822e6a7c4f897deb3f8c91dc1",
+            "physical_lines": 1
+          },
+          "design_docs/verification/world-iter364/legacy-directives.txt": {
+            "bytes": 414,
+            "sha256": "97954099ba35b76541c1c328bbc9b33e7f3f4a992959d945a1eb0647fa91a488",
+            "physical_lines": 2
+          },
+          "design_docs/verification/world-iter364/main-tracked-baseline.json": {
+            "bytes": 233,
+            "sha256": "b120ee6959d5531e3669d0c218f569ca684f86dbe99ebb1d2a35a6281984fc01",
+            "physical_lines": 6
+          },
+          "design_docs/verification/world-iter364/open-decisions.txt": {
+            "bytes": 4974,
+            "sha256": "9109ff023e8e7f1215d3600d3196c761c919d074852d56a502b1dcca5e9abfbb",
+            "physical_lines": 4
+          },
+          "design_docs/verification/world-iter364/planner-supervisor-receipt.json": {
+            "bytes": 5518,
+            "sha256": "01b2e7eb70861eb8e604276317082e314147a18d446b5f83f37d3c7d9ea2b769",
+            "physical_lines": 165
+          },
+          "design_docs/verification/world-iter364/previous-directives.txt": {
+            "bytes": 412,
+            "sha256": "d78a35bfb65cd2f2a2203308c09fbe6eafc9553544c5bec0601cf63377631b59",
+            "physical_lines": 2
+          },
+          "design_docs/verification/world-iter364/product-pr515-fresh.json": {
+            "bytes": 141,
+            "sha256": "594e44bb3c20418f27425ce57a5b030031e61997b44fbe060212ed65d9fde7cc",
+            "physical_lines": 1
+          },
+          "design_docs/verification/world-iter364/product-pr515.json": {
+            "bytes": 267,
+            "sha256": "3d48345493c78cd6cd38712d3b2a1e5d494fc4832dd6c6e8405e43a8e2d8d486",
+            "physical_lines": 1
+          },
+          "design_docs/verification/world-iter364/record-plan.md": {
+            "bytes": 6896,
+            "sha256": "f984bd074414a886a2b26edc3ceae5955de42148248205738d0e91cea8d3e4cd",
+            "physical_lines": 25
+          },
+          "design_docs/verification/world-iter364/record-state.json": {
+            "bytes": 17522,
+            "sha256": "a36f37a8563b747e2df0570292b56e7aa43c0406e8f991f6dcc415ca82895611",
+            "physical_lines": 359
+          },
+          "design_docs/verification/world-iter364/release-predicates.json": {
+            "bytes": 4975,
+            "sha256": "9371cc33b6a5130b6af886c7b5058368c77522bf7c40e8acc104ccdcbe50f86b",
+            "physical_lines": 9
+          },
+          "design_docs/verification/world-iter364/retro-counts.json": {
+            "bytes": 4022,
+            "sha256": "400b1d3ba12c5de81841c2053de604e94ff6fc6032782970fcc20cabaad82458",
+            "physical_lines": 42
+          },
+          "design_docs/verification/world-iter364/skill-currency.json": {
+            "bytes": 2499,
+            "sha256": "0544cad7bcb46a10fc694c783ae611cac87f32f42bc78eb6376f1254ad33c708",
+            "physical_lines": 76
+          },
+          "design_docs/verification/world-iter364/thread.json": {
+            "bytes": 51,
+            "sha256": "7f8ec2f2364dc033bbc7a243ce42b9e680d8cc651a004853861ac6d6fcd8222a",
+            "physical_lines": 1
+          },
+          "design_docs/verification/world-iter364/upstream-predicates.json": {
+            "bytes": 9703,
+            "sha256": "c1b27ce0d4da28665be31c2cb556302e0ed277e3828993e11eb21899bd7953b1",
+            "physical_lines": 463
+          },
+          "design_docs/verification/world-iter364/worktree-census.json": {
+            "bytes": 39765,
+            "sha256": "45ed880f5894e18f9dba73ae6d3fd369591be9b07a9805c250ab2e68383dd430",
+            "physical_lines": 1058
+          },
+          "design_docs/verification/world-iter364/worktree-list-captured.json": {
+            "bytes": 15399,
+            "sha256": "d31267fc97367a0f58b184a26a455d4dc7767252f6b4857264e965ad36ddd279",
+            "physical_lines": 7
+          },
+          "design_docs/world-mission-dashboard.md": {
+            "bytes": 3033,
+            "sha256": "f703c105e0e3ea4cdcde1a3b89f2aa90473756ca575cf9a28e1d27c1c6a7033d",
+            "physical_lines": 18
+          },
+          "design_docs/world-mission-log.md": {
+            "bytes": 482011,
+            "sha256": "7a62880198d97c99fe8a862aa29df341bed4d2433a593bee5582046a99d232bb",
+            "physical_lines": 2950
+          },
+          "design_docs/world-mission-status-archive.md": {
+            "bytes": 1623856,
+            "sha256": "33697b13222054fe70d4f892819b3a6a15f1b4bff59413c1037dcb54631cb599",
+            "physical_lines": 728
+          },
+          "design_docs/world-mission.md": {
+            "bytes": 1388850,
+            "sha256": "e0c746e3c49ee2e02d151d5835292d03c47ce7d3d9b914b9ebc2e9426e117d04",
+            "physical_lines": 6345
+          }
+        }
+      }
     }
   ],
   "independent_evaluator": "REQUIRED actual independent MiniMax; pending, no verdict",

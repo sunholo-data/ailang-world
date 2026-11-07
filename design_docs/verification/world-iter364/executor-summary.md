@@ -1,12 +1,12 @@
-# Iteration 364 executor — M1
+# Iteration 364 executor — M2
 
-M1 completed; M2 pending at this immutable M1 boundary. This is ADMIN execution only; no product acceptance or independent evaluator verdict.
+M1 and M2 completed; authored outputs frozen for independent review. This is ADMIN execution only; no product acceptance or independent evaluator verdict.
 
 Started clean at 645258c277bb4da5ae62b1f169b9310877d4757f; mission base 374696c0536809d7c7080d07339208570d5130cb. Actual pinned executor codex:gpt-6.1-sol per invocation. Terminal run rc/runtime/token usage remain unknown until supervisor receipt. Controller and Agent-supervisor exact identity/tokens are unknown.
 
 M1 overwrote the dashboard (18 physical lines) and appended exactly one canonical364 log entry (45 added physical lines), preserving the entire old log prefix,37→38 entries and unchanged log archive. Cumulative .snap/M1 includes every created/modified path since mission base, including the29 committed curated input files, plan/state and executor outputs. Stage manifests exclude themselves and all snapshot storage; snapshots also capture the proof itself without a self-hash.
 
-M2 has not changed charter/archive at this stage. Index remains unchanged. The next authorized operation is safe3 and the exact current-route-number substitution, without a controller-commit wait.
+M2 inserted one one-line364 STATUS plus blank, retained363/362, and moved only360’s exact line+blank pair (SHA256 ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530). Charter6345+2−2=6345; archive726→728, original prefix exact and359 retained. Only Current route (iteration 363) changed to Current route (iteration 364) on the existing CURRENT GOAL line; other prose delta0. Cumulative .snap/M2 contains every created/modified path since mission base. M1 stage proof and snapshot bytes remain unchanged; no controller commit wait.
 
 All99 ledger rows, full ledger section and queue suffix are byte-identical. OPEN105 C/110 as-built A/111 exact-two-failures A/112 no autonomous credential change remain. Row256 HUMAN PARK needs-human-review, independent FAIL85, LOCAL_CRITERION UNMET. Publish-counter/net6 unattributed; nonrecurrence is not attribution; sanitization does not undo exposure;111/112 clear independently. Conditional attended250→255→256→257→201→243, no skip257/201/243; release150/151 priority only when routable. Human asks arise solely from existing OPEN ledger decisions; no new ask/policy.
 
@@ -18,4 +18,4 @@ Gate0/1 and clauses1–7 MET are inherited controller evidence; goal unmoved. Ga
 
 No network, messages, GitHub import, credentials, agents, source/test/driver/shared-skill/registry/pin/routing/gate edits, git writes, environment overrides, log rotation or product/full tests. Controller exclusively runs outside-sandbox narrow charter validation later; sandbox socket failures would be UNINFORMATIVE UNDER SANDBOX. Independent evaluator, record PR/full40 head/merge and each head’s all3 terminal-success CI checks/run URLs remain pending. No landing claim.
 
-Changed files: design_docs/world-mission-dashboard.md; design_docs/world-mission-log.md; new design_docs/verification/world-iter364/executor-summary.md and executor-structural-proof.json; cumulative .snap/M1 content. Controller later commits stage snapshots and adds new receipts after executor terminal.
+Changed files: design_docs/world-mission-dashboard.md; design_docs/world-mission-log.md; design_docs/world-mission.md; design_docs/world-mission-status-archive.md; new design_docs/verification/world-iter364/executor-summary.md and executor-structural-proof.json; cumulative .snap/M2 content. Controller later commits stage snapshots and adds new receipts after executor terminal.
