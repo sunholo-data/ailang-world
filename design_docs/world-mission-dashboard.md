@@ -13,11 +13,11 @@
 - **Base CI:**3/3 terminal success at canonical base, run42399928994; inherited receipts only, no fresh record acceptance.
 - **Roles:** all4 Agent supervisors spawned; model override unavailable. Actual designer/planner/executor pinned codex:gpt-6.1-sol CLI; executor is not judge.
 - **Degradation:** Sonnet/opus preflights rc1 quota; OpenRouter over ration. Independent fresh actual Codex judge pending under D48, FLAG judge-independence:same-model-fresh-context. Controller has no verdict.
-- **Usage:** designer97451 including probe; planner120602=6207+87696+26699; executor probe6199. Executor terminal usage/runtime unknown until supervisor receipt; evaluator/controller/supervisor usage unreported. Metered$0; no quorum under ADMIN exception.
+- **Usage:** designer97451 including probe; planner120602=6207+87696+26699; executor probe6199. Executor134744 including probe, actual433.096s/rc0; known roles352797; evaluator/controller/supervisor usage unreported. Metered$0; no quorum under ADMIN exception.
 - **Authority provenance:** D48 ancient fleet creation unchanged this fire; D108/109 attended; D111/112 never-resolved (inherited corrected r2 receipt).
 - **Preservation:**6345 charter lines; STATUS366/365/364; exact363 pair moved once; archive732; log40 NO rotation; ledger99/queue/history exact; orphan361 retained.
-- **Evidence:** verification/world-iter366/executor-proof.json and execution-state.json; original planning state immutable, passes=false forever. Local snapshot exactly7 payloads plus self-excluding manifest; reconstruction pending.
-- **Boundary:** no Go suites or child test verdict; narrow charter test controller-owned outside sandbox after inspection/baseline. Sandbox denial UNINFORMATIVE UNDER SANDBOX.
+- **Evidence:** verification/world-iter366/executor-proof.json and execution-state.json; original planning state immutable, passes=false forever. Local snapshot exactly7 payloads plus self-excluding manifest; reconstructed in M1 b371cdce; original manifest recoverable.
+- **Boundary:** no Go suites or child test verdict; narrow charter test and privacy passed outside sandbox after inspection/baseline; index regeneration byte-identical. Sandbox denial UNINFORMATIVE UNDER SANDBOX.
 - **Pending CI/delivery:** controller needs independent final-record review and all3 terminal-success jobs at exact full40 PR-head AND merge-head with run URLs; then external delivery/landing.
 - **Inherited metrics:** harness0/20; last3 product landings none moved UNMET;0 routable UNMET. Goal and human asks unchanged.
 - **Progress**: 1.0: clauses 1–7 MET (inherited assessment); goal unmoved.
