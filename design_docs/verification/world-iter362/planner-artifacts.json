@@ -1,0 +1,212 @@
+{
+  "kind": "planner_artifact_manifest",
+  "created_utc": "2026-11-07T05:44:02.910020+00:00",
+  "design_commit": "caee00cae7dd6938c9017f1977209f4b61ef7c92",
+  "implementation_base_commit": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+  "inputs": {
+    "design_docs/planned/w-daemon-startup-under-load.md": "94f8bf9d7d1f3ac51a848c89e4a1595f892c2991984dc11778ffa0f539d6430a",
+    "design_docs/planned/w-daemon-startup-under-load.patch": "90c6df45c6b4dcf09fd241d76eb87294f5b84d688eb9f2ff90d0eca1de09db16",
+    "design_docs/verification/world-iter362/prototype-manifest.json": "20623e2b510158e3170837c12fbafdb8534ce905fc2335338eb043c367672c4f",
+    "design_docs/verification/world-iter362/run.py": "1b29dcb9fcc02a84a68c592291be35795e91b6a559df6250be30271081b921d2"
+  },
+  "artifacts": [
+    {
+      "path": "design_docs/planned/sprint-plan-w-daemon-startup-under-load.md",
+      "sha256": "e47954052846548278f1a21b75af092af55b7c369ae768eca661915d2bcaf427",
+      "bytes": 41068
+    },
+    {
+      "path": ".ailang/state/sprints/sprint_W-DAEMON-STARTUP-UNDER-LOAD.json",
+      "sha256": "8fe2977e9da1e2faed9ed554d0f6458de46641652a1dc10e07e72ad4250cced8",
+      "bytes": 65804
+    },
+    {
+      "path": "design_docs/verification/world-iter362/planner-sprint-state.json",
+      "sha256": "8fe2977e9da1e2faed9ed554d0f6458de46641652a1dc10e07e72ad4250cced8",
+      "bytes": 65804
+    },
+    {
+      "path": "design_docs/verification/world-iter362/planner-handoff.json",
+      "sha256": "6b38c55908131512e17bc9b36683b27cc21162e0c674fe0ec15c57566428e8ad",
+      "bytes": 11556
+    }
+  ],
+  "review_copy_byte_exact": true,
+  "frozen_implementation_files": [
+    {
+      "path": "cmd/ailang-worldd/doctor.go",
+      "owner": "M1",
+      "added": 23,
+      "deleted": 1,
+      "kind": "implementation",
+      "base_sha256": "a51ce69723882368b19fe780743bad2eea2ad8b5a9bbce60351353a57baf9a2d",
+      "sha256": "759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1",
+      "post_apply_lines": 538
+    },
+    {
+      "path": "cmd/ailang-worldd/doctor_exec_profiles_test.go",
+      "owner": "M1",
+      "added": 100,
+      "deleted": 0,
+      "kind": "test",
+      "base_sha256": "absent",
+      "sha256": "e86d3964b1c9df32e9383f2b35a2e2b3a938455248eb3018153f6ec62ae34dcb",
+      "post_apply_lines": 100
+    },
+    {
+      "path": "cmd/ailang-worldd/doctor_hosts.go",
+      "owner": "M1",
+      "added": 1,
+      "deleted": 1,
+      "kind": "implementation",
+      "base_sha256": "6869cf7ca278bf692e79de085930655745e906ae82d88142d993f8681fbe0755",
+      "sha256": "e6beb0bf3ffe2751ef060d14eb234c3fb98baa63fb9c9e606e8b45c420f9fc8c",
+      "post_apply_lines": 264
+    },
+    {
+      "path": "docs/QUICKSTART.md",
+      "owner": "M1",
+      "added": 5,
+      "deleted": 1,
+      "kind": "documentation",
+      "base_sha256": "715d845827cac15fbdb6f0f7dd80146b28ddda9fc342087133683e0da8833387",
+      "sha256": "be414d27e865c3965720ea441987a8a4a6654fe68950fc23c959d7b5e0af6f0a",
+      "post_apply_lines": 1771
+    },
+    {
+      "path": "host/broker/exec_probe.go",
+      "owner": "M1",
+      "added": 31,
+      "deleted": 4,
+      "kind": "implementation",
+      "base_sha256": "110fffc3f31a10d71a024b3e02f66b0864178ce59e44e3e5b5be2c82ac11c79f",
+      "sha256": "e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1",
+      "post_apply_lines": 1129
+    },
+    {
+      "path": "host/broker/exec_probe_out_of_time_test.go",
+      "owner": "M1",
+      "added": 108,
+      "deleted": 0,
+      "kind": "test",
+      "base_sha256": "absent",
+      "sha256": "769447b26c7191ac37d6ea3deca70dfa0324498a78992012d9b306b105646e59",
+      "post_apply_lines": 108
+    },
+    {
+      "path": "host/broker/exec_startup.go",
+      "owner": "M1",
+      "added": 8,
+      "deleted": 1,
+      "kind": "implementation",
+      "base_sha256": "396a9898a46be63405fb79dde03089a47fae703b47416cff466af0993e15b4c2",
+      "sha256": "8663aac66b6af14299f7af7e52c076de37afb7e2fc1c94b23e094a4417435b0d",
+      "post_apply_lines": 690
+    },
+    {
+      "path": "host/daemon/daemon.go",
+      "owner": "M1",
+      "added": 54,
+      "deleted": 10,
+      "kind": "implementation",
+      "base_sha256": "e6b70d7e3f3fb20ef6a89d52b82a87bbdff0a05915c6afaab8956cb05be6c668",
+      "sha256": "600080956ba673dedcedbb11cdb2093668dff67b32bb258bd2a684e08498d3a9",
+      "post_apply_lines": 1410
+    },
+    {
+      "path": "host/daemon/startup_callers_test.go",
+      "owner": "M1",
+      "added": 225,
+      "deleted": 0,
+      "kind": "test",
+      "base_sha256": "absent",
+      "sha256": "3a92fa604a38da88d93081f2e9502860f28e122adc3d39db1ee5c402507e8094",
+      "post_apply_lines": 225
+    },
+    {
+      "path": "host/daemon/startup_under_load_test.go",
+      "owner": "M1",
+      "added": 314,
+      "deleted": 0,
+      "kind": "test",
+      "base_sha256": "absent",
+      "sha256": "46bb766519c9c368beba972c7a6124dc873bc671e1818a021e0c0c40517a96fb",
+      "post_apply_lines": 314
+    },
+    {
+      "path": "host/daemon/workspace.go",
+      "owner": "M1",
+      "added": 12,
+      "deleted": 2,
+      "kind": "implementation",
+      "base_sha256": "1a178f8bc1e39f8981bcb6bd07f1d8d87574d1876c82ea649f9adbf472b3ad5a",
+      "sha256": "94d4da1952fe0a6be4536c4cfb161b684c0eb2871a06ddede43624126b5bb082",
+      "post_apply_lines": 802
+    }
+  ],
+  "validation": {
+    "json_parse": true,
+    "all_ac_owned_once_by_M1": true,
+    "loc_sum": 881,
+    "all_milestone_passes_pending": true,
+    "new_test_names_from_patch": 13,
+    "four_presence_guards": true,
+    "embedded_future_program_syntax_valid": true,
+    "stock_validator_minimum_two": "overridden explicitly by approved design section 7 and user ruling; shared script unchanged",
+    "implementation_gates_run": false,
+    "production_files_changed": false,
+    "background_jobs_started": false,
+    "execution_hold_present": true,
+    "lightweight_checks": [
+      "four JSON documents parse",
+      "review copy exact bytes",
+      "single-M1 exception recorded",
+      "AC1..AC9 each owned once with real files/tests/mutants",
+      "881/20 LOC totals and four new files match patch",
+      "13 patch-derived test names + 10 neighbours",
+      "embedded future programs and Markdown Python snippet parse without execution",
+      "frozen design/patch and all evidence hashes unchanged",
+      "all implementation targets still at pristine baseline hashes/absence",
+      "ignored sprint state confirmed",
+      "all passes/completion pending",
+      "baseline STOP propagated to plan/state/handoff",
+      "handoff and manifest hash links consistent",
+      "zero tracked-file diff and exact design HEAD retained"
+    ]
+  },
+  "self_hash_note": "Manifest excludes its own hash to avoid a circular identity; hash is returned in final validation output.",
+  "baseline_observation": {
+    "active": true,
+    "reason": "STOP: pristine full verify_go rc 1 on two tests outside row256 patch; no implementation or candidate gates may start",
+    "owner": "controller",
+    "evidence_path": "design_docs/verification/world-iter362/baseline-inherited-failures.json",
+    "observed_rc": 1,
+    "failed_tests": [
+      "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter",
+      "TestCheckSourceUnderPinnedInterpreter"
+    ],
+    "failed_packages": [
+      "github.com/sunholo-data/ailang-world/cmd/world-publish",
+      "github.com/sunholo-data/ailang-world/host/archive"
+    ],
+    "baseline_ail_rc": 0,
+    "environment_modified": false,
+    "observed_at_utc": "2026-11-07T05:45:38.179346+00:00",
+    "files_sha256": {
+      "design_docs/verification/world-iter362/baseline-inherited-failures.json": "a58c42647d58502e682fe8be5e8273a29e6034d228377e85aff4a3bcf4a515e9",
+      "design_docs/verification/world-iter362/baseline-full-verify-go.txt": "970d9ef34b71b8c007500000c9b4d44062c153c988e3f0b14f610cd664d44b13",
+      "design_docs/verification/world-iter362/baseline-verify-ail-real.txt": "0ea939992ca69026c264feceed4099bdd1a7a0220c4780ec2d9310f8cca8b4ce"
+    },
+    "resume_condition": "Controller reports/parks this baseline finding and establishes a genuine rc-0 pristine baseline without scope widening, source edits in this sprint, or environment suppression. Update execution hold only against a new exact receipt; no automatic retry or bypass."
+  },
+  "read_only_input_sources": {
+    "CLAUDE.md": "68f6fd16ede4c598a93590c3de20a2fc661a128c241eed747fab4d68d74a9141",
+    "design_docs/coding-standards.md": "a6951ab19b301c821dabc6eadc5061e6dded79c8af749ae080454e50e80239e4",
+    "design_docs/world-mission.md": "78ec05d70bcc1073a5ca5cf9389faac8040bd78e333116840fa36f6744306459",
+    "design_docs/DESIGN.md": "a8b87a7ca9cec01676d6d6eb00f2116bd60114638df4bab286189a46dfa17836",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/SKILL.md": "b4bcb489e2767930acc1c5cfc74fc54c43a67435a1fba4de7d3fd090e58c83fe",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/resources/sprint_plan_template.md": "55027ac646d8e0038c6a0cfcec6c6d47286d9ff9732e553e6b5fcb5b65c4aa38",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/resources/registry_reuse_gate.md": "35d3ba5f3718fae9abd547915f4fe99f5a50452ad3fe3abbebf24b9012269110",
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md": "fce81ea64a500f1707c3730d535fc56a9dba9b455aaf07fd9d18a461b806ff0c"
+  }
+}
