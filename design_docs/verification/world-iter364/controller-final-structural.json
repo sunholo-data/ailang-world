@@ -93,5 +93,6 @@
     "go": "go1.26.6",
     "load": "2.18 2.47 2.44"
   },
-  "independent_judge": "pending actual MiniMax"
+  "independent_judge": "actual PI OpenRouter MiniMax M3 PASS92, reaffirmed in actual independent clarification; all original reports preserved",
+  "receipt_scope": "Final independent structural preservation observation before delivery; reviewed old controller-structural.json remains unchanged."
 }
