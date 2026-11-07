@@ -8,14 +8,14 @@
 - **Release:** no new attended A1 or188 N2d/N4a; known controls fired. Upstream33/33 closed. Clauses1–7 MET are inherited assessment; goal unmoved.
 - **Fresh observations:** dev base b9816aef CI3/3; skill14/14 current. Ledger99;0 directives; crash0/transcript2 old notices; watermarks degraded1/2.
 - **Inbox correction:** default20 was one batch; explicit limit1000 covered56 historical self claims, all acknowledged; subsequent null/empty means0 remaining. Original receipts preserved.
-- **Roles:** all4 Agent supervisors spawned. Actual Codex gpt-6.1-sol designer/planner/executor complete; independent fresh-context actual Codex evaluator pending.
+- **Roles:** all4 Agent supervisors spawned. Actual Codex gpt-6.1-sol designer/planner/executor and separate fresh-context evaluator complete; independent ADMIN PASS96, zero blockers.
 - **Degrade:** Sonnet/opus weekly limit untilNov9 06:00 Copenhagen; OpenRouter over ration. D48 fallback FLAG judge-independence:same-model-fresh-context; controller does not judge.
-- **Known usage:** designer101755 / planner71529 / executor218481 =391765 subscription tokens before judge; metered$0/imputed$0; controller/supervisor usage unreported.
+- **Known usage:** designer101755 / planner71529 / executor218481 / evaluator179056 =570821 known subscription tokens; metered$0/imputed$0; controller/supervisor usage unreported.
 - **M1:** dcad0ab148969feb3f9d98b5a3cfba6ee4bb58fa, six local snapshot members attested by tracked manifest and recoverable from that commit. Snapshot remains immutable.
 - **Preservation:**6390 protected base paths,47 prior364 files,25 original inputs and6056 shared-checkout tracked files unchanged. Ledger/queue exact;39 log entries; status365/364/363; archive730; orphan361 retained.
-- **Stop retained:** initial executor transport0 stopped on archive whole-file no-index rc3; base728/candidate730 paired diagnostic retained. Exact-session continuation finished required comparisons and snapshot,9/9 controls detected. Judge must assess attribution.
+- **Stop retained:** initial executor transport0 stopped on archive whole-file no-index rc3; base728/candidate730 paired diagnostic retained. Exact-session continuation finished required comparisons and snapshot,9/9 controls detected. Independent judge accepted scoped completion; four nonblocking findings retained.
 - **Controller gate:** narrow charter test outside sandbox PASS; staged/base-relative whitespace PASS. No full product suite or source/gate/harness change.
 - **Retro:** harness0/20; latest3 product landings moved no UNMET clause; none routable, no DRIFT. Freeze inputs, explicit inbox bounds, absolute paths, safe errors. No idle fingerprint under fallback/degradation.
-- **Review/delivery:** actual independent evaluator and exact final PR/merge3/3 CI required. Delivery receipts go to issue449; ADMIN success cannot accept product256.
+- **Review/delivery:** actual separate fresh-context judge PASS96,15/15 own structural mutants detected. Exact final PR/merge3/3 CI still required; receipts go to issue449. Product256 remains parked.
 - **Next:** attended111/112; preserve105/110 defaults. No automatic product pick. Weekly sweep/rotation2026-11-09 07:00 Europe/Copenhagen.
 - **Evidence:** verification/world-iter365/; original STOP/completion/supervisor receipts and full log365 are separate immutable stages.

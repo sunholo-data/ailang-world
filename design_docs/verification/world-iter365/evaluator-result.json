@@ -1,0 +1,569 @@
+{
+  "schema_version": 1,
+  "sprint_id": "WORLD-ITER365-ADMIN",
+  "role": "evaluator",
+  "verdict": "PASS",
+  "scope": "ADMIN_ONLY",
+  "score": 96,
+  "round": 1,
+  "reviewed_sha": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+  "baseline_sha": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+  "immutable_m1_sha": "dcad0ab148969feb3f9d98b5a3cfba6ee4bb58fa",
+  "pr_url": "https://github.com/sunholo-data/ailang-world/pull/519",
+  "independence_flag": "judge-independence:same-model-fresh-context",
+  "rubric": {
+    "source": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-evaluator/resources/scoring_rubric.md",
+    "pass_threshold": 70,
+    "total_possible": 100,
+    "categories": [
+      {
+        "name": "Tests Pass",
+        "score": 20,
+        "max": 20,
+        "adaptation": "Exact-head remote CI replaces forbidden local make test; inherited API capture independently checked. Narrow Go baseline/candidate passes inherited."
+      },
+      {
+        "name": "Lint Clean",
+        "score": 10,
+        "max": 10,
+        "adaptation": "ADMIN format checks: own tracked whitespace rc0/0, explicit38 new-file whitespace checks and35 JSON parses. No make lint run or standalone remote lint success is claimed."
+      },
+      {
+        "name": "Acceptance Criteria",
+        "score": 30,
+        "max": 30,
+        "adaptation": "Ten review-scope obligations met; score10/10\u00d730. Frozen planner passes=null is historical, reconciled with execution-state.json completion; future merge delivery is a later boundary."
+      },
+      {
+        "name": "Code Quality",
+        "score": 11,
+        "max": 15,
+        "adaptation": "ADMIN execution/evidence quality. Four1-point deductions F1\u2013F4; source length/function/TODO rules inapplicable to preserved history and raw evidence, with zero source additions."
+      },
+      {
+        "name": "Documentation",
+        "score": 15,
+        "max": 15,
+        "adaptation": "Canonical ADMIN log/index5; reviewable evidence/reproducibility5 replacing inapplicable new runnable feature examples; frozen design plus explicit completed execution state5. No product changelog/new examples claimed."
+      },
+      {
+        "name": "Design Fidelity",
+        "score": 10,
+        "max": 10,
+        "adaptation": "Exact permitted changes; justified approved ancestry/index-method and stage clarifications; no product authority expansion."
+      }
+    ],
+    "conditional": {
+      "regression_surface": {
+        "triggered": false,
+        "reason": "No compiler or product/source paths changed."
+      },
+      "performance": {
+        "triggered": false,
+        "reason": "No performance goals or optimization implemented; inherited historical mentions do not trigger a perf sprint."
+      }
+    }
+  },
+  "criteria": [
+    {
+      "id": "AC1",
+      "status": "MET",
+      "assessment": "Base and M1 are ancestors of reviewed HEAD. Exactly6395 baseline paths; only the five authorized paths changed;6390 protected paths and all47 prior364 files retain Git blobs/modes/types. Working tree matches every HEAD blob. Exactly38 additions, all regular100644 NEW365 evidence; no removals, renames or extra hunk.",
+      "verification": "independent"
+    },
+    {
+      "id": "AC2",
+      "status": "MET",
+      "assessment": "Independently constructed full expected charter/archive bytes from fixed base and literal365 status. Both stage and current match: statuses365/364/363; exact362 pair appended; prior359 and old archive prefix retained; only route token changed. Charter6345/archive730.",
+      "verification": "independent"
+    },
+    {
+      "id": "AC3",
+      "status": "MET",
+      "assessment": "Full marked ledger including delimiters and final newline byte-identical,99 rows including ROUTE-1/DRIVER-1; queue suffix byte-identical. All four decisions remain OPEN. Both scoped ledger digests independently verified.",
+      "verification": "independent"
+    },
+    {
+      "id": "AC4",
+      "status": "MET",
+      "assessment": "Complete490492-byte baseline log prefix retained at stage and current,38\u219239 canonical entries, precisely one prescribed365 and no invented361. Log archive unchanged.",
+      "verification": "independent"
+    },
+    {
+      "id": "AC5",
+      "status": "MET",
+      "assessment": "Stage and current index equal fixed base plus precisely one literal365 row immediately before364. All prior rows/order and orphan361 retained. Corrected controller index CLI receipt rc0 inherited; exact byte result independently verified.",
+      "verification": "independent bytes; inherited CLI"
+    },
+    {
+      "id": "AC6",
+      "status": "MET",
+      "assessment": "Stage dashboard22/current21 lines, both within40. Complete current record reviewed for product park, four defaults, independent111/112 human gates, conditional order, attribution limits, roles, actual usage provenance, progress/retro/next and delivery boundary. Historical paragraphs are explicitly superseded by factual controller follow-through.",
+      "verification": "independent record assessment; inherited operational facts"
+    },
+    {
+      "id": "AC7",
+      "status": "MET",
+      "assessment": "All25 original explicit ready input hashes/modes unchanged; two continuation inputs and four planner-consumed hashes independently verified. Original STOP, completion, planner state and stage evidence preserved; three later controller evidence additions permitted without whole-directory freeze.",
+      "verification": "independent"
+    },
+    {
+      "id": "S1-guards-snapshot",
+      "status": "MET",
+      "assessment": "Own nine positive guards and15 in-memory mutations:15 detected/zero survivors. Exactly six snapshot members recoverable from immutable M1 with hashes matching executor manifest and controller attestation. Original executor9/9 and controller8/8 remain inherited, not relabeled as my runs.",
+      "verification": "independent structural controls and stage recovery; inherited original runs"
+    },
+    {
+      "id": "S2-verification-discipline",
+      "status": "MET",
+      "assessment": "Own default/base-relative tracked whitespace rc0/0; all38 additions schema/whitespace inspected (35 JSON parsed); both original/new proof no-index rc1 with empty diagnostics independently confirmed. Inherited narrow pristine baseline and candidate tests rc0 outside sandbox. Own stdin paired archive diagnostic rc3 at728/730 supports scope attribution; original STOP retained.",
+      "verification": "independent structural/whitespace; inherited Go tests"
+    },
+    {
+      "id": "S3-review-delivery-boundary",
+      "status": "MET_FOR_ADMIN_REVIEW",
+      "assessment": "This fresh independent actual evaluator decides now. Inherited fresh API capture independently validated for exact reviewed head and three terminal-success checks plus successful pull_request run. Final landing is not claimed: any later final PR-head and merge-head CI/review coverage remain controller duty. Product acceptance remains prohibited.",
+      "verification": "independent adjudication; inherited API provenance"
+    }
+  ],
+  "evidence": {
+    "independent_structural": {
+      "head": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+      "base": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+      "stage": "dcad0ab148969feb3f9d98b5a3cfba6ee4bb58fa",
+      "base_count": 6395,
+      "protected_verified": 6390,
+      "prior364_verified": 47,
+      "working_tree_blob_or_mode_drift": [],
+      "modified": [
+        "design_docs/world-mission-dashboard.md",
+        "design_docs/world-mission-index.md",
+        "design_docs/world-mission-log.md",
+        "design_docs/world-mission-status-archive.md",
+        "design_docs/world-mission.md"
+      ],
+      "added": [
+        "design_docs/verification/world-iter365/base-checks.json",
+        "design_docs/verification/world-iter365/controller-archive-style-baseline.json",
+        "design_docs/verification/world-iter365/controller-charter-gate.json",
+        "design_docs/verification/world-iter365/controller-full-inbox-triage.json",
+        "design_docs/verification/world-iter365/controller-gate4-base.json",
+        "design_docs/verification/world-iter365/controller-index-cli.json",
+        "design_docs/verification/world-iter365/controller-ledger-hash-scope.json",
+        "design_docs/verification/world-iter365/controller-observations.json",
+        "design_docs/verification/world-iter365/controller-plan-addendum.md",
+        "design_docs/verification/world-iter365/controller-snapshot-reconstruction.json",
+        "design_docs/verification/world-iter365/controller-structural-execution.json",
+        "design_docs/verification/world-iter365/controller-structural-prejudge.json",
+        "design_docs/verification/world-iter365/current-issue.json",
+        "design_docs/verification/world-iter365/dedicated-baseline.json",
+        "design_docs/verification/world-iter365/designer-receipt.json",
+        "design_docs/verification/world-iter365/designer-supervisor-receipt.json",
+        "design_docs/verification/world-iter365/evaluator-preflight-diagnostics.json",
+        "design_docs/verification/world-iter365/evaluator-preflight.json",
+        "design_docs/verification/world-iter365/execution-state.json",
+        "design_docs/verification/world-iter365/executor-completion-proof.json",
+        "design_docs/verification/world-iter365/executor-continuation-supervisor-receipt.json",
+        "design_docs/verification/world-iter365/executor-structural-proof.json",
+        "design_docs/verification/world-iter365/executor-supervisor-receipt.json",
+        "design_docs/verification/world-iter365/inbox-triage.json",
+        "design_docs/verification/world-iter365/index-cli-baseline-r2.json",
+        "design_docs/verification/world-iter365/index-cli-baseline.json",
+        "design_docs/verification/world-iter365/main-tracked-baseline.json",
+        "design_docs/verification/world-iter365/planner-supervisor-receipt.json",
+        "design_docs/verification/world-iter365/product-pr515-fresh.json",
+        "design_docs/verification/world-iter365/record-base-tracked-baseline.json",
+        "design_docs/verification/world-iter365/record-design.md",
+        "design_docs/verification/world-iter365/record-plan.md",
+        "design_docs/verification/world-iter365/record-state.json",
+        "design_docs/verification/world-iter365/retro-counts.json",
+        "design_docs/verification/world-iter365/skill-currency.json",
+        "design_docs/verification/world-iter365/upstream-open-control.json",
+        "design_docs/verification/world-iter365/upstream-predicates.json",
+        "design_docs/verification/world-iter365/worktree-census.json"
+      ],
+      "parsed_new_json": 35,
+      "counts": {
+        "stage": {
+          "charter": 6345,
+          "archive": 730,
+          "dashboard": 22,
+          "canonical_log": 39,
+          "ledger": 99
+        },
+        "current": {
+          "charter": 6345,
+          "archive": 730,
+          "dashboard": 21,
+          "canonical_log": 39,
+          "ledger": 99
+        }
+      },
+      "frozen_original": 25,
+      "continuation_additional": 2,
+      "planner_consumed": 4,
+      "snapshot": [
+        {
+          "path": "design_docs/world-mission.md",
+          "sha256": "24225ebebd46c9829b508b279baca0d0195d93fb0ed4961c442daa46c6df5e82",
+          "stage_matches_current": true
+        },
+        {
+          "path": "design_docs/world-mission-log.md",
+          "sha256": "2b42b9a348cdffc7560b4ec53d0c5889d2183a619b49b32d8b091274f67f2547",
+          "stage_matches_current": false
+        },
+        {
+          "path": "design_docs/world-mission-dashboard.md",
+          "sha256": "5e80a7397ad9354d06a6eab3bfb2a43aebf7f35fe673260bca4f515b9cc25160",
+          "stage_matches_current": false
+        },
+        {
+          "path": "design_docs/world-mission-status-archive.md",
+          "sha256": "1829cc1e1a02022496c7ec7537368a9d0202daa43ad6bd65aef3b58fc1bc39e7",
+          "stage_matches_current": true
+        },
+        {
+          "path": "design_docs/world-mission-index.md",
+          "sha256": "a27f891f0f8b7dadaf022eebcdbcc4bb81a2b5e9295000c335cbfc08dbb9fdd7",
+          "stage_matches_current": true
+        },
+        {
+          "path": "design_docs/verification/world-iter365/executor-completion-proof.json",
+          "sha256": "a7f984557342417cbaca99acb4a9b43b0bb4514ac662655c805ac2042259e809",
+          "stage_matches_current": true
+        }
+      ],
+      "post_stage_changed_paths": [
+        "design_docs/world-mission-dashboard.md",
+        "design_docs/world-mission-log.md"
+      ],
+      "new_whitespace_clean": 38,
+      "tracked_whitespace": [
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "rc": 0
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--check",
+            "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+            "--"
+          ],
+          "rc": 0
+        }
+      ],
+      "full_diff_bytes": 2445026,
+      "full_diff_sha256": "a2462a226fa9e2af2d4498637e5888a476b89f13c9e9f67e119658afb34b577e",
+      "diff_sections": 43,
+      "digests": {
+        "ledger_including_newline": "58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01",
+        "ledger_excluding_newline": "c52deeaabfe33a94ecbb71bb2cb190f3ffb686a49f45b89986d794b34bc8f00a",
+        "queue": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4",
+        "pair": "27fecc13ef71fc8811f1c426b134c9650c57d86a3399446aa5ccf5c37d5ab260"
+      },
+      "current_hashes": {
+        "design_docs/world-mission-log.md": "ef9c6fd2af49ab3b9d2fe633b63af48f4666889031b02e8d07c2255f0c20e839",
+        "design_docs/world-mission-index.md": "a27f891f0f8b7dadaf022eebcdbcc4bb81a2b5e9295000c335cbfc08dbb9fdd7",
+        "design_docs/world-mission-status-archive.md": "1829cc1e1a02022496c7ec7537368a9d0202daa43ad6bd65aef3b58fc1bc39e7",
+        "design_docs/world-mission.md": "24225ebebd46c9829b508b279baca0d0195d93fb0ed4961c442daa46c6df5e82",
+        "design_docs/world-mission-dashboard.md": "15065c5423cbf22f066f9b1e69535029749429ffc7075b15f4d705c5b2dbc794"
+      }
+    },
+    "independent_mutations": {
+      "positive_controls": 9,
+      "mutation_attempted": 15,
+      "mutation_detected": 15,
+      "survivors": 0,
+      "outcomes": [
+        {
+          "name": "protected-byte",
+          "detected": true
+        },
+        {
+          "name": "duplicate365",
+          "detected": true
+        },
+        {
+          "name": "drop363",
+          "detected": true
+        },
+        {
+          "name": "corrupt362-pair",
+          "detected": true
+        },
+        {
+          "name": "other-route-byte",
+          "detected": true
+        },
+        {
+          "name": "prior-log-byte",
+          "detected": true
+        },
+        {
+          "name": "orphan361",
+          "detected": true
+        },
+        {
+          "name": "dashboard41",
+          "detected": true
+        },
+        {
+          "name": "frozen-input-hash",
+          "detected": true
+        },
+        {
+          "name": "ledger-row-byte",
+          "detected": true
+        },
+        {
+          "name": "queue-byte",
+          "detected": true
+        },
+        {
+          "name": "snapshot-missing-member",
+          "detected": true
+        },
+        {
+          "name": "CI-skipped",
+          "detected": true
+        },
+        {
+          "name": "CI-wrong-head",
+          "detected": true
+        },
+        {
+          "name": "CI-empty",
+          "detected": true
+        }
+      ],
+      "ci_capture_sha256": "a67dbc785ee781886d79c870a050be6191aa8282ef3dc742c596f578422b3a85",
+      "ci_at_utc": "2026-11-07T17:40:19.767059+00:00",
+      "ci_checks": [
+        {
+          "name": "ailang-code verify gate",
+          "head_sha": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://api.github.com/repos/sunholo-data/ailang-world/check-runs/128474327498",
+          "html_url": "https://github.com/sunholo-data/ailang-world/actions/runs/42396312564/job/128474327498"
+        },
+        {
+          "name": "go host build + test gate",
+          "head_sha": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://api.github.com/repos/sunholo-data/ailang-world/check-runs/128474327465",
+          "html_url": "https://github.com/sunholo-data/ailang-world/actions/runs/42396312564/job/128474327465"
+        },
+        {
+          "name": "go race gate (go test -race, own job)",
+          "head_sha": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://api.github.com/repos/sunholo-data/ailang-world/check-runs/128474327456",
+          "html_url": "https://github.com/sunholo-data/ailang-world/actions/runs/42396312564/job/128474327456"
+        }
+      ],
+      "ci_runs": [
+        {
+          "id": 42396312564,
+          "name": "CI",
+          "head_sha": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/sunholo-data/ailang-world/actions/runs/42396312564"
+        }
+      ]
+    },
+    "independent_archive_style": [
+      {
+        "label": "pristine-base",
+        "argv": [
+          "git",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "-"
+        ],
+        "input_bytes": 1623856,
+        "input_sha256": "33697b13222054fe70d4f892819b3a6a15f1b4bff59413c1037dcb54631cb599",
+        "input_lines": 728,
+        "ends_with_blank_line": true,
+        "rc": 3,
+        "stdout": "-:728: new blank line at EOF.\n",
+        "stderr": ""
+      },
+      {
+        "label": "current",
+        "argv": [
+          "git",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "-"
+        ],
+        "input_bytes": 1625146,
+        "input_sha256": "1829cc1e1a02022496c7ec7537368a9d0202daa43ad6bd65aef3b58fc1bc39e7",
+        "input_lines": 730,
+        "ends_with_blank_line": true,
+        "rc": 3,
+        "stdout": "-:730: new blank line at EOF.\n",
+        "stderr": ""
+      }
+    ],
+    "ci": {
+      "gate_source": "ci",
+      "provenance": "Inherited authoritative fresh controller GitHub API capture; independently validated by evaluator, not evaluator API retrieval",
+      "capture_path": "/tmp/world365-ci-review-9a43f9c1.json",
+      "capture_sha256": "a67dbc785ee781886d79c870a050be6191aa8282ef3dc742c596f578422b3a85",
+      "captured_at_utc": "2026-11-07T17:40:19.767059+00:00",
+      "checks": [
+        {
+          "name": "ailang-code verify gate",
+          "head_sha": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://api.github.com/repos/sunholo-data/ailang-world/check-runs/128474327498",
+          "html_url": "https://github.com/sunholo-data/ailang-world/actions/runs/42396312564/job/128474327498"
+        },
+        {
+          "name": "go host build + test gate",
+          "head_sha": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://api.github.com/repos/sunholo-data/ailang-world/check-runs/128474327465",
+          "html_url": "https://github.com/sunholo-data/ailang-world/actions/runs/42396312564/job/128474327465"
+        },
+        {
+          "name": "go race gate (go test -race, own job)",
+          "head_sha": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://api.github.com/repos/sunholo-data/ailang-world/check-runs/128474327456",
+          "html_url": "https://github.com/sunholo-data/ailang-world/actions/runs/42396312564/job/128474327456"
+        }
+      ],
+      "runs": [
+        {
+          "id": 42396312564,
+          "name": "CI",
+          "head_sha": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+          "event": "pull_request",
+          "status": "completed",
+          "conclusion": "success",
+          "html_url": "https://github.com/sunholo-data/ailang-world/actions/runs/42396312564"
+        }
+      ]
+    },
+    "complete_diff": {
+      "sections": 43,
+      "new_file_sections_reconstructed_byte_exact": 38,
+      "baseline_modified_hunks": 8,
+      "bytes": 2445026,
+      "sha256": "a2462a226fa9e2af2d4498637e5888a476b89f13c9e9f67e119658afb34b577e"
+    },
+    "baseline_sha256_manifest": {
+      "paths": 6395,
+      "mismatches": 0,
+      "verification": "independent: protected current hashes and five base Git-show hashes compared to complete supplied baseline manifest"
+    },
+    "frozen_inputs": {
+      "original25_verified": true,
+      "continuation2_verified": true,
+      "planner4_verified": true
+    },
+    "inherited_narrow_tests": {
+      "candidate_receipt": "design_docs/verification/world-iter365/controller-charter-gate.json",
+      "pristine_receipt": "design_docs/verification/world-iter365/dedicated-baseline.json",
+      "command": "go test ./host/verifygate -run '^TestMissionConfigRealCharter$' -count=1",
+      "candidate_rc": 0,
+      "pristine_rc": 0,
+      "outside_sandbox": true,
+      "evaluator_rerun": false
+    },
+    "usage": {
+      "designer": 101755,
+      "planner": 71529,
+      "executor": 218481,
+      "known_subscription_tokens_before_evaluator": 391765,
+      "metered_usd": 0,
+      "imputed_usd": 0,
+      "evaluator_tokens": null,
+      "controller_supervisor_tokens": null,
+      "provenance": "Inherited actual supervisor footers; sums independently checked. Zero dollars from controller accounting; evaluator footer pending supervisor."
+    }
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "nonblocking",
+      "category": "instrument",
+      "points_deducted": 1,
+      "path": "design_docs/verification/world-iter365/executor-structural-proof.json",
+      "finding": "Additional whole-existing-archive no-index style instrument was not baselined before the initial executor run and caused an honest STOP.",
+      "disposition": "Original STOP immutable. Own paired stdin reproduction is rc3 at pristine728/current730; exact archive pair and required tracked checks pass. Scoped continuation justified; no criterion waiver."
+    },
+    {
+      "id": "F2",
+      "severity": "nonblocking",
+      "category": "instrument",
+      "points_deducted": 1,
+      "path": "design_docs/verification/world-iter365/executor-structural-proof.json",
+      "finding": "Original report wrapper incorrectly asserted rc0 for a new-file no-index diff returning rc1 without diagnostics.",
+      "disposition": "Instrument error explicitly retained. Own original/completion proof checks both rc1, empty stdout/stderr; difference status is expected."
+    },
+    {
+      "id": "F3",
+      "severity": "nonblocking",
+      "category": "input",
+      "points_deducted": 1,
+      "path": "design_docs/verification/world-iter365/controller-full-inbox-triage.json",
+      "finding": "Initial default20 inbox batch was incomplete; later reporting wrapper mishandled len(null).",
+      "disposition": "Preserved original20 plus36 explicit-limit1000 rows are56 unique historical own claims, each ack_rc0; inherited empty/null reread and correction disclosed in current log/dashboard. No directive authority introduced."
+    },
+    {
+      "id": "F4",
+      "severity": "nonblocking",
+      "category": "instrument",
+      "points_deducted": 1,
+      "path": "design_docs/verification/world-iter365/index-cli-baseline.json",
+      "finding": "First ephemeral registry baseline was rejected because schedule.mode was missing.",
+      "disposition": "Original rc1 retained; corrected r2 baseline rc0 with clean bytes and final controller CLI rc0. Independent final index exact-byte check passes; no installed registry modification authorized."
+    },
+    {
+      "id": "F5",
+      "severity": "informational",
+      "category": "scope",
+      "points_deducted": 0,
+      "path": "design_docs/verification/world-iter365/controller-ledger-hash-scope.json",
+      "finding": "Controller structural regex digest excludes final newline; contract digest includes it.",
+      "disposition": "Independently measured c52deea\u2026 without newline and58853d5b\u2026 with newline; full marked bytes unchanged."
+    }
+  ],
+  "blocking_findings": [],
+  "hard_unmet_contract_gates": [],
+  "limitations": [
+    "FLAG judge-independence:same-model-fresh-context. Fresh actual evaluator context, no resume/no agents. Actual pinned CLI model is supplied invocation/supervisor provenance, not a model selected or independently probed through the Agent API.",
+    "GitHub capture is authoritative inherited fresh controller API evidence, not my personal API call. Job/event/head/status URLs and nonempty exact check set independently validated; step-level logs/annotations not fetched.",
+    "Narrow outside-sandbox pristine/candidate TestMissionConfigRealCharter passes inherited; no local Go/full-suite/make test/lint/product rerun. Sandbox loopback failures are UNINFORMATIVE UNDER SANDBOX.",
+    "Own15 in-memory controls prove reviewer structural guards reject selected corruptions. They do not execute original temporary guard scripts, provide independent source-mutant coverage or establish product correctness/causality.",
+    "Controller8 byte-vector comparisons and executor9 controls remain inherited observations. Original temporary scripts are embedded as text in stage proofs and were inspected, not executed.",
+    "Shared-main6056-file preservation,98-worktree census, inbox read/acks, network product state, routing availability, skill currency and upstream/release observations are inherited; no external messages/imports or live shared-state/credential/environment reads performed.",
+    "Snapshot bulk is absent from Git; independent assurance is exact six-member recovery from immutable M1 and correspondence to staged manifests, not a claim to have inspected the original local snapshot directory.",
+    "Usage391765 subscription tokens before evaluator is summed from inherited supervisor footers; metered0/imputed0 is controller accounting. Controller/supervisor usage unreported; evaluator usage awaits actual CLI footer recorded separately by supervisor.",
+    "PASS accepts only ADMIN record at reviewed SHA. Product256 remains PARKED needs-human-review, MiniMax FAIL85/LOCAL_CRITERION UNMET; PR515 draft/unmerged; D105/110/111/112 OPEN; D111/D112 independently human-gated. No skip257/201/243, credential action or product merge authorized.",
+    "Final PR-head and merge-head terminal-success CI and any material later review coverage remain controller delivery duties; no landing or future CI result asserted."
+  ],
+  "delivery_authorized": false,
+  "product_accepted": false
+}

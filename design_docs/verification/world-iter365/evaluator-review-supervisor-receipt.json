@@ -1,0 +1,78 @@
+{
+  "role": "evaluator",
+  "model": "codex:gpt-6.1-sol",
+  "independence_flag": "judge-independence:same-model-fresh-context",
+  "agent_model_override": "API does not offer model selection; actual fresh pinned CLI used",
+  "reviewed_sha": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+  "directive_path": "/tmp/world365-evaluator-directive-9a43f9c1.txt",
+  "directive_sha256": "e6f2298e24898f61cf7cd3afa79b5dba3b7f249902e1bbf3e15b375c3ca20a72",
+  "prior_lanes": "OpenRouter ration refusal rc75; Sonnet+opus subscription weekly limit; preserved preflight receipts",
+  "stages": [
+    {
+      "stage": "probe",
+      "command_without_prompt": [
+        "env",
+        "-u",
+        "OPENAI_API_KEY",
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--model",
+        "gpt-6.1-sol",
+        "-c",
+        "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+        "--sandbox",
+        "workspace-write",
+        "-C",
+        "/Users/voightkampff/dev/sunholo-data/.eval-world-iter365"
+      ],
+      "rc": 0,
+      "runtime_seconds": 4.301,
+      "hard_timeout_seconds": 120,
+      "stdin": "closed",
+      "private_raw_path": "/tmp/world365-evaluator-probe-9a43f9c1.log",
+      "quota_tokens": 9920,
+      "metered_usd": 0,
+      "imputed_usd": 0,
+      "model_header_pinned": true
+    },
+    {
+      "stage": "review",
+      "command_without_prompt": [
+        "env",
+        "-u",
+        "OPENAI_API_KEY",
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--model",
+        "gpt-6.1-sol",
+        "-c",
+        "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+        "--sandbox",
+        "workspace-write",
+        "-C",
+        "/Users/voightkampff/dev/sunholo-data/.eval-world-iter365",
+        "-o",
+        "/tmp/world365-evaluator-final-9a43f9c1.txt"
+      ],
+      "rc": 0,
+      "runtime_seconds": 546.633,
+      "hard_timeout_seconds": 1800,
+      "stdin": "closed",
+      "private_raw_path": "/tmp/world365-evaluator-review-9a43f9c1.log",
+      "quota_tokens": 169136,
+      "metered_usd": 0,
+      "imputed_usd": 0,
+      "model_header_pinned": true
+    }
+  ],
+  "ci_artifact_path": "/tmp/world365-ci-review-9a43f9c1.json",
+  "ci_artifact_sha256": "a67dbc785ee781886d79c870a050be6191aa8282ef3dc742c596f578422b3a85",
+  "actual_final_path": "/tmp/world365-evaluator-final-9a43f9c1.txt",
+  "final_marker": "EVALUATION_VERDICT: PASS score=96",
+  "status": "completed",
+  "report_paths": [
+    "/Users/voightkampff/dev/sunholo-data/.eval-world-iter365/design_docs/verification/world-iter365/evaluator-report.md",
+    "/Users/voightkampff/dev/sunholo-data/.eval-world-iter365/design_docs/verification/world-iter365/evaluator-result.json"
+  ],
+  "quota_tokens_total": 179056
+}
