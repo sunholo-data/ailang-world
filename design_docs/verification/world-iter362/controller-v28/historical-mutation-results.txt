@@ -1,0 +1,43 @@
+== run 2026-11-07T05:21:09Z  tree=/Users/voightkampff/dev/sunholo-data/.probe-world-iter362-quorum  load=(3.16650390625, 4.4775390625, 4.623046875)
+CONTROL: explicit go build rc=0
+CONTROL: rc=0 pass=15 red=- expected=- missing=-  MATCH (16s)
+    |     context_roots_test.go:201: root references: Background=37 TODO=0 WithoutCancel=5
+    |     context_roots_test.go:205: root census: 40 named roots, 217 production files
+MUT-RUN-HEAD-SHAPE: explicit go build rc=0
+MUT-RUN-HEAD-SHAPE: rc=1 pass=14 red=Serve expected=Serve missing=-  MATCH (11s)
+MUT-SHARED-PARENT: explicit go build rc=0
+MUT-SHARED-PARENT: rc=1 pass=13 red=Phase,Serve expected=Phase,Serve missing=-  MATCH (10s)
+MUT-REGISTRY-UNBOUNDED: explicit go build rc=0
+MUT-REGISTRY-UNBOUNDED: rc=1 pass=14 red=Bound expected=Bound missing=-  MATCH (10s)
+MUT-SWEEP-ON-STARTUP-CLOCK: explicit go build rc=0
+MUT-SWEEP-ON-STARTUP-CLOCK: rc=1 pass=14 red=Phase expected=Phase missing=-  MATCH (11s)
+MUT-TEMPLATES-ON-STARTUP-CLOCK: explicit go build rc=0
+MUT-TEMPLATES-ON-STARTUP-CLOCK: rc=0 pass=15 red=- expected=- missing=-  MATCH (14s)
+MUT-SERVE-SPENT: explicit go build rc=0
+MUT-SERVE-SPENT: rc=1 pass=12 red=Phase,Serve,Spent expected=Phase,Serve,Spent missing=-  MATCH (15s)
+MUT-SPENT-STILL-SERVED: explicit go build rc=0
+MUT-SPENT-STILL-SERVED: rc=1 pass=12 red=Phase,Serve,Spent expected=Phase,Serve,Spent missing=-  MATCH (15s)
+MUT-FAIL-NEVER-SPENT: explicit go build rc=0
+MUT-FAIL-NEVER-SPENT: rc=1 pass=12 red=Phase,Serve,Spent expected=Phase,Serve,Spent missing=-  MATCH (15s)
+MUT-DEADLINE-UNSET: explicit go build rc=0
+MUT-DEADLINE-UNSET: rc=1 pass=13 red=Phase,Serve expected=Phase,Serve missing=-  MATCH (22s)
+MUT-SPENT-ANY: explicit go build rc=0
+MUT-SPENT-ANY: rc=1 pass=14 red=Spent expected=Spent missing=-  MATCH (14s)
+MUT-FLAG-NOT-CARRIED: explicit go build rc=0
+MUT-FLAG-NOT-CARRIED: rc=1 pass=12 red=Phase,Serve,Spent expected=Phase,Serve,Spent missing=-  MATCH (15s)
+MUT-HEALTH-DROPS-FLAG: explicit go build rc=0
+MUT-HEALTH-DROPS-FLAG: rc=1 pass=13 red=Phase,Serve expected=Phase,Serve missing=-  MATCH (13s)
+MUT-NO-LOG-LINE: ANCHOR-COUNT 0 in host/daemon/workspace.go: '\t\tif x.OutOfTime {'
+MUT-DOCTOR-NOT-CALLED: explicit go build rc=0
+MUT-DOCTOR-NOT-CALLED: rc=1 pass=14 red=Doctor expected=Doctor missing=-  MATCH (9s)
+MUT-DOCTOR-WARN: explicit go build rc=0
+MUT-DOCTOR-WARN: rc=1 pass=14 red=Doctor expected=Doctor missing=-  MATCH (10s)
+MUT-DOCTOR-CLASS: explicit go build rc=0
+MUT-DOCTOR-CLASS: rc=1 pass=14 red=Doctor expected=Doctor missing=-  MATCH (9s)
+MUT-DOCTOR-ONE-FIX: explicit go build rc=0
+MUT-DOCTOR-ONE-FIX: rc=1 pass=14 red=Doctor expected=Doctor missing=-  MATCH (9s)
+MUT-REGISTRY-BUDGET-30S: explicit go build rc=0
+MUT-REGISTRY-BUDGET-30S: rc=1 pass=14 red=Pin expected=Pin missing=-  MATCH (12s)
+MUT-STARTUP-BUDGET-5S: explicit go build rc=0
+MUT-STARTUP-BUDGET-5S: rc=1 pass=14 red=Pin expected=Pin missing=-  MATCH (13s)
+== done: 19 MATCH, 0 MISMATCH

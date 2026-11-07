@@ -1,0 +1,4 @@
+reader_rc=0
+matches=/Users/voightkampff/.ailang/state/mission-quorum-world/w-daemon-startup-under-load-2026-11-07T01-28-13Z.json
+quorum consult: /Users/voightkampff/.ailang/state/mission-quorum-world
+quorum consult: /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.ailang/state/mission-quorum

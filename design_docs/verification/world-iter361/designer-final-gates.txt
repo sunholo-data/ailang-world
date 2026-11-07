@@ -1,0 +1,14 @@
+== final prototype gates 2026-11-07T01:18:44Z load=13.91 14.94 11.90
+BUILD-OK
+VET-OK
+gofmt -l (touched): []
+== named tests -count=3
+ok  	github.com/sunholo-data/ailang-world/host/daemon	19.823s
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.241s
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.482s
+== full packages (AILANG_BIN pinned)
+ok  	github.com/sunholo-data/ailang-world/host/broker	273.719s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	306.966s
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	156.223s
+ok  	github.com/sunholo-data/ailang-world/host/store	12.030s
+RC=0

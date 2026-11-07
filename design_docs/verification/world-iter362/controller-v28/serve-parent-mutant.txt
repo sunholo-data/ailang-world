@@ -1,0 +1,9 @@
+$ go test -race -count=1 -v -run ^TestServeStartsWhenTheProbeSpendsTheStartupClock$ -timeout=120s ./host/daemon
+=== RUN   TestServeStartsWhenTheProbeSpendsTheStartupClock
+    startup_under_load_test.go:142: Get "http://127.0.0.1:52960/v1/health": dial tcp 127.0.0.1:52960: connect: connection refused
+--- FAIL: TestServeStartsWhenTheProbeSpendsTheStartupClock (1.96s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	2.408s
+FAIL
+
+rc=1

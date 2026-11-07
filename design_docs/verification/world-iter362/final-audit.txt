@@ -1,0 +1,35 @@
+deadline_utc=2026-11-07 05:15:51.212052+00:00
+command=['git', '--no-optional-locks', 'rev-parse', 'HEAD']
+rc=0
+61a8d1c47b45fffc0f36137d29a5285c32da0145
+
+
+command=['git', '--no-optional-locks', 'diff', '--exit-code']
+rc=0
+
+
+command=['git', '--no-optional-locks', 'status', '--short']
+rc=0
+?? .design-scratch/
+?? design_docs/planned/w-daemon-startup-under-load.md
+?? design_docs/planned/w-daemon-startup-under-load.patch
+?? design_docs/verification/world-iter361/
+?? design_docs/verification/world-iter362/
+
+
+UNCHANGED CLAUDE.md sha256=68f6fd16ede4c598a93590c3de20a2fc661a128c241eed747fab4d68d74a9141 lines=50
+UNCHANGED design_docs/coding-standards.md sha256=a6951ab19b301c821dabc6eadc5061e6dded79c8af749ae080454e50e80239e4 lines=130
+UNCHANGED design_docs/world-mission.md sha256=78ec05d70bcc1073a5ca5cf9389faac8040bd78e333116840fa36f6744306459 lines=6343
+UNCHANGED design_docs/DESIGN.md sha256=a8b87a7ca9cec01676d6d6eb00f2116bd60114638df4bab286189a46dfa17836 lines=793
+UNCHANGED design_docs/world-mission-log.md sha256=af4510bca545809b9cc18e49d0ae847d4e5ff13af6a84a88e95e06e8b63a6e80 lines=2758
+all 11 final applied/prototype hashes match manifest
+all final mutation restoration hashes match final prototype production files
+pgrep targeted task test processes rc=3
+matched_pids=
+sysmon request failed with error: sysmond service not found
+pgrep: Cannot get process list
+
+process census UNINFORMATIVE: command denied/failed, not a zero
+ 6:14  4 users, load averages: 2.90 4.16 4.47
+
+SCRATCH_REMOVED=true

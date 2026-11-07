@@ -1,0 +1,73 @@
+== reads/writes of w.exec / workspaceExec fields (non-test host/daemon), with enclosing func
+host/daemon/daemon.go:1226: [func ]  if d.workspace != nil && d.workspace.exec != nil && d.workspace.exec.toolState != nil {
+host/daemon/daemon.go:1227: [func ]   d.workspace.exec.toolState.Close()
+host/daemon/daemon.go:1235: [func ]  if d.workspace != nil && d.workspace.exec != nil && d.workspace.exec.toolState != nil {
+host/daemon/daemon.go:1236: [func ]   d.workspace.exec.toolState.Close()
+host/daemon/workspace.go:185: [func ]   mapped, ok := e.episodeProject[episodeID]
+host/daemon/workspace.go:187: [func ]    if e.profile == nil {
+host/daemon/workspace.go:190: [func ]    return e.profile, ""
+host/daemon/workspace.go:194: [func ]  if why, left := e.excludedWhy[project]; left {
+host/daemon/workspace.go:197: [func ]  p := e.byProject[project]
+host/daemon/workspace.go:212: [func ]  if w == nil || w.exec == nil {
+host/daemon/workspace.go:215: [func ]  for _, project := range sortedProjects(w.exec.byProject) {
+host/daemon/workspace.go:216: [func ]   loaded = append(loaded, HealthExecProfile{Project: project, Digest: w.exec.byProject[project].Digest, File: w.exec.sources[project
+host/daemon/workspace.go:219: [func ]  for _, x := range w.exec.excluded {
+host/daemon/workspace.go:260: [func ]  w.exec = &workspaceExec{toolState: st.Tools, profile: st.Only, byProject: st.Profiles, episodeProject: st.EpisodeProjects,
+host/daemon/workspace.go:263: [func ]  w.exec.tools = captureExecTools(w.exec)
+host/daemon/workspace.go:268: [func ]   w.exec.excludedWhy[x.Project] = x.Reason
+host/daemon/workspace.go:469: [func ]  if w.exec == nil {
+host/daemon/workspace.go:486: [func ]  profile, why := w.exec.profileFor(episodeID, b)
+host/daemon/workspace.go:496: [func ]  eh, err := broker.NewExecHandler(broker.ExecHandlerConfig{Tools: w.exec.toolState, Profile: profile, Sandbox: w.exec.sandbox,
+host/daemon/workspace.go:498: [func ]   OperatorHome: w.exec.operatorHome, MaxOutputBytes: w.exec.maxOutputBytes})
+host/daemon/workspace.go:564: [func ]  if w.exec != nil {
+host/daemon/workspace.go:572: [func ]   if profile, _ := w.exec.profileFor(episodeID, b); profile != nil {
+host/daemon/workspace.go:748: [func ]  if w != nil && w.exec != nil {
+host/daemon/workspace.go:749: [func ]   if w.exec.toolState != nil {
+host/daemon/workspace.go:750: [func ]    return w.exec.toolState.Accepted()
+host/daemon/workspace.go:752: [func ]   for name, path := range w.exec.tools {
+host/daemon/workspace.go:760: [func ]  if w != nil && w.exec != nil && w.exec.toolState != nil {
+host/daemon/workspace.go:761: [func ]   _, status := w.exec.toolState.Health()
+host/daemon/workspace.go:769: [func captureExecTools]  for _, project := range sortedProjects(e.byProject) {
+host/daemon/workspace.go:770: [func captureExecTools]   p := e.byProject[project]
+
+== distinct functions touching it:
+func (d *Daemon) Close() error 
+func (d *Daemon) Shutdown() error 
+func (e *workspaceExec) profileFor(episodeID string, b execBinding) (*broker.ExecProfile, string) 
+func (w *workspaceTools) configureExec(ctx context.Context, cfg Config) error 
+func (w *workspaceTools) episodeHandler(episodeID, sandbox string) (broker.Handler, error) 
+func (w *workspaceTools) execHandler(episodeID, epRoot string) broker.Handler 
+func (w *workspaceTools) healthExecToolStatus() map[string]broker.ExecToolStatus 
+func (w *workspaceTools) healthExecTools() map[string]string 
+func (w *workspaceTools) healthProfiles() ([]HealthExecProfile, []HealthExecExclusion) 
+func captureExecTools(e *workspaceExec) map[string]string 
+
+== the locks workspaceTools has, and what they guard (control: the mutexes exist and are documented)
+116:	// mu guards handler and ailangBuild only. It is never held across the
+119:	mu          sync.Mutex
+123:	// execMu guards execH only. It is never held with mu, so exec
+125:	execMu sync.Mutex
+
+== ExecToolState captures the profile set once, at construction (exec_tools.go)
+22:	Profiles    map[string]*ExecProfile
+122:func NewExecToolState(cfg ExecToolStateConfig) (*ExecToolState, error) {
+148:	for project, p := range cfg.Profiles {
+161:	for project := range cfg.Profiles {
+
+== measured probe-phase share of the startup clock on this rig (designer-phase-timing-out.txt)
+== cold  2026-11-07T00:57:41Z  load averages: 11.28 12.69 10.47
+PHASE exec:probe-profiles          t=  2106ms since-prev=   552ms ctx-left=6922ms
+PHASE exec:tool-state              t=  6903ms since-prev=  4797ms ctx-left=2124ms
+PHASE run:new-returned             t=  7981ms since-prev=     0ms ctx-left=none
+== warm1  2026-11-07T00:57:53Z  load averages: 13.03 13.00 10.62
+PHASE exec:probe-profiles          t=   974ms since-prev=   297ms ctx-left=8050ms
+PHASE exec:tool-state              t=  5165ms since-prev=  4191ms ctx-left=3858ms
+PHASE run:new-returned             t=  5311ms since-prev=     0ms ctx-left=none
+== warm2  2026-11-07T00:57:59Z  load averages: 12.79 12.95 10.62
+PHASE exec:probe-profiles          t=   933ms since-prev=   276ms ctx-left=8078ms
+PHASE exec:tool-state              t=  5201ms since-prev=  4268ms ctx-left=3810ms
+PHASE run:new-returned             t=  5376ms since-prev=     0ms ctx-left=none
+== warm3  2026-11-07T00:58:05Z  load averages: 13.36 13.06 10.67
+PHASE exec:probe-profiles          t=   950ms since-prev=   331ms ctx-left=8081ms
+PHASE exec:tool-state              t=  5426ms since-prev=  4476ms ctx-left=3605ms
+PHASE run:new-returned             t=  5610ms since-prev=     0ms ctx-left=none

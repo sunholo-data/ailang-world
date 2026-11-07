@@ -1,0 +1,25 @@
+== run 2026-11-07T01:13:59Z  tree=/Users/voightkampff/dev/sunholo-data/.wt-world-iter361-row256/.design-scratch/mut  load=(10.2197265625, 8.4140625, 8.84814453125)
+CONTROL: rc=0 pass=15 red=- expected=- missing=-  MATCH (16s)
+    |     context_roots_test.go:201: root references: Background=37 TODO=0 WithoutCancel=5
+    |     context_roots_test.go:205: root census: 40 named roots, 217 production files
+MUT-RUN-HEAD-SHAPE: rc=1 pass=14 red=Serve expected=Serve missing=-  MATCH (12s)
+MUT-SHARED-PARENT: rc=1 pass=13 red=Phase,Serve expected=Phase,Serve missing=-  MATCH (12s)
+MUT-REGISTRY-UNBOUNDED: rc=1 pass=14 red=Bound expected=Bound missing=-  MATCH (13s)
+MUT-SWEEP-ON-STARTUP-CLOCK: rc=1 pass=14 red=Phase expected=Phase missing=-  MATCH (13s)
+MUT-TEMPLATES-ON-STARTUP-CLOCK: rc=0 pass=15 red=- expected=- missing=-  MATCH (13s)
+MUT-SERVE-SPENT: rc=1 pass=12 red=Phase,Serve,Spent expected=Phase,Serve,Spent missing=-  MATCH (20s)
+MUT-SPENT-STILL-SERVED: rc=1 pass=12 red=Phase,Serve,Spent expected=Phase,Serve,Spent missing=-  MATCH (16s)
+MUT-FAIL-NEVER-SPENT: rc=1 pass=12 red=Phase,Serve,Spent expected=Phase,Serve,Spent missing=-  MATCH (18s)
+MUT-DEADLINE-UNSET: rc=1 pass=13 red=Phase,Serve expected=Phase,Serve missing=-  MATCH (16s)
+MUT-SPENT-ANY: rc=1 pass=14 red=Spent expected=Spent missing=-  MATCH (15s)
+MUT-FLAG-NOT-CARRIED: rc=1 pass=12 red=Phase,Serve,Spent expected=Phase,Serve,Spent missing=-  MATCH (15s)
+MUT-HEALTH-DROPS-FLAG: rc=1 pass=13 red=Phase,Serve expected=Phase,Serve missing=-  MATCH (14s)
+MUT-NO-LOG-LINE: rc=1 pass=14 red=Serve expected=Serve missing=-  MATCH (13s)
+MUT-DOCTOR-NOT-CALLED: rc=1 pass=14 red=Doctor expected=Doctor missing=-  MATCH (9s)
+MUT-DOCTOR-WARN: rc=1 pass=14 red=Doctor expected=Doctor missing=-  MATCH (9s)
+MUT-DOCTOR-CLASS: rc=1 pass=14 red=Doctor expected=Doctor missing=-  MATCH (8s)
+MUT-DOCTOR-ONE-FIX: rc=1 pass=14 red=Doctor expected=Doctor missing=-  MATCH (8s)
+MUT-REGISTRY-BUDGET-30S: rc=1 pass=14 red=Pin expected=Pin missing=-  MATCH (13s)
+MUT-STARTUP-BUDGET-5S: rc=1 pass=14 red=Pin expected=Pin missing=-  MATCH (13s)
+== done: 20 MATCH, 0 MISMATCH
+MUT-TREE-RESTORED-IDENTICAL

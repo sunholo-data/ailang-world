@@ -1,0 +1,4 @@
+Canonical reader found /Users/voightkampff/.ailang/state/mission-quorum-world/w-daemon-startup-under-load-2026-11-07T01-28-13Z.json
+canonical_bytes=13131 copied_bytes=13132
+JSON byte formatting differs, decoded objects exactly equal.
+BLOCKED r1, 3 present rejects, no absence; revised once in362 before r2.

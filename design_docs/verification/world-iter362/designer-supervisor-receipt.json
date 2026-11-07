@@ -1,0 +1,26 @@
+{
+  "utc": "2026-11-07T05:15:15.545929+00:00",
+  "model": "gpt-6.1-sol",
+  "lane": "codex:gpt-6.1-sol subscription, OPENAI_API_KEY stripped",
+  "production_diff_rc": 0,
+  "production_diff_empty": true,
+  "scratch_removed": true,
+  "remaining_go_and_target_test_executables": 0,
+  "observed_processes": [],
+  "load": "6:15  up 6 days, 11:34, 4 users, load averages: 3.14 4.11 4.44",
+  "patch_sha256": "90c6df45c6b4dcf09fd241d76eb87294f5b84d688eb9f2ff90d0eca1de09db16",
+  "patch_lines": 1088,
+  "status": [
+    "?? design_docs/planned/w-daemon-startup-under-load.md",
+    "?? design_docs/planned/w-daemon-startup-under-load.patch",
+    "?? design_docs/verification/world-iter361/",
+    "?? design_docs/verification/world-iter362/"
+  ],
+  "completed_utc": "2026-11-07T05:16:47.952235+00:00",
+  "designer_rc": 0,
+  "tokens_used_cli_raw": "247.075",
+  "tokens_used": 247075,
+  "fallback_used": null,
+  "design_doc_sha256": "5e5cd86fb3fc0ddb8253184b115e0aca79041c8007317150fdd5d252df2355e5",
+  "completion": "DESIGNER_REVISION_COMPLETE"
+}

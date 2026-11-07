@@ -1,0 +1,128 @@
+[
+  {
+    "mutant": "MUT-LATE-NEVER-SPENT",
+    "file": "host/broker/exec_probe.go",
+    "before": "e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1",
+    "after": "1a20e8e09ef4667231ad5f5db08cc698c370e8961b2bc70c6db34b36d4ba8e74",
+    "rc": 1,
+    "assertion": "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+    "match": true
+  },
+  {
+    "mutant": "MUT-SPENT-ANY",
+    "file": "host/broker/exec_probe.go",
+    "before": "e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1",
+    "after": "43f699462f17e2ec07819edcc01ba03d4d30eccb64e5531f6393a2865eecaadd",
+    "rc": 1,
+    "assertion": "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+    "match": true
+  },
+  {
+    "mutant": "MUT-LATE-STILL-SERVED",
+    "file": "host/broker/exec_startup.go",
+    "before": "8663aac66b6af14299f7af7e52c076de37afb7e2fc1c94b23e094a4417435b0d",
+    "after": "3fb1c46f81b57032302057675cbbbe10dca0ff3c53ff3a86272689d78b115874",
+    "rc": 1,
+    "assertion": "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+    "match": true
+  },
+  {
+    "mutant": "MUT-FLAG-NOT-CARRIED",
+    "file": "host/broker/exec_startup.go",
+    "before": "8663aac66b6af14299f7af7e52c076de37afb7e2fc1c94b23e094a4417435b0d",
+    "after": "76fe615a5d249dcfdf0fe36bae89c76da1ec4f43cd722dfa73963b53c76fd0b1",
+    "rc": 1,
+    "assertion": "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+    "match": true
+  },
+  {
+    "mutant": "MUT-CAUSAL-OBSERVATION",
+    "file": "host/broker/exec_probe.go",
+    "before": "e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1",
+    "after": "14810eaa9d9813ef063d5ea960b07a9d22ca37366eb3bc0c4da05ad4167ef2d1",
+    "rc": 1,
+    "assertion": "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+    "match": true
+  },
+  {
+    "mutant": "MUT-LOG-CAUSE",
+    "file": "host/daemon/workspace.go",
+    "before": "94d4da1952fe0a6be4536c4cfb161b684c0eb2871a06ddede43624126b5bb082",
+    "after": "ece025423a895790b8c20bbf29cd507d2ff05bab71a213d1bc9b72201ec1fbc1",
+    "rc": 1,
+    "assertion": "TestExecExclusionLogIsObservationOnly",
+    "match": true
+  },
+  {
+    "mutant": "MUT-DOCTOR-CAUSE",
+    "file": "cmd/ailang-worldd/doctor.go",
+    "before": "759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1",
+    "after": "3f1f99364f47fdc5a5007750407cc40312d3ed162339e5af096ca367d7baeb44",
+    "rc": 1,
+    "assertion": "TestDoctorLateRefusalObservationAndReasonCap",
+    "match": true
+  },
+  {
+    "mutant": "MUT-DOCTOR-NO-REVIEW",
+    "file": "cmd/ailang-worldd/doctor.go",
+    "before": "759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1",
+    "after": "1bb2d266a913b023e237173c899951ff9be476cda630a28afec94152d0b0f572",
+    "rc": 1,
+    "assertion": "TestDoctorLateRefusalObservationAndReasonCap",
+    "match": true
+  },
+  {
+    "mutant": "MUT-REASON-CAP-240-PREFIX",
+    "file": "cmd/ailang-worldd/doctor.go",
+    "before": "759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1",
+    "after": "367a7cbdb97f6563288309eedf7231c987288a41722cb3b47fa617b0d5c7a933",
+    "rc": 1,
+    "assertion": "TestDoctorLateRefusalObservationAndReasonCap",
+    "match": true
+  },
+  {
+    "mutant": "MUT-HEALTH-NO-OMITEMPTY",
+    "file": "host/daemon/daemon.go",
+    "before": "600080956ba673dedcedbb11cdb2093668dff67b32bb258bd2a684e08498d3a9",
+    "after": "4488b9e2727b9b9e076c1aba7ed85c839ead5b91a1d3890170f3a018b131f6df",
+    "rc": 1,
+    "assertion": "TestHealthExecExclusionIsAdditive",
+    "match": true
+  },
+  {
+    "mutant": "MUT-PARENT-CANCEL-DETACHED",
+    "file": "host/daemon/daemon.go",
+    "before": "600080956ba673dedcedbb11cdb2093668dff67b32bb258bd2a684e08498d3a9",
+    "after": "05cf0839fa0c3c53d8b6b50bafc43f0fe6fbf59423b9a6d462c6144a3ac1e821",
+    "rc": 1,
+    "assertion": "TestRegistryPhasePreservesParentCancellation",
+    "match": true
+  },
+  {
+    "mutant": "MUT-CALLER-IMPORTED-ALIAS",
+    "file": "cmd/ailang-worldd/startup_caller_mutant.go",
+    "before": "absent",
+    "after": "ab725d7805d0eafbe9e0a27e82daaa4e2fcfb297b555ca4e3381d23ad89338a0",
+    "rc": 1,
+    "assertion": "TestDaemonConstructorCallerInventory",
+    "match": true
+  },
+  {
+    "mutant": "MUT-CALLER-DIRECT",
+    "file": "cmd/ailang-worldd/startup_caller_mutant.go",
+    "before": "absent",
+    "after": "ed60bf937c9beffd2a4429d559d88bdc9a767633c20b777d03bb9a0b12920f2b",
+    "rc": 1,
+    "assertion": "TestDaemonConstructorCallerInventory",
+    "match": true
+  },
+  {
+    "mutant": "MUT-CALLER-LOCAL-ALIAS",
+    "file": "host/daemon/startup_caller_mutant.go",
+    "before": "absent",
+    "after": "48d53c09b87e0f13e4a794d88113c73d91334567ba17518727a3ba477a9fa200",
+    "rc": 1,
+    "assertion": "TestDaemonConstructorCallerInventory",
+    "match": true
+  }
+]

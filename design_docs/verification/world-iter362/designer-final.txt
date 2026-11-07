@@ -1,0 +1,10 @@
+Revised the [design](design_docs/planned/w-daemon-startup-under-load.md), [patch](design_docs/planned/w-daemon-startup-under-load.patch), and [evidence receipt](design_docs/verification/world-iter362/revision-receipt.md).
+
+Patch: **11 files, +881/−20**, SHA-256:
+`90c6df45c6b4dcf09fd241d76eb87294f5b84d688eb9f2ff90d0eca1de09db16`
+
+Validation: apply/presence checks, build/vet/formatting, and focused race tests returned rc 0; **14 tests passed, 14/14 mutants killed**. Socket suite rc 1 from sandbox bind denials; green socket results remain uninformative. `verify_go` baseline and revision both returned rc 1 because archives lack HEAD. Process census returned rc 3.
+
+Scratch removed; production untouched. No source commits or quorum. Controller socket/full-suite/Linux validation and the inherited template-clock gap remain pending.
+
+DESIGN_DOC_PATH: design_docs/planned/w-daemon-startup-under-load.md

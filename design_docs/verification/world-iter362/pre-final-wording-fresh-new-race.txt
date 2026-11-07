@@ -1,0 +1,144 @@
+start_utc=2026-11-07T05:07:27.439016+00:00
+deadline_utc=2026-11-07T05:12:27.439016+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/fresh
+command=go test -race -count=1 -timeout 240s -v -run '^(TestServeStartsWhenTheProbeSpendsTheStartupClock|TestRegistryPhaseHasItsOwnClock|TestRegistryPhaseClockIsBounded|TestServeStartupClocksArePinned|TestExecProbeOutOfTimeNamesTheClockNotAnArm|TestExecProbeGenuineRefusalRecordedAfterDeadline|TestDoctorNamesLeftOutExecProfiles|TestDoctorLateRefusalObservationAndReasonCap|TestRegistryPhasePreservesParentCancellation|TestDaemonConstructorCallerInventory|TestDaemonCallerInventoryAliasControl|TestExecExclusionLogIsObservationOnly|TestHealthExecExclusionIsAdditive)$' ./host/daemon/ ./host/broker/ ./cmd/ailang-worldd/
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:07  4 users, load averages: 2.62 5.50 4.92
+
+go version go1.26.6 darwin/arm64
+
+=== RUN   TestDaemonConstructorCallerInventory
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/cliwalk_e2e_test.go:73 owner=newCLISeRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/cliwalk_e2e_test.go:121 owner=newCLISeRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/demo_proof_test.go:89 owner=newDemoProofRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/demo_test.go:96 owner=newDemoTestRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/demo_test.go:592 owner=newDemoApprovalRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/demo_test.go:641 owner=newDemoApprovalRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/demo_test.go:1874 owner=demoM4bManifestFixture target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/demo_test.go:1934 owner=demoM4bManifestFixture target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/marketing_chrome_test.go:195 owner=newMarketingChromeRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/marketing_chrome_test.go:232 owner=newMarketingChromeRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/marketing_still_test.go:70 owner=checkMarketingStill target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/why_test.go:56 owner=newWalkRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/world-publish/v1_repro_test.go:63 owner=TestV1ReproductionRestartOnANominatedCandidate target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/bench_test.go:208 owner=benchmarkDaemonGET target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/bench_test.go:294 owner=BenchmarkRESTCommit target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/bench_test.go:370 owner=BenchmarkLogRange target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/context_thread_test.go:22 owner=TestStartupCallerCancellation target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/context_thread_test.go:31 owner=TestStartupCallerCancellation target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/credentials_split_test.go:65 owner=TestServeMovesPreSplitCredentialsAndTheyStillAuthenticate target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/credentials_split_test.go:116 owner=TestServeRefusesTheWorldStoreAsCredentialsStore target=New kind=call
+    startup_callers_test.go:173: test=false host/daemon/daemon.go:700 owner=New target=newDaemon kind=call
+    startup_callers_test.go:173: test=false host/daemon/daemon.go:1321 owner=startDaemon target=startBounded kind=call
+    startup_callers_test.go:173: test=false host/daemon/daemon.go:1322 owner=startDaemon target=newDaemon kind=call
+    startup_callers_test.go:173: test=false host/daemon/daemon.go:1328 owner=Run target=startDaemon kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:152 owner=TestNewRefusesNonLoopbackBind target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:178 owner=TestNewRefusesNonLoopbackBind target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:351 owner=TestBoundedGracefulShutdownDrainsInFlightRequest target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:427 owner=TestDaemonShutdownIsBoundedByTheD7Constant target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:487 owner=TestNewReleasesWriterAuthorityOnLateFailure target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:574 owner=TestHealthAndHeadRoundTrip target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:713 owner=TestNewBootstrapsEpochRegistryIdempotently target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:1313 owner=TestDaemonInvokeConfig target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/epoch_startup_test.go:22 owner=TestStartupOnExistingStoreRequiresANominatedRelease target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/epoch_startup_test.go:87 owner=TestUnpinnedStartOnPinnedStoreNamesTheNominatedReleases target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/epoch_startup_test.go:94 owner=TestUnpinnedStartOnPinnedStoreNamesTheNominatedReleases target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/handlers_test.go:23 owner=newHandlerDaemon target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/installed_build_test.go:68 owner=TestSurfaceModelServiceFields target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/integrity_test.go:76 owner=TestIntegrityStartupSweepPagesBothTables target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/integrity_test.go:235 owner=TestIntegrityStartupSweepReportsTruncation target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/invoke_e2e_test.go:42 owner=invocationDaemon target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/invoke_e2e_test.go:419 owner=TestA2AErrorLogWiring target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/lock_wait_order_test.go:21 owner=TestProductionBusyTimeoutConfiguredBelowReadDeadline target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/lock_wait_order_test.go:52 owner=TestNewRefusesBusyTimeoutAtOrAboveReadDeadline target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/objects_by_semantic_id_test.go:239 owner=TestWalkRetimedAtScale target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/registry_publisher_test.go:47 owner=newPublisherDaemon target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/startup_budget_test.go:51 owner=TestStartupBudgetQuarantinesPostCutoffBootstrap target=startBounded kind=call
+    startup_callers_test.go:173: test=true host/daemon/startup_budget_test.go:127 owner=TestStartupBudgetHeldConnectionSettles target=startBounded kind=call
+    startup_callers_test.go:173: test=true host/daemon/startup_measure_test.go:26 owner=TestMeasureStartup target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/startup_under_load_test.go:196 owner=TestRegistryPhaseHasItsOwnClock target=startDaemon kind=call
+    startup_callers_test.go:173: test=true host/daemon/startup_under_load_test.go:232 owner=TestRegistryPhaseClockIsBounded target=startDaemon kind=call
+    startup_callers_test.go:173: test=true host/daemon/startup_under_load_test.go:266 owner=TestRegistryPhasePreservesParentCancellation target=newDaemon kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_app_test.go:21 owner=TestSurfaceAppRoutes target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_follow_test.go:78 owner=newFollowDaemon target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_follow_test.go:252 owner=TestSurfaceFollowStartupRefusals target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_fonts_test.go:14 owner=TestSurfaceFontRoute target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_fonts_test.go:66 owner=TestSurfaceSecurityHeaders target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_index_test.go:18 owner=TestSurfaceIndex target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_index_test.go:122 owner=TestSurfaceIndexStartupRefusal target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_model_test.go:24 owner=TestSurfaceModelRoutes target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_page_test.go:21 owner=TestSurfaceScriptRoute target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_page_test.go:55 owner=TestSurfacePage target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/templates_test.go:71 owner=TestDaemonStartReportsMissingTemplates target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/templates_test.go:113 owner=TestDaemonStartReportsMissingTemplates target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/templates_test.go:239 owner=TestPublishWithoutATemplateIsRefused target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/templates_test.go:266 owner=TestTemplateGCPrunesStaleInterpDigests target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/workbench_grade_test.go:84 owner=newGradeDaemon target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/workbench_grade_test.go:147 owner=refuseGradeConfig target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/workbench_grade_test.go:173 owner=TestProofKeyWiringRefusesEveryHalfConfiguration target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/workspace_test.go:150 owner=newWSDaemon target=New kind=call
+    startup_callers_test.go:178: Go files=626 New test references=60 New production references=0 all production startup references=4
+--- PASS: TestDaemonConstructorCallerInventory (1.55s)
+=== RUN   TestDaemonCallerInventoryAliasControl
+--- PASS: TestDaemonCallerInventoryAliasControl (0.00s)
+=== RUN   TestServeStartsWhenTheProbeSpendsTheStartupClock
+    startup_under_load_test.go:127: Run ended before announcing: daemon startup failed at listen: cannot bind 127.0.0.1:0: listen tcp 127.0.0.1:0: bind: operation not permitted
+        log:
+        ailang-worldd: exec profile "proj" (/private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestServeStartsWhenTheProbeSpendsTheStartupClock1379253707/001/outside/profiles-dir/proj.json) left out: exec startup probe failed for profile "proj" (7 of 7 arms): arm1-write-inside: a write inside the scratch worktree: token "", read back "" (broker: handler subprocess timed out after 1.014465042s; stderr ""); arm2-write-outside: a write to a sibling episode: token "" (want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS), on the host: present=false (broker: handler subprocess timed out after 1.014465042s; stderr ""); arm3-read-fence: a read of decoy /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestServeStartsWhenTheProbeSpendsTheStartupClock1379253707/001/home/.ailang-worldd-exec-probe-decoy: token "", want WORLD-PROBE-REFUSED EPERM|EACCES|EROFS (broker: handler subprocess timed out after 1.014465042s; stderr ""); arm4-srt-default-write: a write to /tmp/claude/world-exec-probe-wep-7069570b8348f386: token "", on the host: present=false (broker: handler subprocess timed out after 1.014465042s; stderr ""); arm5-exit-status: a TERM self-kill reported the startup budget is spent; stderr "", want exit 143; arm6-network: control: World's live listener did not accept an unsandboxed connect: listen tcp 127.0.0.1:0: bind: operation not permitted; a raw connect to World's live listener: token "" on attempt 1; accepts in its window: child 0, silent 0, foreign 0 (want a refusal and no accept from the child or silent; broker: handler subprocess timed out after 1.014465042s; stderr ""); a connect through srt's proxy environment: token "" on attempt 1; accepts in its window: child 0, silent 0, foreign 0 (want a refusal and no accept from the child or silent; the startup budget is spent; stderr ""); reverse leg: no free port: listen tcp 127.0.0.1:0: bind: operation not permitted; arm7-toolchain: probe "sh -c echo toolchain-ok": the startup budget is spent; stderr ""; stdout ""
+        ailang-worldd: exec profile "proj": Every failed arm was recorded at or after the startup deadline; startup timeout may have contributed. Review the failure reasons and restart serve if appropriate.
+--- FAIL: TestServeStartsWhenTheProbeSpendsTheStartupClock (1.96s)
+=== RUN   TestRegistryPhaseHasItsOwnClock
+=== RUN   TestRegistryPhaseHasItsOwnClock/probe-spends-the-startup-clock
+=== RUN   TestRegistryPhaseHasItsOwnClock/control-an-arm-refuses
+--- PASS: TestRegistryPhaseHasItsOwnClock (3.16s)
+    --- PASS: TestRegistryPhaseHasItsOwnClock/probe-spends-the-startup-clock (1.95s)
+    --- PASS: TestRegistryPhaseHasItsOwnClock/control-an-arm-refuses (1.21s)
+=== RUN   TestRegistryPhaseClockIsBounded
+--- PASS: TestRegistryPhaseClockIsBounded (0.05s)
+=== RUN   TestServeStartupClocksArePinned
+--- PASS: TestServeStartupClocksArePinned (0.00s)
+=== RUN   TestRegistryPhasePreservesParentCancellation
+--- PASS: TestRegistryPhasePreservesParentCancellation (0.03s)
+=== RUN   TestExecExclusionLogIsObservationOnly
+--- PASS: TestExecExclusionLogIsObservationOnly (0.00s)
+=== RUN   TestHealthExecExclusionIsAdditive
+--- PASS: TestHealthExecExclusionIsAdditive (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	7.244s
+=== RUN   TestExecProbeOutOfTimeNamesTheClockNotAnArm
+--- PASS: TestExecProbeOutOfTimeNamesTheClockNotAnArm (0.00s)
+=== RUN   TestExecProbeGenuineRefusalRecordedAfterDeadline
+--- PASS: TestExecProbeGenuineRefusalRecordedAfterDeadline (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	1.934s
+=== RUN   TestDoctorNamesLeftOutExecProfiles
+--- FAIL: TestDoctorNamesLeftOutExecProfiles (0.00s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 41 [running]:
+testing.tRunner.func1.2({0x105cd2cc0, 0xc00011cb30})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x2b8
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x460
+panic({0x105cd2cc0?, 0xc00011cb30?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0x13c
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x105e29fa0, 0xc00015b140})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x30
+github.com/sunholo-data/ailang-world/cmd/ailang-worldd.TestDoctorNamesLeftOutExecProfiles.func1(...)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/fresh/cmd/ailang-worldd/doctor_exec_profiles_test.go:32
+github.com/sunholo-data/ailang-world/cmd/ailang-worldd.TestDoctorNamesLeftOutExecProfiles(0xc000201448)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/fresh/cmd/ailang-worldd/doctor_exec_profiles_test.go:42 +0x2d4
+testing.tRunner(0xc000201448, 0x105e1efa8)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0x168
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x7c0
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.943s
+FAIL
+rc=1
+end_utc=2026-11-07T05:07:40.959013+00:00
+ 6:07  4 users, load averages: 2.59 5.40 4.89
+

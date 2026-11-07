@@ -1,0 +1,52 @@
+start_utc=2026-11-07T05:05:08.418642+00:00
+deadline_utc=2026-11-07T05:07:08.418642+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/base/design_docs/verification/w-race-gate-blindspot/racecontrol
+command=go run -race .
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:05  4 users, load averages: 6.97 7.36 5.37
+
+go version go1.26.6 darwin/arm64
+
+==================
+WARNING: DATA RACE
+Read at 0x00c00019c048 by goroutine 7:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/base/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x88
+
+Previous write at 0x00c00019c048 by goroutine 9:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/base/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 7 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/base/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 9 (finished) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/base/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+==================
+WARNING: DATA RACE
+Write at 0x00c00019c048 by goroutine 7:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/base/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Previous write at 0x00c00019c048 by goroutine 9:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/base/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 7 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/base/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 9 (finished) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/base/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+control finished, shared = 38437
+Found 2 data race(s)
+exit status 66
+rc=1
+end_utc=2026-11-07T05:05:12.754263+00:00
+ 6:05  4 users, load averages: 6.74 7.30 5.36
+

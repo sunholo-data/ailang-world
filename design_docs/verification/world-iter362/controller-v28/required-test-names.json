@@ -1,0 +1,19 @@
+[
+  "TestServeStartsWhenTheProbeSpendsTheStartupClock",
+  "TestRegistryPhaseHasItsOwnClock",
+  "TestRegistryPhaseClockIsBounded",
+  "TestServeStartupClocksArePinned",
+  "TestRegistryPhasePreservesParentCancellation",
+  "TestExecExclusionLogIsObservationOnly",
+  "TestHealthExecExclusionIsAdditive",
+  "TestDaemonConstructorCallerInventory",
+  "TestDaemonCallerInventoryAliasControl",
+  "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+  "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+  "TestDoctorNamesLeftOutExecProfiles",
+  "TestDoctorLateRefusalObservationAndReasonCap",
+  "TestStartupCallerCancellation",
+  "TestStartupBudgetQuarantinesPostCutoffBootstrap",
+  "TestStartupBudgetHeldConnectionSettles",
+  "TestProductionContextRoots"
+]

@@ -1,0 +1,4 @@
+$ uptime
+ 5:52  up 6 days, 11:11, 4 users, load averages: 2.50 2.88 2.85
+
+rc=0 elapsed=0.0s

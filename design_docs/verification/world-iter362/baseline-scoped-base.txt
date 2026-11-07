@@ -1,0 +1,6 @@
+$ go test ./host/daemon ./host/broker ./cmd/ailang-worldd -count=1 -timeout=8m
+ok  	github.com/sunholo-data/ailang-world/host/daemon	294.719s
+ok  	github.com/sunholo-data/ailang-world/host/broker	246.790s
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	112.031s
+
+rc=0 elapsed=300.8s

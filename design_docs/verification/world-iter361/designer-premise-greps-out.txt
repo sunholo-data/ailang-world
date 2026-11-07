@@ -1,0 +1,87 @@
+== base
+61a8d1c4
+61a8d1c4
+
+== P1 one startup clock wraps the whole of New (daemon.go)
+1276:func startBounded(ctx context.Context, cfg Config, budget time.Duration, construct func(context.Context, Config) (*Daemon, error)) (*Daemon, error) {
+1277:	startupCtx, cancel := context.WithTimeout(ctx, budget)
+1284:	d, err := startBounded(ctx, cfg, 9*time.Second, New)
+
+== P2 New's order: configureRunCaps, configureExec, interpreter archive, bootstrapRegistry, templates, sweep (all on ctx)
+811:		bin, ref, err := archiveToolBinary(archive.New(cfg.DBPath), cfg.ToolAilangBin)
+817:	if err := workspace.configureRunCaps(ctx, cfg); err != nil {
+820:	if err := workspace.configureExec(ctx, cfg); err != nil {
+830:		ref, err := a.Archive(cfg.AilangBin)
+862:	if err := d.bootstrapRegistry(ctx, release); err != nil {
+868:	d.reportTemplates(ctx)
+870:	d.integrity = d.scanIntegrity(ctx)
+
+== P3 a deadline in bootstrap -> abortBudget(StageRegistry)
+937:		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+938:			return d.abortBudget(StageRegistry, detail, ctx.Err())
+
+== P4 a probe run clamps to the ctx deadline and reads 'the startup budget is spent'
+108:const execProbeRunBudget = 8 * time.Second
+398:		budget = min(budget, time.Until(dl))
+401:		return execProbeRun{err: errors.New("the startup budget is spent")}
+
+== P5 a failed directory profile is left out with errs[i].Error(); a failed --exec-profile refuses startup
+256:	if err := errors.Join(errs[:flagged]...); err != nil {
+264:		st.Excluded = append(st.Excluded, ExecProfileExclusion{File: st.Sources[p.Project], Project: p.Project, Reason: errs[i].Error()})
+265:		delete(st.Profiles, p.Project)
+
+== P6 the probe is not cause-typed: no BudgetSpent/spent anywhere in host/ (control: Reason in exec_startup.go)
+BudgetSpent|spent bool in host/*.go at base:        3
+control Reason: in exec_startup.go: 4
+
+== P7 /v1/health already carries exec_profiles_excluded (daemon.go), filled from healthProfiles
+651:	ExecProfilesExcluded []HealthExecExclusion `json:"exec_profiles_excluded,omitempty"`
+1134:	body.ExecProfiles, body.ExecProfilesExcluded = d.workspace.healthProfiles()
+
+== P8 doctor never reads it (cmd/ailang-worldd/doctor*.go), control: exec_tool_status in the same files
+excluded|exec_profiles|ExecProfilesExcluded in doctor*.go: 0
+control exec_tool_status|ExecToolStatus in doctor*.go: 4
+
+== P9 candidate 4: the refusal and its CALLERS (non-test)
+61a8d1c4:host/broker/handlers_exec.go:74:func ExecProfileNotLoadedRefusal(episode, project, why string) string {
+61a8d1c4:host/daemon/workspace.go:195:		return nil, broker.ExecProfileNotLoadedRefusal(episodeID, project, why)
+61a8d1c4:host/daemon/workspace.go:199:		return nil, broker.ExecProfileNotLoadedRefusal(episodeID, project, "")
+61a8d1c4:host/daemon/workspace.go:486:	profile, why := w.exec.profileFor(episodeID, b)
+61a8d1c4:host/daemon/workspace.go:488:		return broker.ExecRefusalHandler{Why: why}
+61a8d1c4:host/daemon/workspace.go:572:		if profile, _ := w.exec.profileFor(episodeID, b); profile != nil {
+test pinning it:
+61a8d1c4:host/daemon/binding_test.go:76:		if p, why := e.profileFor(tc.ep, tc.b); p != nil || !strings.Contains(why, "left out") || !strings.Contains(why, "path: is empty") {
+
+== P10 the bind-time 10 s is a different budget (workspace.go)
+58:var workspaceHandlerBudget = 3 * time.Second
+607:	ctx, cancel := context.WithTimeout(context.Background(), workspaceHandlerBudget)
+664:const runCapsStartupBudget = 10 * time.Second
+691:	ctx, cancel := context.WithTimeout(parent, runCapsStartupBudget)
+
+== P11 service start's 30 s health wait and the home plist
+87:		wait: 30 * time.Second, client: &http.Client{Timeout: time.Second, CheckRedirect: func(*http.Request, []*http.Request) error {
+240:	end := time.Now().Add(e.wait)
+256:	return serviceMessage(w, "build did not answer /v1/health within 30 s; service stopped", "installed files were kept", "read "+e.paths.Log+"; fix and run service start", 2)
+  "KeepAlive" => true
+    8 => "--ailang-bin"
+    12 => "--tool-ailang-bin"
+    16 => "--exec-profiles-dir"
+  "ThrottleInterval" => 30
+
+== P12 the archive step has no ctx (its only timeout is --version's)
+75:const probeTimeout = 10 * time.Second
+225:func (a *Archive) Archive(execPath string) (hashref.HashRef, error) {
+278:	size, err := io.Copy(tmp, io.TeeReader(src, hasher))
+
+== P13 the home log, 2026-11-03 (read only): the first arm of every profile already found the budget spent
+5
+ailang-compiler 7-of-7 arm1: a write inside the scratch worktree: token "", read back "" (the startup budget is spent;
+ailang-world 7-of-7 arm1: a write inside the scratch worktree: token "", read back "" (the startup budget is spent;
+platform-source 7-of-7 arm1: a write inside the scratch worktree: token "", read back "" (the startup budget is spent;
+sunholo-cli 7-of-7 arm1: a write inside the scratch worktree: token "", read back "" (the startup budget is spent;
+twilightgame 7-of-7 arm1: a write inside the scratch worktree: token "", read back "" (the startup budget is spent;
+29:ailang-worldd: workspace tools unavailable for episode "worldd-2611031015": broker: policy summary: broker: handler subprocess timed out after 10s (stderr "")
+36:ailang-worldd: daemon startup failed at registry-bootstrap: cannot bootstrap world/epoch-registry/v1 with release "AILANG v0.41.0": context deadline exceeded
+
+== P14 context-root census: no new Background/WithoutCancel root is needed (pins live in host/store)
+66:	"host/daemon/daemon.go|drain|Background":          1,

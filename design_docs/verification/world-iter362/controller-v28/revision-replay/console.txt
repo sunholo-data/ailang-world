@@ -1,0 +1,16 @@
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-CONTROL.txt: rc=0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-LATE-NEVER-SPENT.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-SPENT-ANY.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-LATE-STILL-SERVED.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-FLAG-NOT-CARRIED.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-CAUSAL-OBSERVATION.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-LOG-CAUSE.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-DOCTOR-CAUSE.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-DOCTOR-NO-REVIEW.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-REASON-CAP-240-PREFIX.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-HEALTH-NO-OMITEMPTY.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-PARENT-CANCEL-DETACHED.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-CALLER-IMPORTED-ALIAS.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-CALLER-DIRECT.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/controller-v28/revision-replay/mutation-MUT-CALLER-LOCAL-ALIAS.txt: rc=1
+14 named mutations killed; all files restored byte-exact
