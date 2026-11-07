@@ -1,0 +1,50 @@
+{
+  "evaluated_candidate": "9cd60c76d325a6779098d1d386cc740712290c35",
+  "original_reports_byte_exact": true,
+  "controller_reproduced_negative_controls": {
+    "log_prefix": true,
+    "archive_suffix": true,
+    "index_row": true,
+    "ledger": true,
+    "queue": true
+  },
+  "prejudge_structural_check": {
+    "stage": 3,
+    "base": "565609ab51c9300924831087aa98308dcdd418b0",
+    "worktree_head_at_check": "9cd60c76d325a6779098d1d386cc740712290c35",
+    "checks": {
+      "ledger_bytes_unchanged": true,
+      "queue_suffix_unchanged": true,
+      "old_log_exact_prefix": true,
+      "one_new_entry363": true,
+      "dashboard_within40": true,
+      "no_source_or_unrelated_tracked_changes": true,
+      "new_untracked_paths_within_scope": true,
+      "default_whitespace_exact_disclosed_exception": true,
+      "narrow_whitespace_check": true,
+      "canonical_stamps_363_362_360": true,
+      "charter_line_arithmetic": true,
+      "one_moved_stamp": true,
+      "archive_retains_prefix_and_exact_moved_stamp": true,
+      "archive_gains_two_lines": true,
+      "current_goal_has_363_park": true,
+      "index_preserves_prior_ids_plus363": true,
+      "orphan361_verbatim": true,
+      "all_source_entries_indexed": true
+    },
+    "file_sha256": {
+      "design_docs/world-mission.md": "8b28285f948a6e0c8dda8296de62723e150a641f283598c0b46a8d9e0d67df2f",
+      "design_docs/world-mission-log.md": "d96c294d5cc3b2d64f0920011d38263dbb5f3a5a6dd5072fe225116778bdbc3c",
+      "design_docs/world-mission-status-archive.md": "4fd9933012fb700471f11757f8586950d80dada396719cce26f6ea368d05c582",
+      "design_docs/world-mission-index.md": "d93595ccdecbdf38589c321d7c971fa3a18e26ca6c1fd485e3c6821337403bd1",
+      "design_docs/world-mission-dashboard.md": "a9e64fba243dd1671a0799d5711bafc56ef05e6dba91163f23ce1693ec8c12b5"
+    },
+    "scope": "ADMIN record structural checks; no product acceptance or independent verdict"
+  },
+  "review_disposition": "Adopt independent PASS95 with no hard failures under evaluator rubric. Original default whitespace rc2 and partially unmet16/17 result retained; no criterion relabeled met or product gate amended.",
+  "later_delta_scope": "Only verbatim independent reports/curated receipts and factual cost/status annotations; charter, ledger, queue, archives, index and prior role artifacts unchanged.",
+  "historical_executor_result": "FAILED_EVIDENCE_PRESERVATION retained; telemetry executor stage must be failed even though final repaired record independently passes.",
+  "retro_scan": "docs/sprint-retros absent in World record checkout; friction routed to existing process disposition, no skill/policy edit.",
+  "metered_total_usd": 0.48501192,
+  "metered_tokens_total": 5922694
+}

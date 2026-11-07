@@ -1,0 +1,15 @@
+{
+  "policy": "explicit whitelist; no credential environment inherited",
+  "names": [
+    "BASH_ENV",
+    "ENV",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "LC_CTYPE",
+    "LOGNAME",
+    "PATH",
+    "SHELL",
+    "USER"
+  ]
+}

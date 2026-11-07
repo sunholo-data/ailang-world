@@ -7,7 +7,19 @@
   "executor_failure_preserved": true,
   "context_original_bytes_restored": true,
   "original_executor_inputs_equal": 22,
-  "independent_review": "pending, no self-issued acceptance",
+  "independent_review": {
+    "candidate_sha": "9cd60c76d325a6779098d1d386cc740712290c35",
+    "provider": "openrouter",
+    "model": "minimax/minimax-m3",
+    "verdict": "PASS",
+    "score": 95,
+    "blocking_issues": [],
+    "hard_failures": false,
+    "criteria_fully_met": 16,
+    "criteria_total": 17,
+    "default_whitespace_rc": 2,
+    "partial_criterion": "ADMIN-363-M3-4; preserved original planner EOF blank line"
+  },
   "product256": "needs-human-review; prior FAIL85 and local criterion UNMET remain",
   "decisions_resolved": [],
   "quota_tokens": {
@@ -15,5 +27,6 @@
     "planner": 193975,
     "executor": 164029
   },
-  "known_codex_total": 478703
+  "known_codex_total": 478703,
+  "delivery": "PR-head and merge-head CI pending; no LANDED claim"
 }

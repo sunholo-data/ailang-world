@@ -9,8 +9,8 @@
 - **Release predicates:** 150 waits on attended A1 with P0/P3 in its window; 151 on row188 N2d/N4a after attended219 →217 →218. Supplied facts, not fresh executor runs.
 - **Progress:** clauses1–7 MET per controller brief; goal unmoved. Hygiene row258 outside granted scope.
 - **Historical CI:** supplied base565609ab 3/3 (run42349328842); product76553889 3/3 (42344789832). Neither accepts product256 nor establishes this record's CI.
-- **Record gates:** M1/M2 snapshots and M3 index checked outside sandbox; exact narrow charter gate PASS. Independent record review and exact PR-head + merge-head 3/3 CI pending. No landing claim.
-- **Routing:** actual designer/planner/executor Codex gpt-6.1-sol; controller model/tokens unreported. Evaluator declared PI MiniMax M3; supplied availability probe completed, evaluation pending. Anthropic quota reroutes verbatim in log.
-- **Quota/cost:** designer120,699 + planner193,975 + executor164,029 = known Codex quota478,703, including probes; controller/supervisor counts unreported. MiniMax probe $0.00038628; actual review cost pending, $5 cap.
+- **Record gates:** M1/M2 snapshots and M3 index checked outside sandbox; exact narrow charter gate PASS. Actual independent MiniMax record PASS95 (16/17 fully met; default whitespace rc2 retained). Exact PR-head + merge-head 3/3 CI pending.
+- **Routing:** actual designer/planner/executor Codex gpt-6.1-sol; controller model/tokens unreported. Actual independent evaluator PI MiniMax M3 completed, protocol acked=true; source/tracked bytes unchanged. Anthropic quota reroutes verbatim in log.
+- **Quota/cost:** designer120,699 + planner193,975 + executor164,029 = known Codex quota478,703, including probes; controller/supervisor counts unreported. MiniMax judge+probe metered $0.48501192, imputed $0, $5 cap.
 - **Cadence:** one iteration per fire; weekly sweep/thread rotation 2026-11-09 07:00 Europe/Copenhagen. Supplied harness0/20; no skill/routing-policy change.
 - **Evidence:** log363 and verification/world-iter363/; .snap M1/M2 are controller-owned temporary receipts. Prior362 and explicit orphan361 preserved.

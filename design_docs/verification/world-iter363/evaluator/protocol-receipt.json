@@ -1,0 +1,22 @@
+{
+  "events": [
+    {
+      "event_type": "tool_execution_end",
+      "tool_name": "session_protocol_ack",
+      "tool_call_id": "call-a8d4debe-8366-4aa9-8ebf-bf6ce21a6500",
+      "acked": true,
+      "is_error": false,
+      "ack_source": "result.details.acked",
+      "at": "2026-11-07T09:23:41.382Z"
+    }
+  ],
+  "initial_CLAUDE_read_proof": {
+    "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter363/CLAUDE.md",
+    "offset": 1,
+    "limit": 2000,
+    "actual_lines": 50,
+    "complete": true
+  },
+  "successful_ack": true,
+  "parser_note": "Supervisor initially checked content text and missed structured details. Corrected from actual tool_execution_end.result.details.acked=true; original judge reports unchanged."
+}
