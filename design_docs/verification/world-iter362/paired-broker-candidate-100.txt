@@ -1,0 +1,618 @@
+start_utc=2026-11-07T06:03:08.829825+00:00
+deadline_utc=2026-11-07T06:07:08.829825+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256
+command=go test ./host/broker -count=100 -p 1 -parallel 1 -timeout 180s -v -run '^(TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce|TestWorktreeSnapshotRefusesAConfiguredFilter)$'
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 7:03  up 6 days, 12:22, 4 users, load averages: 2.54 5.34 5.77
+
+go version go1.26.6 darwin/arm64
+
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.25s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+    worktree_delta_test.go:432: control: plain git status did not run the clean filter (stat /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestWorktreeSnapshotRefusesAConfiguredFilter787660064/002/filter-ran: no such file or directory); the arm below would prove nothing
+--- FAIL: TestWorktreeSnapshotRefusesAConfiguredFilter (0.05s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.21s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+    worktree_delta_test.go:432: control: plain git status did not run the clean filter (stat /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestWorktreeSnapshotRefusesAConfiguredFilter457581483/002/filter-ran: no such file or directory); the arm below would prove nothing
+--- FAIL: TestWorktreeSnapshotRefusesAConfiguredFilter (0.05s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.21s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.21s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.24s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.21s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.24s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.24s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.24s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.24s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.24s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.24s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.24s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.24s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.28s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:232: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestWorktreeSnapshotRefusesAConfiguredFilter
+--- PASS: TestWorktreeSnapshotRefusesAConfiguredFilter (0.22s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	34.749s
+FAIL
+rc=1
+end_utc=2026-11-07T06:03:44.230550+00:00
+ 7:03  up 6 days, 12:22, 4 users, load averages: 3.11 5.17 5.69
+
