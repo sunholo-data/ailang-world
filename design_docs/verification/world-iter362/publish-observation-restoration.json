@@ -1,0 +1,8 @@
+{
+  "production_source_changed": false,
+  "test_observation_only": true,
+  "test_restored_sha256": "23c78596de0374e0d7bb710043fe3f77105a588779148b6249b05de5041c4542",
+  "base_head": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+  "base_status_after": "",
+  "scope_note": "Observation-only diagnostic after all pristine baseline/paired controls. Original test mtime was not retained; no later mtime-sensitive baseline gate is accepted from this checkout. Byte restoration and clean Git status are the claims."
+}

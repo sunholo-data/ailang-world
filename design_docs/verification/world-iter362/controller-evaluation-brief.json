@@ -1,0 +1,35 @@
+{
+  "reviewed_commit": "7655388936b80bea9c4843f0a2e0abc085e52c0f",
+  "local_criterion": "UNMET: both full candidate attempts contain failures beyond the two baseline diagnostic failures",
+  "full_attempts": {
+    "controller-m1-verify-go-candidate.txt": {
+      "rc": 1,
+      "failed_tests": [
+        "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter",
+        "TestCheckSourceUnderPinnedInterpreter",
+        "TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce",
+        "TestWorktreeSnapshotRefusesAConfiguredFilter"
+      ],
+      "package_results": 37
+    },
+    "controller-m1-verify-go-candidate-attempt2.txt": {
+      "rc": 1,
+      "failed_tests": [
+        "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter",
+        "TestCheckSourceUnderPinnedInterpreter",
+        "TestExecProbeNet6ForeignDialIsRetriedNotRefused"
+      ],
+      "package_results": 37
+    }
+  },
+  "focused_controller": "23/23 exact named race passes, all11sourcehashes exact, build/vet/gofmt clean",
+  "ailang_full": "rc0",
+  "pr_ci": "PASS all3 exact7655388936b80bea9c4843f0a2e0abc085e52c0f; run42344789832",
+  "additional_failure_followup": {
+    "filter": "Pristine4/100 vs candidate2/100; unchanged source/test",
+    "publish_counter": "Unattributed oneoff, not reproduced in100pristine+100candidate+400pristine observation-only; no cause asserted",
+    "net6_foreign_retry": "Second full run exhausted3foreign-only attempts, unchanged retry/verdict logic; not separately reproduced at baseline"
+  },
+  "controller_acceptance": "NONE; independent evaluator must assess actual contract and flag unmet obligations, not rubber stamp CI",
+  "policy": "No more full-suite retries or unrelated test fixes this iteration; source/validation findings go to independent judge for concrete in-scope disposition"
+}

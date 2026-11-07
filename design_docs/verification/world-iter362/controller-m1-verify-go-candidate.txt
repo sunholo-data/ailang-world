@@ -1,0 +1,153 @@
+start_utc=2026-11-07T05:55:18.814375+00:00
+deadline_utc=2026-11-07T06:25:18.814375+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256
+command=env VERIFY_GO_LEGS=plain ./scripts/verify_go.sh
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:55  up 6 days, 12:14, 4 users, load averages: 4.43 4.79 5.34
+
+go version go1.26.6 darwin/arm64
+
+── AILANG_BIN=/Users/voightkampff/.pinned-ailang/ailang (AILANG v0.41.0
+Commit: 24ee108
+Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+Built:  2026-09-21T15:50:02Z
+
+The AI-First Programming Language
+Copyright (c) 2025-2026)
+── legs: plain (race bound 1500s)
+── tracked-binary hygiene gate
+ok 01-valid-png-in-dir
+ok 02-valid-png-outside-dir (not-allowlisted)
+ok 03-renamed-binary (bad-signature)
+ok 04-polyglot-after-iend (trailing-bytes)
+ok 05-text-chunk (chunk-not-allowed:tEXt)
+ok 06-corrupt-idat (bad-crc)
+ok 07-over-file-cap (file-cap-exceeded)
+ok 08-over-dir-cap (dir-cap-exceeded)
+ok 09-gitattributes-in-dir (bad-signature)
+ok 10-gitattributes-tree-wide (not-allowlisted)
+ok 11-empty-tree (enumerated 0 blobs)
+ok 12-nul-past-8000-bytes (not-allowlisted)
+ok 13-row150-deliverable-names
+ok 14-bad-name-and-subdir (not-allowlisted)
+ok 15-no-allowance-no-images (not-allowlisted)
+ok 16-pinned-font-in-dir
+ok 17-renamed-binary-pinned (bad-signature)
+ok 18-unpinned-font (not-allowlisted)
+ok 19-pinned-name-other-bytes (sha256-mismatch)
+ok 20-font-over-file-cap (file-cap-exceeded)
+ok 21-font-outside-dir (not-allowlisted)
+ok 22-font-in-subdirectory (not-allowlisted)
+ok 23-font-dir-cap (dir-cap-exceeded)
+ok 24-png-and-font-together
+test_tracked_binary_gate: 24 passed, 0 failed
+   ✓ 3 pinned font(s) validated, 1017220 bytes (host/surfacepage/fonts/)
+   ✓ 0 other binary blobs among 6223 tracked files
+── World mission-input gate (decision ledger)
+decision ledger valid: 97 rows
+   World decision-ledger validated; centralized runtime currency is NOT certified here.
+   ✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6
+── race-detector known-positive control
+go version go1.26.6 darwin/arm64
+==================
+WARNING: DATA RACE
+Read at 0x00c000112048 by goroutine 9:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x88
+
+Previous write at 0x00c000112048 by goroutine 7:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 9 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 7 (finished) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+==================
+WARNING: DATA RACE
+Write at 0x00c000112048 by goroutine 9:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Previous write at 0x00c000112048 by goroutine 7:
+  main.main.func1()
+      /Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x98
+
+Goroutine 9 (running) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+
+Goroutine 7 (finished) created at:
+  main.main()
+      /Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x6c
+==================
+control finished, shared = 32896
+Found 2 data race(s)
+exit status 66
+── go build ./...
+go version go1.26.6 darwin/arm64
+── focused host/evidence named-manifest gate (64 exact top-level tests)
+   ✓ all 64 required top-level evidence tests passed exactly once
+── go test ./... -count=1
+go version go1.26.6 darwin/arm64
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	200.505s
+--- FAIL: TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter (2.75s)
+    transitions_test.go:295: refusal stderr = "world-publish transitions: entry \"tools.echo\": publish transition registry: entry \"tools.echo\"'s source \"sha256:e0e5ae29444777e208ae9535bbd0b22d555c908f07de927b8dbdbcc7850f329f\" is not loadable under its pinned interpreter: → Type checking host/capsule/main.ail...\n→ Effect checking...\n2026/11/07 06:56:56 Google Cloud OpenTelemetry Trace exporter for Go is deprecated and will be archived after January 1st, 2027. Please migrate to the OpenTelemetry OTLP exporters. For migration details, see https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/blob/main/MIGRATION.md\nError: module loading error: failed …\n", want the interpreter's own LDR001 module-not-found output
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/world-publish	86.094s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	43.964s
+ok  	github.com/sunholo-data/ailang-world/host/agui	7.233s
+--- FAIL: TestCheckSourceUnderPinnedInterpreter (3.83s)
+    check_test.go:104: import-bearing module: check = {Output:→ Type checking host/capsule/main.ail...
+        → Effect checking...
+        2026/11/07 06:56:24 Google Cloud OpenTelemetry Trace exporter for Go is deprecated and will be archived after January 1st, 2027. Please migrate to the OpenTelemetry OTLP exporters. For migration details, see https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/blob/main/MIGRATION.md
+        Error: module loading error: failed … Passed:false}, want Passed=false with "LDR001" in the output
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/archive	45.312s
+ok  	github.com/sunholo-data/ailang-world/host/authority	1.733s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	5.699s
+--- FAIL: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.28s)
+    publish_op_test.go:173: AC25 counters after the attended publish: POST=2 dispatches=1 credentialLoads=1
+    publish_op_test.go:175: counters after the attended publish = POST=2 dispatches=1 credentialLoads=1, want POST=1 dispatches=1 credentialLoads=1
+--- FAIL: TestWorktreeSnapshotRefusesAConfiguredFilter (0.23s)
+    worktree_delta_test.go:432: control: plain git status did not run the clean filter (stat /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestWorktreeSnapshotRefusesAConfiguredFilter1908953346/002/filter-ran: no such file or directory); the arm below would prove nothing
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	316.727s
+ok  	github.com/sunholo-data/ailang-world/host/canon	2.777s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	88.866s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	2.615s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	2.984s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	102.212s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	360.965s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	35.750s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	3.196s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	3.187s
+ok  	github.com/sunholo-data/ailang-world/host/pins	3.161s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	51.693s
+?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/procbound	3.273s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	3.227s
+ok  	github.com/sunholo-data/ailang-world/host/projection	15.679s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	1.854s
+ok  	github.com/sunholo-data/ailang-world/host/registry	1.983s
+ok  	github.com/sunholo-data/ailang-world/host/replay	57.624s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	5.481s
+ok  	github.com/sunholo-data/ailang-world/host/store	13.619s
+ok  	github.com/sunholo-data/ailang-world/host/surface	3.110s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	4.159s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	2.746s
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	69.418s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	339.529s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	3.537s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	13.493s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	118.239s
+FAIL
+rc=1
+end_utc=2026-11-07T06:01:44.623969+00:00
+ 7:01  up 6 days, 12:20, 4 users, load averages: 6.09 6.66 6.24
+

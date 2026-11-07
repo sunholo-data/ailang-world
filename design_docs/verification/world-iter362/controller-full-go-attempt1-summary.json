@@ -1,0 +1,15 @@
+{
+  "attempt": 1,
+  "full_local_rc": 1,
+  "strict_same_two_failure_comparison": "FAIL",
+  "observed_failed_tests": [
+    "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter",
+    "TestCheckSourceUnderPinnedInterpreter",
+    "TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce",
+    "TestWorktreeSnapshotRefusesAConfiguredFilter"
+  ],
+  "new_filter_failure": "reproduced on pristine4/100, candidate2/100; unchanged test/production source",
+  "new_publish_count_failure": "UNATTRIBUTED; no recurrence in100pristine+100candidate unmodified and400pristine logging-only runs; no claim of cause or innocence",
+  "second_full_attempt_authority": "new failures justify bounded rerun after paired controls; all first receipts retained, no source/environment/gate edits",
+  "independent_judge_must_adjudicate": true
+}

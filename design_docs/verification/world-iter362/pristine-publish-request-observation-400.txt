@@ -1,0 +1,2015 @@
+start_utc=2026-11-07T06:04:15.715163+00:00
+deadline_utc=2026-11-07T06:08:05.715163+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.base-world-iter362
+command=go test ./host/broker -count=400 -p 1 -parallel 1 -timeout 200s -v -run '^TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce$'
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 7:04  up 6 days, 12:23, 4 users, load averages: 2.37 4.80 5.54
+
+go version go1.26.6 darwin/arm64
+
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.26s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.16s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.24s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.55s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.18s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.19s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.21s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.16s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.16s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.16s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.16s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.17s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.16s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.16s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.13s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.17s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.16s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.12s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.14s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+=== RUN   TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce
+    publish_op_test.go:174: AC25 counters after the attended publish: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:233: AC25 counters after the reopened reuse: POST=1 dispatches=1 credentialLoads=1
+    publish_op_test.go:105: OBSERVATION_ONLY method=POST path=/publish has_test_key=true
+--- PASS: TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (0.15s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	58.475s
+rc=0
+end_utc=2026-11-07T06:05:15.589077+00:00
+ 7:05  up 6 days, 12:24, 4 users, load averages: 2.84 4.49 5.37
+
