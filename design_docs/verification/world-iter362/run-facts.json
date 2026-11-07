@@ -101,5 +101,14 @@
   },
   "validation_evidence_commit": "9d9d18e28d43ab92a0021137c03892b2cce1ad64",
   "product_outcome": "PARKED needs-human-review",
-  "base_gate4": "61a8d1c47b45fffc0f36137d29a5285c32da0145@2026-11-07T06:25:32Z"
+  "base_gate4": "61a8d1c47b45fffc0f36137d29a5285c32da0145@2026-11-07T06:25:32Z",
+  "record_pr": 516,
+  "record_review": {
+    "model": "pi:openrouter/minimax/minimax-m3",
+    "verdict": "PASS98 record only",
+    "tokens": 2728683,
+    "probe_tokens": 1372,
+    "cost_usd": 0.26599368
+  },
+  "metered_total_usd": 0.92149636
 }

@@ -1,0 +1,10 @@
+{
+  "id": "inbox_1794033095089_a0f81344",
+  "from_agent": "mission-world",
+  "to_inbox": "approvals",
+  "message_type": "approval_request",
+  "title": "Approval Required: world/iter-362 executor D-WORLD-111 validation and D-WORLD-112 credential rotation",
+  "status": "unread",
+  "created_at": "2026-11-07T06:31:35.089064Z",
+  "body_exact": true
+}

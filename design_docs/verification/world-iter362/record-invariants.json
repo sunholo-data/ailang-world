@@ -14,10 +14,11 @@
       359
     ]
   },
-  "original_ledger_rows_unchanged": 95,
+  "original_ledger_rows_unchanged": 97,
   "new_open_rows": [
     111,
     112
   ],
-  "queue_number_sequence_unchanged": true
+  "queue_number_sequence_unchanged": true,
+  "original_ledger_count_note": "Numeric-only preliminary regex counted95; all D-ID rows count97, preserved byte-exact. No ledger content repair."
 }

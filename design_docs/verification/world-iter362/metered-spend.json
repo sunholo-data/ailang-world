@@ -79,7 +79,52 @@
           "present": true
         }
       ]
+    },
+    {
+      "role": "evaluator-r1",
+      "model": "openrouter/minimax/minimax-m3",
+      "status": "failed",
+      "verdict": "FAIL85 LOCAL_CRITERION UNMET",
+      "cost_usd": 0.3135768,
+      "usage_count_rule": "turn_end only, once per assistant turn",
+      "usage": {
+        "input": 78902,
+        "output": 50288,
+        "cacheRead": 3826010,
+        "cacheWrite": 0,
+        "reasoning": 27591,
+        "totalTokens": 3955200
+      }
+    },
+    {
+      "role": "record-evaluator-probe",
+      "model": "openrouter/minimax/minimax-m3",
+      "cost_usd": 0.00030042,
+      "usage": {
+        "input": 847,
+        "output": 13,
+        "cacheRead": 512,
+        "cacheWrite": 0,
+        "reasoning": 11,
+        "totalTokens": 1372
+      }
+    },
+    {
+      "role": "record-evaluator",
+      "model": "openrouter/minimax/minimax-m3",
+      "status": "completed",
+      "verdict": "RECORD_ONLY PASS98; product FAIL85 unchanged",
+      "cost_usd": 0.26569326,
+      "usage": {
+        "input": 300273,
+        "output": 26234,
+        "cacheRead": 2402176,
+        "cacheWrite": 0,
+        "reasoning": 9482,
+        "totalTokens": 2728683
+      }
     }
   ],
-  "total_usd": 0.34192587999999996
+  "total_usd": 0.9214963599999999,
+  "usage_count_rule": "turn_end events once; duplicate message_end usage in historical probe artifact is not summed"
 }
