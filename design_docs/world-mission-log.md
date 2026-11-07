@@ -2903,3 +2903,48 @@ Gate stamp `gate-3b` ran before this commit (rc=0). Gate stamp `gate-5` and the 
 **Delivery scope after reviewed SHA:** only original judge reports/curated receipts and these factual status/cost annotations were added. Exact record PR-head3/3, fresh mergeability, merge, and exact merge-head3/3 remain required. Actual final SHA/run URLs and reports are recorded on the record PR, bookkeeping issue449 and canonical AILANG controlplane to avoid a self-referential receipt commit. Product PR515 remains draft/unmerged, prior FAIL85 and LOCAL_CRITERION UNMET; all four decisions stay OPEN. No idle-fingerprint promotion because of initial driver quota degradation. Gate5 reports, telemetry and final heartbeat still pending at this preparation boundary.
 
 **Verbatim review-artifact hygiene:** banking the original judge Markdown adds six intentional two-space hard line breaks (report.md lines3–8). Default full whitespace remains rc2: those six warnings plus the already reviewed planner EOF blank; no full/default-green claim is made. The five mission record surfaces themselves pass the default whitespace check. Original judge report hash2702820052b7497d0cc71aff2679111cd95439df6658a25fbe959cb629d41bd2 is unchanged. This is a verbatim receipt-format delta, not a product/test gate change or a relabeling of the partially unmet candidate criterion. Full findings: controller-postreview-artifact-hygiene.json.
+
+## 364 — 2026-11-07 — ADMIN record only; row 256 remains parked [ADMIN]
+
+**Kind / pick:** mandatory Gate4 ADMIN record only; no product pick, implementation, quorum or acceptance. M1 registry_reuse=none (dashboard/log prose); M2 registry_reuse=none (existing STATUS bytes and route-number maintenance). No package capability or AILANG change.
+
+**Authority:** marked ledger99 governs. Row256 HUMAN PARK / PARKED needs-human-review, independent FAIL85, LOCAL_CRITERION UNMET. D105/110/111/112 remain OPEN; goal unmoved. All clauses1–7 MET are inherited controller assessments, with no new product verification.
+
+**Gate0 provenance:** inherited controller-brief.json/controller-observations.json: armed, billing CLEAN,35 comments/0 directives, crash0/transcript2 (old fires world-1793825318-10110 and world-1793839743-21731). Issue449 watermark absent, predecessor366 readable, degraded1/2. No executor inbox, network, credential or directive import operation.
+
+**Gate1 provenance:** inherited controller base 374696c0536809d7c7080d07339208570d5130cb, brief read2026-11-07T12:50:53.148277+00:00; skill14/drift0. Base CI all3 completed/success [run42362989926](https://github.com/sunholo-data/ailang-world/actions/runs/42362989926), exact heads in base-full-checks.json. Controller baseline narrow charter rc0/0.375s is inherited, not rerun here; prior363 default whitespace red stays history.
+
+**Gate4 provenance:** controller-gate4-base.json pins full base 374696c0536809d7c7080d07339208570d5130cb; helper row2026-11-07T13:06:23Z, receipt at_utc=2026-11-07T13:06:23.967186+00:00. Its then-current record head0de483ef6b0d8675d79d539f12ee9198c5f8ea44 differs from this executor's clean start 645258c277bb4da5ae62b1f169b9310877d4757f; no invented measurement.
+
+**Product state:** inherited fresh product-pr515-fresh.json says OPEN/draft CONFLICTING/DIRTY, full head7655388936b80bea9c4843f0a2e0abc085e52c0f. Designer's earlier api.github.com failure/UNKNOWN remains historical, not a fresh executor result. Green prior/base/product CI never accepts256.
+
+**M1 work:** overwrite dashboard≤40 lines and append this one canonical entry, old log exact byte prefix37→38. No log rotation; log archive unchanged. New executor summary/proof and cumulative .snap/M1 include every created/modified path since mission base, including committed curated364 evidence and plan/state; manifests exclude themselves and snapshots. Snapshot bytes remain immutable.
+
+**M2 scope:** exact one-line364 STATUS plus blank; retain363/362 and move only360's exact line+blank (SHA256 ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530). Charter6345+2−2=6345; archive726→728, original prefix exact,359 retained. Replace only Current route (iteration 363) with Current route (iteration 364). Actual terminal proof goes in new executor artifacts and cumulative .snap/M2; this append boundary does not anticipate success. Index/M3 remain controller-owned, later .snap/M3 per addendum.
+
+**Designer:** actual codex:gpt-6.1-sol; supervisor run rc0/173.76s;72,246 subscription quota tokens probe+run. Original FAILED_INPUT_PRESERVATION remains unchanged. Controller disposition attributes upstream31→33 addition476/2160 to its own in-flight write before inputs froze; no retroactive green or product waiver.
+
+**Planner:** actual codex:gpt-6.1-sol;161,073 footer-sum subscription tokens across probe, initial run and bounded same-session document-path correction. Run rc0/290.39s; correction rc0/21.16s, per planner-supervisor-receipt.json. Plan/state remain frozen, including original M3 location superseded by controller addendum.
+
+**Executor:** THIS actual pinned codex:gpt-6.1-sol invocation performs ADMIN M1/M2; total runtime/terminal rc/token usage unknown until supervisor receipt. No role terminal or usage fabrication. Controller and Agent-supervisor exact model identity/tokens unknown/unreported.
+
+**Evaluator / routing:** actual independent MiniMax evaluator REQUIRED, pending; declared pi:openrouter/minimax/minimax-m3 is not a completed review. No evaluator acceptance or protocol completion claimed. Verbatim driver_routing_note from controller-brief.json follows:
+lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` — quota-limited) → handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` — quota-limited) → handed to `pi:openrouter/minimax/minimax-m3`
+
+**Accounting:** designer72,246 + planner161,073 =233,319 known subscription quota tokens. Their supplied metered$0/imputed$0 remain separate from subscription. Executor/evaluator/controller/Agent-supervisor pending or unreported usage/costs and combined final totals unknown; no assumed zero or reuse363 spend. Total metered ceiling$5; imputed costs reported separately when known.
+
+**Validation policy:** D111 OPEN default A retains exactly two named baseline failures and no additional failures; no source/gate change or third full retry. Publish-counter and net6 remain unattributed; nonrecurrence is not attribution. D112 OPEN default no autonomous credential change; sanitization does not undo exposure. Clearing111 or112 alone cannot clear the other.
+
+**Conditional route:** attended250 →255 →256 →257 →201 →243;250/255 landed,256 parked. No skipping257/201/243. Release150/151 priority only when routable; inherited150 waits on attended A1,151 on188 N2d/N4a. 201/243 use fakes/test keys; real-key enrolment/approval/no-terminal exits stay attended.
+
+**Human asks:** only still-OPEN ledger105 default C (row233 parked/fail closed),110 default A (row255 as built),111 default A,112 no autonomous credential change. Existing111 validation-policy and112 incident decisions are independent. No new ask, policy, decision resolution or autonomous human-decision substitution.
+
+**Ruled out:** product merge/acceptance from CI or record review; attribution-by-nonrecurrence; input/old-receipt rewriting; source/test/driver/shared-skill/registry/pin/routing/gate changes; credentials, messages/import-GitHub/network, new agents, git writes, TMPDIR/GOTMPDIR overrides, full log rotation, product/full-suite tests. Sandbox socket failures would be UNINFORMATIVE UNDER SANDBOX; no such test is run here.
+
+**Retro / progress:** inherited harness0/20; latest3 product landings360/359/340 moved no UNMET clause. No routable UNMET clause, so no DRIFT. No idle-fingerprint promotion because driver quota fallback and watermark degradation persist. ADMIN record maintenance moves no product goal; preservation disclosure remains for independent review, with no shared policy change.
+
+**Structural follow-through:** actual scope/immutable-input hashes, log prefix/count/title, safe3/pair/archive-prefix/359/363/362 controls, exact current-goal substitution, ledger99/full-section+queue, index and log-archive preservation, and in-memory negative controls go in stage-bound executor-structural-proof.json. Default git diff --check and full-record base whitespace must be observed without narrowing/waiver; base red would remain a finding, never repaired or relabeled.
+
+**Next / judge:** controller alone owns M3 index, new later receipts and outside-sandbox exact go test ./host/verifygate -run '^TestMissionConfigRealCharter$' -count=1. Actual independent MiniMax must judge final record bytes; verdict pending and material later changes require review coverage. One iteration per fire; weekly sweep/rotation2026-11-09 07:00 Europe/Copenhagen.
+
+**Landing:** record PR/head/merge and CI PENDING. Each exact full40 record PR-head and merge-head still requires all3 terminal-success checks with run URLs: ailang-code verify gate; Go race; Go host build/test. Prior/product/base CI cannot substitute. No PR merge, record LANDED or product acceptance claim; row256 stays parked regardless of record outcome.
