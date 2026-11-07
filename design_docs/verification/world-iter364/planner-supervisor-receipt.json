@@ -1,0 +1,165 @@
+{
+  "iteration": 364,
+  "role": "planner",
+  "derive_output": "codex:gpt-6.1-sol declared:planner-lane-default-pin",
+  "resolver_output": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin",
+  "actual_model": "gpt-6.1-sol",
+  "actual_provider": "codex",
+  "supervisor_model": "not asserted; collaboration API has no model override",
+  "role_run_status": "COMPLETED_WITH_NARROW_SAME_SESSION_CORRECTION",
+  "worktree": {
+    "path": "/Users/voightkampff/dev/sunholo-data/.planner-world-iter364",
+    "detached": true,
+    "local_committed_head": "0de483ef6b0d8675d79d539f12ee9198c5f8ea44",
+    "add_rc": 0,
+    "add_seconds": 0.97,
+    "terminal_and_pristine_before_read": true
+  },
+  "probe": {
+    "label": "probe",
+    "rc": 0,
+    "seconds": 4.58,
+    "timed_out": false,
+    "model_header": [
+      "gpt-6.1-sol"
+    ],
+    "footer_literals": [
+      "11.333"
+    ],
+    "output_bytes": 484,
+    "stdin": "DEVNULL",
+    "environment": "minimal whitelist; credential environment stripped"
+  },
+  "run": {
+    "label": "run",
+    "rc": 0,
+    "seconds": 290.39,
+    "timed_out": false,
+    "model_header": [
+      "gpt-6.1-sol"
+    ],
+    "footer_literals": [
+      "74.164"
+    ],
+    "output_bytes": 387586,
+    "stdin": "DEVNULL",
+    "environment": "minimal whitelist; credential environment stripped"
+  },
+  "same_session_continuation": {
+    "label": "same-session-continuation",
+    "rc": 0,
+    "seconds": 21.16,
+    "timed_out": false,
+    "model_header": [
+      "gpt-6.1-sol"
+    ],
+    "footer_literals": [
+      "75.576"
+    ],
+    "output_bytes": 4011,
+    "stdin": "DEVNULL",
+    "environment": "minimal whitelist; credential environment stripped",
+    "reason": "Required Markdown design-doc path absent; narrow actual model correction before banking",
+    "same_session": "01a1b616-9379-7072-b472-86a9dc2321de"
+  },
+  "usage": {
+    "probe": {
+      "literal": "11.333",
+      "tokens": 11333
+    },
+    "run": {
+      "literal": "74.164",
+      "tokens": 74164
+    },
+    "continuation": {
+      "literal": "75.576",
+      "tokens": 75576
+    },
+    "sum_reported_footer_tokens": 161073
+  },
+  "billing": {
+    "subscription_quota": "actual footer readings above; integer locale grouping removed",
+    "metered_usd": 0,
+    "imputed_usd": 0,
+    "controller_supervisor_tokens": "unknown/unreported"
+  },
+  "bounds": {
+    "probe_seconds": 120,
+    "run_seconds": 1200,
+    "continuation_seconds": 300,
+    "directive_bytes": 5301,
+    "stdin": "DEVNULL",
+    "sandbox": "workspace-write",
+    "go_cache_add_dirs": true,
+    "credential_environment_stripped": true,
+    "tmpdir_gotmpdir_overrides": false
+  },
+  "preservation": {
+    "tracked_files": 6372,
+    "changed": [],
+    "unchanged": true
+  },
+  "authored_sha256": {
+    "record-plan.md": "f984bd074414a886a2b26edc3ceae5955de42148248205738d0e91cea8d3e4cd",
+    "record-state.json": "a36f37a8563b747e2df0570292b56e7aa43c0406e8f991f6dcc415ca82895611"
+  },
+  "artifact_checks": {
+    "json_valid": true,
+    "plan_nonempty_and_design_named": true,
+    "placeholder_rejection": true,
+    "milestones": [
+      "M1",
+      "M2",
+      "M3"
+    ],
+    "default_new_file_whitespace": [
+      {
+        "path": "record-plan.md",
+        "raw_rc": 1,
+        "diagnostics_bytes": 0,
+        "interpretation": "new-file difference rc1; zero whitespace diagnostics"
+      },
+      {
+        "path": "record-state.json",
+        "raw_rc": 1,
+        "diagnostics_bytes": 0,
+        "interpretation": "new-file difference rc1; zero whitespace diagnostics"
+      }
+    ]
+  },
+  "ledger_count_scope_finding": {
+    "actual_model_initial_numeric_only_regex_count": 97,
+    "omitted_ids": [
+      "D-WORLD-ROUTE-1",
+      "D-WORLD-DRIVER-1"
+    ],
+    "canonical_checker_rc": 0,
+    "canonical_stdout": "decision ledger valid: 99 rows",
+    "canonical_count": 99,
+    "disposition": "Authored final plan/state correctly99; initial regex excludes two nonnumeric IDs, not byte drift. No existing artifact edited."
+  },
+  "initial_delivery_validation_failure": {
+    "finding": "Markdown plan did not literally name design-gate.md though JSON did",
+    "banking_refused_before_copy": true,
+    "repair": "Actual same-model same-session continuation added authoritative path only; final checks pass"
+  },
+  "historical_designer_finding": "FAILED_INPUT_PRESERVATION unchanged; provenance repair remains controller-designer-disposition.json; no waiver",
+  "copy_policy": "Only new outputs copied byte-exact with exclusive create; no overwritten inputs",
+  "future_controller_receipts": "Allowed as new artifacts after role; frozen existing inputs immutable",
+  "controller_implementation_addendum": {
+    "issue": "Authored M3 requests nested .snap/M2/M3-stage despite preserving earlier proof",
+    "ruling": "Controller explicitly requires independent cumulative .snap/M3; preserve .snap/M1 and .snap/M2 directories intact",
+    "source": "Controller instruction after narrow continuation launch",
+    "plan_bytes": "Authored bytes unchanged; no further planner run required"
+  },
+  "runtime_capture": "raw logs outside repository; only curated receipts banked",
+  "external_handoff": "World not issues-fed; no import-github/messages run",
+  "test_scope": "No product tests or role network verification; narrow charter baseline inherited",
+  "cleanup": {
+    "copies_verified_byte_exact": true,
+    "actual_model_runs_terminal_before_cleanup": true,
+    "clean_before_remove": true,
+    "worktree_remove_rc": 0,
+    "worktree_exists_after": false
+  }
+}

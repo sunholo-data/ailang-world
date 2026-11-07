@@ -1,0 +1,9 @@
+{
+  "sha": "374696c0536809d7c7080d07339208570d5130cb",
+  "helper_state_gate4_rows": [
+    "1794056783\t2026-11-07T13:06:23Z\tbase-gate4\t1\t374696c0536809d7c7080d07339208570d5130cb"
+  ],
+  "current_record_head": "0de483ef6b0d8675d79d539f12ee9198c5f8ea44",
+  "gate3b_disposition": "No product landing; base CI3/3 observed. Record PR/merge CI pending after independent review.",
+  "at_utc": "2026-11-07T13:06:23.967186+00:00"
+}
