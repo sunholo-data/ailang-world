@@ -1,0 +1,93 @@
+{
+  "utc": "2026-11-07T05:47:37.823285+00:00",
+  "completion": "PLANNER_COMPLETE",
+  "actual_cli": {
+    "utc": "2026-11-07T05:46:43.848299+00:00",
+    "requested_model": "gpt-6.1-sol",
+    "model_header": "gpt-6.1-sol",
+    "rc": 0,
+    "timeout": false,
+    "elapsed_seconds": 673.88,
+    "directive_path": "design_docs/verification/world-iter362/planner-directive.txt",
+    "directive_sha256": "608a6a2d9221da610a22b5e11ec1e804f816a3f04ba1cc710b200d8d605e6820",
+    "stdin": "devnull",
+    "api_key_stripped": true,
+    "tokens_used_cli_raw": "209.562",
+    "tokens_used": 209562,
+    "process_group_teardown": "TERM/KILL attempted after completion",
+    "log_path": "design_docs/verification/world-iter362/planner-codex.txt"
+  },
+  "probe": {
+    "utc": "2026-11-07T05:34:54.870201+00:00",
+    "requested_model": "gpt-6.1-sol",
+    "model_header": "gpt-6.1-sol",
+    "rc": 0,
+    "timeout": false,
+    "elapsed_seconds": 6.15,
+    "directive_path": "design_docs/verification/world-iter362/planner-probe-directive.txt",
+    "directive_sha256": "5800ea3785e8afd793c0de37ad032d0abd9f3cefce83d1829b8a551623fe6ba1",
+    "stdin": "devnull",
+    "api_key_stripped": true,
+    "tokens_used_cli_raw": "10.868",
+    "tokens_used": 10868,
+    "process_group_teardown": "TERM/KILL attempted after completion",
+    "log_path": "design_docs/verification/world-iter362/planner-probe.txt"
+  },
+  "tokens_used_total_including_probe": 220430,
+  "artifacts": [
+    {
+      "path": "design_docs/planned/sprint-plan-w-daemon-startup-under-load.md",
+      "sha256": "e47954052846548278f1a21b75af092af55b7c369ae768eca661915d2bcaf427",
+      "bytes": 41068
+    },
+    {
+      "path": ".ailang/state/sprints/sprint_W-DAEMON-STARTUP-UNDER-LOAD.json",
+      "sha256": "8fe2977e9da1e2faed9ed554d0f6458de46641652a1dc10e07e72ad4250cced8",
+      "bytes": 65804
+    },
+    {
+      "path": "design_docs/verification/world-iter362/planner-sprint-state.json",
+      "sha256": "8fe2977e9da1e2faed9ed554d0f6458de46641652a1dc10e07e72ad4250cced8",
+      "bytes": 65804
+    },
+    {
+      "path": "design_docs/verification/world-iter362/planner-handoff.json",
+      "sha256": "6b38c55908131512e17bc9b36683b27cc21162e0c674fe0ec15c57566428e8ad",
+      "bytes": 11556
+    },
+    {
+      "path": "design_docs/verification/world-iter362/planner-artifacts.json",
+      "sha256": "f6b5c5d05c565f61f95d4ef0b5a0ab6c3575ff8d249977fdeb037e686b349ca2"
+    }
+  ],
+  "design_sha256": "94f8bf9d7d1f3ac51a848c89e4a1595f892c2991984dc11778ffa0f539d6430a",
+  "patch_sha256": "90c6df45c6b4dcf09fd241d76eb87294f5b84d688eb9f2ff90d0eca1de09db16",
+  "artifact_validation": "All final input/artifact hashes verified; JSON parses; one M1; exact ignored-state review copy; source diff empty and no new host/cmd files.",
+  "production_diff_empty": true,
+  "new_source_files": 0,
+  "commits_by_role": 0,
+  "background_jobs_started": false,
+  "tracked_cli_and_code_mode_host_remaining": [],
+  "process_teardown": "Bounded wrapper attempted TERM/KILL on CLI process group; observed CLI18023/code-mode-host18713 absent after completion.",
+  "late_baseline_facts": {
+    "source": "design_docs/verification/world-iter362/baseline-inherited-failures.json",
+    "sha256": "a58c42647d58502e682fe8be5e8273a29e6034d228377e85aff4a3bcf4a515e9",
+    "full_go_rc": 1,
+    "ailang_rc": 0,
+    "exact_inherited_failures": [
+      "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter",
+      "TestCheckSourceUnderPinnedInterpreter"
+    ],
+    "environment_modified": false
+  },
+  "planner_authored_execution_hold_preserved": true,
+  "controller_instruction_received_after_cli_launch": {
+    "authority": "Parent controller instruction citing verification-protocol.md 3e(a), with original r3 design section7 baseline/report duty.",
+    "action": "Preserve pinned planner artifacts. Controller will separately repair the inherited-red criterion and execution authorization in an addendum/state; no second CLI.",
+    "candidate_requirement": "Run full candidate exact command in same environment; compare exact two inherited failures and require no additional failures.",
+    "ci_requirement": "Full Linux plain/race/AIL CI green on both PR and merge heads.",
+    "evaluation_requirement": "Independent evaluator must specifically adjudicate the criterion repair.",
+    "constraints": "No warning suppression, environment change, gate dropping, source fix, controller-owned pass or disputed design-direction resolution."
+  },
+  "pending": "Implementation application, full candidate gates, independent evaluation including criterion repair, PR and merge Linux CI remain pending."
+}

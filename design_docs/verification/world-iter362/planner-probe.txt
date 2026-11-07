@@ -1,0 +1,21 @@
+Reading additional input from stdin...
+OpenAI Codex v0.164.0
+--------
+workdir: /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR, /Users/voightkampff/Library/Caches/go-build, /Users/voightkampff/go/pkg/mod]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1b480-9dcb-7600-b985-9e085be86649
+--------
+user
+MISSION-ROLE: planner
+Provider-pinned availability probe only. Do not author a sprint plan, modify files, run tests, send messages, spawn agents, or commit. Respond with the exact text PLANNER_PIN_PROBE_OK. The supervisor will separately invoke the real planner task after this bounded probe succeeds.
+
+codex
+PLANNER_PIN_PROBE_OK
+tokens used
+10.868
+PLANNER_PIN_PROBE_OK
