@@ -1,0 +1,14 @@
+{
+  "command": [
+    "ailang",
+    "mission",
+    "rotate-log",
+    "world",
+    "--index-only"
+  ],
+  "registry": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world366-index-final-yq6syivx",
+  "rc": 0,
+  "stdout": "INDEX      /Users/voightkampff/dev/sunholo-data/.world-iter366-record/design_docs/world-mission-index.md\n  354 iterations, complete history \u2014 grep this before picking work\norphan rows preserved: 361\n",
+  "stderr": "",
+  "index_byte_identical": true
+}

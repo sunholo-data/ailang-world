@@ -1036,11 +1036,11 @@ watermark. Never infer resolution from related code landing.
 
 ## STATUS (rotation rule)
 
+## STATUS 2026-11-07 — ITERATION 366: ADMIN record only; row 256 PARKED needs-human-review, independent MiniMax FAIL 85, LOCAL_CRITERION UNMET, draft PR #515. D-WORLD-105/110/111/112 remain OPEN; D111 and D112 are independent human gates. Independent record review and PR/merge CI/delivery pending. Evidence: verification/world-iter366/; full log entry 366.
+
 ## STATUS 2026-11-07 — ITERATION 365: ADMIN record only; row 256 PARKED needs-human-review, independent MiniMax FAIL 85, LOCAL_CRITERION UNMET, draft PR #515. D-WORLD-105/110/111/112 remain OPEN; D111 and D112 are independent human gates. No autonomous skip257/201/243 or product acceptance. Evidence: verification/world-iter365/; full log entry 365.
 
 ## STATUS 2026-11-07 — ITERATION 364: ADMIN record only; row 256 HUMAN PARK / PARKED needs-human-review, independent FAIL 85 and LOCAL_CRITERION UNMET; D-WORLD-105/110/111/112 remain OPEN; conditional attended 250 → 255 → 256 → 257 → 201 → 243, release150/151 priority only when routable; independent record review and PR/merge CI pending.
-
-## STATUS 2026-11-07 — ITERATION 363: ADMIN only; row 256 PARKED needs-human-review, independent FAIL 85 and LOCAL_CRITERION UNMET; D-WORLD-111/112 await attended decisions; no automatic 257/201/243 route.
 
 ## CURRENT GOAL
 
@@ -1061,7 +1061,7 @@ watermark. Never infer resolution from related code landing.
    doc → `implemented/`), and 4e's OD-1/OD-2 were ratified in the attended TRIPLE RATIFICATION 2.
    **Next items: `4e w-race-gate-blindspot` (RG.A / CF-K-1) and `4f w-bench-load-confound`
    (branch A) — both routable, neither blocked on Mark.**
-    When this line and the Queue disagree, the Queue governs; the Human Decision Ledger governs current authority. Current route (iteration 365): ADMIN record only. Row 256 remains PARKED needs-human-review, draft PR #515, independent FAIL 85 and LOCAL_CRITERION UNMET. D-WORLD-111 default A retains the exact-two-failures contract; no full reruns or source/gate changes. D-WORLD-112 stays OPEN with no autonomous credential changes; sanitization does not undo exposure. No automatic skip to 257, 201 or 243. The attended order 250 → 255 → 256 → 257 → 201 → 243 remains conditional on both parks being explicitly cleared; release rows 150/151 retain priority when routable. D-WORLD-105 and D-WORLD-110 remain OPEN with their existing defaults. History is in the log and status archive.
+    When this line and the Queue disagree, the Queue governs; the Human Decision Ledger governs current authority. Current route (iteration 366): ADMIN record only. Row 256 remains PARKED needs-human-review, draft PR #515, independent FAIL 85 and LOCAL_CRITERION UNMET. D-WORLD-111 default A retains the exact-two-failures contract; no full reruns or source/gate changes. D-WORLD-112 stays OPEN with no autonomous credential changes; sanitization does not undo exposure. No automatic skip to 257, 201 or 243. The attended order 250 → 255 → 256 → 257 → 201 → 243 remains conditional on both parks being explicitly cleared; release rows 150/151 retain priority when routable. D-WORLD-105 and D-WORLD-110 remain OPEN with their existing defaults. History is in the log and status archive.
 
 ## The bar — what "Ailang World 1.0" must meet (RATIFIED by Mark 2026-07-23, attended — see STATUS + issue #1 record)
 

@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "sprint_id": "WORLD-ITER366-ADMIN",
+  "iteration": 366,
+  "milestone": "M1_ADMIN_RECORD_366",
+  "status": "PREPARED_G1_G7_PENDING_G8",
+  "preparation_passes": true,
+  "preparation_completed_at": "2026-11-07T21:13:06.426Z",
+  "canonical_product_base": "1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4",
+  "actual_execution_head": "e3f746457213857c5654654e2188d05d7dcf751a",
+  "planning_state": {
+    "path": "design_docs/verification/world-iter366/record-state.json",
+    "sha256": "28bb418fe3d873a1d8be1273d7cb6a476791a1a2aa92023d846e6a3543a354e9",
+    "immutable": true,
+    "passes": false
+  },
+  "preparation": {
+    "AC-G1-SCOPE": {
+      "prepared": true
+    },
+    "AC-G2-TRANSFORM": {
+      "prepared": true
+    },
+    "AC-G3-COUNTS": {
+      "prepared": true
+    },
+    "AC-G4-PRESERVE": {
+      "prepared": true
+    },
+    "AC-G5-TRUTH": {
+      "prepared": true
+    },
+    "AC-G6-WHITESPACE": {
+      "prepared": true
+    },
+    "AC-G7-BOUNDARY": {
+      "prepared": true
+    }
+  },
+  "delivery": {
+    "AC-G8-DELIVERY": "PENDING",
+    "independent_final_record_review": "PENDING",
+    "controller_reconstruction_and_commit": "PENDING",
+    "controller_narrow_charter_test": "PENDING",
+    "exact_full40_PR_head_all3_CI": "PENDING",
+    "exact_full40_merge_head_all3_CI": "PENDING",
+    "external_delivery_and_landing": "PENDING",
+    "owner": "controller"
+  },
+  "snapshot": {
+    "root": ".snap/M1/",
+    "payloads": 7,
+    "manifest": ".snap/M1/manifest.json",
+    "manifest_excludes_self": true,
+    "local_identity_check": {
+      "verified": true,
+      "payloads": 7,
+      "comparison": "bytes/type/mode/SHA256; final evidence copies and manifest checked after finalization"
+    },
+    "controller_reconstruction": "PENDING"
+  },
+  "notes": "Actual bounded administrative preparation only. Original planning progress stays entirely unchanged, passes=false forever. G1-G7 preparation does not claim G8 acceptance. No product/test LOC, Go execution, Git writes, network, external messages, nested agents or credential action.",
+  "authority": {
+    "row256": "PARKED needs-human-review; independent MiniMax FAIL85; LOCAL_CRITERION UNMET; draft PR515",
+    "open_decisions": [
+      "D-WORLD-105",
+      "D-WORLD-110",
+      "D-WORLD-111",
+      "D-WORLD-112"
+    ],
+    "defaults": {
+      "D-WORLD-105": "C:233 parked/fail closed",
+      "D-WORLD-110": "A:255 as built",
+      "D-WORLD-111": "A:exactly two named baseline failures; no additional failures",
+      "D-WORLD-112": "No autonomous credential change"
+    },
+    "independent_holds": [
+      "D-WORLD-111",
+      "D-WORLD-112"
+    ],
+    "conditional_order": [
+      250,
+      255,
+      256,
+      257,
+      201,
+      243
+    ],
+    "autonomous_skip256": false,
+    "clauses_1_7": "MET inherited; no remeasurement",
+    "goal": "unchanged"
+  },
+  "usage": {
+    "executor_probe_tokens": 6199,
+    "executor_terminal_tokens": null,
+    "executor_terminal_runtime_seconds": null,
+    "evaluator_controller_supervisor_usage": "unreported",
+    "terminal_usage_owner": "new supervisor receipt after actual terminal",
+    "metered_usd": 0
+  }
+}

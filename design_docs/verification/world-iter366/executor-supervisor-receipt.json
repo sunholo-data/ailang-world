@@ -1,0 +1,52 @@
+{
+  "role": "executor",
+  "iteration": 366,
+  "resolved_route": "recipe codex:gpt-6.1-sol declared:provider-pin",
+  "interface": "actual codex exec CLI; Agent supervisor cannot set model override",
+  "agent_model_override_available": false,
+  "model_requested": "gpt-6.1-sol",
+  "model_observed": "gpt-6.1-sol",
+  "exit_code": 0,
+  "runtime_seconds": 433.096,
+  "deadline_seconds": 900,
+  "timed_out": false,
+  "stdin": "/dev/null",
+  "OPENAI_API_KEY": "stripped by name",
+  "multi_agent_model_overrides": false,
+  "sandbox": "workspace-write",
+  "cache_dirs_added": [
+    "/Users/voightkampff/Library/Caches/go-build",
+    "/Users/voightkampff/go/pkg/mod"
+  ],
+  "token_footer_raw": "128.545",
+  "tokens_used": 128545,
+  "probe_tokens": 6199,
+  "total_executor_cli_tokens_including_probe": 134744,
+  "controller_and_supervisor_model_usage": "unreported",
+  "metered_usd": 0,
+  "actual_final_message": "Updated only the five permitted admin records. Created [executor proof](/Users/voightkampff/dev/sunholo-data/.world-iter366-record/design_docs/verification/world-iter366/executor-proof.json), [execution state](/Users/voightkampff/dev/sunholo-data/.world-iter366-record/design_docs/verification/world-iter366/execution-state.json), and verified the [seven-payload snapshot manifest](/Users/voightkampff/dev/sunholo-data/.world-iter366-record/.snap/M1/manifest.json).\n\nG1\u2013G7 prepared; G8 review/CI/delivery **PENDING**. Planning state remains unchanged with `passes=false`. No Git writes or product/test changes.",
+  "snapshot_manifest": ".snap/M1/manifest.json",
+  "owned_outputs": [
+    "design_docs/world-mission.md",
+    "design_docs/world-mission-status-archive.md",
+    "design_docs/world-mission-log.md",
+    "design_docs/world-mission-index.md",
+    "design_docs/world-mission-dashboard.md",
+    "design_docs/verification/world-iter366/executor-proof.json",
+    "design_docs/verification/world-iter366/execution-state.json"
+  ],
+  "independent_review": "pending separate judge; controller has no verdict",
+  "timestamp_utc": "2026-11-07T21:15:13.107562+00:00",
+  "retained_instrument_finding": {
+    "original_failure": "Final file-set check used JavaScript array identity comparison; instrument reported failure despite identical displayed path lists.",
+    "correction": "Actual executor replaced it with sorted path-list byte comparison and reran final checks.",
+    "product_verdict": "none; instrument failure is not a product failure",
+    "preservation": "Original proof and snapshot payloads untouched by supervisor. Original CLI log retained locally.",
+    "source_log": "/tmp/world366-executor-cli.log"
+  },
+  "handoff_hashes": {
+    "design_docs/verification/world-iter366/executor-proof.json": "102ae527b384febbef9ebd696839ccad86c2d1f05f17d64527e33c3008d75f2e",
+    "design_docs/verification/world-iter366/execution-state.json": "85403b8d84d765979a6e9c22136bb6cc9541fff8619cf7ec10cb9cdb3b25007f",
+    ".snap/M1/manifest.json": "35cef6a086a8b3608758ac2d73b95472882e9a303eb98682692f0a95e6a8a029"
+  }
+}

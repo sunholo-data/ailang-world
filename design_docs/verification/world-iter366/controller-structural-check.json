@@ -1,0 +1,37 @@
+{
+  "at": "2026-11-07T21:15:54.320840+00:00",
+  "base": "1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4",
+  "scope": "ADMIN preservation only; not product validation or independent AI verdict",
+  "five_transformations": "PASS",
+  "protected_baseline_paths": 6442,
+  "mode_type_inventory": "PASS",
+  "shared_main_unchanged_paths": 6056,
+  "frozen_inputs": [
+    {
+      "manifest": "ready-inputs.json",
+      "verified": 25
+    },
+    {
+      "manifest": "execution-launch-inputs.json",
+      "verified": 7
+    }
+  ],
+  "controls_rejected": [
+    "archive-drop",
+    "index-old-row-drop",
+    "queue-drop",
+    "log-old-prefix",
+    "ledger-state",
+    "status-omission"
+  ],
+  "controls_surviving": 0,
+  "log_entries": 40,
+  "status": [
+    366,
+    365,
+    364
+  ],
+  "charter_lines": 6345,
+  "archive_lines": 732,
+  "dashboard_lines": 24
+}
