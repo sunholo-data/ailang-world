@@ -1,0 +1,13 @@
+{
+  "iteration": 364,
+  "known_subscription_quota_tokens": 313859,
+  "roles": {
+    "designer": 72246,
+    "planner_footer_sum": 161073,
+    "executor": 80540
+  },
+  "controller_and_supervisor_tokens": "not reported",
+  "metered_usd": 0,
+  "imputed_usd": 0,
+  "evaluator": "pending actual independent MiniMax probe+review; $5 ceiling"
+}

@@ -1,0 +1,359 @@
+{
+  "schema_version": 1,
+  "sprint_id": "WORLD-ITER364-ADMIN",
+  "iteration": 364,
+  "status": "pending",
+  "design_doc": "design_docs/verification/world-iter364/design-gate.md",
+  "plan_path": "design_docs/verification/world-iter364/record-plan.md",
+  "authorization": "Controller authorizes unattended administrative planning under accepted designer AC1–AC7; no approval or handoff.",
+  "local_head": "0de483ef6b0d8675d79d539f12ee9198c5f8ea44",
+  "inherited_controller_gate1_base": "374696c0536809d7c7080d07339208570d5130cb",
+  "planner": {
+    "role": "planner",
+    "actual_lane": "codex:gpt-6.1-sol",
+    "reason": "declared:planner-lane-default-pin",
+    "identity_basis": "User invocation; no runtime probe performed here",
+    "terminal_usage": "unknown until supervisor receipt",
+    "terminal_runtime_rc": "unknown until supervisor receipt",
+    "agents_spawned": 0,
+    "handoff_sent": false
+  },
+  "estimates": {
+    "changed_record_loc": 80,
+    "product_loc": 0,
+    "test_loc": 0,
+    "duration_minutes": 60,
+    "basis": "Planning estimate for three narrow record operations; not measured velocity, actual runtime or promised delivery"
+  },
+  "registry_reuse": [
+    {
+      "milestone": "M1",
+      "package": null,
+      "action": "none",
+      "search": "N/A",
+      "reason": "Nonpackage ADMIN dashboard/log prose; no capability implemented."
+    },
+    {
+      "milestone": "M2",
+      "package": null,
+      "action": "none",
+      "search": "N/A",
+      "reason": "Nonpackage ADMIN exact STATUS byte move and route-number substitution; no capability implemented."
+    },
+    {
+      "milestone": "M3",
+      "package": null,
+      "action": "none",
+      "search": "N/A",
+      "reason": "Nonpackage ADMIN index regeneration with supported existing fleet tooling; no new capability or registry implementation."
+    }
+  ],
+  "syntax_examples_gate": "N/A: no .ail edits or product features; no examples required",
+  "baseline": {
+    "preservation": {
+      "tracked": {
+        "count": 6372,
+        "sha256": "0db627886bfc746b53bcfef99cf033b9d235c0430c4a6512b16e50abe954dfb2",
+        "missing_count": 0
+      },
+      "existing_iter364": {
+        "count": 24,
+        "sha256": "225232a27e37c31359afee87df7c5f2111dd731dedfb5f5bec4168191b184d52",
+        "missing_count": 0
+      },
+      "head": "0de483ef6b0d8675d79d539f12ee9198c5f8ea44"
+    },
+    "hash_method": "For sorted paths: SHA256(path UTF-8 + NUL + binary SHA256(file bytes)), concatenated into aggregate SHA256; symlinks hash SYMLINK:target; missing paths explicitly counted. Observation only; no shared state written.",
+    "independently_read": [
+      "design_docs/world-mission.md STATUS, entire ledger section and queue suffix, current goal and relevant queue entries",
+      "design_docs/world-mission-dashboard.md",
+      "design_docs/world-mission-log.md tail",
+      "design_docs/world-mission-status-archive.md tail",
+      "design_docs/world-mission-index.md",
+      "iter364 design-gate.md, designer-receipt.json, controller-designer-disposition.json, controller-brief.json, controller-observations.json, product-pr515-fresh.json, ledger-check.txt, baseline-charter-gate.txt",
+      "iter364 designer-supervisor-receipt.json, base-full-checks.json, retro-counts.json, worktree-list-captured.json"
+    ],
+    "charter_lines": 6345,
+    "dashboard_lines": 16,
+    "live_log_entries": 37,
+    "status_stamps": [
+      363,
+      362,
+      360
+    ],
+    "status_archive_lines": 726,
+    "status_archive_359_positive_control": true,
+    "log_archive_lines": 26726,
+    "index_prior_ids": 350,
+    "ledger_rows": 99,
+    "ledger_section": {
+      "bytes": 220998,
+      "sha256": "302e2264c72d23ecc2f59a7322f22f90e1a9321591f9249ef99ccec8ecb1648c"
+    },
+    "queue_suffix": {
+      "bytes": 992586,
+      "sha256": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4"
+    },
+    "stamp360_pair_sha256": "ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530",
+    "index_sha256": "d93595ccdecbdf38589c321d7c971fa3a18e26ca6c1fd485e3c6821337403bd1",
+    "orphan361_exact_row": "| 361 | 2026-11-07 | orphan: row 256 r1 design/quorum artifacts recovered and credited by iteration 362; no commit, landing or independent execution verdict [ADMIN] |",
+    "raw_worktree_envelope_sha256_verified": true,
+    "initial_tracked_diff_check_rc": 0,
+    "inherited_not_rerun": {
+      "gate0": "controller brief: armed, billing CLEAN,35 comments,0 directives, crash0/transcript2, watermarks degraded1/2",
+      "gate1": "controller base374696c0536809d7c7080d07339208570d5130cb;14 skill files,drift0",
+      "charter_test": {
+        "rc": 0,
+        "reported_seconds": 0.375,
+        "source": "baseline-charter-gate.txt plus controller-observations.json"
+      },
+      "base_ci": "3/3 terminal success run42362989926, base-full-checks.json; not independently network verified",
+      "clauses": "1–7 MET per controller",
+      "pr515": {
+        "state": "OPEN",
+        "draft": true,
+        "mergeable": "CONFLICTING",
+        "merge_state": "DIRTY",
+        "head": "7655388936b80bea9c4843f0a2e0abc085e52c0f",
+        "source": "product-pr515-fresh.json",
+        "verification": "Inherited fresh controller receipt; no planner network verification"
+      },
+      "retro": "harness0/20; last product landings360/359/340 moved no UNMET clause; no routable UNMET clause, DRIFT false"
+    }
+  },
+  "preservation_history": {
+    "original_designer_finding": "FAILED_INPUT_PRESERVATION retained exactly in original artifacts",
+    "controller_provenance": "controller-designer-disposition.json attributes upstream references31→33 to controller addition of476/2160 during designer hashing; fixed committed inputs frozen, no waiver or product acceptance",
+    "raw_stdout": "Byte-exact JSON envelope worktree-list-captured.json with matching SHA256; default whitespace is not waived",
+    "future_receipts": "New controller receipts are not preexisting inputs; do not require preserving nonexistent files as baseline"
+  },
+  "invariants": {
+    "ledger": "All99 rows, entire ledger section and queue suffix byte-identical",
+    "open_decisions": {
+      "D-WORLD-105": "OPEN default C; row233 parked",
+      "D-WORLD-110": "OPEN default A; compatibility as built",
+      "D-WORLD-111": "OPEN default A; retain exact-two-named-baseline-failures and no additional failures",
+      "D-WORLD-112": "OPEN; no autonomous credential change"
+    },
+    "row256": "HUMAN PARK / PARKED needs-human-review; independent FAIL85; LOCAL_CRITERION UNMET",
+    "causal_finding": "Publish-counter and net6 remain unattributed; nonrecurrence is not attribution",
+    "incident": "Sanitization does not undo exposure; clearing111 or112 alone cannot clear the other",
+    "route": "No skip257/201/243; attended250→255→256→257→201→243 conditional; release150/151 priority only when routable",
+    "product_acceptance": false
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "name": "Dashboard and canonical log append",
+      "owner": "executor",
+      "status": "pending",
+      "passes": null,
+      "estimated_loc": 75,
+      "estimated_duration_minutes": 25,
+      "dependencies": [],
+      "files": [
+        "design_docs/world-mission-dashboard.md",
+        "design_docs/world-mission-log.md"
+      ],
+      "acceptance_criteria": [
+        "AC1/2/4/6: dashboard≤40 physical lines; truthful ADMIN park and provenance",
+        "Append exactly one title: ## 364 — 2026-11-07 — ADMIN record only; row 256 remains parked [ADMIN]",
+        "Old log exact byte prefix;37→38 live entries; no full rotation; log archive unchanged",
+        "Preserve ledger/queue and every other frozen input; capture actual structural/default-whitespace receipts",
+        "Cumulative .snap/M1 includes every created/modified path so far, including plan/state and curated evidence, excluding snapshots themselves; controller verifies and commits M1"
+      ],
+      "snapshot": ".snap/M1",
+      "controller_commit": "required after verified snapshot",
+      "registry_reuse": "none: record prose only"
+    },
+    {
+      "id": "M2",
+      "name": "Safe3 STATUS and exact current-route replacement",
+      "owner": "executor",
+      "status": "pending",
+      "passes": null,
+      "estimated_loc": 4,
+      "estimated_duration_minutes": 20,
+      "dependencies": [
+        "M1"
+      ],
+      "files": [
+        "design_docs/world-mission.md",
+        "design_docs/world-mission-status-archive.md"
+      ],
+      "acceptance_criteria": [
+        "AC1/3/4/7: insert one-line364 STATUS plus blank, retain363/362",
+        "Move only360 exact line+blank pair SHA256 ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530",
+        "Charter6345+2−2=6345; archive726→728 with original prefix exact and359 retained",
+        "Replace only Current route (iteration 363) with Current route (iteration 364) on existing CURRENT GOAL line; prose delta0",
+        "Ledger99, entire ledger section and queue suffix byte-identical; no other charter byte changes",
+        "Cumulative .snap/M2 captures every created/modified path so far with actual structural/default-whitespace receipts; controller verifies and commits M2"
+      ],
+      "snapshot": ".snap/M2",
+      "controller_commit": "required after verified snapshot",
+      "registry_reuse": "none: exact record bytes only"
+    },
+    {
+      "id": "M3",
+      "name": "Supported fleet index-only update",
+      "owner": "controller only",
+      "status": "pending",
+      "passes": null,
+      "estimated_loc": 1,
+      "estimated_duration_minutes": 15,
+      "dependencies": [
+        "M2"
+      ],
+      "files": [
+        "design_docs/world-mission-index.md"
+      ],
+      "acceptance_criteria": [
+        "AC1/5/7: prove resolved output targets record checkout before invoking supported existing fleet index-only tooling",
+        "Preserve both source streams and every prior ID; retain exact existing orphan361 row, add364 exactly once",
+        "Missing tooling/context stays pending; no installed registry hand editing, fabricated canonical361 or shared-state seeding",
+        "Retain M1/M2 stage proofs; capture cumulative M3 state of every created/modified path in separately identified .snap/M2/M3-stage excluding snapshot storage; controller verifies actual receipts and commits M3"
+      ],
+      "snapshot": ".snap/M2/M3-stage",
+      "controller_commit": "required after index and structural proof",
+      "registry_reuse": "none: existing index tooling only"
+    }
+  ],
+  "record_requirements": {
+    "content": [
+      "Gate0/1 provenance",
+      "Actual ADMIN work and route/park",
+      "Four actual roles/models/reroutes/usage; unknown controller identity/tokens explicit",
+      "Retro/progress/next and human park",
+      "Independent judge status and landing status"
+    ],
+    "roles": {
+      "designer": {
+        "actual_lane": "codex:gpt-6.1-sol",
+        "source": "designer-supervisor-receipt.json inherited",
+        "status": "COMPLETED_WITH_FAILED_INPUT_PRESERVATION_FINDING",
+        "run_rc": 0,
+        "run_seconds": 173.76,
+        "quota_tokens_including_probe": 72246,
+        "metered_usd": 0,
+        "imputed_usd": 0
+      },
+      "planner": {
+        "actual_lane": "codex:gpt-6.1-sol",
+        "basis": "current invocation",
+        "status": "plan artifacts authored; terminal supervisor receipt not yet available",
+        "usage": "unknown until supervisor"
+      },
+      "executor": {
+        "declared_lane": "codex:gpt-6.1-sol",
+        "status": "pending; actual model, reroute, runtime, rc and usage require supervisor receipt"
+      },
+      "evaluator": {
+        "declared_lane": "pi:openrouter/minimax/minimax-m3",
+        "status": "pending actual independent MiniMax judgment; declaration is not completed review"
+      },
+      "controller": {
+        "identity": "unknown/unreported",
+        "tokens": "unknown/unreported"
+      }
+    },
+    "driver_routing_note": "lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` — quota-limited) → handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` — quota-limited) → handed to `pi:openrouter/minimax/minimax-m3`",
+    "accounting": {
+      "total_metered_budget_usd": 5,
+      "subscription_quota": "Known inherited designer72,246 tokens including probe; other terminal receipts pending",
+      "metered_total": "unknown until all actual receipts; no inferred zero for pending roles",
+      "imputed_total": "unknown until actual receipts; separate from subscription and metered",
+      "no_reuse": "Do not copy363 usage/cost or invent future timing, success, CI or Gate4 time"
+    },
+    "next": "Attended D111 validation-policy and D112 incident decisions independently; retain D105/D110 defaults and conditional order/release priority",
+    "controller_receipts": "Controller later adds actual role, gate, review and delivery receipts; existing inputs remain frozen"
+  },
+  "validation": {
+    "structural": "Actual scoped path/hash receipts, log prefix/count/title, safe3 arithmetic/hash/prefix/359, current-goal exact substitution, ledger/queue hashes, index prior IDs/orphan/source preservation; negative controls may use memory only, no input mutation",
+    "default_whitespace": "Actual default git diff --check receipts for full record; do not narrow flags or relabel base red; historical363 default rc2 retained",
+    "charter_gate": {
+      "owner": "controller only outside sandbox",
+      "command": "go test ./host/verifygate -run '^TestMissionConfigRealCharter$' -count=1",
+      "baseline": "inherited rc0; not rerun by planner",
+      "post_edit_status": "pending"
+    },
+    "sandbox": "Socket failures UNINFORMATIVE UNDER SANDBOX",
+    "product_tests_run": false,
+    "full_suite_authorized": false,
+    "local_artifact_checks": {
+      "json_valid": true,
+      "milestone_ids": [
+        "M1",
+        "M2",
+        "M3"
+      ],
+      "all_milestones_pending": true,
+      "estimated_loc_sum": 80,
+      "estimated_minutes_sum": 60,
+      "registry_reuse_complete": true,
+      "plan_words": 850,
+      "tracked_default_diff_check": {
+        "command": "git diff --check",
+        "rc": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      "new_file_default_whitespace_checks": [
+        {
+          "command": "git diff --no-index --check /dev/null design_docs/verification/world-iter364/record-plan.md",
+          "raw_rc": 1,
+          "stdout": "",
+          "stderr": "",
+          "interpretation": "No whitespace diagnostics. --no-index reports the new-file content difference with rc1; this raw code is retained, not represented as rc0."
+        },
+        {
+          "command": "git diff --no-index --check /dev/null design_docs/verification/world-iter364/record-state.json",
+          "raw_rc": 1,
+          "stdout": "",
+          "stderr": "",
+          "interpretation": "No whitespace diagnostics. --no-index reports the new-file content difference with rc1; this raw code is retained, not represented as rc0."
+        }
+      ],
+      "scope": "git status --short showed only the two authorized new outputs; no tracked edits",
+      "tests": "Artifact structure checks only; no product tests or charter test run"
+    }
+  },
+  "delivery": {
+    "independent_judge": "REQUIRED later: actual independent MiniMax reviews final record bytes; controller verdict cannot substitute",
+    "review_status": "pending",
+    "material_changes": "Later material changes require independent review coverage",
+    "landing_state": "pending; not LANDED",
+    "pr_head": "unknown until controller receipt; must be exact full40",
+    "merge_head": "unknown until controller receipt; must be exact full40",
+    "ci_each_head": {
+      "required_checks": [
+        "ailang-code verify gate",
+        "go race gate (go test -race, own job)",
+        "go host build + test gate"
+      ],
+      "requirement": "Each exact PR-head and merge-head requires all3 terminal-success CI checks with run URLs before LANDED; base/product/prior CI never substitutes"
+    }
+  },
+  "prohibitions": [
+    "No product acceptance or routable product work",
+    "No git writes/add/commit/stash/checkout by planner or executor; controller commits later",
+    "No credentials, env value dumps, external writes/messages/import-github or agents",
+    "No product tests, full suites, quorum, pin/skill/gate/routing changes",
+    "No TMPDIR/GOTMPDIR overrides",
+    "No modifications to frozen inputs or original designer artifacts; no shared-state seeding"
+  ],
+  "final_preservation": {
+    "status": "PASS for this planner observation only; historical designer FAILED_INPUT_PRESERVATION remains unchanged",
+    "tracked_count": 6372,
+    "tracked_sha256": "0db627886bfc746b53bcfef99cf033b9d235c0430c4a6512b16e50abe954dfb2",
+    "existing_iter364_count": 24,
+    "existing_iter364_sha256": "225232a27e37c31359afee87df7c5f2111dd731dedfb5f5bec4168191b184d52",
+    "all_baseline_hashes_unchanged": true,
+    "head_unchanged": true,
+    "outputs_only": [
+      "design_docs/verification/world-iter364/record-plan.md",
+      "design_docs/verification/world-iter364/record-state.json"
+    ],
+    "excludes_from_existing_evidence": "Only these two newly created planner outputs, not any preexisting input or future controller receipt",
+    "hash_storage": "In-memory comparison plus compact aggregate receipts in this new state; no manifest file or shared-state seed"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "ailang",
+    "mission",
+    "rotate-log",
+    "world",
+    "--index-only"
+  ],
+  "rc": 0,
+  "stdout": "INDEX      /Users/voightkampff/.ailang/state/world-iter364-record/design_docs/world-mission-index.md\n  352 iterations, complete history \u2014 grep this before picking work\norphan rows preserved: 361\n",
+  "stderr": "",
+  "supported_explicit_registry_input": true,
+  "record_workdir": "/Users/voightkampff/.ailang/state/world-iter364-record",
+  "installed_registry_unchanged": true,
+  "source_streams_byte_identical": true,
+  "milestone_commits": {
+    "M1": "29bee58de6109c63da9f403c7f6ce0f7760e4f32",
+    "M2": "8b09483fc5ac383a8065abeda899e1b2bd0b0338"
+  }
+}

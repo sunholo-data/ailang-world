@@ -1,0 +1,73 @@
+{
+  "iteration": 364,
+  "role": "designer",
+  "resolver_output": "recipe codex:gpt-6.1-sol declared:provider-pin",
+  "actual_model": "gpt-6.1-sol",
+  "actual_provider": "codex",
+  "supervisor_model": "not asserted; collaboration API has no model override",
+  "role_run_status": "COMPLETED_WITH_FAILED_INPUT_PRESERVATION_FINDING",
+  "probe": {
+    "label": "probe",
+    "model_requested": "gpt-6.1-sol",
+    "rc": 0,
+    "seconds": 3.99,
+    "stdin": "DEVNULL",
+    "environment": "minimal whitelist; credential environment stripped",
+    "output_bytes": 402,
+    "model_header": [
+      "gpt-6.1-sol"
+    ],
+    "token_lines": [
+      "tokens used\n18.178"
+    ]
+  },
+  "run": {
+    "label": "run",
+    "model_requested": "gpt-6.1-sol",
+    "rc": 0,
+    "seconds": 173.76,
+    "stdin": "DEVNULL",
+    "environment": "minimal whitelist; credential environment stripped",
+    "output_bytes": 1573029,
+    "model_header": [
+      "gpt-6.1-sol"
+    ],
+    "token_lines": [
+      "\"usage\": \"pending supervisor; not invented\",",
+      "tokens used\n54.068"
+    ]
+  },
+  "usage": {
+    "probe": {
+      "literal": "18.178",
+      "tokens": 18178,
+      "interpretation": "integer token footer with locale grouping removed"
+    },
+    "run": {
+      "literal": "54.068",
+      "tokens": 54068,
+      "interpretation": "integer token footer with locale grouping removed"
+    },
+    "total_tokens": 72246,
+    "billing": "subscription quota; metered USD0, imputed0; controller/supervisor token usage unreported"
+  },
+  "bounds": {
+    "probe_seconds": 120,
+    "run_seconds": 1200,
+    "directive_bytes": 2272,
+    "stdin": "DEVNULL",
+    "sandbox": "workspace-write",
+    "feature": "features.multi_agent_v2.expose_spawn_agent_model_overrides=false"
+  },
+  "preservation": {
+    "authored_receipt_byte_exact": true,
+    "finding": "FAILED_INPUT_PRESERVATION retained exactly; controller acknowledged appending476/2160 during designer run; no restoration or retroactive green",
+    "authoritative_file": "designer-receipt.json"
+  },
+  "authored_sha256": {
+    "design-gate.md": "61dfa5381a19292a329ce00ce54a249f3c79200158486861edeadbbb924611cc",
+    "designer-receipt.json": "781e0b95968302743939349c435e1a446f09013e32f3f434af612d14f49930a9"
+  },
+  "runtime_capture": "outside repository; raw logs not banked",
+  "changes": "Only designer outputs plus this curated supervisor receipt; no source, mission, git or external writes by role"
+}

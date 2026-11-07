@@ -1,0 +1,126 @@
+{
+  "iteration": 364,
+  "role": "executor",
+  "supervisor": "Agent-tool supervisor; exact controller/supervisor model identity and token usage unknown/unreported",
+  "resolver": "recipe codex:gpt-6.1-sol declared:provider-pin",
+  "actual_model": "gpt-6.1-sol",
+  "actual_provider": "codex",
+  "status": "COMPLETED_M1_M2_PENDING_INDEPENDENT_JUDGE",
+  "working_directory": "/Users/voightkampff/.ailang/state/world-iter364-record",
+  "start_head": "645258c277bb4da5ae62b1f169b9310877d4757f",
+  "mission_base": "374696c0536809d7c7080d07339208570d5130cb",
+  "probe": {
+    "rc": 0,
+    "runtime_seconds": 6.38,
+    "capped": false,
+    "log": "/tmp/world_iter364_executor_actual_20261107_1343/probe.log",
+    "model_header": "gpt-6.1-sol",
+    "quota_tokens": 11039,
+    "log_sha256": "5875da954d3c639261797d144f7e2ddfcc6ba208f602608376a8b33d7112e3c8"
+  },
+  "run": {
+    "rc": 0,
+    "runtime_seconds": 290.98,
+    "capped": false,
+    "log": "/tmp/world_iter364_executor_actual_20261107_1343/run.log",
+    "model_header": "gpt-6.1-sol",
+    "quota_tokens": 69501,
+    "log_sha256": "e290d62f5f44cb60375e8507e5b12f7a13147851e5e2bbf785290584abddbd1b"
+  },
+  "quota_tokens_total": 80540,
+  "quota_basis": "Actual CLI tokens used footer; probe11,039 + realrun69,501 =80,540 subscription tokens, no earlier iteration usage",
+  "metered_usd": 0,
+  "imputed_usd": 0,
+  "money_basis": "Subscription Codex CLI; separate from quota tokens; no external paid provider invoked by executor supervisor",
+  "runtime_guards": {
+    "probe_cap_seconds": 120,
+    "run_cap_seconds": 1200,
+    "stdin": "DEVNULL for probe and run",
+    "directive_bytes": 6131,
+    "directive_sha256": "9f47af8880acd365f94c2f313c02395b156d8b88871e04193651aab7985fc1be",
+    "sandbox": "workspace-write",
+    "model_override_config": "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+    "cache_add_dirs": "go env GOCACHE and GOMODCACHE",
+    "secret_environment": "Child environment stripped keys matching API_KEY|TOKEN|SECRET|AUTH, case-insensitive; no values printed",
+    "tmpdir_gotmpdir_override": false,
+    "git_writes": false,
+    "additional_agents": false,
+    "external_writes_or_messages": false,
+    "bounded_terminal_poll": "Supervisor actively polled own run/session/artifacts through actual terminal exit; no launcher-completion substitution"
+  },
+  "preservation": {
+    "baseline_tracked_files": 6377,
+    "changed_original_paths": [
+      "design_docs/world-mission-dashboard.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/world-mission.md"
+    ],
+    "outside_scope_changes": [],
+    "frozen_input_count": 29,
+    "frozen_inputs_unchanged": true,
+    "head_unchanged": true,
+    "snapshots": [
+      {
+        "stage": "M1",
+        "path": "/Users/voightkampff/.ailang/state/world-iter364-record/.snap/M1",
+        "file_count": 33,
+        "manifest_count": 32,
+        "all_manifest_hashes_match": true,
+        "stage_proof_matches": true,
+        "negative_controls_detected": 8,
+        "negative_controls_expected": 8,
+        "negative_controls_survived": 0
+      },
+      {
+        "stage": "M2",
+        "path": "/Users/voightkampff/.ailang/state/world-iter364-record/.snap/M2",
+        "file_count": 35,
+        "manifest_count": 34,
+        "all_manifest_hashes_match": true,
+        "stage_proof_matches": true,
+        "negative_controls_detected": 17,
+        "negative_controls_expected": 17,
+        "negative_controls_survived": 0
+      }
+    ],
+    "M2_snapshot_all_files_match_final_tree": true,
+    "authored_output_sha256": {
+      "design_docs/world-mission-dashboard.md": "f703c105e0e3ea4cdcde1a3b89f2aa90473756ca575cf9a28e1d27c1c6a7033d",
+      "design_docs/world-mission-log.md": "7a62880198d97c99fe8a862aa29df341bed4d2433a593bee5582046a99d232bb",
+      "design_docs/world-mission-status-archive.md": "33697b13222054fe70d4f892819b3a6a15f1b4bff59413c1037dcb54631cb599",
+      "design_docs/world-mission.md": "e0c746e3c49ee2e02d151d5835292d03c47ce7d3d9b914b9ebc2e9426e117d04",
+      "design_docs/verification/world-iter364/executor-summary.md": "907e4aebe1be70c64758f76370ba0f812cc7aa269e62d8cc2331e067c86b9e80",
+      "design_docs/verification/world-iter364/executor-structural-proof.json": "0801674af9d0153b88a8062108274dac38036f5ea6c616d8058f7e1e0a9e59f3"
+    },
+    "new_receipt_policy": "This supervisor receipt is a new later-stage addition after actual executor terminal; no old evidence or authored outputs rewritten"
+  },
+  "default_whitespace_checks": [
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "374696c0536809d7c7080d07339208570d5130cb"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "negative_control_clarification": "8 of8 expected M1 controls detected;17 of17 expected M2 controls detected;25 total stage checks detected,0 survivors. This is NOT8of17.",
+  "tests": "No product/full suites or charter test; controller outside-sandbox narrow gate pending",
+  "judge": "Actual independent MiniMax evaluation REQUIRED and pending; supervisor does not judge acceptance",
+  "delivery": "M3/controller commits, record PR-head/merge-head all3 success CI and landing pending; row256 remains HUMAN PARK independent FAIL85/LOCAL_CRITERION UNMET",
+  "created_at_utc": "2026-11-07T13:14:12.153440+00:00"
+}

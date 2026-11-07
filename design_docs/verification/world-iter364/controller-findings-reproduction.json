@@ -1,0 +1,33 @@
+{
+  "NB1": {
+    "reproduced_preheader_rc2_postheader_rc0": [
+      {
+        "commit": "3fa65ad7",
+        "rc": 2,
+        "stdout": "",
+        "stderr": "instrument failure: missing Routing evidence block\n"
+      },
+      {
+        "commit": "c5e34151bd3797ad71cc6b34b17d4f2afc7a323f",
+        "rc": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ]
+  },
+  "NB2": {
+    "before_hash_reconstructed": "c8703dc1fd043168d0c3b4be314cd4591d9b4a2fce7b42dd779394938682503b",
+    "before_matches_original_designer_audit": true,
+    "current_hash": "c1b27ce0d4da28665be31c2cb556302e0ed277e3828993e11eb21899bd7953b1",
+    "after_matches_original_designer_audit": true,
+    "scope": "31 regex-derived upstream references plus2 explicitly added context references476/2160, not33 regex matches",
+    "original_designer_failure_retained": true
+  },
+  "NB3": {
+    "m2_log_sha256": "7a62880198d97c99fe8a862aa29df341bed4d2433a593bee5582046a99d232bb",
+    "candidate_log_sha256": "423072756c6fa4032b028fb1f2c5ed58a81271afc707466498b08ba329d0ffc7",
+    "candidate_exact_M2_prefix": true,
+    "M2_snapshot_equals_M2_commit": true,
+    "delta": "only append-only controller follow-through and canonical routing/progress/next annotations in3fa65ad7 andc5e34151; stage-bound receipts never rewritten"
+  }
+}
