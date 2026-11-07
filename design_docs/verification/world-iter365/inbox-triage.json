@@ -1,0 +1,146 @@
+{
+  "at_utc": "2026-11-07T16:54:11.056774+00:00",
+  "count": 20,
+  "rows": [
+    {
+      "id": "inbox_1794041490088_58eb08e1",
+      "title": "[claim] iteration 363: human gates preserved",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1794027215860_587db866",
+      "title": "[claim] iteration 362: recover 361 row256 design",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793856436569_1852ccbf",
+      "title": "[claim] iteration 350: row 252 resolved; block report 22",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793842915985_d89929be",
+      "title": "[claim] iteration 349: no pick (block report 21)",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793827641585_38f4f664",
+      "title": "[claim] iteration 348: no pick (block report 20)",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793816715638_287eca7f",
+      "title": "[claim] iteration 347: no pick (block report 19)",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793800896469_f8ccd44f",
+      "title": "[claim] iteration 346: no pick (block report 18)",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793785588600_2838c12b",
+      "title": "[claim] iteration 345: no pick (block report 17)",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793772311092_b0a892c2",
+      "title": "[claim] iteration 344: no pick (block report 16)",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793756457577_c0b27a93",
+      "title": "[claim] iteration 343: no pick (block report 15)",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793741192996_c0568783",
+      "title": "[claim] iteration 342: no pick (block report 14)",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793728629625_58be4b60",
+      "title": "[claim] iteration 341: no pick (block report 13)",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793710596872_d88270cc",
+      "title": "[claim] iteration 340: row 242",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793635897987_90e9e89b",
+      "title": "[claim] iteration 335: row 237",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793628237812_a035ef15",
+      "title": "[claim] iteration 334: row 235",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793608738177_389d1bf9",
+      "title": "iter-333 claim: rule (d) block report",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793464127436_08543c29",
+      "title": "iter-332 claim: rule (d) block report",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793449788007_e84aa880",
+      "title": "iter-331 claim: rule (d) block report",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793435311567_4812a6f1",
+      "title": "iter-330 claim: row 233 holder-exit reset",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    },
+    {
+      "id": "inbox_1793420970038_48e4e5cb",
+      "title": "iter-329 claim: row 230 reverse-leg pins",
+      "from": "mission-world",
+      "disposition": "self claim historical context; corresponding record retained; no priority change",
+      "ack_rc": 0
+    }
+  ]
+}
