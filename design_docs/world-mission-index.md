@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 364 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |
 | 363 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |
 | 362 | 2026-11-07 | row 256 implemented but PARKED: independent MiniMax FAIL 85, corrected local gate UNMET; evaluator credential incident escalated [PRODUCT] |
 | 361 | 2026-11-07 | orphan: row 256 r1 design/quorum artifacts recovered and credited by iteration 362; no commit, landing or independent execution verdict [ADMIN] |
