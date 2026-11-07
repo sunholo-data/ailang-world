@@ -1,0 +1,30 @@
+{
+  "head": "7bd3f0fc501adc402b09e3755d96066463f2bc69",
+  "branch": "sprint/world-iter362-row256",
+  "protected_sha256": {
+    "design_docs/planned/w-daemon-startup-under-load.md": "94f8bf9d7d1f3ac51a848c89e4a1595f892c2991984dc11778ffa0f539d6430a",
+    "design_docs/planned/w-daemon-startup-under-load.patch": "90c6df45c6b4dcf09fd241d76eb87294f5b84d688eb9f2ff90d0eca1de09db16",
+    "design_docs/verification/world-iter362/prototype-manifest.json": "20623e2b510158e3170837c12fbafdb8534ce905fc2335338eb043c367672c4f",
+    "design_docs/verification/world-iter362/run.py": "1b29dcb9fcc02a84a68c592291be35795e91b6a559df6250be30271081b921d2",
+    "design_docs/planned/sprint-plan-w-daemon-startup-under-load.md": "e47954052846548278f1a21b75af092af55b7c369ae768eca661915d2bcaf427",
+    "design_docs/verification/world-iter362/planner-sprint-state.json": "8fe2977e9da1e2faed9ed554d0f6458de46641652a1dc10e07e72ad4250cced8",
+    "design_docs/verification/world-iter362/planner-handoff.json": "6b38c55908131512e17bc9b36683b27cc21162e0c674fe0ec15c57566428e8ad",
+    "CLAUDE.md": "68f6fd16ede4c598a93590c3de20a2fc661a128c241eed747fab4d68d74a9141",
+    "design_docs/coding-standards.md": "a6951ab19b301c821dabc6eadc5061e6dded79c8af749ae080454e50e80239e4",
+    "design_docs/world-mission.md": "78ec05d70bcc1073a5ca5cf9389faac8040bd78e333116840fa36f6744306459",
+    "design_docs/DESIGN.md": "a8b87a7ca9cec01676d6d6eb00f2116bd60114638df4bab286189a46dfa17836",
+    "design_docs/verification/world-iter362/controller-authorized-sprint-state.json": "c785b79cf96cea6ac07eef987998b1d21c72030f3c0ae15820763d4a31f8b730",
+    "design_docs/verification/world-iter362/controller-plan-criterion-correction.md": "0bb65517fa5ba2430df18f98403f1ebe912bb60dfdf863acb17004b43c7daf45",
+    "design_docs/verification/world-iter362/planner-artifacts.json": "f6b5c5d05c565f61f95d4ef0b5a0ab6c3575ff8d249977fdeb037e686b349ca2"
+  },
+  "base_identity_count": 11,
+  "new_files_absent": [
+    "host/daemon/startup_callers_test.go",
+    "host/daemon/startup_under_load_test.go",
+    "host/broker/exec_probe_out_of_time_test.go",
+    "cmd/ailang-worldd/doctor_exec_profiles_test.go"
+  ],
+  "source_application_complete": false,
+  "passes": null,
+  "completed": null
+}

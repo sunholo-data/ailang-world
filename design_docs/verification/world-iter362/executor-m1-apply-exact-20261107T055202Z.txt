@@ -1,0 +1,39 @@
+start_utc=2026-11-07T05:52:02.107717+00:00
+deadline_utc=2026-11-07T05:55:02.107717+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256
+command=python3 -c 'import hashlib,json,subprocess,sys
+from pathlib import Path
+s=json.loads(Path(sys.argv[1]).read_text())
+assert not s['"'"'execution_hold'"'"']['"'"'active'"'"'], s['"'"'execution_hold'"'"']['"'"'reason'"'"']
+def digest(p):
+ p=Path(p); return hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else '"'"'absent'"'"'
+assert Path(subprocess.check_output(['"'"'git'"'"','"'"'rev-parse'"'"','"'"'--show-toplevel'"'"'],text=True).strip()).resolve()==Path.cwd().resolve(), '"'"'STOP: wrong Git root'"'"'
+subprocess.run(['"'"'git'"'"','"'"'merge-base'"'"','"'"'--is-ancestor'"'"',s['"'"'design_commit'"'"'],'"'"'HEAD'"'"'],check=True,timeout=10) # controller may commit planning artifacts; frozen source identities still bind
+for path,key in [(s['"'"'design_doc'"'"'],'"'"'design_sha256'"'"'),(s['"'"'patch_path'"'"'],'"'"'patch_sha256'"'"')]:
+ assert digest(path)==s[key], '"'"'STOP: frozen input changed'"'"'
+base=all(digest(f['"'"'path'"'"'])==f['"'"'base_sha256'"'"'] for f in s['"'"'implementation_files'"'"'])
+candidate=all(digest(f['"'"'path'"'"'])==f['"'"'sha256'"'"'] for f in s['"'"'implementation_files'"'"'])
+assert base or candidate, '"'"'STOP: partial application or changed premise'"'"'
+if base:
+ subprocess.run(['"'"'git'"'"','"'"'apply'"'"','"'"'--check'"'"',s['"'"'patch_path'"'"']],check=True,timeout=30)
+ subprocess.run(['"'"'git'"'"','"'"'apply'"'"',s['"'"'patch_path'"'"']],check=True,timeout=30)
+else:
+ print('"'"'Already applied exactly; no second application'"'"')
+subprocess.run(['"'"'test'"'"','"'"'-f'"'"','"'"'host/daemon/startup_callers_test.go'"'"'],check=True,timeout=10)
+subprocess.run(['"'"'test'"'"','"'"'-f'"'"','"'"'host/daemon/startup_under_load_test.go'"'"'],check=True,timeout=10)
+subprocess.run(['"'"'test'"'"','"'"'-f'"'"','"'"'host/broker/exec_probe_out_of_time_test.go'"'"'],check=True,timeout=10)
+subprocess.run(['"'"'test'"'"','"'"'-f'"'"','"'"'cmd/ailang-worldd/doctor_exec_profiles_test.go'"'"'],check=True,timeout=10)
+for f in s['"'"'implementation_files'"'"']:
+ assert digest(f['"'"'path'"'"'])==f['"'"'sha256'"'"'], '"'"'STOP: applied hash mismatch: '"'"'+f['"'"'path'"'"']
+print('"'"'APPLIED 11/11 exact; four presence guards; V28/V29 reuse premise established, acceptance still pending'"'"')
+' /Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/controller-authorized-sprint-state.json
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:52  4 users, load averages: 6.37 4.89 5.51
+
+go version go1.26.6 darwin/arm64
+
+APPLIED 11/11 exact; four presence guards; V28/V29 reuse premise established, acceptance still pending
+rc=0
+end_utc=2026-11-07T05:52:02.373093+00:00
+ 6:52  4 users, load averages: 6.37 4.89 5.51
+

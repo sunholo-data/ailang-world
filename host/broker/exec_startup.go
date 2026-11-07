@@ -81,6 +81,10 @@ type ExecProfileExclusion struct {
 	File    string
 	Project string
 	Reason  string
+	// OutOfTime (row 256): every failed arm was recorded at or after the
+	// startup deadline (ExecProbeError.OutOfTime). This establishes no cause;
+	// the profile is left out exactly as for any other failure.
+	OutOfTime bool
 }
 
 // ExecProfileSuffix and ExecProposedSuffix name the profiles directory's
@@ -261,7 +265,10 @@ func (st *ExecStartup) applyProbe(order []*ExecProfile, flagged int, errs []erro
 			continue
 		}
 		p := order[i]
-		st.Excluded = append(st.Excluded, ExecProfileExclusion{File: st.Sources[p.Project], Project: p.Project, Reason: errs[i].Error()})
+		var probeErr *ExecProbeError
+		spent := errors.As(errs[i], &probeErr) && probeErr.OutOfTime()
+		st.Excluded = append(st.Excluded, ExecProfileExclusion{File: st.Sources[p.Project], Project: p.Project, Reason: errs[i].Error(),
+			OutOfTime: spent})
 		delete(st.Profiles, p.Project)
 		delete(st.Sources, p.Project)
 	}

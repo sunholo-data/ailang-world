@@ -210,10 +210,17 @@ type ExecProbeConfig struct {
 	reversePort func() (int, error)
 }
 
-// ExecProbeArmFailure is one failed arm and what it observed.
+// ExecProbeDeadlineObservation describes timestamps, not failure causes.
+// Shared by the startup log and doctor so neither infers host load or a
+// valid profile from the time at which a failure was recorded.
+const ExecProbeDeadlineObservation = "Every failed arm was recorded at or after the startup deadline; startup timeout may have contributed."
+
+// ExecProbeArmFailure is one failed arm and what it observed. spent (row
+// 256) records only that fail observed it at or after the startup deadline.
 type ExecProbeArmFailure struct {
-	Arm string
-	Why string
+	Arm   string
+	Why   string
+	spent bool
 }
 
 // ExecProbeError refuses `serve` for a profile, naming every failed arm.
@@ -233,6 +240,19 @@ func (e *ExecProbeError) Error() string {
 		total = 7
 	}
 	return fmt.Sprintf("exec startup probe failed for profile %q (%d of %d arms): %s", e.Project, len(e.Failed), total, strings.Join(parts, "; "))
+}
+
+// OutOfTime reports whether every failed arm was recorded at or after the
+// startup deadline (row 256). It does not establish a cause or a scheduling
+// bound. A genuine refusal can be recorded late, and a per-run timeout can
+// be recorded before the startup deadline. Failed profiles remain excluded.
+func (e *ExecProbeError) OutOfTime() bool {
+	for _, f := range e.Failed {
+		if !f.spent {
+			return false
+		}
+	}
+	return len(e.Failed) > 0
 }
 
 // FailedArms returns the failed arms' names, in arm order.
@@ -422,10 +442,14 @@ type execProber struct {
 	client   string
 	pickPort func() (int, error)
 	failed   []ExecProbeArmFailure
+	// deadline is the startup clock's (zero: none). An arm judged at or
+	// after it is a spent arm (row 256).
+	deadline time.Time
 }
 
 func (pp *execProber) fail(arm, format string, args ...any) {
-	pp.failed = append(pp.failed, ExecProbeArmFailure{Arm: arm, Why: fmt.Sprintf(format, args...)})
+	spent := !pp.deadline.IsZero() && !time.Now().Before(pp.deadline)
+	pp.failed = append(pp.failed, ExecProbeArmFailure{Arm: arm, Why: fmt.Sprintf(format, args...), spent: spent})
 }
 
 func randomHex(n int) (string, error) {
@@ -475,6 +499,9 @@ func probeExecProfile(ctx context.Context, cfg ExecProbeConfig, env *execProbeEn
 		client = cfg.Sandbox.Node
 	}
 	pp := &execProber{h: h, cwd: cwd, client: client, pickPort: cfg.reversePort}
+	if dl, ok := ctx.Deadline(); ok {
+		pp.deadline = dl
+	}
 	pp.probe(ctx, env, net6, worktree, sibling, id)
 	pp.probeProtected(ctx, hostGOOS())
 	if len(pp.failed) > 0 {

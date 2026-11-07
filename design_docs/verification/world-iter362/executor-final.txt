@@ -1,0 +1,43 @@
+IMPLEMENTATION_COMPLETE: true — **APPLICATION ONLY**
+
+Frozen patch applied once. All 11 hashes match; four new files and 13 test declarations are present. Authorized identity/build/vet/gofmt/reuse checks returned rc 0. **AC1–AC9, full verification, evaluation, and CI remain pending/null.**
+
+Published [implementation snapshot](/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/executor-implementation.json), [executor state](/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/executor-state.json), and [controller handoff](/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/executor-handoff.md).
+
+The complete application file list and SHA256 values follow; **new** marks the four new files.
+
+| File | SHA256 |
+|---|---|
+| `cmd/ailang-worldd/doctor.go` | `759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1` |
+| `cmd/ailang-worldd/doctor_exec_profiles_test.go` **new** | `e86d3964b1c9df32e9383f2b35a2e2b3a938455248eb3018153f6ec62ae34dcb` |
+| `cmd/ailang-worldd/doctor_hosts.go` | `e6beb0bf3ffe2751ef060d14eb234c3fb98baa63fb9c9e606e8b45c420f9fc8c` |
+| `docs/QUICKSTART.md` | `be414d27e865c3965720ea441987a8a4a6654fe68950fc23c959d7b5e0af6f0a` |
+| `host/broker/exec_probe.go` | `e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1` |
+| `host/broker/exec_probe_out_of_time_test.go` **new** | `769447b26c7191ac37d6ea3deca70dfa0324498a78992012d9b306b105646e59` |
+| `host/broker/exec_startup.go` | `8663aac66b6af14299f7af7e52c076de37afb7e2fc1c94b23e094a4417435b0d` |
+| `host/daemon/daemon.go` | `600080956ba673dedcedbb11cdb2093668dff67b32bb258bd2a684e08498d3a9` |
+| `host/daemon/startup_callers_test.go` **new** | `3a92fa604a38da88d93081f2e9502860f28e122adc3d39db1ee5c402507e8094` |
+| `host/daemon/startup_under_load_test.go` **new** | `46bb766519c9c368beba972c7a6124dc873bc671e1818a021e0c0c40517a96fb` |
+| `host/daemon/workspace.go` | `94d4da1952fe0a6be4536c4cfb161b684c0eb2871a06ddede43624126b5bb082` |
+
+The 13 new declarations were inventoried without executing tests:
+
+```text
+TestDoctorNamesLeftOutExecProfiles
+TestDoctorLateRefusalObservationAndReasonCap
+TestExecProbeOutOfTimeNamesTheClockNotAnArm
+TestExecProbeGenuineRefusalRecordedAfterDeadline
+TestDaemonConstructorCallerInventory
+TestDaemonCallerInventoryAliasControl
+TestServeStartsWhenTheProbeSpendsTheStartupClock
+TestRegistryPhaseHasItsOwnClock
+TestRegistryPhaseClockIsBounded
+TestServeStartupClocksArePinned
+TestRegistryPhasePreservesParentCancellation
+TestExecExclusionLogIsObservationOnly
+TestHealthExecExclusionIsAdditive
+```
+
+The known `MUT-TEMPLATES-ON-STARTUP-CLOCK` survivor remains disclosed. Planner/controller inputs are unchanged. No socket tests, broad suites, background jobs, staging, commits, or dispatch occurred.
+
+**actualCLIusage:** pending supervisor runtime receipt; model/CLI rc/token/cost fields remain null.

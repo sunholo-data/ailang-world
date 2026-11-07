@@ -1,0 +1,17 @@
+{
+  "source_files_exact": 11,
+  "patch_sha256": "90c6df45c6b4dcf09fd241d76eb87294f5b84d688eb9f2ff90d0eca1de09db16",
+  "controller_outside_sandbox": true,
+  "focused": [
+    "identity",
+    "build",
+    "vet",
+    "gofmt",
+    "reuse-v28-v29",
+    "23/23 exact named race passes; 13new+10neighbours"
+  ],
+  "full_go": "running, same environment and exact command; original baseline2reds retained",
+  "independent_evaluation": "pending, specifically must adjudicate criterion correction",
+  "pr_and_merge_ci": "pending; all3required",
+  "native_source_diff_note": "Native git aligns daemon context one line differently: frozen Python-generated patch881/20 vs native880/19, identical11filehashes/net861."
+}
