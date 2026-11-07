@@ -1,0 +1,8 @@
+{
+  "at_utc": "2026-11-07T16:58:46.903364+00:00",
+  "helper_record_line": "1794070709\t2026-11-07T16:58:29Z\tbase-gate4\t1\tb9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+  "base": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+  "recorded_utc": "2026-11-07T16:58:29Z",
+  "head_at_gate4": "0e8cb716",
+  "charter_log_diff_vs_base": "empty"
+}

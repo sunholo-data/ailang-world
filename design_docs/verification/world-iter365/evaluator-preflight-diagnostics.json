@@ -1,0 +1,93 @@
+{
+  "role": "evaluator",
+  "iteration": 365,
+  "purpose": "diagnostic remeasurement; original raw stdout not retained",
+  "review_performed": false,
+  "agent_model_pin": "API has no model selection argument",
+  "diagnostics": [
+    {
+      "model": "claude-sonnet-4-6",
+      "declared_lane": "claude:claude-sonnet-4-6",
+      "command": [
+        "claude-sub",
+        "-p",
+        "--model",
+        "claude-sonnet-4-6",
+        "--output-format",
+        "json",
+        "Reply exactly OK."
+      ],
+      "stdin": "closed",
+      "hard_timeout_seconds": 120,
+      "rc": 1,
+      "runtime_seconds": 2.113,
+      "error_category": "subscription-limit",
+      "provider_error_sanitized": "You've hit your weekly limit \u00b7 resets Nov 9 at 6am (Europe/Copenhagen)",
+      "usage": {
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 0,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "",
+        "iterations": [],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "lane_dead_receipt_rc": 0
+    },
+    {
+      "model": "opus",
+      "declared_lane": "opus",
+      "command": [
+        "claude-sub",
+        "-p",
+        "--model",
+        "opus",
+        "--output-format",
+        "json",
+        "Reply exactly OK."
+      ],
+      "stdin": "closed",
+      "hard_timeout_seconds": 120,
+      "rc": 1,
+      "runtime_seconds": 2.009,
+      "error_category": "subscription-limit",
+      "provider_error_sanitized": "You've hit your weekly limit \u00b7 resets Nov 9 at 6am (Europe/Copenhagen)",
+      "usage": {
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 0,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "",
+        "iterations": [],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "lane_dead_receipt_rc": 0
+    }
+  ]
+}

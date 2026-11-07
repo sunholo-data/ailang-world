@@ -1,0 +1,17 @@
+{
+  "at_utc": "2026-11-07T17:01:41.807399+00:00",
+  "argv": [
+    "ailang",
+    "mission",
+    "rotate-log",
+    "world",
+    "--index-only"
+  ],
+  "ephemeral_registry": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-registry-baseline-r2-7oatlu8a",
+  "target": "/Users/voightkampff/dev/sunholo-data/.base-world-iter365",
+  "rc": 0,
+  "stdout": "INDEX      /Users/voightkampff/dev/sunholo-data/.base-world-iter365/design_docs/world-mission-index.md\n  352 iterations, complete history \u2014 grep this before picking work\norphan rows preserved: 361\n",
+  "stderr": "",
+  "index_byte_identical": true,
+  "base_porcelain": ""
+}

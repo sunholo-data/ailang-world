@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "go",
+    "test",
+    "./host/verifygate",
+    "-run",
+    "^TestMissionConfigRealCharter$",
+    "-count=1"
+  ],
+  "rc": 0,
+  "runtime_seconds": 1.2439876249991357,
+  "stdout": "ok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.370s\n",
+  "stderr": "",
+  "scope": "outside sandbox, record only; no full product retry"
+}

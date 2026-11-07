@@ -1,0 +1,17 @@
+{
+  "at_utc": "2026-11-07T17:53:37.780266+00:00",
+  "original_sha256": "739c1ef42997103f1cb9cdbd9df5aa44eca28580470acffda4a288cdf1714c7e",
+  "presentation_sha256": "093670fcb3dfcead167af80e23882c2365bf5767184c83566b6f0467426c0280",
+  "changed_original_lines": [
+    5,
+    6,
+    7,
+    8
+  ],
+  "lossless_roundtrip": true,
+  "source_evaluator_original_unchanged": true,
+  "scope": "formatting/presentation only; no verdict or source-record change",
+  "initial_staged_diff_check_rc": 2,
+  "initial_findings": "four trailing-space Markdown hard breaks in newly banked judge report",
+  "disposition": "Original raw payload preserved; derived presentation explicitly labeled; no whitespace gate waiver."
+}

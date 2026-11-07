@@ -1,0 +1,93 @@
+{
+  "role": "evaluator",
+  "iteration": 365,
+  "purpose": "lane preflight only; no review verdict",
+  "agent_model_pin": "Agent API has no model selection argument; supervisor invokes actual provider recipe",
+  "prior_route": "OpenRouter MiniMax rc75 refused by driver; no retry",
+  "probes": [
+    {
+      "command": [
+        "claude-sub",
+        "-p",
+        "--model",
+        "claude-sonnet-4-6",
+        "--output-format",
+        "json",
+        "Reply exactly OK."
+      ],
+      "stdin": "closed",
+      "hard_timeout_seconds": 120,
+      "rc": 1,
+      "runtime_seconds": 2.123,
+      "error": "Provider failed; private provider output withheld",
+      "tokens": {
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 0,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "",
+        "iterations": [],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "response_ok": false,
+      "lane_dead_receipt_rc": 0
+    },
+    {
+      "command": [
+        "claude-sub",
+        "-p",
+        "--model",
+        "opus",
+        "--output-format",
+        "json",
+        "Reply exactly OK."
+      ],
+      "stdin": "closed",
+      "hard_timeout_seconds": 120,
+      "rc": 1,
+      "runtime_seconds": 2.041,
+      "error": "Provider failed; private provider output withheld",
+      "tokens": {
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "output_tokens": 0,
+        "server_tool_use": {
+          "web_search_requests": 0,
+          "web_fetch_requests": 0
+        },
+        "service_tier": "standard",
+        "cache_creation": {
+          "ephemeral_1h_input_tokens": 0,
+          "ephemeral_5m_input_tokens": 0
+        },
+        "inference_geo": "",
+        "iterations": [],
+        "speed": "standard",
+        "fallback_credit": null
+      },
+      "response_ok": false,
+      "lane_dead_receipt_rc": 2
+    }
+  ],
+  "verdict": null,
+  "status": "UNAVAILABLE",
+  "available_lane": null,
+  "transport_receipt": "No independent evaluator lane available; no PASS or FAIL verdict; controller must park unmerged"
+}

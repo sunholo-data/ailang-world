@@ -1,0 +1,51 @@
+{
+  "at_utc": "2026-11-07T17:52:24.819041+00:00",
+  "scope": "ADMIN_ONLY",
+  "verdict": "independent PASS96 for reviewed9a43f9c1; delivery pending final-head and merge CI",
+  "judge": "codex:gpt-6.1-sol",
+  "judge_independence": "same-model-fresh-context",
+  "required_agent_roles": [
+    "designer",
+    "planner",
+    "executor",
+    "evaluator"
+  ],
+  "all_agent_roles_spawned": true,
+  "actual_quota_tokens": {
+    "designer": 101755,
+    "planner": 71529,
+    "executor": 218481,
+    "evaluator": 179056
+  },
+  "known_subscription_total": 570821,
+  "controller_tokens": "not reported",
+  "supervisor_tokens": "not reported",
+  "metered_usd": 0,
+  "imputed_usd": 0,
+  "source_baseline": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+  "reviewed_sha": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+  "review_ci_run": 42396312564,
+  "blocking_findings": 0,
+  "reviewer_own_structural_mutations": {
+    "detected": 15,
+    "survivors": 0
+  },
+  "nonblocking_findings": [
+    "F1",
+    "F2",
+    "F3",
+    "F4"
+  ],
+  "informational": [
+    "F5"
+  ],
+  "product_accepted": false,
+  "product256": "PARKED needs-human-review; independent FAIL85/local criterion UNMET",
+  "open_decisions": [
+    "D-WORLD-105",
+    "D-WORLD-110",
+    "D-WORLD-111",
+    "D-WORLD-112"
+  ],
+  "final_delivery": "Exact final PR-head and merge-head three-check successes required; receipts on issue449/controlplane."
+}

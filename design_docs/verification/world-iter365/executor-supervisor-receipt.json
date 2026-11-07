@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "role": "executor",
+  "stage": "supervisor_after_actual_terminal",
+  "actual_lane": "codex:gpt-6.1-sol",
+  "agent_supervisor_model": "unreported; API has no model override",
+  "resolver": "declared:provider-pin",
+  "worktree": "/Users/voightkampff/.ailang/state/world-iter365-record",
+  "fixed_base": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+  "directive": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-executor-_4gh50uu/directive.txt",
+  "probe": {
+    "rc": 0,
+    "runtime_seconds": 6.439,
+    "timeout": false,
+    "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-executor-_4gh50uu/probe.log",
+    "footer_tokens": 11039,
+    "footer_raw": "11.039"
+  },
+  "actual": {
+    "rc": 0,
+    "runtime_seconds": 521.07,
+    "timeout": false,
+    "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-executor-_4gh50uu/run.log",
+    "footer_tokens": 93752,
+    "footer_raw": "93.752"
+  },
+  "subscription_tokens": 104791,
+  "metered_usd": 0,
+  "imputed_cost_usd": null,
+  "supervisor_usage": "unreported",
+  "verdict_boundary": "Transport and actual-role usage receipt only; no supervisor implementation acceptance or independent judgment"
+}

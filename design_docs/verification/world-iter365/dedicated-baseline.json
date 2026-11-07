@@ -1,0 +1,19 @@
+{
+  "at_utc": "2026-11-07T16:59:07.133885+00:00",
+  "workdir": "/Users/voightkampff/dev/sunholo-data/.base-world-iter365",
+  "base": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+  "argv": [
+    "go",
+    "test",
+    "./host/verifygate",
+    "-run",
+    "^TestMissionConfigRealCharter$",
+    "-count=1"
+  ],
+  "rc": 0,
+  "runtime_seconds": 1.37439504096983,
+  "stdout": "ok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.365s\n",
+  "stderr": "",
+  "porcelain": "",
+  "disposition": "Dedicated pristine baseline supersedes provenance of earlier record-worktree measurement; earlier rc0 remains history."
+}

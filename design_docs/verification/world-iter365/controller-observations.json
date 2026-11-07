@@ -1,0 +1,179 @@
+{
+  "at_utc": "2026-11-07T16:51:47.723702+00:00",
+  "base": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+  "clauses": {
+    "1": "MET inherited charter assessment; no new product validation",
+    "2": "MET inherited charter assessment; no new product validation",
+    "3": "MET inherited charter assessment; no new product validation",
+    "4": "MET inherited charter assessment; no new product validation",
+    "5": "MET inherited charter assessment; no new product validation",
+    "6": "MET inherited charter assessment; no new product validation",
+    "7": "MET inherited charter assessment; no new product validation"
+  },
+  "reads": {
+    "ledger-check": {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_decisions.sh",
+        "--check",
+        "--file",
+        "design_docs/world-mission.md"
+      ],
+      "rc": 0,
+      "stdout": "decision ledger valid: 99 rows\n",
+      "stderr": ""
+    },
+    "open-decisions": {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_decisions.sh",
+        "--open",
+        "--file",
+        "design_docs/world-mission.md"
+      ],
+      "rc": 0,
+      "stdout": "D-WORLD-105\tOPEN\t**Row 233 (`w-exec-probe-holder-exit-reset`) parked after quorum r2: should World excuse a reverse-leg reset that closely follows a foreign answer, inside the fail-closed exec probe?** The design (r1) turns a sticky startup refusal into a retry when srt's mux, colliding on the probe port, exits mid-poll. Measured under load on Linux with real srt this happens in 49\u201354 of 100 collided cycles (collisions themselves are rare: one CI instance on record). `gpt6-1-sol` rejects: the safety proof needs \"a reachable child never resets a connection before its listener closes\", which is unmeasured on darwin and on Linux rests on an unenforced kernel setting; a wrong premise could let a broken sandbox pass on a later attempt. **A:** build r1 plus kimi's verbatim wiring fix (a testable `reverseLeg` seam and T13) and accept gpt's premise as a documented residual. Startup survives mux collisions; a small, unmeasured soundness risk in a security gate. **B:** before building, the loop measures the pre-close-reset premise on darwin and Linux (listen-queue overflow, accepted-socket teardown) and designs enforcement, then re-quorums. Probably several iterations; the outcome may still be no. **C (recommended):** close row 233 for 1.0 and keep today's behaviour: a mux collision refuses startup (fails closed) and the operator retries. The gate's soundness outranks availability on a rare event; the design and measurements stay as reference. **Default while unanswered:** C (nothing is built; row 233 stays PARKED).\nD-WORLD-110\tOPEN\t**Row 255's compatibility policy: may a store that holds a failure line refuse older World binaries, and must the read verbs match the daemon's build?** Row 255 records a failed `workspace-exec` call's reason in a new optional `failure` field on `world/effect-record/v1`. Every pre-change binary decodes records strictly, so none can read a record that has the field, and no carrier exists that old readers tolerate (the record law rules out reusing `denial` or `resultRef`). As built, just before the first such record the store's schema version is raised from 5 to 6, so an older binary refuses the store cleanly at open. A failed raise returns a write error and writes no record. No written store-compatibility or rollback policy exists in the charter, DESIGN.md, coding-standards or docs (measured), so the loop asks rather than asserts. **A (recommended):** ratify as built. After a store's first failure line, a `service upgrade` rollback to a build from before row 255 stops the service with `schema version future \u2026 use a compatible binary` instead of serving. An older `why` or `call` pointed at a newer daemon marks that one effect link \u2717, naming the unknown field. **B:** A, plus a new row making `why` and `call` refuse a daemon of a different build, as `episode start` already does (`episode.go:330`). That makes a mixed install fail loudly up front, at the cost of one more build check on every read verb. **C:** revert row 255's record field before the next release. Failed exec calls go back to recording no reason, and the 2026-11-03 failure class stays unattributable. **Default while unanswered: A** (it is what `dev` holds after row 255 lands).\nD-WORLD-111\tOPEN\t**Row 256 is implemented but independent judge FAIL 85: should its local validation contract be retained or explicitly redesigned before resuming?** Both candidate full suites have additional failures beyond two permitted baseline diagnostic failures. The filter failure reproduces at base; publish counter and net6 remain unattributed. **A:** retain the exact-two-failures criterion and keep PR #515 parked until it is met. No source or gate change. **B (recommended):** authorize a subsequent iteration to specify and independently judge an attribution-based criterion: every additional failure must reproduce at the pinned base under paired same-environment arms (at least 100 each), or receive a causal in-scope repair; unmeasured or candidate-only failures still block. Existing full runs remain evidence and Linux PR/merge CI remains required. This is permission to design/measure, not to waive a failure or merge. **Default while unanswered: A**, effective now; row 256 remains needs-human-review and later dependent rows wait.\nD-WORLD-112\tOPEN\t**Rotate/revoke the six credentials actually exposed by the evaluator's environment command?** Affected names: ZAI_API_KEY, TYPESAFE_API_KEY, LYCEUM_API_KEY, OLLAMA_API_KEY, GOOGLE_API_KEY, GEMINI_AGENTS_API_KEY. **A (recommended):** perform attended rotation/revocation and update authoritative vault entries and consumers; invalidates any exposed values but requires provider access. **B:** retain current credentials and explicitly accept possible OpenRouter/MiniMax exposure. **Default while unanswered:** no autonomous credential change; incident stays OPEN immediately and product work remains parked. Stored artifacts have been sanitized, which does not undo provider exposure.\n",
+      "stderr": ""
+    },
+    "product-pr515": {
+      "argv": [
+        "gh",
+        "pr",
+        "view",
+        "515",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--json",
+        "number,state,isDraft,mergeable,mergeStateStatus,headRefOid,url"
+      ],
+      "rc": 0,
+      "stdout": "{\"headRefOid\":\"7655388936b80bea9c4843f0a2e0abc085e52c0f\",\"isDraft\":true,\"mergeStateStatus\":\"UNKNOWN\",\"mergeable\":\"UNKNOWN\",\"number\":515,\"state\":\"OPEN\",\"url\":\"https://github.com/sunholo-data/ailang-world/pull/515\"}\n",
+      "stderr": ""
+    },
+    "base-ci": {
+      "argv": [
+        "gh",
+        "run",
+        "list",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--workflow",
+        "CI",
+        "--branch",
+        "dev",
+        "--limit",
+        "1",
+        "--json",
+        "conclusion,headSha,status,url"
+      ],
+      "rc": 0,
+      "stdout": "[{\"conclusion\":\"success\",\"headSha\":\"b9816aefab82dc09cf9e3a9cec5e8191fb58a9de\",\"status\":\"completed\",\"url\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42379267599\"}]\n",
+      "stderr": ""
+    },
+    "base-checks": {
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang-world/commits/b9816aefab82dc09cf9e3a9cec5e8191fb58a9de/check-runs"
+      ],
+      "rc": 0,
+      "stderr": "",
+      "artifact": "base-checks.json",
+      "count": 3
+    },
+    "previous-directives": {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_directives.sh",
+        "--issue",
+        "366",
+        "--watermark-file",
+        "/Users/voightkampff/.ailang/state/mission-366-last-seen",
+        "--repo",
+        "sunholo-data/ailang-world"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "\u001b[1;33m\u26a0 mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-366-last-seen (bare timestamp, no processed ids, written before #981) \u2014 the first --mark upgrades it\u001b[0m\n\u001b[1;33mmission_directives: #366 \u2014 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 35 comments; the rest are public feedback, never directives)\u001b[0m\n"
+    },
+    "baseline-charter": {
+      "argv": [
+        "go",
+        "test",
+        "./host/verifygate",
+        "-run",
+        "^TestMissionConfigRealCharter$",
+        "-count=1"
+      ],
+      "rc": 0,
+      "stdout": "ok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.358s\n",
+      "stderr": ""
+    },
+    "base-whitespace": {
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "current-issue": {
+      "argv": [
+        "gh",
+        "issue",
+        "view",
+        "449",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--json",
+        "createdAt,comments"
+      ],
+      "rc": 0,
+      "stderr": "",
+      "artifact": "current-issue.json",
+      "count": 36
+    },
+    "main-status": {
+      "argv": [
+        "git",
+        "status",
+        "--porcelain",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? .claude/worktrees/\n?? .wt-world-iter306-r0/\n",
+      "stderr": ""
+    }
+  },
+  "release-predicates": {
+    "subjects_enumerated": 1662,
+    "N2d_N4a_hits": [],
+    "N2c_control": [
+      "6f2ba0397b022e22601ce9e01dea344dfb0b349f feat(row 188 N2c): live refresh in the World app over AG-UI (w188l, 3 rounds)"
+    ],
+    "A1_since360": [],
+    "row150": "requires attended A1; zero new allowlisted directive/ruling observed; old acceptance A1 strings do not satisfy it"
+  },
+  "upstream": {
+    "enumerated": 33,
+    "closed": 33
+  },
+  "gate0": {
+    "armed": true,
+    "billing": "CLEAN",
+    "directives": 0,
+    "comments": 36,
+    "crash": 0,
+    "transcript": 2,
+    "transcript_fires": [
+      "world-1793825318-10110",
+      "world-1793839743-21731"
+    ],
+    "watermarks": "degraded 1/2; issue449 absent; legacy read separately; no direct writes",
+    "weekly_sweep": "not due, next2026-11-09 07:00 Europe/Copenhagen",
+    "inbox": "20 self claim notifications only; no directive, regression or harness-resolved"
+  }
+}

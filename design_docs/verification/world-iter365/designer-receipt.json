@@ -1,0 +1,558 @@
+{
+  "schema_version": 1,
+  "iteration": 365,
+  "role": "designer",
+  "scope": "mandatory Gate4 ADMIN assessment/design only",
+  "status": "DESIGN_COMPLETE_ADMIN_ONLY_HUMAN_PARK",
+  "author": {
+    "actual_resolved_model": "codex:gpt-6.1-sol",
+    "provenance": "Explicit controller invocation; no model probe or environment read",
+    "independently_probed": false
+  },
+  "base": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+  "deliverables": [
+    "design_docs/verification/world-iter365/record-design.md",
+    "design_docs/verification/world-iter365/designer-receipt.json"
+  ],
+  "design_sha256": "39549a5d8d075e9a8a560475a6e4960bd2657184f6963cbd547a76255481e98c",
+  "formal_exemptions": [
+    {
+      "kind": "BOOKKEEPING_ONLY_DESIGN_QUORUM",
+      "authority": "Explicit controller instruction in this task",
+      "reason": "Mandatory Gate4 ADMIN record, not a new feature design",
+      "product_authority": false
+    },
+    {
+      "kind": "REQUESTED_PATH_AND_SCOPE_OVERRIDE",
+      "authority": "Explicit controller instruction in this task",
+      "effect": "Create requested verification record; no generic planned-feature scaffold, neural search/network or external quorum"
+    },
+    {
+      "kind": "FEATURE_ONLY_SECTIONS_NOT_APPLICABLE",
+      "reason": "No product capability, language claim, parser/typechecker/codegen change, package or banked-product schema; registry_reuse=none; no invented feature axiom score"
+    }
+  ],
+  "guidance": {
+    "read": [
+      "CLAUDE.md",
+      "design_docs/coding-standards.md",
+      "design_docs/DESIGN.md sections 1 and 14",
+      "design_docs/world-mission.md active profile/ledger/STATUS/current goal/routing/queue excerpts",
+      "design_docs/world-mission-log.md exact iteration 364 lines 2907-2982",
+      "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/design-doc-creator/SKILL.md relevant requirements",
+      "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md in full"
+    ],
+    "ancestor_agents": "All nine checked locations absent; W6",
+    "skill_hashes_observation": "W7",
+    "duplicate_search": {
+      "negative": "T7 rc1 empty, scoped only to prior364 design/plan",
+      "positive_control": "T8 rc0 matching364 in same files",
+      "read_matches": [
+        "U3",
+        "U4"
+      ],
+      "distinction": "Subsequent mandatory record fire, no duplicate feature"
+    }
+  },
+  "findings": [
+    {
+      "id": "F1",
+      "status": "INHERITED_PRODUCT_PARK",
+      "evidence": [
+        "T1",
+        "T2",
+        "V1",
+        "S3",
+        "S4"
+      ],
+      "detail": "Row256 PARKED needs-human-review, independent MiniMax FAIL85, local criterion UNMET, draft PR515. Product outcomes are inherited records, not newly rerun tests."
+    },
+    {
+      "id": "F2",
+      "status": "AUTHORITY_UNCHANGED",
+      "evidence": [
+        "T1",
+        "T2",
+        "V6"
+      ],
+      "detail": "D105/110/111/112 OPEN, defaults C/A/A/no autonomous credential change. Full ledger and queue frozen. No skip257/201/243 or product criterion laundering."
+    },
+    {
+      "id": "F3",
+      "status": "ONE_RECORD_MILESTONE_PROPOSED",
+      "evidence": [
+        "U5",
+        "U3",
+        "U4",
+        "R5",
+        "R8",
+        "V5"
+      ],
+      "detail": "Only dashboard/log/charter/status archive/index may later change plus NEW365 evidence. Embedded ledger needs no edit. Rotate362 exact STATUS pair, retain364/363, append365 log and index row."
+    },
+    {
+      "id": "F4",
+      "status": "DESIGN_PHASE_INPUT_PRESERVATION_OBSERVED",
+      "evidence": [
+        "T10",
+        "V3",
+        "V4",
+        "W1",
+        "W2"
+      ],
+      "detail": "Tracked worktree content matches pristine base. Before/after all53 selected Git blobs match: six mission files plus47 prior364 evidence files. No existing files edited by designer. No all365-directory freeze."
+    },
+    {
+      "id": "F5",
+      "status": "CONCURRENT_CONTROLLER_EVIDENCE_ALLOWED",
+      "evidence": [
+        "O2",
+        "W8"
+      ],
+      "detail": "New untracked controller365 receipts arrived during the role. Directory growth is not input drift; fixed consumed inputs and protected tracked content remain separate."
+    },
+    {
+      "id": "F6",
+      "status": "INHERITED_RECORD_REVIEW_ONLY",
+      "evidence": [
+        "S4"
+      ],
+      "detail": "364 records PASS92 and bounded clarification, separate from product FAIL85. Preserve original FAILED_INPUT_PRESERVATION and controller concurrent31-to33 disclosure; prior reports are immutable."
+    },
+    {
+      "id": "F7",
+      "status": "LOCAL_BASELINE_WHITESPACE_CLEAN",
+      "evidence": [
+        "T11",
+        "V7",
+        "W3",
+        "W4"
+      ],
+      "detail": "Default/base-relative tracked diff whitespace instruments rc0 with tracked path/content controls. No full/product/charter suite run."
+    },
+    {
+      "id": "F8",
+      "status": "NEW_OUTPUT_FORMAT_CORRECTED",
+      "evidence": [
+        "W5",
+        "X1"
+      ],
+      "detail": "Untracked new design initially had an EOF blank diagnostic rc3, removed within the new deliverable. Corrected no-index check has no diagnostic, rc1 for new-file difference. This was not a base red; original result retained."
+    },
+    {
+      "id": "F9",
+      "status": "INHERITED_BASE_CI_ONLY",
+      "evidence": [
+        "U7"
+      ],
+      "detail": "Local controller receipt lists exact-base three success checks; no network verification or designer rerun. Does not accept product or iteration365 record."
+    }
+  ],
+  "preservation": {
+    "base_tracked_path_count": 6395,
+    "base_364_evidence_file_count": 47,
+    "selected_git_blob_matches_before": 53,
+    "selected_git_blob_matches_after": 53,
+    "record_ledger_rows": 99,
+    "live_log_entries_before": 38,
+    "status_before": [
+      364,
+      363,
+      362
+    ],
+    "status_archive_lines_before": 728,
+    "charter_lines_before": 6345,
+    "ledger_marked_section_sha256": "58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01",
+    "queue_suffix_sha256": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4",
+    "displaced_362_status_pair_sha256": "27fecc13ef71fc8811f1c426b134c9650c57d86a3399446aa5ccf5c37d5ab260",
+    "predecessor_tree_manifest_sha256": "59301c03951fcc377d027296511f1820b8acf13f03a796824f7af1d7da6c6c36",
+    "entire_365_directory_frozen": false,
+    "observed_scope": "Read-only Git/hash/record observations; only two requested new deliverables authored."
+  },
+  "verdicts": {
+    "product": "PARKED_NEEDS_HUMAN_REVIEW",
+    "admin_design": "COMPLETE",
+    "admin_execution": "NOT_PERFORMED_BY_DESIGNER",
+    "admin_independent_review": "PENDING",
+    "admin_landing": "PENDING",
+    "sandbox_product_verdict": "NOT_ESTABLISHED",
+    "infrastructure_denial_policy": "UNINFORMATIVE UNDER SANDBOX"
+  },
+  "observed_evidence": [
+    {
+      "id": "O1",
+      "command": "git rev-parse HEAD",
+      "exit_code": 0,
+      "tool_chunk_id": "867a07",
+      "output": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "O2",
+      "command": "git status --short --untracked-files=all",
+      "exit_code": 0,
+      "tool_chunk_id": "b4f41b",
+      "output": "?? design_docs/verification/world-iter365/base-checks.json\n?? design_docs/verification/world-iter365/controller-observations.json\n?? design_docs/verification/world-iter365/current-issue.json\n?? design_docs/verification/world-iter365/main-tracked-baseline.json\n?? design_docs/verification/world-iter365/upstream-predicates.json\n?? design_docs/verification/world-iter365/worktree-census.json\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "O3",
+      "command": "wc -l CLAUDE.md design_docs/coding-standards.md design_docs/world-mission.md design_docs/world-mission-log.md design_docs/world-mission-dashboard.md design_docs/world-mission-index.md /Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/design-doc-creator/SKILL.md /Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md",
+      "exit_code": 0,
+      "tool_chunk_id": "fa9b49",
+      "output": "      50 CLAUDE.md\n     130 design_docs/coding-standards.md\n    6345 design_docs/world-mission.md\n    2982 design_docs/world-mission-log.md\n      18 design_docs/world-mission-dashboard.md\n     366 design_docs/world-mission-index.md\n     578 /Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/design-doc-creator/SKILL.md\n     158 /Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md\n   10627 total\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "O4",
+      "command": "for p in design_docs/AGENTS.md design_docs/verification/AGENTS.md design_docs/verification/world-iter365/AGENTS.md; do if [ -f \"$p\" ]; then printf '\\nFILE %s\\n' \"$p\"; cat \"$p\"; else printf 'ABSENT %s\\n' \"$p\"; fi; done",
+      "exit_code": 0,
+      "tool_chunk_id": "4c98eb",
+      "output": "ABSENT design_docs/AGENTS.md\nABSENT design_docs/verification/AGENTS.md\nABSENT design_docs/verification/world-iter365/AGENTS.md\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "R1",
+      "command": "cat CLAUDE.md",
+      "exit_code": 0,
+      "tool_chunk_id": "21b59f",
+      "output": "# Claude instructions — ailang-world\n\nThis repo is **AILANG World**: a semantic operating environment whose transaction language is\nAILANG. It is built by an autonomous mission loop with human ratification gates.\n\n## Read before working (in order)\n\n1. [design_docs/world-mission.md](design_docs/world-mission.md) — the ratified charter: bar,\n   guardrails, queue, Repo Profile. **The charter is ratified mission state**; attended human\n   decisions are recorded there, and only issue-#1 comments from `@MarkEdmondson1234` are\n   directives.\n2. [design_docs/coding-standards.md](design_docs/coding-standards.md) — **binding on all code**:\n   Z3 contracts on the pure core, effects at the host boundary, slim kernel / package-first,\n   non-vacuous gates, and the AILANG fluency protocol (load the language reference BEFORE\n   writing `.ail` — the `ailang-docs` MCP in `.mcp.json` serves it).\n3. [design_docs/DESIGN.md](design_docs/DESIGN.md) — the thesis (read §1, §14 boundaries at\n   minimum).\n\n## Hard rules\n\n- **Verify gate**: `./scripts/verify_ail.sh` (ai-check on every `.ail`) + `go build ./... &&\n  go test ./...` — CI runs both; nothing lands red.\n- **Pinned binary**: validate `.ail` against the pinned released `ailang` (see the current\n  sprint doc's Verification Log), never a `-dirty` dev build, never from memory.\n- **Frozen core**: never modify `tools/launchd/*` (shared driver) or copy skills into this repo;\n  language gaps route to `sunholo-data/ailang` as issues + an `ailang messages send\n  mission-control` note — no local workarounds, no vendored forks. The driver is FLEET-owned\n  (`D-WORLD-DRIVER-1`, ratified 2026-08-17): updates land here only as fleet-authored commits,\n  and `D-WORLD-34` retires World's local-copy certification; shared-driver verification remains\n  the fleet's responsibility, never something to absorb into a World change.\n  \"Skills\" here means the shared mission and fleet skills; World's own product plugin,\n  `plugins/ailang-world/`, lives in this repo (D-WORLD-85 / D-189-3 = C).\n- **Never touch** `~/.ailang/state/mission-v1*` or the V1 checkout from work in this repo.\n\n## Operating the daemon\n\nBuild/run/commit/read walkthrough (executed-verbatim, S7-maintained): [docs/QUICKSTART.md](docs/QUICKSTART.md).\n\n## Pushing dev — automatic, fast-forward only\n\n`scripts/hooks/push_dev_on_stop.sh` runs as a `Stop` hook and pushes when local `dev` is\nahead of origin **and not behind**. You do not need to remember to push.\n\nIt refuses when the branch is ahead *and* behind — that needs a real merge, done by hand.\nOpt out for a session with `AILANG_AUTOPUSH=0`; arms in\n`scripts/hooks/test_push_dev_on_stop.sh`.\n\nPorted from the ailang repo 2026-09-02, where commits had stranded on local `dev` for days\n(25 of them) because nothing in the attended workflow pushed. This repo is a SEPARATE\nGitHub repo, so it does not inherit that fix through `dev` — the copy here is its own.\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "R2",
+      "command": "cat design_docs/coding-standards.md",
+      "exit_code": 0,
+      "tool_chunk_id": "8a2c6d",
+      "output": "# World Coding Standards (ratified: Mark + coordinator, attended, 2026-07-24)\n\nBinding on every agent writing code in this repo — designers, executors, evaluators, and\nattended sessions alike. The evaluator scores against these; the CI gate enforces what it can.\nOrigin: the M1-milestone-1 retrospective — 285 LOC of kernel AILANG shipped using **none** of\nAILANG's distinguishing features (0 contracts, 0 inline tests, vacuously-green Z3 gate), because\nthese standards existed only as unwritten house style. See `w-m1-ailang-hardening.md` for the\nretrofit.\n\n## S1 — Z3-verifiable pure core\n\nEvery **pure function in `world/` with a meaningful invariant** carries `requires`/`ensures`\ncontracts, written FIRST as the specification. Executable predicate functions (the\n`contracts.ail` pattern) complement contracts as shared runtime checks — they never replace\nthem: a predicate nobody proves is decoration. Where Z3 cannot encode a function (string\ninterpolation/`show`, etc.), **named inline `tests [(in, exp)]`** are the fallback — every\ncanonical text form (renderers, keys) must have one or the other. The verify gate asserts a\n**manifest of named check identities** (see the hardening doc) — never bare exit codes, never\naggregate counts alone: a green gate must be non-vacuous by construction.\n\n## S2 — Effects at the boundary only\n\n`world/` kernel modules are pure (`! {}`). Effects live in the host layer (Go) and, later, in\neffect-handler extensions behind the broker. A `world/` function that wants an effect is a\ndesign smell: what it actually wants is to *return a description* the host executes.\n\n## S3 — Slim kernel, package-first (the self-modification enabler)\n\n`world/` holds ONLY the frozen kernel surface: core types, transition laws, epoch registry,\ncontract predicates. Everything else — new domains, policies, tools, projections — lands as\n**AILANG packages** (registry-published, version-pinned, cascade-updatable), because granular\npackages are what make controlled self-modification viable: a World behavior change is a\npackage version bump through propose→verify→commit (DESIGN.md §14), never a kernel edit. Every\nproposed addition to `world/` or `host/` must answer, in its design doc: **\"why is this not a\npackage?\"** Kernel growth without that answer is the OS gravity well (DESIGN.md §12.4) — the\nnamed failure mode of this project.\n\n\n### S3 ledger — language split & kernel size (dated; drift must be visible)\n\nMeasured per attended review (repro: `wc -l` over `world/*.ail`, `design_docs/**/*.ail`,\nnon-test vs test `.go` under `host/ cmd/`). The ratified architecture (DESIGN §19 q1) expects a\nsmall `.ail` semantic core over a Go host, with the `.ail` share GROWING as: the MCP projection\nregistry (.ail `@route` modules), policies, domain transitions, and clause-7 extension packages\nland — and as upstream Z3 encoder limits lift (ADT-record sort). A FALLING `.ail` share or a\nkernel that grows without \"why is this not a package?\" answers is drift against S3.\n\n| D\n[receipt excerpt: middle omitted]\nte\nonly by memory, and the memory lives in whoever last raised the floor.* Raising the\nverified-identity floor touches **six files**; at `P6.V` three roles each found a different\nsubset, and the full set existed only in commit `699f592`'s message. The map:\n\n| # | File | What moves |\n|---|---|---|\n| 1 | `world/<module>.ail` | the new contract (the law itself) |\n| 2 | `packages/world-core/world/<module>.ail` | projection copy — regenerate with `./scripts/build_world_package.sh`, never hand-edit |\n| 3 | `scripts/verify_ail.sh` | BOTH constants: `REQUIRED_VERIFIED` and `EXACT_TOTAL_VERIFIED` |\n| 4 | `scripts/world_package_ready_packet.golden.json` | `contentHash`, `tarballSHA256`, `tarballBytes` |\n| 5 | `docs/SELF_MOD_PUBLISH.md` | the `contentHash` and `tarballSHA256` digest-table rows |\n| 6 | `host/verifygate/module_manifest_gate_test.go` | the pristine-control marker string — hand-maintained; deriving it from `EXACT_TOTAL_VERIFIED` would make the control vacuous (S6) |\n\n**`interfaceHash` does not move for `.ail` byte changes or packaged-module changes that\nleave the hashed manifest fields unchanged. It MUST move when a hashed manifest field\nchanges, including `name`, `edition`, the optional AILANG bound, exports, or effects.**\nSo do not \"fix\" the third digest on a Tier-1 raise. A raise that changes the hashed manifest\nfields (or the packaged-module census) touches additional sites beyond these six; that\ninventory is deferred to a future item pending a first-party rehearsal.\n\nRecipe, all six in the SAME commit: edit 1 and 3 by hand → `./scripts/build_world_package.sh`\n(2) → run the pinned gate; step 9/9 reds printing a diff against the committed golden;\nreplace the golden with the diff's new line and re-run (4) *(step 9/9's red-arm diff format\nverified via the V25 mechanism, not re-executed this session — see the V16 note)* → copy the two moved digests into the runbook table (5) → update the marker (6) →\nre-run to green; `go test ./host/runbook/` binds 5↔4. Enforced by\n`host/verifygate/floor_raise_inventory_test.go`.\n\n---\n*Changes to this document are ratification-class (human gate). It is deliberately short —\nevery sprint reads it; token cost is a standing tax.*\n",
+      "output_is_excerpt": true
+    },
+    {
+      "id": "R3",
+      "command": "sed -n '280,410p' /Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/design-doc-creator/SKILL.md",
+      "exit_code": 0,
+      "tool_chunk_id": "5f2222",
+      "output": "   safe-write helper exists,\" \"there is no `fmt` subcommand,\" or \"field X is not retained\" is making\n   a claim about the *absence* of something — and a reject-by-default reviewer will (correctly)\n   block on any such claim that lacks a grep/read proving it, because if the thing DOES exist the\n   exhaustive-visitor / reuse / mechanism premise silently breaks. These are easy to leave implicit\n   because \"it's not there\" feels like a non-claim — but it is exactly as load-bearing as a positive\n   claim. Grep/read and record each one:\n   ```bash\n   grep -rin \"paren\" internal/ast/*.go        # prove \"no ParenExpr node\" (empty/only-comments = confirmed)\n   grep -rn \"os.Rename\\|SafeWrite\\|Atomic\" internal/ cmd/   # prove \"no shared write helper\" (or name the one to reuse)\n   ```\n   **Rule of thumb:** if a design sentence contains \"no\", \"none\", \"doesn't exist\", \"not retained\",\n   \"unallocated\", or \"must reconstruct because … isn't stored\", it needs a log row. Sweep the doc\n   for these BEFORE submitting to quorum — one row each is cheap; discovering them one-per-round via\n   reviewer rejects ping-pongs a sound design across the bounded revision limit and parks it.\n   **Case study (2026-07-18, m-ailang-fmt, iter 49):** the formatter design was architecturally\n   sound and the controller passed it, but `gemini-3-1-pro` (reject-by-default) blocked it TWICE —\n   round 1 on \"atomic-write uses the repo's helper *if one exists*\" (no helper exists; the\n   temp+`os.Rename` pattern is ad-hoc at 4 sites → V19), round 2 on \"the AST has no parenthesis\n   node\" (true — only `// move to LPAREN` comments → V20). Both were TRUE negatives missing a log\n   row, surfaced one-per-round; the re-quorum-ONCE guardrail was then exhausted and a complete design\n   parked for a human ratification it did not need. Both rows were a 10-second grep away at authoring\n   time.\n\n**Case study (2026-07-12, m-module-less-run-fail-loud):** the doc's Verification Log marked two\nthings \"Confirmed\" that a code-check refuted. (a) It proposed error code `MOD011` — already the\nlive module-path-collision diagnostic since v0.10.9; the reality-check reassigned it to `MOD014`\n(one `grep` would have caught it). (b) It marked \"bare-expr eval unaffected — routes to\n`runSingle`, never reaches `validateModulePath`\" Confirmed, on the strength of `1+1 → 2` still\nworking; the *mechanism* was false (a bare-expr **file** does reach `validateModulePath`, and the\nparser mirrors the expression into `Statements`+`Decls`), so the doc's proposed 3-way\n`Funcs||Statements||Decls` guard would have broken `ailang run 1+1`. The executor had to override\nit to `Funcs`-only mid-sprint. Both were a one-command code-check away at doc time.\n\n**⚠️ CRITICAL: Conflict Surface Analysis (REQUIRED for parser/typechecker/codegen changes)**\n\n**If the design touches `internal/parser/`, `internal/lexer/`, `internal/ast/`, `internal/types/`, `internal/elaborate/`, `internal/iface/`, `internal/codegen/`, `internal/eval/`, `internal/vm/`, `i\n[receipt excerpt: middle omitted]\ndoc's *status* (gate the phases behind a discovery spike, list the unmeasured\n   premises as explicitly PENDING rows) and give it to the human with its gaps labelled. Grinding\n   rounds is what parks sound designs (m-ailang-fmt, iter 49).\n\n**Accept objections; do not argue them.** In the 2026-08-26 run the author was *technically*\nexempt from the Conflict Surface rule (no parser/typechecker/codegen files) and wrote the section\nanyway — it immediately surfaced that `isRetryableError` returns true on any `\"429\"` substring, so\nquota exhaustion would have retried into a spent bucket, and that `0/0` pricing maps to a\n*positively false* `free-local` label rather than merely an absent one. Both would have shipped.\nA reject that is wrong on the rule can still be right on the substance.\n\n```bash\n# One reviewer (reject-by-default; exits non-zero if it can't produce a verdict):\nailang design-review design_docs/planned/vX_Y/my-doc.md --reviewer gpt5-6-sol --json\n\n# Full quorum (parallel reviewers + your IN-SESSION controller verdict; --author = the doc's writer, whose vendor sits out):\nailang design-quorum design_docs/planned/vX_Y/my-doc.md \\\n  --author claude:claude-opus-5-5 \\\n  --controller-verdict pass --controller-note \"<your in-session judgement>\" \\\n  --mission-log design_docs/v1-mission-log.md\n```\n\nReviewers are **reject-by-default** (each must state a `strongest_objection`). Synthesis: any\npresent reviewer or the controller rejects → **blocked** (exit 3); the objection goes back to you,\nthe author, before planning. A reviewer that is unreachable / over-budget / mis-authed is recorded\nby NAME with its reason and the quorum degrades to N−1 — never a silent pass. Each run writes a\nmachine artifact under `.ailang/state/mission-quorum/` (seeds the Phase E assignment table) and,\nwith `--mission-log`, a human markdown block. Gemini reviewers use **Vertex ADC** (not\n`GEMINI_API_KEY`). See `ailang design-quorum --help`.\n\n**2. Choose Document Name**\n\n**Naming conventions:**\n- Use lowercase with hyphens: `feature-name.md`\n- For milestone features: `m-XXX-feature-name.md` (e.g., `m-dx2-better-errors.md`)\n- Be specific and descriptive\n- Avoid generic names like `improvements.md`\n",
+      "output_is_excerpt": true
+    },
+    {
+      "id": "R4",
+      "command": "cat /Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md",
+      "exit_code": 0,
+      "tool_chunk_id": "ee9dba",
+      "output": "# The codex/pi executor lane — the five false-greens, and the gate list you write yourself\n\nOn-demand reference for `mission-control`'s Gate 3 cross-provider executor recipe. Split out of\n`SKILL.md` 2026-09-04 (V1 iteration 327) under the progressive-disclosure convention\n(`.claude/rules/context-docs.md`): every rule below is a war story with discriminating commands,\nneeded only when you are actually driving a sandboxed executor lane, and none is worth a line in\nevery session that loads the skill. Nothing was reworded in the move; (5) is new.\n\n**Read this in full before writing a directive for any `codex:` or `pi:` role, and again before\nrecording a Gate-4 verdict on that role's output.** (1)-(2) are about a run that never happened,\n(3) about a verdict you cannot trust, (4) about the gate list you wrote yourself, and (5) about a\ndestructive side effect the sandbox hid from the executor and hands to you.\n\n---\n\n**THREE FALSE-GREENS this recipe used to carry** (all proposed by `world-coordinator` from\nmission-world, which shares this skill but cannot edit it; each corroborated first-party before\nbeing written in, rather than taken on trust — the sibling-claim ghost discipline).\n**(1) stdin was never redirected**: `codex exec` reads stdin IN ADDITION to the positional\nprompt, so under a backgrounded launch with an open (never-EOF) stdin it prints\n`Reading additional input from stdin...` and blocks until the 30-min cap — a hang that *looks*\nlike normal long work (World: 39-byte log, zero diff, 6 minutes). That line appears in\niter-111's own `codex_out.log`; the run survived only because stdin happened to EOF.\n**(2) delivery was never asserted**, as above. Both are the vacuous-pass class this mission has\nclosed twice elsewhere (silent z3 skip, silent `t.Skip`): *an exit code reporting success for\nwork never requested*. Iter-112 hit the near-miss live — its first `Write` of the directive file\nFAILED (pre-existing file) and, unnoticed, would have produced exactly defect (2). *(Cheap\nhabit that closes it: give the directive file a per-iteration name, e.g.\n`/tmp/codex_directive_iter<N>.txt` — `Write` refuses to overwrite a file this session has not\nRead, so a fixed name collides with the previous iteration's leftover.)*\n**(3) A GATE VERDICT FROM INSIDE THE SANDBOX IS NOT EVIDENCE.** `workspace-write` DENIES\nloopback socket binds, so any suite touching `httptest`/servers fails with\n`bind: operation not permitted` — an infrastructure denial that is **indistinguishable from a\nreal regression** in the exit code. V1 hit this three times (iters 110, 111, 113: `make test`\nexit 2 each time, **rc=0 with zero FAIL** on the controller's re-run outside the sandbox), and\nWorld hit the same wall from the other side — its sandbox panic on a loopback bind *masked* a\ngenuine `io.Pipe` startup deadlock. So it cuts BOTH ways: the sandbox invents failures **and\nhides real ones**. Rule: the executor MUST label any such result\n`UNINFORMATIVE UNDER SANDBOX` rather than reporting\n[receipt excerpt: middle omitted]\ntf … > \"$CALLER_LOG\"`), its sandboxed run reported the arm PASSING, an evaluator would have\nseen the same, and the first re-run outside the sandbox truncated that log from **92 lines to 1**.\nNo second copy under `$HOME` (`find` → 0 hits), no usable local snapshot: the evidence is gone. A\ntest written to prove the harness never touches the caller's log was the thing that destroyed it —\nthe vacuous-pass class this loop keeps closing, arriving through a *guard*.\n\n**Rules. (a)** Before the controller's out-of-sandbox re-run, read the diff for any command that\nWRITES outside the worktree — `>`/`>>`/`tee`/`rm`/`mv`/`truncate` against `$HOME`,\n`~/.ailang/state/`, `/usr/local`, a shared log or a database — and treat each as **UNVERIFIED,\nPOTENTIALLY DESTRUCTIVE** rather than as tested. The executor's green says nothing about it.\n**(b)** Rehearse such a step under a synthetic root first (`HOME=$(mktemp -d) …`) and diff the real\nartifact's sha before and after; that one habit turns this from unrecoverable into a non-event.\n**(c) Specify the guard as an OBSERVATION, never as a seeded write.** \"Sha and line-count the\nartifact on both sides, with `absent` a legitimate reading\" kills exactly the same mutation as a\nsentinel and cannot destroy anything — verified here: dropping the harness's `HOME` export still\nreddens the arm (3 lines → 17, sha differs) plus four others. **(d)** This binds the DESIGNER and\nPLANNER as much as the executor: the defect was authored in an acceptance criterion, not in the\ncode that implemented it faithfully. A criterion of the form \"assert X is unchanged\" must say how X\nis established, and if the answer is \"by writing to it\", the criterion is the bug.\n\nMission-independent — every lane that sandboxes writes (codex `workspace-write`, pi's worktree\nfence) has this shape, and `ailang-code`'s version is a step that mutates the shared lockfile or\nregistry. The generalisation: **a sandbox makes a destructive step indistinguishable from a\nharmless one, so \"it passed under the sandbox\" is not evidence of safety — only of confinement.**\nThe tell: an acceptance criterion mentions a path outside the worktree, and the only run of it so\nfar was a sandboxed one.\n",
+      "output_is_excerpt": true
+    },
+    {
+      "id": "R5",
+      "command": "sed -n '1,165p' design_docs/world-mission.md",
+      "exit_code": 0,
+      "tool_chunk_id": "da6079",
+      "output": "# Ailang World Mission — a semantic operating environment whose transaction language is AILANG\n\n<!--\n  Charter for the WORLD mission (from mission-charter-TEMPLATE.md, M-MISSION-PORTABILITY M3).\n  DRAFTED AT BOOTSTRAP 2026-07-23 — written to be CHALLENGED, not to be final.\n  Iteration 0 = ratify this charter (bar + queue + guardrails) through the design quorum\n  with Mark, attended. The kill switch stays SET until ratification.\n  Thesis document: DESIGN.md (v0.3) in this directory — this charter is its operational\n  distillation; where they conflict, the ratified charter governs the loop and the\n  conflict gets fixed in DESIGN.md.\n-->\n\n**Type**: Long-running mission (peer of the V1 mission in `sunholo-data/ailang`); advanced by a\nscheduled outer loop on the always-on rig. **First mission outside the AILANG repo.**\n**North star**: ship **Ailang World 1.0** — a local-first semantic operating environment\n([DESIGN.md](DESIGN.md) §1: an immutable, typed, content-addressed world graph whose transactions\nare AILANG programs; propose → verify → commit; capabilities, budgets, evidence, replay) — with\nthe software-engineering domain live — value proven by clause 5's provenance teeth + the R1\nstanding evidence, floored by clause 4's resident-agent non-inferiority check (motoko remains\nthe aspirational first *native* agent as an optional arm).\n**Traces to**: [DESIGN.md](DESIGN.md) (thesis) and the AILANG program's operating model\n([PROGRAM.md](https://github.com/sunholo-data/ailang/blob/dev/design_docs/PROGRAM.md) — frozen\nminimal core, extension-routed evolution); language gaps found here route BACK to\n`sunholo-data/ailang` as issues/backlog items, never worked around locally.\n**Skill**: the SAME unforked `mission-control` skill every mission uses, reached via user-level\nsymlinks (`~/.claude/skills/*`) — this repo carries NO skill copies (a copy is a fork; forks stop\nlearning).\n**Scheduling**: launchd `dev.ailang.mission-world` — **ARMED by Mark 2026-07-23** ahead of\nratification; sprint-routing stays BLOCKED until the charter is ratified (iter-0 honored this:\nquorum-only, no sprint). Off switch: `~/.ailang/state/mission-world.disabled`. StartInterval\nstaggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-nothing.\n**Log**: [world-mission-log.md](world-mission-log.md) — append-only, one entry per iteration.\n**Human-facing reporting**: GitHub issue #1 — every iteration posts its report there as a comment\n(Mark follows by email); driver crashes post there too.\n\n## Repo Profile (M-MISSION-PORTABILITY M2 — the per-mission values mission-control reads)\n\n- **Repo slug**: `sunholo-data/ailang-world` (driver: `MISSION_REPO`)\n- **Mission doc**: `design_docs/world-mission.md` (driver: `MISSION_DOC`)\n- **Mission name / state namespace**: `world` (driver: `MISSION_NAME`; fully namespaced\n  `~/.ailang/state/mission-world-*` paths — no collision with the V1 loop)\n- **Bookkeeping issue**: `#1`, rotates weekly; live number in\n  `~/.ailang/state/mission-\n[receipt excerpt: middle omitted]\n` in the login shell and ran its helpers directly:\n  `_pin_same_repo` returned **rc=2 (\"indeterminate origin identity\") for every repository on the\n  rig, including a freshly `git init`'d positive control**. Read literally, that says a guard the\n  fleet shipped hours earlier fails closed everywhere — a report this loop was one step from\n  filing. Re-run as `bash -c '. pin-root.sh; …'`, all twelve acceptance criteria matched their\n  stated expectations exactly (rc=1 for World, rc=0 for motoko, the override winning both ways, the\n  origin-less repo LOUD at `PIN_STATUS=STALE`). **Rule: any `#!/bin/bash` script this mission\n  sources, greps for functions in, or executes as an acceptance criterion is invoked as\n  `bash <script>` or `bash -c`, never through the interactive shell.** This is verification rule 3c\n  aimed at a SHELL rather than a service — *the shell you run a check from is part of the\n  instrument* — and it pairs with the already-recorded `grep` fact (this login shell's `grep` is\n  **ugrep**; use `/usr/bin/grep` in scripts and acceptance criteria). The tell: a check comes back\n  red in a way that indicts someone else's freshly landed work, and you have not yet re-run it under\n  the interpreter the file declares.\n- **`scripts/mission_directives.sh` DOES NOT EXIST IN THIS REPO — invoke it by ABSOLUTE PATH from\n  the V1 checkout (process fix, iter-72).** Gate 0.6 says to run `scripts/mission_directives.sh`\n  and, in the same breath, forbids hand-rolling the `gh | jq` pipeline it replaces — because the\n  author allowlist that stops arbitrary commenters steering this loop lives *in that script*, not\n  in prose a controller is trusted to retype. But the script is a V1 artifact and was never copied\n  here (measured iter-72: absent from `scripts/`, present at\n  `/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_directives.sh`). A controller that\n  runs the relative path gets `No such file or directory` and is one step from doing exactly the\n  thing the rule forbids — or, worse, from concluding the directive channel is unavailable and\n  skipping it, which silently drops human directives that OUTRANK the queue. It takes `--repo`, so\n  no fork is needed:\n",
+      "output_is_excerpt": true
+    },
+    {
+      "id": "R7",
+      "command": "cat design_docs/world-mission-dashboard.md",
+      "exit_code": 0,
+      "tool_chunk_id": "815a37",
+      "output": "# World mission dashboard — iteration 364 (2026-11-07)\n\n- **ADMIN:** no product pick or acceptance. Row256 HUMAN PARK / PARKED needs-human-review, independent FAIL85, LOCAL_CRITERION UNMET.\n- **Product receipt:** inherited controller PR515 OPEN/draft CONFLICTING/DIRTY, head7655388936b80bea9c4843f0a2e0abc085e52c0f; designer's earlier network failure remains history.\n- **OPEN defaults:** D105 C (row233 parked/fail closed); D110 A (row255 as built); D111 A (exact-two-named-baseline-failures, no additional failures); D112 no autonomous credential change.\n- **Causality/incident:** publish-counter/net6 unattributed; nonrecurrence is not attribution. Sanitization does not undo exposure; clearing111/112 is independent.\n- **Conditional attended order:** 250 → 255 → 256 → 257 → 201 → 243; no skipping257/201/243. Release150/151 priority only when routable; 201/243 use fakes/test keys, real-key exits attended.\n- **Release:** inherited150 waits on attended A1;151 needs188 N2d/N4a. No new ruling or release measurement.\n- **Gate0/1:** inherited controller billing CLEAN,35 comments/0 directives, crash0/transcript2, degraded watermark1/2; skill14/drift0, base374696c0536809d7c7080d07339208570d5130cb CI3/3 run42362989926.\n- **Gate4:** base374696c0536809d7c7080d07339208570d5130cb; helper2026-11-07T13:06:23Z, receipt2026-11-07T13:06:23.967186+00:00. No executor gate rerun.\n- **Goal/retro:** clauses1–7 MET are inherited assessment; goal unmoved. Prior product360/359/340 moved no UNMET; harness0/20; no routable UNMET, no DRIFT. No idle fingerprint: quota fallback/degraded watermark.\n- **Roles:** all4 required Agent roles completed actual prescribed recipes: Codex gpt-6.1-sol designer/planner/executor; independent PI OpenRouter MiniMax M3 judge. Controller/supervisor exact usage unreported.\n- **Accounting:** known Codex subscription313,859 tokens (designer72,246/planner161,073/executor80,540); actual evaluator probe+review+clarification metered$0.51223248, imputed$0, under$5. Controller/supervisor usage unreported.\n- **Preservation:** original designer FAILED_INPUT_PRESERVATION retained; controller disclosed in-flight31→33 upstream addition before freeze. Existing364 inputs frozen.\n- **Record:** M1/M2 committed from immutable cumulative snapshots; controller M3 index complete, orphan361 preserved. Log38 entries, ledger99 and all29 frozen inputs unchanged. No full log rotation.\n- **Review/delivery:** actual independent MiniMax PASS92, reaffirmed with corrected evidence scope and clean fresh handshake. Narrow charter PASS outside sandbox; final PR/merge each require3/3 CI. Delivery receipts on issue449.\n- **Next/human:** only still-OPEN ledger asks105/110/111/112; attended111 validation and112 incident decisions independently. No new ask/policy; one iteration per fire; weekly sweep2026-11-09 07:00 Europe/Copenhagen.\n- **Evidence:** log364; verification/world-iter364/ contains original reports, actual-judge clarification, supervisor receipts and reproduced findings. M1/M2 snapshots remain immutable; source product parks unchanged.\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "R8",
+      "command": "sed -n '1,24p' design_docs/world-mission-index.md",
+      "exit_code": 0,
+      "tool_chunk_id": "6d761a",
+      "output": "# world-mission — ITERATION INDEX\n\nOne line per iteration, newest first, covering the live log AND the archive.\n\n**GREP THIS BEFORE PICKING WORK.** It is the cheapest way to find out whether\nsomething has already been tried, and it is small enough to read in full — which the\nlog (2.8 MB, ~715k tokens) has not been for a long time.\n\nRegenerated wholesale by `ailang mission rotate-log`, never appended to: an\nappend-only index drifts the moment an entry is edited, and an index that answers\nconfidently and wrongly is worse than none.\n\n| # | date | what happened |\n|---|---|---|\n| 364 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |\n| 363 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |\n| 362 | 2026-11-07 | row 256 implemented but PARKED: independent MiniMax FAIL 85, corrected local gate UNMET; evaluator credential incident escalated [PRODUCT] |\n| 361 | 2026-11-07 | orphan: row 256 r1 design/quorum artifacts recovered and credited by iteration 362; no commit, landing or independent execution verdict [ADMIN] |\n| 360 | 2026-11-06 | row 255 built: a failed workspace-exec call records, returns and logs one bounded failure line; lazy store schema mark guards older binaries; desig... |\n| 359 | 2026-11-06 | row 250 built: arm 6 classifies each loopback accept (child / foreign / silent), so a local dialer no longer refuses the exec startup probe; design... |\n| 358 | 2026-11-06 | no pick: rule (d) block report 30 (repeats 341–357); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12299; Gat... |\n| 357 | 2026-11-06 | no pick: rule (d) block report 29 (repeats 341–356); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12190; Gat... |\n| 356 | 2026-11-06 | no pick: rule (d) block report 28 (repeats 341–355); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12161; Gat... |\n| 355 | 2026-11-06 | no pick: rule (d) block report 27 (repeats 341–354); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12183; Gat... |\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "S3",
+      "command": "sed -n '2907,2941p' design_docs/world-mission-log.md",
+      "exit_code": 0,
+      "tool_chunk_id": "753079",
+      "output": "## 364 — 2026-11-07 — ADMIN record only; row 256 remains parked [ADMIN]\n\n**Kind / pick:** mandatory Gate4 ADMIN record only; no product pick, implementation, quorum or acceptance. M1 registry_reuse=none (dashboard/log prose); M2 registry_reuse=none (existing STATUS bytes and route-number maintenance). No package capability or AILANG change.\n\n**Authority:** marked ledger99 governs. Row256 HUMAN PARK / PARKED needs-human-review, independent FAIL85, LOCAL_CRITERION UNMET. D105/110/111/112 remain OPEN; goal unmoved. All clauses1–7 MET are inherited controller assessments, with no new product verification.\n\n**Gate0 provenance:** inherited controller-brief.json/controller-observations.json: armed, billing CLEAN,35 comments/0 directives, crash0/transcript2 (old fires world-1793825318-10110 and world-1793839743-21731). Issue449 watermark absent, predecessor366 readable, degraded1/2. No executor inbox, network, credential or directive import operation.\n\n**Gate1 provenance:** inherited controller base 374696c0536809d7c7080d07339208570d5130cb, brief read2026-11-07T12:50:53.148277+00:00; skill14/drift0. Base CI all3 completed/success [run42362989926](https://github.com/sunholo-data/ailang-world/actions/runs/42362989926), exact heads in base-full-checks.json. Controller baseline narrow charter rc0/0.375s is inherited, not rerun here; prior363 default whitespace red stays history.\n\n**Gate4 provenance:** controller-gate4-base.json pins full base 374696c0536809d7c7080d07339208570d5130cb; helper row2026-11-07T13:06:23Z, receipt at_utc=2026-11-07T13:06:23.967186+00:00. Its then-current record head0de483ef6b0d8675d79d539f12ee9198c5f8ea44 differs from this executor's clean start 645258c277bb4da5ae62b1f169b9310877d4757f; no invented measurement.\n\n**Product state:** inherited fresh product-pr515-fresh.json says OPEN/draft CONFLICTING/DIRTY, full head7655388936b80bea9c4843f0a2e0abc085e52c0f. Designer's earlier api.github.com failure/UNKNOWN remains historical, not a fresh executor result. Green prior/base/product CI never accepts256.\n\n**M1 work:** overwrite dashboard≤40 lines and append this one canonical entry, old log exact byte prefix37→38. No log rotation; log archive unchanged. New executor summary/proof and cumulative .snap/M1 include every created/modified path since mission base, including committed curated364 evidence and plan/state; manifests exclude themselves and snapshots. Snapshot bytes remain immutable.\n\n**M2 scope:** exact one-line364 STATUS plus blank; retain363/362 and move only360's exact line+blank (SHA256 ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530). Charter6345+2−2=6345; archive726→728, original prefix exact,359 retained. Replace only Current route (iteration 363) with Current route (iteration 364). Actual terminal proof goes in new executor artifacts and cumulative .snap/M2; this append boundary does not anticipate success. Index/M3 remain controller-owned, later .snap/M3 per addendum.\n\n**Designer:** actual codex:gpt-6.1-sol; supervisor run rc0/173.76s;72,246 subscription quota tokens probe+run. Original FAILED_INPUT_PRESERVATION remains unchanged. Controller disposition attributes upstream31→33 addition476/2160 to its own in-flight write before inputs froze; no retroactive green or product waiver.\n\n**Planner:** actual codex:gpt-6.1-sol;161,073 footer-sum subscription tokens across probe, initial run and bounded same-session document-path correction. Run rc0/290.39s; correction rc0/21.16s, per planner-supervisor-receipt.json. Plan/state remain frozen, including original M3 location superseded by controller addendum.\n\n**Executor:** THIS actual pinned codex:gpt-6.1-sol invocation performs ADMIN M1/M2; total runtime/terminal rc/token usage unknown until supervisor receipt. No role terminal or usage fabrication. Controller and Agent-supervisor exact model identity/tokens unknown/unreported.\n\n**Evaluator / routing:** actual independent MiniMax evaluator REQUIRED, pending; declared pi:openrouter/minimax/minimax-m3 is not a completed review. No evaluator acceptance or protocol completion claimed. Verbatim driver_routing_note from controller-brief.json follows:\nlanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` — quota-limited) → handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` — quota-limited) → handed to `pi:openrouter/minimax/minimax-m3`\n\n**Accounting:** designer72,246 + planner161,073 =233,319 known subscription quota tokens. Their supplied metered$0/imputed$0 remain separate from subscription. Executor/evaluator/controller/Agent-supervisor pending or unreported usage/costs and combined final totals unknown; no assumed zero or reuse363 spend. Total metered ceiling$5; imputed costs reported separately when known.\n\n**Validation policy:** D111 OPEN default A retains exactly two named baseline failures and no additional failures; no source/gate change or third full retry. Publish-counter and net6 remain unattributed; nonrecurrence is not attribution. D112 OPEN default no autonomous credential change; sanitization does not undo exposure. Clearing111 or112 alone cannot clear the other.\n\n**Conditional route:** attended250 →255 →256 →257 →201 →243;250/255 landed,256 parked. No skipping257/201/243. Release150/151 priority only when routable; inherited150 waits on attended A1,151 on188 N2d/N4a. 201/243 use fakes/test keys; real-key enrolment/approval/no-terminal exits stay attended.\n\n**Human asks:** only still-OPEN ledger105 default C (row233 parked/fail closed),110 default A (row255 as built),111 default A,112 no autonomous credential change. Existing111 validation-policy and112 incident decisions are independent. No new ask, policy, decision resolution or autonomous human-decision substitution.\n\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "S4",
+      "command": "sed -n '2942,2982p' design_docs/world-mission-log.md",
+      "exit_code": 0,
+      "tool_chunk_id": "603edd",
+      "output": "**Ruled out:** product merge/acceptance from CI or record review; attribution-by-nonrecurrence; input/old-receipt rewriting; source/test/driver/shared-skill/registry/pin/routing/gate changes; credentials, messages/import-GitHub/network, new agents, git writes, TMPDIR/GOTMPDIR overrides, full log rotation, product/full-suite tests. Sandbox socket failures would be UNINFORMATIVE UNDER SANDBOX; no such test is run here.\n\n**Retro / progress:** inherited harness0/20; latest3 product landings360/359/340 moved no UNMET clause. No routable UNMET clause, so no DRIFT. No idle-fingerprint promotion because driver quota fallback and watermark degradation persist. ADMIN record maintenance moves no product goal; preservation disclosure remains for independent review, with no shared policy change.\n\n**Structural follow-through:** actual scope/immutable-input hashes, log prefix/count/title, safe3/pair/archive-prefix/359/363/362 controls, exact current-goal substitution, ledger99/full-section+queue, index and log-archive preservation, and in-memory negative controls go in stage-bound executor-structural-proof.json. Default git diff --check and full-record base whitespace must be observed without narrowing/waiver; base red would remain a finding, never repaired or relabeled.\n\n**Next / judge:** controller alone owns M3 index, new later receipts and outside-sandbox exact go test ./host/verifygate -run '^TestMissionConfigRealCharter$' -count=1. Actual independent MiniMax must judge final record bytes; verdict pending and material later changes require review coverage. One iteration per fire; weekly sweep/rotation2026-11-09 07:00 Europe/Copenhagen.\n\n**Landing:** record PR/head/merge and CI PENDING. Each exact full40 record PR-head and merge-head still requires all3 terminal-success checks with run URLs: ailang-code verify gate; Go race; Go host build/test. Prior/product/base CI cannot substitute. No PR merge, record LANDED or product acceptance claim; row256 stays parked regardless of record outcome.\n\n**Controller follow-through before independent review:** actual designer, planner and executor CLI runs completed on Codex `gpt-6.1-sol`; required Agent supervisors each launched the resolved recipe because this Agent API has no model override. No role was absent or silently replaced. Designer72,246 + planner161,073 (summed probe/run/continuation footer readings) + executor80,540 =313,859 known subscription tokens; controller/supervisor counts unreported, metered$0/imputed$0 before judge. The planner’s short same-session continuation added the missing explicit design-document path. Its numeric-only ledger regex omitted ROUTE-1 and DRIVER-1; canonical99 governs. Neither changes product validation.\n\nM1 `29bee58de6109c63da9f403c7f6ce0f7760e4f32` and M2 `8b09483fc5ac383a8065abeda899e1b2bd0b0338` were reconstructed from immutable cumulative snapshots; original final executor outputs were restored byte-exact. Executor controls: M1 8/8 and M2 17/17 detected, zero survivors. Cont\n[receipt excerpt: middle omitted]\nult.details.acked=true where visible tool text is less explicit. No original report is silently edited, and no stronger independent mutation-coverage claim is adopted.\n\n**Controller disposition of NB1–NB3:** reproduced outside the judge’s method in `controller-findings-reproduction.json`: routing checker rc2 before the canonical header versus rc0 after; reconstruction of the31-reference JSON exactly matches the original designer’s before hash, and current33 matches its after hash; M2 log hash7a628801… differs from reviewed42307275… only by append-only controller annotations, while the M2 snapshot equals its committed stage. The33 references comprise31 regex matches plus2 explicit context references476/2160. The log delta spans3fa65ad7 andc5e34151. Stage-bound receipts remain immutable; recommendations to regenerate them are not adopted. The original designer input-preservation failure remains failed in telemetry, separate from the independently accepted final record.\n\n**Final actual routing/cost:** all four requested Agent roles completed their prescribed actual lanes: Codex designer/planner/executor versus independent actual PI MiniMax evaluator. No missing role, judge substitution or in-run lane failure. Designer72,246 + planner161,073 summed footer readings + executor80,540 =313,859 known subscription quota tokens. Actual evaluator probe+review+clarification: input181,749/cacheRead6,220,063/output70,420 =6,472,232 total tokens; reasoning23,822 is a subset of output. Metered **$0.51223248**, imputed$0, below$5; controller/supervisor tokens unreported. No earlier iteration spend reused.\n\n**Delivery boundary:** only factual review/usage annotations and original/curated receipts were added after the reviewed SHA. Exact final record PR-head and merge-head all3 terminal-success checks, fresh mergeability and reporting remain required; final SHA/run URLs go to the record PR, bookkeeping issue449 and canonical controlplane to avoid self-referential receipt commits. Record PASS never upgrades product256: PR515 stays draft/unmerged, FAIL85/local criterion UNMET; D105/D110/D111/D112 remain OPEN. Goal unmoved; no idle-fingerprint promotion because the fire was degraded.\n",
+      "output_is_excerpt": true
+    },
+    {
+      "id": "T1",
+      "command": "sed -n '1029,1031p' design_docs/world-mission.md",
+      "exit_code": 0,
+      "tool_chunk_id": "b43bdb",
+      "output": "| D-WORLD-110 | OPEN | **Row 255's compatibility policy: may a store that holds a failure line refuse older World binaries, and must the read verbs match the daemon's build?** Row 255 records a failed `workspace-exec` call's reason in a new optional `failure` field on `world/effect-record/v1`. Every pre-change binary decodes records strictly, so none can read a record that has the field, and no carrier exists that old readers tolerate (the record law rules out reusing `denial` or `resultRef`). As built, just before the first such record the store's schema version is raised from 5 to 6, so an older binary refuses the store cleanly at open. A failed raise returns a write error and writes no record. No written store-compatibility or rollback policy exists in the charter, DESIGN.md, coding-standards or docs (measured), so the loop asks rather than asserts. **A (recommended):** ratify as built. After a store's first failure line, a `service upgrade` rollback to a build from before row 255 stops the service with `schema version future … use a compatible binary` instead of serving. An older `why` or `call` pointed at a newer daemon marks that one effect link ✗, naming the unknown field. **B:** A, plus a new row making `why` and `call` refuse a daemon of a different build, as `episode start` already does (`episode.go:330`). That makes a mixed install fail loudly up front, at the cost of one more build check on every read verb. **C:** revert row 255's record field before the next release. Failed exec calls go back to recording no reason, and the 2026-11-03 failure class stays unattributable. **Default while unanswered: A** (it is what `dev` holds after row 255 lands). | Filed iteration 360 (unattended loop) from the design's Q1 and Q2 (`planned/w-exec-failure-carries-a-reason.md` §3.7 and §9) and quorum r1's gpt6-1-sol objection; evidence `design_docs/verification/world-iter360/` (quorum-r1.json, quorum-r2.json, controller-M1/compat-old-open.log for the measured refusal). |\n| D-WORLD-111 | OPEN | **Row 256 is implemented but independent judge FAIL 85: should its local validation contract be retained or explicitly redesigned before resuming?** Both candidate full suites have additional failures beyond two permitted baseline diagnostic failures. The filter failure reproduces at base; publish counter and net6 remain unattributed. **A:** retain the exact-two-failures criterion and keep PR #515 parked until it is met. No source or gate change. **B (recommended):** authorize a subsequent iteration to specify and independently judge an attribution-based criterion: every additional failure must reproduce at the pinned base under paired same-environment arms (at least 100 each), or receive a causal in-scope repair; unmeasured or candidate-only failures still block. Existing full runs remain evidence and Linux PR/merge CI remains required. This is permission to design/measure, not to waive a failure or merge. **Default while unanswered: A**, effective now; row 256 remains needs-human-review and later dependent rows wait. | Filed unattended iteration 362; draft PR #515; `verification/world-iter362/evaluator-r1/report.md` §§4–6 and `controller-final-disposition.json`. Current criterion remains UNMET; no third full retry or unrelated test rewrite this iteration. |\n| D-WORLD-112 | OPEN | **Rotate/revoke the six credentials actually exposed by the evaluator's environment command?** Affected names: ZAI_API_KEY, TYPESAFE_API_KEY, LYCEUM_API_KEY, OLLAMA_API_KEY, GOOGLE_API_KEY, GEMINI_AGENTS_API_KEY. **A (recommended):** perform attended rotation/revocation and update authoritative vault entries and consumers; invalidates any exposed values but requires provider access. **B:** retain current credentials and explicitly accept possible OpenRouter/MiniMax exposure. **Default while unanswered:** no autonomous credential change; incident stays OPEN immediately and product work remains parked. Stored artifacts have been sanitized, which does not undo provider exposure. | Filed unattended iteration 362; `verification/world-iter362/credential-incident.md`; name-only sanitization and supervisor receipts under `evaluator-r1/`. No values published and no rotation claimed. |\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "T2",
+      "command": "sed -n '1064,1064p' design_docs/world-mission.md",
+      "exit_code": 0,
+      "tool_chunk_id": "89cbfa",
+      "output": "    When this line and the Queue disagree, the Queue governs; the Human Decision Ledger governs current authority. Current route (iteration 364): ADMIN record only. Row 256 remains PARKED needs-human-review, draft PR #515, independent FAIL 85 and LOCAL_CRITERION UNMET. D-WORLD-111 default A retains the exact-two-failures contract; no full reruns or source/gate changes. D-WORLD-112 stays OPEN with no autonomous credential changes; sanitization does not undo exposure. No automatic skip to 257, 201 or 243. The attended order 250 → 255 → 256 → 257 → 201 → 243 remains conditional on both parks being explicitly cleared; release rows 150/151 retain priority when routable. D-WORLD-105 and D-WORLD-110 remain OPEN with their existing defaults. History is in the log and status archive.\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "T3",
+      "command": "sed -n '1695,1737p' design_docs/world-mission.md",
+      "exit_code": 0,
+      "tool_chunk_id": "fa8850",
+      "output": "## Routing policy\n\nUses the **shared** per-role model routing from `mission-control` (controller /\ndesigner-rotation / planner / executor / evaluator, generator≠judge enforced). Overrides for THIS\nmission in `~/.config/ailang/mission-world.env`:\n\n- **Temp-dir rule for codex directives and the runners they write (iteration 360; instance 2 after\n  iteration 359):** set neither `TMPDIR` nor `GOTMPDIR`; leave both at the rig default. A temp path\n  under `~/dev` trips ailang's MOD010 module-path check (359), and a long one pushes path-bearing\n  lines past row 255's 200-byte failure-line cap (360, `TestExecFailureClassesReachTheRecord`).\n  Read each runner's unmutated CONTROL row before any mutant verdict.\n- **SUPERSEDED 2026-08-28 (iter-135) — SEE LEDGER ROW `D-WORLD-27`. The chain below is NO LONGER\n  the current state, and this paragraph asserted that it was for two days after it stopped being\n  true.** The shared `mission-control` SKILL carries a **PROMOTION RULE (Mark, attended\n  2026-08-26)** that explicitly supersedes the `D-WORLD-20` suspension: deepseek returns as the\n  **fallback link only** — not a rotation peer — reached only when codex is dry, and re-qualified\n  on two consecutive real sprint runs returning `ok` with a non-empty worktree diff. The rule\n  landed in `sunholo-data/ailang@b4122db56`; the live `mission-world.env` was edited to match at\n  the same minute. **And the id actually in force on this rig is NOT the one the fleet intended** —\n  it is the `:floor` variant that `fc6e42682` explicitly dropped, because World's driver copy\n  predates that commit. Filed as queue row **54**. The suspension text follows for the record.\n  ~~**EXECUTOR CHAIN AS OF 2026-08-19 (Mark, attended, `D-WORLD-20`, verbatim \"Remove deepseek\n  flash\"): `codex:gpt-5.6-sol` → `opus`. The `pi:openrouter/deepseek/deepseek-v4-flash-0731`\n  link is SUSPENDED and unreachable.**~~ This supersedes the middle link of the 2026-08-10\n  three-link ratification below (and of `D-WORLD-ROUTE-1`) and nothing else in either. Evidence\n  bar for a routing change is ≥3 rows and was MET at **five**: five consecutive executor runs\n  changed zero useful bytes across **four distinct mechanisms** (iter-91 ×2 `stopReason=stop` at\n  625 tokens against a 65,536 budget; iter-92 325 MB of `thinking_delta`; iters 93/94 killed at\n  the ~300 MB size ceiling with `stopReason=\"length\"` count **0**) — and the detector this skill\n  prescribes for the lane, the per-turn `stopReason` assertion, fired on **0 of 5**; only the\n  file-SIZE poll ever fired.\n  **APPLIED IN `~/.config/ailang/mission-world.env`, NOT THE DRIVER** (`tools/launchd/*` is frozen\n  core, `D-WORLD-DRIVER-1`): the driver defaults the tail at `mission-control.sh:331` with\n  `${MISSION_EXECUTOR_FALLBACK:-pi:…:floor}` and sources this mission's env file at `:58-59`,\n  i.e. BEFORE that line, so `MISSION_EXECUTOR_FALLBACK=\"${MISSION_EXECUTOR_FALLBACK:-opus}\"`\n  wins the default and the pi link is never reachable. Same lever and precedent as the iter-23\n  PATH fix.\n  **PROVEN NON-VACUOUS, TWO ARMS, ONE VARIABLE** (iter-95; the third arm is honestly unrunnable\n  and recorded as such rather than asserted). The reading is the driver's own\n  `falling back to '<lane>'` line — NOT the `DRY RUN ok:` roles line, which this rig cannot emit\n  while an iteration holds the pidfile, and whose absence is an empty result, not a green.\n  Arm B, real rather than simulated (codex is genuinely quota-dry until 2026-08-20 05:34, so the\n  chain resolved through the fallback link for real): **`falling back to 'opus'`**. Arm C, the\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "T7",
+      "command": "rg -n --max-count 3 'world-iter365|iteration 365' design_docs/verification/world-iter364/design-gate.md design_docs/verification/world-iter364/record-plan.md",
+      "exit_code": 1,
+      "tool_chunk_id": "76b353",
+      "output": "",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "T8",
+      "command": "rg -n --max-count 3 'world-iter364|iteration 364' design_docs/verification/world-iter364/design-gate.md design_docs/verification/world-iter364/record-plan.md",
+      "exit_code": 0,
+      "tool_chunk_id": "70e9be",
+      "output": "design_docs/verification/world-iter364/design-gate.md:9:**Permitted eventual record changes.** Only `design_docs/world-mission-dashboard.md`, `world-mission-log.md`, `world-mission.md`, `world-mission-status-archive.md`, `world-mission-index.md` (all under design_docs), and genuinely new curated evidence under `design_docs/verification/world-iter364/`. Freeze existing inputs and earlier evidence, including these designer artifacts. This role writes only design-gate.md and designer-receipt.json. No other mission/source/test/driver/skill/registry/credential change is authorized.\ndesign_docs/verification/world-iter364/record-plan.md:3:Authoritative design: `design_docs/verification/world-iter364/design-gate.md`. Authorized unattended under designer AC1–AC7; no human approval or handoff is required. Actual planner lane: `codex:gpt-6.1-sol`, reason `declared:planner-lane-default-pin` (invocation, not a runtime probe). Local committed HEAD: `0de483ef6b0d8675d79d539f12ee9198c5f8ea44`; inherited controller Gate1 base: `374696c0536809d7c7080d07339208570d5130cb`. This role creates only this plan and `record-state.json`. No product work is routable.\ndesign_docs/verification/world-iter364/record-plan.md:14:| M2 STATUS + current goal / executor; depends M1 | 4 / 20 min | Insert one one-line364 STATUS + blank, retain363/362, move only exact360 line+blank to status archive. Charter6345+2−2=6345; archive726→728, original prefix exact,359 retained. On existing CURRENT GOAL line replace only `Current route (iteration 363)` with `Current route (iteration 364)`; prose delta0. Capture cumulative `.snap/M2`, receipts; controller commits M2 (AC1/3/4/7). |\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "T10",
+      "command": "git diff --quiet b9816aefab82dc09cf9e3a9cec5e8191fb58a9de --",
+      "exit_code": 0,
+      "tool_chunk_id": "20e5ff",
+      "output": "",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "T11",
+      "command": "git diff --check",
+      "exit_code": 0,
+      "tool_chunk_id": "6a40ae",
+      "output": "",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "U1",
+      "command": "sed -n '27,48p' design_docs/DESIGN.md",
+      "exit_code": 0,
+      "tool_chunk_id": "f6abf9",
+      "output": "## 1. The defining move\n\n> **AILANG World is a semantic database whose transaction language is AILANG.**\n\nNot \"an operating system\" with a database inside it — the inversion: the kernel *is* a typed,\nimmutable, content-addressed world graph, and every other subsystem — the scheduler, agents\n(motoko first), the effect broker, deployments, the UI, even games — is a **projection over\nthe same world graph**. AILANG programs are the transactions.\n\nThis is what separates World from another workflow engine. Workflow engines bolt state onto\nimperative steps. World makes the state model primary and derives execution from it:\n\n- A **transition** is a pure AILANG function `World -> Command -> World'` — deterministic,\n  type-checked, contract-verifiable *before it runs*.\n- **Effects** are the only nondeterminism, declared in the function signature and enforced by\n  the compiler (this exists today: AILANG effect rows + `--caps`).\n- **History** is an append-only log of committed transitions. Replay is not aspirational —\n  a pure transition plus recorded effect results reconstructs any historical state\n  bit-for-bit, because the language guarantees the pure part.\n\nUnix made everything a file. AILANG World makes everything a **typed state transition**.\n\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "U2",
+      "command": "sed -n '610,641p' design_docs/DESIGN.md",
+      "exit_code": 0,
+      "tool_chunk_id": "3237c4",
+      "output": "## 14. Controlled self-modification\n\nWorld modifies **itself** through the same machinery it offers everyone else. This section\nis normative.\n\n**The lane.** World's own behavior lives in versioned **extension packages** in the AILANG\nregistry. A self-modification is: (1) a proposal targeting a package version bump or new\nextension; (2) Verify — `ai-check`, tests, policy (self-mods are a high-risk class → quorum\nevidence required); (3) Commit — publish + **auto-cascade** propagates the bump to dependent\nWorld components. Locally, registry + cascade run in local-first mode; the cloud cascade\n(multivac) is the later extension transport.\n\n**Nodes and edges.** Agents and their inboxes are **nodes** in the world graph; typed\nmessages are **edges**. The messaging system (already local-first SQLite) becomes a domain\nof the world model, so agent coordination is itself replayable, auditable history — not\nside-channel chatter.\n\n**Hard boundaries — out of self-mod scope:**\n1. **The mission-loop machinery** (driver, mission-control skill). It is shared with the v1\n   mission and parameterized, never forked; improvements route through the Gate-5 retro so\n   all missions benefit. World may not rewrite its own outer loop.\n2. **The AILANG core/compiler.** Needs surface in World route back to the ailang repo's\n   lanes (extension-first per PROGRAM.md). World never accumulates compiler workarounds.\n3. **The live daemon binary.** Self-replacement of a running `ailang-worldd` follows the\n   attended atomic-mv discipline (precedent: mission-driver M1, 2026-07-21) — proposed and\n   verified headlessly, applied under supervision until a shutdown-handoff protocol is\n   designed and proven.\n\n**Reversibility.** Because worlds are immutable, \"rollback\" of a bad self-mod is a roll\n*forward* to a transition that re-pins the prior package version — with the failed episode\npreserved as evidence.\n\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "U3",
+      "command": "cat design_docs/verification/world-iter364/design-gate.md",
+      "exit_code": 0,
+      "tool_chunk_id": "9e8ac0",
+      "output": "# Iteration 364 — mandatory Gate4 ADMIN assessment\n\n**Verdict: ADMIN_ONLY_HUMAN_PARK.** Actual designer `codex:gpt-6.1-sol`, per invocation; base `374696c0536809d7c7080d07339208570d5130cb`. Administrative design assessment only; no product pick/build/quorum. Authority is the current charter’s marked Human Decision Ledger (99 rows), above STATUS/log/index summaries. No governing AGENTS.md was found in ancestor directories or the repository record path.\n\nRow256 stays **PARKED needs-human-review, independent FAIL85, LOCAL_CRITERION UNMET**. D-WORLD-105/110/111/112 stay OPEN: defaults C/as-built A/retain exact-two-baseline-failures A/no autonomous credential change. Publish-counter and net6 remain unattributed; nonrecurrence is not attribution. Sanitization does not reverse exposure. Clearing111 or112 alone cannot clear the other. No skip to257/201/243; attended order250→255→256→257→201→243 remains conditional, with release150/151 priority when routable. This is a human-decision park, not a lane-capacity park.\n\n**Evidence boundary.** Independently read charter, ledger, current goal, log363, index, iteration363 assessment/plan/addendum/dispositions, and supplied364 brief/observations. Local HEAD equals base; no tracked edits observed. Direct `gh pr view 515` failed rc1 connecting to api.github.com: current PR authority is **inherited/unverified**. Current supplied receipt says OPEN/draft, head `7655388936b80bea9c4843f0a2e0abc085e52c0f`, mergeability UNKNOWN; do not carry363’s CONFLICTING as freshly measured. Controller reports baseline charter test rc0 and base CI3/3 run42362989926; neither was rerun here. Prior record363 PASS95, its preservation repair and disclosed default whitespace rc2 remain historical, separate from product FAIL85.\n\n**Permitted eventual record changes.** Only `design_docs/world-mission-dashboard.md`, `world-mission-log.md`, `world-mission.md`, `world-mission-status-archive.md`, `world-mission-index.md` (all under design_docs), and genuinely new curated evidence under `design_docs/verification/world-iter364/`. Freeze existing inputs and earlier evidence, including these designer artifacts. This role writes only design-gate.md and designer-receipt.json. No other mission/source/test/driver/skill/registry/credential change is authorized.\n\n| ID | Exact acceptance criterion for the subsequent record |\n|---|---|\n| AC1 — scope | Diff and tracked/untracked path audit against base show only permitted record edits; every pre-existing364 input and all other tracked bytes remain identical. Observe hashes/counts; never seed shared state. |\n| AC2 — log/dashboard | Append exactly one canonical `## 364 — 2026-11-07 — ADMIN record only; row 256 remains parked [ADMIN]` entry; old log remains an exact byte prefix. Live entries37→38; no full rotation; log archive unchanged. Dashboard ≤40 physical lines, accurately names the parks and conditional order. |\n| AC3 — safe3/current goal | Insert one one-line364 STATUS plus blank; retain363/362; move only360’s exact line+blank to status archive (pair SHA256 `ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530`). Stamp arithmetic6345+2−2=6345; archive726→728 with original prefix exact and359 positive control. Separately replace only “Current route (iteration 363)” with364 on the existing CURRENT GOAL line; prose delta0. Preserve all other charter bytes. |\n| AC4 — authority | Entire ledger section and queue suffix byte-identical to base; ledger99, exactly OPEN105/110/111/112; row256 park and257 dependency unchanged. No product acceptance, criterion amendment or decision resolution. |\n| AC5 — index | Controller uses supported existing fleet index-only tooling only after proving resolved output targets this record checkout; preserve every prior ID and exact orphan361 row, add364 exactly once, keep both source streams unchanged. Missing tooling/context is pending, never permission to seed shared state or hand-edit installed registry. No fabricated canonical361 log. |\n| AC6 — truthful record | Include Gate0/1 provenance, actual ADMIN work, route/park, actual role/model/reroute receipts, unknowns, ruled-out actions, retro, progress/next, judge and landing state. Separate subscription quota/metered/imputed costs under $5; use supervisor’s real usage/rc/runtime later. Never copy363 usage or invent controller measurements, Gate4 time, role completion or judge result. |\n| AC7 — gates/judge/delivery | Structural preservation and default diff-whitespace checks must have actual receipts. Report any base red without repair, narrowing or relabeling. Controller alone obtains outside-sandbox narrow charter validation; no full product rerun. Independent actual MiniMax judge assesses final record bytes; designer grants no PASS. Exact full40 record PR-head and merge-head each require all3 terminal-success CI checks with run URLs before LANDED; prior/product/base CI cannot substitute. Material later changes require review coverage. |\n\nNo credential operations, full suites, environment/pin/gate fixes, TMPDIR/GOTMPDIR changes, git writes, external writes/messages or extra agents. Sandbox-sensitive findings are **UNINFORMATIVE UNDER SANDBOX** and never establish product acceptance. No product tests or record test were run by this designer. Independent MiniMax evaluator retains judgment.\n\n\n**Preservation finding:** final hash check found all6348 tracked files unchanged, but pre-existing364/upstream-predicates.json changed between snapshots (actor unverified). Designer did not write it. Input preservation is FAILED, not green; controller must resolve provenance before review without rewriting this finding. Receipt retains both hashes.\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "U4",
+      "command": "cat design_docs/verification/world-iter364/record-plan.md",
+      "exit_code": 0,
+      "tool_chunk_id": "da9111",
+      "output": "# Iteration 364 ADMIN record plan\n\nAuthoritative design: `design_docs/verification/world-iter364/design-gate.md`. Authorized unattended under designer AC1–AC7; no human approval or handoff is required. Actual planner lane: `codex:gpt-6.1-sol`, reason `declared:planner-lane-default-pin` (invocation, not a runtime probe). Local committed HEAD: `0de483ef6b0d8675d79d539f12ee9198c5f8ea44`; inherited controller Gate1 base: `374696c0536809d7c7080d07339208570d5130cb`. This role creates only this plan and `record-state.json`. No product work is routable.\n\nIndependently read current STATUS, marked ledger, queue, CURRENT GOAL, dashboard, log tail, archive tail, index and specified364 evidence. Local measurements: 6,372 tracked files and24 existing364 files hashed before writes; charter6,345 lines, ledger99 with only105/110/111/112 OPEN, dashboard16 lines, live log37 entries, status archive726 lines with359 positive control, index350 prior IDs. Exact section and aggregate hashes are in state. Initial tracked diff whitespace rc0. No product or charter test, network verification, shared-state seeding or external write occurred.\n\nInherited evidence: controller Gate0 billing CLEAN,35 comments/0 directives, crash0/transcript2, watermark degraded1/2; Gate1 skill14/drift0, base CI3/3 run42362989926. Clauses1–7 MET are inherited assessments. Narrow baseline charter gate rc0 (0.375s) is controller evidence, not a planner rerun. Fresh controller PR515 receipt says OPEN/draft CONFLICTING/DIRTY, head `7655388936b80bea9c4843f0a2e0abc085e52c0f`; designer's earlier UNKNOWN/network failure remains historical.\n\nThe original `FAILED_INPUT_PRESERVATION` stays unchanged. `controller-designer-disposition.json` attributes upstream references31→33 to the controller's in-flight addition of476/2160; the fixed committed inputs are now frozen. Raw worktree stdout remains byte-exact in its verified SHA256 JSON envelope, satisfying default whitespace without waiver. Freeze only existing inputs; later controller receipts are new evidence.\n\n| Milestone / owner | Estimated changed LOC / duration | Work and acceptance |\n|---|---|---|\n| M1 dashboard + log / executor | 75 / 25 min | Update only dashboard and append one canonical364 entry. Dashboard≤40 physical lines; old log exact byte prefix, entries37→38, log archive unchanged, no full rotation (AC1/2/4/6). Capture cumulative `.snap/M1` and structural/default-whitespace receipts; controller commits M1. |\n| M2 STATUS + current goal / executor; depends M1 | 4 / 20 min | Insert one one-line364 STATUS + blank, retain363/362, move only exact360 line+blank to status archive. Charter6345+2−2=6345; archive726→728, original prefix exact,359 retained. On existing CURRENT GOAL line replace only `Current route (iteration 363)` with `Current route (iteration 364)`; prose delta0. Capture cumulative `.snap/M2`, receipts; controller commits M2 (AC1/3/4/7). |\n| M3 index / controller only; depends M2 | 1 / 15 min | Use supported existing fleet index-only too\n[receipt excerpt: middle omitted]\nvaluator remain pending. Preserve the brief's verbatim quota-reroute note; declared lanes never establish completion. Subscription quota, metered and imputed accounting stay distinct under total metered budget$5; controller adds actual receipts later. Never reuse363 usage or invent timing, cost, Gate4 time, CI or success. Retro harness0/20 and no DRIFT are inherited; no policy change.\n\nAll99 ledger rows, entire ledger section and queue suffix remain byte-identical. D105 default C, D110 as-built A, D111 retain exact-two-baseline-failures A, D112 no autonomous credential change remain OPEN. Row256 stays HUMAN PARK / needs-human-review, independent FAIL85 / LOCAL_CRITERION UNMET. Publish-counter/net6 remain unattributed; nonrecurrence is not attribution; sanitization does not undo exposure; clearing111/112 is independent. No skip257/201/243; attended250→255→256→257→201→243 stays conditional, release150/151 priority only when routable. No product acceptance.\n\nFor360's exact pair require SHA256 `ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530`. Controller banks actual scope/hash, log-prefix/count, safe3 arithmetic, current-goal-only substitution, ledger/queue, index/source and default `git diff --check` receipts. Report any base red without repair, narrowing or relabeling; historical363 whitespace rc2 remains historical. Controller alone runs outside sandbox `go test ./host/verifygate -run '^TestMissionConfigRealCharter$' -count=1`; no full product rerun. Socket failures are **UNINFORMATIVE UNDER SANDBOX**.\n\nIndependent actual MiniMax must judge final record bytes; controller verdict cannot substitute. Material later changes need review coverage. Before LANDED, exact full40 record PR-head and merge-head EACH need all3 terminal-success CI checks with run URLs: ailang-code verify, Go race, Go host build/test. Prior/product/base CI cannot substitute. Review, landing and milestone execution remain pending. Stop on unauthorized scope, preservation drift or missing evidence; do not repair inputs, pins, skills, gates, routing, source/tests or credentials, override TMPDIR/GOTMPDIR, run quorum/full suites, send messages, import GitHub issues or spawn agents.\n",
+      "output_is_excerpt": true
+    },
+    {
+      "id": "U5",
+      "command": "bash -c 'set -eu; git ls-files -- design_docs/world-mission.md design_docs/world-mission-log.md design_docs/world-mission-dashboard.md design_docs/world-mission-index.md design_docs/world-mission-status-archive.md design_docs/world-mission-log-archive.md; git ls-tree -r --name-only b9816aefab82dc09cf9e3a9cec5e8191fb58a9de -- design_docs/verification/world-iter364 | wc -l; git ls-files | wc -l; rg -c \"^## [0-9]+ —\" design_docs/world-mission-log.md; rg -c \"^\\| D-WORLD[^|]* \\|\" design_docs/world-mission.md; rg -n \"^## STATUS [0-9]{4}-[0-9]{2}-[0-9]{2} — ITERATION [0-9]+:\" design_docs/world-mission.md; wc -l design_docs/world-mission-status-archive.md design_docs/world-mission-log-archive.md'",
+      "exit_code": 0,
+      "tool_chunk_id": "4f9df4",
+      "output": "design_docs/world-mission-dashboard.md\ndesign_docs/world-mission-index.md\ndesign_docs/world-mission-log-archive.md\ndesign_docs/world-mission-log.md\ndesign_docs/world-mission-status-archive.md\ndesign_docs/world-mission.md\n      47\n    6395\n38\n99\n1039:## STATUS 2026-11-07 — ITERATION 364: ADMIN record only; row 256 HUMAN PARK / PARKED needs-human-review, independent FAIL 85 and LOCAL_CRITERION UNMET; D-WORLD-105/110/111/112 remain OPEN; conditional attended 250 → 255 → 256 → 257 → 201 → 243, release150/151 priority only when routable; independent record review and PR/merge CI pending.\n1041:## STATUS 2026-11-07 — ITERATION 363: ADMIN only; row 256 PARKED needs-human-review, independent FAIL 85 and LOCAL_CRITERION UNMET; D-WORLD-111/112 await attended decisions; no automatic 257/201/243 route.\n1043:## STATUS 2026-11-07 — ITERATION 362: **ROW 256 PARKED [PRODUCT].** Implemented frozen r3 at `76553889`, draft PR #515, but independent actual PI MiniMax M3 returned FAIL 85/100: AC8 and the explicit corrected full-local-Go criterion remain UNMET. Both failed full candidate attempts are retained; green product PR CI 3/3 does not discharge that criterion. No production code is merged by this record. D-WORLD-111 asks whether to retain the exact-two-failures gate (default: stay parked) or authorize a separately specified attribution gate; no criterion amendment or waiver is made here. The evaluator also exposed six credential values in an environment tool result; stored artifacts are sanitized, prior provider exposure cannot be undone, and D-WORLD-112 requests attended rotation. Original planner, execution and independent mutation receipts are retained. Orphan iteration 361 is credited. Clauses 1–7 MET; goal unmoved. D-WORLD-108/109 order remains 256 → 257 → 201 → 243, with 256 blocked pending review; release 150 waits on attended A1 and 151 on N2d/N4a. Cap-accounted before record judge $0.65550268 (metered $0.39196188 plus flat-rate Ollama imputation $0.2635408); source/controller checkout preserved. Evidence: `verification/world-iter362/`; full log entry 362.\n     728 design_docs/world-mission-status-archive.md\n   26726 design_docs/world-mission-log-archive.md\n   27454 total\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "U6",
+      "command": "bash -c 'for p in design_docs/verification/world-iter365/record-design.md design_docs/verification/world-iter365/designer-receipt.json; do if [ -e \"$p\" ]; then printf \"EXISTS %s\\n\" \"$p\"; else printf \"ABSENT %s\\n\" \"$p\"; fi; done; git ls-files -- design_docs/verification/world-iter364/design-gate.md'",
+      "exit_code": 0,
+      "tool_chunk_id": "af1ebe",
+      "output": "ABSENT design_docs/verification/world-iter365/record-design.md\nABSENT design_docs/verification/world-iter365/designer-receipt.json\ndesign_docs/verification/world-iter364/design-gate.md\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "U7",
+      "command": "jq '{total_count,check_runs:[.check_runs[]|{name,head_sha,status,conclusion,html_url}]}' design_docs/verification/world-iter365/base-checks.json",
+      "exit_code": 0,
+      "tool_chunk_id": "d6a4bd",
+      "output": "{\n  \"total_count\": 3,\n  \"check_runs\": [\n    {\n      \"name\": \"go host build + test gate\",\n      \"head_sha\": \"b9816aefab82dc09cf9e3a9cec5e8191fb58a9de\",\n      \"status\": \"completed\",\n      \"conclusion\": \"success\",\n      \"html_url\": \"https://github.com/sunholo-data/ailang-world/actions/runs/42379267599/job/128423242509\"\n    },\n    {\n      \"name\": \"go race gate (go test -race, own job)\",\n      \"head_sha\": \"b9816aefab82dc09cf9e3a9cec5e8191fb58a9de\",\n      \"status\": \"completed\",\n      \"conclusion\": \"success\",\n      \"html_url\": \"https://github.com/sunholo-data/ailang-world/actions/runs/42379267599/job/128423242457\"\n    },\n    {\n      \"name\": \"ailang-code verify gate\",\n      \"head_sha\": \"b9816aefab82dc09cf9e3a9cec5e8191fb58a9de\",\n      \"status\": \"completed\",\n      \"conclusion\": \"success\",\n      \"html_url\": \"https://github.com/sunholo-data/ailang-world/actions/runs/42379267599/job/128423242283\"\n    }\n  ]\n}\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "V1",
+      "command": "sed -n '6338,6345p' design_docs/world-mission.md",
+      "exit_code": 0,
+      "tool_chunk_id": "39e3f2",
+      "output": "256. **[PARKED needs-human-review iteration 362 — draft PR #515, implementation `76553889`, independent MiniMax FAIL 85; local criterion UNMET; D-WORLD-111 validation and D-WORLD-112 credential incident; below every D-WORLD-81 release row; in D-WORLD-108's scope after row 255 (attended 2026-11-06); filed attended 2026-11-06 from the home service's restarts] w-daemon-startup-under-load** · clause-3 (MET; availability) · **UNDER HEAVY HOST LOAD THE SERVICE CANNOT START: EVERY EXEC PROFILE IS LEFT OUT, THEN THE REGISTRY BOOTSTRAP TIMES OUT AND THE SERVICE STOPS.** On 2026-11-03, `ailang-worldd service start` ran on a 16-core Mac at a 1-minute load of ~110–130. The load came from Blender and about ten `ailang` release builds in another session. Startup logged `exec profile \"<p>\" left out: exec startup probe failed … (7 of 7 arms): … the startup budget is spent; stderr \"\"` for all five profiles. It then logged `daemon startup failed at registry-bootstrap: cannot bootstrap world/epoch-registry/v1 with release \"AILANG v0.41.0\": context deadline exceeded`, and the start ended with `did not answer /v1/health within 30 s; service stopped`. A second start at load ~100 failed the same way. A third, at load 16, succeeded with every profile probed. At episode bind, the same load also gave `workspace tools unavailable … policy summary: broker: handler subprocess timed out after 10s`. Candidates:\n    - give the registry bootstrap its own deadline, not one shared with the probes;\n    - retry a profile whose probe ran out of budget, as opposed to failing an arm, with backoff after startup. A budget-spent probe is not a confinement failure, and fail-closed still holds while it waits;\n    - name left-out profiles in `/v1/health` and in `doctor`. Today `doctor` was all green while exec was failing;\n    - make an exec call for a left-out profile refuse with that name.\n  Interacts with row 250 (the same probe) and row 233 (D-WORLD-105). Design and quorum first, because this touches the fail-closed probe.\n257. **[NEXT — below every D-WORLD-81 release row; in D-WORLD-108's scope after row 256 (attended 2026-11-06); filed attended 2026-11-06 from episode worldd-2611031015] w-exec-cache-seed-at-bind** · clause-5 (MET; agent UX) · **THE GOCACHE SEED IS CLONED ON THE EPISODE'S FIRST EXEC CALL, INSIDE THAT CALL'S 9-SECOND BUDGET.** `prepareCache` (`host/broker/handlers_exec.go`) clones the operator's seed: 225 MB for `ailang-world` (`cp -cR`, or `cp -a --reflink=auto`). It runs under `execSeedBudget(ctx)`, the remaining call budget. That took 0.69 s on an idle Mac. Under load it competes with the command it serves, and a failure repeats on every call. Build: clone the seed when the episode's exec handler is bound, or at `episode start`, before the agent runs. Report a seed failure there, with the row-255 reason, and keep the per-call path as a check that the copy exists. Measure the clone time at bind under package-parallel load, and say what bound it gets. Tests: the first call spawns no seed copy when bind succeeded, and a bind-time failure is visible in the episode report.\n258. **[NEXT — below every D-WORLD-81 release row; under rule (d), not in any granted scope; filed attended 2026-11-06 by D-WORLD-109 = A] w-hygiene-triage** · clause-3 (MET; hygiene) · **ONE ROW FOR THE TEST-PIN AND CI-FLAKE TAIL, SO JUDGES' NOTES STOP GROWING THE QUEUE.** Folded here, with each original row kept in place as the detail of record: 244 `w-human-approve-failure-path-pins`; 245 `w-finish-guard-adjacent-pins`; 246 `w-a5-drift-sign-and-rounding-pins`; 247 `w-capture-fakechrome-deadline-flake`; 248 `w-tolerance-pins-self-checks`; 249 `w-verifygate-race-package-timeout-headroom`; 251 `w-broker-post-dispatch-budget-load-flake`; 254 `w-marketing-supervisor-shell-cleanup-load-flake`. **Rule from D-WORLD-109 on:** a judge's non-blocking note or a single CI red is logged in that iteration's entry, not filed as a row. A flake becomes its own row only at its third recorded instance, so name the instances. When a fold member reaches that bar, or Mark ranks this row, take the members whose evidence still reproduces at the then-current dev, in one sprint, smallest first. Close the rest with the measurement that shows they no longer reproduce.\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "V3",
+      "command": "shasum -a 256 design_docs/world-mission.md design_docs/world-mission-log.md design_docs/world-mission-dashboard.md design_docs/world-mission-index.md design_docs/world-mission-status-archive.md design_docs/world-mission-log-archive.md",
+      "exit_code": 0,
+      "tool_chunk_id": "3d398a",
+      "output": "e0c746e3c49ee2e02d151d5835292d03c47ce7d3d9b914b9ebc2e9426e117d04  design_docs/world-mission.md\nf30ec0c3f8d54036b6c7c933ba2c5f9f0c27b691664a80c9e6eabf88642c4541  design_docs/world-mission-log.md\n85319e9561f03dba9281326eb3e01c92251b878403ffc50a68fbe5050b86ffd7  design_docs/world-mission-dashboard.md\n7e20cdca5fb0956eaed9bf9387c3ffd5a9400c3d85cbdd07c0703bc709f3a199  design_docs/world-mission-index.md\n33697b13222054fe70d4f892819b3a6a15f1b4bff59413c1037dcb54631cb599  design_docs/world-mission-status-archive.md\n32c90181c7c0ad86e8981e1992c3dfd2f57a4f5a43dd6de022d9eaa5b22bbcce  design_docs/world-mission-log-archive.md\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "V4",
+      "command": "bash -c 'set -eu; base=b9816aefab82dc09cf9e3a9cec5e8191fb58a9de; paths=$(git ls-tree -r --name-only \"$base\" -- design_docs/world-mission.md design_docs/world-mission-log.md design_docs/world-mission-dashboard.md design_docs/world-mission-index.md design_docs/world-mission-status-archive.md design_docs/world-mission-log-archive.md design_docs/verification/world-iter364); n=0; while IFS= read -r p; do expected=$(git rev-parse \"$base:$p\"); actual=$(git hash-object -- \"$p\"); [ \"$expected\" = \"$actual\" ] || { printf \"MISMATCH %s\\n\" \"$p\"; exit 1; }; n=$((n+1)); done <<< \"$paths\"; printf \"Git blob matches against base: %s\\n\" \"$n\"; git ls-tree -r \"$base\" -- design_docs/verification/world-iter364 | shasum -a 256'",
+      "exit_code": 0,
+      "tool_chunk_id": "60993b",
+      "output": "Git blob matches against base: 53\n59301c03951fcc377d027296511f1820b8acf13f03a796824f7af1d7da6c6c36  -\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "V5",
+      "command": "sed -n '1043,1044p' design_docs/world-mission.md | shasum -a 256",
+      "exit_code": 0,
+      "tool_chunk_id": "59efa4",
+      "output": "27fecc13ef71fc8811f1c426b134c9650c57d86a3399446aa5ccf5c37d5ab260  -\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "V6",
+      "command": "bash -c 'set -eu; awk \"/<!-- decision-ledger:start -->/,/<!-- decision-ledger:end -->/\" design_docs/world-mission.md | shasum -a 256; sed -n \"1807,\\$p\" design_docs/world-mission.md | shasum -a 256'",
+      "exit_code": 0,
+      "tool_chunk_id": "477c55",
+      "output": "58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01  -\nf51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4  -\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "V7",
+      "command": "git diff --check b9816aefab82dc09cf9e3a9cec5e8191fb58a9de --",
+      "exit_code": 0,
+      "tool_chunk_id": "2bf6e6",
+      "output": "",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "W1",
+      "command": "bash -c 'set -eu; base=b9816aefab82dc09cf9e3a9cec5e8191fb58a9de; paths=$(git ls-tree -r --name-only \"$base\" -- design_docs/world-mission.md design_docs/world-mission-log.md design_docs/world-mission-dashboard.md design_docs/world-mission-index.md design_docs/world-mission-status-archive.md design_docs/world-mission-log-archive.md design_docs/verification/world-iter364); n=0; while IFS= read -r p; do expected=$(git rev-parse \"$base:$p\"); actual=$(git hash-object -- \"$p\"); [ \"$expected\" = \"$actual\" ] || { printf \"MISMATCH %s\\n\" \"$p\"; exit 1; }; n=$((n+1)); done <<< \"$paths\"; printf \"Git blob matches against base: %s\\n\" \"$n\"'",
+      "exit_code": 0,
+      "tool_chunk_id": "b6a95d",
+      "output": "Git blob matches against base: 53\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "W2",
+      "command": "git diff --quiet b9816aefab82dc09cf9e3a9cec5e8191fb58a9de --",
+      "exit_code": 0,
+      "tool_chunk_id": "84b54e",
+      "output": "",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "W3",
+      "command": "git diff --check",
+      "exit_code": 0,
+      "tool_chunk_id": "30221c",
+      "output": "",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "W4",
+      "command": "git diff --check b9816aefab82dc09cf9e3a9cec5e8191fb58a9de --",
+      "exit_code": 0,
+      "tool_chunk_id": "d72217",
+      "output": "",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "W5",
+      "command": "git diff --no-index --check /dev/null design_docs/verification/world-iter365/record-design.md",
+      "exit_code": 3,
+      "tool_chunk_id": "5ba955",
+      "output": "design_docs/verification/world-iter365/record-design.md:67: new blank line at EOF.\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "W6",
+      "command": "bash -c 'for p in /AGENTS.md /Users/AGENTS.md /Users/voightkampff/AGENTS.md /Users/voightkampff/.ailang/AGENTS.md /Users/voightkampff/.ailang/state/AGENTS.md AGENTS.md design_docs/AGENTS.md design_docs/verification/AGENTS.md design_docs/verification/world-iter365/AGENTS.md; do if [ -f \"$p\" ]; then printf \"PRESENT %s\\n\" \"$p\"; cat \"$p\"; else printf \"ABSENT %s\\n\" \"$p\"; fi; done'",
+      "exit_code": 0,
+      "tool_chunk_id": "b3ed3c",
+      "output": "ABSENT /AGENTS.md\nABSENT /Users/AGENTS.md\nABSENT /Users/voightkampff/AGENTS.md\nABSENT /Users/voightkampff/.ailang/AGENTS.md\nABSENT /Users/voightkampff/.ailang/state/AGENTS.md\nABSENT AGENTS.md\nABSENT design_docs/AGENTS.md\nABSENT design_docs/verification/AGENTS.md\nABSENT design_docs/verification/world-iter365/AGENTS.md\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "W7",
+      "command": "shasum -a 256 /Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/design-doc-creator/SKILL.md /Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md",
+      "exit_code": 0,
+      "tool_chunk_id": "05f4c8",
+      "output": "5dec198456b398758b90cfe9f9924f1002767ac3f530c8f1a08ce909d105e896  /Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/design-doc-creator/SKILL.md\nfce81ea64a500f1707c3730d535fc56a9dba9b455aaf07fd9d18a461b806ff0c  /Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "W8",
+      "command": "git status --short --untracked-files=all",
+      "exit_code": 0,
+      "tool_chunk_id": "11577b",
+      "output": "?? design_docs/verification/world-iter365/base-checks.json\n?? design_docs/verification/world-iter365/controller-observations.json\n?? design_docs/verification/world-iter365/current-issue.json\n?? design_docs/verification/world-iter365/evaluator-preflight-diagnostics.json\n?? design_docs/verification/world-iter365/evaluator-preflight.json\n?? design_docs/verification/world-iter365/inbox-triage.json\n?? design_docs/verification/world-iter365/main-tracked-baseline.json\n?? design_docs/verification/world-iter365/product-pr515-fresh.json\n?? design_docs/verification/world-iter365/record-design.md\n?? design_docs/verification/world-iter365/retro-counts.json\n?? design_docs/verification/world-iter365/skill-currency.json\n?? design_docs/verification/world-iter365/upstream-predicates.json\n?? design_docs/verification/world-iter365/worktree-census.json\n",
+      "output_is_excerpt": false
+    },
+    {
+      "id": "X1",
+      "command": "git diff --no-index --check /dev/null design_docs/verification/world-iter365/record-design.md",
+      "exit_code": 1,
+      "tool_chunk_id": "36b054",
+      "output": "",
+      "interpretation": "After correcting new-output EOF blank: no whitespace diagnostic; rc1 is the no-index new-file difference, not a product verdict."
+    },
+    {
+      "id": "X2",
+      "command": "shasum -a 256 design_docs/verification/world-iter365/record-design.md",
+      "exit_code": 0,
+      "tool_chunk_id": "eb4465",
+      "output": "39549a5d8d075e9a8a560475a6e4960bd2657184f6963cbd547a76255481e98c  design_docs/verification/world-iter365/record-design.md\n"
+    }
+  ],
+  "hypothetical_acceptance": {
+    "location": "record-design.md Exact preservation and acceptance gates",
+    "executed_milestone_checks": false,
+    "narrow_charter_test": "Controller-owned outside sandbox; not executed by designer",
+    "full_suites": "UNROUTED",
+    "product_gates": "Remain with human/controller; no acceptance or waiver",
+    "base_red_policy": "Report findings, never bypass or repair out of scope",
+    "shared_state_guard": "Observe Git content/hashes only; never seed/write shared state"
+  },
+  "run_accounting": {
+    "runtime_seconds": null,
+    "run_token_count": null,
+    "terminal_footer": null,
+    "metered_cost": null,
+    "imputed_cost": null,
+    "reason": "Actual terminal footer and complete-run runtime unavailable inside this role. Supervisor will add a separate NEW receipt; no invented usage or reuse of364 accounting."
+  },
+  "prohibited_actions_performed": {
+    "git_writes": false,
+    "existing_file_edits": false,
+    "product_test_gate_harness_changes": false,
+    "full_suites": false,
+    "product_tests": false,
+    "network": false,
+    "external_messaging": false,
+    "subagents": false,
+    "credential_reads": false,
+    "environment_value_reads": false,
+    "imports": false,
+    "writes_outside_worktree": false
+  },
+  "receipt_boundary": "Evidence is stage-bound before creation of this receipt. No self-hash or whole365 frozen snapshot; final external terminal verification belongs in a NEW supervisor receipt."
+}

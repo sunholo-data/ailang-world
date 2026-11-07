@@ -1,0 +1,35 @@
+{
+  "at_utc": "2026-11-07T17:52:26.539693+00:00",
+  "phase": "final",
+  "base": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+  "baseline_census": 6395,
+  "protected_paths": 6390,
+  "protected_mismatches": [],
+  "active_statuses": [
+    365,
+    364,
+    363
+  ],
+  "charter_lines": 6345,
+  "archive_lines": 730,
+  "ledger_rows": 99,
+  "ledger_sha256": "c52deeaabfe33a94ecbb71bb2cb190f3ffb686a49f45b89986d794b34bc8f00a",
+  "queue_sha256": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4",
+  "log_entries": 39,
+  "base_log_prefix_bytes": 490492,
+  "index_single_row_delta": true,
+  "dashboard_lines": 21,
+  "frozen_inputs": 25,
+  "main_unchanged_files": 6056,
+  "controller_negative_controls": {
+    "protected_byte": true,
+    "charter_byte": true,
+    "archive_drop_pair": true,
+    "ledger_change": true,
+    "log_prefix_drop": true,
+    "index_drop_new": true,
+    "dashboard_over_limit": true,
+    "input_hash_change": true
+  },
+  "scope": "ADMIN only; no product acceptance; original stopped proof remains immutable"
+}

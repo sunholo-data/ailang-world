@@ -1,0 +1,545 @@
+{
+  "comments": [
+    {
+      "id": "IC_kwDOThhN288AAAABh7pX2w",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "# Mission `world` \u2014 weekly report\n\n**Window** last 168h (since 2026-10-26) \u00b7 **generated** 2026-11-02 09:01\n\n| mission | iters (wk/all) | commits | lines+ | metered $ | opus | opus/it | refuted | ref/it |\n|---|---:|---:|---:|---:|---:|---:|---:|---:|\n| **world** | 27 / 27 | 342 | 108881 | $4.17 | 25 | 0.93 | 188 | 7.0 |\n| **fleet** | **27** | | | **$4.17** | **25** | | **188** | |\n\n`$` is a **lower bound** (fail-soft posting) \u00b7 `~` shared repo, subject-attributed \u00b7 fleet tokens **337099413** (all chains incl. evals; per-mission not exposed)\n\n## Goal distance \u2014 each mission's own claim\n\n_Source: the last `**Progress**` line in the mission log (self-reported at Gate 4,\nmandated 2026-08-31). \"not yet reported\" = no iteration has run since the mandate._\n\n- **world** \u2014 not yet reported\n\n## Landed\n\n**world** \u2014 27 iterations (product 13 \u00b7 admin 11 \u00b7 untagged 3), latest first\n- `#332` 2026-10-31 \u00b7 no pick: rule (d) block report 11; nothing moved since 331 but its own record and landing; row\u2026\n- `#331` 2026-10-31 \u00b7 no pick: rule (d) block report 10, the first since D-WORLD-102's scope ran out; row 233 parked\u2026\n- `#330` 2026-10-31 \u00b7 row 233 designed and parked: the holder-exit-reset excuse is blocked at quorum r2 on the\u2026\n- `#329` 2026-10-31 \u00b7 row 230 built: arm 6's hello wait pinned from both sides by a deterministic test, the SILENT\u2026\n- `#328` 2026-10-31 \u00b7 row 231 built: the P0/P3 position and phone predicates become CI-gated marketingcheck\u2026\n- \u2026and 22 earlier\n\n## Next week \u2014 each mission's own declaration\n\n`next` is the last iteration's `**Next**` field \u2014 what the mission itself said it would\ntake. `expected` is last week's OBSERVED rate (nominal capacity in brackets); observed is\nthe better predictor because iterations overrun the interval and the overlap guard yields.\n\n| mission | expected iters | blocked | next |\n|---|---:|---:|---|\n| **world** | 27 | 4 | \u2014 |\n\n## Harness drift\n\n_Surfaced weekly; upgrading is attended-only \u2014 see docs/internal/harness-upgrade-runbook.md._\n\n- **pi** 0.85.1 (npm latest 1.4.0) \u2014 **behind**\n- **codex** 0.164.0 (npm latest 0.166.0) \u2014 **behind**\n- **opencode** 1.15.7 (npm latest 1.19.5) \u2014 **behind**\n- **claude** 2.1.316 (self-updating channel)\n- **ollama** 0.40.0 \u2014 upgrades are BANKED eval boundaries, never mid-rotation\n- **brew outdated**: 51 formulae\n\n## Needs you\n\n_Conservative \u2014 under-reports by design; the charter is the source of truth._\n\nNothing parked on a human decision.\n\n\n---\n*Lines-added is volume, not efficiency: the highest-value output of a loop is often a\nrefutation that deletes a wrong premise at near-zero line count. Rank cost on **opus/it**,\nvalue on **ref/it**; read lines as context.*\n",
+      "createdAt": "2026-11-02T08:01:55Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6572103643",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABh8QrPQ",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 333: no pick, rule (d) block report 12. Nothing moved since 332. The weekly thread moved to #449.**\n- **Pick**: none. Nothing is loop-routable: release rows 150 and 151 wait on attended steps, and row 233 is parked on D-WORLD-105.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 94/100, nothing blocking \u00b7 record [#450](https://github.com/sunholo-data/ailang-world/pull/450), merge `22989014` (3/3 green)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. Weekly issue sweep: 0 orphans of 1 open issue. Bookkeeping moved from #366 to #449.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 row 233, but only if D-WORLD-105 is answered A or B\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: lanes degraded: ; `planner`: **codex** lane `gpt-6.1-sol` unusable (probe rc=`75` \u2014 over daily ration) \u2192 handed to `opus`; `executor`: **codex** lane `gpt-6.1-sol` unusable (probe rc=`75` \u2014 over daily ration) \u2192 handed to `claude:claude-haiku-5-5`\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-105** (unchanged): should World excuse a reverse-leg reset that closely follows a foreign answer, inside the fail-closed exec probe (row 233)? **A:** build r1 plus kimi's wiring fix and accept the unmeasured premise as a residual. Startup survives mux collisions, at a small soundness risk in a security gate. **B:** measure and enforce the premise on darwin and Linux first, then re-quorum. That probably takes several iterations, and the answer may still be no. **C (recommended):** close row 233 and keep failing closed; the operator retries on a rare collision. **Default if unanswered:** C, so nothing is built.\n  - Block reports end when a release row unblocks or you widen D-WORLD-102's scope (rows 235, 237\u2013242).\n\nFull record: [world-mission-log.md entry 333](https://github.com/sunholo-data/ailang-world/blob/dev/design_docs/world-mission-log.md) \u00b7 STATUS 2026-11-02 in `design_docs/world-mission.md`\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-02T08:38:50Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6572747581",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABiDX0GA",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 334 \u2014 row 235 LANDED: AC8's serialization test waits on events and proves the mutex held (first pick under D-WORLD-106 = A)**\n- **Pick**: row 235 `w-human-approve-control-window-flake`, the first row your D-WORLD-106 = A ruling (2026-11-02, attended; provenance `attended`) opened. D-WORLD-107 = A acknowledged too (row 243, attended track).\n- **Outcome**: LANDED \u00b7 [PRODUCT-HYGIENE] \u00b7 evaluator sonnet PASS 88, zero blocking \u00b7 [#457](https://github.com/sunholo-data/ailang-world/pull/457) merge `436e65c3`, merge CI 3/3. The fix is test-only (+177/\u221217); `daemon.go` is untouched. The 200 ms probe window is gone. A `TryLock` check now proves the daemon mutex was held: mutex removal is killed 20/20, plain and race. The serialized arm had been vacuous under the same gap that broke CI, a hole the row did not name.\n- **Progress**: 1.0 clauses 7/7 MET; goal unmoved (release rows 150/151).\n- **Up next (banked)**:\n  - row 237, the finish approve guard's `Record != nil` pin (next in D-WORLD-106's order);\n  - then rows 238 \u2192 242;\n  - row 244 (two failure-path guards, from the judge's notes) is outside D-WORLD-106's scope.\n- **Key find**: the quorum blocked twice on how strongly the doc labelled its checks (deterministic vs empirical), never on the design. Two cheap controller measurements settled it.\n- **Cost**: metered $0.5492 (two quorum rounds) \u00b7 quota: Anthropic (controller, designer, judge), ChatGPT (codex planner and executor) \u00b7 routing: as configured \u00b7 harness share 0 of the last 20.\n- **DECISIONS FOR MARK**: **D-WORLD-105** (unchanged): should World excuse a reset that arrives just after srt's mux answers, inside the fail-closed exec probe? \u00b7 A: build it and accept a small unmeasured soundness risk \u00b7 B: measure and enforce the premise first, which is likely several iterations \u00b7 **C (recommended, default)**: close row 233 and keep failing closed; the operator retries.\nFull record: `design_docs/world-mission.md` STATUS 334 \u00b7 `design_docs/world-mission-log.md` entry 334\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-02T14:52:24Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6580204568",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABiHITVA",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 335 \u2014 row 237 LANDED: a test now pins the finish approve guard's `Record != nil` arm (second pick under D-WORLD-106 = A)**\n- **Pick**: row 237 `w-finish-approve-record-guard-pin`, next in D-WORLD-106's order after row 235. Before routing, the controller re-measured at `77e0dd7c` that dropping the arm left every `host/daemon` and worldd Finish test green.\n- **Outcome**: LANDED \u00b7 [PRODUCT-HYGIENE] \u00b7 evaluator sonnet PASS 92, zero blocking \u00b7 [#459](https://github.com/sunholo-data/ailang-world/pull/459) merge `96d7489b`, merge CI 3/3 \u00b7 landing note [#460](https://github.com/sunholo-data/ailang-world/pull/460).\n  - The change is test-only (one new 67-line file); `episode_finish.go` is untouched.\n  - An approve request carrying a record now gets 403 and writes no approval to the store. A 200 control without the record runs on the same clock.\n  - The three checks each have their own killer mutant.\n- **Progress**: 1.0 clauses 7/7 MET; goal unmoved (release rows 150/151).\n- **Up next (banked)**:\n  - row 238, marketing predicate tolerances: next in D-WORLD-106's order, and the heaviest (its own orchestration-doc quorum and a store re-measure);\n  - then rows 239 \u2192 242;\n  - rows 244 and 245 come from judge notes and are outside D-WORLD-106's scope.\n- **Key find**: the judge's two survivors are real (a guard narrowed to `Record.Episode != \"\"`, and the record phase's `Scope` arm). The controller reproduced both and filed them as row 245.\n- **Cost**: metered $0.1441 (one quorum round, PROCEED 3/3) \u00b7 quota: Anthropic (controller, designer, judge), ChatGPT (codex planner and executor) \u00b7 routing: as configured \u00b7 harness share 0 of the last 20.\n- **DECISIONS FOR MARK**: **D-WORLD-105** (unchanged): should World excuse a reset that arrives just after srt's mux answers, inside the fail-closed exec probe? \u00b7 A: build it and accept a small unmeasured soundness risk \u00b7 B: measure and enforce the premise first, which is likely several iterations \u00b7 **C (recommended, default)**: close row 233 and keep failing closed; the operator retries.\nFull record: `design_docs/world-mission.md` STATUS 335 \u00b7 `design_docs/world-mission-log.md` entry 335\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-02T17:47:22Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6584144724",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABiMnXug",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 336: row 238 LANDED. The marketing checker bounds free gaps to one line, adds a cumulative-drift bound, and bridges a 1 px thumb split.**\n- **Pick**: row 238 `w-marketing-predicate-tolerances`, the third pick under D-WORLD-106 = A (queue order).\n- **Outcome**: LANDED \u00b7 [PRODUCT-HYGIENE] \u00b7 evaluator sonnet **89/100**, 0 blocking \u00b7 PR [#461](https://github.com/sunholo-data/ailang-world/pull/461) \u2192 merge [`98934b0e`](https://github.com/sunholo-data/ailang-world/commit/98934b0e) (head 3/3 green; merge CI 3/3, attempt 1)\n- **Progress**: 1.0 clauses 7/7 MET, goal unmoved (release rows 150/151 wait on attended steps). Real data keeps its verdicts: 9/9 stores ACCEPT, 10/10 phone images ACCEPT. The known-permissive arms now REFUSE.\n- **Up next (banked)**: row 239 still-probe commit (next under D-WORLD-106; it amends orchestration \u00a74.4, so expect that doc's quorum path) \u00b7 row 240 checker tolerance pins (now also carries two \u00b13 survivors) \u00b7 rows 241\u2013242.\n- **Key find**: the orchestration doc's own quorum blocked twice, 3/3 each time, on pre-existing review debt, not on row 238. Measured: none of the 16 lines row 231 pasted into \u00a74.4 were ever content-reviewed (0 of 16 appear in its reviewed design). Under r7 a judge content review of those lines is now a **precondition for A1's P0 step**.\n- **Cost**: metered $1.7503 (four quorum rounds) \u00b7 quota buckets: anthropic (opus designer\u00d73 + planner, haiku executor, sonnet judge) \u00b7 routing: `planner`: **codex** lane `gpt-6.1-sol` unusable (probe rc=`75`, over daily ration) \u2192 handed to `opus`; `executor`: **codex** lane `gpt-6.1-sol` unusable (probe rc=`75`, over daily ration) \u2192 handed to `claude:claude-haiku-5-5`\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-105** (pending, unchanged): should World excuse the holder-exit reset in the fail-closed probe? A: build it and accept the residual \u00b7 B: measure first \u00b7 **C (recommended, default): close row 233**.\n- Fleet `harness-resolved` replies acknowledged; rows 129/131/133 resolved (D-FLEET-24 A). Harness share 0 of the last 20.\n\nFull record: charter STATUS 336 and `design_docs/world-mission-log.md` entry 336 \u00b7 evidence `design_docs/verification/world-iter336/`\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-02T22:18:49Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6589896634",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABiQbx1w",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 337 \u2014 row 239 LANDED: the marketing capture's P0 still check is now a committed, asserting test**\n- **Pick**: row 239 `w-marketing-still-probe-commit` (fourth pick under D-WORLD-106 = A)\n- **Outcome**: LANDED \u00b7 [RELEASE-HYGIENE] \u00b7 evaluator sonnet PASS 91, zero blocking \u00b7 PR #463, merge [`248f902c`](https://github.com/sunholo-data/ailang-world/commit/248f902c386e25f2ec3872afdc2363b4d1c4d684), merge CI 3/3\n- **Progress**: 1.0: clauses 1\u20137 MET; goal unmoved. Release order 150 (waits on the attended A1) \u2192 151 (waits on row 188 N2d/N4a) \u2192 v1.0.0. P0 item (1) now runs inside the six-shot drill on the store it captures, so the attended A1's precondition is one command instead of a copied `.txt` probe.\n- **Up next (banked)**: row 240 (row 231's five surviving checker mutants) \u2014 next under D-WORLD-106 = A \u00b7 then 241 \u2192 242 \u00b7 a dev red still outranks\n- **Cost**: metered $0.3075 (two design-quorum rounds) \u00b7 quota buckets opus, sonnet, haiku \u00b7 routing: lanes degraded: ; `planner`: **codex** lane `gpt-6.1-sol` unusable (probe rc=`75` \u2014 over daily ration) \u2192 handed to `opus`; `executor`: **codex** lane `gpt-6.1-sol` unusable (probe rc=`75` \u2014 over daily ration) \u2192 handed to `claude:claude-haiku-5-5`\n- **DECISIONS FOR MARK**:\n  - D-WORLD-105 (pending, unchanged): should World excuse the holder-exit reset inside the fail-closed exec probe? A: build it, accept a small unmeasured soundness risk \u00b7 B: measure the premise first (several iterations, may still be no) \u00b7 **C (recommended): close row 233 and keep failing closed; the operator retries** \u00b7 default while unanswered: C.\n\nFull record: `design_docs/world-mission.md` STATUS 337 \u00b7 `design_docs/world-mission-log.md` entry 337\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-03T02:30:02Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6593901015",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABiT-v1g",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 338 \u2014 row 240 LANDED: every row-231 checker tolerance the judge found unpinned now has a boundary pair**\n- **Pick**: row 240 `w-marketing-checker-tolerance-pins`, next under D-WORLD-106 = A (fifth pick); release rows 150/151 re-measured, still not routable\n- **Outcome**: LANDED \u00b7 [RELEASE-HYGIENE] \u00b7 evaluator sonnet PASS 91, zero blocking \u00b7 PR #465 \u2192 merge [`13d3a3fb`](https://github.com/sunholo-data/ailang-world/commit/13d3a3fb6603f88627570d9ac354d2104262dd1c), merge CI 3/3\n- **Progress**: 1.0 clauses 7/7 MET; goal unmoved (release rows 150 and 151 wait on attended steps). This iteration closed the 7 row-240 survivors plus the background right edge, pinned the `gc >= 0` equivalence premise, and routed `position`/`phone` through `run`.\n- **Up next (banked)**: row 241 (row 230's hello-wait constant) \u2014 next under D-WORLD-106 = A \u00b7 row 242 (cross-profile exclusion by construction) \u2014 the last row in that scope \u00b7 new row 248 (the row-240 pins' own helpers carry no weight) \u2014 outside the scope, filed from the judge\n- **Key find**: a sandboxed codex executor cannot run this repo's marketingcheck package at all: one httptest bind panic aborts the test binary. The controller's out-of-sandbox round is the only real mutation evidence.\n- **Cost**: metered $0.4111 (two design-quorum rounds) \u00b7 quota buckets Anthropic (controller, designer, judge), codex (planner, executor) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**: D-WORLD-105 (unchanged, pending): should World excuse a reverse-leg reset that follows a foreign answer inside the fail-closed exec probe? A: build it and accept a small unmeasured soundness risk \u00b7 B: measure the premise on darwin and Linux first (several iterations) \u00b7 **C (recommended): close row 233 for 1.0 and keep failing closed** \u00b7 default C while unanswered.\nFull record: `design_docs/world-mission.md` STATUS 338 \u00b7 `design_docs/world-mission-log.md` entry 338\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-03T07:08:29Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6597619670",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABiaOIxA",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 339 \u2014 row 241 LANDED: pollLoopback's real dial cadence is now pinned to execProbePollEvery**\n- **Pick**: row 241 `w-exec-probe-hello-wait-pin-survivors`, the queue head under D-WORLD-106 = A (sixth pick).\n- **Outcome**: LANDED \u00b7 [PRODUCT-HYGIENE, clause 3] \u00b7 evaluator sonnet PASS 88, zero blocking \u00b7 [`a1a1bc6a`](https://github.com/sunholo-data/ailang-world/commit/a1a1bc6a91f8606c51e37e18bc4e11b06079c41a) (PR #467), landing note PR #468; dev green at `e22e0794`. Test-only: new T12 counts real dials against a reference timer loop; T10 measures its ceiling from `SetDeadline`. Held under 160 `yes` (min 19 dials vs gate 6).\n- **Progress**: 1.0 clauses 7/7 MET; goal unmoved (waits on release rows 150 and 151).\n- **Up next (banked)**:\n  - row 242 `net6` hoist \u2014 last row in D-WORLD-106's scope; needs its own design + quorum\n  - row 150 \u2014 waits on your attended A1\n  - row 151 \u2014 waits on row 188 N2d/N4a (attended 219 \u2192 217 \u2192 218)\n- **Key find**: merge CI attempt 1 went red only because `host/verifygate` hit its 8 min `-race` package timeout (480 s; green runs 259\u2013403 s) on a tree identical to the green PR head; attempt 2 green. Filed as row 249. After row 242 the D-WORLD-106 scope is used up, and rows 244\u2013249 are hygiene outside it.\n- **Cost**: metered $0.38 (design quorum r1, 3/3 PROCEED) \u00b7 quota: opus (controller, designer 340k tok), codex (planner 114k, executor 52k), sonnet (judge 42k) \u00b7 routing: as configured \u00b7 harness share 0 of last 20.\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-105** (unchanged): should World excuse the holder-exit reset in the fail-closed probe? A: build it and accept the residual \u00b7 B: measure first \u00b7 **C (recommended, default): close row 233 for 1.0 and keep failing closed.**\nFull record: `design_docs/world-mission-log.md` entry 339 and STATUS 2026-11-03 \u2014 ITERATION 339.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-03T12:47:22Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6604163268",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABidugvg",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 340 \u2014 row 242 LANDED: every exec-probe `net6` listener is bound before the fan-out (port exclusion by construction); D-WORLD-106's scope is used up**\n- **Pick**: row 242 `w-exec-probe-cross-profile-net6-hoist`, the last row in D-WORLD-106's scope (queue order).\n- **Outcome**: LANDED \u00b7 [PRODUCT-HYGIENE] \u00b7 evaluator sonnet PASS 93, zero blocking. PR #469 merged as [`1af4fe90`](https://github.com/sunholo-data/ailang-world/commit/1af4fe9042ba8164564dc78e6fe444b17cdcf3d2), merge CI 3/3. Quorum r1 + r2 blocked on evidence, never on direction; r3 applied the reviewers' verbatim fixes.\n- **Progress**: 1.0 clauses 7/7 MET; goal unmoved (release rows 150 \u2192 151). Harness share 0 of the last 20.\n- **Up next (banked)**: nothing is loop-routable. Rule-(d) block reports resume unless D-WORLD-108 or D-WORLD-105 is answered, or a release row becomes routable.\n- **Key find**: the Sunholo start page (`serve.py`) dials every 127.0.0.1 listener about every 32 s. On this rig that makes World's fail-closed exec startup probe refuse, estimated at 2\u20136% per profile per startup. Filed as row 250.\n- **Cost**: metered $0.5617 (two quorum rounds) \u00b7 quota buckets opus (designer, controller), codex (planner, executor), sonnet (judge) \u00b7 routing: as configured.\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (new)**: D-WORLD-106's rows are all done. May the loop take the remaining hygiene rows below the release rows?\n    - **A**: rows 250, then 244 \u2192 249, in queue order, stopping when a release row is routable. 250 fixes the startup false refusal; 244\u2013249 are small test-pin and CI-flake rows like the seven just landed.\n    - **B**: row 250 only.\n    - **C**: keep rule (d), so block reports and no builds.\n    - Recommendation **A**. Default **C** while unanswered.\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe?\n    - **A**: build it.\n    - **B**: measure first.\n    - **C**: close row 233 and keep failing closed.\n    - Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-03 \u2014 ITERATION 340 \u00b7 `design_docs/world-mission-log.md` entry 340\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-03T15:27:16Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6607839422",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABihO_Gg",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 341: no pick, rule (d) block report 13. D-WORLD-106's rows are done, and nothing else is loop-routable.**\n- **Pick**: none. Release rows 150 and 151 wait on attended steps. Row 233 is parked on D-WORLD-105. Rows 250 and 244\u2013249 wait on D-WORLD-108.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 95/100, zero blocking \u00b7 record [#471](https://github.com/sunholo-data/ailang-world/pull/471) merged as `5d78a8dd` (3/3 green); landing note #472 merged as `05b5b05e`\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. There were 0 directives and 0 crash notices, and dev is green.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured (no lane degraded)\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**.\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-03 \u2014 ITERATION 341 \u00b7 `design_docs/world-mission-log.md` entry 341\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-03T17:57:05Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6611517210",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABilV_Aw",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 342: no pick, rule (d) block report 14 (repeats 341). Nothing is loop-routable.**\n- **Pick**: none. Release rows 150 and 151 wait on attended steps. Row 233 is parked on D-WORLD-105. Rows 250 and 244\u2013249 wait on D-WORLD-108.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 94/100, zero blocking \u00b7 record [#473](https://github.com/sunholo-data/ailang-world/pull/473) merged as `b6d9ae62` (3/3 green); landing note [#474](https://github.com/sunholo-data/ailang-world/pull/474)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. There were 0 directives and 0 crash notices, and dev is green.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**.\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-03 \u2014 ITERATION 342 \u00b7 `design_docs/world-mission-log.md` entry 342\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-03T21:26:29Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6615826179",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABiphzVA",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 343: no pick, rule (d) block report 15 (repeats 341\u2013342). Nothing is loop-routable.**\n- **Pick**: none. Release rows 150 and 151 wait on attended steps. Row 233 is parked on D-WORLD-105. Rows 250 and 244\u2013249 wait on D-WORLD-108.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 95/100, zero blocking \u00b7 record [#475](https://github.com/sunholo-data/ailang-world/pull/475) merged as `762079ba` (3/3 green); landing note [#476](https://github.com/sunholo-data/ailang-world/pull/476)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. There were 0 directives and 0 crash notices, dev is green, and the harness share is 0 of the last 20.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**.\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-04 \u2014 ITERATION 343 \u00b7 `design_docs/world-mission-log.md` entry 343\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-04T01:40:47Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6620214100",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABitCS0Q",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 344: no pick, rule (d) block report 16 (repeats 341\u2013343). Nothing is loop-routable.**\n- **Pick**: none. Release rows 150 and 151 wait on attended steps. Row 233 is parked on D-WORLD-105. Rows 250 and 244\u2013249 wait on D-WORLD-108.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 96/100, zero blocking \u00b7 record [#477](https://github.com/sunholo-data/ailang-world/pull/477) merged as `800eb842`; landing note [#478](https://github.com/sunholo-data/ailang-world/pull/478) merged as `38b9f627` (3/3 green; a second sonnet judge passed row 251's attribution 96/100)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. There were 0 directives and 0 crash notices, and the harness share is 0 of the last 20. Merge CI on `800eb842` went red once in `host/broker` (a 4 s post-dispatch budget expired under load). The tree was identical to the green PR head, and the re-run was 3/3 green, so dev is green. That flake is filed as row 251 (filing only).\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, two sonnet judges) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**.\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-04 \u2014 ITERATION 344 \u00b7 `design_docs/world-mission-log.md` entry 344\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-04T06:05:01Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6623892177",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABiwsUow",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 345: no pick, rule (d) block report 17 (repeats 341\u2013344). Nothing is loop-routable.**\n- **Pick**: none. Release rows 150 and 151 wait on attended steps. Row 233 is parked on D-WORLD-105. Rows 250 and 244\u2013249 wait on D-WORLD-108. Row 251 (the broker load flake) is outside every granted scope.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 94/100, zero blocking \u00b7 record [#479](https://github.com/sunholo-data/ailang-world/pull/479) merged as `28306cb3` (merge CI 3/3 on attempt 1); landing note [#480](https://github.com/sunholo-data/ailang-world/pull/480) merged as `3683ac60`\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. There were 0 directives and 0 crash notices, and the harness share is 0 of the last 20. The mission log was rotated (`--keep 20`): entries 306\u2013325 moved to the archive, lossless (\u22121,673 / +1,673 lines).\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Row 251 is not in that list, so to include it, say \"A + 251\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-04 \u2014 ITERATION 345 \u00b7 `design_docs/world-mission-log.md` entry 345\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-04T09:46:07Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6627726499",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABi1WH3Q",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 346: no pick, rule (d) block report 18 (repeats 341\u2013345). Nothing is loop-routable.**\n- **Pick**: none. Release rows 150 and 151 wait on attended steps. Row 233 is parked on D-WORLD-105. Rows 250 and 244\u2013249 wait on D-WORLD-108. Row 251 (the broker load flake) is outside every granted scope.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 93/100, zero blocking \u00b7 record [#481](https://github.com/sunholo-data/ailang-world/pull/481) merged as `c7e7a7eb` (merge CI 3/3 on attempt 1); landing note [#482](https://github.com/sunholo-data/ailang-world/pull/482) merged as `62d362ce` (3/3)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. There were 0 directives and 0 crash notices, and the harness share is 0 of the last 20.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Row 251 is not in that list, so to include it, say \"A + 251\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-04 \u2014 ITERATION 346 \u00b7 `design_docs/world-mission-log.md` entry 346\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-04T14:01:19Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6632605661",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABi6VIwQ",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 347: no pick, rule (d) block report 19 (repeats 341\u2013346). Nothing is loop-routable.**\n- **Pick**: none. Release rows 150 and 151 wait on attended steps (row 151's N2d route is confirmed unbuilt in code). Row 233 is parked on D-WORLD-105. Rows 250 and 244\u2013249 wait on D-WORLD-108. Row 251 is outside every granted scope.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 93/100, zero blocking \u00b7 record [#483](https://github.com/sunholo-data/ailang-world/pull/483) merged as `f6976ed0` (merge CI 3/3 on attempt 1); landing note [#484](https://github.com/sunholo-data/ailang-world/pull/484)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. There were 0 directives and 0 crash notices, and the harness share is 0 of the last 20.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Row 251 is not in that list, so to include it, say \"A + 251\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-04 \u2014 ITERATION 347 \u00b7 `design_docs/world-mission-log.md` entry 347\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-04T17:49:37Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6637832385",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABi-0ceA",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 348: no pick, rule (d) block report 20 (repeats 341\u2013347). Nothing is loop-routable.**\n- **Pick**: none. Release rows 150 and 151 wait on attended steps (row 151's N2d route is still unbuilt in code). Row 233 is parked on D-WORLD-105. Rows 250 and 244\u2013249 wait on D-WORLD-108. Row 251 is outside every granted scope.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 94/100, zero blocking \u00b7 record [#485](https://github.com/sunholo-data/ailang-world/pull/485) merged as `e92b7489` (merge CI 3/3 on attempt 1); landing note [#486](https://github.com/sunholo-data/ailang-world/pull/486)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. There were 0 directives and 0 crash notices, and the harness share is 0 of the last 20.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Key find**: this is the 6th block report today (343\u2013348). Each one costs a record PR, a judge run and two CI runs, and nothing moves. One word on D-WORLD-108 or D-WORLD-105 changes that.\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Row 251 is not in that list, so to include it, say \"A + 251\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-04 \u2014 ITERATION 348 \u00b7 `design_docs/world-mission-log.md` entry 348\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-04T21:27:06Z",
+      "includesCreatedEdit": true,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6642539640",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABi_d2Kg",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "Transcript secret exposure on fire world-1793825318-10110: 1 key/file hit(s). Key names and paths are in the controlplane notice and the driver log; no values are printed anywhere.",
+      "createdAt": "2026-11-04T22:00:52Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6643217962",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjDVxpA",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 349: no pick, rule (d) block report 21 (repeats 341\u2013348). Nothing is loop-routable.**\n- **Pick**: none. Release rows 150 and 151 wait on attended steps (row 151's N2d route is still unbuilt in code). Row 233 is parked on D-WORLD-105. Rows 250 and 244\u2013249 wait on D-WORLD-108. Row 251 is outside every granted scope.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 94/100, zero blocking \u00b7 record [#487](https://github.com/sunholo-data/ailang-world/pull/487) merged as `29f02857` (merge CI 3/3 on attempt 1); landing note [#488](https://github.com/sunholo-data/ailang-world/pull/488)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. There were 0 directives and 0 crash notices, and the harness share is 0 of the last 20.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Key find**: the \"transcript secret exposure\" notice the driver posted here after iteration 348 is real but old. The hit is in an attended session transcript from 10-16/19, not in that fire. It is the same leaked-key class as the fleet's D-FLEET-42 rotation ask. The scan matches files by mtime, so it will keep blaming World fires. Filed as a fleet ticket (row 252); no World action.\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Row 251 is not in that list, so to include it, say \"A + 251\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-05 \u2014 ITERATION 349 \u00b7 `design_docs/world-mission-log.md` entry 349\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-05T01:41:38Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6647280036",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjDXHpA",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "Transcript secret exposure on fire world-1793839743-21731: 1 key/file hit(s). Key names and paths are in the controlplane notice and the driver log; no values are printed anywhere.",
+      "createdAt": "2026-11-05T01:43:10Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6647302052",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjGaazg",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 350: row 252 done (the fleet fixed the transcript-scan misattribution); one new fleet ticket; otherwise rule (d) block report 22.**\n- **Pick**: row 252, bookkeeping. The fleet replied `harness-resolved` (driver #2127, `9ea8adcf4`). Checked: the fix is in this fire's driver and its baseline was written. Nothing else is loop-routable.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 94/100, zero blocking \u00b7 record [#489](https://github.com/sunholo-data/ailang-world/pull/489) merged as `646ae3f5` (merge CI 3/3 on attempt 1); landing note [#490](https://github.com/sunholo-data/ailang-world/pull/490)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. There were 0 directives and 0 crash notices, and the harness share is 0 of the last 20.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Key find**: the second \"transcript secret exposure\" notice here (01:43Z) is the same old hit as the first (checked by hashes). From now on a notice means a real in-fire exposure, and Gate 0 does not read them yet: fleet ticket, row 253. Rotating the old key is still the fleet's D-FLEET-42 ask.\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Row 251 is not in that list, so to include it, say \"A + 251\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-05 \u2014 ITERATION 350 \u00b7 `design_docs/world-mission-log.md` entry 350\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-05T05:26:49Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6650501838",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjK75tg",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 351: rule (d) block report 23, no pick. Row 252's fix is confirmed. A new CI flake is filed as row 254.**\n- **Pick**: none. Nothing is loop-routable. Row 252's next-fire check passed: the scan after iteration 350's fire read clean with a baseline, and no new notice appeared here.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 96/100 (record) and PASS 90/100 (landing note + row 254), zero blocking \u00b7 record [#491](https://github.com/sunholo-data/ailang-world/pull/491) merged as `7e22489c` (merge CI 3/3 on attempt 2); landing [#492](https://github.com/sunholo-data/ailang-world/pull/492)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. 0 directives, 0 crash notices; harness share 0 of the last 20.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Key find**: dev CI took 5 attempts over two SHAs today with no code change. The PR head hit HTTP 504 on GitHub release downloads twice (install step, no retry). The merge hit a `scripts/marketingcheck` cleanup-timing flake (now row 254, filed only). Both went green on the same tree.\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, two sonnet judges) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Rows 251 and 254 are not in that list, so to include them, say \"A + 251 + 254\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-05 \u2014 ITERATION 351 \u00b7 `design_docs/world-mission-log.md` entry 351\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-05T10:07:21Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6655244726",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjOoffg",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 352: the fleet fixed row 253, so Gate 0 now counts transcript-scan notices itself. Then rule (d) block report 24.**\n- **Pick**: row 253, bookkeeping only. The fleet's fix (ailang #2132) is in this fire's driver. Run live, the script reports 2 notices on #449: the old ones for fires 348 and 349, not new exposure.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 93/100, zero blocking \u00b7 record [#493](https://github.com/sunholo-data/ailang-world/pull/493) merged as `ae5aa91b` (merge CI 3/3 on attempt 1)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. 0 directives, 0 crash notices; harness share 0 of the last 20. Both tickets this loop filed this week (rows 252, 253) are resolved and verified.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Rows 251 and 254 are not in that list, so to include them, say \"A + 251 + 254\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-05 \u2014 ITERATION 352 \u00b7 `design_docs/world-mission-log.md` entry 352\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-05T13:24:15Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6659121022",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjT4Ebg",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 353: rule (d) block report 25. There was no new input, and nothing is loop-routable.**\n- **Pick**: none. Clauses 1\u20137 are MET, and every NEXT row waits on D-WORLD-108, D-WORLD-105 or an attended step.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 93/100, zero blocking \u00b7 record [#495](https://github.com/sunholo-data/ailang-world/pull/495) merged as `7b24c787` (merge CI 3/3 on attempt 1)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. 0 directives, 0 crash notices, 0 fleet replies; harness share 0 of the last 20. Rows 252 and 253 still check out: the post-fire scan is clean, and #449 reads `transcript=2`, which are the two old notices.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Rows 251 and 254 are not in that list, so to include them, say \"A + 251 + 254\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-05 \u2014 ITERATION 353 \u00b7 `design_docs/world-mission-log.md` entry 353\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-05T17:25:52Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6664619118",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjZCaZA",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 354: rule (d) block report 26. There was no new input, and nothing is loop-routable.**\n- **Pick**: none. Clauses 1\u20137 are MET, and every NEXT row waits on D-WORLD-108, D-WORLD-105 or an attended step.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 94/100, zero blocking \u00b7 record [#498](https://github.com/sunholo-data/ailang-world/pull/498) merged as `44d1d7db` (merge CI 3/3)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. 0 directives, 0 crash notices, 0 fleet replies; harness share 0 of the last 20. Rows 252 and 253 still check out: the post-fire scan is clean, and #449 reads `transcript=2`, which are the two old notices.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal; 247 is the capture flake that went red on a dev merge at 353). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Rows 251 and 254 are not in that list, so to include them, say \"A + 251 + 254\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-05 \u2014 ITERATION 354 \u00b7 `design_docs/world-mission-log.md` entry 354\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-05T21:29:17Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6670031460",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjc_cfw",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 355: rule (d) block report 27. There was no new input, and nothing is loop-routable.**\n- **Pick**: none. Clauses 1\u20137 are MET, and every NEXT row waits on D-WORLD-108, D-WORLD-105 or an attended step.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 93/100, zero blocking \u00b7 record [#500](https://github.com/sunholo-data/ailang-world/pull/500) merged as `36a8bb67` (merge CI 3/3)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. 0 directives, 0 crash notices, 0 fleet replies; harness share 0 of the last 20. Rows 252 and 253 still check out: the post-fire scan is clean, and #449 reads `transcript=2`, which are the two old notices.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal; 247 is the capture flake that went red on a dev merge at 353). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Rows 251 and 254 are not in that list, so to include them, say \"A + 251 + 254\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-06 \u2014 ITERATION 355 \u00b7 `design_docs/world-mission-log.md` entry 355\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-06T01:26:40Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6674177151",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjgYZ7g",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 356: rule (d) block report 28. There was no new input, and nothing is loop-routable.**\n- **Pick**: none. Clauses 1\u20137 are MET, and every NEXT row waits on D-WORLD-108, D-WORLD-105 or an attended step.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 96/100, zero blocking \u00b7 record [#502](https://github.com/sunholo-data/ailang-world/pull/502) merged as `0916628e` (merge CI 3/3)\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. 0 directives, 0 crash notices, 0 fleet replies; harness share 0 of the last 20. Rows 252 and 253 still check out: the post-fire scan is clean, and #449 reads `transcript=2`, which are the two old notices.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal; 247 is the capture flake that went red on a dev merge at 353). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Rows 251 and 254 are not in that list, so to include them, say \"A + 251 + 254\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-06 \u2014 ITERATION 356 \u00b7 `design_docs/world-mission-log.md` entry 356\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-06T05:28:57Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6677731822",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjkX-hA",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 357: rule (d) block report 29. No new input and nothing loop-routable. The record merge hit the row-247 capture flake on dev again.**\n- **Pick**: none. Clauses 1\u20137 are MET, and every NEXT row waits on D-WORLD-108, D-WORLD-105 or an attended step.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 93/100, zero blocking \u00b7 record [#504](https://github.com/sunholo-data/ailang-world/pull/504) merged as `6abccce0`. Merge CI was red on attempt 1 and green 3/3 after re-running the failed job.\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. 0 directives, 0 crash notices, 0 fleet replies; harness share 0 of the last 20. Rows 252 and 253 still check out: the post-fire scan is clean, and #449 reads `transcript=2`, which are the two old notices.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Key find**: row 247's capture test (fixed 120 s context) turned dev red on a docs-only merge for the second time in two days (353, 357). Each time the runner was about 4\u00d7 slower, and a re-run fixed it. An A on D-WORLD-108 lets the loop fix it.\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judges) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal; 247 is this flake). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Rows 251 and 254 are not in that list, so to include them, say \"A + 251 + 254\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-06 \u2014 ITERATION 357 \u00b7 `design_docs/world-mission-log.md` entry 357\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-06T09:43:15Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6681919108",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjoNomw",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 358: rule (d) block report 30. No new input and nothing loop-routable.**\n- **Pick**: none. Clauses 1\u20137 are MET, and every NEXT row waits on D-WORLD-108, D-WORLD-105 or an attended step.\n- **Outcome**: LANDED (record only) \u00b7 [ADMIN] \u00b7 evaluator sonnet PASS 96/100, zero blocking \u00b7 record [#506](https://github.com/sunholo-data/ailang-world/pull/506) merged as `374eca52`; merge CI green 3/3 on attempt 1.\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. 0 directives, 0 crash notices, 0 fleet replies; harness share 0 of the last 20. Rows 252 and 253 still check out: the post-fire scan is clean, and #449 reads `transcript=2`, which are the two old notices.\n- **Up next (banked)**: row 150, the release (needs only your attended A1) \u00b7 row 151 (needs row 188 N2d/N4a, after attended rows 219 \u2192 217 \u2192 218) \u00b7 rows 250, then 244 \u2192 249, if D-WORLD-108 is answered A\n- **Cost**: metered $0 \u00b7 quota buckets: Anthropic subscription (opus controller, sonnet judge) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-108 (unchanged)**: may the loop take the hygiene rows below the release rows? **A**: rows 250, then 244 \u2192 249 (250 fixes a startup false refusal; 247 is the capture flake that turned two dev merges red). **B**: row 250 only. **C**: keep rule (d). Recommendation **A**, default **C**. Rows 251 and 254 are not in that list, so to include them, say \"A + 251 + 254\".\n  - **D-WORLD-105 (unchanged)**: excuse the holder-exit reset in the fail-closed probe? **A** build \u00b7 **B** measure first \u00b7 **C** close row 233. Recommendation and default **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-06 \u2014 ITERATION 358 \u00b7 `design_docs/world-mission-log.md` entry 358\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-06T13:28:08Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6685943963",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjviLAg",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 359: row 250 landed. A local dialer no longer refuses the exec startup probe.**\n- **Pick**: row 250 `w-exec-probe-foreign-dial-false-refusal`. Your attended ruling D-WORLD-108 = B was received (provenance attended) and this is its first row. D-WORLD-109 = A was received too. Block reports end.\n- **Outcome**: LANDED \u00b7 [PRODUCT-HYGIENE] \u00b7 evaluator sonnet PASS 91/100, zero blocking \u00b7 [#511](https://github.com/sunholo-data/ailang-world/pull/511) merged as `e2e2c7cc`, merge CI 3/3 on attempt 1. The Linux real-srt step passes the new tests.\n- **Progress**: 1.0 is 7/7 clauses MET; goal unmoved. Arm 6 of the fail-closed exec probe now classifies each loopback accept as child, foreign or silent. The rig start page's `GET /` dials, which caused the false refusals, are retried rather than refused. A child or silent reach still fails.\n- **Up next (banked)**: rows 255 \u2192 256 \u2192 257, which finish D-WORLD-108's scope (each needs its own design) \u00b7 then rows 201 \u2192 243 (D-WORLD-109 = A) \u00b7 row 150 still needs only your attended A1\n- **Key find**: one weakening is stated, not hidden. An escape that both rewrites bytes and is intermittent now gets 3 tries. The pinned srt 0.0.78 has no such relay under World's config (verified from its source).\n- **Cost**: metered $0.68 (design quorum, 2 rounds) \u00b7 quota buckets: Anthropic subscription (opus controller and designer, sonnet judge), ChatGPT (codex planner and executor) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-105 (unchanged)**: should World excuse the holder-exit reset in the fail-closed probe? **A**: build it. **B**: measure first. **C**: close row 233 and keep failing closed. Recommendation and default: **C**.\n\nFull record: `design_docs/world-mission.md` STATUS 2026-11-06 \u2014 ITERATION 359 \u00b7 `design_docs/world-mission-log.md` entry 359\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-06T19:33:09Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6693620482",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABjvjOgA",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "\u26a0\ufe0f Mission slot verdict: **REAPED at=gate-5** (rc=0, attempt=1/3). Log: `/tmp/ailang-mission-world.log`.",
+      "createdAt": "2026-11-06T19:34:01Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6693637760",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABj0BNLg",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 360: row 255 landed. A failed exec call now says why it failed.**\n- **Pick**: row 255 `w-exec-failure-carries-a-reason`, the 2nd row under your D-WORLD-108 = B.\n- **Outcome**: LANDED \u00b7 [PRODUCT] \u00b7 judge sonnet 88 (code), 80 (record) \u00b7 PR #513 \u2192 merge `2dc94fc2` (CI 3/3)\n- **What changed**: a failed `workspace-exec` call now carries one short reason, up to 200 bytes, from 10 fixed classes such as `seed-cache: GOCACHE: timed out after 9s` or `exec-stack-drift: \u2026`. It reaches the effect record, the agent's result, `why`, `call` and the daemon log. The reason never includes Go error text or private paths.\n- **Progress**: 1.0 clauses 1\u20137 MET; goal unmoved (clause 5 UX, already met). Harness share 0/20.\n- **Up next (banked)**: row 256 (service can't start under heavy load), then row 257 (seed the GOCACHE at bind) to finish D-WORLD-108; then 201 \u2192 243 under D-WORLD-109.\n- **Key find**: no written store-compatibility policy exists, so I filed D-WORLD-110 rather than assume one. Iteration 359's \"REAPED\" notice here was a false alarm: its work had landed, but it skipped its final `stamp complete`.\n- **Cost**: metered $0.54 (quorum, 2 rounds) \u00b7 quota: opus (designer, controller), sonnet (2 judges), codex (planner, executor) \u00b7 routing: as configured\n- **DECISIONS FOR MARK**:\n  - **D-WORLD-110 (new)**: once a store holds a failure reason, older World builds can't read it. As built, the store raises its schema version, so an older build refuses it at open. Do you accept that?\n    - **A (recommended)**: as built. A `service upgrade` rollback to a pre-255 build stops the service instead of serving, and an older `why` shows that link as \u2717.\n    - **B**: A, plus `why` and `call` refuse a daemon of a different build up front.\n    - **C**: revert the record field before the next release, so failures go back to having no reason.\n    - Default if unanswered: **A**.\n  - **D-WORLD-105** (unchanged): row 233. Default C, close it and keep failing closed.\n\nFull record: charter STATUS 2026-11-06 ITERATION 360 \u00b7 log entry 360 \u00b7 `design_docs/verification/world-iter360/`\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-06T23:20:49Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6698323246",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABj2Gm2w",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "\u2139\ufe0f Mission iteration exited **rc=1 after landing its record** at 2026-11-07 02:41 CET \u2014 the mission log gained an entry during this run, so this was a late watchdog kill of a lingering child, not a lost iteration. The queue advanced normally. Log on the rig: `/tmp/ailang-mission-world.log`.",
+      "createdAt": "2026-11-07T01:41:54Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6700508891",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABj5PwKA",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 362 \u2014 row 256 parked; independent FAIL**\n- **Pick**: 256 daemon startup under load.\n- **Outcome**: PARKED \u00b7 [PRODUCT] \u00b7 product FAIL85/local UNMET; draft515 [76553889](https://github.com/sunholo-data/ailang-world/commit/7655388936b80bea9c4843f0a2e0abc085e52c0f). Record judge PASS98; record-only [565609ab](https://github.com/sunholo-data/ailang-world/commit/565609ab51c9300924831087aa98308dcdd418b0) LANDED, CI3/3.\n- **Progress**: 1.0 clauses 7/7 MET; goal unmoved. Harness 0/20.\n- **Up next (banked)**: no READY item; 256 validation \u2192257 cache seed\u2192201 approvals\u2192243 verbs, in ratified order.\n- **Cost**: metered $0.65795556 (+$0.2635408 imputed) \u00b7 quota codex624157tok/ollama57239tok (+controller/supervisors unreported); routing: controller claude:claude-opus-5-5 \u2192 codex:gpt-6.1-sol (probe ok); lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `pi:openrouter/minimax/minimax-m3`\n- **DECISIONS FOR MARK**:\n  - D-WORLD-105 holder reset: A build/risk; B measure; C retire row233 for1.0/keep fail-closed (rec; default parked while unanswered).\n  - D-WORLD-110 compatibility: A schema6 after first failure line/older binary refuses (rec/default); B A+matched why/call readers; C remove failure field before release.\n  - D-WORLD-111 validation: A retain current gate/park (default); B authorize independently judged attribution gate, \u2265100 paired runs/arm, unattributed failures still block (rec). No waiver.\n  - D-WORLD-112 rotate exposed ZAI_API_KEY,TYPESAFE_API_KEY,LYCEUM_API_KEY,OLLAMA_API_KEY,GOOGLE_API_KEY,GEMINI_AGENTS_API_KEY: A attended revoke/rotate+update consumers (rec); B accept possible provider exposure. Default: no autonomous changes, incident OPEN. Stored artifacts sanitized; provider exposure persists.\nFull record: https://github.com/sunholo-data/ailang-world/pull/516\n\ud83e\udd16 Generated with [Codex](https://openai.com/codex/)\n",
+      "createdAt": "2026-11-07T07:15:23Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6703804456",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABj6-lvg",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 363 \u2014 ADMIN record; product 256 still parked**\n\n- **Pick**: none; attended decisions block the route.\n- **Outcome**: LANDED \u00b7 ADMIN \u00b7 MiniMax PASS95 \u00b7 [PR517](https://github.com/sunholo-data/ailang-world/pull/517) [merge](https://github.com/sunholo-data/ailang-world/commit/374696c0536809d7c7080d07339208570d5130cb)\n- **Progress**: 1.0 clauses1\u20137 MET; goal unmoved; harness0/20.\n- **Up next (banked)**: 256 \u2014 waits111/112; then257; then201\u2192243 under attended order. Release150/151 first when attended predicates pass.\n- **Cost**: metered $0.48501192 \u00b7 Codex quota478,703; controller/supervisors unknown \u00b7 routing: lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `pi:openrouter/minimax/minimax-m3`\n- **DECISIONS FOR MARK**:\n\n  - D-WORLD-105 reset safety? A build/accept risk; B measure+enforce then re-quorum; C close233 for1.0/keep fail-closed. Recommend C; default now:233 parked/no build.\n  - D-WORLD-110 compatibility? A ratify schema6/old-binary refusal; B A+reject mixed read builds; C revert field/lose exec reasons. Recommend/default A now.\n  - D-WORLD-111 validation? A retain exact-two-failures gate/park515; B design+independently judge paired-base attribution (\u2265100 same-environment arms each) or causal in-scope repair; unmeasured blocks, no waiver/merge. Recommend B; default A now.\n  - D-WORLD-112 exposed credentials? A attended revoke/rotate+update vault/consumers; B accept exposure/retain. Recommend A; default no changes now, incident open/product parked.\n\nFull record: [log](https://github.com/sunholo-data/ailang-world/blob/dev/design_docs/world-mission-log.md)\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)\n",
+      "createdAt": "2026-11-07T10:27:56Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6705620414",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOThhN288AAAABj9O6Xg",
+      "author": {
+        "login": "sunholo-voight-kampff"
+      },
+      "authorAssociation": "MEMBER",
+      "body": "**Iteration 364 \u2014 human gates preserved**\n- **Pick**: none.\n- **Outcome**: LANDED \u00b7 [ADMIN] \u00b7 independent MiniMax PASS92/100 \u00b7 [record](https://github.com/sunholo-data/ailang-world/pull/518) \u00b7 [merge b9816aef](https://github.com/sunholo-data/ailang-world/commit/b9816aefab82dc09cf9e3a9cec5e8191fb58a9de) \u00b7 PR/merge CI3/3.\n- **Progress**: 1.0 clauses7/7 MET; goal unmoved. Harness0/20.\n- **Up next (banked)**: none READY.256 awaits111/112; then257\u2192201\u2192243 in attended order. Release150/151 stay attended.\n- **Cost**: metered$0.51223248 \u00b7 Codex quota313,859; controller/supervisor unreported \u00b7 routing: lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `pi:openrouter/minimax/minimax-m3`\n- **DECISIONS FOR MARK** (unchanged):\n- **D-WORLD-105** reverse resets: A build with soundness risk; B measure safety first; C keep fail-closed (recommended/default now).\n- **D-WORLD-110** rollback policy: A ratify old-binary refusal at schema6 (recommended/default now); B also refuse mixed-build reads; C revert failure-reason recording.\n- **D-WORLD-111** row256 gate: A retain exact-two-failures/park (default now); B design an independently judged attribution gate, \u2265100 runs per paired base/candidate arm or causal repair, unknowns block (recommended; no waiver/merge).\n- **D-WORLD-112** six exposed keys: A attended rotate/revoke+update consumers (recommended); B retain/accept exposure. Default now: no autonomous changes, incident OPEN/product parked.\nFull record: [iteration364](https://github.com/sunholo-data/ailang-world/blob/dev/design_docs/world-mission-log.md#364--2026-11-07--admin-record-only-row-256-remains-parked-admin).\n\ud83e\udd16 Generated with [Codex](https://openai.com/codex/)\n",
+      "createdAt": "2026-11-07T14:09:47Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6707984990",
+      "viewerDidAuthor": true
+    }
+  ],
+  "createdAt": "2026-11-02T08:01:35Z"
+}

@@ -1,0 +1,49 @@
+{
+  "at_utc": "2026-11-07T16:53:29.669073+00:00",
+  "index_keyword_hits": [
+    "| 364 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |",
+    "| 363 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |",
+    "| 362 | 2026-11-07 | row 256 implemented but PARKED: independent MiniMax FAIL 85, corrected local gate UNMET; evaluator credential incident escalated [PRODUCT] |",
+    "| 361 | 2026-11-07 | orphan: row 256 r1 design/quorum artifacts recovered and credited by iteration 362; no commit, landing or independent execution verdict [ADMIN] |"
+  ],
+  "last20": [
+    "| 364 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |",
+    "| 363 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |",
+    "| 362 | 2026-11-07 | row 256 implemented but PARKED: independent MiniMax FAIL 85, corrected local gate UNMET; evaluator credential incident escalated [PRODUCT] |",
+    "| 361 | 2026-11-07 | orphan: row 256 r1 design/quorum artifacts recovered and credited by iteration 362; no commit, landing or independent execution verdict [ADMIN] |",
+    "| 360 | 2026-11-06 | row 255 built: a failed workspace-exec call records, returns and logs one bounded failure line; lazy store schema mark guards older binaries; desig... |",
+    "| 359 | 2026-11-06 | row 250 built: arm 6 classifies each loopback accept (child / foreign / silent), so a local dialer no longer refuses the exec startup probe; design... |",
+    "| 358 | 2026-11-06 | no pick: rule (d) block report 30 (repeats 341\u2013357); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12299; Gat... |",
+    "| 357 | 2026-11-06 | no pick: rule (d) block report 29 (repeats 341\u2013356); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12190; Gat... |",
+    "| 356 | 2026-11-06 | no pick: rule (d) block report 28 (repeats 341\u2013355); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12161; Gat... |",
+    "| 355 | 2026-11-06 | no pick: rule (d) block report 27 (repeats 341\u2013354); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12183; Gat... |",
+    "| 354 | 2026-11-05 | no pick: rule (d) block report 26 (repeats 341\u2013353); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12161; Gat... |",
+    "| 353 | 2026-11-05 | no pick: rule (d) block report 25 (repeats 341\u2013352); rows 252 and 253's later-fire checks held (post-fire scan clean with baseline=12170; Gate 0 re... |",
+    "| 352 | 2026-11-05 | bookkeeping pick: row 253 resolved on the fleet's harness-resolved reply (ailang #2132 `7e9e9192b`, in this fire's pin; Gate 0's self-notice script... |",
+    "| 351 | 2026-11-05 | no pick: rule (d) block report 23 (repeats 341\u2013350); row 252's next-fire check passed (fire world-1793854144-27678 scanned clean with baseline=1207... |",
+    "| 350 | 2026-11-05 | bookkeeping pick: row 252 resolved on the fleet's harness-resolved reply (driver #2127 `9ea8adcf4`, in this fire's pin); Gate 0's missing read for ... |",
+    "| 349 | 2026-11-05 | no pick: rule (d) block report 21 (repeats 341\u2013348); rows 250 and 244\u2013249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; re... |",
+    "| 348 | 2026-11-04 | no pick: rule (d) block report 20 (repeats 341\u2013347); rows 250 and 244\u2013249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; re... |",
+    "| 347 | 2026-11-04 | no pick: rule (d) block report 19 (repeats 341\u2013346); rows 250 and 244\u2013249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; re... |",
+    "| 346 | 2026-11-04 | no pick: rule (d) block report 18 (repeats 341\u2013345); rows 250 and 244\u2013249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; re... |",
+    "| 345 | 2026-11-04 | no pick: rule (d) block report 17 (repeats 341\u2013344); rows 250 and 244\u2013249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; re... |"
+  ],
+  "harness_last20": 0,
+  "last3_product_landings": [
+    {
+      "iteration": 360,
+      "unmet_clause_moved": "none; all clauses already MET"
+    },
+    {
+      "iteration": 359,
+      "unmet_clause_moved": "none; all clauses already MET"
+    },
+    {
+      "iteration": 340,
+      "unmet_clause_moved": "none; all clauses already MET"
+    }
+  ],
+  "routable_unmet_clause": false,
+  "drift": false,
+  "idle_fingerprint": "ineligible: driver quota fallbacks and watermark degradation"
+}

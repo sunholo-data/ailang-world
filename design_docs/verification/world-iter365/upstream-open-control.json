@@ -1,0 +1,13 @@
+{
+  "at_utc": "2026-11-07T16:58:29.268407+00:00",
+  "argv": [
+    "gh",
+    "api",
+    "repos/sunholo-data/ailang-world/issues/449",
+    "--jq",
+    "{number,state}"
+  ],
+  "rc": 0,
+  "stdout": "{\"number\":449,\"state\":\"open\"}\n",
+  "purpose": "known-open endpoint control, excluded from upstream numerator"
+}

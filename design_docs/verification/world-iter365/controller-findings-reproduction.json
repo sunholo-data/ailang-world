@@ -1,0 +1,72 @@
+{
+  "baseline_archive": {
+    "argv": [
+      "git",
+      "diff",
+      "--no-index",
+      "--check",
+      "/dev/null",
+      "-"
+    ],
+    "rc": 3,
+    "stdout": "-:728: new blank line at EOF.\n",
+    "stderr": ""
+  },
+  "candidate_archive": {
+    "argv": [
+      "git",
+      "diff",
+      "--no-index",
+      "--check",
+      "/dev/null",
+      "-"
+    ],
+    "rc": 3,
+    "stdout": "-:730: new blank line at EOF.\n",
+    "stderr": ""
+  },
+  "executor-structural-proof.json": {
+    "argv": [
+      "git",
+      "diff",
+      "--no-index",
+      "--check",
+      "/dev/null",
+      "/Users/voightkampff/.ailang/state/world-iter365-record/design_docs/verification/world-iter365/executor-structural-proof.json"
+    ],
+    "rc": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "executor-completion-proof.json": {
+    "argv": [
+      "git",
+      "diff",
+      "--no-index",
+      "--check",
+      "/dev/null",
+      "/Users/voightkampff/.ailang/state/world-iter365-record/design_docs/verification/world-iter365/executor-completion-proof.json"
+    ],
+    "rc": 1,
+    "stdout": "",
+    "stderr": ""
+  },
+  "inbox": {
+    "initial": 20,
+    "additional": 36,
+    "distinct": 56,
+    "all_ack_rc0": true,
+    "empty_representation": null
+  },
+  "len_null_wrapper": {
+    "reproduced": "TypeError",
+    "scope": "report-only expression; no repeated messaging or writes"
+  },
+  "missing_schedule_mode": {
+    "rc": 1,
+    "stderr": "Error: AILANG_MISSION_REGISTRY: /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-registry-baseline-6n6u3z9x/world.toml: schedule.mode is required (\"keepalive\" or \"interval\")\n",
+    "original_registry": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-registry-baseline-6n6u3z9x",
+    "corrected_r2_preserved": true
+  },
+  "disposition": "All four nonblocking findings reproduced; retained as recorded, not filed as new rows under D-WORLD-109. Judge independently accepted scoped continuation; no product criterion change."
+}

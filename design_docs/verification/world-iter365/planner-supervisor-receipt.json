@@ -1,0 +1,92 @@
+{
+  "role": "planner",
+  "iteration": 365,
+  "recorded_at": "2026-11-07T17:04:16.056558+00:00",
+  "resolved_lane": "codex:gpt-6.1-sol",
+  "derive_reason": "declared:planner-lane-default-pin",
+  "actual_role_model": "gpt-6.1-sol",
+  "supervisor_interface": "collaboration Agent supervisor without model override; actual role via bounded model-pinned codex CLI",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.planner-world-iter365",
+  "base": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+  "probe": {
+    "command": [
+      "/opt/homebrew/bin/codex",
+      "exec",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "--sandbox",
+      "workspace-write",
+      "-C",
+      "/Users/voightkampff/dev/sunholo-data/.planner-world-iter365",
+      "-o",
+      "/tmp/world365-planner-1794070710489644000/probe-final.txt",
+      "MISSION-ROLE: planner\nReply with exactly: ok"
+    ],
+    "rc": 0,
+    "runtime_seconds": 3.829,
+    "deadline_seconds": 120,
+    "stdin": "/dev/null",
+    "OPENAI_API_KEY": "stripped, subscription lane",
+    "actual_footer": "11.069",
+    "actual_tokens": 11069,
+    "private_log": "/tmp/world365-planner-1794070710489644000/probe.log",
+    "final_message": "/tmp/world365-planner-1794070710489644000/probe-final.txt"
+  },
+  "run": {
+    "command": [
+      "/opt/homebrew/bin/codex",
+      "exec",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "--sandbox",
+      "workspace-write",
+      "--add-dir",
+      "/Users/voightkampff/Library/Caches/go-build",
+      "--add-dir",
+      "/Users/voightkampff/go/pkg/mod",
+      "-C",
+      "/Users/voightkampff/dev/sunholo-data/.planner-world-iter365",
+      "-o",
+      "/tmp/world365-planner-1794070710489644000/run-final.txt",
+      "CONTENTS_OF:/tmp/world365-planner-1794070710489644000/directive.txt"
+    ],
+    "rc": 0,
+    "runtime_seconds": 278.048,
+    "deadline_seconds": 1800,
+    "stdin": "/dev/null",
+    "OPENAI_API_KEY": "stripped, subscription lane",
+    "directive_bytes": 5507,
+    "actual_footer": "60.460",
+    "actual_tokens": 60460,
+    "private_log": "/tmp/world365-planner-1794070710489644000/run.log",
+    "final_message": "/tmp/world365-planner-1794070710489644000/run-final.txt"
+  },
+  "usage": {
+    "probe_tokens": 11069,
+    "run_tokens": 60460,
+    "total_actual_footer_tokens": 71529,
+    "locale_note": "Dotted footer grouping:11.069=11069;60.460=60460",
+    "billing": "Subscription CLI lane, OPENAI_API_KEY removed; footer tokens are actual; no per-direction or metered-cost claim",
+    "metered_usd": null,
+    "imputed_usd": null
+  },
+  "artifacts": {
+    "design_docs/verification/world-iter365/record-plan.md": "523008e17f783f19b955f45c54da454fcfc7a4c7dab21031d9a2a5ffb6fce57e",
+    "design_docs/verification/world-iter365/record-state.json": "293d95564b3c5afae27d2479192547f5162c9219c92c84c55c05ca19eca01d42"
+  },
+  "scope_validation": {
+    "one_milestone": true,
+    "passes": null,
+    "existing_file_edits": false,
+    "test_reruns": false
+  },
+  "postrun_controller_refinements_pending": [
+    "Gate4 controller base=<fullsha>@2026-11-07T16:58:29Z must appear in final Routing evidence",
+    "Controller will run fleet CLI index-only using ephemeral registry pointed to record checkout; installed registry untouched. Exact manual365 row identity remains required. This refinement arrived after actual planner run started; plan says no wholesale regeneration, so controller must disclose narrow CLI validation reconciliation before executor handoff."
+  ],
+  "no_plan_copy_performed": true
+}

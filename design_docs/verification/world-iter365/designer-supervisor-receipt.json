@@ -1,0 +1,26 @@
+{
+  "role": "designer",
+  "actual_lane": "codex:gpt-6.1-sol",
+  "rc": 0,
+  "runtime_seconds": 309.646,
+  "tokens_used": 90716,
+  "token_provenance": "actual raw terminal footer; dot grouping interpreted as thousands separator",
+  "raw_log": "/tmp/world-iter365-designer-20261107-0/actual.raw.log",
+  "final_file": "/tmp/world-iter365-designer-20261107-0/actual-final.txt",
+  "token_footer_literal": "90.716",
+  "probe": {
+    "rc": 0,
+    "runtime_seconds": 3.991,
+    "model": "gpt-6.1-sol",
+    "raw_log": "/tmp/world-iter365-designer-20261107-0/probe.raw.log",
+    "token_footer_literal": "11.039",
+    "tokens_used": 11039,
+    "final": "ok"
+  },
+  "supervisor_interface": "collaboration Agent supervisor without model override; actual role via bounded model-pinned CLI",
+  "artifacts": {
+    "record-design.md": "39549a5d8d075e9a8a560475a6e4960bd2657184f6963cbd547a76255481e98c",
+    "designer-receipt.json": "43e71ae7d17e60516d311af7fcba8e3d329cd737149b3565f6c0052500a0935c"
+  },
+  "finding": "One ADMIN record milestone; row256 PARKED independent FAIL85 local criterion UNMET; D105/110/111/112 OPEN; product implementation and full suites unrouted."
+}

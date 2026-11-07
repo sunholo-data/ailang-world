@@ -1,0 +1,81 @@
+{
+  "at_utc": "2026-11-07T16:52:12.739574+00:00",
+  "fleet_origin_dev": "252680e1beb4e6cf1709a010cc1c45838b91b9f8",
+  "authoritative_path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control",
+  "symlink_target": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control",
+  "cwd_copy_exists": false,
+  "files": [
+    {
+      "file": "SKILL.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/ci-health.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/codex-lane-false-greens.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-0-preflight.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-1-observe.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-2-pick.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-3-route.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-3-triage.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-3b-ci-green.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-4-record.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-5-retro.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/ref-drift.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/role-spawn-routing.md",
+      "rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/verification-protocol.md",
+      "rc": 0,
+      "matches_origin": true
+    }
+  ],
+  "instrument_control": "remote byte stream compared; altered local byte vector != remote asserted",
+  "control_pass": true
+}

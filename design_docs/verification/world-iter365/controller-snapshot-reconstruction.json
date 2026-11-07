@@ -1,0 +1,14 @@
+{
+  "at_utc": "2026-11-07T17:23:35.568197+00:00",
+  "members": {
+    "design_docs/world-mission-log.md": "2b42b9a348cdffc7560b4ec53d0c5889d2183a619b49b32d8b091274f67f2547",
+    "design_docs/world-mission-index.md": "a27f891f0f8b7dadaf022eebcdbcc4bb81a2b5e9295000c335cbfc08dbb9fdd7",
+    "design_docs/world-mission-status-archive.md": "1829cc1e1a02022496c7ec7537368a9d0202daa43ad6bd65aef3b58fc1bc39e7",
+    "design_docs/world-mission-dashboard.md": "5e80a7397ad9354d06a6eab3bfb2a43aebf7f35fe673260bca4f515b9cc25160",
+    "design_docs/world-mission.md": "24225ebebd46c9829b508b279baca0d0195d93fb0ed4961c442daa46c6df5e82",
+    "design_docs/verification/world-iter365/executor-completion-proof.json": "a7f984557342417cbaca99acb4a9b43b0bb4514ac662655c805ac2042259e809"
+  },
+  "faithful": true,
+  "member_count": 6,
+  "scope": "single immutable local M1, bulk not staged; tracked stage commit and hashes preserve reviewable reconstruction"
+}

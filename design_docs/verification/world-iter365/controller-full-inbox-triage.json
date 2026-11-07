@@ -1,0 +1,263 @@
+{
+  "at_utc": "2026-11-07T17:08:53.851620+00:00",
+  "initial_list_limit": 20,
+  "initial20_acked": true,
+  "explicit_limit": 1000,
+  "additional_count": 36,
+  "rows": [
+    {
+      "id": "inbox_1793405384179_a8734bee",
+      "title": "iter-328 claim: row 231 marketing position checker",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793390682086_a0f83fd5",
+      "title": "iter-327 claim: row 236 dev red (TestEpisodeFinishScopeExpiry boundary flake)",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793376118625_60105403",
+      "title": "iter-326 claim: rule (d) block report",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793361869007_883be643",
+      "title": "iter-325 claim: rule (d) block report + log rotation",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793347370348_58cb7988",
+      "title": "iter-324 claim: rule (d) block report",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793332967693_601a6427",
+      "title": "iter-323 claim: rule (d) block report",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793318597095_a077fd3c",
+      "title": "iter-322 claim: rule (d) block report",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793304200279_4873de37",
+      "title": "iter-321 claim: rule (d) block report",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793293037209_2857111d",
+      "title": "iter-320 claim: row 234 dev red (requireF15 134 substring)",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793289832458_d0b201f3",
+      "title": "iter-320 claim: rule (d) block report",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793275434230_3824ba99",
+      "title": "iter-319 claim: rule (d) block report",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793261149307_d81dfca1",
+      "title": "iter-318 claim: row 232 (dev red)",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793246908670_a83bdef9",
+      "title": "iter-317 claim: rule (d) block report",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793232203938_48788a43",
+      "title": "iter-316 claim: row 150 M8b",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793217851646_602b4a9c",
+      "title": "iter-315 claim: row 150 C8\u2032(iii)/P0 amendment",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793204288073_68f84e98",
+      "title": "iter-314 claim: arm6 reverse-leg flake",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793189047564_58bd3523",
+      "title": "iter-313 claim: row 150 M8a",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793174669964_38ed7297",
+      "title": "iter-312 claim: row 150 R1",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793160149214_80ea4ab7",
+      "title": "iter-311 claim: row 150 M7c4",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793145729267_f8fc7f4f",
+      "title": "iter-310 claim: row 150 M7c3",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793131586515_3060c571",
+      "title": "iter-309 claim: row 150 M7c2b",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793117052506_00445c7b",
+      "title": "iter-308 claim: row 150 M7a-fix",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793102625035_e0bf0e53",
+      "title": "iter-307 claim: row 150 M7c2a",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793088200938_386ae2f3",
+      "title": "iter-306 claim: row 150 R0 + M7c0",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1793014104555_a849500b",
+      "title": "iter-305 claim: row 150 orchestration doc",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1792999711680_a0de15f1",
+      "title": "iter-304 claim: row 150 M7c",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1792668706768_680beada",
+      "title": "iter-301 claim: row 150 M7a",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1792654051988_88bceec5",
+      "title": "iter-300 claim: row 150 M6",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1792639661342_088e9230",
+      "title": "iter-299 claim: row 150 M5c",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1792625322816_58d0d5bd",
+      "title": "iter-298 claim: row 150 M5b (third attempt to judge)",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1792610903824_e00ced8e",
+      "title": "iter-297 claim: row 150 M5b (landing iter-296's orphan)",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1792596802867_c829686c",
+      "title": "iter-296 claim: row 150 M5b",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1792582122749_e8c22f71",
+      "title": "iter-295 claim: row 156 M7b",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1792567659426_78d1f1ef",
+      "title": "iter-294 claim: row 156 M7a",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1792539024717_b8c555e6",
+      "title": "iter-292 claim: row 156 M6b",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    },
+    {
+      "id": "inbox_1792525358082_300e63e3",
+      "title": "iter-291 claim: row 156 M6a",
+      "sender": "mission-world",
+      "ack_rc": 0,
+      "disposition": "historical own-claim; already represented in mission history; no directive authority"
+    }
+  ],
+  "remaining": null,
+  "correction": "Earlier20 was first batch only. Full enumeration now covered56 own claims; no other sender/directive/regression found. Original observations stay unchanged."
+}
