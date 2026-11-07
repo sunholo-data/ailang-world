@@ -1,0 +1,69 @@
+{
+  "role": "planner",
+  "agent_api_model_override": "unavailable; Agent supervisor delegates actual pinned provider CLI",
+  "lane": "codex:gpt-6.1-sol",
+  "resolver_reason": "declared:planner-lane-default-pin",
+  "base": "adb4fb80b9d7600ad9118aa15a29fb2e4a4e7c89",
+  "private_raw_dir": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world366-planner-0mlj1fxk",
+  "subscription_key_stripped": true,
+  "raw_census_restored_sha256": "188fa00923b82119a0cc3cd6a6b64717891b9dfc62bf9e6775e7422f505cab97",
+  "probe": {
+    "command": [
+      "/opt/homebrew/bin/codex",
+      "exec",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "reply with exactly: ok"
+    ],
+    "closed_stdin": true,
+    "deadline_seconds": 120,
+    "returncode": 0,
+    "wall_seconds": 3.664,
+    "timed_out": false,
+    "footer_literal": "6.207",
+    "footer_tokens": 6207,
+    "model_header_present": true
+  },
+  "actual": {
+    "command": [
+      "/opt/homebrew/bin/codex",
+      "exec",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "--sandbox",
+      "workspace-write",
+      "--add-dir",
+      "/Users/voightkampff/Library/Caches/go-build",
+      "--add-dir",
+      "/Users/voightkampff/go/pkg/mod",
+      "-C",
+      "/Users/voightkampff/dev/sunholo-data/.world-iter366-planner",
+      "-o",
+      "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world366-planner-0mlj1fxk/last.txt",
+      "MISSION-ROLE: planner\nAct as actual pinned sprint-planner for World mission iteration366 ADMIN record. Read authoritative /Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/SKILL.md and mission-control/resources/gate-3-route.md and codex-lane-false-greens.md; scope below overrides scaffolding, two-milestone template and external automatic handoffs. Produce a concise practical one-milestone ADMIN plan, not product code.\nRead design_docs/verification/world-iter366/record-design.md, CLAUDE.md, relevant charter authority/queue, controller-observations.json, controller-gate4-base.json, designer-receipt.json and baseline receipts. Programmatically parse large base-files.json, never cat full large manifests or earlier evidence collections. Planner worktree is detached from committed adb4fb80b9d7600ad9118aa15a29fb2e4a4e7c89; canonical product base remains1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4. Raw worktree-census.txt was reconstructed from tracked worktree-census-original.json original_text with original_sha256 verification; it is intentionally local-only since porcelain trailing blank failed whitespace, original bytes and original failure remain evidence, no waiver.\nOutput ONLY two NEW files: design_docs/verification/world-iter366/record-plan.md and record-state.json. Plan ideally <=100 lines. State real sprint_id WORLD-ITER366-ADMIN; one real milestone ID M1_ADMIN_RECORD_366 with description, references to design/plan, nonempty acceptance_criteria all aligned with plan AC names, registry_reuse none reason administrative bookkeeping, passes=false initially. No placeholder IDs; no Go suite acceptance. Follow all design G1-G8: five existing administrative outputs only, new executor-proof evidence plus cumulative .snap/M1 snapshot, one manifest with path/type/mode/hash, explicit owned output enumeration. Controller commits/reconstructs, child no Git writes. No novel long scripts or acceptance diagnostic gates for this routine ADMIN. Freeze consumed inputs individually as paths+SHA256; never freeze/hash entire366 directory, and allow genuinely NEW concurrent controller evidence untouched. In state include input_sha256 from supplied explicit map. Freeze future consumed record-plan.md by its actual hash in state after writing it; state itself is executor writable only for progress fields, not a cyclic hash.\nExisting outputs: world-mission.md inserts STATUS366 retaining365/364 and transfers exact363 line+blank to end status archive; unique Current route365 ->366. No other charter edits; preserve whole marked ledger and queue suffix bytes. Archive preserves all old prefix bytes, but whole-file old archive whitespace style is NOT an acceptance gate. Log preserves complete prior prefix, appends one canonical366 heading from design, 39->40 entries means NO rotation (rotation only >40); unchanged log archive. Index inserts366 before365 preserving every earlier byte incl361. Dashboard <=40 physical lines. ALL baseline files outside five and ALL earlier evidence byte exact. Default and base-relative git diff --check plus NEW output diagnostics are required; new-file no-index rc1 signals content differences, inspect diagnostics separately. Report base reds without repair or waiver. No TMPDIR/GOTMPDIR overrides. No suite, product source/tests/gates, shared state, credentials, network, external messaging, nested agents, human decisions or autonomous skip256.\nTruthful ADMIN record: row256 remains PARKED needs-human-review independent MiniMax FAIL85 LOCAL_CRITERION UNMET draftPR515. D-WORLD105/110/111/112 remain OPEN, defaults C/A/A and no autonomous credential change; D111/112 independent holds. Conditional order250->255->256->257->201->243 no skip. Clauses1-7 MET inherited, goal unchanged. Controller owns Git, narrow Go test only if side-effect inspected and pristine baseline, CI exact PR+merge full40 heads all3 success, external delivery and independent final judge; do not assert future completion. No sandbox test verdict accepted; denial UNINFORMATIVE UNDER SANDBOX. ADMIN scope has explicit quorum exception. Plan can immediately hand to controller, no user awaited.\nFrozen consumed input map (read and verify as needed; preserve ALL these files):\n{\n  \"design_docs/verification/world-iter366/record-design.md\": \"cb625155d298e01d53f6835e9df6e834a8def626910ea4a32afd43689ba829d2\",\n  \"design_docs/verification/world-iter366/designer-receipt.json\": \"b57bcbd0e363b04440c182d7a685b0cd56833706d7e9b13f09aefd08a3cfa016\",\n  \"design_docs/verification/world-iter366/controller-observations.json\": \"835c7b1e8f043ffdd665b50ead1c01746b68dcfc16e1ababca81fb96ce5025b2\",\n  \"design_docs/verification/world-iter366/controller-gate4-base.json\": \"6dead0affd47d93a35c117d7ee8048ab80dc3ab3bf3fdd7a6b39f0cf547400c3\",\n  \"design_docs/verification/world-iter366/base-files.json\": \"cd7c4b01521f5dcf05cc28ee0eca9a2ed9c16df5a725ad76799e97774b8b8be0\",\n  \"design_docs/verification/world-iter366/base-checks.json\": \"ed89adb7157be4912a51bfb33705d2d2690455714e951730221f6a168907d2e7\",\n  \"design_docs/verification/world-iter366/baseline-charter-gate.json\": \"115a490fa241735e1eaa3d5618d2f51a6508984c731d81a076f7f2ba8f018b36\",\n  \"design_docs/verification/world-iter366/baseline-index-cli.json\": \"25355aeea1426966a16db9c2b24546ea7cdf91998fa3d74c14df755a0e4652cc\",\n  \"design_docs/verification/world-iter366/baseline-privacy.json\": \"200e5988087719a6e33c1de336986fa04e8b7f192c5c81c4b0d107346fce64ac\",\n  \"design_docs/verification/world-iter366/worktree-census-original.json\": \"0ba05080b812ca077c0f62ef11b8c20a44d85acaae228c8eb7ec9fb6f809854b\",\n  \"design_docs/verification/world-iter366/worktree-census.txt\": \"188fa00923b82119a0cc3cd6a6b64717891b9dfc62bf9e6775e7422f505cab97\",\n  \"design_docs/verification/world-iter366/routing-resolvers.json\": \"4943e2eac7548d9415838ddb9e65dfb0fb030e77905440fef185f058ce89877c\",\n  \"CLAUDE.md\": \"68f6fd16ede4c598a93590c3de20a2fc661a128c241eed747fab4d68d74a9141\",\n  \"design_docs/world-mission.md\": \"24225ebebd46c9829b508b279baca0d0195d93fb0ed4961c442daa46c6df5e82\",\n  \"design_docs/world-mission-log.md\": \"a829fe7f26991b7765082829615ba151cd4bdbfcc7192ac843b5d06384470359\",\n  \"design_docs/world-mission-index.md\": \"a27f891f0f8b7dadaf022eebcdbcc4bb81a2b5e9295000c335cbfc08dbb9fdd7\",\n  \"design_docs/world-mission-dashboard.md\": \"e12a54622d072419c98e84892ecbe8815f73eb0a44ea323cc752a0359f373dd6\",\n  \"design_docs/world-mission-status-archive.md\": \"1829cc1e1a02022496c7ec7537368a9d0202daa43ad6bd65aef3b58fc1bc39e7\",\n  \"design_docs/world-mission-log-archive.md\": \"32c90181c7c0ad86e8981e1992c3dfd2f57a4f5a43dd6de022d9eaa5b22bbcce\"\n}\nFinish with short plan/state paths and no claimed execution.\n"
+    ],
+    "closed_stdin": true,
+    "deadline_seconds": 600,
+    "returncode": 0,
+    "wall_seconds": 238.31,
+    "timed_out": false,
+    "footer_literal": "87.696",
+    "footer_tokens": 87696,
+    "model_header_present": true
+  },
+  "artifacts": {
+    "record-plan.md": {
+      "bytes": 8532,
+      "sha256": "c83f38e286939fa9060ed3b42a9eae3d9212e6b8accf83f9cf0444072e9f7526"
+    },
+    "record-state.json": {
+      "bytes": 15188,
+      "sha256": "83d2e5d9133137aaef3cbb598bc69d96157a0797d8360a06fb4fa7b2049c15ca"
+    }
+  },
+  "completion": "Actual child exited rc0; both actual planner artifacts validated, frozen inputs stable, exact bytes copied to unused controller-owned evidence paths. One real M1 with passes=false and nonvacuous acceptance criteria."
+}

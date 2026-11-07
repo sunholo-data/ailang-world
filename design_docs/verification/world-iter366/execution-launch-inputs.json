@@ -1,0 +1,12 @@
+{
+  "sha256": {
+    "design_docs/verification/world-iter366/record-design.md": "cb625155d298e01d53f6835e9df6e834a8def626910ea4a32afd43689ba829d2",
+    "design_docs/verification/world-iter366/record-plan.md": "6fd6323243087e08719c36a9db11cac30765e4eb7c9339bee56e4ed7f6b0d761",
+    "design_docs/verification/world-iter366/record-state.json": "28bb418fe3d873a1d8be1273d7cb6a476791a1a2aa92023d846e6a3543a354e9",
+    "design_docs/verification/world-iter366/designer-supervisor-receipt.json": "e1f63e2eac8b5a7aea094d9ef60f34f77ead62e1f6f753c970c709d8cc310df7",
+    "design_docs/verification/world-iter366/planner-supervisor-receipt.json": "0d18a28d55eb20dc293a359317f943655eb742a30c7d9e8fe1a8830a6791e060",
+    "design_docs/verification/world-iter366/planner-correction-supervisor-receipt.json": "9f3188161e9a7c089a5f5b8ebffad5757da05237625a1f0ac01c1b17bb58935b",
+    "design_docs/verification/world-iter366/executor-preflight.json": "67215626d66d9f7491994a6595a7dc82d28eaeb380898ac2e83457ad0fd89332"
+  },
+  "rule": "Original planning state immutable; new execution-state owns progress; genuinely new controller receipts allowed untouched"
+}

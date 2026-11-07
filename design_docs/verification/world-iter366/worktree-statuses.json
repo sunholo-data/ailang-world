@@ -1,0 +1,926 @@
+{
+  "operation": "read-only status, no adoption/cleanup",
+  "rows": [
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world",
+      "branch": "refs/heads/dev",
+      "rc": 0,
+      "status": [
+        "?? .claude/worktrees/",
+        "?? .wt-world-iter306-r0/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/private/tmp/claude-501/-Users-voightkampff-dev-sunholo-data-ailang-world/ae6f556a-f500-44de-9966-aae536bf2162/scratchpad/wt-d108",
+      "branch": "refs/heads/mission/attended-d-world-108",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/private/tmp/claude-501/-Users-voightkampff-dev-sunholo-data-ailang-world/ae6f556a-f500-44de-9966-aae536bf2162/scratchpad/wt-d109",
+      "branch": "refs/heads/mission/attended-d-world-109",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-final-2026-10-14/repo",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-final-2026-10-15/repo",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-final/repo",
+      "branch": "refs/heads/attended/row93-final",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-smoke-2026-10-15/repo",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-tune/repo",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/row114/wt",
+      "branch": "refs/heads/sprint/row114-k5-q7q8",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/row182-e2e/repo",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/repo",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610271234",
+      "branch": "refs/heads/world/h2610271234",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610271506",
+      "branch": "refs/heads/world/h2610271506",
+      "rc": 0,
+      "status": [
+        " M README.md",
+        "?? design_docs/planned/w-worldd-home-service.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610280901",
+      "branch": "refs/heads/world/h2610280901",
+      "rc": 0,
+      "status": [
+        " M design_docs/planned/w-all-agent-work-through-world.md",
+        " M design_docs/verification/world-dogfood/friction.md",
+        " M design_docs/world-mission.md",
+        "?? design_docs/planned/w-episode-finish.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610281352",
+      "branch": "refs/heads/world/h2610281352",
+      "rc": 0,
+      "status": [
+        " M design_docs/verification/world-dogfood/friction.md",
+        " M design_docs/world-mission.md",
+        "?? design_docs/planned/w-episode-one-command.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610281541",
+      "branch": "refs/heads/world/h2610281541",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter350-record",
+      "branch": "refs/heads/mission/world-iter350-landed",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter351-landed",
+      "branch": "refs/heads/mission/world-iter351-landed",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter351-record",
+      "branch": "refs/heads/mission/world-iter351-record",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter352-record",
+      "branch": "refs/heads/mission/world-iter352-landed",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter353-record",
+      "branch": "refs/heads/mission/world-iter353-row247",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter354-record",
+      "branch": "refs/heads/mission/world-iter354-landed",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter355-record",
+      "branch": "refs/heads/mission/world-iter355-landed",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter356-record",
+      "branch": "refs/heads/mission/world-iter356-landed",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter357-landed",
+      "branch": "refs/heads/mission/world-iter357-landed",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter357-record",
+      "branch": "refs/heads/mission/world-iter357-record",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter358-landed",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter358-record",
+      "branch": "refs/heads/mission/world-iter358-record",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter363-record",
+      "branch": "refs/heads/mission/world-iter363-record",
+      "rc": 0,
+      "status": [
+        "?? .snap/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter364-record",
+      "branch": "refs/heads/mission/world-iter364-record",
+      "rc": 0,
+      "status": [
+        "?? .snap/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter365-record",
+      "branch": "refs/heads/mission/world-iter365-record",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter365/.snap/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-wt/iter239-record",
+      "branch": "refs/heads/mission/world-iter239-park",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-wt/iter241-row153",
+      "branch": "refs/heads/sprint/row153-plan-phase-deadline-under-load",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/world-ws/world-2611021047",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/world-ws/worldd-2611031015",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.base-world-iter362",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.base-world-iter365",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter208",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? eval-report-iter208.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter215-preflight",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? evaluator-administrative-recovery-report.md",
+        "?? evaluator-r2-design.md",
+        "?? evaluator-r2-evidence.json",
+        "?? evaluator-readiness.txt"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter217",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter217/native-astra-quorum-r1.json",
+        "?? design_docs/verification/world-iter217/native-astra-quorum-r1.md",
+        "?? design_docs/verification/world-iter217/native-sol6-quorum-r1.json",
+        "?? design_docs/verification/world-iter217/native-sol6-quorum-r1.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter217-r2",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter217/native-astra-quorum-r2.json",
+        "?? design_docs/verification/world-iter217/native-astra-quorum-r2.md",
+        "?? design_docs/verification/world-iter217/native-sol6-quorum-r2.json",
+        "?? design_docs/verification/world-iter217/native-sol6-quorum-r2.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter218",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? record-eval-218-r1.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter267/evaluator-r1.json",
+        "?? design_docs/verification/world-iter267/evaluator-r1.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268",
+      "branch": "refs/heads/eval/world-iter268-r1",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter268/evaluator-r1.json",
+        "?? design_docs/verification/world-iter268/evaluator-r1.md",
+        "?? design_docs/verification/world-iter268/evaluator-r1/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+      "branch": "refs/heads/eval/world-iter268-r2",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter268/evaluator-r2.json",
+        "?? design_docs/verification/world-iter268/evaluator-r2.md",
+        "?? design_docs/verification/world-iter268/evaluator-r2/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r3",
+      "branch": "refs/heads/eval/world-iter268-r3",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter268/evaluator-r3.json",
+        "?? design_docs/verification/world-iter268/evaluator-r3.md",
+        "?? design_docs/verification/world-iter268/evaluator-r3/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-record-r1",
+      "branch": "refs/heads/eval/world-iter268-record-r1",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter268/record-evaluator-r1.json",
+        "?? design_docs/verification/world-iter268/record-evaluator-r1.md",
+        "?? design_docs/verification/world-iter268/record-evaluator-r1/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-record-r2",
+      "branch": "refs/heads/eval/world-iter268-record-r2",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter268/record-evaluator-r2.json",
+        "?? design_docs/verification/world-iter268/record-evaluator-r2.md",
+        "?? design_docs/verification/world-iter268/record-evaluator-r2/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter281-fallback",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? .judge/",
+        "?? design_docs/verification/world-iter281/evaluator-r1.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter296",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter302",
+      "branch": "refs/heads/eval/world-iter302-r1",
+      "rc": 0,
+      "status": [
+        "?? evaluator-r1.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter302-r2",
+      "branch": "refs/heads/eval/world-iter302-r2",
+      "rc": 0,
+      "status": [
+        "?? evaluator-r2.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter303-recovery",
+      "branch": "refs/heads/eval/world-iter303-recovery",
+      "rc": 0,
+      "status": [
+        "?? evaluator-recovery-evidence/",
+        "?? evaluator-recovery-report.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter313",
+      "branch": "refs/heads/eval/world-iter313-r1",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter313/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter313-r2",
+      "branch": "refs/heads/eval/world-iter313-r2",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter313/evaluator-r2.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-record",
+      "branch": "refs/heads/eval/world-iter362-record",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter362/record-evaluator/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-row256-r1",
+      "branch": "refs/heads/eval/world-iter362-row256-r1",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter362/controller-evaluation-brief.json",
+        "?? design_docs/verification/world-iter362/controller-full-go-attempt1-summary.json",
+        "?? design_docs/verification/world-iter362/controller-m1-verify-ail-candidate.txt",
+        "?? design_docs/verification/world-iter362/controller-m1-verify-go-candidate-attempt2.txt",
+        "?? design_docs/verification/world-iter362/controller-m1-verify-go-candidate.txt",
+        "?? design_docs/verification/world-iter362/evaluator-r1/",
+        "?? design_docs/verification/world-iter362/paired-broker-candidate-100.txt",
+        "?? design_docs/verification/world-iter362/paired-broker-pristine-100.txt",
+        "?? design_docs/verification/world-iter362/pr-ci-76553889.json",
+        "?? design_docs/verification/world-iter362/pristine-publish-request-observation-400.txt",
+        "?? design_docs/verification/world-iter362/publish-counter-observation.diff.txt",
+        "?? design_docs/verification/world-iter362/publish-observation-restoration.json"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter363",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter363/evaluator/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter364",
+      "branch": "refs/heads/eval/world-iter364",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter364/evaluator/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter365",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter365/evaluator-report.md",
+        "?? design_docs/verification/world-iter365/evaluator-result.json"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.exec-world-iter303-recovery",
+      "branch": "refs/heads/exec/world-iter303-recovery",
+      "rc": 0,
+      "status": [
+        "?? executor-recovery-evidence/",
+        "?? executor-recovery-report.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256",
+      "branch": "refs/heads/review/world-iter362-validation",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter362/executor-codex.txt",
+        "?? design_docs/verification/world-iter362/executor-pid.json",
+        "?? design_docs/verification/world-iter362/executor-probe-pid.json"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.judge-wt-iter337",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? evaluator-r1.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.probe-world-iter362-quorum",
+      "branch": "refs/heads/probe/world-iter362-quorum-v28",
+      "rc": 0,
+      "status": [
+        " M cmd/ailang-worldd/doctor.go",
+        " M cmd/ailang-worldd/doctor_hosts.go",
+        " M docs/QUICKSTART.md",
+        " M host/broker/exec_probe.go",
+        " M host/broker/exec_startup.go",
+        " M host/daemon/daemon.go",
+        " M host/daemon/workspace.go",
+        "?? cmd/ailang-worldd/doctor_exec_profiles_test.go",
+        "?? host/broker/exec_probe_out_of_time_test.go",
+        "?? host/daemon/startup_callers_test.go",
+        "?? host/daemon/startup_under_load_test.go"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.record-world-iter362",
+      "branch": "refs/heads/mission/world-iter362-record",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter362/record-merge-ci-565609ab.json",
+        "?? design_docs/verification/world-iter362/record-pr-ci-6068ed30.json"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter366-baseline",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter366-planner",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter366/worktree-census.txt"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter366-record",
+      "branch": "refs/heads/mission/world-iter366-record",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter366/worktree-census.txt"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter182",
+      "branch": "refs/heads/sprint/w-prove-1-0-phase-a",
+      "rc": 0,
+      "status": [
+        "?? .snap/",
+        "?? .walk-scratch/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter198-design",
+      "branch": "refs/heads/design/w-kernel-exports-carry-no-contract",
+      "rc": 0,
+      "status": [
+        " M .github/workflows/ci.yml",
+        " M docs/SELF_MOD_PUBLISH.md",
+        " M host/verifygate/module_manifest_gate_test.go",
+        " M packages/world-core/world/contracts.ail",
+        " M packages/world-core/world/logepoch.ail",
+        " M packages/world-core/world/transitions.ail",
+        " M scripts/verify_ail.sh",
+        " M scripts/verify_world_package.sh",
+        " M scripts/world_package_ready_packet.golden.json",
+        " M world/contracts.ail",
+        " M world/logepoch.ail",
+        " M world/transitions.ail",
+        "?? .iteration198/",
+        "?? design_docs/planned/w-kernel-exports-carry-no-contract.md",
+        "?? scripts/__pycache__/",
+        "?? scripts/check_world_contract_quality.py",
+        "?? scripts/test_kernel_contracts.py",
+        "?? scripts/test_world_contract_history.py"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter208",
+      "branch": "refs/heads/sprint/w-transition-invocation-m5m6",
+      "rc": 0,
+      "status": [
+        "?? .snap/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter217/product-evaluator-independent.json",
+        "?? design_docs/verification/world-iter217/product-evaluator-independent.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval-r2",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter217/evaluator-product-round2/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval-r3-pi",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter217/controller-final-profiles-terminal.json",
+        "?? design_docs/verification/world-iter217/evaluator-product-round3/",
+        "?? design_docs/verification/world-iter217/round3-final-verify-ail.json",
+        "?? design_docs/verification/world-iter217/round3-final-verify-ail.log",
+        "?? design_docs/verification/world-iter217/round3-final-verify-ail.log.raw.b64",
+        "?? design_docs/verification/world-iter217/round3-final-verify-go.json",
+        "?? design_docs/verification/world-iter217/round3-final-verify-go.log",
+        "?? design_docs/verification/world-iter217/round3-final-verify-go.log.raw.b64",
+        "?? design_docs/verification/world-iter217/round3-full-profile-raw-manifest.json"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-record-eval",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter217/evaluator-record-independent.json",
+        "?? design_docs/verification/world-iter217/evaluator-record-independent.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220",
+      "branch": "refs/heads/sprint/world-iter220-followup",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter220/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-eval",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter220/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-record-eval",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter220/record-delta-evaluation.json",
+        "?? design_docs/verification/world-iter220/record-delta-evaluation.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter222-evaluator",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter222/independent-ail.log",
+        "?? design_docs/verification/world-iter222/independent-evaluation.json",
+        "?? design_docs/verification/world-iter222/independent-evaluation.md",
+        "?? design_docs/verification/world-iter222/independent-go.log"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter222-evaluator-delta",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter222/independent-delta-evaluation.json",
+        "?? design_docs/verification/world-iter222/independent-delta-evaluation.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter249-eval",
+      "branch": "refs/heads/mission/world-iter249-eval",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter249/independent-gate-review.md"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter307-row150-m7c2a",
+      "branch": "refs/heads/sprint/world-iter307-row150-m7c2a",
+      "rc": 0,
+      "status": [
+        "?? snap/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter337-landed",
+      "branch": "refs/heads/mission/world-iter337-landed",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter337-row239",
+      "branch": "refs/heads/sprint/world-iter337-still-probe-commit",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-landed",
+      "branch": "refs/heads/mission/world-iter338-landed",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240",
+      "branch": "refs/heads/sprint/world-iter338-tolerance-pins",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter361-row256",
+      "branch": "refs/heads/mission/world-iter361-row256",
+      "rc": 0,
+      "status": [
+        "?? .design-scratch/",
+        "?? design_docs/planned/w-daemon-startup-under-load.md",
+        "?? design_docs/planned/w-daemon-startup-under-load.patch",
+        "?? design_docs/verification/world-iter361/"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256",
+      "branch": "refs/heads/mission/world-iter362-row256",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter362/controller-premise.txt",
+        "?? design_docs/verification/world-iter362/designer-codex.txt",
+        "?? design_docs/verification/world-iter362/main-before-roles-sha256.json",
+        "?? design_docs/verification/world-iter362/planner-codex.txt"
+      ],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.ailang/state/sol-pilot-2026-10-12/wt",
+      "branch": "refs/heads/attended/row93-paired-order",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a3e42abd198ce4e0c",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a57e72f781b921db9",
+      "branch": "refs/heads/design/row145-long-run-lane",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a5fa785b78bd257d9",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a6d8f8eb391612df9",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aa124cbfa7ef55ceb",
+      "branch": "refs/heads/design/row189-world-onboarding",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aa3c8d42aed503afc",
+      "branch": "refs/heads/sprint/row184-worktree-delta",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-ad349fba6d3f1cee4",
+      "branch": "refs/heads/r140-design",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-add1db00be9c6cfa7",
+      "branch": "refs/heads/sprint/row183-trial-runner",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-ae2e5875bae5b36aa",
+      "branch": "refs/heads/final-work",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aef12c361b7813e4a",
+      "branch": "refs/heads/sprint/row139-m1-release-manifest",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aefcb5933188c1497",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aeffab2f36349e1da",
+      "branch": "refs/heads/sprint/row139-m2-nominate",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-afa348be34236d498",
+      "branch": "detached",
+      "rc": 0,
+      "status": [],
+      "error": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter306-r0",
+      "branch": "detached",
+      "rc": 0,
+      "status": [
+        "?? cmd/ailang-worldd/zz_iter305_bottoms_test.go"
+      ],
+      "error": ""
+    }
+  ]
+}
