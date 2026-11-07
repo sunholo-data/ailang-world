@@ -1,0 +1,85 @@
+{
+  "iteration": 362,
+  "budget_usd": 5,
+  "calls": [
+    {
+      "role": "evaluator-probe",
+      "model": "minimax/minimax-m3",
+      "cost_usd": 0.00038508,
+      "usage": [
+        {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "totalTokens": 0,
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "total": 0
+          }
+        },
+        {
+          "input": 1195,
+          "output": 13,
+          "cacheRead": 183,
+          "cacheWrite": 0,
+          "reasoning": 12,
+          "totalTokens": 1391,
+          "cost": {
+            "input": 0.0003585,
+            "output": 1.56e-05,
+            "cacheRead": 1.0979999999999998e-05,
+            "cacheWrite": 0,
+            "total": 0.00038508
+          }
+        },
+        {
+          "input": 1195,
+          "output": 13,
+          "cacheRead": 183,
+          "cacheWrite": 0,
+          "reasoning": 12,
+          "totalTokens": 1391,
+          "cost": {
+            "input": 0.0003585,
+            "output": 1.56e-05,
+            "cacheRead": 1.0979999999999998e-05,
+            "cacheWrite": 0,
+            "total": 0.00038508
+          }
+        }
+      ]
+    },
+    {
+      "role": "quorum-r2",
+      "cost_usd": 0.3415408,
+      "reviewers": [
+        {
+          "model": "oc-kimi-k3",
+          "cost_usd": 0.171702,
+          "tokens_in": 16719,
+          "tokens_out": 8103,
+          "present": true
+        },
+        {
+          "model": "gemini-4-argon",
+          "cost_usd": 0.078,
+          "tokens_in": 18275,
+          "tokens_out": 245,
+          "present": true
+        },
+        {
+          "model": "oc-glm-5-3",
+          "cost_usd": 0.0918388,
+          "tokens_in": 16932,
+          "tokens_out": 15485,
+          "present": true
+        }
+      ]
+    }
+  ],
+  "total_usd": 0.34192587999999996
+}

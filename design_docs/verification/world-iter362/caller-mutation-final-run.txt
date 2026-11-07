@@ -1,0 +1,18 @@
+start_utc=2026-11-07T05:05:39.325556+00:00
+deadline_utc=2026-11-07T05:15:39.325556+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256
+command=python3 design_docs/verification/world-iter362/mutate.py MUT-CALLER-IMPORTED-ALIAS,MUT-CALLER-DIRECT,MUT-CALLER-LOCAL-ALIAS
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:05  4 users, load averages: 5.38 6.94 5.28
+
+go version go1.26.6 darwin/arm64
+
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-CONTROL.txt: rc=0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/caller-final-mutation-MUT-CALLER-IMPORTED-ALIAS.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/caller-final-mutation-MUT-CALLER-DIRECT.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/caller-final-mutation-MUT-CALLER-LOCAL-ALIAS.txt: rc=1
+3 named mutations killed; all files restored byte-exact
+rc=0
+end_utc=2026-11-07T05:05:48.011165+00:00
+ 6:05  4 users, load averages: 5.17 6.84 5.27
+

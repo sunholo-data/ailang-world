@@ -1,0 +1,29 @@
+start_utc=2026-11-07T05:00:33.300587+00:00
+deadline_utc=2026-11-07T05:20:33.300587+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256
+command=python3 design_docs/verification/world-iter362/mutate.py
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:00  4 users, load averages: 2.99 3.52 3.26
+
+go version go1.26.6 darwin/arm64
+
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-CONTROL.txt: rc=0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-LATE-NEVER-SPENT.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-SPENT-ANY.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-LATE-STILL-SERVED.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-FLAG-NOT-CARRIED.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-CAUSAL-OBSERVATION.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-LOG-CAUSE.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-DOCTOR-CAUSE.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-DOCTOR-NO-REVIEW.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-REASON-CAP-240-PREFIX.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-HEALTH-NO-OMITEMPTY.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-PARENT-CANCEL-DETACHED.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-CALLER-IMPORTED-ALIAS.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-CALLER-DIRECT.txt: rc=1
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/design_docs/verification/world-iter362/mutation-MUT-CALLER-LOCAL-ALIAS.txt: rc=1
+14 named mutations killed; all files restored byte-exact
+rc=0
+end_utc=2026-11-07T05:02:06.960096+00:00
+ 6:02  4 users, load averages: 16.71 8.43 5.21
+

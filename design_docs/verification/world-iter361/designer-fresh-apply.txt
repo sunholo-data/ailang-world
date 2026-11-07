@@ -1,0 +1,28 @@
+== run 1 (discarded, vacuous): git apply inside the worktree's repo skipped every path; 9 PASS = the neighbours only, the 6 new tests absent
+APPLY-CHECK rc=0
+APPLY rc=0
+new test file present after apply: host/daemon/startup_under_load_test.go
+newDaemon in daemon.go: 4
+BUILD-VET-OK
+gofmt -l host cmd: []
+go test rc=0
+--- PASS: TestProfileForResolutionOrder (0.00s)
+--- PASS: TestHealthReportsBuildToolCredentialsAndProfiles (0.01s)
+--- PASS: TestStartupBudgetQuarantinesPostCutoffBootstrap (0.12s)
+--- PASS: TestStartupBudgetHeldConnectionSettles (0.15s)
+--- PASS: TestServeStartsWhenTheProbeSpendsTheStartupClock (1.94s)
+--- PASS: TestRegistryPhaseHasItsOwnClock (4.37s)
+--- PASS: TestRegistryPhaseClockIsBounded (0.02s)
+--- PASS: TestServeStartupClocksArePinned (0.00s)
+ok  	github.com/sunholo-data/ailang-world/host/daemon	6.988s
+--- PASS: TestExecProbeOutOfTimeNamesTheClockNotAnArm (0.00s)
+--- PASS: TestExecProfilesDirProbeFailureIsolatesOneProfile (0.00s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.653s
+--- PASS: TestDoctorNamesLeftOutExecProfiles (0.00s)
+--- PASS: TestDoctorExecToolsWithAnM3Daemon (0.00s)
+--- PASS: TestDoctorDaemonVsForeignListener (0.01s)
+--- PASS: TestDoctorHelpAndAPIKeyGuard (0.00s)
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.845s
+--- PASS: TestProductionContextRoots (0.10s)
+ok  	github.com/sunholo-data/ailang-world/host/store	1.076s
+PASS count: 15  FAIL count: 0

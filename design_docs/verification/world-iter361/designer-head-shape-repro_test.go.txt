@@ -1,0 +1,97 @@
+package daemon
+
+// THROWAWAY (iter-361 designer): reproduce row 256's failure on HEAD code
+// (61a8d1c4) with no host load: a probe client that never answers spends the
+// one startup clock, and the registry bootstrap then fails on it.
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/sunholo-data/ailang-world/host/broker"
+)
+
+type zzLog struct {
+	mu sync.Mutex
+	b  strings.Builder
+}
+
+func (l *zzLog) Write(p []byte) (int, error) { l.mu.Lock(); defer l.mu.Unlock(); return l.b.Write(p) }
+func (l *zzLog) String() string              { l.mu.Lock(); defer l.mu.Unlock(); return l.b.String() }
+
+func zzRig(t *testing.T, slow bool) (Config, *zzLog) {
+	r := newExecRig(t)
+	dir := filepath.Join(r.f.outside, "profiles-dir")
+	_ = os.MkdirAll(dir, 0o755)
+	data, _ := json.Marshal(r.profile)
+	_ = os.WriteFile(filepath.Join(dir, "proj.json"), data, 0o600)
+	r.cfg.ExecProfilesDir = dir
+	client := ""
+	if slow {
+		client = filepath.Join(r.f.outside, "slow-client")
+		_ = os.WriteFile(client, []byte("#!/bin/sh\nexec sleep 60\n"), 0o755)
+	}
+	prev := execStartupHook
+	execStartupHook = func(c *broker.ExecStartupConfig) { c.Pin = *r.pin; c.ProbeClient = client }
+	t.Cleanup(func() { execStartupHook = prev })
+	log := &zzLog{}
+	cfg := r.cfg
+	cfg.BindHost, cfg.ErrorLog = DefaultBindHost, log
+	return cfg, log
+}
+
+func zzReport(t *testing.T, label string, err error, log string, took time.Duration) {
+	var startup *StartupError
+	stage := ""
+	if errors.As(err, &startup) {
+		stage = startup.Stage
+		if startup.Settled != nil {
+			<-startup.Settled
+		}
+	}
+	t.Logf("%s: took=%s stage=%q deadline=%t err=%v", label, took.Round(time.Millisecond), stage, errors.Is(err, context.DeadlineExceeded), err)
+	for _, l := range strings.Split(strings.TrimSpace(log), "\n") {
+		if len(l) > 700 {
+			l = l[:700] + "…"
+		}
+		t.Logf("%s: log: %s", label, l)
+	}
+}
+
+// HEAD's shape (Run = startBounded(ctx, cfg, 9 s, New)) with the clock at 1.5 s.
+func TestZZHeadSharedClockShortBudget(t *testing.T) {
+	cfg, log := zzRig(t, true)
+	begin := time.Now()
+	d, err := startBounded(boundedTestContext(t), cfg, 1500*time.Millisecond, New)
+	if d != nil {
+		_ = d.Close()
+	}
+	zzReport(t, "head-shared-1.5s", err, log.String(), time.Since(begin))
+}
+
+// HEAD's own Run, its literal 9 s clock: the production message.
+func TestZZHeadRunNineSeconds(t *testing.T) {
+	cfg, log := zzRig(t, true)
+	begin := time.Now()
+	err := Run(boundedTestContext(t), cfg, os.Stdout)
+	zzReport(t, "head-run-9s", err, log.String(), time.Since(begin))
+}
+
+// Control: the same rig with the probe client answering (the pass-through shim
+// fails real arms fast): HEAD starts, the profile left out by its arms.
+func TestZZHeadControlFastProbe(t *testing.T) {
+	cfg, log := zzRig(t, false)
+	begin := time.Now()
+	d, err := startBounded(boundedTestContext(t), cfg, 9*time.Second, New)
+	if d != nil {
+		_ = d.Close()
+	}
+	zzReport(t, "head-control-fast-9s", err, log.String(), time.Since(begin))
+}

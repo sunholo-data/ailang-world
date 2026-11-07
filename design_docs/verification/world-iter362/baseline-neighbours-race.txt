@@ -1,0 +1,74 @@
+start_utc=2026-11-07T04:55:03.078522+00:00
+deadline_utc=2026-11-07T05:00:03.078522+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/base
+command=go test -race -count=1 -timeout 240s -v -run '^(TestStartupCallerCancellation|TestStartupBudgetQuarantinesPostCutoffBootstrap|TestStartupBudgetHeldConnectionSettles|TestHealthReportsBuildToolCredentialsAndProfiles|TestProfileForResolutionOrder|TestExecProfilesDirProbeFailureIsolatesOneProfile|TestDoctorDaemonVsForeignListener|TestDoctorHelpAndAPIKeyGuard|TestDoctorExecToolsWithAnM3Daemon|TestProductionContextRoots)$' ./host/daemon/ ./host/broker/ ./cmd/ailang-worldd/ ./host/store/
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 5:55  4 users, load averages: 3.92 3.49 3.11
+
+go version go1.26.6 darwin/arm64
+
+=== RUN   TestProfileForResolutionOrder
+--- PASS: TestProfileForResolutionOrder (0.00s)
+=== RUN   TestHealthReportsBuildToolCredentialsAndProfiles
+--- PASS: TestHealthReportsBuildToolCredentialsAndProfiles (0.02s)
+=== RUN   TestStartupCallerCancellation
+=== RUN   TestStartupCallerCancellation/New
+=== RUN   TestStartupCallerCancellation/Run
+--- PASS: TestStartupCallerCancellation (0.10s)
+    --- PASS: TestStartupCallerCancellation/New (0.07s)
+    --- PASS: TestStartupCallerCancellation/Run (0.04s)
+=== RUN   TestStartupBudgetQuarantinesPostCutoffBootstrap
+--- PASS: TestStartupBudgetQuarantinesPostCutoffBootstrap (0.16s)
+=== RUN   TestStartupBudgetHeldConnectionSettles
+--- PASS: TestStartupBudgetHeldConnectionSettles (0.18s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	2.096s
+=== RUN   TestExecProfilesDirProbeFailureIsolatesOneProfile
+--- PASS: TestExecProfilesDirProbeFailureIsolatesOneProfile (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	1.935s
+=== RUN   TestDoctorExecToolsWithAnM3Daemon
+=== RUN   TestDoctorExecToolsWithAnM3Daemon/pending
+=== RUN   TestDoctorExecToolsWithAnM3Daemon/ok
+=== RUN   TestDoctorExecToolsWithAnM3Daemon/failed:_arm7_toolchain
+=== RUN   TestDoctorExecToolsWithAnM3Daemon/does-not-start:_--version_failed
+--- PASS: TestDoctorExecToolsWithAnM3Daemon (0.00s)
+    --- PASS: TestDoctorExecToolsWithAnM3Daemon/pending (0.00s)
+    --- PASS: TestDoctorExecToolsWithAnM3Daemon/ok (0.00s)
+    --- PASS: TestDoctorExecToolsWithAnM3Daemon/failed:_arm7_toolchain (0.00s)
+    --- PASS: TestDoctorExecToolsWithAnM3Daemon/does-not-start:_--version_failed (0.00s)
+=== RUN   TestDoctorDaemonVsForeignListener
+--- FAIL: TestDoctorDaemonVsForeignListener (0.01s)
+panic: httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted [recovered, repanicked]
+
+goroutine 42 [running]:
+testing.tRunner.func1.2({0x103d8aae0, 0xc0002e0af0})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1974 +0x2b8
+testing.tRunner.func1()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:1977 +0x460
+panic({0x103d8aae0?, 0xc0002e0af0?})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/runtime/panic.go:860 +0x12c
+net/http/httptest.newLocalListener()
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:72 +0x13c
+net/http/httptest.NewUnstartedServer(...)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:120
+net/http/httptest.NewServer({0x103ee1840, 0xc0000104c8})
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/net/http/httptest/server.go:107 +0x30
+github.com/sunholo-data/ailang-world/cmd/ailang-worldd.TestDoctorDaemonVsForeignListener(0xc0006158c8)
+	/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256/.design-scratch/base/cmd/ailang-worldd/doctor_test.go:235 +0x148
+testing.tRunner(0xc0006158c8, 0x103ed6810)
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2036 +0x168
+created by testing.(*T).Run in goroutine 1
+	/Users/voightkampff/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64/src/testing/testing.go:2101 +0x7c0
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	1.095s
+=== RUN   TestProductionContextRoots
+    context_roots_test.go:201: root references: Background=37 TODO=0 WithoutCancel=5
+    context_roots_test.go:205: root census: 40 named roots, 217 production files
+--- PASS: TestProductionContextRoots (0.62s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/store	3.113s
+FAIL
+rc=1
+end_utc=2026-11-07T04:55:14.829660+00:00
+ 5:55  4 users, load averages: 3.93 3.52 3.13
+

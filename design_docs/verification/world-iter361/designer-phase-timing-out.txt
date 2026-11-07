@@ -1,0 +1,80 @@
+== cold  2026-11-07T00:57:41Z  load averages: 11.28 12.69 10.47
+PHASE new:migrate-credentials      t=    29ms since-prev=    29ms ctx-left=8999ms
+PHASE new:store-open               t=    32ms since-prev=     3ms ctx-left=8995ms
+PHASE new:archive-tool-binary      t=    36ms since-prev=     3ms ctx-left=8991ms
+PHASE new:run-caps                 t=  1190ms since-prev=  1153ms ctx-left=7838ms
+PHASE new:configure-exec           t=  1190ms since-prev=     0ms ctx-left=7838ms
+PHASE exec:node-version            t=  1190ms since-prev=     0ms ctx-left=7838ms
+PHASE exec:sandbox-dir             t=  1353ms since-prev=   163ms ctx-left=7674ms
+PHASE exec:archive-srt             t=  1553ms since-prev=   199ms ctx-left=7474ms
+PHASE exec:probe-profiles          t=  2106ms since-prev=   552ms ctx-left=6922ms
+PHASE exec:tool-state              t=  6903ms since-prev=  4797ms ctx-left=2124ms
+PHASE exec:done                    t=  6904ms since-prev=     0ms ctx-left=2123ms
+PHASE new:archive-interpreter      t=  6904ms since-prev=     0ms ctx-left=2123ms
+PHASE new:registry-bootstrap       t=  7963ms since-prev=  1059ms ctx-left=1064ms
+PHASE new:report-templates         t=  7965ms since-prev=     1ms ctx-left=1062ms
+PHASE new:scan-integrity           t=  7973ms since-prev=     8ms ctx-left=1054ms
+PHASE new:projection               t=  7980ms since-prev=     6ms ctx-left=1047ms
+PHASE run:new-returned             t=  7981ms since-prev=     0ms ctx-left=none
+ailang-worldd listening on http://127.0.0.1:59156
+wall to listen line: 8653 ms
+== warm1  2026-11-07T00:57:53Z  load averages: 13.03 13.00 10.62
+PHASE new:migrate-credentials      t=    24ms since-prev=    24ms ctx-left=8999ms
+PHASE new:store-open               t=    25ms since-prev=     0ms ctx-left=8998ms
+PHASE new:archive-tool-binary      t=    27ms since-prev=     1ms ctx-left=8996ms
+PHASE new:run-caps                 t=   243ms since-prev=   216ms ctx-left=8780ms
+PHASE new:configure-exec           t=   243ms since-prev=     0ms ctx-left=8780ms
+PHASE exec:node-version            t=   243ms since-prev=     0ms ctx-left=8780ms
+PHASE exec:sandbox-dir             t=   441ms since-prev=   197ms ctx-left=8582ms
+PHASE exec:archive-srt             t=   676ms since-prev=   235ms ctx-left=8347ms
+PHASE exec:probe-profiles          t=   974ms since-prev=   297ms ctx-left=8050ms
+PHASE exec:tool-state              t=  5165ms since-prev=  4191ms ctx-left=3858ms
+PHASE exec:done                    t=  5166ms since-prev=     0ms ctx-left=3858ms
+PHASE new:archive-interpreter      t=  5166ms since-prev=     0ms ctx-left=3857ms
+PHASE new:registry-bootstrap       t=  5298ms since-prev=   132ms ctx-left=3725ms
+PHASE new:report-templates         t=  5299ms since-prev=     0ms ctx-left=3725ms
+PHASE new:scan-integrity           t=  5307ms since-prev=     7ms ctx-left=3717ms
+PHASE new:projection               t=  5310ms since-prev=     3ms ctx-left=3713ms
+PHASE run:new-returned             t=  5311ms since-prev=     0ms ctx-left=none
+ailang-worldd listening on http://127.0.0.1:59337
+wall to listen line: 5632 ms
+== warm2  2026-11-07T00:57:59Z  load averages: 12.79 12.95 10.62
+PHASE new:migrate-credentials      t=    12ms since-prev=    12ms ctx-left=8999ms
+PHASE new:store-open               t=    14ms since-prev=     1ms ctx-left=8998ms
+PHASE new:archive-tool-binary      t=    15ms since-prev=     1ms ctx-left=8996ms
+PHASE new:run-caps                 t=   260ms since-prev=   245ms ctx-left=8751ms
+PHASE new:configure-exec           t=   260ms since-prev=     0ms ctx-left=8751ms
+PHASE exec:node-version            t=   261ms since-prev=     0ms ctx-left=8751ms
+PHASE exec:sandbox-dir             t=   429ms since-prev=   168ms ctx-left=8582ms
+PHASE exec:archive-srt             t=   657ms since-prev=   228ms ctx-left=8354ms
+PHASE exec:probe-profiles          t=   933ms since-prev=   276ms ctx-left=8078ms
+PHASE exec:tool-state              t=  5201ms since-prev=  4268ms ctx-left=3810ms
+PHASE exec:done                    t=  5202ms since-prev=     0ms ctx-left=3809ms
+PHASE new:archive-interpreter      t=  5202ms since-prev=     0ms ctx-left=3809ms
+PHASE new:registry-bootstrap       t=  5354ms since-prev=   151ms ctx-left=3657ms
+PHASE new:report-templates         t=  5355ms since-prev=     0ms ctx-left=3656ms
+PHASE new:scan-integrity           t=  5374ms since-prev=    19ms ctx-left=3637ms
+PHASE new:projection               t=  5376ms since-prev=     1ms ctx-left=3635ms
+PHASE run:new-returned             t=  5376ms since-prev=     0ms ctx-left=none
+ailang-worldd listening on http://127.0.0.1:59476
+wall to listen line: 5762 ms
+== warm3  2026-11-07T00:58:05Z  load averages: 13.36 13.06 10.67
+PHASE new:migrate-credentials      t=    32ms since-prev=    32ms ctx-left=8999ms
+PHASE new:store-open               t=    32ms since-prev=     0ms ctx-left=8998ms
+PHASE new:archive-tool-binary      t=    34ms since-prev=     1ms ctx-left=8997ms
+PHASE new:run-caps                 t=   266ms since-prev=   232ms ctx-left=8764ms
+PHASE new:configure-exec           t=   267ms since-prev=     0ms ctx-left=8764ms
+PHASE exec:node-version            t=   267ms since-prev=     0ms ctx-left=8764ms
+PHASE exec:sandbox-dir             t=   402ms since-prev=   135ms ctx-left=8628ms
+PHASE exec:archive-srt             t=   618ms since-prev=   216ms ctx-left=8412ms
+PHASE exec:probe-profiles          t=   950ms since-prev=   331ms ctx-left=8081ms
+PHASE exec:tool-state              t=  5426ms since-prev=  4476ms ctx-left=3605ms
+PHASE exec:done                    t=  5427ms since-prev=     0ms ctx-left=3604ms
+PHASE new:archive-interpreter      t=  5427ms since-prev=     0ms ctx-left=3604ms
+PHASE new:registry-bootstrap       t=  5599ms since-prev=   171ms ctx-left=3432ms
+PHASE new:report-templates         t=  5599ms since-prev=     0ms ctx-left=3432ms
+PHASE new:scan-integrity           t=  5608ms since-prev=     9ms ctx-left=3422ms
+PHASE new:projection               t=  5610ms since-prev=     1ms ctx-left=3421ms
+PHASE run:new-returned             t=  5610ms since-prev=     0ms ctx-left=none
+ailang-worldd listening on http://127.0.0.1:59616
+wall to listen line: 6064 ms

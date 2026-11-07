@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# iter-361 designer: what a post-startup re-probe (candidate 2) would have to
+# make mutable. At 61a8d1c4, every read of the startup exec state (w.exec and
+# its maps) in host/daemon non-test code, and which lock guards it.
+set -u
+B=61a8d1c4
+echo "== reads/writes of w.exec / workspaceExec fields (non-test host/daemon), with enclosing func"
+for f in host/daemon/daemon.go host/daemon/workspace.go; do
+  git show $B:$f | awk -v F=$f '/^func /{fn=$0} /\.exec(\.| |\)|$)|[^a-zA-Z]e\.(byProject|excludedWhy|excluded|profile|episodeProject|sources)/ && !/^\s*\/\// {sub(/\(.*/,"",fn); print F":"NR": ["fn"] "$0}' | sed 's/\t/ /g' | cut -c1-170
+done
+echo
+echo "== distinct functions touching it:"
+for f in host/daemon/daemon.go host/daemon/workspace.go; do
+  git show $B:$f | awk -v F=$f '/^func /{fn=$0} /\.exec(\.| |\)|$)|[^a-zA-Z]e\.(byProject|excludedWhy|excluded|profile|episodeProject|sources)/ && !/^\s*\/\// {sub(/\{.*/,"",fn); print fn}'
+done | sort -u
+echo
+echo "== the locks workspaceTools has, and what they guard (control: the mutexes exist and are documented)"
+git show $B:host/daemon/workspace.go | grep -n 'mu guards\|execMu guards\|mu          sync.Mutex\|execMu sync.Mutex'
+echo
+echo "== ExecToolState captures the profile set once, at construction (exec_tools.go)"
+git show $B:host/broker/exec_tools.go | grep -n 'func NewExecToolState\|for project, p := range cfg.Profiles\|for project := range cfg.Profiles\|Profiles    map'
+echo
+echo "== measured probe-phase share of the startup clock on this rig (designer-phase-timing-out.txt)"
+grep -E '^== |exec:probe-profiles|exec:tool-state|run:new-returned' design_docs/verification/world-iter361/designer-phase-timing-out.txt

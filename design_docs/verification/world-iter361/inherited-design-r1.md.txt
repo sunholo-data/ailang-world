@@ -1,0 +1,455 @@
+# w-daemon-startup-under-load — the registry phase gets its own startup clock, and a left-out exec profile shows in `doctor`
+
+- **Status**: Planned (designed iteration 361, **r1**). Queue row 256, in D-WORLD-108's scope after
+  row 255 (attended 2026-11-06: rows 250, then 255 → 257). Row 233 (`w-exec-probe-holder-exit-reset`,
+  D-WORLD-105 OPEN, default C) and row 257 (`w-exec-cache-seed-at-bind`) are separate rows, and this
+  design touches neither surface (§9, Conflict Surface).
+- **Item**: Clause 3 (MET; availability). It touches the fail-closed exec startup probe in one
+  place only: the probe now records *when* each failed arm was judged, so a profile whose probe the
+  startup clock cut short can be named as such. Which profiles are served does not change (§4
+  Claim C). The row asks for design and quorum first for that reason.
+- **Author**: `claude:claude-opus-5-5 (designer, World iter-361)`, via Agent opus.
+- **Estimated**: ~0.5 day, one milestone. A complete patch is
+  `design_docs/planned/w-daemon-startup-under-load.patch`: 741 lines over 10 files, sha256
+  `f9bcb6360a38172b…` (V16). It applies with `git apply --check` at `61a8d1c4`.
+  - **Production code**: +122/−17 lines in 6 Go files (`daemon.go` +55/−9, `workspace.go` +7/−1,
+    `exec_probe.go` +27/−4, `exec_startup.go` +8/−1, `doctor.go` +24/−1, `doctor_hosts.go` +1/−1).
+    About half of it is comments.
+  - **Tests**: three new files, 403 lines (`host/daemon/startup_under_load_test.go` 255,
+    `host/broker/exec_probe_out_of_time_test.go` 82, `cmd/ailang-worldd/doctor_exec_profiles_test.go` 66).
+    No existing test is edited.
+  - **Docs**: one `docs/QUICKSTART.md` paragraph (S7) and the `doctor --help` text.
+- **Measurement base**: `61a8d1c4` (= origin/dev), worktree `mission/world-iter361-row256`.
+- **Instruments**: `go1.26.6 darwin/arm64`, matching `go.mod`'s `go 1.26.6`. 16 cores. Pinned
+  `AILANG v0.41.0` (`24ee108`) at `$HOME/.pinned-ailang/ailang`. TMPDIR, GOTMPDIR and GOTOOLCHAIN
+  were left unset/default. The rig was shared, with load averages of 7–13 during the timed runs.
+  The home service's real srt (`~/.ailang-world-exec/srt/node_modules`, 16 MB, 849 files) and real
+  node were used for the phase timing (V3), with a scratch store and workspace root. No Linux host
+  was used, so every Linux statement is **UNMEASURED** (§6 R7). Prototypes ran on `git archive`
+  copies under `$WT/.design-scratch/{proto,head,instr,mut,base}`, never under `/tmp`, and were
+  deleted afterwards. Scripts and raw outputs are banked as
+  `design_docs/verification/world-iter361/designer-*.txt` (`$V` below).
+
+---
+
+## 1. What row 256 says, and what this session measured
+
+| # | Claim | Verdict at `61a8d1c4` | Evidence |
+|---|---|---|---|
+| 1 | One deadline is shared by the probes and the registry bootstrap | **CONFIRMED.** `Run` calls `startBounded(ctx, cfg, 9*time.Second, New)` (`daemon.go:1284`), which wraps **all** of `New` in one `context.WithTimeout` (`:1277`). Inside `New`, `configureRunCaps(ctx)` (`:817`), `configureExec(ctx)` (`:820`), `bootstrapRegistry(ctx)` (`:862`), `reportTemplates(ctx)` (`:868`) and `scanIntegrity(ctx)` (`:870`) all take that one ctx. A deadline in the bootstrap goes to `abortBudget(StageRegistry, …)` (`:937–938`) | V1 |
+| 2 | The probes spend the budget the bootstrap needs | **TRUE BUT INCOMPLETE.** The home log of 2026-11-03 shows that **arm 1 of all five profiles** already read `(the startup budget is spent; stderr "")`. A probe run returns that text only when **no** time is left when it starts (`exec_probe.go:398–401`). So the clock was spent **before the first probe run** of any profile. What spent it was the work in front of the first probe run: the tool binary's archive, `node --version`, the srt tree and its archive (0.93–0.97 s warm on this rig up to the probe's start, V3), then the probe's own scratch setup. The probes then spent nothing, and the bootstrap found the clock empty | V1 (P13), V3 |
+| 3 | `/v1/health` names left-out profiles, `doctor` does not | **CONFIRMED.** `exec_profiles_excluded` is in the health body (`daemon.go:651`, filled at `:1134`). `cmd/ailang-worldd/doctor*.go` has **0** matches for `excluded`, `exec_profiles` or `ExecProfilesExcluded` (case-insensitive); the control `exec_tool_status\|ExecToolStatus` matches **4** times in the same files | V1 (P7, P8) |
+| 4 | An exec call for a left-out profile should refuse with its name | **ALREADY BUILT** (row 189 M2). The refusal is `ExecProfileNotLoadedRefusal` (`handlers_exec.go:74`). Its non-test callers are `profileFor` (`workspace.go:195`, `:199`), which `execHandler` calls (`:486`) and turns into `broker.ExecRefusalHandler{Why: why}` (`:488`). That is the handler the episode registry binds to `Workspace.Exec`. `TestProfileForResolutionOrder` pins it (`binding_test.go:76`). This row builds nothing for it, and its new test **T2** drives it end to end from a profile left out by load | V1 (P9), §5 T2 |
+| 5 | The bind-time `broker: handler subprocess timed out after 10s` | **A DIFFERENT BUDGET, OUT OF SCOPE (§9).** That line comes from building the episode's AILANG handler. The build runs under `workspaceHandlerBudget` (3 s, `workspace.go:58`, its own root at `:607`). The "10s" in the text is the handler's own `ailangToolExecTimeout` (`handlers_ailang.go:54`), not the clock that fired. `runBounded` labels any expiry of its `runCtx` with `bounds.execTimeout` (`handlers.go:155`, `:208`, `:229–231`). A throwaway test on HEAD code (parent ctx 150 ms, handler bound 10 s) returned `broker: handler subprocess timed out after 10s` after **150 ms** | V1 (P10), V5 |
+| 6 | A second start at load ~100 failed the same way; a third at load 16 succeeded | **Not re-measured.** The home log holds one `daemon startup failed at registry-bootstrap` line (line 36), not two. This session did not load the host | V1 (P13) |
+
+**Premises refined, not reversed.**
+
+- The controller's reading "probes and the archive spend the budget" holds for the clock, but the
+  2026-11-03 log shows the clock was gone before any probe ran (claim 2). The design therefore does
+  **not** try to give the probes more time under that load. On this rig the probe phase takes
+  **4.2–4.8 s** of the 9 s at load 11–13 (V3). The home start's work up to its first probe run took ≥ 9 s; here the same steps up to the probe's
+  start take 0.93–0.97 s. That is a slowdown of about 9.3×. It is an estimate: the home figure also
+  holds the probe's scratch setup, which this rig did not time separately (§6 R8). At that slowdown no bound that fits inside
+  `service start`'s 30 s wait lets five profiles probe (4.2 s × 9.3 ≈ 39 s). What this row can do is
+  keep the daemon up, keep the profiles out (fail-closed), and say so in `doctor`.
+- On this rig, even at load ~12, a start that must archive both pinned binaries fresh uses
+  **8.0 s** of the 9 s clock, leaving 1.05 s. Warm starts use 5.3–5.6 s (V3). So the shared clock was
+  close to failing well below the row's load.
+
+## 2. The mechanism being changed
+
+At `61a8d1c4`, `ailang-worldd serve` builds the daemon in one call (V1, V3):
+
+1. `Run` → `startBounded(ctx, cfg, 9 s, New)`. One startup clock starts here.
+2. `New`: `MigrateCredentials(ctx)`, `store.Open`, and the tool binary's archive (`archiveToolBinary`).
+   The archive copies and hashes about 100 MB and takes no ctx (`archive.go:225`, `:278`).
+3. `configureRunCaps(ctx)`, which is a no-op on the home service (no `--run-*` flag).
+4. `configureExec(ctx)` → `broker.StartExec(ctx, …)`:
+   - `node --version`, which is ctx-bounded;
+   - the srt tree, then `ArchiveExecSandbox`, which takes no ctx;
+   - `ProbeExecProfilesEach`, which probes every profile at once. Each probe run's budget is
+     `min(execProbeRunBudget = 8 s, time left on ctx)`. A run that starts with nothing left returns
+     `the startup budget is spent` (`exec_probe.go:396–402`).
+   - `applyProbe`: a failed `--exec-profile` refuses startup. A failed directory profile is left out
+     with `errs[i].Error()` as its reason (`exec_startup.go:256`, `:264–265`).
+5. The interpreter's archive, about 100 MB, with no ctx (`daemon.go:830`).
+6. `bootstrapRegistry(ctx)` on the **same** ctx. If it is past its deadline,
+   `abortBudget(StageRegistry)` follows, then `daemon startup failed at registry-bootstrap: …
+   context deadline exceeded`, and `serve` exits.
+7. `reportTemplates(ctx)` and `scanIntegrity(ctx)` also run on the same ctx.
+
+`service start` then polls `/v1/health` for 30 s (`service.go:87`, `:240`). It stops the service
+when nothing answers: `build did not answer /v1/health within 30 s; service stopped` (`:256`).
+The plist has `KeepAlive` and `ThrottleInterval 30` (V1 P11), so launchd cannot relaunch inside
+that window.
+
+**Reproduced with no host load** (V4, the positive control). A probe client that never answers
+stands in for the load. In a `git archive 61a8d1c4` copy, a throwaway test built HEAD's own shape,
+`startBounded(ctx, cfg, 1.5 s, New)`, with one directory profile:
+`daemon startup failed at registry-bootstrap: cannot bootstrap world/epoch-registry/v1 with release
+"unpinned": context deadline exceeded` after 1.91 s, and the log shows `left out: exec startup probe
+failed … (7 of 7 arms)`. HEAD's real `Run` (9 s) failed the same way after 9.21 s. The control, the
+same rig with an answering client and the 9 s clock, started in 2.50 s, with the profile left out by
+its arms.
+
+## 3. Design
+
+### 3.1 What this row builds, per candidate
+
+| Candidate | Decision | Why (measured) |
+|---|---|---|
+| (1) The registry bootstrap gets its own deadline | **BUILT.** It covers the whole *registry phase* (bootstrap, template report, integrity sweep), §3.2 | The bootstrap itself takes 0–2 ms on this rig (V3). Only the shared clock made it fail. The template report and the sweep run on the same ctx after it, so a fresh clock for the bootstrap alone would leave the sweep on a spent clock. The sweep then reports a false `scan` hole, which `MUT-SWEEP-ON-STARTUP-CLOCK` shows (§5) |
+| (2) Retry a profile whose probe ran out of time | **NARROWED.** The probe now tells "ran out of time" from "an arm refused" (§3.3), and `/v1/health`, the log and `doctor` all say which it was. **No retry loop.** The loop is proposed as a follow-on row (§9) | A post-startup re-probe would have to make the startup exec state mutable. Today 10 functions read it and **no lock guards it** (`mu` guards `handler`/`ailangBuild`, `execMu` guards `execH`). `ExecToolState` also captures the profile set once, when it is built (`exec_tools.go:148`, `:161`) (V6). That is a concurrency change to the fail-closed gate's state, with a different correctness bar from the clock split. Recent rounds blocked docs that bundled two such bars. And at the row's load a retry would not have helped soon: the probe phase needs about 4.2–4.8 s × 9.3 (§1) |
+| (3) Name left-out profiles in `/v1/health` and in `doctor` | **BUILT for `doctor`.** `/v1/health` already had them; it gains `out_of_time` (§3.4) | V1 P7, P8 |
+| (4) An exec call for a left-out profile refuses with its name | **ALREADY BUILT** (row 189). Nothing is built; T2 pins the path from a load-left-out profile | §1 claim 4 |
+
+### 3.2 Two startup clocks, both bounded
+
+`Run` now calls `startDaemon(ctx, cfg, startupBudget, registryPhaseBudget)` (`daemon.go:1322–1330`,
+patched):
+
+- **The startup clock**, `startupBudget = 9 s`, is HEAD's constant and value, unchanged. It is still
+  made by `startBounded`. It bounds `New` up to and including the exec probe and the interpreter
+  archive.
+- **The registry clock**, `registryPhaseBudget = 9 s`, is new. `newDaemon` starts it from serve's
+  own ctx (`phaseParent`) at the moment the registry phase starts:
+  `regCtx, cancelReg := context.WithTimeout(phaseParent, registryBudget)` (`:879`).
+  `bootstrapRegistry`, `reportTemplates` and `scanIntegrity` take `regCtx` (`:886–894`). Nothing
+  before it shares it, so it never inherits time the probes, or the work in front of them, spent.
+- `New(ctx, cfg)` keeps its signature for its 47 test call sites, as
+  `newDaemon(ctx, ctx, registryPhaseBudget, cfg)`. When there is no separate parent, the registry
+  clock is the smaller of the caller's deadline and 9 s.
+- No new context root. Both clocks derive from serve's ctx with `WithTimeout`, so the
+  context-root census (`TestProductionContextRoots`) is unchanged and green (§5).
+
+**Why 9 s for the registry clock.**
+
+- The value is the existing startup constant (`daemon.go:1284`). The bootstrap never gets less than
+  HEAD gave it when nothing before it was slow.
+- The measured stimulus is small: bootstrap 0–2 ms, template report 8–19 ms, sweep 2–7 ms (V3). At
+  the ~9.3× slowdown of §1 that is ≤ 0.3 s, so the clock exists to bound a wedged store or a
+  SQLite lock wait, not the normal work.
+- A smaller existing constant, `commitBudget` (3 s, B6), would not fit: the sweep alone may use
+  `integrityScanTimeBudget` (2 s) plus one page read. A sweep cut short by the clock reports a
+  false hole (§3.1).
+
+**Accounting against `service start`'s 30 s.**
+
+- The two clocks bound the ctx-aware work at 9 s + 9 s = 18 s.
+- The ctx-free work is the three archives. Warm, they took 216–245 ms (tool binary), 276–331 ms
+  (srt) and 132–171 ms (interpreter) on this rig, 0.62–0.75 s in all (V3).
+- The two archives in front of the probe run inside the startup clock's wall time. The
+  interpreter's runs after the probe and before the registry clock.
+- At the ~9.3× slowdown, a warm start is therefore about 9 s (startup clock, spent) +
+  0.17 s × 9.3 ≈ 1.6 s (interpreter archive) + ≤ 0.3 s (registry phase) ≈ 11 s. That is inside the
+  30 s wait.
+- The worst case, with the registry clock fully used on a wedged store, is about 20 s, still inside.
+- A **cold** start (both binaries archived fresh) took 2.76 s of ctx-free work at load ~12. At 9.3×
+  that alone exceeds 30 s. This row does not fix that case (§6 R2).
+
+### 3.3 "Out of time" is told apart from "an arm refused"
+
+- `execProber` gains `deadline` (`exec_probe.go:443`). `probeExecProfile` sets it from the startup
+  ctx (`:499`).
+- `fail` marks a failed arm `spent` when it is judged at or after that deadline (`:447`).
+- `ExecProbeError.OutOfTime()` (`:245`) is true only when **every** failed arm is `spent`. One arm
+  that failed while time remained makes it false.
+- `applyProbe` copies it into `ExecProfileExclusion.OutOfTime` (`exec_startup.go:269–271`).
+- The profile is deleted from the served set exactly as before (`:272`). The flag is written only
+  into the exclusion.
+
+This is conservative in one direction: when in doubt, it says "an arm refused".
+
+- A probe run that hits its **own** 8 s per-run bound while startup time remains is judged in time,
+  so it counts as an arm failure. HEAD's `Run` reproduction shows that case: arm 1 reads `timed out
+  after 8s` (V4), and §6 R3 covers it.
+- A genuine refusal judged after the deadline would be marked out of time. That can only happen to
+  a run that finished within a few milliseconds of the deadline. It changes only the advice; the
+  profile is still left out.
+
+The name avoids "budget". Row 255 already owns the exec-call class `time-budget-spent`, and the
+broker owns `denied:budget`.
+
+### 3.4 Where an operator sees it
+
+- **Log** (`workspace.go:270`). The existing `exec profile "<p>" (<file>) left out: <reason>` line is
+  unchanged. For an out-of-time profile one more line follows: `exec profile "<p>": its startup probe
+  ran out of startup time (every failed arm was judged after the startup clock ran out: host load);
+  restart serve when the host is quieter`.
+- **`/v1/health`**. `exec_profiles_excluded[]` gains `"out_of_time": true`, tagged `omitempty`, so
+  every other health body keeps its bytes. The change is additive, as `HealthResponse`'s doc requires
+  (`daemon.go:610`).
+- **`doctor`** (`doctor.go:344`, `:352`). `doctorDaemon` already decodes `/v1/health`. It now also
+  decodes `exec_profiles_excluded` and, after its ✓ line, writes one **✗ `exec profiles`** line per
+  left-out profile, naming the project, the file and the reason (one line, 240 bytes).
+  - The fix for an out-of-time profile is a restart once the host is quieter.
+  - Any other profile is told to fix its file.
+  - `exec profiles` joins the exec class (exit 13) in `doctorClass`.
+  - Because `doctorDaemon` always runs, `--quick` shows these lines too: the row's "doctor was all
+    green" case.
+  - `doctor --help` lists the check.
+- **The refusal** an agent gets is unchanged (candidate 4): `exec profile "<p>" of episode "<e>" was
+  left out at serve startup: <reason>`.
+- **Docs (S7)**: one `docs/QUICKSTART.md` sentence block where the profiles directory is introduced.
+
+### 3.5 Fail-closed
+
+No path serves a profile whose probe did not pass every arm. The served set is `st.Profiles` after
+`applyProbe`. `applyProbe` deletes every profile with a non-nil probe result, whatever `OutOfTime`
+says. The flag is written only into `st.Excluded` and never reaches `st.Profiles` (§4 Claim C).
+
+The registry clock changes when the daemon gives up, never what it serves. A flagged
+`--exec-profile` whose probe runs out of time still refuses startup, as any failed `--exec-profile`
+does (T4's last row).
+
+### 3.6 Pure core, and why this is not a package
+
+This is Go host code: the daemon's startup and the probe's bookkeeping. **No `.ail` is touched**,
+and S1's Z3 contracts bind `world/` and `.ail` code. `OutOfTime` and `fail`'s rule are pure
+functions of their inputs and the clock reading, and T4 tests them with no process run. A package
+cannot hold this, because it is the host boundary's own startup (S2, S3).
+
+## 4. The by-construction argument
+
+**Claim A (serve's registry phase never inherits the startup clock).** *Proof.*
+
+- `Run` calls `startDaemon(ctx, …)` (`daemon.go:1330`). `startDaemon` passes `ctx` as `phaseParent`
+  and the startup clock as `ctx` to `newDaemon` (`:1324`).
+- `regCtx` is `WithTimeout(phaseParent, registryBudget)` (`:879`).
+- The three registry-phase calls take `regCtx` and nothing else (`:886`, `:892`, `:894`).
+
+∎ T1 (`Serve`, through `Run`) kills `MUT-RUN-HEAD-SHAPE`. T1 and T2 (`Phase`) kill
+`MUT-SHARED-PARENT`. T2 kills `MUT-SWEEP-ON-STARTUP-CLOCK`.
+
+**Claim B (every clock is bounded).** *Proof.*
+
+- The startup clock is `startBounded`'s `WithTimeout`, unchanged.
+- The registry clock is `WithTimeout(phaseParent, registryBudget)`.
+- Both values are 9 s, pinned by T6 (`Pin`).
+
+∎ T3 (`Bound`) runs the registry clock at 1 ns and gets `registry-bootstrap … context deadline
+exceeded`, which kills `MUT-REGISTRY-UNBOUNDED`. T6 kills both budget mutants.
+
+**Claim C (fail-closed: a profile whose probe did not pass is never served).** *Proof.*
+
+- In `applyProbe` every `i` with `errs[i] != nil` reaches `delete(st.Profiles, p.Project)`
+  (`exec_startup.go:272`) unconditionally.
+- `OutOfTime` is computed above that line and written only into `st.Excluded`.
+- `w.exec.byProject` is `st.Profiles` (`workspace.go:260`).
+- `profileFor` refuses any project in `excludedWhy` before it reads `byProject` (`:194–197`).
+
+∎ T4 (`Spent`), T1 and T2 kill `MUT-SERVE-SPENT` (an out-of-time profile is skipped, so it stays
+served) and `MUT-SPENT-STILL-SERVED` (it is left out but not deleted).
+
+**Claim D (`out_of_time` never names an in-time refusal as load).** *Proof.* `OutOfTime()` returns
+false as soon as one failed arm is not `spent`, and false when nothing failed. ∎ T4's truth table
+kills `MUT-SPENT-ANY`. T1 and T2 kill `MUT-FAIL-NEVER-SPENT`, `MUT-DEADLINE-UNSET`,
+`MUT-FLAG-NOT-CARRIED` and `MUT-HEALTH-DROPS-FLAG`. T2's control row (an answering client, real
+arm refusals) expects `out_of_time` false.
+
+**Claim E (doctor names every left-out profile as an exec failure).** *Proof.* `doctorExecProfiles`
+calls `r.add(markFail, "exec profiles", …)` once for each element of `exec_profiles_excluded`, and
+`doctorClass("exec profiles")` is `("exec", 13)`. ∎ T5 (`Doctor`) kills `MUT-DOCTOR-NOT-CALLED`,
+`MUT-DOCTOR-WARN`, `MUT-DOCTOR-CLASS` and `MUT-DOCTOR-ONE-FIX`.
+
+**Claim F (neighbours untouched).** *Proof.* The patch's file list (V16) contains none of row 255's
+files (`failure.go`, `record.go`, `broker.go`, `handlers_exec.go`, `effectful.go`, `why.go`,
+`mcpclient.go`, `projection.go`). In `exec_probe.go` it changes only `ExecProbeArmFailure`,
+`ExecProbeError.OutOfTime`, `execProber.deadline`, `fail` and two lines in `probeExecProfile`. No
+verdict (`judgeReverse`, `judgeLeg`, `net6Leg`, `reverseLeg`, `classify*`) reads `deadline` or
+`spent`. ∎ The existing probe tests stay green in the full broker package (V12).
+
+## 5. Test plan and mutation table
+
+| Id | Test (file) | What it asserts |
+|---|---|---|
+| **T1** `Serve` | `TestServeStartsWhenTheProbeSpendsTheStartupClock` (`host/daemon/startup_under_load_test.go`) | Through **`Run`**, with the startup clock at 1.5 s (test seam) and a probe client that never answers, standing in for load. Run announces within 12 s. `GET /v1/health` lists no loaded profile and one exclusion: `proj`, `out_of_time: true`, with a reason holding the probe's own `the startup budget is spent`. The log has the out-of-time line, and Run stops cleanly on cancel |
+| **T2** `Phase` | `TestRegistryPhaseHasItsOwnClock` (same file) | Through `startDaemon`, two rows. **Load row** (1.5 s): the integrity sweep is complete with no hole; health shows `proj` left out with `out_of_time: true`; the episode `ep1`, mapped to `proj`, gets `ExecRefusalHandler` with `exec profile "proj" of episode "ep1" was left out at serve startup: exec startup probe failed`, so candidate 4 is reached end to end and nothing runs. **Control row** (9 s, the client answers, and the pass-through srt shim lets real arms refuse at once): the profile is left out with `out_of_time: false` |
+| **T3** `Bound` | `TestRegistryPhaseClockIsBounded` (same file) | A 1 ns registry clock refuses startup with `StartupError{Stage: registry-bootstrap}` and `context.DeadlineExceeded`. The control (9 s) starts |
+| **T6** `Pin` | `TestServeStartupClocksArePinned` (same file) | The production clocks are 9 s and 9 s |
+| **T4** `Spent` | `TestExecProbeOutOfTimeNamesTheClockNotAnArm` (`host/broker/exec_probe_out_of_time_test.go`) | `fail` against a past, a future and a zero deadline. `OutOfTime` for all spent, one refused in time, a refusal only, and none. `applyProbe` over four profiles: the out-of-time one is left out, flagged and not served; the refused one and a non-probe error are left out and not flagged; only the clean one is served, and `Only` is nil. A flagged `--exec-profile` that ran out of time still refuses startup |
+| **T5** `Doctor` | `TestDoctorNamesLeftOutExecProfiles` (`cmd/ailang-worldd/doctor_exec_profiles_test.go`) | `doctor --quick` against a fake health with one out-of-time and one refused exclusion: exit 13, the ✓ daemon line, two ✗ `exec profiles` lines with distinct fixes, and `2 check(s) failed`. The control (nothing left out) exits 0 with no `exec profiles` line |
+
+**Mutation run** (V11; harness `$V/designer-mutate.py.txt`, results `$V/designer-mutants.txt`).
+
+- Each mutant is one exact-string edit whose anchor occurs exactly once.
+- Each run is `go test -count=1 -v` over the 15 tests below, in `host/daemon`, `host/broker`,
+  `cmd/ailang-worldd` and `host/store`. The files are restored after each run and checked by sha256.
+- **CONTROL runs first and is green (15 of 15).**
+- Afterwards the mutation tree is byte-identical to the prototype (`diff -r`: identical).
+- The neighbours, green under every mutant: `Quar` (`TestStartupBudgetQuarantinesPostCutoffBootstrap`),
+  `Held` (`…HeldConnectionSettles`), `Health` (`TestHealthReportsBuildToolCredentialsAndProfiles`),
+  `ProfileFor` (`TestProfileForResolutionOrder`), `Isolate` (`TestExecProfilesDirProbeFailureIsolatesOneProfile`),
+  the three doctor tests `DocDaemon`, `DocHelp` and `DocM3`, and `Roots` (`TestProductionContextRoots`).
+- **Result: 20 of 20 MATCH**, with one predicted survivor.
+
+| Mutant | Edit | Expected red | Observed |
+|---|---|---|---|
+| CONTROL | none | — | 15/15 PASS, MATCH |
+| **MUT-RUN-HEAD-SHAPE** (HEAD's shared clock) | `Run` calls `startBounded(ctx, cfg, startupBudget, New)` | Serve | Serve, MATCH |
+| **MUT-SHARED-PARENT** | `startDaemon` passes the startup clock as `phaseParent` | Serve, Phase | Serve, Phase, MATCH |
+| MUT-REGISTRY-UNBOUNDED | `regCtx` from `WithCancel` (no bound) | Bound | Bound, MATCH |
+| MUT-SWEEP-ON-STARTUP-CLOCK | `scanIntegrity(ctx)` | Phase | Phase, MATCH (a `scan` hole) |
+| MUT-TEMPLATES-ON-STARTUP-CLOCK | `reportTemplates(ctx)` | — (predicted survivor) | **SURVIVES**, as predicted. No rig has `--ailang-bin`, so `reportTemplates` returns at `d.arch == nil` (`templates.go:97`). Its only effect would be a `capsule template status unavailable` log line (§6 R6) |
+| **MUT-SERVE-SPENT** (fail-closed) | `applyProbe` skips an out-of-time profile, so it stays served | Spent, Serve, Phase | Spent, Serve, Phase, MATCH |
+| **MUT-SPENT-STILL-SERVED** (fail-closed) | an out-of-time profile is excluded but not deleted | Spent, Serve, Phase | Spent, Serve, Phase, MATCH |
+| MUT-FAIL-NEVER-SPENT | `fail` ignores the deadline | Spent, Serve, Phase | Spent, Serve, Phase, MATCH |
+| MUT-DEADLINE-UNSET | `probeExecProfile` never sets `pp.deadline` | Serve, Phase | Serve, Phase, MATCH |
+| MUT-SPENT-ANY | `OutOfTime` true when any arm is spent | Spent | Spent, MATCH |
+| MUT-FLAG-NOT-CARRIED | `applyProbe` writes `OutOfTime: false` | Spent, Serve, Phase | Spent, Serve, Phase, MATCH |
+| MUT-HEALTH-DROPS-FLAG | `healthProfiles` drops the flag | Serve, Phase | Serve, Phase, MATCH |
+| MUT-NO-LOG-LINE | no out-of-time log line | Serve | Serve, MATCH |
+| MUT-DOCTOR-NOT-CALLED | `doctorDaemon` never calls `doctorExecProfiles` | Doctor | Doctor, MATCH |
+| MUT-DOCTOR-WARN | ✗ becomes ! | Doctor | Doctor, MATCH |
+| MUT-DOCTOR-CLASS | `exec profiles` falls out of the exec class (exit 1) | Doctor | Doctor, MATCH |
+| MUT-DOCTOR-ONE-FIX | `doctor` ignores `out_of_time` | Doctor | Doctor, MATCH |
+| MUT-REGISTRY-BUDGET-30S | `registryPhaseBudget = 30 s` | Pin | Pin, MATCH |
+| MUT-STARTUP-BUDGET-5S | `startupBudget = 5 s` | Pin | Pin, MATCH |
+
+## 6. Residuals and risks
+
+- **R1, no retry: a profile left out by load stays out until a restart.**
+  - Under sustained load the daemon now comes up, exec stays down for that project, and `doctor`
+    says so with the restart fix.
+  - The automatic re-probe is the follow-on row in §9, with V6's surface (10 reader functions,
+    0 locks, `ExecToolState` captured once) as its premise.
+- **R2, a cold start under very heavy load can still miss the 30 s wait.** The three archives took
+  2.76 s cold at load ~12 (V3). At the ~9.3× slowdown that alone exceeds 30 s. The archives take no
+  ctx (`archive.go:225`), and this row does not move them. A cold archive happens only when a pinned
+  binary changes (`setup --replace`), not on a `service upgrade` of `ailang-worldd` itself.
+- **R3, a probe run that hits its own 8 s bound is reported as an arm failure.** In HEAD's 9 s
+  reproduction, arm 1 read `timed out after 8s` with about 1 s of the startup clock left (V4). Such a
+  profile is left out with `out_of_time: false`, and `doctor` tells the operator to fix the file. The
+  reason text still says `timed out after 8s`. This errs toward investigation, never toward serving.
+- **R4, a flagged `--exec-profile` that runs out of time still refuses startup**, as at HEAD. That
+  is the operator's explicit single-profile flag. The home service uses `--exec-profiles-dir`
+  (V1 P11).
+- **R5, a wedged store now takes up to 9 s longer to refuse startup**, because the registry clock is
+  fresh. This is inside the 30 s wait (§3.2).
+- **R6, `MUT-TEMPLATES-ON-STARTUP-CLOCK` survives.** No daemon rig archives an interpreter. The code
+  is one argument in the same three-line block whose sweep line `MUT-SWEEP-ON-STARTUP-CLOCK` pins.
+- **R7, Linux (UNMEASURED).** T1 and T2 use the existing pass-through srt shim and a `/bin/sh`
+  client, as the row-140 refusal table does. They run in CI's plain `go test ./...` leg on Linux,
+  which is the acceptance gate (§7).
+- **R8, the load stand-in certifies one axis.** A client that never answers makes the probe phase
+  spend the clock, which is the 2026-11-03 mechanism (V4). It does not reproduce CPU or I/O
+  contention on the other steps. The ×9.3 figure is an estimate from one logged instance (§1 claim 2). The
+  rig's timings are from a shared host at load 7–13.
+
+## 7. Milestones
+
+**M1 (single, ~0.5 day).** Apply the patch, then prove each step. Leave TMPDIR and GOTMPDIR at their
+defaults, and do not set `GOTOOLCHAIN=local`.
+
+```bash
+cd <worktree>
+git apply --check design_docs/planned/w-daemon-startup-under-load.patch && git apply design_docs/planned/w-daemon-startup-under-load.patch
+# expect: rc 0, no output
+go build ./... && go vet ./host/broker/ ./host/daemon/ ./cmd/ailang-worldd/ && test -z "$(gofmt -l host cmd)" && echo OK
+# expect: OK
+go test -count=1 -v -run '^(TestServeStartsWhenTheProbeSpendsTheStartupClock|TestRegistryPhaseHasItsOwnClock|TestRegistryPhaseClockIsBounded|TestServeStartupClocksArePinned|TestExecProbeOutOfTimeNamesTheClockNotAnArm|TestDoctorNamesLeftOutExecProfiles|TestStartupBudgetQuarantinesPostCutoffBootstrap|TestStartupBudgetHeldConnectionSettles|TestHealthReportsBuildToolCredentialsAndProfiles|TestProfileForResolutionOrder|TestExecProfilesDirProbeFailureIsolatesOneProfile|TestDoctorDaemonVsForeignListener|TestDoctorHelpAndAPIKeyGuard|TestDoctorExecToolsWithAnM3Daemon|TestProductionContextRoots)$' \
+  ./host/daemon/ ./host/broker/ ./cmd/ailang-worldd/ ./host/store/ | grep -E '^(--- |ok|FAIL)'
+# expect: 15 "--- PASS", 4 "ok", no FAIL (V17)
+go test -count=3 -run '^(TestServeStartsWhenTheProbeSpendsTheStartupClock|TestRegistryPhaseHasItsOwnClock|TestRegistryPhaseClockIsBounded|TestServeStartupClocksArePinned|TestExecProbeOutOfTimeNamesTheClockNotAnArm|TestDoctorNamesLeftOutExecProfiles)$' \
+  ./host/daemon/ ./host/broker/ ./cmd/ailang-worldd/
+# expect: 3 "ok" (V12)
+VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh | grep 'go gate PASSED'
+# expect: ✓ go gate PASSED (plain): …
+```
+
+Then reproduce at least these kill patterns from §5 with `$V/designer-mutate.py.txt <tree> <out>`,
+each red on its named tests:
+
+- `MUT-RUN-HEAD-SHAPE` (Serve) and `MUT-SHARED-PARENT` (Serve, Phase): the HEAD-shape pair;
+- `MUT-SERVE-SPENT` and `MUT-SPENT-STILL-SERVED` (Spent, Serve, Phase): the fail-closed pair;
+- `MUT-REGISTRY-UNBOUNDED` (Bound), `MUT-SWEEP-ON-STARTUP-CLOCK` (Phase), `MUT-SPENT-ANY` (Spent)
+  and `MUT-DOCTOR-CLASS` (Doctor).
+
+Record the one survivor with its reason. No `.ail` file is touched, so `verify_ail.sh` is unaffected.
+
+**Acceptance gate: CI on the PR.** The plain `go build + test` step runs T1 and T2 on Linux (R7).
+The item is not accepted until that step is green on the PR head.
+
+## 8. Files
+
+| File | Change |
+|---|---|
+| `host/daemon/daemon.go` | +55/−9: `New` → `newDaemon(ctx, phaseParent, registryBudget, cfg)`; the registry phase's `regCtx` (bootstrap, template report, sweep); `startupBudget` and `registryPhaseBudget` (vars, as test seams, pinned); `startDaemon`; `Run` calls it; `HealthExecExclusion.OutOfTime` (`out_of_time,omitempty`) |
+| `host/daemon/workspace.go` | +7/−1: `healthProfiles` carries the flag; `configureExec` logs the out-of-time line |
+| `host/broker/exec_probe.go` | +27/−4: `ExecProbeArmFailure.spent`, `ExecProbeError.OutOfTime()`, `execProber.deadline`, `fail` marks spent arms, `probeExecProfile` sets the deadline |
+| `host/broker/exec_startup.go` | +8/−1: `ExecProfileExclusion.OutOfTime`, set in `applyProbe` |
+| `cmd/ailang-worldd/doctor.go` | +24/−1: decodes `exec_profiles_excluded`; `doctorExecProfiles`; the help text |
+| `cmd/ailang-worldd/doctor_hosts.go` | +1/−1: `exec profiles` joins the exec class (13) |
+| `docs/QUICKSTART.md` | +5/−1: the doctor line, `out_of_time` and the restart (S7) |
+| `host/daemon/startup_under_load_test.go` | new, 255 lines: T1, T2, T3, T6 and the `loadRig` helper |
+| `host/broker/exec_probe_out_of_time_test.go` | new, 82 lines: T4 |
+| `cmd/ailang-worldd/doctor_exec_profiles_test.go` | new, 66 lines: T5 |
+
+## 9. What this item is NOT doing
+
+- **Not the retry loop** (candidate 2's second half). **Proposed follow-on row**,
+  `w-exec-reprobe-out-of-time-profiles`: after startup, re-probe each profile whose exclusion is
+  `out_of_time`, with backoff, and serve it only after a full pass.
+  - Its premise is V6: it must make `workspaceExec` safe for concurrent update across 10 reader
+    functions that no lock guards today, and rebuild or extend `ExecToolState`.
+  - It needs its own design and quorum, because it changes the fail-closed gate's state machine.
+  - This row's `out_of_time` flag is its trigger.
+- **Not the bind-time `handler subprocess timed out after 10s`.** That is the AILANG handler's build
+  under `workspaceHandlerBudget` (3 s), not startup, and it does not stop the daemon.
+  - A failed build is not cached; the next Binder open builds again (`workspace.go:136–137`), so it
+    recovers when load drops.
+  - Its message names the wrong bound (V5). **Proposed follow-on row**, `w-handler-timeout-names-the-bound`:
+    `runBounded` should name the bound that fired, the caller's ctx or its own `execTimeout`.
+- **Not row 233** (D-WORLD-105 OPEN, default C). No reverse-leg verdict, retry or reset rule changes.
+- **Not row 250's** forward legs, and **not row 242's** listener hoist.
+- **Not row 255.** No change to the failure line, its classes, the record or its readers. The probe
+  is startup, not an exec call.
+- **Not row 257.** The seed is still cloned at the first call; `prepareCache` is untouched.
+- **Not the archives' cost** (§6 R2): they still take no ctx.
+- No change to `tools/launchd/*`, any skill, any `.ail`, `~/.ailang/state/*`, or `HOST_CHANGELOG.md`.
+
+There are no decisions for the human. The deferral of the retry loop is a routing call, and §3.1
+gives its measured reason. The controller may file the two follow-on rows, or not.
+
+## Conflict Surface
+
+| File | Function or symbol | Change | Neighbours it must not regress |
+|---|---|---|---|
+| `host/daemon/daemon.go` | `New`, new `newDaemon`, `startBounded` (unchanged), new `startDaemon`, `Run`, `startupBudget`, `registryPhaseBudget`, `HealthExecExclusion` | the registry clock; `out_of_time` | Row 23's bounded startup: `TestStartupBudgetQuarantinesPostCutoffBootstrap`/`…HeldConnectionSettles` (green, §5). Row 153's template report and the integrity announce (`TestIntegrityWarningsFollowTheAnnouncementAndServeNormally`, in the full daemon run, V12). The context-root census (`Roots`, green). Row 189 M3's health fields (`Health`, green) |
+| `host/daemon/workspace.go` | `healthProfiles`, `configureExec` | carry the flag; one more log line | Row 189 M2's `exec profile … left out` line, unchanged byte for byte. `profileFor` and `execHandler` (candidate 4) are untouched |
+| `host/broker/exec_probe.go` | `ExecProbeArmFailure`, `ExecProbeError.OutOfTime`, `execProber.deadline`, `fail`, `probeExecProfile` | bookkeeping only | **Row 233** (reverse leg, D-WORLD-105): `reverseLeg`, `judgeReverse`, `pollLoopback` untouched. **Row 250** (forward legs): `net6Leg`, `judgeLeg`, `classifyNet6Dial`, `readProbeLine` untouched. **Row 242** (net6 hoist): `ProbeExecProfilesEach` untouched. `ExecProbeError.Error()` is unchanged, so every reason string and every test that matches it is unchanged |
+| `host/broker/exec_startup.go` | `ExecProfileExclusion`, `applyProbe` | carry the flag | Row 189 M2's isolation (`Isolate`, green) and the flagged-profile refusal (T4) |
+| `cmd/ailang-worldd/doctor.go`, `doctor_hosts.go` | `doctorDaemon`, new `doctorExecProfiles`, `doctorClass`, `doctorHelp` | the ✗ line | Row 138 M4's doctor contract: read-only (no new I/O beyond the existing health GET), the class order, `DocDaemon`, `DocHelp` and `DocM3` (green) |
+| `docs/QUICKSTART.md` | the profiles-directory paragraph | +5/−1 prose | No code block changes, and §10's refusal table is untouched |
+| **Row 255** | `failure.go`, `record.go`, `broker.go`, `handlers_exec.go`, `effectful.go`, `why.go`, `mcpclient.go`, `projection.go` | **none** | the failure-line contract (200-byte cap, classes, `time-budget-spent`) |
+| **Row 257** | `handlers_exec.go` `prepareCache`, `NewExecHandler` | **none** | the seed clone at first call |
+
+## 10. Verification Log
+
+Commands ran from `/Users/voightkampff/dev/sunholo-data/.wt-world-iter361-row256` unless they say
+otherwise. A bare line number refers to `61a8d1c4`; a "patched" line number refers to the
+prototype. `$V` = `design_docs/verification/world-iter361`.
+
+| # | Claim | Command | Observed |
+|---|---|---|---|
+| V1 | Premise readings P1–P14 at the base, each negative with a positive control | `bash $V/designer-premise-greps.sh.txt` → `$V/designer-premise-greps-out.txt` (`git show 61a8d1c4:<file> \| grep -n …`; `plutil -p` of the home plist; a read-only `grep` of `~/Library/Logs/ailang-world/worldd.log`) | P1 `daemon.go:1276 func startBounded`, `:1277 startupCtx, cancel := context.WithTimeout(ctx, budget)`, `:1284 d, err := startBounded(ctx, cfg, 9*time.Second, New)`. P2 `:811` `archiveToolBinary`, `:817` `configureRunCaps(ctx`, `:820` `configureExec(ctx`, `:830` `a.Archive(cfg.AilangBin)`, `:862` `bootstrapRegistry(ctx, release)`, `:868` `reportTemplates(ctx)`, `:870` `scanIntegrity(ctx)`. P3 `:937–938` `abortBudget(StageRegistry`. P4 `exec_probe.go:108 const execProbeRunBudget = 8 * time.Second`, `:398 budget = min(budget, time.Until(dl))`, `:401 "the startup budget is spent"`. P5 `exec_startup.go:256`, `:264 Reason: errs[i].Error()`, `:265 delete(st.Profiles`. P6 `BudgetSpent\|spent bool` in host: 3 files, all row 255's call-time class `FailTimeBudgetSpent` (`failure.go:33,40`, `handlers_exec.go:320`), none in the probe (control `Reason` in `exec_startup.go`: 4). P7 `daemon.go:651`, `:1134`. P8 doctor `excluded\|exec_profiles\|ExecProfilesExcluded` **0**, control `exec_tool_status\|ExecToolStatus` **4**. P9 `handlers_exec.go:74` def; callers `workspace.go:195`, `:199`, `:486`, `:488 return broker.ExecRefusalHandler{Why: why}`, `:572`; test `binding_test.go:76`. P10 `workspace.go:58 workspaceHandlerBudget = 3 * time.Second`, `:607`, `:664 runCapsStartupBudget = 10 * time.Second`, `:691`. P11 `service.go:87 wait: 30 * time.Second`, `:240`, `:256`; plist `KeepAlive => true`, `ThrottleInterval => 30`, `--exec-profiles-dir`. P12 `archive.go:75 probeTimeout = 10 * time.Second`, `:225 func (a *Archive) Archive(execPath string)` (no ctx), `:278 io.Copy(tmp, io.TeeReader(src, hasher))`. P13 home log: 5 `left out` lines, every one `7-of-7 arm1: … (the startup budget is spent;`; line 36 `daemon startup failed at registry-bootstrap: cannot bootstrap world/epoch-registry/v1 with release "AILANG v0.41.0": context deadline exceeded`; line 29 `workspace tools unavailable … handler subprocess timed out after 10s`. P14 the census pins `daemon.go\|drain\|Background` only |
+| V2 | Instruments | `go version`; `grep '^go ' go.mod`; `echo $TMPDIR $GOTMPDIR $GOTOOLCHAIN`; `$HOME/.pinned-ailang/ailang --version`; `sysctl -n hw.ncpu`; `du -sh` and `find … -type f \| wc -l` of the srt tree; `ls -la` of both pins | `go1.26.6 darwin/arm64` = `go 1.26.6`; TMPDIR `/var/folders/kr/…/T/`, GOTMPDIR and GOTOOLCHAIN empty; `AILANG v0.41.0`, `Commit: 24ee108`; 16 cores; srt `16M`, 849 files; tool pin 106 877 442 B, interpreter pin 100 594 162 B |
+| V3 | Phase timing of HEAD's `New` on this rig, real flags, scratch store | HEAD plus `PhaseMark` lines only (`$V/designer-phase-instrumentation.diff.txt`), built to `worldd-instr`; `bash $V/designer-phase-timing.sh.txt <label>` for `cold`, `warm1–3` → `$V/designer-phase-timing-out.txt`; loads 11.3–13.4. Each mark is printed *before* its step, so a step's time is the difference between its mark's `t` and the next mark's `t` (±1 ms against `since-prev`) | **cold**: tool archive 1153 ms, `node --version` 163, srt tree 199, srt archive 552, **probe phase 4797**, interpreter archive 1059, bootstrap 2, templates 8, sweep 7; New returns at **7981 ms (1047 ms left of 9 s)**. **warm1–3**: tool archive 216/245/232, node 197/168/135, srt tree 235/228/216, srt archive 297/276/331, **probe phase 4191/4268/4476**, interpreter archive 132/151/171, bootstrap 1/1/0, templates 8/19/9, sweep 3/2/2; New returns at **5311/5376/5610 ms**. Pre-probe work (to the `exec:probe-profiles` mark) 974/933/950 ms warm, 2106 cold. All five home profiles passed in every run. Wall to the listen line 5.6–6.1 s warm, 8.7 s cold |
+| V4 | HEAD reproduction with no host load (positive control) | throwaway `zz_head_shape_test.go` (banked as `$V/designer-head-shape-repro_test.go.txt`) in a `git archive 61a8d1c4` copy (`head/`): the slow-client rig with one directory profile; `startBounded(ctx, cfg, 1.5 s, New)`; HEAD's own `Run` (9 s); control with an answering client and 9 s → `$V/designer-head-shape-repro.txt` | 1.5 s: `took=1.911s stage="registry-bootstrap" deadline=true err=daemon startup failed at registry-bootstrap: cannot bootstrap world/epoch-registry/v1 with release "unpinned": context deadline exceeded`; log `left out: … (7 of 7 arms): arm1-write-inside: … (broker: handler subprocess timed out after 1.055337667s; …`. Run 9 s: `took=9.206s`, the same error; log `(6 of 7 arms): arm1-write-inside: … timed out after 8s`. Control: `took=2.502s … err=<nil>`, left out `(4 of 7 arms): arm2-write-outside: … token "WORLD-PROBE-WROTE"` (the pass-through shim does not confine) |
+| V5 | The bind-time "10s" names the handler's bound, not the clock that fired | throwaway `zz_label_test.go` (banked as `$V/designer-bind-label-probe_test.go.txt`) in `head/host/broker`: `runBounded` with a parent ctx of 150 ms, `execTimeout` 10 s, `sh -c 'sleep 2'` → `$V/designer-bind-label-probe.txt` | `took=150ms err=broker: handler subprocess timed out after 10s` |
+| V6 | What a re-probe would make mutable (candidate 2's measured cost) | `bash $V/designer-retry-surface.sh.txt` → `$V/designer-retry-surface-out.txt` | 30 lines in non-test `host/daemon` touch `w.exec`/`workspaceExec` fields (3 writes in `configureExec`, the rest reads); **10 distinct functions** (`Close`, `Shutdown`, `profileFor`, `configureExec`, `episodeHandler`, `execHandler`, `healthExecToolStatus`, `healthExecTools`, `healthProfiles`, `captureExecTools`); locks `workspace.go:116 mu guards handler and ailangBuild only`, `:123 execMu guards execH only`, so **none guards `exec`**; `exec_tools.go:122 func NewExecToolState`, `:148 for project, p := range cfg.Profiles`, `:161` |
+| V7 | The prototype builds, vets and is gofmt-clean | in `proto/`: `go build ./...`; `go vet ./host/broker/ ./host/daemon/ ./cmd/ailang-worldd/`; `gofmt -l` over the 9 touched Go files → `$V/designer-final-gates.txt` | `BUILD-OK`, `VET-OK`, `gofmt -l (touched): []` |
+| V8 | The named tests pass | `go test -count=1 -v -run '^(<6 new>)$' ./host/daemon/ ./host/broker/ ./cmd/ailang-worldd/` | `--- PASS` ×6 (Serve 1.95 s, Phase 4.36 s with subtests 1.92 s and 2.48 s, Bound 0.01 s, Pin, Spent, Doctor); 3 `ok` |
+| V9 | (pre-rename) the full packages pass with the first prototype | `AILANG_BIN=$HOME/.pinned-ailang/ailang go test -count=1 -timeout 900s ./host/broker/ ./host/daemon/ ./cmd/ailang-worldd/` | `ok host/broker 276.820s`, `ok host/daemon 306.095s`, `ok cmd/ailang-worldd 153.608s`, `RC=0`. A later rename changed only identifiers (`BudgetSpent` → `OutOfTime`, `budget_spent` → `out_of_time`). V12 re-ran the full packages on the final bytes |
+| V10 | The doctor output reads as designed | T5 with a temporary `t.Logf` (removed) | `✗ exec profiles ailang-world (/p/ailang-world.json) was left out at startup: the host was too busy for its startup probe to finish (…)` / `fix: nothing to fix in the profile; restart World when the host is quieter (ailang-worldd service stop, then service start; or restart serve)`; `✗ exec profiles broken (/p/broken.json) … arm7-toolchain …` / `fix: fix /p/broken.json as the reason says, then restart World …`; `2 check(s) failed` |
+| V11 | The mutation table | `python3 $V/designer-mutate.py.txt $WT/.design-scratch/mut $V/designer-mutants.txt` (a copy of the final prototype); then `diff -r proto mut` | `CONTROL: rc=0 pass=15 red=- … MATCH`; the 19 mutants as in §5; `== done: 20 MATCH, 0 MISMATCH`; `MUT-TREE-RESTORED-IDENTICAL` |
+| V12 | The final prototype: stability and the full packages | `$V/designer-final-gates.txt`: `go test -count=3` of the 6 new tests; `AILANG_BIN=$HOME/.pinned-ailang/ailang go test -count=1 -timeout 900s ./host/broker/ ./host/daemon/ ./cmd/ailang-worldd/ ./host/store/` (load 13.9 at start) | `-count=3`: `ok host/daemon 19.823s`, `ok host/broker 0.241s`, `ok cmd/ailang-worldd 0.482s`. Full: `ok host/broker 273.719s`, `ok host/daemon 306.966s`, `ok cmd/ailang-worldd 156.223s`, `ok host/store 12.030s`. The daemon package holds the integrity-announce, context-thread and QUICKSTART-bound tests |
+| V16 | The patch, and that it applies at HEAD | rsync the prototype onto a fresh `git archive 61a8d1c4` repo (`base/`), `git add -A`, `git diff --cached` → the patch; `git apply --check` in the worktree | `10 files changed, 530 insertions(+), 18 deletions(-)`; 741 lines; sha256 `f9bcb6360a38172ba99dcc41d7887a79b33646ad1b928f1aeaa2f890665c9b3e`; `apply-check rc=0`; `git status --porcelain` → only `.design-scratch/` (deleted after), the patch and `$V/` |
+| V17 | The patch applied to a fresh archive passes its tests | `bash $V/designer-fresh-apply.sh.txt` → `$V/designer-fresh-apply.txt`: `git archive 61a8d1c4` into `fresh/`, `git init`, `git apply --check`, `git apply`, `go build ./...`, `go vet` (3 packages), `gofmt -l host cmd`, the 15 named tests | `APPLY-CHECK rc=0`, `APPLY rc=0`, the new test file present, `newDaemon` ×4, `BUILD-VET-OK`, gofmt empty, `go test rc=0`, **15 `--- PASS`, 0 FAIL**, 4 `ok`. **Run 1 was vacuous and is discarded.** Without `git init`, `git apply` inside the worktree's repo skipped every path and still returned rc 0, so only the 9 neighbours ran. The new-file check now guards that |
+| V18 | No `.ail` change | `grep -c '^diff --git.*\.ail' <patch>`, with the control `'^diff --git.*\.go'` | `.ail` 0; `.go` 9 |
+| — | **UNMEASURED** | — | A real host at load ~110 (the stand-in is a client that never answers, R8); Linux and real srt on Linux (R7); `service start` end to end against launchd; the second and third 2026-11-03 starts (§1 claim 6); `-race`; the repo-wide `verify_go.sh` (the designer ran the four touched packages in full, V12, not every package) |
+
+## 11. Quorum log
+
+r1. No quorum round has run yet.

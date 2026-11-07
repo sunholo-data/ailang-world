@@ -1,0 +1,3 @@
+zz_label_test.go:18: took=150ms err=broker: handler subprocess timed out after 10s
+--- PASS: TestZZTimeoutLabelNamesTheHandlerBoundNotTheParent (0.15s)
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.489s

@@ -1,0 +1,108 @@
+start_utc=2026-11-07T05:27:13.196339+00:00
+deadline_utc=2026-11-07T05:30:13.196339+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.probe-world-iter362-quorum
+command=go test -count=1 -timeout 120s -v -run '^(TestExecProbeOutOfTimeNamesTheClockNotAnArm|TestExecProbeGenuineRefusalRecordedAfterDeadline|TestDoctorLateRefusalObservationAndReasonCap|TestRegistryPhasePreservesParentCancellation|TestExecExclusionLogIsObservationOnly|TestHealthExecExclusionIsAdditive|TestDaemonConstructorCallerInventory|TestDaemonCallerInventoryAliasControl)$' ./host/daemon/ ./host/broker/ ./cmd/ailang-worldd/
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:27  up 6 days, 11:46, 4 users, load averages: 10.14 8.88 6.87
+
+go version go1.26.6 darwin/arm64
+
+=== RUN   TestDaemonConstructorCallerInventory
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/cliwalk_e2e_test.go:73 owner=newCLISeRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/cliwalk_e2e_test.go:121 owner=newCLISeRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/demo_proof_test.go:89 owner=newDemoProofRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/demo_test.go:96 owner=newDemoTestRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/demo_test.go:592 owner=newDemoApprovalRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/demo_test.go:641 owner=newDemoApprovalRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/demo_test.go:1874 owner=demoM4bManifestFixture target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/demo_test.go:1934 owner=demoM4bManifestFixture target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/marketing_chrome_test.go:195 owner=newMarketingChromeRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/marketing_chrome_test.go:232 owner=newMarketingChromeRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/marketing_still_test.go:70 owner=checkMarketingStill target=New kind=call
+    startup_callers_test.go:173: test=true cmd/ailang-worldd/why_test.go:56 owner=newWalkRig target=New kind=call
+    startup_callers_test.go:173: test=true cmd/world-publish/v1_repro_test.go:63 owner=TestV1ReproductionRestartOnANominatedCandidate target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/bench_test.go:208 owner=benchmarkDaemonGET target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/bench_test.go:294 owner=BenchmarkRESTCommit target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/bench_test.go:370 owner=BenchmarkLogRange target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/context_thread_test.go:22 owner=TestStartupCallerCancellation target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/context_thread_test.go:31 owner=TestStartupCallerCancellation target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/credentials_split_test.go:65 owner=TestServeMovesPreSplitCredentialsAndTheyStillAuthenticate target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/credentials_split_test.go:116 owner=TestServeRefusesTheWorldStoreAsCredentialsStore target=New kind=call
+    startup_callers_test.go:173: test=false host/daemon/daemon.go:700 owner=New target=newDaemon kind=call
+    startup_callers_test.go:173: test=false host/daemon/daemon.go:1321 owner=startDaemon target=startBounded kind=call
+    startup_callers_test.go:173: test=false host/daemon/daemon.go:1322 owner=startDaemon target=newDaemon kind=call
+    startup_callers_test.go:173: test=false host/daemon/daemon.go:1328 owner=Run target=startDaemon kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:152 owner=TestNewRefusesNonLoopbackBind target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:178 owner=TestNewRefusesNonLoopbackBind target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:351 owner=TestBoundedGracefulShutdownDrainsInFlightRequest target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:427 owner=TestDaemonShutdownIsBoundedByTheD7Constant target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:487 owner=TestNewReleasesWriterAuthorityOnLateFailure target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:574 owner=TestHealthAndHeadRoundTrip target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:713 owner=TestNewBootstrapsEpochRegistryIdempotently target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/daemon_test.go:1313 owner=TestDaemonInvokeConfig target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/epoch_startup_test.go:22 owner=TestStartupOnExistingStoreRequiresANominatedRelease target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/epoch_startup_test.go:87 owner=TestUnpinnedStartOnPinnedStoreNamesTheNominatedReleases target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/epoch_startup_test.go:94 owner=TestUnpinnedStartOnPinnedStoreNamesTheNominatedReleases target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/handlers_test.go:23 owner=newHandlerDaemon target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/installed_build_test.go:68 owner=TestSurfaceModelServiceFields target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/integrity_test.go:76 owner=TestIntegrityStartupSweepPagesBothTables target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/integrity_test.go:235 owner=TestIntegrityStartupSweepReportsTruncation target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/invoke_e2e_test.go:42 owner=invocationDaemon target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/invoke_e2e_test.go:419 owner=TestA2AErrorLogWiring target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/lock_wait_order_test.go:21 owner=TestProductionBusyTimeoutConfiguredBelowReadDeadline target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/lock_wait_order_test.go:52 owner=TestNewRefusesBusyTimeoutAtOrAboveReadDeadline target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/objects_by_semantic_id_test.go:239 owner=TestWalkRetimedAtScale target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/registry_publisher_test.go:47 owner=newPublisherDaemon target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/startup_budget_test.go:51 owner=TestStartupBudgetQuarantinesPostCutoffBootstrap target=startBounded kind=call
+    startup_callers_test.go:173: test=true host/daemon/startup_budget_test.go:127 owner=TestStartupBudgetHeldConnectionSettles target=startBounded kind=call
+    startup_callers_test.go:173: test=true host/daemon/startup_measure_test.go:26 owner=TestMeasureStartup target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/startup_under_load_test.go:196 owner=TestRegistryPhaseHasItsOwnClock target=startDaemon kind=call
+    startup_callers_test.go:173: test=true host/daemon/startup_under_load_test.go:232 owner=TestRegistryPhaseClockIsBounded target=startDaemon kind=call
+    startup_callers_test.go:173: test=true host/daemon/startup_under_load_test.go:266 owner=TestRegistryPhasePreservesParentCancellation target=newDaemon kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_app_test.go:21 owner=TestSurfaceAppRoutes target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_follow_test.go:78 owner=newFollowDaemon target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_follow_test.go:252 owner=TestSurfaceFollowStartupRefusals target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_fonts_test.go:14 owner=TestSurfaceFontRoute target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_fonts_test.go:66 owner=TestSurfaceSecurityHeaders target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_index_test.go:18 owner=TestSurfaceIndex target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_index_test.go:122 owner=TestSurfaceIndexStartupRefusal target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_model_test.go:24 owner=TestSurfaceModelRoutes target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_page_test.go:21 owner=TestSurfaceScriptRoute target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/surface_page_test.go:55 owner=TestSurfacePage target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/templates_test.go:71 owner=TestDaemonStartReportsMissingTemplates target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/templates_test.go:113 owner=TestDaemonStartReportsMissingTemplates target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/templates_test.go:239 owner=TestPublishWithoutATemplateIsRefused target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/templates_test.go:266 owner=TestTemplateGCPrunesStaleInterpDigests target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/workbench_grade_test.go:84 owner=newGradeDaemon target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/workbench_grade_test.go:147 owner=refuseGradeConfig target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/workbench_grade_test.go:173 owner=TestProofKeyWiringRefusesEveryHalfConfiguration target=New kind=call
+    startup_callers_test.go:173: test=true host/daemon/workspace_test.go:150 owner=newWSDaemon target=New kind=call
+    startup_callers_test.go:178: Go files=626 New test references=60 New production references=0 all production startup references=4
+--- PASS: TestDaemonConstructorCallerInventory (0.18s)
+=== RUN   TestDaemonCallerInventoryAliasControl
+--- PASS: TestDaemonCallerInventoryAliasControl (0.00s)
+=== RUN   TestRegistryPhasePreservesParentCancellation
+--- PASS: TestRegistryPhasePreservesParentCancellation (0.02s)
+=== RUN   TestExecExclusionLogIsObservationOnly
+--- PASS: TestExecExclusionLogIsObservationOnly (0.00s)
+=== RUN   TestHealthExecExclusionIsAdditive
+--- PASS: TestHealthExecExclusionIsAdditive (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	0.671s
+=== RUN   TestExecProbeOutOfTimeNamesTheClockNotAnArm
+    exec_probe_out_of_time_test.go:75: excluded = [{File:/d/b.json Project:b Reason:exec startup probe failed for profile "b" (1 of 7 arms): arm1-write-inside: the startup budget is spent OutOfTime:false} {File:/d/c.json Project:c Reason:exec startup probe failed for profile "c" (2 of 7 arms): arm1-write-inside: the startup budget is spent; arm2-write-outside: token "WORLD-PROBE-WROTE" OutOfTime:false} {File:/d/d.json Project:d Reason:broker: exec probe for profile "d": scratch episode: exists OutOfTime:false}], want b flagged (its reason kept), c and d not
+--- FAIL: TestExecProbeOutOfTimeNamesTheClockNotAnArm (0.00s)
+=== RUN   TestExecProbeGenuineRefusalRecordedAfterDeadline
+    exec_probe_out_of_time_test.go:102: late refusal lost exclusion/reason: &{Profiles:map[] Only:<nil> EpisodeProjects:map[] Sources:map[] Excluded:[{File:/p/late.json Project:late Reason:exec startup probe failed for profile "late" (1 of 7 arms): arm2-write-outside: genuine refusal: sibling write succeeded OutOfTime:false}] Sandbox:<nil> Tools:<nil> MaxOutputBytes:0 OperatorHome:}
+--- FAIL: TestExecProbeGenuineRefusalRecordedAfterDeadline (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.284s
+=== RUN   TestDoctorLateRefusalObservationAndReasonCap
+--- PASS: TestDoctorLateRefusalObservationAndReasonCap (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.684s
+FAIL
+rc=1
+end_utc=2026-11-07T05:27:14.712915+00:00
+ 6:27  up 6 days, 11:46, 4 users, load averages: 9.57 8.78 6.85
+

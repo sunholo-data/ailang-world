@@ -1,0 +1,29 @@
+[
+  {
+    "mutant": "MUT-CALLER-IMPORTED-ALIAS",
+    "file": "cmd/ailang-worldd/startup_caller_mutant.go",
+    "before": "absent",
+    "after": "ab725d7805d0eafbe9e0a27e82daaa4e2fcfb297b555ca4e3381d23ad89338a0",
+    "rc": 1,
+    "assertion": "TestDaemonConstructorCallerInventory",
+    "match": true
+  },
+  {
+    "mutant": "MUT-CALLER-DIRECT",
+    "file": "cmd/ailang-worldd/startup_caller_mutant.go",
+    "before": "absent",
+    "after": "ed60bf937c9beffd2a4429d559d88bdc9a767633c20b777d03bb9a0b12920f2b",
+    "rc": 1,
+    "assertion": "TestDaemonConstructorCallerInventory",
+    "match": true
+  },
+  {
+    "mutant": "MUT-CALLER-LOCAL-ALIAS",
+    "file": "host/daemon/startup_caller_mutant.go",
+    "before": "absent",
+    "after": "48d53c09b87e0f13e4a794d88113c73d91334567ba17518727a3ba477a9fa200",
+    "rc": 1,
+    "assertion": "TestDaemonConstructorCallerInventory",
+    "match": true
+  }
+]

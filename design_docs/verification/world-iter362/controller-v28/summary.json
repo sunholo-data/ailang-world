@@ -1,0 +1,19 @@
+{
+  "patch_sha256": "90c6df45c6b4dcf09fd241d76eb87294f5b84d688eb9f2ff90d0eca1de09db16",
+  "new_and_neighbour_race": {
+    "pass": 17,
+    "fail": 0
+  },
+  "historical_mutants": {
+    "named": 19,
+    "killed": 18,
+    "survivor": "MUT-TEMPLATES-ON-STARTUP-CLOCK",
+    "stale_no_log_anchor_repaired": true
+  },
+  "serve_parent_mutant": "killed; control0 build0 mutant1",
+  "revision_mutants": {
+    "named": 14,
+    "killed": 14
+  },
+  "restore": "11/11 exact"
+}

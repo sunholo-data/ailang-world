@@ -1,0 +1,19 @@
+Reading additional input from stdin...
+OpenAI Codex v0.164.0
+--------
+workdir: /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1b459-524e-7173-b294-711305f0ab09
+--------
+user
+reply with exactly: ok
+codex
+ok
+tokens used
+10.507
+ok
