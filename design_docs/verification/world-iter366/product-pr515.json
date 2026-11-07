@@ -1,0 +1,15 @@
+{
+  "command": [
+    "gh",
+    "pr",
+    "view",
+    "515",
+    "-R",
+    "sunholo-data/ailang-world",
+    "--json",
+    "number,state,isDraft,headRefOid,mergeable,mergeStateStatus"
+  ],
+  "rc": 0,
+  "stdout": "{\"headRefOid\":\"7655388936b80bea9c4843f0a2e0abc085e52c0f\",\"isDraft\":true,\"mergeStateStatus\":\"DIRTY\",\"mergeable\":\"CONFLICTING\",\"number\":515,\"state\":\"OPEN\"}\n",
+  "stderr": ""
+}

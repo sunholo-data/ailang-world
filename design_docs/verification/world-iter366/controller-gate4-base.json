@@ -1,0 +1,8 @@
+{
+  "base": "1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4",
+  "at": "2026-11-07T20:55:57Z",
+  "helper": "MISSION_DRIVER_ROOT/tools/launchd/mission-base.sh record gate4",
+  "previous_stamp_present": "ITERATION365",
+  "control_present": "ITERATION364",
+  "charter_at_worktree_equals_origin": true
+}

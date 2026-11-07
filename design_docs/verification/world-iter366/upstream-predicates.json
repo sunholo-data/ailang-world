@@ -1,0 +1,435 @@
+{
+  "at": "2026-11-07T20:52:20.451142+00:00",
+  "results": [
+    {
+      "number": 477,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/477",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":477,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 486,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/486",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":486,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 493,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/493",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":493,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 498,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/498",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":498,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 517,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/517",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":517,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 611,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/611",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":611,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 633,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/633",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":633,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 764,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/764",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":764,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 885,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/885",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":885,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 941,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/941",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":941,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 984,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/984",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":984,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1036,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1036",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1036,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1037,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1037",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1037,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1042,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1042",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1042,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1043,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1043",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1043,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1096,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1096",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1096,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1160,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1160",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1160,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1424,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1424",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1424,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1542,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1542",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1542,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1547,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1547",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1547,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1557,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1557",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1557,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1558,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1558",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1558,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1559,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1559",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1559,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1580,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1580",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1580,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1602,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1602",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1602,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1607,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1607",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1607,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1635,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1635",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1635,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 1843,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/1843",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":1843,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 2053,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/2053",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":2053,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 2127,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/2127",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":2127,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 2132,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/2132",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":2132,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 476,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/476",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":476,\"state\":\"closed\"}\n",
+      "stderr": ""
+    },
+    {
+      "number": 2160,
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang/issues/2160",
+        "--jq",
+        "{number,state}"
+      ],
+      "rc": 0,
+      "stdout": "{\"number\":2160,\"state\":\"closed\"}\n",
+      "stderr": ""
+    }
+  ],
+  "control": "each response number matches requested; negative absent field deliberately rejected"
+}

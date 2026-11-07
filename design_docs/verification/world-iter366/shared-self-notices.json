@@ -1,0 +1,25 @@
+{
+  "command": [
+    "bash",
+    "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_gate0_self_notices.sh",
+    "--issue",
+    "449",
+    "--prev-issue",
+    "366",
+    "--repo",
+    "sunholo-data/ailang-world",
+    "--self",
+    "sunholo-voight-kampff",
+    "--watermark-file",
+    "/Users/voightkampff/.ailang/state/mission-449-last-seen",
+    "--watermark-file",
+    "/Users/voightkampff/.ailang/state/mission-366-last-seen",
+    "--control",
+    "auto",
+    "--driver-src",
+    "/Users/voightkampff/.ailang-driver-pin/world/tools/launchd/mission-control.sh"
+  ],
+  "rc": 0,
+  "stdout": "gate0_self_notices: repo=sunholo-data/ailang-world self=sunholo-voight-kampff issues=449,366\nwatermark: /Users/voightkampff/.ailang/state/mission-449-last-seen ABSENT \u2014 DEGRADED: single-watermark read (iter-52 rule wants two)\nwatermark: /Users/voightkampff/.ailang/state/mission-366-last-seen = 2026-10-27T09:03:42Z ok\nsince: 2026-10-27T09:03:42Z (older of 1 readable watermark(s) of 2)\ntranscript: issue=449 at=2026-11-04T22:00:52Z hits=1 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6643217962 fire=world-1793825318-10110\ntranscript: issue=449 at=2026-11-05T01:43:10Z hits=1 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6647302052 fire=world-1793839743-21731\nissue: 449 comments=37 self=37 crash=0 transcript=2 other=35\nissue: 366 comments=35 self=35 crash=0 transcript=0 other=35\ncontrol: issue=107 expect=4 got=4 ok\nsignature-source: /Users/voightkampff/.ailang-driver-pin/world/tools/launchd/mission-control.sh ok\nverdict: 0 crash notice(s) since 2026-10-27T09:03:42Z on #449,#366 \u2014 no death signal from the driver; Gate 2's traces (a)-(c) still run [mission_gate0_self_notices.sh, control 107:4, watermarks 1/2]; transcript notice(s) since watermark: 2; exposure reported: key names are in the private controlplane notice; report the count and fire id, never a value or path\n",
+  "stderr": ""
+}

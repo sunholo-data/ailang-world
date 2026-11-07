@@ -1,0 +1,40 @@
+{
+  "initial_reader": "ledger-provenance.json safe_fields filter matched nothing; no provenance verdict inferred; corrected capture of named safe tokens",
+  "rows": [
+    {
+      "decision": "D-WORLD-48",
+      "rc": 0,
+      "verdict": "fleet",
+      "flip": "54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e",
+      "creation": "54e0fb0a5fb0c988fb8d9f9e9bcda28096a1183e"
+    },
+    {
+      "decision": "D-WORLD-108",
+      "rc": 0,
+      "verdict": "attended",
+      "flip": "cd15c9dce6cd020266acd2a9ff99b384cf610421",
+      "creation": "e9ec30595407531121ac02a52dfd24395dc411ab"
+    },
+    {
+      "decision": "D-WORLD-109",
+      "rc": 0,
+      "verdict": "attended",
+      "flip": "61e2411aaa8c02bbc2058a5c8cafa1431454baf6",
+      "creation": "89a92ea028464466542277f72ce69f809b42b7e8"
+    },
+    {
+      "decision": "D-WORLD-111",
+      "rc": 0,
+      "verdict": "never-resolved",
+      "flip": "none",
+      "creation": "11b7a56902cf7935d506c7ccd157cc916499ee8a"
+    },
+    {
+      "decision": "D-WORLD-112",
+      "rc": 0,
+      "verdict": "never-resolved",
+      "flip": "none",
+      "creation": "11b7a56902cf7935d506c7ccd157cc916499ee8a"
+    }
+  ]
+}

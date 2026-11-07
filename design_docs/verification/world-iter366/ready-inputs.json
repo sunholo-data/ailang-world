@@ -1,0 +1,30 @@
+{
+  "scope": "explicit ready files only; new controller evidence allowed",
+  "sha256": {
+    "design_docs/verification/world-iter366/base-files.json": "cd7c4b01521f5dcf05cc28ee0eca9a2ed9c16df5a725ad76799e97774b8b8be0",
+    "design_docs/verification/world-iter366/shared-main-baseline.json": "435803ee0f24056e96f177456ca4a33c66587af1d98de3fe0df85a917bb7a052",
+    "design_docs/verification/world-iter366/record-design.md": "cb625155d298e01d53f6835e9df6e834a8def626910ea4a32afd43689ba829d2",
+    "design_docs/verification/world-iter366/evaluator-preflight.json": "c6f2f019187d4eafce5c37e56c80716859675301b7b0112ffeeed679812ec536",
+    "design_docs/verification/world-iter366/ledger-provenance.json": "e26a43a31dd6881b3307ae75020df59e0af6c1003667365d91cf7fd1994325c8",
+    "design_docs/verification/world-iter366/base-checks.json": "ed89adb7157be4912a51bfb33705d2d2690455714e951730221f6a168907d2e7",
+    "design_docs/verification/world-iter366/issue.json": "0cea0e7a692aa8536237a499ca2fc967f26ee3e441a5d842461b27cbf0743951",
+    "design_docs/verification/world-iter366/inbox.json": "f9150042714a0dfb2d8380b6f2d4bb37c28658460e76fcaca668e4f0c808eda1",
+    "design_docs/verification/world-iter366/previous-directives.json": "2312f2866534affc34dcea8953a8fa0a19eb544c9d13bd51d1a2ae4cb258e893",
+    "design_docs/verification/world-iter366/worktree-census.txt": "188fa00923b82119a0cc3cd6a6b64717891b9dfc62bf9e6775e7422f505cab97",
+    "design_docs/verification/world-iter366/shared-self-notices.json": "3176fb19c64320f9d5c39898956bc7de1388a7d9e02fe1a82eb5be6e5d08c67a",
+    "design_docs/verification/world-iter366/product-pr515.json": "df229593aa63f07f8a8745a5353d46a8c1af37b1fca681e2de63dc5b1e44ccf3",
+    "design_docs/verification/world-iter366/ledger-check.json": "c25fd36093d8e3443aa9d7f325d9f09b2f487147e97c6e1c4b75f38a616c9957",
+    "design_docs/verification/world-iter366/upstream-predicates.json": "f738253762f5720a7e16db8ff84df3fcc9ff173c876f1fcfce104db743ed5ee3",
+    "design_docs/verification/world-iter366/controller-observations.json": "835c7b1e8f043ffdd665b50ead1c01746b68dcfc16e1ababca81fb96ce5025b2",
+    "design_docs/verification/world-iter366/baseline-index-cli.json": "25355aeea1426966a16db9c2b24546ea7cdf91998fa3d74c14df755a0e4652cc",
+    "design_docs/verification/world-iter366/baseline-charter-gate.json": "115a490fa241735e1eaa3d5618d2f51a6508984c731d81a076f7f2ba8f018b36",
+    "design_docs/verification/world-iter366/designer-supervisor-receipt.json": "e1f63e2eac8b5a7aea094d9ef60f34f77ead62e1f6f753c970c709d8cc310df7",
+    "design_docs/verification/world-iter366/ledger-open.json": "ce40ff734d31b5fc7ba7861ae7d500d746235e3e966a9fe54f906d86beff399f",
+    "design_docs/verification/world-iter366/base-confirmation.json": "a0fcd335672fc9fb169f9fc13dcd89dbb68b5177c38f8aedfa2b478b62caaa31",
+    "design_docs/verification/world-iter366/routing-resolvers.json": "4943e2eac7548d9415838ddb9e65dfb0fb030e77905440fef185f058ce89877c",
+    "design_docs/verification/world-iter366/designer-receipt.json": "b57bcbd0e363b04440c182d7a685b0cd56833706d7e9b13f09aefd08a3cfa016",
+    "design_docs/verification/world-iter366/ledger-provenance-r2.json": "2a2822a07b05134c8a8fd4346a290c12b15e5533db268b54473561b3336d0219",
+    "design_docs/verification/world-iter366/controller-gate4-base.json": "6dead0affd47d93a35c117d7ee8048ab80dc3ab3bf3fdd7a6b39f0cf547400c3",
+    "design_docs/verification/world-iter366/baseline-privacy.json": "200e5988087719a6e33c1de336986fa04e8b7f192c5c81c4b0d107346fce64ac"
+  }
+}
