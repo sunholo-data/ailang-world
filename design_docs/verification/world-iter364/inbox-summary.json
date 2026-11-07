@@ -1,0 +1,9 @@
+{
+  "rc": 0,
+  "count": 56,
+  "senders": [
+    "mission-world"
+  ],
+  "nonself": [],
+  "triage": "self claims are context, no directive authority; no ack-all"
+}

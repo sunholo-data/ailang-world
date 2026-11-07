@@ -1,0 +1,130 @@
+{
+  "at_utc": "2026-11-07T12:52:12.317753+00:00",
+  "observations": [
+    {
+      "argv": [
+        "bash",
+        "scripts/mission_decisions.sh",
+        "--check",
+        "--file",
+        "design_docs/world-mission.md"
+      ],
+      "rc": 0,
+      "file": "ledger-check.txt",
+      "bytes": 31
+    },
+    {
+      "argv": [
+        "bash",
+        "scripts/mission_decisions.sh",
+        "--open",
+        "--file",
+        "design_docs/world-mission.md"
+      ],
+      "rc": 0,
+      "file": "open-decisions.txt",
+      "bytes": 4968
+    },
+    {
+      "argv": [
+        "gh",
+        "pr",
+        "view",
+        "515",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--json",
+        "number,title,state,isDraft,mergeable,headRefOid,url"
+      ],
+      "rc": 0,
+      "file": "product-pr515.json",
+      "bytes": 267
+    },
+    {
+      "argv": [
+        "gh",
+        "run",
+        "list",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--workflow",
+        "CI",
+        "--branch",
+        "dev",
+        "--limit",
+        "1",
+        "--json",
+        "conclusion,headSha,status,url"
+      ],
+      "rc": 0,
+      "file": "base-ci.json",
+      "bytes": 179
+    },
+    {
+      "argv": [
+        "git",
+        "worktree",
+        "list",
+        "--porcelain"
+      ],
+      "rc": 0,
+      "file": "worktree-list.txt",
+      "bytes": 14811
+    },
+    {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_directives.sh",
+        "--issue",
+        "366",
+        "--watermark-file",
+        "/Users/voightkampff/.ailang/state/mission-366-last-seen",
+        "--repo",
+        "sunholo-data/ailang-world"
+      ],
+      "rc": 0,
+      "file": "previous-directives.txt",
+      "bytes": 406
+    },
+    {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_directives.sh",
+        "--issue",
+        "449",
+        "--watermark-file",
+        "/Users/voightkampff/.ailang/state/mission-world-last-seen",
+        "--repo",
+        "sunholo-data/ailang-world"
+      ],
+      "rc": 0,
+      "file": "legacy-directives.txt",
+      "bytes": 408
+    },
+    {
+      "argv": [
+        "go",
+        "test",
+        "./host/verifygate",
+        "-run",
+        "^TestMissionConfigRealCharter$",
+        "-count=1"
+      ],
+      "rc": 0,
+      "file": "baseline-charter-gate.txt",
+      "bytes": 65
+    }
+  ],
+  "upstream_previous_schema": "dict",
+  "clauses": {
+    "1": "MET (ratified charter assessment; no new product verification)",
+    "2": "MET (ratified charter assessment; no new product verification)",
+    "3": "MET (ratified charter assessment; no new product verification)",
+    "4": "MET (ratified charter assessment; no new product verification)",
+    "5": "MET (ratified charter assessment; no new product verification)",
+    "6": "MET (ratified charter assessment; no new product verification)",
+    "7": "MET (ratified charter assessment; no new product verification)"
+  },
+  "main_status_observed": "untracked .claude/worktrees/ and .wt-world-iter306-r0; no tracked edits",
+  "no_product_pick": true
+}

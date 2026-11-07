@@ -1,0 +1,2 @@
+[1;33m⚠ mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-366-last-seen (bare timestamp, no processed ids, written before #981) — the first --mark upgrades it[0m
+[1;33mmission_directives: #366 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 35 comments; the rest are public feedback, never directives)[0m

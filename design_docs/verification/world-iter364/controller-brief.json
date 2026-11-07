@@ -1,0 +1,37 @@
+{
+  "iteration": 364,
+  "base": "374696c0536809d7c7080d07339208570d5130cb",
+  "base_read_utc": "2026-11-07T12:50:53.148277+00:00",
+  "fire": "world-1794055729-42084",
+  "scope": "ADMIN only. No product pick. Preserve D105/D110/D111/D112 and row256 human park; no product acceptance or full reruns. All four roles required, actual recipe lanes per resolver, independent MiniMax judge.",
+  "main_checkout": "/Users/voightkampff/dev/sunholo-data/ailang-world",
+  "driver_root": "/Users/voightkampff/.ailang-driver-pin/world",
+  "driver_routing_note": "lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `pi:openrouter/minimax/minimax-m3`",
+  "preflight": {
+    "armed": true,
+    "billing": "CLEAN",
+    "github_login": "sunholo-voight-kampff",
+    "current_issue": 449,
+    "comments": 35,
+    "directives": 0,
+    "self_notices_crashes": 0,
+    "transcript_notices": 2,
+    "notice_fires": [
+      "world-1793825318-10110",
+      "world-1793839743-21731"
+    ],
+    "watermarks": "issue449 absent; predecessor366 readable; degraded1/2",
+    "skill_files_matched": 14,
+    "skill_drift": 0,
+    "base_ci": "3/3 completed success, run42362989926"
+  },
+  "do_not_modify": [
+    "source",
+    "tests",
+    "credentials",
+    "tools/launchd",
+    "shared skills",
+    "existing evidence"
+  ],
+  "cost_ceiling_usd": 5
+}

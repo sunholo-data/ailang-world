@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "iteration": 364,
+  "role": "designer",
+  "assessment": "ADMIN_ONLY_HUMAN_PARK",
+  "actual_model": "gpt-6.1-sol",
+  "actual_provider": "codex",
+  "identity_basis": "User invocation pins codex:gpt-6.1-sol; no runtime probe or provider telemetry independently collected by designer.",
+  "base": "374696c0536809d7c7080d07339208570d5130cb",
+  "outputs": [
+    "design_docs/verification/world-iter364/design-gate.md",
+    "design_docs/verification/world-iter364/designer-receipt.json"
+  ],
+  "authority": {
+    "source": "design_docs/world-mission.md marked Human Decision Ledger; independently read local authority",
+    "ledger_rows": 99,
+    "open": [
+      "D-WORLD-105",
+      "D-WORLD-110",
+      "D-WORLD-111",
+      "D-WORLD-112"
+    ],
+    "product256": "PARKED needs-human-review; independent FAIL85; LOCAL_CRITERION UNMET",
+    "defaults": {
+      "D-WORLD-105": "C; nothing built, row233 parked",
+      "D-WORLD-110": "A; as-built compatibility, still OPEN",
+      "D-WORLD-111": "A; exact-two-named-baseline-failures contract; no additional failures",
+      "D-WORLD-112": "No autonomous credential change; incident OPEN and product work parked"
+    },
+    "no_automatic_skip": [
+      257,
+      201,
+      243
+    ],
+    "release_priority": "150/151 when routable",
+    "pr515": {
+      "fresh_read": "UNAVAILABLE; inherited/unverified",
+      "designer_rc": 1,
+      "designer_error": "error connecting to api.github.com",
+      "supplied_state": "OPEN",
+      "supplied_isDraft": true,
+      "supplied_mergeable": "UNKNOWN",
+      "supplied_head": "7655388936b80bea9c4843f0a2e0abc085e52c0f",
+      "supplied_source": "design_docs/verification/world-iter364/product-pr515.json"
+    }
+  },
+  "observed_commands": [
+    {
+      "command": "pwd; rg --files with AGENTS/brief/charter/log/index/iter363/ledger globs",
+      "rc": 0,
+      "result": "Confirmed record root and discovered paths; no applicable AGENTS.md found."
+    },
+    {
+      "command": "Python ancestor AGENTS checks; charter/brief/index reads; iteration363 file enumeration",
+      "rc": 0,
+      "result": "No ancestor AGENTS.md; initial large charter output truncated, followed by bounded independent extracts."
+    },
+    {
+      "command": "git status --short; git rev-parse HEAD; tail -n 220 design_docs/world-mission-log.md",
+      "rc": 0,
+      "result": "Only untracked iteration364 directory; HEAD matches pinned base; independently read full recent363 log entry."
+    },
+    {
+      "command": "rg -n targeted charter authority/Gate4/ADMIN/ledger/queue terms",
+      "rc": 0,
+      "result": "Large matching lines truncated; ledger/default/current-goal follow-up Python extracts read independently."
+    },
+    {
+      "command": "git status --short; git rev-parse HEAD; gh pr view 515 --json number,state,isDraft,headRefOid,baseRefName,mergeable,url",
+      "rc": 1,
+      "result": "Git reads succeeded; gh network failed. No current remote verification."
+    },
+    {
+      "command": "tail -n 12 world-mission-index.md; cat iter363/design-gate.md; cat iter364/ledger-check.txt",
+      "rc": 0,
+      "result": "Prior assessment independently considered; supplied controller ledger validator says99."
+    },
+    {
+      "command": "Python bounded charter lines, exact named ledger rows, index head, log entry count; cat supplied364 observations/baseline/PR",
+      "rc": 0,
+      "result": "Independently established current authority and37 live entries. Supplied test rc0/CI3/3 are controller observations, not designer measurements."
+    },
+    {
+      "command": "Python read iteration363 plan/addendum/controller-judge-disposition/controller-record-disposition; hash/count tracked bytes,364 inputs, ledger/queue and stamp/archive surfaces",
+      "rc": 0,
+      "result": "363 record PASS95 and preserved historical failure disclosed; local6348 tracked files hashed, safe3 arithmetic/sections measured without seeded state."
+    },
+    {
+      "command": "Python JSON/nonempty validation and SHA256 comparison of all6348 tracked files and15 baseline364 inputs; git diff --stat; git status --short",
+      "rc": 1,
+      "result": {
+        "tracked_count": 6348,
+        "tracked_digest_unchanged": true,
+        "existing_input_mismatches": [
+          "design_docs/verification/world-iter364/upstream-predicates.json"
+        ],
+        "output_nonempty": true,
+        "gate_words": 647,
+        "json_valid": true
+      }
+    }
+  ],
+  "direct_local_findings": {
+    "charter_lines": 6345,
+    "live_log_entries": 37,
+    "status_stamps": [
+      363,
+      362,
+      360
+    ],
+    "status_archive_lines": 726,
+    "log_archive_lines": 26726,
+    "dashboard_lines": 16,
+    "ledger_section": {
+      "bytes": 220998,
+      "sha256": "302e2264c72d23ecc2f59a7322f22f90e1a9321591f9249ef99ccec8ecb1648c"
+    },
+    "queue_suffix": {
+      "bytes": 992586,
+      "sha256": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4"
+    },
+    "stamp360_pair_sha256": "ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530"
+  },
+  "preservation_baseline": {
+    "tracked_file_count": 6348,
+    "tracked_path_content_digest_sha256": "0a1cd5f28d395ab8b81e4cb8135250589dff589bbdd421383bcae79b0ad468e7",
+    "input_sha256": {
+      "design_docs/verification/world-iter364/base-ci.json": "7feed8fc8db7588189498f0b66eb391ecae1e7e46798a0bb333b39ce06252abe",
+      "design_docs/verification/world-iter364/baseline-charter-gate.txt": "315c67d6cd76a2815b41c9b08bf62af5e835c98452bdb4e5ce0cb47d14b0e9dc",
+      "design_docs/verification/world-iter364/controller-brief.json": "2d5d003e91f7f6c52fdd60b9a79bbbcfc7b2c204a1512a51328328e8a23ed809",
+      "design_docs/verification/world-iter364/controller-observations.json": "b745eb6c1c2c6a0c7370473f30b1caa511c6b31eb670eab8de2c1922121004b2",
+      "design_docs/verification/world-iter364/inbox-summary.json": "ed3450018d8461b535e5098b76526d9480da2c9bd8029b739311bd44532bf57f",
+      "design_docs/verification/world-iter364/ledger-check.txt": "b7bba0836c56d150f455579e13037510c7101eb822e6a7c4f897deb3f8c91dc1",
+      "design_docs/verification/world-iter364/legacy-directives.txt": "97954099ba35b76541c1c328bbc9b33e7f3f4a992959d945a1eb0647fa91a488",
+      "design_docs/verification/world-iter364/open-decisions.txt": "9109ff023e8e7f1215d3600d3196c761c919d074852d56a502b1dcca5e9abfbb",
+      "design_docs/verification/world-iter364/previous-directives.txt": "d78a35bfb65cd2f2a2203308c09fbe6eafc9553544c5bec0601cf63377631b59",
+      "design_docs/verification/world-iter364/product-pr515.json": "3d48345493c78cd6cd38712d3b2a1e5d494fc4832dd6c6e8405e43a8e2d8d486",
+      "design_docs/verification/world-iter364/release-predicates.json": "9371cc33b6a5130b6af886c7b5058368c77522bf7c40e8acc104ccdcbe50f86b",
+      "design_docs/verification/world-iter364/retro-counts.json": "400b1d3ba12c5de81841c2053de604e94ff6fc6032782970fcc20cabaad82458",
+      "design_docs/verification/world-iter364/upstream-predicates.json": "c8703dc1fd043168d0c3b4be314cd4591d9b4a2fce7b42dd779394938682503b",
+      "design_docs/verification/world-iter364/worktree-census.json": "45ed880f5894e18f9dba73ae6d3fd369591be9b07a9805c250ab2e68383dd430",
+      "design_docs/verification/world-iter364/worktree-list.txt": "4535a260ef6d6c2ef3f4848de91f8703b366168e87e0172618e1c447782fe2f3"
+    }
+  },
+  "acceptance_criteria": {
+    "AC1": "Only five named mission record files and new curated364 evidence; freeze existing inputs.",
+    "AC2": "Exact old log prefix, one364 entry,37\u219238 entries; dashboard<=40; no log rotation.",
+    "AC3": "Exactly364/363/362 stamps; move360 pair exact;6345\u21926345 charter,726\u2192728 archive; separate current-route prose delta0.",
+    "AC4": "Entire ledger/queue byte-exact;99 rows; four OPEN defaults and256 park retained.",
+    "AC5": "Safe controller index-only; correct record output root, preserve all prior IDs/orphan361, add364 once.",
+    "AC6": "Attribution and honest actual role/usage receipts; unknowns explicit; $5 cap; no invented measurements.",
+    "AC7": "Actual structural/default whitespace/outside-sandbox narrow charter receipts; disclose base reds; independent MiniMax record judgment; exact PR+merge3/3 CI before landing."
+  },
+  "inherited_controller_facts": {
+    "baseline_narrow_charter_test": "rc0, 0.375s per baseline-charter-gate.txt and observations",
+    "base_ci": "3/3 completed success run42362989926 per brief; not freshly independently verified",
+    "clauses": "1\u20137 MET per current charter/controller, no fresh product verification",
+    "routing_note": "Anthropic designer claude-opus-5-5 quota failure \u2192 codex:gpt-6.1-sol; evaluator sonnet quota failure \u2192 pi:openrouter/minimax/minimax-m3; supplied declarations, not designer runtime probes",
+    "prior_record363": "MiniMax PASS95 on9cd60c76d325a6779098d1d386cc740712290c35; historical evidence-preservation failure repaired, default whitespace rc2 retained; no product acceptance"
+  },
+  "unverified_facts": [
+    "Current PR515 remote state/mergeability/head and fresh CI; direct gh read failed.",
+    "Actual364 planner/executor/evaluator completion, model/protocol/usage and independent verdict.",
+    "Controller Gate4 timestamp and final record bytes, PR-head/merge-head CI and landing.",
+    "Fresh release evidence and current external directive/inbox state; not queried by designer.",
+    "Runtime probe/usage/rc of this designer process; supervisor will append after exit."
+  ],
+  "sandbox_policy": "UNINFORMATIVE UNDER SANDBOX for sandbox-sensitive findings; no test was run; no sandbox result establishes product acceptance.",
+  "no_product_tests_run": true,
+  "no_record_tests_run": true,
+  "base_gate_red_observed": false,
+  "prior_red_disclosure": "Historical363 default whitespace rc2 is retained; supplied364 base charter gate rc0, not a designer rerun. Any future base red is a finding, no workaround authorized.",
+  "supervisor_completion": {
+    "runtime_probe": "pending supervisor",
+    "usage": "pending supervisor; not invented",
+    "process_rc": "pending supervisor"
+  },
+  "independent_evaluator": {
+    "required": "Actual independent MiniMax judge",
+    "status": "pending; judgment reserved to evaluator"
+  },
+  "final_local_verification": {
+    "tracked_count": 6348,
+    "tracked_digest_unchanged": true,
+    "existing_input_mismatches": [
+      "design_docs/verification/world-iter364/upstream-predicates.json"
+    ],
+    "output_nonempty": true,
+    "gate_words": 647,
+    "json_valid": true
+  },
+  "input_preservation_finding": {
+    "status": "FAILED_INPUT_PRESERVATION",
+    "path": "design_docs/verification/world-iter364/upstream-predicates.json",
+    "before_sha256": "c8703dc1fd043168d0c3b4be314cd4591d9b4a2fce7b42dd779394938682503b",
+    "after_sha256": "c1b27ce0d4da28665be31c2cb556302e0ed277e3828993e11eb21899bd7953b1",
+    "actor": "unverified; designer did not write this file",
+    "disposition": "Report mismatch, do not restore or adopt silently. Controller must establish frozen provenance before independent review. All6348 tracked bytes unchanged."
+  }
+}

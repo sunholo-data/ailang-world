@@ -1,0 +1,17 @@
+{
+  "finding": "FAILED_INPUT_PRESERVATION",
+  "actor": "controller",
+  "path": "upstream-predicates.json",
+  "measured_cause": "Controller expanded current upstream evidence from31 regex references to33, appending explicit context476/2160, while designer hashed inputs. Designer writes did not cause mismatch.",
+  "disposition": "Original designer finding remains unchanged. New33-result evidence is individually current-read, all closed. Freeze complete committed inputs before planner and executor. Independent evaluator must assess this process repair; no product acceptance or criterion waiver.",
+  "near_misses": [
+    "Controller initial worktree add used bounded Python subprocess, not canonical helper: rc0 terminal/pristine; no half-built checkout read. Further branch worktrees use canonical helper; detached planner uses explicit bounded detached recipe.",
+    "Initial shared-relative mission-base helper absent; immediately used absolute exported driver helper and recorded exact Gate1 base. No missing evidence treated as green."
+  ],
+  "post_designer_frozen_at": "2026-11-07T12:55:43.465606+00:00",
+  "raw_output_transport": {
+    "source": "worktree-list.txt",
+    "banked_envelope": "worktree-list-captured.json",
+    "reason": "Original porcelain ends in a blank record separator; default Git whitespace rc2 rejected its raw .txt representation. Exact stdout bytes are retained in JSON string plus sha256 and private original. No default lint waiver and no edited designer receipt."
+  }
+}
