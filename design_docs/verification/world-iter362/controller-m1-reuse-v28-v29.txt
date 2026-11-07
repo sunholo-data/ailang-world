@@ -1,0 +1,27 @@
+start_utc=2026-11-07T05:54:35.576868+00:00
+deadline_utc=2026-11-07T05:56:35.576868+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256
+command=python3 -c 'import hashlib,json,re,sys
+from pathlib import Path
+s=json.loads(Path(sys.argv[1]).read_text()); a=Path(sys.argv[1]).resolve().parents[3]
+for f in s['"'"'implementation_files'"'"']:
+ p=Path(f['"'"'path'"'"']); assert p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest()==f['"'"'sha256'"'"'], '"'"'STOP: changed premise; cannot inherit empirical evidence: '"'"'+f['"'"'path'"'"']
+for name,expected in s['"'"'reusable_evidence'"'"']['"'"'files_sha256'"'"'].items():
+ assert hashlib.sha256((a/name).read_bytes()).hexdigest()==expected, '"'"'STOP: empirical receipt changed: '"'"'+name
+summary=json.loads((a/s['"'"'reusable_evidence'"'"']['"'"'summary_path'"'"']).read_text())
+assert summary['"'"'new_and_neighbour_race'"'"']=={'"'"'pass'"'"':17,'"'"'fail'"'"':0}
+assert summary['"'"'historical_mutants'"'"']['"'"'named'"'"']==19 and summary['"'"'historical_mutants'"'"']['"'"'killed'"'"']==18
+assert summary['"'"'historical_mutants'"'"']['"'"'survivor'"'"']=='"'"'MUT-TEMPLATES-ON-STARTUP-CLOCK'"'"'
+assert summary['"'"'revision_mutants'"'"']=={'"'"'named'"'"':14,'"'"'killed'"'"':14} and summary['"'"'restore'"'"']=='"'"'11/11 exact'"'"'
+print('"'"'REUSE AUTHORIZED: Darwin empirical race/lifecycle + 19 historical names (18 kills, template survivor) + 14 revision kills + V29 serve-parent kill; no full-suite/Linux discharge'"'"')
+' /Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/controller-authorized-sprint-state.json
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:54  up 6 days, 12:13, 4 users, load averages: 6.37 5.13 5.48
+
+go version go1.26.6 darwin/arm64
+
+REUSE AUTHORIZED: Darwin empirical race/lifecycle + 19 historical names (18 kills, template survivor) + 14 revision kills + V29 serve-parent kill; no full-suite/Linux discharge
+rc=0
+end_utc=2026-11-07T05:54:35.628540+00:00
+ 6:54  up 6 days, 12:13, 4 users, load averages: 6.37 5.13 5.48
+

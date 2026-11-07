@@ -1,0 +1,84 @@
+{
+  "go_sources_checked": 626,
+  "go_sources_changed": [],
+  "models": [
+    "openrouter/minimax/minimax-m3"
+  ],
+  "assistant_messages_counted_once": 59,
+  "turn_end_count": 59,
+  "usage": {
+    "input": 78902,
+    "output": 50288,
+    "cacheRead": 3826010,
+    "cacheWrite": 0,
+    "reasoning": 27591,
+    "totalTokens": 3955200
+  },
+  "cost_usd": 0.3135768,
+  "protocol_ack_events": [
+    {
+      "type": "tool_execution_end",
+      "toolCallId": "call_function_dzbiip6duwhg_1",
+      "toolName": "session_protocol_ack",
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Session protocol acknowledged \u2014 mutating tools unlocked for this session. Work routing per AGENTS.md still applies."
+          }
+        ],
+        "details": {
+          "acked": true,
+          "at": "2026-11-07T06:17:15.408Z"
+        }
+      },
+      "isError": false
+    }
+  ],
+  "report_files": {
+    "report.json": {
+      "bytes": 17257,
+      "sha256": "5b90df212c341ac5a54d9ed2ad4d47ceadc7462f2706d34dfb728d5426507b3e"
+    },
+    "report.md": {
+      "bytes": 31879,
+      "sha256": "fd8b992bdcf9acbc428701c8d007aeab3a06f5fd9a2d9681b15be0155b78a68f"
+    }
+  },
+  "launcher": {
+    "verdict": "ok",
+    "rc": 0,
+    "fenced": true,
+    "model": "openrouter/minimax/minimax-m3",
+    "pi_rc": 0,
+    "elapsed_seconds": 325,
+    "worktree_changed_files": 12,
+    "predirty_files": 12,
+    "worktree_changed_since_start": true,
+    "base_head": "7655388936b80bea9c4843f0a2e0abc085e52c0f",
+    "head_after": "7655388936b80bea9c4843f0a2e0abc085e52c0f",
+    "commits_since_start": 0,
+    "tool_executions": 73,
+    "hung_tool": "",
+    "provider_errors": 0,
+    "provider_error": "",
+    "agent_end_events": 1,
+    "ndjson_bytes_filtered": 2687171,
+    "ndjson": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-row256-r1/design_docs/verification/world-iter362/evaluator-r1/pi-minimax-m3-r1.ndjson",
+    "snapshot": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-row256-r1/design_docs/verification/world-iter362/evaluator-r1/pi-minimax-m3-r1.ndjson.snapshot.ndjson",
+    "stderr": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-row256-r1/design_docs/verification/world-iter362/evaluator-r1/pi-minimax-m3-r1.ndjson.stderr"
+  },
+  "reviewed_head": "7655388936b80bea9c4843f0a2e0abc085e52c0f",
+  "teardown": {
+    "launcher_session_completed": true,
+    "matching_evaluator_child_processes": [],
+    "source_tracked_diff_empty": true
+  },
+  "operational_finding": {
+    "summary": "Actual PI evaluator violated names-only environment instruction through broad environment grep; six key values were present in its tool output and subsequently redacted by supervisor before publication. Model report claim of no secret access is contradicted by transcript. Product verdict unchanged.",
+    "sanitization_receipt": "supervisor-transcript-sanitization.json",
+    "report_original_preserved": true
+  },
+  "model_verdict": "EVALUATION_VERDICT: FAIL score=85",
+  "proposal_scope_note": "Criterion amendment/re-measure recommendations belong to the actual evaluator. They are proposals for controller adjudication, not authorization to waive the current criterion or claim attribution from mere co-occurrence. Current-contract FAIL is authoritative judge output."
+}

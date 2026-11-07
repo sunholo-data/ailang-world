@@ -1,0 +1,31 @@
+start_utc=2026-11-07T05:54:33.561332+00:00
+deadline_utc=2026-11-07T05:56:33.561332+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256
+command=python3 -c 'import hashlib,json,subprocess,sys
+from pathlib import Path
+s=json.loads(Path(sys.argv[1]).read_text()); mode=sys.argv[2]
+def digest(p):
+ p=Path(p); return hashlib.sha256(p.read_bytes()).hexdigest() if p.is_file() else '"'"'absent'"'"'
+assert Path(subprocess.check_output(['"'"'git'"'"','"'"'rev-parse'"'"','"'"'--show-toplevel'"'"'],text=True).strip()).resolve()==Path.cwd().resolve(), '"'"'STOP: wrong Git root'"'"'
+artifact_root=Path(sys.argv[1]).resolve().parents[3]
+for name,key in [('"'"'design_doc'"'"','"'"'design_sha256'"'"'),('"'"'patch_path'"'"','"'"'patch_sha256'"'"')]:
+ assert digest(artifact_root/s[name])==s[key], '"'"'STOP: frozen input changed'"'"'
+key='"'"'base_sha256'"'"' if mode=='"'"'baseline'"'"' else '"'"'sha256'"'"'
+assert mode in ('"'"'baseline'"'"','"'"'candidate'"'"')
+for f in s['"'"'implementation_files'"'"']:
+ assert digest(f['"'"'path'"'"'])==f[key], '"'"'STOP: changed premise: '"'"'+f['"'"'path'"'"']
+if mode=='"'"'candidate'"'"':
+ for name in s['"'"'presence_guards'"'"']:
+  subprocess.run(['"'"'test'"'"','"'"'-f'"'"',name],check=True,timeout=10)
+print('"'"'IDENTITY '"'"'+mode+'"'"': 11/11 exact; four presence guards required on candidate; no empirical reuse on baseline'"'"')
+' /Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/controller-authorized-sprint-state.json candidate
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:54  up 6 days, 12:13, 4 users, load averages: 6.37 5.13 5.48
+
+go version go1.26.6 darwin/arm64
+
+IDENTITY candidate: 11/11 exact; four presence guards required on candidate; no empirical reuse on baseline
+rc=0
+end_utc=2026-11-07T05:54:33.785738+00:00
+ 6:54  up 6 days, 12:13, 4 users, load averages: 6.37 5.13 5.48
+

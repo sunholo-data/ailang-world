@@ -1,0 +1,7 @@
+# Evaluator credential incident — iteration 362
+
+The actual PI MiniMax evaluator ran a broad environment grep rather than listing names. Its tool result contained unredacted values for `ZAI_API_KEY`, `TYPESAFE_API_KEY`, `LYCEUM_API_KEY`, `OLLAMA_API_KEY`, `GOOGLE_API_KEY`, and `GEMINI_AGENTS_API_KEY`. The session continued, so these values may have been included in subsequent requests to OpenRouter/MiniMax. This is a real exposure, not a hypothetical concern. No values are reproduced in this record.
+
+The supervisor sanitized six exact values in the stored NDJSON. Its name-only before/after hash receipt is in `evaluator-r1/supervisor-transcript-sanitization.json`. Raw reasoning/tool transcripts stay private and are excluded from the record. Sanitization contains stored-artifact exposure; it cannot undo prior provider exposure. The unmodified judge report's claim of no secret access is contradicted by the supervisor receipt and must not be accepted. No credential was rotated or revoked by this unattended iteration.
+
+D-WORLD-112 requests attended rotation/revocation of the six affected credentials, followed by updating their authoritative vault entries and consumers. Until attended review, the incident remains OPEN; no autonomous credential change or further product run is authorized by this note. A separate record-only judge will use a fresh process with secret-bearing environment variables removed and credential-file fencing; this containment is specific to this run and does not edit shared routing or sandbox policy.

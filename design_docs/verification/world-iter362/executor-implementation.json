@@ -1,0 +1,495 @@
+{
+  "kind": "executor_implementation_snapshot",
+  "sprint_id": "W-DAEMON-STARTUP-UNDER-LOAD",
+  "iteration": 362,
+  "queue_row": 256,
+  "milestone": "M1",
+  "declared_executor": "codex:gpt-6.1-sol",
+  "branch": "sprint/world-iter362-row256",
+  "head": "7bd3f0fc501adc402b09e3755d96066463f2bc69",
+  "implementation_base_commit": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+  "observed_at_utc": "2026-11-07T05:53:45.865914+00:00",
+  "source_application_complete": true,
+  "implementation_complete_meaning": "Frozen patch application only; not milestone acceptance or landing.",
+  "status": "source_application_complete_acceptance_pending",
+  "passes": null,
+  "completed": null,
+  "authority": {
+    "state_path": "design_docs/verification/world-iter362/controller-authorized-sprint-state.json",
+    "state_sha256": "c785b79cf96cea6ac07eef987998b1d21c72030f3c0ae15820763d4a31f8b730",
+    "correction_path": "design_docs/verification/world-iter362/controller-plan-criterion-correction.md",
+    "correction_sha256": "0bb65517fa5ba2430df18f98403f1ebe912bb60dfdf863acb17004b43c7daf45",
+    "original_planner_hold_superseded_only_by_controller_correction": true
+  },
+  "patch": {
+    "path": "design_docs/planned/w-daemon-startup-under-load.patch",
+    "sha256": "90c6df45c6b4dcf09fd241d76eb87294f5b84d688eb9f2ff90d0eca1de09db16",
+    "apply_count": 1,
+    "check_rc": 0,
+    "apply_rc": 0,
+    "manual_source_edits": false
+  },
+  "manifest": {
+    "path": "design_docs/verification/world-iter362/prototype-manifest.json",
+    "sha256": "20623e2b510158e3170837c12fbafdb8534ce905fc2335338eb043c367672c4f",
+    "matching_file_count": 11
+  },
+  "implementation_files": [
+    {
+      "path": "cmd/ailang-worldd/doctor.go",
+      "sha256": "759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1",
+      "lines": 538,
+      "owner": "M1",
+      "new_file": false
+    },
+    {
+      "path": "cmd/ailang-worldd/doctor_exec_profiles_test.go",
+      "sha256": "e86d3964b1c9df32e9383f2b35a2e2b3a938455248eb3018153f6ec62ae34dcb",
+      "lines": 100,
+      "owner": "M1",
+      "new_file": true
+    },
+    {
+      "path": "cmd/ailang-worldd/doctor_hosts.go",
+      "sha256": "e6beb0bf3ffe2751ef060d14eb234c3fb98baa63fb9c9e606e8b45c420f9fc8c",
+      "lines": 264,
+      "owner": "M1",
+      "new_file": false
+    },
+    {
+      "path": "docs/QUICKSTART.md",
+      "sha256": "be414d27e865c3965720ea441987a8a4a6654fe68950fc23c959d7b5e0af6f0a",
+      "lines": 1771,
+      "owner": "M1",
+      "new_file": false
+    },
+    {
+      "path": "host/broker/exec_probe.go",
+      "sha256": "e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1",
+      "lines": 1129,
+      "owner": "M1",
+      "new_file": false
+    },
+    {
+      "path": "host/broker/exec_probe_out_of_time_test.go",
+      "sha256": "769447b26c7191ac37d6ea3deca70dfa0324498a78992012d9b306b105646e59",
+      "lines": 108,
+      "owner": "M1",
+      "new_file": true
+    },
+    {
+      "path": "host/broker/exec_startup.go",
+      "sha256": "8663aac66b6af14299f7af7e52c076de37afb7e2fc1c94b23e094a4417435b0d",
+      "lines": 690,
+      "owner": "M1",
+      "new_file": false
+    },
+    {
+      "path": "host/daemon/daemon.go",
+      "sha256": "600080956ba673dedcedbb11cdb2093668dff67b32bb258bd2a684e08498d3a9",
+      "lines": 1410,
+      "owner": "M1",
+      "new_file": false
+    },
+    {
+      "path": "host/daemon/startup_callers_test.go",
+      "sha256": "3a92fa604a38da88d93081f2e9502860f28e122adc3d39db1ee5c402507e8094",
+      "lines": 225,
+      "owner": "M1",
+      "new_file": true
+    },
+    {
+      "path": "host/daemon/startup_under_load_test.go",
+      "sha256": "46bb766519c9c368beba972c7a6124dc873bc671e1818a021e0c0c40517a96fb",
+      "lines": 314,
+      "owner": "M1",
+      "new_file": true
+    },
+    {
+      "path": "host/daemon/workspace.go",
+      "sha256": "94d4da1952fe0a6be4536c4cfb161b684c0eb2871a06ddede43624126b5bb082",
+      "lines": 802,
+      "owner": "M1",
+      "new_file": false
+    }
+  ],
+  "new_files": [
+    "cmd/ailang-worldd/doctor_exec_profiles_test.go",
+    "host/broker/exec_probe_out_of_time_test.go",
+    "host/daemon/startup_callers_test.go",
+    "host/daemon/startup_under_load_test.go"
+  ],
+  "presence_guards": [
+    "host/daemon/startup_callers_test.go",
+    "host/daemon/startup_under_load_test.go",
+    "host/broker/exec_probe_out_of_time_test.go",
+    "cmd/ailang-worldd/doctor_exec_profiles_test.go"
+  ],
+  "new_test_names": [
+    {
+      "name": "TestDoctorNamesLeftOutExecProfiles",
+      "path": "cmd/ailang-worldd/doctor_exec_profiles_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    },
+    {
+      "name": "TestDoctorLateRefusalObservationAndReasonCap",
+      "path": "cmd/ailang-worldd/doctor_exec_profiles_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    },
+    {
+      "name": "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+      "path": "host/broker/exec_probe_out_of_time_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    },
+    {
+      "name": "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+      "path": "host/broker/exec_probe_out_of_time_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    },
+    {
+      "name": "TestDaemonConstructorCallerInventory",
+      "path": "host/daemon/startup_callers_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    },
+    {
+      "name": "TestDaemonCallerInventoryAliasControl",
+      "path": "host/daemon/startup_callers_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    },
+    {
+      "name": "TestServeStartsWhenTheProbeSpendsTheStartupClock",
+      "path": "host/daemon/startup_under_load_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    },
+    {
+      "name": "TestRegistryPhaseHasItsOwnClock",
+      "path": "host/daemon/startup_under_load_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    },
+    {
+      "name": "TestRegistryPhaseClockIsBounded",
+      "path": "host/daemon/startup_under_load_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    },
+    {
+      "name": "TestServeStartupClocksArePinned",
+      "path": "host/daemon/startup_under_load_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    },
+    {
+      "name": "TestRegistryPhasePreservesParentCancellation",
+      "path": "host/daemon/startup_under_load_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    },
+    {
+      "name": "TestExecExclusionLogIsObservationOnly",
+      "path": "host/daemon/startup_under_load_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    },
+    {
+      "name": "TestHealthExecExclusionIsAdditive",
+      "path": "host/daemon/startup_under_load_test.go",
+      "runtime_status": "pending_controller_outside_sandbox"
+    }
+  ],
+  "new_test_name_count": 13,
+  "test_name_evidence_kind": "read-only source declaration inventory; not execution",
+  "source_file_list": [
+    "cmd/ailang-worldd/doctor.go",
+    "cmd/ailang-worldd/doctor_exec_profiles_test.go",
+    "cmd/ailang-worldd/doctor_hosts.go",
+    "docs/QUICKSTART.md",
+    "host/broker/exec_probe.go",
+    "host/broker/exec_probe_out_of_time_test.go",
+    "host/broker/exec_startup.go",
+    "host/daemon/daemon.go",
+    "host/daemon/startup_callers_test.go",
+    "host/daemon/startup_under_load_test.go",
+    "host/daemon/workspace.go"
+  ],
+  "patch_statistics": {
+    "files": 11,
+    "added": 881,
+    "deleted": 20,
+    "net": 861,
+    "patch_lines": 1088,
+    "implementation_added": 129,
+    "tests_added": 747,
+    "documentation_added": 5,
+    "new_test_files": 4
+  },
+  "verification_receipts": [
+    {
+      "gate_id": "apply-exact",
+      "log": "design_docs/verification/world-iter362/executor-m1-apply-exact-20261107T055202Z.txt",
+      "sha256": "a27fea8098855eda9b16caa54ba50ec57b2d6f0b380b7db1acfe9ae75e2cc863",
+      "observed_rc": 0,
+      "deadline_seconds": 180,
+      "start_utc": "2026-11-07T05:52:02.107717+00:00",
+      "end_utc": "2026-11-07T05:52:02.373093+00:00",
+      "acceptance_passes": null,
+      "program": "apply",
+      "program_sha256": "43c36bb29c34895b2b4547f5b7c9e7b06ebc3488b0658b20980765d96627c4c6",
+      "program_args": [
+        "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/controller-authorized-sprint-state.json"
+      ]
+    },
+    {
+      "gate_id": "identity-candidate",
+      "log": "design_docs/verification/world-iter362/executor-m1-identity-candidate-20261107T055213Z.txt",
+      "sha256": "3a248c7a9e7e38522dbf84215c25c6e50491d8d7a100c7dd4c41982dcc32d573",
+      "observed_rc": 0,
+      "deadline_seconds": 120,
+      "start_utc": "2026-11-07T05:52:13.495894+00:00",
+      "end_utc": "2026-11-07T05:52:13.731223+00:00",
+      "acceptance_passes": null,
+      "program": "identity",
+      "program_sha256": "cc3ff49b3654503c4b3d44f7dd6aa5bd177022ed5cb22a3a02135988d99887a2",
+      "program_args": [
+        "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/controller-authorized-sprint-state.json",
+        "candidate"
+      ]
+    },
+    {
+      "gate_id": "build-candidate",
+      "log": "design_docs/verification/world-iter362/executor-m1-build-candidate-20261107T055213Z.txt",
+      "sha256": "1997684f847377a6c97c568bedc685f9bacfc6776a9cee62d1a84d14b3af4bd1",
+      "observed_rc": 0,
+      "deadline_seconds": 300,
+      "start_utc": "2026-11-07T05:52:13.766464+00:00",
+      "end_utc": "2026-11-07T05:52:18.169419+00:00",
+      "acceptance_passes": null,
+      "argv": [
+        "go",
+        "build",
+        "./..."
+      ]
+    },
+    {
+      "gate_id": "vet-candidate",
+      "log": "design_docs/verification/world-iter362/executor-m1-vet-candidate-20261107T055218Z.txt",
+      "sha256": "548a45f5047ee8906df12e7fa575950289da4148092cec5c403e0cd23358c79e",
+      "observed_rc": 0,
+      "deadline_seconds": 300,
+      "start_utc": "2026-11-07T05:52:18.201880+00:00",
+      "end_utc": "2026-11-07T05:52:19.780815+00:00",
+      "acceptance_passes": null,
+      "argv": [
+        "go",
+        "vet",
+        "./host/broker/",
+        "./host/daemon/",
+        "./cmd/ailang-worldd/"
+      ]
+    },
+    {
+      "gate_id": "gofmt-candidate",
+      "log": "design_docs/verification/world-iter362/executor-m1-gofmt-candidate-20261107T055219Z.txt",
+      "sha256": "2de04648b5ad03322cc059cbce1d61d7a57ebc1343612aa0cb51d24675bf608d",
+      "observed_rc": 0,
+      "deadline_seconds": 120,
+      "start_utc": "2026-11-07T05:52:19.849478+00:00",
+      "end_utc": "2026-11-07T05:52:19.996896+00:00",
+      "acceptance_passes": null,
+      "program": "gofmt",
+      "program_sha256": "c601e96c634b95ae23379a2a889518e25310e03330db4f9b9ee6e304d6f6652e",
+      "program_args": [
+        "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/controller-authorized-sprint-state.json",
+        "candidate"
+      ]
+    },
+    {
+      "gate_id": "reuse-v28-v29",
+      "log": "design_docs/verification/world-iter362/executor-m1-reuse-v28-v29-20261107T055220Z.txt",
+      "sha256": "0d567cb0d390fa39b3fd2e0600db18d8510182693b52dd52e68b2867fba7cbfb",
+      "observed_rc": 0,
+      "deadline_seconds": 120,
+      "start_utc": "2026-11-07T05:52:20.049768+00:00",
+      "end_utc": "2026-11-07T05:52:20.132624+00:00",
+      "acceptance_passes": null,
+      "program": "reuse",
+      "program_sha256": "84415011721c7c39577e9eb454ca6655309b19d2df6cb0f778d72dc7b1958ed8",
+      "program_args": [
+        "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/controller-authorized-sprint-state.json"
+      ]
+    }
+  ],
+  "acceptance_checks": [
+    {
+      "id": "AC1",
+      "owner": "M1",
+      "passes": null,
+      "completed": null,
+      "status": "pending"
+    },
+    {
+      "id": "AC2",
+      "owner": "M1",
+      "passes": null,
+      "completed": null,
+      "status": "pending"
+    },
+    {
+      "id": "AC3",
+      "owner": "M1",
+      "passes": null,
+      "completed": null,
+      "status": "pending"
+    },
+    {
+      "id": "AC4",
+      "owner": "M1",
+      "passes": null,
+      "completed": null,
+      "status": "pending"
+    },
+    {
+      "id": "AC5",
+      "owner": "M1",
+      "passes": null,
+      "completed": null,
+      "status": "pending"
+    },
+    {
+      "id": "AC6",
+      "owner": "M1",
+      "passes": null,
+      "completed": null,
+      "status": "pending"
+    },
+    {
+      "id": "AC7",
+      "owner": "M1",
+      "passes": null,
+      "completed": null,
+      "status": "pending"
+    },
+    {
+      "id": "AC8",
+      "owner": "M1",
+      "passes": null,
+      "completed": null,
+      "status": "pending"
+    },
+    {
+      "id": "AC9",
+      "owner": "M1",
+      "passes": null,
+      "completed": null,
+      "status": "pending"
+    }
+  ],
+  "empirical_reuse": {
+    "identity_check_observed_rc": 0,
+    "receipt": "design_docs/verification/world-iter362/executor-m1-reuse-v28-v29-20261107T055220Z.txt",
+    "receipt_hash_count": 39,
+    "scope": [
+      "V28 seventeen named Darwin outside-sandbox race/lifecycle tests",
+      "V28 nineteen historical production mutant names: eighteen killed, known template survivor disclosed",
+      "V28 fourteen revision production mutants killed after compile controls",
+      "V29 successful serve-parent control and compiling mutation killed at health assertion",
+      "V27 independent fresh archive application plus V29 fourth presence check, conditional on candidate identity"
+    ],
+    "does_not_discharge": [
+      "candidate full verify_go in real checkout",
+      "candidate verify_ail",
+      "all six additional current-head neighbours beyond the seventeen-name V28 run",
+      "independent evaluation",
+      "PR/merge Linux plain/race CI and real Linux srt",
+      "template-clock mutant gap",
+      "real high-load startup or service/launchd end-to-end wall-time claims"
+    ],
+    "known_survivor": "MUT-TEMPLATES-ON-STARTUP-CLOCK",
+    "known_survivor_status": "retained; not killed; fixture has no interpreter archive, d.arch == nil"
+  },
+  "pending_obligations": [
+    {
+      "id": "NAMED-CANDIDATE",
+      "owner": "controller_outside_sandbox",
+      "description": "Run authorized exact 23-name race command on candidate; require 23 unique PASS identities, including all 13 new names, no skip/fail/race.",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "FULL-GO",
+      "owner": "controller_outside_sandbox",
+      "description": "Run identical baseline command/env: VERIFY_GO_LEGS=plain ./scripts/verify_go.sh. Require exactly TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter and TestCheckSourceUnderPinnedInterpreter at the inherited diagnostic-truncation layer, with no additional failures and a complete run. Equal-red alone is not acceptance.",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "FULL-AIL",
+      "owner": "controller_outside_sandbox",
+      "description": "Run ./scripts/verify_ail.sh using the unchanged pinned released interpreter and environment; require rc 0.",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "EVALUATION",
+      "owner": "independent_MiniMax_evaluator",
+      "description": "Independently adjudicate actual diff, AC1..AC9, empirical reuse, retained template-clock survivor and explicit controller criterion correction; evaluator may reject.",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "PR-LINUX",
+      "owner": "controller_CI",
+      "description": "Current PR head: completed successful Linux go host build + test gate, go race gate (go test -race, own job), ailang-code verify gate, including required real-srt/name guards.",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "MERGE-LINUX",
+      "owner": "controller_CI",
+      "description": "Merge head: same completed successful Linux plain/race/AIL checks and real-srt/name obligations; no inherited PR-head verdict.",
+      "passes": null,
+      "completed": null
+    }
+  ],
+  "actualCLIusage": {
+    "runtime_receipt_owner": "supervisor",
+    "runtime_receipt_status": "pending_supervisor_receipt",
+    "actual_model": null,
+    "cli_exit_code": null,
+    "input_tokens": null,
+    "output_tokens": null,
+    "total_tokens": null,
+    "cost": null,
+    "note": "Actual CLI model/rc/token usage is supplied by the supervisor after this invocation exits; no usage estimate or probe receipt substituted. Verification command argv/program and observed rc are preserved in dated logs."
+  },
+  "preserved_inputs_sha256": {
+    "design_docs/planned/w-daemon-startup-under-load.md": "94f8bf9d7d1f3ac51a848c89e4a1595f892c2991984dc11778ffa0f539d6430a",
+    "design_docs/planned/w-daemon-startup-under-load.patch": "90c6df45c6b4dcf09fd241d76eb87294f5b84d688eb9f2ff90d0eca1de09db16",
+    "design_docs/verification/world-iter362/prototype-manifest.json": "20623e2b510158e3170837c12fbafdb8534ce905fc2335338eb043c367672c4f",
+    "design_docs/verification/world-iter362/run.py": "1b29dcb9fcc02a84a68c592291be35795e91b6a559df6250be30271081b921d2",
+    "design_docs/planned/sprint-plan-w-daemon-startup-under-load.md": "e47954052846548278f1a21b75af092af55b7c369ae768eca661915d2bcaf427",
+    "design_docs/verification/world-iter362/planner-sprint-state.json": "8fe2977e9da1e2faed9ed554d0f6458de46641652a1dc10e07e72ad4250cced8",
+    "design_docs/verification/world-iter362/planner-handoff.json": "6b38c55908131512e17bc9b36683b27cc21162e0c674fe0ec15c57566428e8ad",
+    "CLAUDE.md": "68f6fd16ede4c598a93590c3de20a2fc661a128c241eed747fab4d68d74a9141",
+    "design_docs/coding-standards.md": "a6951ab19b301c821dabc6eadc5061e6dded79c8af749ae080454e50e80239e4",
+    "design_docs/world-mission.md": "78ec05d70bcc1073a5ca5cf9389faac8040bd78e333116840fa36f6744306459",
+    "design_docs/DESIGN.md": "a8b87a7ca9cec01676d6d6eb00f2116bd60114638df4bab286189a46dfa17836",
+    "design_docs/verification/world-iter362/controller-authorized-sprint-state.json": "c785b79cf96cea6ac07eef987998b1d21c72030f3c0ae15820763d4a31f8b730",
+    "design_docs/verification/world-iter362/controller-plan-criterion-correction.md": "0bb65517fa5ba2430df18f98403f1ebe912bb60dfdf863acb17004b43c7daf45",
+    "design_docs/verification/world-iter362/planner-artifacts.json": "f6b5c5d05c565f61f95d4ef0b5a0ab6c3575ff8d249977fdeb037e686b349ca2"
+  },
+  "execution_boundary": {
+    "socket_tests_run": false,
+    "named_candidate_run": false,
+    "full_suites_run": false,
+    "mutation_runs": false,
+    "coverage_run": false,
+    "load_experiments": false,
+    "environment_policy_changed": false,
+    "live_binary_replaced": false,
+    "cache_seed_changes": false,
+    "row233_changes": false,
+    "subagents_used": false,
+    "background_jobs_started": false,
+    "git_staging": false,
+    "commits_created": false,
+    "messages_sent": false,
+    "pr_dispatch_merge": false,
+    "sandbox_socket_result_label": "UNINFORMATIVE UNDER SANDBOX"
+  }
+}

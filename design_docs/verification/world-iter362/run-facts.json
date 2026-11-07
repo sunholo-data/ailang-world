@@ -1,0 +1,105 @@
+{
+  "iteration": 362,
+  "pick": 256,
+  "recovered_orphan_iteration": 361,
+  "worktrees": {
+    "design": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256",
+    "executor": "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256",
+    "baseline": "/Users/voightkampff/dev/sunholo-data/.base-world-iter362",
+    "evaluator": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-row256-r1"
+  },
+  "commits": {
+    "design": "caee00cae7dd6938c9017f1977209f4b61ef7c92",
+    "plan": "7bd3f0fc501adc402b09e3755d96066463f2bc69",
+    "M1": "7655388936b80bea9c4843f0a2e0abc085e52c0f"
+  },
+  "base_gate1": "61a8d1c47b45fffc0f36137d29a5285c32da0145@2026-11-07T04:49:53Z",
+  "product_pr": 515,
+  "product_ci_run": 42344789832,
+  "bookkeeping_issue": 449,
+  "roles": {
+    "designer": {
+      "model": "codex:gpt-6.1-sol",
+      "cli_tokens": 247075,
+      "probe_tokens": 10507,
+      "quota_total": 257582
+    },
+    "planner": {
+      "model": "codex:gpt-6.1-sol",
+      "cli_tokens": 209562,
+      "probe_tokens": 10868,
+      "quota_total": 220430
+    },
+    "executor": {
+      "model": "codex:gpt-6.1-sol",
+      "cli_tokens": 140144,
+      "probe_tokens": 6001,
+      "quota_total": 146145
+    },
+    "evaluator": {
+      "model": "pi:openrouter/minimax/minimax-m3",
+      "verdict": "FAIL",
+      "score": 85,
+      "tokens": 3955200,
+      "cost_usd": 0.3135768
+    },
+    "controller": {
+      "model": "codex:gpt-6.1-sol per driver routing note",
+      "tokens": "not reported"
+    }
+  },
+  "gate0": {
+    "directives": 0,
+    "issue_comments": 33,
+    "previous_issue": 366,
+    "previous_comments": 35,
+    "upstream_closed": 33,
+    "ledger_rows": 97,
+    "open_decisions": [
+      "D-WORLD-105",
+      "D-WORLD-110"
+    ],
+    "crash_notices": 0,
+    "historical_transcript_notices": 2,
+    "skill_files_matching": 14
+  },
+  "progress": "1.0 clauses 7/7 MET; goal unmoved",
+  "release_blockers": {
+    "150": "attended A1",
+    "151": "row188 N2d/N4a after attended219\u2192217\u2192218"
+  },
+  "next_banked": [
+    257,
+    201,
+    243
+  ],
+  "local": {
+    "focused_race": "23/23pass;13new+10neighbours",
+    "baseline_full": "rc1 exactly2diagnostic errors",
+    "candidate_full_attempt1": "rc1 4failed tests;2known diagnostic +filter +publish counter",
+    "paired_filter": "pristine4/100 candidate2/100",
+    "publisher": "0/100pristine+0/100candidate+0/400pristine logging-only; initialoneoff remainsUNATTRIBUTED",
+    "candidate_ailang": "rc0",
+    "candidate_full_attempt2": "rc1 diagnostic2 plus TestExecProbeNet6ForeignDialIsRetriedNotRefused; corrected local criterionUNMET"
+  },
+  "quorum": {
+    "r1": "inherited361 blocked3/3 historicalcostnotthisrun",
+    "r2": "blocked1/3 allpresent KimiReject GLM/GeminiPass",
+    "r3": "bounded reviewer-specified refinement; no3rdquorum; AC1..9 allM1"
+  },
+  "retrospective": {
+    "harness_last20": "0/20",
+    "last_three_landings_clause_moved": "none (362 iflanded,360,359); no routableUNMETclause",
+    "skill_edits": 0
+  },
+  "transport": "Agent supervisors cannot take model_override parameter; actualroles execute exact resolver recipes; no model fallback; no controller judge verdict.",
+  "driver_routing_note": "controller claude:claude-opus-5-5 \u2192 codex:gpt-6.1-sol (probe ok); lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `pi:openrouter/minimax/minimax-m3`",
+  "driver_quota_reroutes": {
+    "controller": "claude:claude-opus-5-5 -> codex:gpt-6.1-sol, probe ok",
+    "designer": "claude-opus-5-5 probe rc1 quota-limited -> codex:gpt-6.1-sol",
+    "evaluator": "sonnet probe rc1 quota-limited -> pi:openrouter/minimax/minimax-m3"
+  },
+  "validation_evidence_commit": "9d9d18e28d43ab92a0021137c03892b2cce1ad64",
+  "product_outcome": "PARKED needs-human-review",
+  "base_gate4": "61a8d1c47b45fffc0f36137d29a5285c32da0145@2026-11-07T06:25:32Z"
+}

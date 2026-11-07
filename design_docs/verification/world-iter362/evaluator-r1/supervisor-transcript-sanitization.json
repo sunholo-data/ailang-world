@@ -1,0 +1,26 @@
+{
+  "reason": "Actual PI evaluator broad environment inspection violated names-only discipline; exact exposed values removed before publication. No raw-value copy retained by supervisor. Product verdict not modified.",
+  "exposed_names": [
+    "GEMINI_AGENTS_API_KEY",
+    "GOOGLE_API_KEY",
+    "LYCEUM_API_KEY",
+    "OLLAMA_API_KEY",
+    "TYPESAFE_API_KEY",
+    "ZAI_API_KEY"
+  ],
+  "files_sanitized": [
+    {
+      "path": "pi-minimax-m3-r1.ndjson",
+      "sha256_before": "20efba4fc20b862890db817c25f240b829554f4ae86b7e8b3c93dbf8a1a6d81f",
+      "sha256_after": "63b0b6b361c6fb5a139459115580475cb5bce9a28fd7858c4450c46567213983",
+      "redacted_names": [
+        "TYPESAFE_API_KEY",
+        "LYCEUM_API_KEY",
+        "OLLAMA_API_KEY",
+        "GEMINI_AGENTS_API_KEY",
+        "ZAI_API_KEY",
+        "GOOGLE_API_KEY"
+      ]
+    }
+  ]
+}

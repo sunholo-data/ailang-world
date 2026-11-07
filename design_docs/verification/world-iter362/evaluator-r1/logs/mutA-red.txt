@@ -1,0 +1,9 @@
+=== RUN   TestExecProbeOutOfTimeNamesTheClockNotAnArm
+    exec_probe_out_of_time_test.go:25: an arm judged with time remaining is spent
+--- FAIL: TestExecProbeOutOfTimeNamesTheClockNotAnArm (0.00s)
+=== RUN   TestExecProbeGenuineRefusalRecordedAfterDeadline
+--- PASS: TestExecProbeGenuineRefusalRecordedAfterDeadline (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	0.352s
+FAIL
+rc=1

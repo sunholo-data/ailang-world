@@ -1,0 +1,18 @@
+{
+  "product_head": "7655388936b80bea9c4843f0a2e0abc085e52c0f",
+  "product_pr": 515,
+  "product_verdict": "FAIL",
+  "score": 85,
+  "local_criterion": "UNMET",
+  "product_disposition": "PARKED needs-human-review",
+  "human_decisions": [
+    "D-WORLD-111",
+    "D-WORLD-112"
+  ],
+  "implementation_merged": false,
+  "criterion_rewritten_after_judge": false,
+  "further_full_suite_retries": 0,
+  "metered_before_record_judge_usd": 0.65550268,
+  "quota_tokens_known": 624157,
+  "controller_and_supervisor_tokens": "not reported"
+}
