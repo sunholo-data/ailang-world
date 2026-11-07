@@ -1,5 +1,5 @@
 {
-  "at_utc": "2026-11-07T13:16:24.521082+00:00",
+  "at_utc": "2026-11-07T13:18:00.241095+00:00",
   "base": "374696c0536809d7c7080d07339208570d5130cb",
   "checks": {
     "charter_exact_operations": true,
@@ -26,11 +26,13 @@
     "design_docs/verification/world-iter364/base-ci.json",
     "design_docs/verification/world-iter364/base-full-checks.json",
     "design_docs/verification/world-iter364/baseline-charter-gate.txt",
+    "design_docs/verification/world-iter364/controller-M3-index.json",
     "design_docs/verification/world-iter364/controller-brief.json",
     "design_docs/verification/world-iter364/controller-designer-disposition.json",
     "design_docs/verification/world-iter364/controller-gate4-base.json",
     "design_docs/verification/world-iter364/controller-observations.json",
     "design_docs/verification/world-iter364/controller-plan-addendum.md",
+    "design_docs/verification/world-iter364/controller-structural.json",
     "design_docs/verification/world-iter364/design-gate.md",
     "design_docs/verification/world-iter364/designer-receipt.json",
     "design_docs/verification/world-iter364/designer-supervisor-receipt.json",
@@ -43,6 +45,7 @@
     "design_docs/verification/world-iter364/main-tracked-baseline.json",
     "design_docs/verification/world-iter364/open-decisions.txt",
     "design_docs/verification/world-iter364/planner-supervisor-receipt.json",
+    "design_docs/verification/world-iter364/prejudge-spend.json",
     "design_docs/verification/world-iter364/previous-directives.txt",
     "design_docs/verification/world-iter364/product-pr515-fresh.json",
     "design_docs/verification/world-iter364/product-pr515.json",

@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "/bin/bash",
+    "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_routing_models_check.sh",
+    "--file",
+    "design_docs/world-mission-log.md",
+    "--entry",
+    "364"
+  ],
+  "rc": 0,
+  "stdout": "",
+  "stderr": "",
+  "initial_attempt": "rc2 missing Routing evidence block; corrected before judge, never banked as clean"
+}
