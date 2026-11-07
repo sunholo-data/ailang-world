@@ -1,0 +1,7 @@
+=== RUN   TestExecProbeOutOfTimeNamesTheClockNotAnArm
+--- PASS: TestExecProbeOutOfTimeNamesTheClockNotAnArm (0.00s)
+=== RUN   TestExecProbeGenuineRefusalRecordedAfterDeadline
+--- PASS: TestExecProbeGenuineRefusalRecordedAfterDeadline (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/broker	0.391s
+rc=0

@@ -1,0 +1,5 @@
+=== RUN   TestDoctorLateRefusalObservationAndReasonCap
+--- PASS: TestDoctorLateRefusalObservationAndReasonCap (0.00s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.283s
+rc=0

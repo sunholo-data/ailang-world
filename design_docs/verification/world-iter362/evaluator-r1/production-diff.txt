@@ -1,0 +1,331 @@
+diff --git a/cmd/ailang-worldd/doctor.go b/cmd/ailang-worldd/doctor.go
+index 46188902..ca0ec029 100644
+--- a/cmd/ailang-worldd/doctor.go
++++ b/cmd/ailang-worldd/doctor.go
+@@ -54,6 +54,9 @@ line per check: ✓ fine, ! worth knowing (with a fix), ✗ broken (with a fix).
+                digests (never executed); stale tarballs and old binaries noted
+   daemon       what answers at --addr: a worldd (its store and interpreter),
+                a foreign listener, or nothing
++  exec profiles  each exec profile the daemon left out at startup, with its
++               reason: ✗, because that project's exec calls refuse; a probe
++               recorded after its deadline gets observation-only advice
+   service      installed service, supervisor and build identity (full pass only)
+   store        exists (never created), writer lock held or free, world head
+                and transition registry present
+@@ -68,7 +71,8 @@ the pin directories of 'setup', --examples-dir ~/.ailang/examples.
+ --host runs the host's --version (the only exec in --quick), with a 5 s
+ timeout and an empty environment except PATH and HOME, and verifies launch digests.
+ --profile resolves commands through its path and checks startup exec tool paths.
+---quick checks only daemon, session and host; healthy checks finish under 2 s.
++--quick checks only daemon (and its left-out exec profiles), session and host;
++healthy checks finish under 2 s.
+ --json prints JSON lines plus {"failed": n}.
+ Exit: 0 no ✗; daemon 10, session 11, host 12, exec 13, otherwise 1.
+ The first failing dependency class wins in daemon, session, host, exec order.
+@@ -319,6 +323,7 @@ func doctorDaemon(r *doctorReport, addr, db string) string {
+ 		ExecTools          map[string]string                `json:"exec_tools"`
+ 		ExecToolStatus     map[string]broker.ExecToolStatus `json:"exec_tool_status"`
+ 		CredentialsDB      string                           `json:"credentials_db"`
++		ExecExcluded       []daemon.HealthExecExclusion     `json:"exec_profiles_excluded"`
+ 	}
+ 	if status != http.StatusOK || json.Unmarshal(body, &h) != nil || h.DaemonVersion == "" {
+ 		r.add(markFail, "daemon", fmt.Sprintf("something that is not ailang-worldd answers at %s (HTTP %d)", addr, status),
+@@ -336,9 +341,26 @@ func doctorDaemon(r *doctorReport, addr, db string) string {
+ 		return h.DBPath
+ 	}
+ 	r.add(markOK, "daemon", detail, "")
++	doctorExecProfiles(r, h.ExecExcluded)
+ 	return h.DBPath
+ }
+ 
++// doctorExecProfiles names each exec profile the daemon left out at startup
++// (row 256): its exec calls refuse, so it is a failure. Timestamps establish
++// no cause: review the reasons even when every failure was recorded late.
++func doctorExecProfiles(r *doctorReport, excluded []daemon.HealthExecExclusion) {
++	for _, x := range excluded {
++		detail := fmt.Sprintf("%s (%s) was left out at startup: %s", x.Project, x.File, oneLine(x.Reason, 240-len("…")))
++		fix := "review " + x.File + " and the failure reasons; correct the profile if needed, then restart World if appropriate (ailang-worldd service stop, then service start; or restart serve)"
++		if x.OutOfTime {
++			detail = fmt.Sprintf("%s (%s) was left out at startup: %s Reason: %s",
++				x.Project, x.File, broker.ExecProbeDeadlineObservation, oneLine(x.Reason, 240-len("…")))
++			fix = "Review the failure reasons and restart World if appropriate (ailang-worldd service stop, then service start; or restart serve)"
++		}
++		r.add(markFail, "exec profiles", detail, fix)
++	}
++}
++
+ func firstLine(s string) string {
+ 	s, _, _ = strings.Cut(strings.TrimSpace(s), "\n")
+ 	return s
+diff --git a/cmd/ailang-worldd/doctor_hosts.go b/cmd/ailang-worldd/doctor_hosts.go
+index 68f9f457..e7cf6c6a 100644
+--- a/cmd/ailang-worldd/doctor_hosts.go
++++ b/cmd/ailang-worldd/doctor_hosts.go
+@@ -25,7 +25,7 @@ func doctorClass(name string) (string, int) {
+ 		return "session", 11
+ 	case "host":
+ 		return "host", 12
+-	case "exec tools":
++	case "exec tools", "exec profiles":
+ 		return "exec", 13
+ 	default:
+ 		return "other", 1
+diff --git a/docs/QUICKSTART.md b/docs/QUICKSTART.md
+index e07d6c31..5b73e97b 100644
+--- a/docs/QUICKSTART.md
++++ b/docs/QUICKSTART.md
+@@ -272,7 +272,11 @@ The daemon side, once: start `serve` with `--exec-sandbox <srt node_modules>` an
+ `--exec-profile`, and it loads every `<project>.json` in `~/.ailang-world-exec/profiles/`
+ (`--exec-profiles-dir` names another; `*.proposed.json` is skipped until you rename it). A
+ profile there that fails to parse or probe is left out, named on stderr and in `/v1/health`
+-(`exec_profiles_excluded`), and the rest serve. `ailang-worldd episode start --help` has every flag.
++(`exec_profiles_excluded`), and the rest serve. `ailang-worldd doctor` (also `--quick`) shows each
++left-out profile as a ✗ `exec profiles` line with its reason (exec class, exit 13).
++`"out_of_time": true` in `/v1/health` means every failed arm was recorded at or after the startup
++deadline; startup timeout may have contributed. This establishes neither a cause nor a scheduling
++bound. Review the failure reasons and restart if appropriate. The profile stays excluded. `ailang-worldd episode start --help` has every flag.
+ 
+ **Propose a profile instead of writing one.** `profile init` (row 189) drafts the profile from
+ the repo's own files. It needs no daemon and no terminal, and it never activates anything:
+diff --git a/host/broker/exec_probe.go b/host/broker/exec_probe.go
+index 24934d23..13c1099e 100644
+--- a/host/broker/exec_probe.go
++++ b/host/broker/exec_probe.go
+@@ -210,10 +210,17 @@ type ExecProbeConfig struct {
+ 	reversePort func() (int, error)
+ }
+ 
+-// ExecProbeArmFailure is one failed arm and what it observed.
++// ExecProbeDeadlineObservation describes timestamps, not failure causes.
++// Shared by the startup log and doctor so neither infers host load or a
++// valid profile from the time at which a failure was recorded.
++const ExecProbeDeadlineObservation = "Every failed arm was recorded at or after the startup deadline; startup timeout may have contributed."
++
++// ExecProbeArmFailure is one failed arm and what it observed. spent (row
++// 256) records only that fail observed it at or after the startup deadline.
+ type ExecProbeArmFailure struct {
+-	Arm string
+-	Why string
++	Arm   string
++	Why   string
++	spent bool
+ }
+ 
+ // ExecProbeError refuses `serve` for a profile, naming every failed arm.
+@@ -235,6 +242,19 @@ func (e *ExecProbeError) Error() string {
+ 	return fmt.Sprintf("exec startup probe failed for profile %q (%d of %d arms): %s", e.Project, len(e.Failed), total, strings.Join(parts, "; "))
+ }
+ 
++// OutOfTime reports whether every failed arm was recorded at or after the
++// startup deadline (row 256). It does not establish a cause or a scheduling
++// bound. A genuine refusal can be recorded late, and a per-run timeout can
++// be recorded before the startup deadline. Failed profiles remain excluded.
++func (e *ExecProbeError) OutOfTime() bool {
++	for _, f := range e.Failed {
++		if !f.spent {
++			return false
++		}
++	}
++	return len(e.Failed) > 0
++}
++
+ // FailedArms returns the failed arms' names, in arm order.
+ func (e *ExecProbeError) FailedArms() []string {
+ 	out := make([]string, 0, len(e.Failed))
+@@ -422,10 +442,14 @@ type execProber struct {
+ 	client   string
+ 	pickPort func() (int, error)
+ 	failed   []ExecProbeArmFailure
++	// deadline is the startup clock's (zero: none). An arm judged at or
++	// after it is a spent arm (row 256).
++	deadline time.Time
+ }
+ 
+ func (pp *execProber) fail(arm, format string, args ...any) {
+-	pp.failed = append(pp.failed, ExecProbeArmFailure{Arm: arm, Why: fmt.Sprintf(format, args...)})
++	spent := !pp.deadline.IsZero() && !time.Now().Before(pp.deadline)
++	pp.failed = append(pp.failed, ExecProbeArmFailure{Arm: arm, Why: fmt.Sprintf(format, args...), spent: spent})
+ }
+ 
+ func randomHex(n int) (string, error) {
+@@ -475,6 +499,9 @@ func probeExecProfile(ctx context.Context, cfg ExecProbeConfig, env *execProbeEn
+ 		client = cfg.Sandbox.Node
+ 	}
+ 	pp := &execProber{h: h, cwd: cwd, client: client, pickPort: cfg.reversePort}
++	if dl, ok := ctx.Deadline(); ok {
++		pp.deadline = dl
++	}
+ 	pp.probe(ctx, env, net6, worktree, sibling, id)
+ 	pp.probeProtected(ctx, hostGOOS())
+ 	if len(pp.failed) > 0 {
+diff --git a/host/broker/exec_startup.go b/host/broker/exec_startup.go
+index 65cd666e..46ab0a99 100644
+--- a/host/broker/exec_startup.go
++++ b/host/broker/exec_startup.go
+@@ -81,6 +81,10 @@ type ExecProfileExclusion struct {
+ 	File    string
+ 	Project string
+ 	Reason  string
++	// OutOfTime (row 256): every failed arm was recorded at or after the
++	// startup deadline (ExecProbeError.OutOfTime). This establishes no cause;
++	// the profile is left out exactly as for any other failure.
++	OutOfTime bool
+ }
+ 
+ // ExecProfileSuffix and ExecProposedSuffix name the profiles directory's
+@@ -261,7 +265,10 @@ func (st *ExecStartup) applyProbe(order []*ExecProfile, flagged int, errs []erro
+ 			continue
+ 		}
+ 		p := order[i]
+-		st.Excluded = append(st.Excluded, ExecProfileExclusion{File: st.Sources[p.Project], Project: p.Project, Reason: errs[i].Error()})
++		var probeErr *ExecProbeError
++		spent := errors.As(errs[i], &probeErr) && probeErr.OutOfTime()
++		st.Excluded = append(st.Excluded, ExecProfileExclusion{File: st.Sources[p.Project], Project: p.Project, Reason: errs[i].Error(),
++			OutOfTime: spent})
+ 		delete(st.Profiles, p.Project)
+ 		delete(st.Sources, p.Project)
+ 	}
+diff --git a/host/daemon/daemon.go b/host/daemon/daemon.go
+index 63394abc..8ced7581 100644
+--- a/host/daemon/daemon.go
++++ b/host/daemon/daemon.go
+@@ -659,10 +659,14 @@ type HealthExecProfile struct {
+ }
+ 
+ // HealthExecExclusion is one left-out profile of --exec-profiles-dir.
++// OutOfTime (row 256) means every failed arm was recorded at or after the
++// startup deadline; startup timeout may have contributed. Review the failure
++// reasons and restart if appropriate. The profile remains excluded.
+ type HealthExecExclusion struct {
+-	Project string `json:"project"`
+-	File    string `json:"file"`
+-	Reason  string `json:"reason"`
++	Project   string `json:"project"`
++	File      string `json:"file"`
++	Reason    string `json:"reason"`
++	OutOfTime bool   `json:"out_of_time,omitempty"`
+ }
+ 
+ // resolveErrorLog turns Config.ErrorLog's optional nil into the concrete
+@@ -687,9 +691,21 @@ func resolveErrorLog(w io.Writer) io.Writer {
+ // misconfigured bind never disturbs a database another process is serving.
+ // Every failure after store.Open closes the store, releasing the writer lock:
+ // a refused startup must not strand writer authority.
+-// ctx is threaded to bootstrap reads; it does not bound every startup operation.
+-// Pass the caller's intended bootstrap-read ctx; this API supplies no default timeout.
++// ctx is threaded to the steps up to and including the exec startup probe;
++// it does not bound every startup operation, and this API supplies no default
++// timeout for them. The registry phase (the registry bootstrap, the template
++// report and the integrity sweep) runs under its own clock of
++// registryPhaseBudget, started from ctx when that phase starts (row 256).
+ func New(ctx context.Context, cfg Config) (*Daemon, error) {
++	return newDaemon(ctx, ctx, registryPhaseBudget, cfg)
++}
++
++// newDaemon is New with the registry phase's clock started from phaseParent
++// rather than from ctx. Run passes serve's own context as phaseParent and,
++// as ctx, the startup clock it derived from it, so the registry phase never
++// inherits the startup deadline (row 256). This separates context allowances;
++// it does not establish the cause of a probe failure or bound ctx-free work.
++func newDaemon(ctx, phaseParent context.Context, registryBudget time.Duration, cfg Config) (*Daemon, error) {
+ 	_ = CurrentBuild()
+ 	if cfg.SurfaceIndex != "" && cfg.SurfaceFollow != "" {
+ 		return nil, &StartupError{Stage: StageConfig, Detail: "surface follow refused: --surface-follow and --surface-index are mutually exclusive; next: ailang-worldd serve --help"}
+@@ -855,19 +871,25 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
+ 		return nil, d.abort(StageConfig, "invocation deadline must be shorter than write timeout", nil)
+ 	}
+ 
++	// Row 256: the registry phase has its own clock, started now. Nothing
++	// before this line shares it. Its context allowance is bounded:
++	// registryBudget, under phaseParent.
++	regCtx, cancelReg := context.WithTimeout(phaseParent, registryBudget)
++	defer cancelReg()
++
+ 	// Idempotent by construction; a head naming different bytes is a genuine
+ 	// divergence and registry.Bootstrap returns an error for it. Surfacing that
+ 	// as a fatal StartupError is the point: a divergent registry head must never
+ 	// be silently accepted or rewritten.
+-	if err := d.bootstrapRegistry(ctx, release); err != nil {
++	if err := d.bootstrapRegistry(regCtx, release); err != nil {
+ 		return nil, err
+ 	}
+ 
+ 	// Row 153 M3b: say, per descriptor, whether its compile-cache template is
+ 	// ready. A stat each, no build; the rebuild runs from Run after Listen.
+-	d.reportTemplates(ctx)
++	d.reportTemplates(regCtx)
+ 
+-	d.integrity = d.scanIntegrity(ctx)
++	d.integrity = d.scanIntegrity(regCtx)
+ 
+ 	// The A2A projection (w-a2a-session-projection) mounts two additive routes
+ 	// over the handles New already owns: the ONE resolver instance (F3), the
+@@ -1279,9 +1301,31 @@ func startBounded(ctx context.Context, cfg Config, budget time.Duration, constru
+ 	return construct(startupCtx, cfg)
+ }
+ 
++// serve's two startup clocks (row 256). startupBudget is HEAD's one 9 s
++// clock, unchanged; pre-registry context-aware work observes this deadline.
++// Context-free archives do not. registryPhaseBudget is a second, fresh clock for the registry
++// phase, the same 9 s: the registry bootstrap never gets less time than HEAD
++// gave it when nothing before it was slow. Both are bounded, and together
++// (18 s) account for ctx-aware work. The three archives and scheduling
++// have no established wall-time bound; the 30 s health wait can still expire.
++// They are vars only as test seams; TestServeStartupClocksArePinned pins
++// the production values.
++var (
++	startupBudget       = 9 * time.Second
++	registryPhaseBudget = 9 * time.Second
++)
++
++// startDaemon is Run's construction: pre-registry work receives the startup
++// context; the registry phase's clock starts from serve's own ctx.
++func startDaemon(ctx context.Context, cfg Config, startup, registry time.Duration) (*Daemon, error) {
++	return startBounded(ctx, cfg, startup, func(startupCtx context.Context, cfg Config) (*Daemon, error) {
++		return newDaemon(startupCtx, ctx, registry, cfg)
++	})
++}
++
+ func Run(ctx context.Context, cfg Config, announce io.Writer) error {
+ 	_ = CurrentBuild() // Freeze executable bytes before any listener accepts.
+-	d, err := startBounded(ctx, cfg, 9*time.Second, New)
++	d, err := startDaemon(ctx, cfg, startupBudget, registryPhaseBudget)
+ 	if err != nil {
+ 		return err
+ 	}
+diff --git a/host/daemon/workspace.go b/host/daemon/workspace.go
+index c6eb514d..3b363cdf 100644
+--- a/host/daemon/workspace.go
++++ b/host/daemon/workspace.go
+@@ -217,7 +217,7 @@ func (w *workspaceTools) healthProfiles() ([]HealthExecProfile, []HealthExecExcl
+ 	}
+ 	var excluded []HealthExecExclusion
+ 	for _, x := range w.exec.excluded {
+-		excluded = append(excluded, HealthExecExclusion{Project: x.Project, File: x.File, Reason: x.Reason})
++		excluded = append(excluded, HealthExecExclusion{Project: x.Project, File: x.File, Reason: x.Reason, OutOfTime: x.OutOfTime})
+ 	}
+ 	return loaded, excluded
+ }
+@@ -266,11 +266,21 @@ func (w *workspaceTools) configureExec(ctx context.Context, cfg Config) error {
+ 	// refuses with the reason.
+ 	for _, x := range st.Excluded {
+ 		w.exec.excludedWhy[x.Project] = x.Reason
+-		fmt.Fprintf(w.errLog, "ailang-worldd: exec profile %q (%s) left out: %s\n", x.Project, x.File, x.Reason)
++		logExecProfileExclusion(w.errLog, x)
+ 	}
+ 	return nil
+ }
+ 
++// logExecProfileExclusion keeps late-recording advice observational.
++func logExecProfileExclusion(out io.Writer, x broker.ExecProfileExclusion) {
++	fmt.Fprintf(out, "ailang-worldd: exec profile %q (%s) left out: %s\n", x.Project, x.File, x.Reason)
++	if x.OutOfTime {
++		// Row 256: observation only; a genuine refusal can be recorded late.
++		fmt.Fprintf(out, "ailang-worldd: exec profile %q: %s Review the failure reasons and restart serve if appropriate.\n",
++			x.Project, broker.ExecProbeDeadlineObservation)
++	}
++}
++
+ // execFailedHandler answers every call with the error that kept the
+ // episode's exec handler from being built: a recorded failure, never a run
+ // and never an unbound name (R8).

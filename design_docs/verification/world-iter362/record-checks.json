@@ -1,0 +1,37 @@
+{
+  "ignored_control_fired": true,
+  "artifact_destination_ignored": false,
+  "harness_last20": {
+    "count": 0,
+    "denominator": 20,
+    "iterations": [
+      362,
+      361,
+      360,
+      359,
+      358,
+      357,
+      356,
+      355,
+      354,
+      353,
+      352,
+      351,
+      350,
+      349,
+      348,
+      347,
+      346,
+      345,
+      344,
+      343
+    ]
+  },
+  "canonical_test": "go test ./internal/mission/ -run Canonical -count=1 rc0 (V1 module)",
+  "ledger": "99 rows,97 original unchanged, OPEN105/110/111/112",
+  "routing_check": "rc0",
+  "email_check": "rc0",
+  "main_original_hashes": "6056/6056 preserved",
+  "helper_nearmiss": "Record judge first helperadd mistakenly received path as SHA; terminal failed:worktree_add_rc_128, helper cleaned; corrected full-SHA add and wait ready required. No tree read on failed attempt.",
+  "heartbeat_order_note": "Gate4 preparation was stamped before the formal Gate3b stamp after product FAIL. Product was never merged or accepted. Formal Gate3b stamped2026-11-07T06:32:31Z with base61a8 steady before any record merge; record review and terminalCI remain mandatory."
+}

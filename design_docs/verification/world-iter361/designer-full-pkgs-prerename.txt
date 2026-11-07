@@ -1,0 +1,4 @@
+ok  	github.com/sunholo-data/ailang-world/host/broker	276.820s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	306.095s
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	153.608s
+RC=0

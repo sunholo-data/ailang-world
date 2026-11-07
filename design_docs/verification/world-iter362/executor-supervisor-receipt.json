@@ -1,0 +1,127 @@
+{
+  "utc": "2026-11-07T05:54:57.150517+00:00",
+  "completion": "IMPLEMENTATION_COMPLETE_APPLICATION_ONLY",
+  "actual_cli": {
+    "utc": "2026-11-07T05:50:18.422013+00:00",
+    "requested_model": "gpt-6.1-sol",
+    "model_header": "gpt-6.1-sol",
+    "rc": 0,
+    "timeout": false,
+    "elapsed_seconds": 258.37,
+    "directive_path": "design_docs/verification/world-iter362/executor-directive.txt",
+    "directive_sha256": "341d747dddd4ae666a66be6a2229644668ffd0442506f2049d643a72a11fba89",
+    "directive_bytes": 4012,
+    "stdin": "devnull",
+    "api_key_stripped": true,
+    "tokens_used_cli_raw": "140.144",
+    "tokens_used": 140144,
+    "process_group": 64550,
+    "process_group_teardown": [
+      "SIGTERM group absent",
+      "SIGKILL group absent"
+    ],
+    "log_path": "design_docs/verification/world-iter362/executor-codex.txt",
+    "add_dirs": [
+      "/Users/voightkampff/Library/Caches/go-build",
+      "/Users/voightkampff/go/pkg/mod"
+    ],
+    "command_prefix": [
+      "/opt/homebrew/bin/codex",
+      "exec",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "--sandbox",
+      "workspace-write",
+      "--add-dir",
+      "/Users/voightkampff/Library/Caches/go-build",
+      "--add-dir",
+      "/Users/voightkampff/go/pkg/mod",
+      "-C",
+      "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256",
+      "-o",
+      "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/executor-final.txt"
+    ]
+  },
+  "probe": {
+    "utc": "2026-11-07T05:50:08.875505+00:00",
+    "requested_model": "gpt-6.1-sol",
+    "model_header": "gpt-6.1-sol",
+    "rc": 0,
+    "timeout": false,
+    "elapsed_seconds": 3.99,
+    "directive_path": "design_docs/verification/world-iter362/executor-probe-directive.txt",
+    "directive_sha256": "8053f7c30f70964a175f3d7cb67fd63a253918f35edac27e9afe7f2f4afc9efd",
+    "directive_bytes": 289,
+    "stdin": "devnull",
+    "api_key_stripped": true,
+    "tokens_used_cli_raw": "6.001",
+    "tokens_used": 6001,
+    "process_group": 64177,
+    "process_group_teardown": [
+      "SIGTERM group absent",
+      "SIGKILL group absent"
+    ],
+    "log_path": "design_docs/verification/world-iter362/executor-probe-codex.txt",
+    "add_dirs": [
+      "/Users/voightkampff/Library/Caches/go-build",
+      "/Users/voightkampff/go/pkg/mod"
+    ],
+    "command_prefix": [
+      "/opt/homebrew/bin/codex",
+      "exec",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "--sandbox",
+      "workspace-write",
+      "--add-dir",
+      "/Users/voightkampff/Library/Caches/go-build",
+      "--add-dir",
+      "/Users/voightkampff/go/pkg/mod",
+      "-C",
+      "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256",
+      "-o",
+      "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/executor-probe-final.txt"
+    ]
+  },
+  "tokens_used_total_including_probe": 146145,
+  "protected_inputs_unchanged": true,
+  "source_frozen_count": 11,
+  "acceptance_pending": true,
+  "controller_may_start_outside_sandbox_gates": true,
+  "commits_by_role": 0,
+  "background_jobs_started": false,
+  "process_teardown": "CLI and probe process groups absent; no role-owned background jobs",
+  "remaining_role_processes": [],
+  "artifacts": [
+    {
+      "path": "design_docs/verification/world-iter362/executor-implementation.json",
+      "sha256": "993313ec844fbeb0b6aa878a790d56570c8dc52be393d68ce8937911c2c32d96",
+      "bytes": 19078
+    },
+    {
+      "path": "design_docs/verification/world-iter362/executor-state.json",
+      "sha256": "142a70089bbc3d554b5bce390088a7b6334a79c44f28b43e6898004b90745495",
+      "bytes": 71294
+    },
+    {
+      "path": "design_docs/verification/world-iter362/executor-handoff.md",
+      "sha256": "3cb3eaed7fe6928d4a2f179f5755d6ad66dba9e369d5dd44644ae1db8d8f7c5c",
+      "bytes": 2986
+    },
+    {
+      "path": "design_docs/verification/world-iter362/executor-final.txt",
+      "sha256": "4b6f35ee3c25fc070165f81c05bbece805663b890e05bfb374170354a07de408",
+      "bytes": 2978
+    },
+    {
+      "path": "design_docs/verification/world-iter362/executor-input-identities.json",
+      "sha256": "72c4d91787caf0da0a9e49eb3b0551acddf0b32a9070c4558237cb0b3ddf21b6",
+      "bytes": 2222
+    }
+  ],
+  "source_frozen_confirmed_before_controller_gates": true
+}

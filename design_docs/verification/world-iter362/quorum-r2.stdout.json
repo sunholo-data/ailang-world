@@ -1,0 +1,62 @@
+{
+  "doc": "design_docs/planned/w-daemon-startup-under-load.md",
+  "iso_ts": "2026-11-07T05:17:29Z",
+  "reviewers": [
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.171702,
+      "tokens_in": 16719,
+      "tokens_out": 8103,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Premise verification fails for the claims that matter most, by the document's own epistemic standard. §4 presents Claims A–C as proofs with '∎' and 'kills MUT-…', and §5 reports 20 'MATCH' mutation kills, but the only executions behind them are (a) V8/V11/V12, which ran under sandbox and which this doc itself declares 'UNINFORMATIVE UNDER SANDBOX, including green tests' (header, R7, V23: the r2 session could not even bind 127.0.0.1/[::1], so T1/T2/T5 cannot have informatively run there), and (b) r1 bytes — a different artifact (10 files +530/−18, 741 lines) than the submitted r2 patch (11 files +881/−20, 1088 lines). The doc concedes both points in fine print ('not a claim that the revised bytes passed those experiments'; 'historical socket-dependent clock/lifecycle mutations remain controller-pending'), yet the proof-shaped language in §4/§5 and the quorum request assert what no informative run has ever shown on any bytes: that through Run, a spent startup clock no longer fails registry-bootstrap (T1), that the sweep is not left on a spent clock (T2/MUT-SWEEP-ON-STARTUP-CLOCK), and that doctor emits exit 13 ✗ lines (T5/MUT-DOCTOR-*). The revised-bytes evidence (V26) covers only the 14 non-socket diagnostic/caller mutants. Under the premise-verification gate, the central behavioral premise of this design is asserted, not verified.",
+        "catch": "Reconcile §4/§5 with the evidence that actually exists for the V27 SHA-256 90c6df45… bytes: right now 'Proof. … ∎' and 'MATCH' rest entirely on inherited r1 runs and sandbox-socket results the doc disqualifies. Specifically: T1 (Serve through Run), T2 (Phase, both rows), T5 (Doctor exit 13), and the seven clock/lifecycle mutants MUT-RUN-HEAD-SHAPE, MUT-SHARED-PARENT, MUT-REGISTRY-UNBOUNDED, MUT-SWEEP-ON-STARTUP-CLOCK, MUT-SERVE-SPENT, MUT-SPENT-STILL-SERVED, MUT-DOCTOR-NOT-CALLED have zero informative executions on the submitted patch. Also verify whether the Row-23 neighbours TestStartupBudgetQuarantinesPostCutoffBootstrap / …HeldConnectionSettles are socket-bound too — if so, their 'r1 green' conflict-surface row is equally uninformative, and their continued pass depends on the New-compat path inheriting the caller's spent ctx (§3.2 'smaller of the caller's deadline and 9 s'), which is asserted, not demonstrated, on r2 bytes.",
+        "proposed_fix": "Add a V28 row obtained BEFORE quorum, on a controller machine outside sandbox, applied via the existing $R/fresh_apply.py to the exact V27 patch on base 61a8d1c4: run T1, T2 (spent-clock and control rows), T3, T5, T5b, TestStartupCallerCancellation, TestStartupBudgetQuarantinesPostCutoffBootstrap, TestStartupBudgetHeldConnectionSettles under -race with the dated $R/run.py wrapper, then $R/mutate.py for the seven clock/lifecycle mutants plus the unmutated control. Until V28 exists: (1) reword §4 Claims A–C from 'Proof. … ∎' to 'obligation with named red test; dispositive execution pending V28', (2) annotate every row of the §5 inherited mutation table with 'r1 bytes, sandbox — uninformative per this header's own standard', (3) move the controller outside-sandbox run from the post-approval acceptance gate into a quorum precondition, and (4) replace the Conflict Surface 'r1 green; current non-socket checks V23' cell for Row 23 with the V28 result or an explicit 'pending' marker. If V28 cannot be scheduled pre-quorum, state plainly in the header and §11 that quorum evaluates premises and structure only, with all behavioral claims deferred to AC8's CI/controller gates — and strip the '∎'/'MATCH' framing accordingly."
+      },
+      "landed": null
+    },
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.078,
+      "tokens_in": 18275,
+      "tokens_out": 245,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The fresh-archive apply check in §7 M1 verifies the presence of 3 new test files, leaving the 4th new test file (`host/daemon/startup_callers_test.go` holding T8) out of the explicit `test -f` bash guard, and `MUT-TEMPLATES-ON-STARTUP-CLOCK` remains a surviving mutant because no test rig exercises `reportTemplates` with a non-nil archive.",
+        "catch": "In §7 M1's fresh-apply bash block, add `test -f host/daemon/startup_callers_test.go` alongside the other three new test files so all four new test files from §8 are guarded before test execution.",
+        "proposed_fix": "In §7 M1, append `test -f host/daemon/startup_callers_test.go` to the `git apply` verification snippet and update AC8 from 'three presence assertions' to 'four presence assertions'."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0918388,
+      "tokens_in": 16932,
+      "tokens_out": 15485,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The doc pins the registry phase's context to the identifier (regCtx at patched :886/:892/:894) but never states which context backs Run's listen, announce, serving and shutdown-watch after newDaemon returns — and the patch makes 'New succeeds with a spent startup clock' the routine success path, a state HEAD's Run almost never reached. If the daemon binds the constructor's startup clock for its serve lifecycle or shutdown-watch, a successfully built daemon would be torn down the moment the spent clock is observed, silently defeating the row's purpose. The only guard is T1, which the doc itself marks UNINFORMATIVE UNDER SANDBOX and which has never meaningfully run on the revised bytes; no mutant in either table names this obligation, so the controller's outside-sandbox gate has no required red for it.",
+        "catch": "§3.2's 'Whole lifecycle and cancellation' paragraph asserts ownership ('successful Run still owns listen, serving and shutdown') without naming the context those operations run on. Verify against the V27-manifest prototype bytes that the daemon's serve-lifecycle context is serve's parent (phaseParent), not the startup clock passed into newDaemon, and that only cancellation of the serve parent — never startup-clock expiry — ends serving after a successful build.",
+        "proposed_fix": "Add one sentence to §3.2: 'Listen, announce, serving and the shutdown watch bind serve's parent ctx (the same phaseParent passed to newDaemon), never the startup clock; a spent startup clock cannot end a successfully built daemon.' Add a revision mutation row MUT-SERVE-ON-STARTUP-CLOCK with production edit 'daemon binds the startup clock as its serve/shutdown context' and required red 'T1: Run announces within 12 s under a spent startup clock', discharged in the controller's outside-sandbox run alongside the historical clock/lifecycle mutants (M1 step 3); bank the prototype check (a grep or assertion of the serve-lifecycle ctx field assignment in the applied patch bytes) as a new $R verification row."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller first-party at base61a8d1c4: stalled actual Run reaches expired shared clock at registry-bootstrap; answering-probe control starts while rejecting unsafe profile. Revised text claims only failure timestamps, preserves exclusion and caller cancellation, adds census and guards. Outside-sandbox acceptance remains owed; design direction pass."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-kimi-k3: Premise verification fails for the claims that matter most, by the document's own epistemic standard. §4 presents Claims A–C as proofs with '∎' and 'kills MUT-…', and §5 reports 20 'MATCH' mutation kills, but the only executions behind them are (a) V8/V11/V12, which ran under sandbox and which this doc itself declares 'UNINFORMATIVE UNDER SANDBOX, including green tests' (header, R7, V23: the r2 session could not even bind 127.0.0.1/[::1], so T1/T2/T5 cannot have informatively run there), and (b) r1 bytes — a different artifact (10 files +530/−18, 741 lines) than the submitted r2 patch (11 files +881/−20, 1088 lines). The doc concedes both points in fine print ('not a claim that the revised bytes passed those experiments'; 'historical socket-dependent clock/lifecycle mutations remain controller-pending'), yet the proof-shaped language in §4/§5 and the quorum request assert what no informative run has ever shown on any bytes: that through Run, a spent startup clock no longer fails registry-bootstrap (T1), that the sweep is not left on a spent clock (T2/MUT-SWEEP-ON-STARTUP-CLOCK), and that doctor emits exit 13 ✗ lines (T5/MUT-DOCTOR-*). The revised-bytes evidence (V26) covers only the 14 non-socket diagnostic/caller mutants. Under the premise-verification gate, the central behavioral premise of this design is asserted, not verified."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.3415408,
+    "total_tokens_in": 51926,
+    "total_tokens_out": 23833
+  }
+}

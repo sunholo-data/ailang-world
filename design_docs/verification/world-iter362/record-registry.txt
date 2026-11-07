@@ -1,0 +1,4 @@
+Temporary record-only registry: /Users/voightkampff/.ailang/state/world-iter362-control/record-registry
+Only world.toml workdir differs, pointing at isolated record worktree. For separate World repo rotate-log uses mission Workdir; registry-root rule applies to shared ailang repo only. No canonical registry or main checkout edits.
+NAME     REPO                         SCHEDULE           PIN     DRIVER
+world    sunholo-data/ailang-world    keepalive/14400    NO      /Users/voightkampff/.ailang/state/world-iter362-control/tools/launchd/mission-control.sh

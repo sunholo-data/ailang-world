@@ -1,0 +1,13 @@
+{
+  "attempt": 2,
+  "rc": 1,
+  "strict_same_two_failure_comparison": "FAIL",
+  "failed_tests": [
+    "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter",
+    "TestCheckSourceUnderPinnedInterpreter",
+    "TestExecProbeNet6ForeignDialIsRetriedNotRefused"
+  ],
+  "no_more_full_retries": true,
+  "independent_evaluation": "required; no controller acceptance",
+  "source_changes_after_M1": false
+}

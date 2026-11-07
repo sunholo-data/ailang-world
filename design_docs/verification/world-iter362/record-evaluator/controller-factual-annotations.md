@@ -1,0 +1,9 @@
+# Read the unmodified record report with its caveats
+
+Actual independent MiniMax record verdict: PASS98, zero blocking findings, exact reviewed SHA `11b7a56902cf7935d506c7ccd157cc916499ee8a`. This never overrides PRODUCT FAIL85 / LOCAL_CRITERION UNMET / draft source PR515.
+
+The model report is retained unmodified; its supervisor receipt records three factual errors, not new evidence: (1) reviewed metered-spend.json was the pre-product-evaluator subtotal $0.34192588, not $0.65550268; later controller follow-through adds evaluator receipts and conservative cap-accounted total $0.92149636; (2) current r3 patch is a revision of orphan361r1, not byte-identical to it; both lineages are banked separately; (3) the header's DraftPR515 is the source PR, whereas this is recordPR516. In addition, the per-file diff table in §1 uses diffstat magnitudes as if all insertions with no deletions. `reviewed-numstat.txt` is the exact Git insertion/deletion authority. The aggregate 236 files/+25299/-32 is correct. None of these false model claims is adopted by the controller.
+
+The judge independently found the nonblocking count95→97 artifact issue; the controller corrected that JSON and retained the preliminary count provenance note. All97 original ledger rows remain byte-exact, two OPEN rows added. Only count/provenance, actual usage and delivery/check receipts are added after reviewed SHA; no source, validation criterion, decision resolution, route or product acceptance change.
+
+Additional controller correction: quoted aggregate costs include flat-rate Ollama imputation. Metered $0.65795556 + imputed $0.2635408 = cap-accounted $0.92149636. This classification was established from the shipped registry after review; original model reports are unchanged, and their “metered” aggregate is not adopted.

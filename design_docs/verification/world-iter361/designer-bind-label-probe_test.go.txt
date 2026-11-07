@@ -1,0 +1,19 @@
+package broker
+
+// THROWAWAY (iter-361 designer): which bound does "handler subprocess timed out
+// after 10s" name when the caller's ctx (workspaceHandlerBudget, 3 s) is the
+// shorter one? Scaled down: parent ctx 150 ms, handler execTimeout 10 s.
+import (
+	"context"
+	"testing"
+	"time"
+)
+
+func TestZZTimeoutLabelNamesTheHandlerBoundNotTheParent(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 150*time.Millisecond)
+	defer cancel()
+	begin := time.Now()
+	_, err := runBounded(ctx, handlerBounds{execTimeout: 10 * time.Second, maxOutputBytes: 1 << 10},
+		handlerCommand{path: "/bin/sh", args: []string{"-c", "sleep 2"}})
+	t.Logf("took=%s err=%v", time.Since(begin).Round(10*time.Millisecond), err)
+}

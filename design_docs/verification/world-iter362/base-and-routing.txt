@@ -1,0 +1,8 @@
+Gate1 base=61a8d1c47b45fffc0f36137d29a5285c32da0145@2026-11-07T04:49:53Z
+Declared designer/planner/executor=codex:gpt-6.1-sol; evaluator=pi:openrouter/minimax/minimax-m3.
+Agent tools supervise prescribed CLI recipes because collaboration spawn has no model override parameter. Actual authors and judge must execute pinned recipes, not inherited supervisor models. No fallback to controller verdict permitted.
+User standing authorization explicitly requests all four sub-agents.
+Designer completed rc0 CLI247075 tokens. Namespaced rotation pointer advanced claude:claude-opus-5-5 -> codex:gpt-6.1-sol after successful design; next rotation slot is GLM per shared table. No other mission state key touched.
+
+planner derivation: codex:gpt-6.1-sol declared:planner-lane-default-pin
+planner resolver: recipe codex:gpt-6.1-sol declared:planner-lane-default-pin

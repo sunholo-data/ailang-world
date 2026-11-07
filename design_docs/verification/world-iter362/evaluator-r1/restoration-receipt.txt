@@ -1,0 +1,28 @@
+RESTORATION RECEIPT — evaluator r1
+utc=2026-11-07T06:22:22Z
+worktree=/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-row256-r1
+reviewed_head=7655388936b80bea9c4843f0a2e0abc085e52c0f
+branch=eval/world-iter362-row256-r1
+git_diff_after=       0 lines (0 = clean)
+--- restored file hashes (must equal manifest values) ---
+e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1  host/broker/exec_probe.go
+759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1  cmd/ailang-worldd/doctor.go
+expected e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1  host/broker/exec_probe.go
+expected 759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1  cmd/ailang-worldd/doctor.go
+--- all 11 frozen-manifest files ---
+mismatches: NONE (11/11 byte-exact)
+--- git status (only untracked V artifacts expected) ---
+?? design_docs/verification/world-iter362/controller-evaluation-brief.json
+?? design_docs/verification/world-iter362/controller-full-go-attempt1-summary.json
+?? design_docs/verification/world-iter362/controller-m1-verify-ail-candidate.txt
+?? design_docs/verification/world-iter362/controller-m1-verify-go-candidate-attempt2.txt
+?? design_docs/verification/world-iter362/controller-m1-verify-go-candidate.txt
+?? design_docs/verification/world-iter362/evaluator-r1/
+?? design_docs/verification/world-iter362/paired-broker-candidate-100.txt
+?? design_docs/verification/world-iter362/paired-broker-pristine-100.txt
+?? design_docs/verification/world-iter362/pr-ci-76553889.json
+?? design_docs/verification/world-iter362/pristine-publish-request-observation-400.txt
+?? design_docs/verification/world-iter362/publish-counter-observation.diff.txt
+?? design_docs/verification/world-iter362/publish-observation-restoration.json
+--- lingering jobs ---
+none

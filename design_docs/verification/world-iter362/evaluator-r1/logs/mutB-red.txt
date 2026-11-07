@@ -1,0 +1,7 @@
+=== RUN   TestDoctorLateRefusalObservationAndReasonCap
+    doctor_exec_profiles_test.go:88: reason must be one line, capped at 240 bytes: "late (/p/late.json) was left out at startup: genuine refusal: sibling write succeeded\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+--- FAIL: TestDoctorLateRefusalObservationAndReasonCap (0.00s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.393s
+FAIL
+rc=1

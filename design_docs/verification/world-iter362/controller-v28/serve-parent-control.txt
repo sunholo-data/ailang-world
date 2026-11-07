@@ -1,0 +1,7 @@
+$ go test -race -count=1 -v -run ^TestServeStartsWhenTheProbeSpendsTheStartupClock$ -timeout=120s ./host/daemon
+=== RUN   TestServeStartsWhenTheProbeSpendsTheStartupClock
+--- PASS: TestServeStartsWhenTheProbeSpendsTheStartupClock (1.96s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/daemon	3.570s
+
+rc=0

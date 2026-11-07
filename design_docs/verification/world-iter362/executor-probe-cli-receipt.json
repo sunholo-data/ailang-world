@@ -1,0 +1,43 @@
+{
+  "utc": "2026-11-07T05:50:08.875505+00:00",
+  "requested_model": "gpt-6.1-sol",
+  "model_header": "gpt-6.1-sol",
+  "rc": 0,
+  "timeout": false,
+  "elapsed_seconds": 3.99,
+  "directive_path": "design_docs/verification/world-iter362/executor-probe-directive.txt",
+  "directive_sha256": "8053f7c30f70964a175f3d7cb67fd63a253918f35edac27e9afe7f2f4afc9efd",
+  "directive_bytes": 289,
+  "stdin": "devnull",
+  "api_key_stripped": true,
+  "tokens_used_cli_raw": "6.001",
+  "tokens_used": 6001,
+  "process_group": 64177,
+  "process_group_teardown": [
+    "SIGTERM group absent",
+    "SIGKILL group absent"
+  ],
+  "log_path": "design_docs/verification/world-iter362/executor-probe-codex.txt",
+  "add_dirs": [
+    "/Users/voightkampff/Library/Caches/go-build",
+    "/Users/voightkampff/go/pkg/mod"
+  ],
+  "command_prefix": [
+    "/opt/homebrew/bin/codex",
+    "exec",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+    "--sandbox",
+    "workspace-write",
+    "--add-dir",
+    "/Users/voightkampff/Library/Caches/go-build",
+    "--add-dir",
+    "/Users/voightkampff/go/pkg/mod",
+    "-C",
+    "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256",
+    "-o",
+    "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256/design_docs/verification/world-iter362/executor-probe-final.txt"
+  ]
+}

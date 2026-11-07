@@ -1,0 +1,16 @@
+{
+  "utc": "2026-11-07T05:46:43.848299+00:00",
+  "requested_model": "gpt-6.1-sol",
+  "model_header": "gpt-6.1-sol",
+  "rc": 0,
+  "timeout": false,
+  "elapsed_seconds": 673.88,
+  "directive_path": "design_docs/verification/world-iter362/planner-directive.txt",
+  "directive_sha256": "608a6a2d9221da610a22b5e11ec1e804f816a3f04ba1cc710b200d8d605e6820",
+  "stdin": "devnull",
+  "api_key_stripped": true,
+  "tokens_used_cli_raw": "209.562",
+  "tokens_used": 209562,
+  "process_group_teardown": "TERM/KILL attempted after completion",
+  "log_path": "design_docs/verification/world-iter362/planner-codex.txt"
+}

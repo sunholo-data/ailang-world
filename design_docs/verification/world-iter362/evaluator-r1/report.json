@@ -1,0 +1,137 @@
+{
+  "schema": "world-evaluator-r1/1",
+  "sprint_id": "w-daemon-startup-under-load",
+  "iteration": 362,
+  "row": 256,
+  "milestone": "M1",
+  "reviewed_commit": "7655388936b80bea9c4843f0a2e0abc085e52c0f",
+  "reviewed_branch": "sprint/world-iter362-row256",
+  "pr": 515,
+  "implementation_base_commit": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+  "plan_parent_commit": "7bd3f0fc501adc402b09e3755d96066463f2bc69",
+  "evaluator_worktree": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-row256-r1",
+  "verdict": "FAIL",
+  "score": 85,
+  "score_max": 100,
+  "hard_fail": true,
+  "hard_fail_reasons": [
+    "Local full-Go acceptance criterion (controller-corrected, rule 3e(a)) is UNMET: both candidate full runs contain failures beyond the two permitted base failures.",
+    "AC8's controller-full-gate leg is therefore not discharged."
+  ],
+  "local_criterion": "UNMET",
+  "local_criterion_detail": {
+    "authority": "verification-protocol.md rule 3e(a); V/controller-plan-criterion-correction.md",
+    "criterion": "identical full command on candidate with identical inherited environment: exactly the same two named failures at the same diagnostic-truncation layer and no additional failures; plus all Linux CI green",
+    "pristine_base_run": {"rc": 1, "failures": ["TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter", "TestCheckSourceUnderPinnedInterpreter"], "additional_failures": []},
+    "candidate_attempt_1": {"rc": 1, "additional_failures": ["TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce", "TestWorktreeSnapshotRefusesAConfiguredFilter"], "evidence": "V/controller-m1-verify-go-candidate.txt"},
+    "candidate_attempt_2": {"rc": 1, "additional_failures": ["TestExecProbeNet6ForeignDialIsRetriedNotRefused"], "evidence": "V/controller-m1-verify-go-candidate-attempt2.txt"},
+    "permitted_failures_verified": "identical failure text and diagnostic-truncation layer (400-byte output head truncates before LDR001 after the pinned interpreter's trace-exporter warning) in base, attempt 1 and attempt 2; affected code outside the patch",
+    "pr_ci": {"run": 42344789832, "sha": "7655388936b80bea9c4843f0a2e0abc085e52c0f", "conclusion": "success", "checks": {"go host build + test gate": "success", "go race gate (go test -race, own job)": "success", "ailang-code verify gate": "success"}, "note": "CI green does not erase the unmet local criterion"}
+  },
+  "criterion_correction_adjudication": {
+    "form": "VALID",
+    "form_reason": "rule 3e(a) satisfied in form: pristine base baselined, base-red recorded as part of the criterion, AC explicitly repaired and published, provider-pinned plan and its hash preserved, no change to pin/warnings/environment/test policy/production code, remote CI gate retained; no design-direction override, no waiver",
+    "substance": "SOUND BUT NOT ROBUST; ONE ATTRIBUTION MISSING",
+    "substance_points": [
+      "'no additional failures' measures the repository's base flake rate as much as the candidate (TestWorktreeSnapshotRefusesAConfiguredFilter fails 4/100 at pristine base, 2/100 at candidate), so the repaired clause is not reliably satisfiable by a correct implementation",
+      "rule 3e(a) base-pinning was applied to 2 of 3 additional failures (paired arms); the net6 failure has no base arm, so its attribution is undetermined rather than excluded",
+      "green CI supplies an independent Linux full-suite signal but does not discharge the local comparison"
+    ],
+    "recommended_repair": "replace 'and no additional failures' with 'and no additional failure that is not reproduced at base', where each additional failure is attributed by a paired pristine/candidate arm (same test, same environment, N>=100, both arms, outside sandbox); failures in both arms are base flakes and excluded, candidate-arm-only failures block; original correction document and pinned plan hash preserved for audit",
+    "repair_is_not_a_waiver": true
+  },
+  "failure_dispositions": [
+    {"id": 1, "test": "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter", "package": "cmd/world-publish", "runs": ["base", "attempt1", "attempt2"], "disposition": "BASE_INHERITED_PERMITTED", "mechanism": "pinned interpreter trace-exporter deprecation warning consumes the 400-byte retained output head before the expected LDR001; code outside the patch", "attribution_rule": "3e(a)"},
+    {"id": 2, "test": "TestCheckSourceUnderPinnedInterpreter", "package": "host/archive", "runs": ["base", "attempt1", "attempt2"], "disposition": "BASE_INHERITED_PERMITTED", "mechanism": "same diagnostic-truncation layer as id 1", "attribution_rule": "3e(a)"},
+    {"id": 3, "test": "TestWorktreeSnapshotRefusesAConfiguredFilter", "package": "host/broker", "runs": ["attempt1"], "disposition": "BASE_FLAKE_NOT_ATTRIBUTABLE_TO_M1", "mechanism": "the test's own positive control fails (plain git status did not run the clean filter); paired arms pristine 4/100 fail vs candidate 2/100 fail", "attribution_rule": "3d(iii) mechanism not timing", "still_breaks_literal_clause": true},
+    {"id": 4, "test": "TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce", "package": "host/broker", "runs": ["attempt1"], "disposition": "UNATTRIBUTED_NO_CAUSE_CLAIMED", "mechanism": "POST=2 vs expected 1; not reproduced in 100 pristine + 100 candidate + 400 pristine observation-only runs; patched broker files contain no publish path", "attribution_rule": "3d(ii) consistent-with, not caused-by", "still_breaks_literal_clause": true},
+    {"id": 5, "test": "TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy", "package": "host/broker", "runs": ["attempt2"], "disposition": "UNDETERMINED_ATTRIBUTION_GAP", "mechanism": "inconclusive after 3 attempts: every attempt's window held an accept that was not the child's (foreign 1, 2, 1); no base arm was run", "attribution_rule": "3d(ii) consistent-with environment interference, not established as candidate-caused; patch touches only ExecProbeArmFailure bookkeeping, OutOfTime, execProber.deadline, fail and two lines in probeExecProfile; net6Leg/judgeLeg/classifyNet6Dial/ExecProbeError.Error untouched", "still_breaks_literal_clause": true}
+  ],
+  "protocol": {
+    "claude_md_read_in_full": true,
+    "work_classification": "independent evaluation under the supplied approved design and sprint plan",
+    "unattended_mission_stage": true,
+    "ailang_messages_run": false,
+    "session_protocol_ack_called": true,
+    "session_protocol_ack_result": "Session protocol acknowledged - mutating tools unlocked for this session.",
+    "session_protocol_ack_acked": true,
+    "model_lane_prescribed": "pi:openrouter/minimax/minimax-m3",
+    "model_identity_evidence": "MISSION_EVALUATOR_FALLBACK first entry = pi:openrouter/minimax/minimax-m3; no per-session model identity variable exposed to the agent; supervisor NDJSON is the authority",
+    "judging_done_in_session": true,
+    "other_agent_requested": false
+  },
+  "categories": [
+    {"category": "Tests Pass", "max": 20, "awarded": 10, "hard_fail": true, "basis": "local full Go gate rc 1; corrected local criterion UNMET; offset by PR CI full plain+race+ailang success at exact head, 23/23 named focused passes (controller outside sandbox), my socket-free controls green, 2/2 independent production mutations killed"},
+    {"category": "Lint Clean", "max": 10, "awarded": 10, "basis": "go build ./host/broker rc 0 and go build ./cmd/ailang-worldd rc 0 (mine); controller build/vet/gofmt receipts clean; no TODO/HACK/FIXME in new code"},
+    {"category": "Acceptance Criteria", "max": 30, "awarded": 26, "basis": "8 of 9 ACs met (AC8 controller-full-gate leg unmet); >50% so no hard fail here"},
+    {"category": "Code Quality", "max": 15, "awarded": 14, "basis": "surgical byte-exact 11-file diff, small focused helpers, no TODO/FIXME; -1 for unguarded AC3 help clause (F-3)"},
+    {"category": "Documentation", "max": 15, "awarded": 15, "basis": "QUICKSTART S7 paragraph, doctor --help update, complete design r3 + sprint plan consistent with implementation"},
+    {"category": "Design Fidelity", "max": 10, "awarded": 10, "basis": "all 11 files byte-exact to approved r3 patch; every by-construction claim verified on current bytes"},
+    {"category": "Regression Surface Coverage", "max": 0, "awarded": 0, "basis": "not triggered: no parser/lexer/types/codegen/eval/vm/effects/cmd-ailang-exec path touched; design Conflict Surface filled in anyway"},
+    {"category": "Performance Verification", "max": 0, "awarded": 0, "basis": "not triggered: approved r3 design claims no performance/wall-time goal and runs no load experiment (R2/R5); no total startup bound established"}
+  ],
+  "acceptance_criteria": [
+    {"id": "AC1", "verdict": "MET", "evidence": "startupBudget=9s and registryPhaseBudget=9s; newDaemon builds regCtx=WithTimeout(phaseParent, registryBudget); bootstrapRegistry/reportTemplates/scanIntegrity all take regCtx; Run uses startDaemon; T1/T2/T3 pass outside sandbox"},
+    {"id": "AC2", "verdict": "MET", "evidence": "applyProbe deletes every non-nil-result profile unconditionally; OutOfTime written only into st.Excluded; profileFor refuses excludedWhy; flagged explicit --exec-profile still refuses startup"},
+    {"id": "AC3", "verdict": "MET", "evidence": "shared broker.ExecProbeDeadlineObservation is observation-only; log/health/doctor/help/QUICKSTART carry no causal claim; doctor names every exclusion as an exec failure (class exec, exit 13) incl. --quick; T5b green (my run)", "note": "help-text clause unguarded by any test (F-3)"},
+    {"id": "AC4", "verdict": "MET", "evidence": "OutOfTime requires every arm spent AND len(Failed)>0; fail() sets spent only when !deadline.IsZero() && !time.Now().Before(deadline); deadline from ctx.Deadline() (zero => never spent); my mutation M-1 kills the at-or-after comparison"},
+    {"id": "AC5", "verdict": "MET", "evidence": "my run: 626 Go files, 60 test New references, 0 production New references, 4 production edges (New->newDaemon, startDaemon->startBounded, startDaemon->newDaemon, Run->startDaemon); alias/direct/local/shadow control green", "note": "counts logged not asserted (F-4)"},
+    {"id": "AC6", "verdict": "MET", "evidence": "out_of_time bool with omitempty keeps old bytes and adds the field when true; doctor reason one line capped at 240 bytes via oneLine(x.Reason, 240-len(...)) in both branches; my mutation M-2 kills removal of the cap in the un-flagged branch"},
+    {"id": "AC7", "verdict": "MET", "evidence": "regCtx derives from phaseParent so a canceled serve parent cancels the fresh phase with context.Canceled at registry-bootstrap; writer reopens; settlement bounded; serial test seams; narrow -race incl. T1 discharged outside sandbox"},
+    {"id": "AC8", "verdict": "UNMET", "evidence": "byte-exact delivery, 13 named tests, docs/help and focused gates satisfied; PR CI (run 42344789832) all 3 checks success at the exact head; controller full local Go gate UNMET; merge-head CI not yet in existence"},
+    {"id": "AC9", "verdict": "MET", "evidence": "Run's lifecycle binds serve's parent ctx; the startup clock is confined to construction; V29 MUT-SERVE-ON-STARTUP-CLOCK compiles and is killed by T1's health assertion"}
+  ],
+  "mutation_evidence": [
+    {"id": "M-1", "name": "MUT-EV-SPENT-IGNORES-RECORDING-TIME", "file": "host/broker/exec_probe.go", "function": "execProber.fail", "edit": "spent := !pp.deadline.IsZero() && !time.Now().Before(pp.deadline)  ->  spent := !pp.deadline.IsZero()", "targets": "AC4/AC3", "distinct_from_banked_mutants": ["MUT-FAIL-NEVER-SPENT", "MUT-DEADLINE-UNSET", "MUT-SPENT-ANY"], "control_before_edit": "rc 0", "build": "go build ./host/broker/ rc 0", "red_assertion": "TestExecProbeOutOfTimeNamesTheClockNotAnArm: exec_probe_out_of_time_test.go:25: an arm judged with time remaining is spent", "restored": true, "restored_sha256": "e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1", "post_restore_control": "rc 0", "log": "logs/mutA-red.txt"},
+    {"id": "M-2", "name": "MUT-EV-DOCTOR-CAP-UNFLAGGED", "file": "cmd/ailang-worldd/doctor.go", "function": "doctorExecProfiles (non-flagged branch)", "edit": "oneLine(x.Reason, 240-len(\"...\"))  ->  x.Reason", "targets": "AC6", "distinct_from_banked_mutants": ["MUT-REASON-CAP-240-PREFIX"], "control_before_edit": "rc 0", "build": "go build ./cmd/ailang-worldd/ rc 0", "red_assertion": "TestDoctorLateRefusalObservationAndReasonCap: doctor_exec_profiles_test.go:88: reason must be one line, capped at 240 bytes", "restored": true, "restored_sha256": "759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1", "post_restore_control": "rc 0", "log": "logs/mutB-red.txt"}
+  ],
+  "findings": [
+    {"id": "F-1", "severity": "blocker", "summary": "Corrected local acceptance criterion UNMET in both candidate full attempts", "requires_source_change": false},
+    {"id": "F-2", "severity": "major", "summary": "Corrected criterion's 'no additional failures' clause is not robust to measured base flake rate, and the paired base/candidate attribution was applied to only 2 of 3 additional failures", "requires_source_change": false},
+    {"id": "F-3", "severity": "minor", "summary": "No test asserts doctor --help lists the new 'exec profiles' check; AC3's help clause is unguarded (production bytes do contain the update)", "requires_source_change": false, "optional_hardening": true},
+    {"id": "F-4", "severity": "minor", "summary": "AC5 census numbers 60/0/4 are logged, not asserted; the guard works through the production-edge allowlist", "requires_source_change": false, "optional_hardening": true},
+    {"id": "F-5", "severity": "informational", "summary": "Declared residual: context-free archives and scheduling have no established total startup bound, so the 30s service health wait can still expire", "requires_source_change": false}
+  ],
+  "remedy": {
+    "source_change_required": false,
+    "steps": [
+      "R1 (required): paired pristine/candidate arms, N>=100 each, outside the sandbox, for TestExecProbeNet6ForeignDialIsRetriedNotRefused. Fails in both arms => base flake, excluded; candidate-arm-only => real regression and a source blocker.",
+      "R2 (controller-owned, explicit): amend the corrected criterion to 'no additional failure that is not reproduced at base', preserving the original correction document and the pinned plan hash for audit.",
+      "R3: re-measure the amended local full-Go criterion once on the candidate head, keeping the requirement that all Linux CI checks stay green.",
+      "R4 (optional, not a blocker): assert doctor --help lists 'exec profiles'; pin AC5 census numbers as assertions.",
+      "R5: merge-head Linux CI remains a controller-owned post-evaluation obligation."
+    ],
+    "park_recommendation": "If the controller elects not to re-measure this iteration, park the row with F-1 open rather than accept on CI green alone; no human decision is required for R1/R2."
+  },
+  "scope_limits": [
+    "no broad/full suites run by the evaluator (no go test ./..., no scripts/verify_go.sh, no CI rerun, no root tests)",
+    "socket-dependent tests are UNINFORMATIVE UNDER SANDBOX in this lane (loopback bind denied: 'httptest: failed to listen on a port: listen tcp6 [::1]:0: bind: operation not permitted'); never treated as product pass or fail",
+    "T5/T1/T2 verdicts rest on the controller's outside-sandbox receipts (read, not reproduced)",
+    "PR CI receipt read from V/pr-ci-76553889.json, not re-queried from GitHub",
+    "attribution of failure id 5 is undetermined, not excluded: no paired base arm exists",
+    "no commits, git add/stash/reset/checkout, PR edits, lifecycle-document moves, ailang messages or other messages, unrelated source fixes, real-log/secret/HOME-state access, TMPDIR/GOTMPDIR overrides, stress or GPU jobs",
+    "source mutated only in this isolated evaluator worktree and restored from saved copies",
+    "accepts the design's declared residuals (no total startup wall-time bound, no causal claim for the timestamp flag, retry loop deferred) rather than treating them as hidden gaps"
+  ],
+  "restoration": {
+    "source_exact_restoration": true,
+    "manifest_files_checked": 11,
+    "manifest_mismatches": 0,
+    "git_diff_after": "empty",
+    "restored_files": {
+      "host/broker/exec_probe.go": "e10b1e59ef88b61715e0ff4236733fd9ccf9cb02b618d879bc5ab6235435dbb1",
+      "cmd/ailang-worldd/doctor.go": "759ed7f1f1cff13886f6afd3cc755ed272af68e455d82864f6e66d97d27363b1"
+    },
+    "restore_method": "cp from saved byte-exact copies under evaluator-r1/mutations (no git checkout/reset/stash)",
+    "lingering_jobs": "none"
+  },
+  "artifacts": {
+    "report_md": "design_docs/verification/world-iter362/evaluator-r1/report.md",
+    "report_json": "design_docs/verification/world-iter362/evaluator-r1/report.json",
+    "restoration_receipt": "design_docs/verification/world-iter362/evaluator-r1/restoration-receipt.txt",
+    "logs_dir": "design_docs/verification/world-iter362/evaluator-r1/logs/",
+    "mutations_dir": "design_docs/verification/world-iter362/evaluator-r1/mutations/",
+    "production_diff": "design_docs/verification/world-iter362/evaluator-r1/production-diff.txt"
+  },
+  "verdict_line": "EVALUATION_VERDICT: FAIL score=85"
+}

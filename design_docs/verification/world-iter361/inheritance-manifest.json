@@ -1,0 +1,19 @@
+{
+  "base": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+  "recovered_by_iteration": 362,
+  "status": "historical r1 only; blocked quorum; product patch never applied",
+  "artifacts": [
+    {
+      "source": "orphan iteration361 w-daemon-startup-under-load.md",
+      "artifact": "inherited-design-r1.md.txt",
+      "sha256": "f7a92e2243bb0ba439433e7d6bca9a5d3aaa584e807f6cdf366cafcfba4cf650",
+      "bytes": 46940
+    },
+    {
+      "source": "orphan iteration361 w-daemon-startup-under-load.patch",
+      "artifact": "inherited-patch-r1.diff.txt",
+      "sha256": "f9bcb6360a38172ba99dcc41d7887a79b33646ad1b928f1aeaa2f890665c9b3e",
+      "bytes": 32515
+    }
+  ]
+}

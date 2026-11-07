@@ -1,0 +1,13 @@
+start_utc=2026-11-07T05:54:33.814910+00:00
+deadline_utc=2026-11-07T05:59:33.814910+00:00
+cwd=/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256
+command=go build ./...
+PATH=/opt/homebrew/bin:$PATH AILANG_BIN=$HOME/.pinned-ailang/ailang; TMPDIR/GOTMPDIR untouched
+ 6:54  up 6 days, 12:13, 4 users, load averages: 6.37 5.13 5.48
+
+go version go1.26.6 darwin/arm64
+
+rc=0
+end_utc=2026-11-07T05:54:35.054115+00:00
+ 6:54  up 6 days, 12:13, 4 users, load averages: 6.37 5.13 5.48
+

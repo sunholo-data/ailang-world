@@ -1,0 +1,110 @@
+{
+  "reviewed_head": "11b7a56902cf7935d506c7ccd157cc916499ee8a",
+  "models": [
+    "openrouter/minimax/minimax-m3"
+  ],
+  "assistant_messages_counted_once": 56,
+  "turn_end_count": 56,
+  "usage": {
+    "input": 300273,
+    "output": 26234,
+    "cacheRead": 2402176,
+    "cacheWrite": 0,
+    "reasoning": 9482,
+    "totalTokens": 2728683
+  },
+  "cost_usd": 0.26569326,
+  "minimal_environment_probe": {
+    "assistant_messages_counted_once": 1,
+    "usage": {
+      "input": 847,
+      "output": 13,
+      "cacheRead": 512,
+      "cacheWrite": 0,
+      "reasoning": 11,
+      "totalTokens": 1372
+    },
+    "cost_usd": 0.00030042
+  },
+  "protocol_ack_events": [
+    {
+      "type": "tool_execution_end",
+      "toolCallId": "call_b31e34551c1f47a28a9300f8",
+      "toolName": "session_protocol_ack",
+      "result": {
+        "content": [
+          {
+            "type": "text",
+            "text": "Session protocol acknowledged \u2014 mutating tools unlocked for this session. Work routing per AGENTS.md still applies."
+          }
+        ],
+        "details": {
+          "acked": true,
+          "at": "2026-11-07T06:32:49.423Z"
+        }
+      },
+      "isError": false
+    }
+  ],
+  "tracked_files_checked": 6287,
+  "tracked_files_changed": [],
+  "forbidden_command_or_private_reads_observed": [],
+  "matching_child_processes": [],
+  "tool_executions": 82,
+  "launcher": {
+    "verdict": "ok",
+    "rc": 0,
+    "fenced": true,
+    "model": "openrouter/minimax/minimax-m3",
+    "pi_rc": 0,
+    "elapsed_seconds": 254,
+    "worktree_changed_files": 1,
+    "predirty_files": 1,
+    "worktree_changed_since_start": true,
+    "base_head": "11b7a56902cf7935d506c7ccd157cc916499ee8a",
+    "head_after": "11b7a56902cf7935d506c7ccd157cc916499ee8a",
+    "commits_since_start": 0,
+    "tool_executions": 82,
+    "hung_tool": "",
+    "provider_errors": 0,
+    "provider_error": "",
+    "agent_end_events": 1,
+    "ndjson_bytes_filtered": 1999915,
+    "ndjson": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-record/design_docs/verification/world-iter362/record-evaluator/record-pi.private.ndjson",
+    "snapshot": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-record/design_docs/verification/world-iter362/record-evaluator/record-pi.private.ndjson.snapshot.ndjson",
+    "stderr": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-record/design_docs/verification/world-iter362/record-evaluator/record-pi.private.ndjson.stderr"
+  },
+  "tracked_diff_empty": true,
+  "product_state": "FAIL85,LOCAL_CRITERION UNMET,PARKED; unchanged",
+  "report_sha256": {
+    "report.md": "2a014c092c0407f04a8099c57a341cfa4ce05f6b2e0330df0499f18ed7f18746",
+    "report.json": "188944833e9dab8959c1c5087ec61e622f10a1b3ebf7562a9dc9eb5bd0f87f99"
+  },
+  "operational_scope_note": "Model wrote untracked .eval-tmp scratch outside requested record-evaluator output directory but inside isolated worktree; no tracked mutations. Private transcripts remain excluded from public artifacts.",
+  "known_model_report_factual_discrepancies": [
+    {
+      "id": "S-1",
+      "report_claim": "Committed metered-spend.json total$0.65550268 includes product evaluator main.",
+      "observed_reviewed_artifact": "At reviewed11b7a569 total_usd=0.34192587999999996; only evaluator-probe and quorum-r2 calls. Later controller correction is outside reviewed commit.",
+      "impact": "Telemetry prose claim inaccurate; actual model verdict preserved."
+    },
+    {
+      "id": "S-2",
+      "report_claim": "Planned patch unchanged from orphan361r1 SHA-anchored content.",
+      "observed_reviewed_artifact": "Current plannedpatch is r3 refinement1088lines; inherited orphanr1 patch is741lines, separate preserved historical artifact.",
+      "impact": "Lineage prose inaccurate; actual record preserves both artifacts. Model verdict preserved."
+    },
+    {
+      "id": "S-3",
+      "report_claim": "DraftPR515 in record-review header.",
+      "observed_reviewed_artifact": "Record-only review is draftPR516; sourcePR515 remains parked/unmerged.",
+      "impact": "Header labeling ambiguity; scope paragraphs preserve distinction."
+    }
+  ],
+  "new_record_probe_plus_main_cost_usd": 0.26599368,
+  "iteration_total_with_prior_0_65550268_usd": 0.92149636,
+  "model_report_not_modified": true,
+  "judge_verdict": "RECORD_ONLY PASS98; PRODUCT FAIL85 and LOCAL_CRITERION UNMET unchanged",
+  "transport_failure": false,
+  "fallback_used": false
+}

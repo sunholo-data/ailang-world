@@ -1,0 +1,10 @@
+--- pristine_test
++++ observation_only_test
+@@ -102,6 +102,7 @@
+ 
+ func TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce(t *testing.T) {
+ 	validator := newFakeValidator(t, "ok")
++	defer func() { for _, req := range validator.requests() { t.Logf("OBSERVATION_ONLY method=%s path=%s has_test_key=%t", req.Method, req.Path, req.HasAPIKey) } }()
+ 	base := openPublishStore(t)
+ 	fixture := newPublishFixture(t, validator.origin(), "smd0-ac25")
+ 	plan := attendedPlanFor(fixture, "smd0-ac25")

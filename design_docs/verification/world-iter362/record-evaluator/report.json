@@ -1,0 +1,208 @@
+{
+  "schema": "world-record-evaluator-r1/1",
+  "iteration": 362,
+  "scope": "RECORD_ONLY",
+  "reviewed_commit": "11b7a56902cf7935d506c7ccd157cc916499ee8a",
+  "reviewed_branch": "eval/world-iter362-record",
+  "base_commit": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-record",
+  "product_state_preserved": {
+    "product_verdict": "FAIL",
+    "product_score": 85,
+    "local_criterion": "UNMET",
+    "product_disposition": "PARKED needs-human-review",
+    "source_pr": 515,
+    "source_pr_state": "DRAFT_UNMERGED",
+    "implementation_merged": false,
+    "criterion_rewritten_after_judge": false,
+    "further_full_suite_retries": 0,
+    "open_decisions": ["D-WORLD-105", "D-WORLD-110", "D-WORLD-111", "D-WORLD-112"]
+  },
+  "diff_coverage": {
+    "files_changed": 236,
+    "lines_added": 25299,
+    "lines_removed": 32,
+    "non_verification_paths_all_under_design_docs": true,
+    "production_source_files_in_diff": 0,
+    "planned_patch_remains_planned": true,
+    "shared_driver_or_skill_edits": 0,
+    "tracked_files_mutated_by_this_review": 0,
+    "tracked_files_untracked_paths_added": [".eval-tmp/", "design_docs/verification/world-iter362/record-evaluator/ (pre-existing)"]
+  },
+  "protocol": {
+    "claude_md_read_in_full": true,
+    "work_classification": "independent record-only evaluation under the supplied approved design and sprint plan",
+    "unattended_mission_stage": true,
+    "ailang_messages_run": false,
+    "session_protocol_ack_called": true,
+    "session_protocol_ack_acked": true,
+    "model_lane_prescribed": "pi:openrouter/minimax/minimax-m3",
+    "model_identity_source": "supervisor NDJSON metadata only; no environment or HOME inspection",
+    "containment_observed": true,
+    "private_ndjson_files_opened": [],
+    "secret_values_in_public_artifacts": 0
+  },
+  "verification_points": {
+    "v1_entry_dashboard_charter_index_archive_agreement": {
+      "result": "PASS",
+      "notes": "All five files agree on FAIL 85, UNMET, PARKED needs-human-review. STATUS 362 at top of charter; row 256 bracket updated from [NEXT] to [PARKED]; D-WORLD-111 and D-WORLD-112 filed OPEN; STATUS 358 rotated to archive; index 362 and 361 added at top. No false completion claim.",
+      "evidence_files": [
+        "design_docs/world-mission.md",
+        "design_docs/world-mission-dashboard.md",
+        "design_docs/world-mission-log.md",
+        "design_docs/world-mission-index.md",
+        "design_docs/world-mission-status-archive.md"
+      ]
+    },
+    "v2_orphan_361_credit_preserved": {
+      "result": "PASS",
+      "notes": "Inheritance manifest preserves original r1 design + r1 patch + r1 quorum SHA256; original planner state preserved byte-exact; original controller criterion correction preserved alongside; index 361 explicitly attributes recovery to iteration 362; original blocked-quorum status preserved as historical.",
+      "evidence_files": [
+        "design_docs/verification/world-iter361/inheritance-manifest.json",
+        "design_docs/world-mission-index.md",
+        "design_docs/world-mission-log.md (retro item 3)",
+        "design_docs/verification/world-iter362/planner-sprint-state.json",
+        "design_docs/verification/world-iter362/controller-plan-criterion-correction.md"
+      ]
+    },
+    "v3_candidate_failures_and_paired_attribution": {
+      "result": "PASS",
+      "notes": "Both candidate attempts banked. attempt1: 4 failures (2 permitted + publish counter UNATTRIBUTED + filter BASE FLAKE 4/100 vs 2/100). attempt2: 3 failures (2 permitted + net6 UNDETERMINED no paired baseline). CI green (run 42344789832, 3/3) recorded but explicitly does not discharge local criterion. No criterion amendment post-judge, no broad-suite rerun, no causal exoneration.",
+      "permitted_baseline_failures": [
+        "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter",
+        "TestCheckSourceUnderPinnedInterpreter"
+      ],
+      "candidate_attempt_1_additional_failures": [
+        "TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce (UNATTRIBUTED)",
+        "TestWorktreeSnapshotRefusesAConfiguredFilter (BASE FLAKE)"
+      ],
+      "candidate_attempt_2_additional_failures": [
+        "TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy (UNDETERMINED)"
+      ],
+      "evidence_files": [
+        "design_docs/verification/world-iter362/controller-evaluation-brief.json",
+        "design_docs/verification/world-iter362/paired-broker-pristine-100.txt",
+        "design_docs/verification/world-iter362/paired-broker-candidate-100.txt",
+        "design_docs/verification/world-iter362/pristine-publish-request-observation-400.txt",
+        "design_docs/verification/world-iter362/controller-m1-verify-go-candidate.txt",
+        "design_docs/verification/world-iter362/controller-m1-verify-go-candidate-attempt2.txt"
+      ]
+    },
+    "v4_prior_evaluator_and_credential_incident": {
+      "result": "PASS",
+      "notes": "Prior product report (FAIL 85) intact with hashes. Supervisor contradicting operational finding filed and not suppressed: 'Model report claim of no secret access is contradicted by transcript. Product verdict unchanged.' Sanitization before/after hashes match. Public artifacts contain names only (6 names), no values. D-WORLD-112 OPEN; no false closure. Prevention framed as future process lane, not as a fix already in place.",
+      "exposed_names": [
+        "ZAI_API_KEY",
+        "TYPESAFE_API_KEY",
+        "LYCEUM_API_KEY",
+        "OLLAMA_API_KEY",
+        "GOOGLE_API_KEY",
+        "GEMINI_AGENTS_API_KEY"
+      ],
+      "public_secret_value_count": 0,
+      "evidence_files": [
+        "design_docs/verification/world-iter362/evaluator-r1/report.md",
+        "design_docs/verification/world-iter362/evaluator-r1/report.json",
+        "design_docs/verification/world-iter362/evaluator-r1/supervisor-receipt.json",
+        "design_docs/verification/world-iter362/evaluator-r1/supervisor-transcript-sanitization.json",
+        "design_docs/verification/world-iter362/credential-incident.md"
+      ]
+    },
+    "v5_record_scope_design_docs_only": {
+      "result": "PASS",
+      "notes": "All diff paths under design_docs/. Zero .go or .ail files in diff. Planned patch stays under design_docs/planned/. PR #515 unmerged. No shared driver or skill edits."
+    }
+  },
+  "findings": [
+    {
+      "id": "R-1",
+      "severity": "minor",
+      "scope": "record_only",
+      "summary": "design_docs/verification/world-iter362/record-invariants.json reports original_ledger_rows_unchanged=95; verified unchanged row count is 97 (95 numeric D-WORLD-N + 2 non-numeric D-WORLD-DRIVER-1 and D-WORLD-ROUTE-1). Numeric-only regex missed the 2 non-numeric IDs.",
+      "does_not_affect_verdict": true,
+      "remedy": "Mechanical correction: set original_ledger_rows_unchanged=97 in record-invariants.json and add an unchanged_count_regex provenance note. Do not regenerate by re-running end-to-end measurement."
+    },
+    {
+      "id": "R-2",
+      "severity": "informational",
+      "summary": "controller-final-disposition.json fields criterion_rewritten_after_judge=false and further_full_suite_retries=0 correctly reflect the iteration's discipline."
+    },
+    {
+      "id": "R-3",
+      "severity": "informational",
+      "summary": "Prior product evaluator's 'no secret access' claim is contradicted by the supervisor receipt; both are filed and the contradiction is preserved (not retroactively ratified)."
+    },
+    {
+      "id": "R-4",
+      "severity": "informational",
+      "summary": "D-WORLD-111 (default A = retain criterion and stay parked) and D-WORLD-112 (default = no autonomous credential change; incident stays OPEN) are filed OPEN and the record does not pre-empt them."
+    }
+  ],
+  "categories": [
+    {
+      "category": "Evidence preservation",
+      "max": 30,
+      "awarded": 30,
+      "hard_fail": false,
+      "basis": "11/11 manifest byte-exact; restoration receipt clean; paired broker arms + 400 publish observation + worktree census + meter-spend + supervisor before/after sanitization hashes all present; orphan 361 SHA256 + bytes retained"
+    },
+    {
+      "category": "Truthfulness and internal consistency",
+      "max": 30,
+      "awarded": 28,
+      "hard_fail": false,
+      "basis": "Charter, dashboard, log, index, archive and all JSON receipts agree on FAIL 85 / UNMET / PARKED. record-invariants.json original_ledger_rows_unchanged off by 2 (R-1)."
+    },
+    {
+      "category": "Safety / containment",
+      "max": 15,
+      "awarded": 15,
+      "hard_fail": false,
+      "basis": "Names only in all public artifacts; raw transcripts excluded; supervisor contradiction preserved; D-WORLD-112 OPEN; no false closure of incident; prevention framed as future work"
+    },
+    {
+      "category": "Scope discipline",
+      "max": 10,
+      "awarded": 10,
+      "hard_fail": false,
+      "basis": "All diff paths under design_docs/; zero .go/.ail in diff; planned patch stays planned; no shared driver or skill edits"
+    },
+    {
+      "category": "Original authorship preservation",
+      "max": 10,
+      "awarded": 10,
+      "hard_fail": false,
+      "basis": "Orphan 361 design/patch/quorum SHA256 retained; original planner state byte-exact; original controller criterion correction preserved alongside"
+    },
+    {
+      "category": "Completeness",
+      "max": 5,
+      "awarded": 5,
+      "hard_fail": false,
+      "basis": "All required entries (charter STATUS, log 362, dashboard, index 361/362, archive rotation, README, README per dir, credential incident, controller-final-disposition, evaluator-r1 report+restoration, supervisor receipts) present"
+    }
+  ],
+  "total_score": 98,
+  "score_max": 100,
+  "verdict": "PASS",
+  "hard_fail_triggered": false,
+  "product_state_preserved_summary": "Product verdict FAIL 85 and LOCAL_CRITERION UNMET preserved verbatim; source PR #515 unmerged and parked; record-only correction for record-invariants.json is mechanical and does not change the verdict or disposition.",
+  "remedies": [
+    {
+      "id": "RX-1",
+      "type": "record_only_correction",
+      "scope": "design_docs/verification/world-iter362/record-invariants.json",
+      "instruction": "Set original_ledger_rows_unchanged to 97 and add unchanged_count_regex provenance field; do not regenerate any other field; do not run end-to-end measurement.",
+      "do_not_do": ["regenerate the JSON by running a new ledger sweep", "touch any other record artifact", "change the product verdict or disposition"]
+    }
+  ],
+  "do_not_do": [
+    "Fix the record yourself",
+    "Authorize source landing",
+    "Waive the corrected local criterion",
+    "Treat CI green as acceptance",
+    "Amend the criterion post-judge",
+    "Run archived scripts",
+    "Inspect secrets, env, vaults or HOME"
+  ]
+}

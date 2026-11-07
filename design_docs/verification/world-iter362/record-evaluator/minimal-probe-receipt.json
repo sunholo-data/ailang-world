@@ -1,0 +1,10 @@
+{
+  "rc": 0,
+  "expired": false,
+  "assistant_models": [
+    "openrouter/minimax/minimax-m3"
+  ],
+  "error_count": 0,
+  "text_ok": true,
+  "cost_usd": 0.00030042
+}

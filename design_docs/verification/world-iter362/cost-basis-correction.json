@@ -1,0 +1,12 @@
+{
+  "metered_usd": 0.65795556,
+  "ollama_flat_rate_imputed_usd": 0.2635408,
+  "conservative_cap_accounted_usd": 0.92149636,
+  "budget_usd": 5,
+  "actual_new_model_calls": 0,
+  "ollama_quota_tokens": 57239,
+  "basis": "shipped internal/modelreg/models.yml oc-kimi-k3/oc-glm-5-3 providerollama, flat-rate imputed cost notes",
+  "registry_sha256": "21128f0d959df39d941490ffb7f4283d5af869ca011f8cce396d661b8cd4e5cf",
+  "role_reports_preserved_unmodified": true,
+  "telemetry": "Ollama stages quota_bucket ollama, quota_tokens real, cost_usd/tokens_in/out zero; no fake metered invoice"
+}

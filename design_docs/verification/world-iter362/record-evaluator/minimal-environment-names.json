@@ -1,0 +1,19 @@
+{
+  "names": [
+    "AILANG_BIN",
+    "BASH_ENV",
+    "ENV",
+    "HOME",
+    "LANG",
+    "LC_ALL",
+    "LC_CTYPE",
+    "LOGNAME",
+    "PATH",
+    "SHELL",
+    "TMPDIR",
+    "USER"
+  ],
+  "sensitive_name_count": 0,
+  "shell_policy": "supervisor /bin/bash --noprofile --norc; PI sandbox spawns bash -c, runtime defaults /bin/bash; BASH_ENV and ENV=/dev/null; no zsh startup",
+  "credentials_inherited": false
+}

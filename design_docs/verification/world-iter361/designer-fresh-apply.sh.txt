@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# iter-361 designer: the banked patch on a FRESH git archive of the base builds,
+# vets, is gofmt-clean, and its 15 named tests pass (6 new + 9 neighbours).
+set -u
+WT=/Users/voightkampff/dev/sunholo-data/.wt-world-iter361-row256
+F=$WT/.design-scratch/fresh
+rm -rf $F && mkdir -p $F && git -C $WT archive 61a8d1c4 | tar -x -C $F
+cd $F
+# The fresh tree sits inside the worktree's repo; without its own .git, git
+# apply treats it as a subdirectory and SILENTLY skips every path (rc 0, nothing
+# applied: the first run of this script hit exactly that). Make it a repo.
+git init -q
+git apply --check $WT/design_docs/planned/w-daemon-startup-under-load.patch; echo "APPLY-CHECK rc=$?"
+git apply $WT/design_docs/planned/w-daemon-startup-under-load.patch; echo "APPLY rc=$?"
+echo "new test file present after apply: $(ls host/daemon/startup_under_load_test.go 2>/dev/null || echo NO)"
+echo "newDaemon in daemon.go: $(grep -c newDaemon host/daemon/daemon.go)"
+go build ./... && go vet ./host/broker/ ./host/daemon/ ./cmd/ailang-worldd/ && echo BUILD-VET-OK
+echo "gofmt -l host cmd: [$(gofmt -l host cmd)]"
+AILANG_BIN=$HOME/.pinned-ailang/ailang go test -count=1 -v -run '^(TestServeStartsWhenTheProbeSpendsTheStartupClock|TestRegistryPhaseHasItsOwnClock|TestRegistryPhaseClockIsBounded|TestServeStartupClocksArePinned|TestExecProbeOutOfTimeNamesTheClockNotAnArm|TestDoctorNamesLeftOutExecProfiles|TestStartupBudgetQuarantinesPostCutoffBootstrap|TestStartupBudgetHeldConnectionSettles|TestHealthReportsBuildToolCredentialsAndProfiles|TestProfileForResolutionOrder|TestExecProfilesDirProbeFailureIsolatesOneProfile|TestDoctorDaemonVsForeignListener|TestDoctorHelpAndAPIKeyGuard|TestDoctorExecToolsWithAnM3Daemon|TestProductionContextRoots)$' \
+  ./host/daemon/ ./host/broker/ ./cmd/ailang-worldd/ ./host/store/ > $F.out 2>&1
+echo "go test rc=$?"
+grep -E '^(--- |ok|FAIL)' $F.out
+echo "PASS count: $(grep -c '^--- PASS' $F.out)  FAIL count: $(grep -c '^--- FAIL' $F.out)"

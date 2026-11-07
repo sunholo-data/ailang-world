@@ -1,0 +1,10 @@
+Base 61a8d1c47b45fffc0f36137d29a5285c32da0145; platform darwin/arm64.
+Pristine detached worktree .base-world-iter362, separate from every role.
+AILANG_BIN=$HOME/.pinned-ailang/ailang: v0.41.0 commit24ee108.
+TMPDIR/GOTMPDIR left at inherited defaults, no custom exports.
+Go build ./... rc0.
+Go test ./host/daemon ./host/broker ./cmd/ailang-worldd -count=1 -timeout=8m rc0 (300.8s).
+Source and results baseline-{build,scoped-base,pin,load}.txt.
+Then temporary reproduction test copied into base, run exact TestZZHead names, removed afterwards; base pristine rechecked.
+Original Run9s shared-clock failure vs answering-probe control reproduced outside sandbox, logs controller-live-repro.txt.
+No claim about Linux or actual high-load availability from these controls.

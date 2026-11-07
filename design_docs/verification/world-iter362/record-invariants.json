@@ -1,0 +1,24 @@
+{
+  "base": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+  "base_at_gate4": "2026-11-07T06:25:32Z",
+  "status_rotation": {
+    "before_lines": 6343,
+    "after_status_only_lines": 6343,
+    "old_blocks_rotated": 1,
+    "new_blocks": 1,
+    "arithmetic": "before +2 -2*1 = before; then +2 OPEN ledger rows",
+    "archived_iteration": 358,
+    "charter_statuses": [
+      362,
+      360,
+      359
+    ]
+  },
+  "original_ledger_rows_unchanged": 97,
+  "new_open_rows": [
+    111,
+    112
+  ],
+  "queue_number_sequence_unchanged": true,
+  "original_ledger_count_note": "Numeric-only preliminary regex counted95; all D-ID rows count97, preserved byte-exact. No ledger content repair."
+}

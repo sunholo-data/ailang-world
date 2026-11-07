@@ -1,0 +1,2 @@
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	0.277s
+rc=0

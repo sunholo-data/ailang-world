@@ -1,0 +1,2 @@
+MISSION-ROLE: planner
+Provider-pinned availability probe only. Do not author a sprint plan, modify files, run tests, send messages, spawn agents, or commit. Respond with the exact text PLANNER_PIN_PROBE_OK. The supervisor will separately invoke the real planner task after this bounded probe succeeds.

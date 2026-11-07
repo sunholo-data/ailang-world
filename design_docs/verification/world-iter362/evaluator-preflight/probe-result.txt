@@ -1,0 +1,4 @@
+model=openrouter/minimax/minimax-m3
+probe_rc=0
+expired=0
+elapsed_seconds=2

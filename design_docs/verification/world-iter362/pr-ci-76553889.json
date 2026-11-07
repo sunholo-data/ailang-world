@@ -1,0 +1,31 @@
+{
+  "sha": "7655388936b80bea9c4843f0a2e0abc085e52c0f",
+  "utc": "2026-11-07T06:09:19.981142+00:00",
+  "runs": [
+    {
+      "id": 42344789832,
+      "status": "completed",
+      "conclusion": "success",
+      "event": "pull_request",
+      "attempt": 1
+    }
+  ],
+  "checks": {
+    "go host build + test gate": {
+      "status": "completed",
+      "conclusion": "success",
+      "id": 128320074671
+    },
+    "go race gate (go test -race, own job)": {
+      "status": "completed",
+      "conclusion": "success",
+      "id": 128320074801
+    },
+    "ailang-code verify gate": {
+      "status": "completed",
+      "conclusion": "success",
+      "id": 128320074785
+    }
+  },
+  "verdict": "PASS"
+}

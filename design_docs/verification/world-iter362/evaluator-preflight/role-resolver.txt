@@ -1,0 +1,1 @@
+recipe pi:openrouter/minimax/minimax-m3 declared:provider-pin

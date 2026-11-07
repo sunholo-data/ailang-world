@@ -1,0 +1,21 @@
+Reading additional input from stdin...
+OpenAI Codex v0.164.0
+--------
+workdir: /Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR, /Users/voightkampff/Library/Caches/go-build, /Users/voightkampff/go/pkg/mod]
+reasoning effort: high
+reasoning summaries: none
+session id: 01a1b48e-a38d-71b1-8ef6-1117a811d1f1
+--------
+user
+MISSION-ROLE: executor
+Provider-pin probe only for codex:gpt-6.1-sol. Perform no tools, edits, implementation, delegation, dispatch, commits, or background work. This probe checks actual model availability before a separate bounded implementation invocation. Reply only EXECUTOR_PROBE_OK.
+
+codex
+EXECUTOR_PROBE_OK
+tokens used
+6.001
+EXECUTOR_PROBE_OK

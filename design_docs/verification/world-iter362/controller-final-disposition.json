@@ -1,0 +1,30 @@
+{
+  "product_head": "7655388936b80bea9c4843f0a2e0abc085e52c0f",
+  "product_pr": 515,
+  "product_verdict": "FAIL",
+  "score": 85,
+  "local_criterion": "UNMET",
+  "product_disposition": "PARKED needs-human-review",
+  "human_decisions": [
+    "D-WORLD-111",
+    "D-WORLD-112"
+  ],
+  "implementation_merged": false,
+  "criterion_rewritten_after_judge": false,
+  "further_full_suite_retries": 0,
+  "quota_tokens_known": 624157,
+  "controller_and_supervisor_tokens": "not reported",
+  "record_review": {
+    "verdict": "PASS",
+    "score": 98,
+    "reviewed_head": "11b7a56902cf7935d506c7ccd157cc916499ee8a",
+    "hard_fails": 0,
+    "nonblocking_count_fix": "95\u219297 numeric regex corrected",
+    "factual_caveats": "record-evaluator/controller-factual-annotations.md"
+  },
+  "metered_total_usd": 0.65795556,
+  "cap_accounted_before_record_judge_usd": 0.65550268,
+  "metered_before_record_judge_usd": 0.39196188,
+  "ollama_flat_rate_imputed_usd": 0.2635408,
+  "cap_accounted_total_usd": 0.92149636
+}

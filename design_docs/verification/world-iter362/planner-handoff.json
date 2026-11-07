@@ -1,0 +1,211 @@
+{
+  "type": "plan_ready",
+  "delivery": "file_only_no_dispatch",
+  "sprint_id": "W-DAEMON-STARTUP-UNDER-LOAD",
+  "iteration": 362,
+  "queue_row": 256,
+  "planner": {
+    "declared": "codex:gpt-6.1-sol",
+    "resolved": "codex:gpt-6.1-sol",
+    "resolver_basis": "declared:planner-lane-default-pin",
+    "authorship": "this provider-pinned planner invocation; no delegated author or sub-agents",
+    "runtime_receipt_owner": "supervisor; actual model/rc/CLI token receipt not fabricated here"
+  },
+  "plan_path": "design_docs/planned/sprint-plan-w-daemon-startup-under-load.md",
+  "plan_sha256": "e47954052846548278f1a21b75af092af55b7c369ae768eca661915d2bcaf427",
+  "progress_path": ".ailang/state/sprints/sprint_W-DAEMON-STARTUP-UNDER-LOAD.json",
+  "progress_sha256": "8fe2977e9da1e2faed9ed554d0f6458de46641652a1dc10e07e72ad4250cced8",
+  "review_copy_path": "design_docs/verification/world-iter362/planner-sprint-state.json",
+  "review_copy_sha256": "8fe2977e9da1e2faed9ed554d0f6458de46641652a1dc10e07e72ad4250cced8",
+  "design_path": "design_docs/planned/w-daemon-startup-under-load.md",
+  "design_sha256": "94f8bf9d7d1f3ac51a848c89e4a1595f892c2991984dc11778ffa0f539d6430a",
+  "design_commit": "caee00cae7dd6938c9017f1977209f4b61ef7c92",
+  "patch_path": "design_docs/planned/w-daemon-startup-under-load.patch",
+  "patch_sha256": "90c6df45c6b4dcf09fd241d76eb87294f5b84d688eb9f2ff90d0eca1de09db16",
+  "milestones": [
+    {
+      "id": "M1",
+      "estimated_loc": 881,
+      "estimated_hours": 1.25,
+      "acceptance_ids": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC4",
+        "AC5",
+        "AC6",
+        "AC7",
+        "AC8",
+        "AC9"
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null
+    }
+  ],
+  "status": "planning complete; executor STOP on preexisting pristine full-Go baseline red",
+  "scope": "One byte-exact frozen patch only; controller owns commits/routing/launch. This file sends no message. No production source applied by planner.",
+  "executor_instructions": [
+    "ACTIVE STOP: pristine full verify_go rc 1 on TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter and TestCheckSourceUnderPinnedInterpreter. Preserve files and report BLOCKED; do not apply or execute candidate gates. Baseline verify_ail rc 0 does not clear this hold.",
+    "Read approved r3 design and human plan. Restore ignored sprint state from exact review copy if fresh checkout; verify supplied SHA256 first.",
+    "Do not start implementation until controller outside-sandbox pristine baseline receipts are rc 0. Never mutate the pristine baseline tree or duplicate its currently running full suite.",
+    "Apply the frozen patch once after input/base identity checks; execute all four explicit presence guards and eleven post-apply hash checks. No manual patch edits or added production changes.",
+    "Use focused build/vet/gofmt and named gates only; any sandbox socket verdict, green or red, is UNINFORMATIVE UNDER SANDBOX. Controller supplies outside-sandbox evidence.",
+    "All thirteen new test functions including both caller inventory tests are mandatory. Missing baseline names are expected gaps, never new-test passes.",
+    "V28/V29 reuse only after eleven exact hashes and frozen empirical receipt hashes match. Changed premise STOP/report; no broad test/mutation/coverage/rehearsal jobs in this planner handoff.",
+    "Use dated run.py, fixed pinned AILANG_BIN/PATH, serial mutable seams, no TMPDIR/GOTMPDIR override, no background jobs, no secrets or real artifact seeding.",
+    "Keep passes/completion pending until all required current-head, independent evaluation and CI obligations close. Return file receipts to controller; do not dispatch, commit, PR or merge."
+  ],
+  "presence_guards": [
+    "host/daemon/startup_callers_test.go",
+    "host/daemon/startup_under_load_test.go",
+    "host/broker/exec_probe_out_of_time_test.go",
+    "cmd/ailang-worldd/doctor_exec_profiles_test.go"
+  ],
+  "new_test_name_floor": 13,
+  "new_test_names": [
+    "TestDoctorNamesLeftOutExecProfiles",
+    "TestDoctorLateRefusalObservationAndReasonCap",
+    "TestExecProbeOutOfTimeNamesTheClockNotAnArm",
+    "TestExecProbeGenuineRefusalRecordedAfterDeadline",
+    "TestDaemonConstructorCallerInventory",
+    "TestDaemonCallerInventoryAliasControl",
+    "TestServeStartsWhenTheProbeSpendsTheStartupClock",
+    "TestRegistryPhaseHasItsOwnClock",
+    "TestRegistryPhaseClockIsBounded",
+    "TestServeStartupClocksArePinned",
+    "TestRegistryPhasePreservesParentCancellation",
+    "TestExecExclusionLogIsObservationOnly",
+    "TestHealthExecExclusionIsAdditive"
+  ],
+  "existing_neighbours": [
+    "TestStartupCallerCancellation",
+    "TestStartupBudgetQuarantinesPostCutoffBootstrap",
+    "TestStartupBudgetHeldConnectionSettles",
+    "TestHealthReportsBuildToolCredentialsAndProfiles",
+    "TestProfileForResolutionOrder",
+    "TestExecProfilesDirProbeFailureIsolatesOneProfile",
+    "TestDoctorDaemonVsForeignListener",
+    "TestDoctorHelpAndAPIKeyGuard",
+    "TestDoctorExecToolsWithAnM3Daemon",
+    "TestProductionContextRoots"
+  ],
+  "gate_order": [
+    "identity-baseline",
+    "build-baseline",
+    "vet-baseline",
+    "gofmt-baseline",
+    "named-baseline",
+    "verify-go-baseline",
+    "verify-ail-baseline",
+    "apply-exact",
+    "identity-candidate",
+    "build-candidate",
+    "vet-candidate",
+    "gofmt-candidate",
+    "named-candidate",
+    "reuse-v28-v29",
+    "verify-go-candidate",
+    "verify-ail-candidate"
+  ],
+  "gate_spec_path": "design_docs/verification/world-iter362/planner-sprint-state.json",
+  "reuse_evidence": {
+    "manifest": "design_docs/verification/world-iter362/prototype-manifest.json",
+    "required_hash_count": 11,
+    "summary": "design_docs/verification/world-iter362/controller-v28/summary.json",
+    "historical_mutants": "19 named, 18 killed, 1 known template-clock survivor",
+    "revision_mutants": "14 killed",
+    "serve_parent_mutant": "killed after build/control",
+    "status": "conditional, not an implementation pass"
+  },
+  "pending_obligations": [
+    {
+      "id": "BASELINE",
+      "owner": "controller",
+      "description": "Observed pristine real-checkout verify_go rc 1; report/STOP on two inherited tests. verify_ail baseline rc 0. No implementation until controller establishes a genuine green baseline without masking red.",
+      "passes": null,
+      "completed": null,
+      "observed_rc": 1,
+      "status": "blocked_preexisting_red"
+    },
+    {
+      "id": "CANDIDATE",
+      "owner": "controller",
+      "description": "Exact byte application, focused build/vet/gofmt and all 23 named tests outside sandbox",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "FULL-GO",
+      "owner": "controller",
+      "description": "VERIFY_GO_LEGS=plain ./scripts/verify_go.sh in real candidate checkout after rc-0 pristine baseline",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "FULL-AIL",
+      "owner": "controller",
+      "description": "./scripts/verify_ail.sh with fixed released AILANG_BIN",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "EVALUATION",
+      "owner": "independent evaluator",
+      "description": "Independent evaluation after controller full gates; no mutation overlap with suites",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "PR-LINUX",
+      "owner": "controller/CI",
+      "description": "PR head ailang-code verify, Linux plain host build+test, Linux race, real-srt verbose gates; missing/skipped new names never pass",
+      "passes": null,
+      "completed": null
+    },
+    {
+      "id": "MERGE-LINUX",
+      "owner": "controller/CI",
+      "description": "Repeat all required CI checks on merge head; do not inherit Darwin or PR-head verdict as merge verdict",
+      "passes": null,
+      "completed": null
+    }
+  ],
+  "stop_conditions": [
+    "ACTIVE STOP: controller pristine full verify_go finished rc 1 at 2026-11-07T05:39:00.911689Z; TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter and TestCheckSourceUnderPinnedInterpreter fail outside frozen patch. Do not apply or run candidate gates. Planner deliverables remain reviewable; implementation is pending.",
+    "STOP: preserve current files, report BLOCKED: <specific changed premise, preexisting red, or new judgment call>, and end the run. Do not commit or dispatch; controller owns commits and routing.",
+    "Any design/patch hash mismatch, non-base/non-candidate implementation hash, partial apply, missing required file or changed empirical receipt stops reuse and execution; do not repair or regenerate the frozen patch.",
+    "Every acceptance command is baselined in a separate pristine real checkout. Any preexisting red or timeout is reported/STOP; never widen scope, change test/environment policy, seed Git history, override TMPDIR/GOTMPDIR or weaken a gate to hide it.",
+    "Baseline absence of thirteen new tests is an explicit expected feature gap, not a passed test, and is distinguished from any existing-neighbour red. Candidate missing/skip/duplicate tests stop.",
+    "Socket results inside workspace-write, green or red, are UNINFORMATIVE UNDER SANDBOX. Controller outside-sandbox rerun is required for verdicts.",
+    "Review writes outside the worktree before any outside-sandbox execution. Observe real artifacts only by sha256 and line count, absent valid, never seed/truncate. Unknown real-state writes stop; rehearse risky setup only under a synthetic root after review.",
+    "Do not run mutations or broad suites concurrently with the controller pristine baseline or each other. No background jobs, stress spinners, CPU/I/O contention experiment or parallel seam mutations.",
+    "No human-decision gates remain in row 256. D-WORLD-105 belongs to parked row 233, D-WORLD-110 to row 255. Genuine new policy/direction judgment parks with terminal STOP; helper names and evidence layout do not reopen approval."
+  ],
+  "external_dispatch_authorized": false,
+  "background_jobs_started": false,
+  "execution_hold": {
+    "active": true,
+    "reason": "STOP: pristine full verify_go rc 1 on two tests outside row256 patch; no implementation or candidate gates may start",
+    "owner": "controller",
+    "evidence_path": "design_docs/verification/world-iter362/baseline-inherited-failures.json",
+    "observed_rc": 1,
+    "failed_tests": [
+      "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter",
+      "TestCheckSourceUnderPinnedInterpreter"
+    ],
+    "failed_packages": [
+      "github.com/sunholo-data/ailang-world/cmd/world-publish",
+      "github.com/sunholo-data/ailang-world/host/archive"
+    ],
+    "baseline_ail_rc": 0,
+    "environment_modified": false,
+    "observed_at_utc": "2026-11-07T05:45:38.179346+00:00",
+    "files_sha256": {
+      "design_docs/verification/world-iter362/baseline-inherited-failures.json": "a58c42647d58502e682fe8be5e8273a29e6034d228377e85aff4a3bcf4a515e9",
+      "design_docs/verification/world-iter362/baseline-full-verify-go.txt": "970d9ef34b71b8c007500000c9b4d44062c153c988e3f0b14f610cd664d44b13",
+      "design_docs/verification/world-iter362/baseline-verify-ail-real.txt": "0ea939992ca69026c264feceed4099bdd1a7a0220c4780ec2d9310f8cca8b4ce"
+    },
+    "resume_condition": "Controller reports/parks this baseline finding and establishes a genuine rc-0 pristine baseline without scope widening, source edits in this sprint, or environment suppression. Update execution hold only against a new exact receipt; no automatic retry or bypass."
+  }
+}

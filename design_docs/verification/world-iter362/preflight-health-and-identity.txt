@@ -1,0 +1,33 @@
+$ gh auth status
+rc=0
+  ✓ Logged in to github.com account sunholo-voight-kampff (/Users/voightkampff/.config/gh/hosts.yml)
+  - Active account: true
+
+$ git -C /Users/voightkampff/dev/sunholo-data/ailang-world status --short
+rc=0
+?? .claude/worktrees/
+?? .wt-world-iter306-r0/
+
+
+$ git -C /Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256 status --short
+rc=0
+?? .design-scratch/
+?? design_docs/planned/w-daemon-startup-under-load.md
+?? design_docs/planned/w-daemon-startup-under-load.patch
+?? design_docs/verification/world-iter361/
+?? design_docs/verification/world-iter362/
+
+
+$ gh run list --repo sunholo-data/ailang-world --workflow CI --branch dev --limit 1 --json conclusion,headSha,databaseId,status
+rc=0
+[{"conclusion":"success","databaseId":42313003664,"headSha":"61a8d1c47b45fffc0f36137d29a5285c32da0145","status":"completed"}]
+
+
+$ gh api repos/sunholo-data/ailang-world/commits/61a8d1c47b45fffc0f36137d29a5285c32da0145/check-runs --jq "checks=\(.total_count)", (.check_runs[]|"\(.name): \(.conclusion // .status)")
+rc=0
+checks=3
+go race gate (go test -race, own job): success
+ailang-code verify gate: success
+go host build + test gate: success
+
+Billing tripwire: CLEAN (only presence tested). Kill switch: absent. No tracked main-tree edits.
