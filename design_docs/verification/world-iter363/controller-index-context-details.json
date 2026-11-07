@@ -1,0 +1,9 @@
+{
+  "effective_fields": {
+    "name": "world",
+    "repo": "sunholo-data/ailang-world",
+    "workdir": "/Users/voightkampff/.ailang/state/world-iter363-record",
+    "doc": "design_docs/world-mission.md"
+  },
+  "descriptor_source": "Canonical driver missions/world.toml copied as per-run data; only workdir changed. No installed registry edit."
+}

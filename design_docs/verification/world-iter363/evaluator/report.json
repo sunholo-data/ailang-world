@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "mission": "world",
+  "iteration": 363,
+  "scope": "admin-record-only",
+  "verdict": "PASS",
+  "score": 95,
+  "base_sha": "565609ab51c9300924831087aa98308dcdd418b0",
+  "candidate_sha": "9cd60c76d325a6779098d1d386cc740712290c35",
+  "judging_model": "openrouter/minimax/minimax-m3",
+  "evaluation_round": 1,
+  "report_path": "design_docs/verification/world-iter363/evaluator/report.md",
+  "blocking_issues": [],
+  "hard_fail_conditions": {
+    "incomplete_final_record": false,
+    "false_preservation_stamp_or_index_claim": false,
+    "altered_historical_evidence": false,
+    "product_acceptance_or_dropped_human_gate": false,
+    "fewer_than_50_percent_acceptance_criteria_met": false
+  },
+  "acceptance_criteria_summary": {
+    "total": 17,
+    "fully_met": 16,
+    "not_fully_met": 1,
+    "percent_fully_met": 94.1,
+    "below_50_percent": false
+  },
+  "acceptance_criteria": [
+    {
+      "id": "ADMIN-363-M1-1",
+      "milestone": "ADMIN-363-M1",
+      "criterion": "Dashboard is overwritten, at most 40 physical lines, and includes release, pending row 256, conditional order, cadence/routing, all four OPEN decisions, and receipt-based quota posture.",
+      "met": true,
+      "evidence": "Candidate dashboard has 16 physical lines and contains each listed fact; independently read from candidate blob."
+    },
+    {
+      "id": "ADMIN-363-M1-2",
+      "milestone": "ADMIN-363-M1",
+      "criterion": "Append exactly one canonical iteration-363 heading, preserve the old log as an exact prefix, and include every required section with none or pending instead of omissions.",
+      "met": true,
+      "evidence": "Base log is an exact prefix of candidate; live headings are 36 before and 37 after; only appended heading ID is 363; all required section labels occur in the appended block."
+    },
+    {
+      "id": "ADMIN-363-M1-3",
+      "milestone": "ADMIN-363-M1",
+      "criterion": "Routing evidence names actual role models and token receipts, the full40 Gate 4 base@UTC receipt, quota reroutes, and distinct subscription/metered/imputed accounting with unavailable values explicit.",
+      "met": true,
+      "evidence": "The final log records actual Codex roles, MiniMax probe only, controller/supervisor unknowns, the Gate 4 timestamp, reroutes, and token/cost bases; receipt artifacts support the counts."
+    },
+    {
+      "id": "ADMIN-363-M1-4",
+      "milestone": "ADMIN-363-M1",
+      "criterion": "Product 256 PR #515 remains draft/unmerged, FAIL 85 and LOCAL_CRITERION UNMET; no new product acceptance, automatic 257/201/243 routing, or inferred decision resolution.",
+      "met": true,
+      "evidence": "Candidate log, dashboard, charter stamp, CURRENT GOAL, and design gate all retain the park; ledger is byte-identical with all four decisions OPEN."
+    },
+    {
+      "id": "ADMIN-363-M1-5",
+      "milestone": "ADMIN-363-M1",
+      "criterion": "Future controller/independent verdicts and PR/merge-head CI are pending until exact receipts exist; historical observations are attributed.",
+      "met": true,
+      "evidence": "Candidate explicitly marks independent review, exact record PR-head CI, and merge-head CI pending, and separately labels base/product CI as historical."
+    },
+    {
+      "id": "ADMIN-363-M2-1",
+      "milestone": "ADMIN-363-M2",
+      "criterion": "Baseline is remeasured before editing and stamp-only arithmetic is 6345+2-2*1=6345 before the separate CURRENT GOAL operation.",
+      "met": true,
+      "evidence": "Executor proof records the pre-edit baseline and arithmetic; independent final charter reconstruction yields exactly 6345 lines and only the authorized edits."
+    },
+    {
+      "id": "ADMIN-363-M2-2",
+      "milestone": "ADMIN-363-M2",
+      "criterion": "Exactly three canonical live stamps in descending order 363/362/360, each one physical line plus one blank.",
+      "met": true,
+      "evidence": "Independent candidate-byte scan returns [363,362,360], each matched as one line plus blank; the 363 text equals the plan."
+    },
+    {
+      "id": "ADMIN-363-M2-3",
+      "milestone": "ADMIN-363-M2",
+      "criterion": "Only iteration 359's exact two-line bytes move; SHA-256 6867bd... is preserved in the status archive, which gains exactly two lines and retains the 358 control.",
+      "met": true,
+      "evidence": "Base 359 stamp-plus-blank and candidate archive suffix both hash to 6867bd184b9d21d03d55093efc6ab09305e7961d785aea718a210e557495258c; archive is an exact base prefix, 724 to 726 lines."
+    },
+    {
+      "id": "ADMIN-363-M2-4",
+      "milestone": "ADMIN-363-M2",
+      "criterion": "Replace only the stale CURRENT GOAL line with the planned one-line route, preserving zero prose line delta and 6345 final lines.",
+      "met": true,
+      "evidence": "Candidate mission is byte-exactly reconstructible from base using only the 363 insertion, 359 move, and one old-goal-line to new-goal-line replacement; both versions have 6345 lines; new line SHA-256 is 6716a7ef96036dcff64fe423a2fcda2e194ef0fd07b21aa4c2d231334002bb9a."
+    },
+    {
+      "id": "ADMIN-363-M2-5",
+      "milestone": "ADMIN-363-M2",
+      "criterion": "The Human Decision Ledger section remains byte-identical with 99 rows and OPEN 105/110/111/112 unchanged.",
+      "met": true,
+      "evidence": "Base and candidate ledger sections are both 220998 bytes with SHA-256 302e2264c72d23ecc2f59a7322f22f90e1a9321591f9249ef99ccec8ecb1648c; OPEN set is exactly 105/110/111/112."
+    },
+    {
+      "id": "ADMIN-363-M2-6",
+      "milestone": "ADMIN-363-M2",
+      "criterion": "The entire queue suffix from the exact Queue heading to EOF equals base bytes, with anchored rows 256 and 257 each still present once.",
+      "met": true,
+      "evidence": "Base and candidate queue suffixes are both 992586 bytes with SHA-256 f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4; row 256 and row 257 counts are 1 each."
+    },
+    {
+      "id": "ADMIN-363-M3-1",
+      "milestone": "ADMIN-363-M3",
+      "criterion": "The missing registry is reported rather than repaired; the controller addendum's private ephemeral descriptor supplies the supported input without an installed-registry edit and redirects World output to the record checkout.",
+      "met": true,
+      "evidence": "Planner artifacts report the absent registry; controller addendum authorizes the descriptor; controller-index-context and details identify the private descriptor and record workdir; disposition says no installed registry edit."
+    },
+    {
+      "id": "ADMIN-363-M3-2",
+      "milestone": "ADMIN-363-M3",
+      "criterion": "Index-only runs against the confirmed record workdir, emitted paths resolve there, orphan 361 is preserved, and no log rotation occurs.",
+      "met": true,
+      "evidence": "Controller index receipt records rc 0, the exact record index output path, no archive path, and unchanged source streams; index removal of only row 363 reproduces base exactly and orphan 361 occurs once."
+    },
+    {
+      "id": "ADMIN-363-M3-3",
+      "milestone": "ADMIN-363-M3",
+      "criterion": "The index has exactly one 363 row and preserves all prior iterations; 37 live entries remain below rotation threshold; only the planned 359 status move changes an archive.",
+      "met": true,
+      "evidence": "Index has 350 numeric rows plus one continuation row (351 data rows), versus base 349 plus one (350); removing row 363 reproduces base bytes; live log has 37 entries; log archive is byte-identical; status archive adds only 359."
+    },
+    {
+      "id": "ADMIN-363-M3-4",
+      "milestone": "ADMIN-363-M3",
+      "criterion": "Run byte-preservation, canonical-heading, count, source-equality, and git diff --check structural audits; only the five named record files and new iteration-363 evidence may differ.",
+      "met": false,
+      "partial": true,
+      "evidence": "Preservation, heading, count, and source-equality checks independently pass, and only the five named files plus 39 new scoped artifacts differ. The required default git diff --check nevertheless exits rc 2 for the retained record-plan.md:170 extra EOF blank line. The narrowed check exits rc 0 but does not make the default command pass. The exception is explicitly disclosed."
+    },
+    {
+      "id": "ADMIN-363-M3-5",
+      "milestone": "ADMIN-363-M3",
+      "criterion": "Controller outside-sandbox structural confirmation and an independent record PASS are required before record PR merge; no product/full-suite test is authorized.",
+      "met": true,
+      "evidence": "Controller structural receipts are present and this report independently covers the final candidate. No product/full-suite test is claimed. Exact PR/merge CI and landing remain explicitly pending."
+    },
+    {
+      "id": "ADMIN-363-M3-6",
+      "milestone": "ADMIN-363-M3",
+      "criterion": "Exact full40 PR-head and merge-head SHAs with three terminal-success checks are controller-owned and remain pending until collected; material later edits require review coverage.",
+      "met": true,
+      "evidence": "Candidate marks both CI gates pending and never green; this review covers the final committed bytes. ci-expectations names the three checks actually present in .github/workflows/ci.yml."
+    }
+  ],
+  "score_breakdown": {
+    "record_structural_verification": {
+      "points": 20,
+      "max": 20,
+      "basis": "Adapted from Tests Pass for ADMIN scope: narrow charter receipt plus independent preservation, stamp, archive, log, index, JSON, and source-isolation checks; no product test claim."
+    },
+    "artifact_hygiene": {
+      "points": 9,
+      "max": 10,
+      "basis": "31/31 new JSON files parse; default git diff --check is rc 2 for one disclosed planner-artifact EOF blank; narrowed rc 0 is not claimed as default green."
+    },
+    "acceptance_criteria": {
+      "points": 28,
+      "max": 30,
+      "basis": "16/17 fully met (94.1%); one M3 structural-audit criterion is not fully met because of the default whitespace rc 2."
+    },
+    "record_quality": {
+      "points": 14,
+      "max": 15,
+      "basis": "Complete final log and bounded dashboard; immutable planner-state nulls are correctly scoped, but one point is deducted for the whitespace exception and stage-bound M3 log hash that could be misread as final."
+    },
+    "documentation": {
+      "points": 15,
+      "max": 15,
+      "basis": "Canonical log, dashboard, index, charter stamp, CURRENT GOAL, archive move, and curated evidence are complete; product documentation actions are inapplicable."
+    },
+    "design_fidelity": {
+      "points": 9,
+      "max": 10,
+      "basis": "Approved ADMIN plan and controller addendum followed without scope expansion; one point deducted for the unmet default whitespace subcriterion."
+    },
+    "total": 95,
+    "max": 100
+  },
+  "artifact_derived_counts": {
+    "changed_paths": 44,
+    "added_paths": 39,
+    "modified_paths": 5,
+    "new_json_files_valid": 31,
+    "live_log_entries_base": 36,
+    "live_log_entries_candidate": 37,
+    "index_numeric_rows_base": 349,
+    "index_numeric_rows_candidate": 350,
+    "index_continuation_rows": 1,
+    "index_total_data_rows_candidate": 351,
+    "index_ids_added": [363],
+    "index_ids_removed": [],
+    "orphan_361_index_rows": 1,
+    "source_numeric_ids_covered_by_index": 349,
+    "charter_lines_base": 6345,
+    "charter_lines_candidate": 6345,
+    "ledger_bytes": 220998,
+    "ledger_data_rows": 99,
+    "open_decisions": [
+      "D-WORLD-105",
+      "D-WORLD-110",
+      "D-WORLD-111",
+      "D-WORLD-112"
+    ],
+    "queue_suffix_bytes": 992586,
+    "status_archive_lines_base": 724,
+    "status_archive_lines_candidate": 726,
+    "dashboard_lines": 16,
+    "upstream_predicates_closed": 33,
+    "skill_files_equal": 14,
+    "known_codex_quota_tokens": 478703
+  },
+  "preservation_evidence": {
+    "mission_reconstruction_exact": true,
+    "live_log_base_prefix_exact": true,
+    "status_archive_base_prefix_exact": true,
+    "moved_359_sha256": "6867bd184b9d21d03d55093efc6ab09305e7961d785aea718a210e557495258c",
+    "ledger_sha256": "302e2264c72d23ecc2f59a7322f22f90e1a9321591f9249ef99ccec8ecb1648c",
+    "queue_suffix_sha256": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4",
+    "index_without_363_equals_base": true,
+    "log_archive_equals_base": true,
+    "executor_original_input_hashes_matching": 22,
+    "in_memory_negative_controls_fired": 5,
+    "default_git_diff_check_rc": 2,
+    "default_git_diff_check_detail": "design_docs/verification/world-iter363/record-plan.md:170: new blank line at EOF",
+    "narrowed_git_diff_check_rc": 0
+  },
+  "product_state": {
+    "row": 256,
+    "pr": 515,
+    "verdict": "FAIL 85",
+    "local_criterion": "UNMET",
+    "park": "needs-human-review",
+    "product_acceptance_granted": false,
+    "pending_decisions": [
+      "D-WORLD-111",
+      "D-WORLD-112"
+    ]
+  },
+  "independent_methods": [
+    "Verified HEAD equals the candidate SHA.",
+    "Inspected the complete base-to-candidate name/status, stat, and no-ext-diff/no-textconv diff for every path in bounded chunks.",
+    "Compared base and candidate bytes with git show and read-only Python for exact prefixes, suffixes, hashes, line counts, index sets, and full charter reconstruction.",
+    "Ran five in-memory negative controls for preservation validators; all fired.",
+    "Did not run make, Go tests, product tests, builds, source changes, design moves, network calls, environment/credential inspection, or external reporting."
+  ]
+}

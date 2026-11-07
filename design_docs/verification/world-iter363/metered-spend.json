@@ -1,0 +1,43 @@
+{
+  "metered_ceiling_usd": 5,
+  "known_metered_usd": 0.48501192,
+  "calls": [
+    {
+      "role": "evaluator",
+      "kind": "availability_probe",
+      "provider": "openrouter",
+      "model": "minimax/minimax-m3",
+      "cost_usd": 0.00038628,
+      "tokens": 1381
+    },
+    {
+      "role": "evaluator",
+      "kind": "independent_admin_review",
+      "provider": "openrouter",
+      "model": "minimax/minimax-m3",
+      "candidate_sha": "9cd60c76d325a6779098d1d386cc740712290c35",
+      "cost_usd": 0.48462564,
+      "usage": {
+        "input": 329266,
+        "output": 44143,
+        "cacheRead": 5547904,
+        "cacheWrite": 0,
+        "reasoning": 17429,
+        "totalTokens": 5921313
+      },
+      "counting": "55 turn_end once; reasoning included in output, cacheRead added once to input for telemetry"
+    }
+  ],
+  "quota_tokens": {
+    "designer": 120699,
+    "planner": 193975,
+    "executor": 164029,
+    "controller": null,
+    "supervisors": null
+  },
+  "judge_reserve_usd_including_probe": 1,
+  "judge_status": "completed PASS95 ADMIN-only; no blocking/hard failures; default whitespace rc2 and16/17 criterion retained",
+  "imputed_usd": 0,
+  "note": "Codex quota is subscription spend, not metered. Controller and supervisor counts remain unreported. No imputed spend. Judge and probe costs counted once; no prior-iteration spend.",
+  "known_codex_quota_tokens": 478703
+}

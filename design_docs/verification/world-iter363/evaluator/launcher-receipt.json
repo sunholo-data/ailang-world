@@ -1,0 +1,10 @@
+{
+  "verdict": "ok",
+  "rc": 0,
+  "fenced": true,
+  "elapsed_seconds": 722,
+  "worktree_changed_files": 1,
+  "hung_tool": "",
+  "provider_errors": 0,
+  "provider_error": ""
+}

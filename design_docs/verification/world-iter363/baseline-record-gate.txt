@@ -1,0 +1,6 @@
+$ go test ./host/verifygate/ -run ^TestMissionConfigRealCharter$ -count=1 -timeout 60s -v
+rc=0
+=== RUN   TestMissionConfigRealCharter
+--- PASS: TestMissionConfigRealCharter (0.06s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	0.354s

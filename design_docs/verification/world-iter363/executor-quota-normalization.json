@@ -1,0 +1,19 @@
+{
+  "role": "executor",
+  "basis": "Controller re-extracted integer tokens used footer. Three-digit locale grouping removed; original supervisor receipt retained.",
+  "runs": [
+    {
+      "kind": "probe",
+      "literal": "17.649",
+      "quota_tokens": 17649,
+      "raw_log_sha256": "22393cb6a25a4e1a8d685ee5b7ff9764a6325df313141be7ed027a42db681261"
+    },
+    {
+      "kind": "run",
+      "literal": "146.380",
+      "quota_tokens": 146380,
+      "raw_log_sha256": "6e7d3a35f2ab41b536b9f3c27521971ce990e00837fdeb650563457bd26dd451"
+    }
+  ],
+  "quota_tokens": 164029
+}

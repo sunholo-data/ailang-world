@@ -1,0 +1,14 @@
+{
+  "ephemeral_registry": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world363-registry-hs2y9qd5",
+  "descriptor": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world363-registry-hs2y9qd5/world.toml",
+  "world_workdir": "/Users/voightkampff/.ailang/state/world-iter363-record",
+  "purpose": "Existing fleet CLI-supported registry input for this record checkout only; installed registry untouched",
+  "index_command": [
+    "ailang",
+    "mission",
+    "rotate-log",
+    "world",
+    "--index-only"
+  ],
+  "controller_owned": true
+}

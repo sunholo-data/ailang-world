@@ -1,0 +1,31 @@
+{
+  "executor_original_result": "FAILED_EVIDENCE_PRESERVATION retained unmodified",
+  "measured_reason": "Controller added effective_fields and descriptor_source to its own context JSON while executor ran; metered-spend and planner-quota-normalization were new parent receipts",
+  "repair": "Restore original controller-index-context bytes; save additive details in separate new controller-index-context-details.json. Original22 executor inputs now byte-exact. New receipts are controller-owned M3 artifacts, not executor writes. Historical drift is not erased.",
+  "preexisting_inputs_equal_original": {
+    "design_docs/verification/world-iter363/controller-brief.json": true,
+    "design_docs/verification/world-iter363/inbox-summary.json": true,
+    "design_docs/verification/world-iter363/design-gate.md": true,
+    "design_docs/verification/world-iter363/ci-expectations.json": true,
+    "design_docs/verification/world-iter363/controller-plan-addendum.md": true,
+    "design_docs/verification/world-iter363/retro-counts.json": true,
+    "design_docs/verification/world-iter363/gate0-current-directives.txt": true,
+    "design_docs/verification/world-iter363/planner-supervisor-receipt.json": true,
+    "design_docs/verification/world-iter363/record-state.json": true,
+    "design_docs/verification/world-iter363/record-plan.md": true,
+    "design_docs/verification/world-iter363/upstream-predicates.json": true,
+    "design_docs/verification/world-iter363/controller-observations.json": true,
+    "design_docs/verification/world-iter363/controller-index-context.json": true,
+    "design_docs/verification/world-iter363/record-baseline-hashes.json": true,
+    "design_docs/verification/world-iter363/worktree-census.json": true,
+    "design_docs/verification/world-iter363/baseline-record-gate.txt": true,
+    "design_docs/verification/world-iter363/designer-receipt.json": true,
+    "design_docs/verification/world-iter363/release-code-predicate.json": true,
+    "design_docs/verification/world-iter363/gate0-canonical-self-notices.txt": true,
+    "design_docs/verification/world-iter363/skill-currency.json": true,
+    "design_docs/verification/world-iter363/evaluator-preflight/minimal-probe-receipt.json": true,
+    "design_docs/verification/world-iter363/evaluator-preflight/minimal-environment-names.json": true
+  },
+  "restored_context_sha256": "565540bb8259cfa59720c9ec39dd4fc0ec5701715fd5f692d948ae87ecba33e2",
+  "acceptance": "No source/product gate amendment. Independent record judge must assess both failed-window receipt and final repair; no automatic PASS asserted."
+}

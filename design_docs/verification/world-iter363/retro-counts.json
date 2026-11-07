@@ -1,0 +1,20 @@
+{
+  "last20_harness": 0,
+  "denominator": 20,
+  "last3_product_landings": [
+    {
+      "iteration": 360,
+      "unmet_clause_moved": null
+    },
+    {
+      "iteration": 359,
+      "unmet_clause_moved": null
+    },
+    {
+      "iteration": 340,
+      "unmet_clause_moved": null
+    }
+  ],
+  "unmet_clauses": [],
+  "drift_predicate": false
+}

@@ -1,16 +1,16 @@
-# World mission dashboard — iteration 362 (2026-11-07)
+# World mission dashboard — iteration 363 (2026-11-07)
 
-- **This fire:** row 256 implemented at `76553889`, draft PR #515; **PARKED, needs-human-review**. No production code lands in this record.
-- **Independent product judge:** actual MiniMax M3 FAIL 85/100; AC8/local full-Go criterion UNMET. Eight other ACs met. Two independently compiling mutants killed, all sources restored.
-- **CI:** product PR head has all 3 checks success (run 42344789832); this does not discharge the local criterion or imply a merge.
-- **Local:** both full candidate attempts rc 1 with additional failures; baseline has two diagnostic-truncation failures. Publish counter and net6 failure remain unattributed. Filter failure reproduced at base.
-- **Incident:** evaluator exposed six credential values to its session/provider; stored artifacts sanitized. D-WORLD-112 requests attended rotation. Raw transcripts are private.
-- **Clauses:** 1–7 MET; goal unmoved. Latest release pin AILANG v0.41.0 (`24ee108`); release order 150 → 151 → v1.0.0.
-- **Release 150:** waits on attended A1. **151:** row 188 N2d/N4a after attended 219 → 217 → 218.
-- **Banked order:** resolve row 256 validation first, then 257 (cache seed), then 201 → 243 (D-WORLD-109; fakes/test keys only, real-key exits attended). Stop when a release becomes routable.
-- **Parked on Mark:** D-WORLD-105 holder reset (default C, fail closed); D-WORLD-110 row-255 compatibility (default A, as built); D-WORLD-111 row-256 validation policy (default A, stay parked); D-WORLD-112 credential rotation (default: no autonomous credential changes, incident stays open).
-- **Routing:** Agent supervisors for all four required roles; designer/planner/executor actual Codex Sol, product judge actual PI MiniMax M3. Driver quota reroutes disclosed in log.
-- **Final cost:** $0.65795556 metered + $0.2635408 flat-rate Ollama imputed = $0.92149636 cap-accounted; Codex subscription 624,157 reported tokens including probes; controller/supervisor tokens unreported. $5 ceiling.
-- **Cadence:** one iteration per fire; next weekly sweep/thread rotation Monday Nov 9 at 07:00 local. Harness 0/20; no skill/routing-policy edit.
-- **Evidence:** world-mission-log.md entry 362 and verification/world-iter362/. Orphan 361's artifacts are credited and retained.
-- **Record-only review:** actual PI MiniMax PASS98; minor count corrected, factual report caveats retained. Product FAIL85 unchanged. Record PR516 requires its own PR+merge CI.
+- **This fire:** ADMIN only; no product pick. Row 256 / draft OPEN PR #515 remains CONFLICTING, PARKED needs-human-review, independent FAIL 85, LOCAL_CRITERION UNMET.
+- **Validation:** D-WORLD-111 default A retains exactly the two named baseline failures and no additional failures; no source/gate change or full retry. B proposes subsequent attended design/measurement.
+- **Incident:** D-WORLD-112 OPEN, no autonomous credential change. Sanitization does not undo provider exposure. Clearing either 111/112 does not clear the other.
+- **Parked on Mark:** OPEN105 default C (row233 parked/fail closed); OPEN110 default A (row255 compatibility as built); OPEN111 default A; OPEN112 no autonomous change.
+- **Conditional order:** 250 → 255 → 256 → 257 → 201 → 243; 250/255 landed, 256 parked. No automatic next-row pick. 201/243 use fakes/test keys; real-key exits remain attended.
+- **Release:** latest AILANG pin v0.41.0 (24ee108); D-WORLD-81 order156 (closed) → finish150 →151 →v1.0.0; priority when routable.
+- **Release predicates:** 150 waits on attended A1 with P0/P3 in its window; 151 on row188 N2d/N4a after attended219 →217 →218. Supplied facts, not fresh executor runs.
+- **Progress:** clauses1–7 MET per controller brief; goal unmoved. Hygiene row258 outside granted scope.
+- **Historical CI:** supplied base565609ab 3/3 (run42349328842); product76553889 3/3 (42344789832). Neither accepts product256 nor establishes this record's CI.
+- **Record gates:** M1/M2 snapshots and M3 index checked outside sandbox; exact narrow charter gate PASS. Actual independent MiniMax record PASS95 (16/17 fully met; default whitespace rc2 retained). Exact PR-head + merge-head 3/3 CI pending.
+- **Routing:** actual designer/planner/executor Codex gpt-6.1-sol; controller model/tokens unreported. Actual independent evaluator PI MiniMax M3 completed, protocol acked=true; source/tracked bytes unchanged. Anthropic quota reroutes verbatim in log.
+- **Quota/cost:** designer120,699 + planner193,975 + executor164,029 = known Codex quota478,703, including probes; controller/supervisor counts unreported. MiniMax judge+probe metered $0.48501192, imputed $0, $5 cap.
+- **Cadence:** one iteration per fire; weekly sweep/thread rotation 2026-11-09 07:00 Europe/Copenhagen. Supplied harness0/20; no skill/routing-policy change.
+- **Evidence:** log363 and verification/world-iter363/; .snap M1/M2 are controller-owned temporary receipts. Prior362 and explicit orphan361 preserved.

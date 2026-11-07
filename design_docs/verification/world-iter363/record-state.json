@@ -1,0 +1,424 @@
+{
+  "schema_version": 1,
+  "mission": "world",
+  "iteration": 363,
+  "classification": "ADMIN",
+  "role": "planner",
+  "actual_model": "codex:gpt-6.1-sol",
+  "status": "planned_with_baseline_findings",
+  "execution_performed": false,
+  "product_pick": null,
+  "base_sha": "565609ab51c9300924831087aa98308dcdd418b0",
+  "planner_worktree": "/Users/voightkampff/dev/sunholo-data/.planner-world-iter363",
+  "eventual_record_worktree": "/Users/voightkampff/.ailang/state/world-iter363-record",
+  "plan_path": "design_docs/verification/world-iter363/record-plan.md",
+  "state_path": "design_docs/verification/world-iter363/record-state.json",
+  "inputs": {
+    "skill_root": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills",
+    "skills_read": [
+      "sprint-planner/SKILL.md",
+      "mission-control/resources/gate-4-record.md",
+      "mission-control/resources/codex-lane-false-greens.md"
+    ],
+    "local_documents": [
+      "design_docs/world-mission.md",
+      "design_docs/world-mission-log.md"
+    ],
+    "external_read_only": [
+      "/Users/voightkampff/.ailang/state/world-iter363-record/design_docs/verification/world-iter363/design-gate.md",
+      "/Users/voightkampff/.ailang/state/world-iter363-record/design_docs/verification/world-iter363/controller-brief.json",
+      "/Users/voightkampff/.ailang/state/world-iter363-record/design_docs/verification/world-iter363/controller-observations.json"
+    ]
+  },
+  "baseline_measured_now": {
+    "measured_at_utc": "2026-11-07T08:58:14.951541+00:00",
+    "base": "565609ab51c9300924831087aa98308dcdd418b0",
+    "head": "565609ab51c9300924831087aa98308dcdd418b0",
+    "origin_dev_local_ref": "565609ab51c9300924831087aa98308dcdd418b0",
+    "charter_bytes": 1403920,
+    "charter_lines": 6345,
+    "charter_sha256": "3209e7a1c245ca0172688680cf0c840086916423d9c3cc0764b58446feb9a79d",
+    "stamps": [
+      {
+        "line": 1039,
+        "iteration": 362,
+        "canonical": true,
+        "next_line_blank": true,
+        "sha256": "27fecc13ef71fc8811f1c426b134c9650c57d86a3399446aa5ccf5c37d5ab260"
+      },
+      {
+        "line": 1041,
+        "iteration": 360,
+        "canonical": true,
+        "next_line_blank": true,
+        "sha256": "ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530"
+      },
+      {
+        "line": 1043,
+        "iteration": 359,
+        "canonical": true,
+        "next_line_blank": true,
+        "sha256": "6867bd184b9d21d03d55093efc6ab09305e7961d785aea718a210e557495258c"
+      }
+    ],
+    "status_archive_358_presence": 1,
+    "status_archive_359_presence": 0,
+    "ledger": {
+      "start_line": 910,
+      "end_exclusive_line": 1037,
+      "bytes": 220998,
+      "sha256": "302e2264c72d23ecc2f59a7322f22f90e1a9321591f9249ef99ccec8ecb1648c",
+      "data_rows": 99,
+      "open": [
+        "D-WORLD-105",
+        "D-WORLD-110",
+        "D-WORLD-111",
+        "D-WORLD-112"
+      ],
+      "validator_rc": 0,
+      "validator_stdout": "decision ledger valid: 99 rows\n",
+      "validator_stderr": "",
+      "preliminary_numeric_only_count": 97,
+      "count_note": "The initial numeric-only regex counted 97. The actual validator and a D-identifier scan count 99, including D-WORLD-ROUTE-1 and D-WORLD-DRIVER-1; no ledger edits."
+    },
+    "queue_suffix": {
+      "start_line": 1807,
+      "bytes": 992586,
+      "sha256": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4",
+      "row256_count": 1,
+      "row257_count": 1
+    },
+    "log": {
+      "live_entries": 36,
+      "canonical_362_live": 1,
+      "canonical_361_live": 0,
+      "canonical_361_archived": 0,
+      "index_361_orphan": 1,
+      "index_362": 1,
+      "prior_control_360_live": 1
+    },
+    "dashboard_lines": 16,
+    "source_equality": {
+      "command": "git diff --exit-code 565609ab51c9300924831087aa98308dcdd418b0 -- .",
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "diff_check": {
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "initial_untracked": [],
+    "registry_precondition": {
+      "path": "/Users/voightkampff/.ailang/state/world-iter363-record/missions",
+      "rc": 1,
+      "stdout": "",
+      "stderr": "stat: /Users/voightkampff/.ailang/state/world-iter363-record/missions: stat: No such file or directory\n"
+    },
+    "planner_registry_exists": false,
+    "fleet_path": "/Users/voightkampff/go/bin/ailang",
+    "artifact_ignore_checks": {
+      "plan_rc": 1,
+      "state_rc": 1,
+      "ignored_positive_control_rc": 0,
+      "positive_control_rule": ".gitignore:3:**/.ailang/"
+    },
+    "instrument_failures": [
+      {
+        "command": "Path('missions').iterdir()",
+        "rc": 1,
+        "finding": "FileNotFoundError; planner checkout has no missions directory. No repair."
+      },
+      {
+        "command": "stat -f %N /Users/voightkampff/.ailang/state/world-iter363-record/missions",
+        "rc": 1,
+        "finding": "No such file or directory. Index-regeneration precondition unmet; no registry created."
+      },
+      {
+        "command": "/Users/voightkampff/go/bin/ailang mission rotate-log --help",
+        "rc": 1,
+        "finding": "unknown flag \"--help\" (want: [--keep N | --index-only], --stream log|status). Read-only instrument probe failed; no rotation/index write attempted."
+      }
+    ]
+  },
+  "constraints": {
+    "product_state": "row256 PR515 PARKED needs-human-review; independent FAIL85; LOCAL_CRITERION UNMET",
+    "open_decisions": [
+      "D-WORLD-105",
+      "D-WORLD-110",
+      "D-WORLD-111",
+      "D-WORLD-112"
+    ],
+    "d111": "Default A; exact two named baseline failures and no additional failures; no criterion/source/gate change or full reruns.",
+    "d112": "Credential incident OPEN; no autonomous credential reads/changes; sanitization does not undo exposure.",
+    "no_automatic_skip": [
+      257,
+      201,
+      243
+    ],
+    "queue_suffix_preserve": "full bytes, not row presence alone",
+    "ledger_preserve": "heading through next level2 heading, all 99 validated rows byte-exact",
+    "forbidden": [
+      "product picks",
+      "source/test/.ail/product design edits",
+      "skills/driver/secrets changes",
+      "tests and full-suite reruns",
+      "TMPDIR/GOTMPDIR overrides",
+      "environment/key dumps",
+      "credential reads",
+      "external calls/reports",
+      "git writes/commits/stash/checkout/push",
+      "writes outside eventual record worktree",
+      "overwriting existing evidence"
+    ],
+    "handoff": "Parent supervisor only; no messages or coordinator trigger."
+  },
+  "allowed_future_modified_record_files": [
+    "design_docs/world-mission-dashboard.md",
+    "design_docs/world-mission-log.md",
+    "design_docs/world-mission.md",
+    "design_docs/world-mission-status-archive.md",
+    "design_docs/world-mission-index.md"
+  ],
+  "allowed_future_new_evidence": {
+    "prefix": "design_docs/verification/world-iter363/",
+    "must_be_absent_at_base": true,
+    "no_overwrite": true
+  },
+  "required_log_sections": [
+    "Kind",
+    "Context / preflight",
+    "Pick and why",
+    "Gate 0",
+    "Gate 1",
+    "Work done",
+    "Designer / planner / executor",
+    "Independent evaluator (record)",
+    "Routing evidence",
+    "Metered ledger",
+    "Ruled out",
+    "Parked for human",
+    "Retro",
+    "Progress",
+    "Next",
+    "Judge follow-through (iteration 363)",
+    "Landing (iteration 363)"
+  ],
+  "planned_status_heading": "## STATUS 2026-11-07 — ITERATION 363: ADMIN only; row 256 PARKED needs-human-review, independent FAIL 85 and LOCAL_CRITERION UNMET; D-WORLD-111/112 await attended decisions; no automatic 257/201/243 route.",
+  "planned_current_goal_line": "    When this line and the Queue disagree, the Queue governs; the Human Decision Ledger governs current authority. Current route (iteration 363): ADMIN record only. Row 256 remains PARKED needs-human-review, draft PR #515, independent FAIL 85 and LOCAL_CRITERION UNMET. D-WORLD-111 default A retains the exact-two-failures contract; no full reruns or source/gate changes. D-WORLD-112 stays OPEN with no autonomous credential changes; sanitization does not undo exposure. No automatic skip to 257, 201 or 243. The attended order 250 → 255 → 256 → 257 → 201 → 243 remains conditional on both parks being explicitly cleared; release rows 150/151 retain priority when routable. D-WORLD-105 and D-WORLD-110 remain OPEN with their existing defaults. History is in the log and status archive.",
+  "rotation": {
+    "status": "prospective_not_executed",
+    "unit": "one physical stamp line plus one blank",
+    "before_lines": 6345,
+    "moved_iterations": [
+      359
+    ],
+    "moved_count": 1,
+    "formula": "after=before+2-2*moved",
+    "stamp_after_lines": 6345,
+    "independent_goal_line_delta": 0,
+    "final_lines": 6345,
+    "expected_live_iterations": [
+      363,
+      362,
+      360
+    ],
+    "archive_path": "design_docs/world-mission-status-archive.md",
+    "archive_before_lines": 724,
+    "archive_after_lines": 726,
+    "moved_stamp_plus_blank_sha256": "6867bd184b9d21d03d55093efc6ab09305e7961d785aea718a210e557495258c",
+    "archive_positive_control": 358
+  },
+  "features": [
+    {
+      "id": "ADMIN-363-M1",
+      "name": "Refresh World dashboard and append the complete ADMIN record",
+      "description": "Overwrite the namespaced snapshot and append canonical iteration 363 without changing prior log bytes.",
+      "paths": [
+        "design_docs/world-mission-dashboard.md",
+        "design_docs/world-mission-log.md"
+      ],
+      "dependencies": [],
+      "estimated_record_lines": 90,
+      "estimated_hours": 0.5,
+      "estimated_loc": 0,
+      "registry_reuse": {
+        "decision": "none",
+        "reason": "Mission bookkeeping only; no package capability, dependency or implementation is planned."
+      },
+      "acceptance_criteria": [
+        "Dashboard is overwritten at design_docs/world-mission-dashboard.md, at most 40 physical lines; includes release, pending row256, conditional order, cadence/routing, all four OPEN decisions and receipt-based quota posture.",
+        "Append exactly one heading '## 363 — 2026-11-07 — ADMIN record only; row 256 remains parked [ADMIN]' to design_docs/world-mission-log.md. Its full baseline bytes remain an exact prefix; all required template sections are present, with none/pending rather than omissions.",
+        "Routing evidence names actual role models and provider token receipts, full40 base@UTC receipt, supplied quota reroutes, subscription vs metered/imputed distinction; unavailable values explicitly tok: not reported and controller/supervisor collection pending.",
+        "Product256 PR515 remains draft/unmerged, independent FAIL85 and LOCAL_CRITERION UNMET; no new product acceptance, no automatic257/201/243 routing and no inferred decision resolution.",
+        "Future controller/independent verdicts and PR/merge-head CI are pending until exact receipts exist; historical supplied observations are explicitly attributed."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "ADMIN-363-M2",
+      "name": "Apply safe3 stamp rotation and correct CURRENT GOAL separately",
+      "description": "Prepend canonical363, move only359's stamp+blank to the status archive, then replace only the stale CURRENT GOAL line.",
+      "paths": [
+        "design_docs/world-mission.md",
+        "design_docs/world-mission-status-archive.md"
+      ],
+      "dependencies": [
+        "ADMIN-363-M1"
+      ],
+      "estimated_record_lines": 12,
+      "estimated_hours": 0.5,
+      "estimated_loc": 0,
+      "registry_reuse": {
+        "decision": "none",
+        "reason": "Charter record maintenance only; no reusable software or .ail syntax changes."
+      },
+      "acceptance_criteria": [
+        "Baseline is remeasured before editing. Stamp-only calculation is after=before+2-2*moved=6345+2-2*1=6345 before the independent CURRENT GOAL delta. Unexpected baseline stops the edit.",
+        "Exactly three canonical live stamps in descending recency:363/362/360. A stamp is exactly one physical line plus one blank, never a header-delimited block.",
+        "Only359's exact two-line bytes move; SHA2566867bd184b9d21d03d55093efc6ab09305e7961d785aea718a210e557495258c survives byte-exact in design_docs/world-mission-status-archive.md. Archive gains exactly2 lines (724→726); bare ITERATION359 presence and known-present358 control both >=1.",
+        "Replace only CURRENT GOAL's stale 'Current next (after iteration 360)' physical line with the planned current route. Keep it one line:independent prose line delta0; final charter lines6345. Never use this delta to conceal incorrect stamp arithmetic.",
+        "Ledger heading through the next level2 heading remains byte-identical:99 validated rows, SHA256302e2264c72d23ecc2f59a7322f22f90e1a9321591f9249ef99ccec8ecb1648c; OPEN105/110/111/112 unchanged.",
+        "Compare entire queue suffix bytes from exact '## Queue (' heading to EOF against pinned base, SHA256f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4,992586 bytes; exact rows256/257 each still present once. Existence alone is insufficient."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "ADMIN-363-M3",
+      "name": "Regenerate the pinned record index and assemble structural acceptance receipts",
+      "description": "Once the supervisor supplies the missing valid local registry precondition, use fleet PATH ailang with an explicit record-root registry pin and perform record-only audits.",
+      "paths": [
+        "design_docs/world-mission-index.md",
+        "design_docs/verification/world-iter363/"
+      ],
+      "dependencies": [
+        "ADMIN-363-M1",
+        "ADMIN-363-M2"
+      ],
+      "estimated_record_lines": 40,
+      "estimated_hours": 0.5,
+      "estimated_loc": 0,
+      "registry_reuse": {
+        "decision": "none",
+        "reason": "Use the existing fleet mission CLI for index bookkeeping; no package creation or registry capability work."
+      },
+      "acceptance_criteria": [
+        "Missing registry is reported, not repaired. Supervisor must establish an already valid record-root missions directory whose resolved World output target is this same eventual record root; no main/pin/sibling write is allowed.",
+        "Run only AILANG_MISSION_REGISTRY=\"$record_root/missions\" ailang mission rotate-log world --index-only using fleet PATH binary, never $AILANG_BIN and never --keep. Assert emitted INDEX resolves to record_root/design_docs/world-mission-index.md; validate any emitted archive path and both expected archive destinations under that same root.",
+        "Index has exactly one new363 row, preserves exact orphan361 row and all prior iteration numbers.37 live entries after append is below rotation threshold; both log archives remain unchanged except the explicitly planned status359 append.",
+        "Run byte-preservation,canonical-heading,count,source-equality and git diff --check structural audits. Only the five named record files and newly created world-iter363 evidence may differ from pinned base; every other tracked or untracked path must have zero difference.",
+        "Controller outside-sandbox structural confirmation and independent record evaluator PASS are required before any record PR merge; sandbox socket results are UNINFORMATIVE UNDER SANDBOX. No product/full-suite tests are authorized.",
+        "Controller alone collects exact full40 final PR-head and merge-head SHAs with all3 terminal success checks and run URLs on each; pending/unavailable is never a green result. Any material record edit after evaluation requires review coverage of final bytes."
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "Index regeneration is prospective and blocked on the missing record-root registry precondition; this planner does not supply it."
+    }
+  ],
+  "velocity": {
+    "basis": "ADMIN scope estimate; not product velocity",
+    "target_loc_per_day": 0,
+    "estimated_total_loc": 0,
+    "estimated_record_lines": 142,
+    "estimated_hours": 1.5,
+    "estimated_days": 0.1875,
+    "external_receipt_latency": "unknown"
+  },
+  "index_regeneration": {
+    "status": "not_run_precondition_unmet",
+    "fleet_path": "/Users/voightkampff/go/bin/ailang",
+    "registry_pin": "/Users/voightkampff/.ailang/state/world-iter363-record/missions",
+    "registry_exists_now": false,
+    "required_preflight": "Supervisor-supplied valid existing registry; resolve World Workdir and all output destinations to eventual record root before invocation; no registry repair allowed.",
+    "future_command": "AILANG_MISSION_REGISTRY=\"$record_root/missions\" ailang mission rotate-log world --index-only",
+    "expected_index": "design_docs/world-mission-index.md",
+    "expected_archive_destinations": [
+      "design_docs/world-mission-log-archive.md",
+      "design_docs/world-mission-status-archive.md"
+    ],
+    "assert_emitted_paths_under_record_root": true,
+    "index_only_emits_archive": false,
+    "log_rotation_due": false,
+    "live_entries_before": 36,
+    "live_entries_after": 37,
+    "preserve_orphan_361": true
+  },
+  "acceptance_prospective": {
+    "controller_outside_sandbox_structural": {
+      "status": "pending",
+      "verdict": null,
+      "evidence_path": null
+    },
+    "independent_record_evaluator": {
+      "status": "pending_required_before_record_pr_merge",
+      "actual_model": null,
+      "verdict": null,
+      "evidence_path": null
+    },
+    "record_pr_ci": {
+      "status": "pending_unavailable",
+      "head_sha": null,
+      "checks_required": 3,
+      "checks": [],
+      "run_urls": []
+    },
+    "record_merge_ci": {
+      "status": "pending_unavailable",
+      "head_sha": null,
+      "checks_required": 3,
+      "checks": [],
+      "run_urls": []
+    },
+    "socket_tests": "UNINFORMATIVE UNDER SANDBOX; not run or authorized",
+    "tests_run": false,
+    "product_acceptance_claim": false
+  },
+  "routing_receipts": {
+    "planner": {
+      "actual_model": "codex:gpt-6.1-sol",
+      "tokens": null,
+      "token_status": "tok: not reported; actual CLI terminal report to be captured by supervisor"
+    },
+    "controller": {
+      "actual_model": null,
+      "tokens": null,
+      "status": "requires actual supervisor receipt"
+    },
+    "designer": {
+      "declared_model": "codex:gpt-6.1-sol",
+      "actual_assessment_model": "codex:gpt-6.1-sol",
+      "tokens": null,
+      "status": "assessment input read; provider token receipt pending"
+    },
+    "executor": {
+      "declared_model": "codex:gpt-6.1-sol",
+      "actual_model": null,
+      "tokens": null,
+      "status": "future role, not executed by planner"
+    },
+    "evaluator": {
+      "declared_model": "pi:openrouter/minimax/minimax-m3",
+      "actual_model": null,
+      "tokens": null,
+      "status": "future independent record role, not a verdict"
+    },
+    "gate4_base_receipt": null,
+    "gate1_input_receipt": "565609ab51c9300924831087aa98308dcdd418b0@2026-11-07T08:49:44Z",
+    "metered_dollars": null,
+    "imputed_dollars": null,
+    "no_tokens_or_costs_fabricated": true
+  },
+  "handoff": {
+    "owner": "parent supervisor",
+    "sent": false
+  },
+  "completion_policy": "All milestone passes remain null until actual future execution and receipts. Record source equality alone is not independent/controller/CI acceptance."
+}

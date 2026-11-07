@@ -1,0 +1,19 @@
+{
+  "scope": "Final receipt delta after independently reviewed candidate9cd60c76; does not relabel the candidate partial criterion met.",
+  "full_default_rc": 2,
+  "full_default_stdout": "design_docs/verification/world-iter363/evaluator/report.md:3: trailing whitespace.\n+**Verdict:** PASS  \ndesign_docs/verification/world-iter363/evaluator/report.md:4: trailing whitespace.\n+**Score:** 95/100  \ndesign_docs/verification/world-iter363/evaluator/report.md:5: trailing whitespace.\n+**Scope:** `admin-record-only`  \ndesign_docs/verification/world-iter363/evaluator/report.md:6: trailing whitespace.\n+**Base:** `565609ab51c9300924831087aa98308dcdd418b0`  \ndesign_docs/verification/world-iter363/evaluator/report.md:7: trailing whitespace.\n+**Candidate:** `9cd60c76d325a6779098d1d386cc740712290c35`  \ndesign_docs/verification/world-iter363/evaluator/report.md:8: trailing whitespace.\n+**Actual judging model:** `openrouter/minimax/minimax-m3`  \ndesign_docs/verification/world-iter363/record-plan.md:170: new blank line at EOF.\n",
+  "findings": [
+    "design_docs/verification/world-iter363/evaluator/report.md:3: trailing whitespace.",
+    "design_docs/verification/world-iter363/evaluator/report.md:4: trailing whitespace.",
+    "design_docs/verification/world-iter363/evaluator/report.md:5: trailing whitespace.",
+    "design_docs/verification/world-iter363/evaluator/report.md:6: trailing whitespace.",
+    "design_docs/verification/world-iter363/evaluator/report.md:7: trailing whitespace.",
+    "design_docs/verification/world-iter363/evaluator/report.md:8: trailing whitespace.",
+    "design_docs/verification/world-iter363/record-plan.md:170: new blank line at EOF."
+  ],
+  "original_plan_extra_eof_blank_retained": true,
+  "original_judge_report_six_markdown_hardbreaks_retained": true,
+  "judge_report_sha256": "2702820052b7497d0cc71aff2679111cd95439df6658a25fbe959cb629d41bd2",
+  "core_five_record_files_default_whitespace_rc": 0,
+  "disposition": "Original planner and judge reports remain byte-exact. Six two-space Markdown hard line breaks in the newly banked report are additionally reported by default git whitespace checking. No full/default-green claim, source/test gate change, or criterion amendment; original independent PASS95/16-of17 finding remains the candidate verdict. Receipt and factual delta only."
+}

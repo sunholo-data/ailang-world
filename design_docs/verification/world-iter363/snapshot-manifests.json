@@ -1,0 +1,70 @@
+{
+  "ADMIN-363-M1": {
+    "schema_version": 1,
+    "boundary": "ADMIN-363-M1",
+    "base": "565609ab51c9300924831087aa98308dcdd418b0",
+    "created_at_utc": "2026-11-07T09:10:22.611273+00:00",
+    "ownership": "controller-owned temporary boundary receipt; never git-add/commit",
+    "files": {
+      "design_docs/world-mission-dashboard.md": {
+        "sha256": "e42aa1fb0e20e9ce1aba1734530544bbbd041bd86e99ef8c245e8f135407131f",
+        "bytes": 2542,
+        "lines": 16
+      },
+      "design_docs/world-mission-log.md": {
+        "sha256": "85e2a1793d0ecd2e9a47d3222755d0bff803b9eb03f7f02bb446db9afeb780f8",
+        "bytes": 466945,
+        "lines": 2883
+      },
+      "design_docs/world-mission.md": {
+        "sha256": "3209e7a1c245ca0172688680cf0c840086916423d9c3cc0764b58446feb9a79d",
+        "bytes": 1403920,
+        "lines": 6345
+      },
+      "design_docs/world-mission-status-archive.md": {
+        "sha256": "2054da2f5105604d990a740311a01545135c675932452e1b3f811d15b6b85230",
+        "bytes": 1617312,
+        "lines": 724
+      },
+      "design_docs/world-mission-index.md": {
+        "sha256": "b1e4b346db2c723fdbc7ac32006cb84bece7e9b3c79f42235dafa94b5da4dc82",
+        "bytes": 57551,
+        "lines": 364
+      }
+    }
+  },
+  "ADMIN-363-M2": {
+    "schema_version": 1,
+    "boundary": "ADMIN-363-M2",
+    "base": "565609ab51c9300924831087aa98308dcdd418b0",
+    "created_at_utc": "2026-11-07T09:11:34.970444+00:00",
+    "ownership": "controller-owned temporary boundary receipt; never git-add/commit",
+    "files": {
+      "design_docs/world-mission-dashboard.md": {
+        "sha256": "e42aa1fb0e20e9ce1aba1734530544bbbd041bd86e99ef8c245e8f135407131f",
+        "bytes": 2542,
+        "lines": 16
+      },
+      "design_docs/world-mission-log.md": {
+        "sha256": "85e2a1793d0ecd2e9a47d3222755d0bff803b9eb03f7f02bb446db9afeb780f8",
+        "bytes": 466945,
+        "lines": 2883
+      },
+      "design_docs/world-mission.md": {
+        "sha256": "8b28285f948a6e0c8dda8296de62723e150a641f283598c0b46a8d9e0d67df2f",
+        "bytes": 1392046,
+        "lines": 6345
+      },
+      "design_docs/world-mission-status-archive.md": {
+        "sha256": "4fd9933012fb700471f11757f8586950d80dada396719cce26f6ea368d05c582",
+        "bytes": 1620307,
+        "lines": 726
+      },
+      "design_docs/world-mission-index.md": {
+        "sha256": "b1e4b346db2c723fdbc7ac32006cb84bece7e9b3c79f42235dafa94b5da4dc82",
+        "bytes": 57551,
+        "lines": 364
+      }
+    }
+  }
+}

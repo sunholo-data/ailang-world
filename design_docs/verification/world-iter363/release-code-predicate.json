@@ -1,0 +1,5 @@
+{
+  "non_test_go_file_json_hits": [],
+  "control_package_files": 159,
+  "scope": "host/**/*.go excluding *_test.go; reads source only; absent source is evidence, not a milestone claim"
+}

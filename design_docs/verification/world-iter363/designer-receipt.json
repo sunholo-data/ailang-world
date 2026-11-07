@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "mission": "world",
+  "iteration": 363,
+  "role": "designer",
+  "actual_provider": "codex",
+  "actual_model": "gpt-6.1-sol",
+  "assessment_artifact": "design_docs/verification/world-iter363/design-gate.md",
+  "route_verdict": "ADMIN_ONLY_HUMAN_PARK",
+  "probe": {
+    "actual_model": "gpt-6.1-sol",
+    "rc": 0,
+    "elapsed_seconds": 4.884421124996152,
+    "timeout_seconds": 120,
+    "usage_event_count": 1,
+    "usage": {
+      "input_tokens": 16494,
+      "cached_input_tokens": 7168,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 5,
+      "reasoning_output_tokens": 0
+    },
+    "printed_tokens_used": null,
+    "printed_tokens_used_status": "not_emitted_in_json_mode",
+    "quota_tokens": 9331,
+    "quota_tokens_basis": "derived_from_turn.completed_events_not_a_printed_footer",
+    "gross_tokens_including_cached_input": 16499
+  },
+  "run": {
+    "actual_model": "gpt-6.1-sol",
+    "rc": 0,
+    "elapsed_seconds": 176.84908399998676,
+    "timeout_seconds": 600,
+    "usage_event_count": 1,
+    "usage": {
+      "input_tokens": 1188326,
+      "cached_input_tokens": 1083776,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 6818,
+      "reasoning_output_tokens": 897
+    },
+    "printed_tokens_used": null,
+    "printed_tokens_used_status": "not_emitted_in_json_mode",
+    "quota_tokens": 111368,
+    "quota_tokens_basis": "derived_from_turn.completed_events_not_a_printed_footer",
+    "gross_tokens_including_cached_input": 1195144
+  },
+  "summed_authoritative_event_usage": {
+    "input_tokens": 1204820,
+    "cached_input_tokens": 1090944,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 6823,
+    "reasoning_output_tokens": 897
+  },
+  "gross_tokens_including_cached_input": 1211643,
+  "quota_tokens": 120699,
+  "quota_tokens_basis": "sum(input_tokens - cached_input_tokens + output_tokens) over probe and real turn.completed events; no literal tokens-used footer emitted by --json",
+  "token_accounting_note": "input_tokens includes cached_input_tokens; cached values are a subset and are not added again. reasoning_output_tokens is a subset of output_tokens and is not added again. Gross count includes cached input; quota_tokens excludes cached input. No claim that an absent printed footer was observed.",
+  "rotation_pointer_updated": false,
+  "rotation_pointer_reason": "ADMIN assessment only; no new product design document authored.",
+  "recovered_existing_artifacts_only": true,
+  "additional_cli_runs": 0,
+  "no_pending_launched_work": true
+}

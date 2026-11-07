@@ -1,0 +1,75 @@
+{
+  "MISSION_NAME": "world",
+  "MISSION_FIRE_ID": "world-1794041328-52558",
+  "MISSION_REPO": "sunholo-data/ailang-world",
+  "MISSION_DOC": "design_docs/world-mission.md",
+  "MISSION_GH_ISSUE": "449",
+  "MISSION_WORKDIR": "/Users/voightkampff/dev/sunholo-data/ailang-world",
+  "MISSION_DRIVER_ROOT": "/Users/voightkampff/.ailang-driver-pin/world",
+  "AILANG_DRIVER_SRC": "/Users/voightkampff/dev/sunholo-data/ailang",
+  "MISSION_DESIGNER_RESOLVED": "codex:gpt-6.1-sol",
+  "MISSION_PLANNER_RESOLVED": "codex:gpt-6.1-sol",
+  "MISSION_EXECUTOR_RESOLVED": "codex:gpt-6.1-sol",
+  "MISSION_EVALUATOR_RESOLVED": "pi:openrouter/minimax/minimax-m3",
+  "MISSION_ROUTING_NOTE": "lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `pi:openrouter/minimax/minimax-m3`",
+  "MISSION_ANTHROPIC_AVAILABLE": "0",
+  "MISSION_METERED_BUDGET_USD": "5",
+  "MISSION_OVER_RATION": "",
+  "gate1_base": "565609ab51c9300924831087aa98308dcdd418b0",
+  "gate1_read_time": "2026-11-07T08:49:44Z",
+  "tracked_main_clean": true,
+  "main_checkout_head": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+  "skill_v1_origin": "8fa7e8ab1eddee99a84b447b8eaaa4ee12308051",
+  "skill_directory_compared": 14,
+  "skill_drift_count": 0,
+  "skill_copy_followed": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control",
+  "billing_tripwire": "CLEAN",
+  "kill_switch": "absent",
+  "gh_identity": "sunholo-voight-kampff",
+  "open_decisions": [
+    "D-WORLD-105",
+    "D-WORLD-110",
+    "D-WORLD-111",
+    "D-WORLD-112"
+  ],
+  "runtime_routes": {
+    "designer": "recipe codex:gpt-6.1-sol declared:provider-pin",
+    "planner": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin",
+    "executor": "recipe codex:gpt-6.1-sol declared:provider-pin",
+    "evaluator": "recipe pi:openrouter/minimax/minimax-m3 declared:provider-pin"
+  },
+  "clauses": {
+    "1": "MET",
+    "2": "MET",
+    "3": "MET",
+    "4": "MET",
+    "5": "MET",
+    "6": "MET",
+    "7": "MET"
+  },
+  "pick": null,
+  "class": "ADMIN",
+  "park_kind": "needs-human-review",
+  "pending_product": "row256 PR515; independent FAIL85; LOCAL_CRITERION UNMET; D111/D112 default parks",
+  "weekly_rotation_due": "2026-11-09T07:00:00+01:00",
+  "current_issue_comments": 34,
+  "old_transcript_notices": [
+    {
+      "fire": "world-1793825318-10110",
+      "hits": 1
+    },
+    {
+      "fire": "world-1793839743-21731",
+      "hits": 1
+    }
+  ],
+  "crash_notices": 0,
+  "watermark_state": "issue449 absent; mission-scoped legacy timestamp; no directives to mark; do not hand-write",
+  "gate4_base": "565609ab51c9300924831087aa98308dcdd418b0",
+  "gate4_read_time": "2026-11-07T09:02:59Z",
+  "baseline_record_gate": {
+    "command": "go test ./host/verifygate/ -run ^TestMissionConfigRealCharter$ -count=1 -timeout 60s -v",
+    "rc": 0,
+    "platform": "darwin/arm64 outside sandbox"
+  }
+}

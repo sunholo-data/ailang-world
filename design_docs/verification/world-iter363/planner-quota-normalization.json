@@ -1,0 +1,21 @@
+{
+  "role": "planner",
+  "basis": "Token usage is an integer. The captured tokens used footer contains grouping separators, each followed by exactly three digits; strip grouping, preserve raw literals. Both labels re-extracted by controller from completed private logs. No fabricated printed counts.",
+  "runs": [
+    {
+      "run": "probe",
+      "footer_label": "tokens used",
+      "provider_literal": "5.637",
+      "quota_tokens": 5637,
+      "raw_log_sha256": "65d3fc53c3016c3002b6a6fdd67309b5eff873a8c80049dc9318b660cb4e62d2"
+    },
+    {
+      "run": "run",
+      "footer_label": "tokens used",
+      "provider_literal": "188.338",
+      "quota_tokens": 188338,
+      "raw_log_sha256": "1b2edd5f015b7e7229bad511a90f8ecd8e0a109e53118d4233fb8a948eeb9a40"
+    }
+  ],
+  "quota_tokens": 193975
+}
