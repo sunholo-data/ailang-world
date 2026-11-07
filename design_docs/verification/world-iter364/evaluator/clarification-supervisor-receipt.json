@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "iteration": 364,
+  "role": "evaluator",
+  "scope": "ADMIN record only; actual independent MiniMax judgment; no product acceptance or landing",
+  "base": "374696c0536809d7c7080d07339208570d5130cb",
+  "candidate": "c5e34151bd3797ad71cc6b34b17d4f2afc7a323f",
+  "required_agent_role": "Spawned through Agent/collaboration supervisor; exact supervisor model/tokens unreported; actual provider pinned canonical PI recipe below",
+  "minimal_child_environment_names": [
+    "HOME",
+    "PATH",
+    "USER",
+    "LANG",
+    "TERM",
+    "MISSION_DRIVER_ROOT",
+    "MISSION_NAME",
+    "AILANG_MISSION_STAGE",
+    "AILANG_STORAGE_MESSAGING",
+    "AILANG_MESSAGES_PROJECT"
+  ],
+  "credential_environment_inherited": false,
+  "login_shell": false,
+  "stdin": "DEVNULL launcher; canonical closed directive file child",
+  "known_author_subscription_quota_tokens": 313859,
+  "controller_and_supervisor_exact_tokens": "unreported, never inferred zero",
+  "prior_iteration_usage_counted": false,
+  "metered_ceiling_usd": 5,
+  "raw_transcript_reasoning_publicly_banked": false,
+  "stage": "actual-judge evidentiary clarification, not a new generator or controller verdict",
+  "actual_clarification": {
+    "actual_lane": "pi:openrouter/minimax/minimax-m3",
+    "provider_models_observed": [
+      [
+        "openrouter",
+        "minimax/minimax-m3"
+      ]
+    ],
+    "launcher_argv": [
+      "/bin/bash",
+      "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_pi_run.sh",
+      "--model",
+      "openrouter/minimax/minimax-m3",
+      "--directive",
+      "/tmp/world-iter364-evaluator-clarification-1794058381416178000/directive.txt",
+      "--workdir",
+      "/Users/voightkampff/dev/sunholo-data/.eval-world-iter364",
+      "--out",
+      "/tmp/world-iter364-evaluator-clarification-1794058381416178000/clarification.ndjson",
+      "--max-seconds",
+      "300",
+      "--stall-seconds",
+      "600"
+    ],
+    "runtime_rc": 0,
+    "elapsed_seconds_supervisor": 132.5371018750011,
+    "typed_verdict": {
+      "verdict": "ok",
+      "rc": 0,
+      "fenced": true,
+      "model": "openrouter/minimax/minimax-m3",
+      "pi_rc": 0,
+      "elapsed_seconds": 132,
+      "worktree_changed_files": 1,
+      "predirty_files": 1,
+      "worktree_changed_since_start": true,
+      "base_head": "c5e34151bd3797ad71cc6b34b17d4f2afc7a323f",
+      "head_after": "c5e34151bd3797ad71cc6b34b17d4f2afc7a323f",
+      "commits_since_start": 0,
+      "tool_executions": 26,
+      "provider_errors": 0,
+      "agent_end_events": 1
+    },
+    "usage_sum_turn_end_once": {
+      "input": 56527,
+      "output": 25704,
+      "cacheRead": 680991,
+      "cacheWrite": 0,
+      "reasoning": 11452,
+      "totalTokens": 763222
+    },
+    "usage_event_count": 24,
+    "cost_usd": 0.08866236,
+    "usage_rules": "cacheRead separate; reasoning subset of output, not added twice; no message_end double counting",
+    "protocol": {
+      "exact_preamble_at_directive_start": true,
+      "claude_start_event": 9,
+      "claude_end_event": 10,
+      "claude_complete_file_contained": true,
+      "claude_result_has_automatic_brain_context_appendix": true,
+      "ack_end_event": 18,
+      "ack_details": {
+        "acked": true,
+        "at": "2026-11-07T13:33:06.488Z"
+      },
+      "all_report_write_edit_calls_after_ack": true,
+      "pre_ack_tools": [
+        {
+          "event": 9,
+          "tool": "read",
+          "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter364/CLAUDE.md",
+          "command_preview": ""
+        },
+        {
+          "event": 17,
+          "tool": "session_protocol_ack",
+          "path": null,
+          "command_preview": ""
+        }
+      ]
+    },
+    "tool_counts": {
+      "read": 9,
+      "session_protocol_ack": 1,
+      "bash": 14,
+      "write": 2
+    },
+    "read_tool_paths": [
+      "/Users/voightkampff/dev/sunholo-data/.eval-world-iter364/CLAUDE.md",
+      "/Users/voightkampff/dev/sunholo-data/.eval-world-iter364/design_docs/verification/world-iter364/controller-plan-addendum.md",
+      "/Users/voightkampff/dev/sunholo-data/.eval-world-iter364/design_docs/verification/world-iter364/design-gate.md",
+      "/Users/voightkampff/dev/sunholo-data/.eval-world-iter364/design_docs/verification/world-iter364/evaluator/report.md",
+      "/Users/voightkampff/dev/sunholo-data/.eval-world-iter364/design_docs/verification/world-iter364/executor-summary.md"
+    ],
+    "submitted_command_scan_flags": {
+      "credential_or_environment_commands": [],
+      "git_mutations": [],
+      "external_messages_or_network": []
+    },
+    "confinement_caveat": "Tool argument audit and before/after tracked-byte observations support confinement; no raw transcripts or reasoning are publicly banked. Regex scans are supporting evidence, not an absolute proof.",
+    "preservation": {
+      "eval": {
+        "tracked_before": 6384,
+        "tracked_after": 6384,
+        "before_sha256": "e74b5b1c6cdd914720983ee341ba296147f0800f3b82091985aba765af29df3a",
+        "after_sha256": "e74b5b1c6cdd914720983ee341ba296147f0800f3b82091985aba765af29df3a",
+        "tracked_paths_and_bytes_identical": true,
+        "head_identical": true,
+        "porcelain_identical": false
+      },
+      "main": {
+        "tracked_before": 6056,
+        "tracked_after": 6056,
+        "before_sha256": "667ae27938b7c4e96fd076c27f676dd2107c096692dde769ce164db901d5e546",
+        "after_sha256": "667ae27938b7c4e96fd076c27f676dd2107c096692dde769ce164db901d5e546",
+        "tracked_paths_and_bytes_identical": true,
+        "head_identical": true,
+        "porcelain_identical": true
+      }
+    },
+    "private_run_dir": "/tmp/world-iter364-evaluator-clarification-1794058381416178000"
+  },
+  "effective_actual_judge_verdict": "PASS",
+  "effective_score": 92,
+  "hard_failures": [],
+  "blocking_findings": [],
+  "nonblocking_finding_ids": [
+    "NB1",
+    "NB2",
+    "NB3",
+    "NB4",
+    "NB5",
+    "NB6",
+    "NB7"
+  ],
+  "original_reports_byte_exact": true,
+  "original_report_hashes": {
+    "report.md": "bc9f5b357378ba748e5b091932a8200afc113aa00bf4efcf8abb132eb1cd41e7",
+    "report.json": "3dae0d852dbd9d71d997f1022934d46d0eff0290ed68a49101b5f17bcbdf46b1"
+  },
+  "clarification_files": {
+    "clarification.md": {
+      "sha256": "766de83aede9510694043917877fabf40959e4ff5177cd7d650ba5c3741d09d4",
+      "bytes": 17156,
+      "default_whitespace_command": "git diff --no-index --check /dev/null <file>",
+      "raw_rc": 1,
+      "stdout": "",
+      "stderr": "",
+      "interpretation": "rc1 is expected new-file content difference with no whitespace diagnostics; not represented as rc0"
+    },
+    "clarification.json": {
+      "sha256": "b2afc02b47038575c05c5b3ae90c6d3dec89de4962702d0ca668ed5e1d8b0d60",
+      "bytes": 13166,
+      "default_whitespace_command": "git diff --no-index --check /dev/null <file>",
+      "raw_rc": 1,
+      "stdout": "",
+      "stderr": "",
+      "interpretation": "rc1 is expected new-file content difference with no whitespace diagnostics; not represented as rc0"
+    }
+  },
+  "metered_accounting": {
+    "probe_usd": 0.00042479999999999997,
+    "original_review_usd": 0.42314532,
+    "clarification_usd": 0.08866236,
+    "evaluator_total_usd": 0.51223248,
+    "imputed_usd": 0
+  },
+  "evidence_attribution": "Actual judge corrected19 own observations versus25 inherited executor mutation controls (8M1+17M2); no actual-judge mutant construction/rerun in either session.",
+  "protocol_metadata_correction": "Clarification author says the harness did not expose boolean acked. Supervisor transcript DOES expose tool_execution_end.result.details.acked=true; exact details above establish success. Judge-visible text and supervisor-visible metadata differ; no transport bypass.",
+  "additional_controller_factual_caveats_received_after_launch": [
+    "NB2 current33 upstream refs consist of31 regex-derived refs plus explicit additional context476/2160; do not label all33 regex-derived. Parent independently reproduced original31/current33 serialized hashes against designer audit, private receipt /tmp/world-iter364-judge-findings-reproduction.json.",
+    "NB3 candidate log appends to byte-exact M2 prefix across BOTH3fa65ad7 andc5e34151, not onlyc5. Parent independently reproduced all stage/candidate hashes and M2 snapshot. This is disclosed stage-bound evidence; do not regenerate M2 receipts or snapshots."
+  ],
+  "landing_state": "PENDING exact record PR-head and merge-head each all3CI success with URLs; no prior/base/product CI substitute",
+  "product_state": "PR515 draft PARKED independent FAIL85/LOCAL_CRITERION UNMET; D105/110/111/112OPEN; no skips257/201/243"
+}

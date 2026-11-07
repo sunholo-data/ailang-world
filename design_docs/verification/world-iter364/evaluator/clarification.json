@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "iteration": 364,
+  "round": 1,
+  "kind": "independent evaluator clarification of own round-1 report",
+  "amends": "design_docs/verification/world-iter364/evaluator/report.md",
+  "amends_json": "design_docs/verification/world-iter364/evaluator/report.json",
+  "originals_unmodified": {
+    "report_md_sha256": "bc9f5b357378ba748e5b091932a8200afc113aa00bf4efcf8abb132eb1cd41e7",
+    "report_json_sha256": "3dae0d852dbd9d71d997f1022934d46d0eff0290ed68a49101b5f17bcbdf46b1",
+    "verified": true
+  },
+  "evaluator": {
+    "role": "evaluator",
+    "declared_lane": "pi:openrouter/minimax/minimax-m3",
+    "actual_lane": "pi:openrouter/minimax/minimax-m3",
+    "independent_of_authors": true,
+    "authors_of_record": "codex gpt-6.1-sol (executor/controller lanes)"
+  },
+  "session_protocol": {
+    "fresh_clarification_order": [
+      "read CLAUDE.md in full (with auto-appended Brain context appendix)",
+      "classify: independent ADMIN evaluation clarification under approved design-gate.md AC1-AC7 and record-plan/controller-plan-addendum; unattended mission stage, no ailang messages",
+      "session_protocol_ack {}",
+      "only then: contract reads, original report reads, all commands, all writes"
+    ],
+    "claude_md_read": true,
+    "classification_made": "independent ADMIN evaluation clarification",
+    "session_protocol_ack_called": true,
+    "session_protocol_ack_returned_text": "Session protocol acknowledged — mutating tools unlocked for this session. Work routing per AGENTS.md still applies.",
+    "acked": true,
+    "acked_field_note": "Harness renders the ack result as a text acknowledgement rather than exposing a boolean acked field; returned acknowledgement text plus newly unlocked mutating tools is the success evidence for this session.",
+    "mutating_tools_unlocked": true,
+    "first_command_after_ack": true,
+    "judge_work_before_ack": false,
+    "mutations_before_ack": false,
+    "handshake_status": "COMPLETED"
+  },
+  "scope": {
+    "kind": "ADMIN-only documentary record clarification",
+    "base": "374696c0536809d7c7080d07339208570d5130cb",
+    "candidate": "c5e34151bd3797ad71cc6b34b17d4f2afc7a323f",
+    "worktree": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter364",
+    "head_equals_candidate": true,
+    "mutant_constructed": false,
+    "mutant_rerun": false,
+    "mutation_testing_claimed": false,
+    "read_only_observations_only": true,
+    "product_tests_run": false,
+    "full_suite_run": false,
+    "builds_run": false,
+    "network_calls": false,
+    "git_writes": false,
+    "external_writes": false,
+    "messages_sent": false,
+    "credentials_read": false,
+    "home_env_config_read": false,
+    "source_or_tracked_mutation": false,
+    "tmpdir_gotmpdir_overrides": false,
+    "additional_agents_spawned": false,
+    "new_outputs_only": [
+      "design_docs/verification/world-iter364/evaluator/clarification.md",
+      "design_docs/verification/world-iter364/evaluator/clarification.json"
+    ]
+  },
+  "evidence_attribution": {
+    "correction_id": "NB4",
+    "original_overstatement": "Round-1 report headed 19 read-only invariant observations as 'in-memory negative controls' and cited '19/19 negative controls PASS' in report.json, the coordinator FEEDBACK_SUMMARY and the tests_pass rationale.",
+    "accurate_statement": "The 19 items were read-only invariant observations (counts, byte equality, SHA256 hashes, path/scope audits, git diff --check rc). No mutant was constructed and no check was re-run against a deliberately corrupted copy; none is a negative control in the mutation-detection sense.",
+    "mine_independent_invariant_observations": 19,
+    "mine_owner": "evaluator (MiniMax), original round 1",
+    "inherited_mutation_controls": {
+      "source_file": "design_docs/verification/world-iter364/executor-structural-proof.json",
+      "path": "stages[].negative_controls_in_memory",
+      "stage_M1_count": 8,
+      "stage_M2_count": 17,
+      "total": 25,
+      "all_values_true": true,
+      "owner": "executor (codex:gpt-6.1-sol) — inherited, not evaluator-measured",
+      "controller_reported_total": 25,
+      "count_verified_this_session": true
+    },
+    "impact_on_verdict": "none",
+    "impact_on_score": "none"
+  },
+  "archive_naming_correction": {
+    "correction_id": "NB5",
+    "original_overstatement": "Round-1 AC2 prose called the STATUS archive 'the log archive' and attached the status-archive hash 33697b13... to that phrase.",
+    "log_archive": {
+      "path": "design_docs/world-mission-log-archive.md",
+      "base_to_candidate": "unchanged, byte-identical",
+      "sha256_at_candidate": "32c90181c7c0ad86e8981e1992c3dfd2f57a4f5a43dd6de022d9eaa5b22bbcce",
+      "listed_in_diff_name_status": false,
+      "ac_role": "AC2 'log archive unchanged' satisfied"
+    },
+    "status_archive": {
+      "path": "design_docs/world-mission-status-archive.md",
+      "base_to_candidate": "modified, +2 lines (726 -> 728)",
+      "sha256_at_candidate": "33697b13222054fe70d4f892819b3a6a15f1b4bff59413c1037dcb54631cb599",
+      "listed_in_diff_name_status": true,
+      "ac_role": "AC3 M2 target; received the 360 STATUS pair"
+    },
+    "ac2_impact": "none",
+    "ac3_impact": "none"
+  },
+  "minor_precision_corrections": [
+    {
+      "correction_id": "NB6",
+      "item": "360 STATUS source line is charter line 1043 (line 1042 is the preceding blank); round-1 report cited 1042.",
+      "pair_sha256": "ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530",
+      "pair_sha256_unchanged": true
+    },
+    {
+      "correction_id": "precision-note",
+      "item": "Index 'data rows 350 -> 351' counts iteration-numbered rows; the table also holds one non-numeric '| — |' row so total table rows are 351 -> 352. Delta +1, 364 added once and baseline-ID preservation are unaffected."
+    }
+  ],
+  "ordering_assessment": {
+    "correction_id": "NB7",
+    "original_sequence": "complete CLAUDE.md read -> directory listing -> contract/rubric context reads (design-gate.md, record-plan.md, record-state.json, controller-plan-addendum.md) -> session_protocol_ack {} -> acked=true -> first git/diff/judgment command and all writes",
+    "canonical_preamble_gates": ["judge work", "report/mutation writes"],
+    "judge_work_before_ack": false,
+    "mutations_before_ack": false,
+    "judgment": "non-blocking ordering caveat, not a blocking transport defect",
+    "rationale": [
+      "Neither gated behaviour occurred before the ack: no git command, diff, measurement, evaluation, scoring or write.",
+      "The pre-ack reads were protocol steps 1 and 3: the mandated CLAUDE.md read plus the reads needed to classify the task as independent evaluation under the approved design and sprint plan; a directory listing is navigation, not evidence.",
+      "The ack outcome is independent of those file contents, so no result could have been biased.",
+      "Caveat retained because the ordering was broader than strictly necessary; the minimal canonical order is CLAUDE.md -> classify -> ack -> everything else."
+    ],
+    "cured_in_this_clarification": true,
+    "recommendation": "Ack immediately after the CLAUDE.md read in future evaluator rounds, before any further file read."
+  },
+  "independent_observations_this_session": {
+    "method": "read-only re-derivation; no mutant construction or rerun",
+    "checks": [
+      {"id": 1, "check": "charter physical lines base -> candidate", "result": "6345 -> 6345", "pass": true},
+      {"id": 2, "check": "status-archive physical lines", "result": "726 -> 728", "pass": true},
+      {"id": 3, "check": "log-archive bytes base vs candidate identical", "result": "sha256 32c90181c7c0ad86e8981e1992c3dfd2f57a4f5a43dd6de022d9eaa5b22bbcce both", "pass": true},
+      {"id": 4, "check": "status-archive sha256 at candidate", "result": "33697b13222054fe70d4f892819b3a6a15f1b4bff59413c1037dcb54631cb599", "pass": true},
+      {"id": 5, "check": "live log entry count", "result": "37 -> 38", "pass": true},
+      {"id": 6, "check": "exact 364 title count in candidate log", "result": 1, "pass": true},
+      {"id": 7, "check": "base log is exact byte prefix of candidate log", "result": true, "pass": true},
+      {"id": 8, "check": "dashboard physical lines (cap 40)", "result": 18, "pass": true},
+      {"id": 9, "check": "current-goal substitution", "result": "iteration 364 count 1, iteration 363 count 0", "pass": true},
+      {"id": 10, "check": "ledger section byte-identical; row count", "result": "identical; 99 D-WORLD rows", "pass": true},
+      {"id": 11, "check": "OPEN decisions in ledger", "result": ["D-WORLD-105", "D-WORLD-110", "D-WORLD-111", "D-WORLD-112"], "pass": true},
+      {"id": 12, "check": "queue suffix byte-identical to base", "result": true, "pass": true},
+      {"id": 13, "check": "index iteration-numbered rows; 364 added once; baseline IDs preserved", "result": "350 -> 351; 364 x1; preserved", "pass": true},
+      {"id": 14, "check": "360 pair sha256 from base charter line 1043 + blank present in candidate status archive", "result": "ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530", "pass": true},
+      {"id": 15, "check": "status-archive prefix identical; 359 retained; 360 absent from charter; 363 and 362 retained", "result": true, "pass": true},
+      {"id": 16, "check": "git diff --check base candidate and base", "result": "rc 0, zero output bytes for both", "pass": true},
+      {"id": 17, "check": "executor mutation-control boolean count", "result": "8 + 17 = 25, all true", "pass": true},
+      {"id": 18, "check": "diff name-status scope", "result": "36 added (0 outside verification dir), 5 modified (0 outside design_docs), 0 deleted; tracked 6348 -> 6384", "pass": true}
+    ],
+    "observations_rederived": 18,
+    "mutants_constructed": 0,
+    "mutants_rerun": 0
+  },
+  "acceptance_criteria": {
+    "AC1_scope": {"verdict": "PASS", "basis": "unchanged; scope audit and 29/29 frozen-input SHA256 re-derivation stand"},
+    "AC2_log_dashboard": {"verdict": "PASS", "basis": "unchanged; archive-naming prose corrected (NB5), substance unaffected: log archive byte-identical base..candidate"},
+    "AC3_safe3_current_goal": {"verdict": "PASS", "basis": "unchanged; 6345+2-2=6345, archive 726->728, 360 pair hash ac6418a0... reconfirmed, 359 retained"},
+    "AC4_authority": {"verdict": "PASS", "basis": "unchanged; ledger byte-identical, 99 rows, OPEN 105/110/111/112"},
+    "AC5_index": {"verdict": "PASS", "basis": "unchanged; 364 added exactly once, all baseline IDs preserved, orphan 361 preserved"},
+    "AC6_truthful_record": {"verdict": "PASS", "basis": "unchanged; canonical 364 entry covers provenance, roles, unknowns, retro, judge and landing state"},
+    "AC7_gates_judge_delivery": {"verdict": "PASS", "basis": "unchanged; git diff --check rc=0; narrow out-of-sandbox charter gate inherited (controller-only); record PR/merge and all-3 CI pending"}
+  },
+  "verdict": "PASS",
+  "score": 92,
+  "score_max": 100,
+  "gate_threshold": 80,
+  "score_unchanged_from_round_1": true,
+  "score_change_reason": "none; the narrowing removed an overstated method label and changed no measurement, AC verdict or awarded point",
+  "hard_failures": [],
+  "blocking_findings": [],
+  "non_blocking_findings": [
+    {"id": "NB1", "title": "Late-stage routing-check correction (c5e34151)", "status": "carried forward from round-1 report"},
+    {"id": "NB2", "title": "FAILED_INPUT_PRESERVATION and controller 31->33 in-flight expansion", "status": "carried forward from round-1 report"},
+    {"id": "NB3", "title": "M2 log SHA256 vs candidate log SHA256", "status": "carried forward from round-1 report"},
+    {"id": "NB4", "title": "Evaluator-report terminology overstatement: 19 invariant observations mislabelled as negative controls", "status": "added by this clarification; self-disclosed; no measurement or verdict impact"},
+    {"id": "NB5", "title": "Archive naming conflation: status archive called 'log archive' in AC2 prose", "status": "added by this clarification; self-disclosed; AC2/AC3 substance unaffected"},
+    {"id": "NB6", "title": "360 STATUS source line is 1043, not 1042", "status": "added by this clarification; pair hash unchanged"},
+    {"id": "NB7", "title": "Pre-ack contract/rubric context reads in the original session", "status": "added by this clarification; non-blocking ordering caveat; cured in this clarification"}
+  ],
+  "unchanged_record_facts": {
+    "row_256": "PARKED, independent FAIL 85, LOCAL_CRITERION UNMET; stays parked regardless of record outcome",
+    "open_decisions": ["D-WORLD-105", "D-WORLD-110", "D-WORLD-111", "D-WORLD-112"],
+    "scope": "ADMIN-only; no product pick, build, quorum or acceptance",
+    "record_pr_and_merge": "pending; exact final record PR-head and merge-head each require all 3 terminal-success CI checks (ailang-code verify, Go race, Go host build/test) with run URLs; prior/product/base CI cannot substitute; no landing claim",
+    "product_pr515": "draft; not this record",
+    "provider_cost": null,
+    "runtime": null,
+    "provider_cost_note": "not measured in this session; appended separately by the supervisor; no usage invented here"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "reviewed_sha": "c5e34151bd3797ad71cc6b34b17d4f2afc7a323f",
+  "independent_actual_judge": "pi:openrouter/minimax/minimax-m3",
+  "effective_verdict": "PASS",
+  "score": 92,
+  "blocking_findings": [],
+  "scope": "ADMIN documentary record only, no product acceptance",
+  "original_reports_byte_exact": true,
+  "findings_reproduced": "controller-findings-reproduction.json",
+  "evidence_limits": [
+    "Original r1 mislabels19 read-only invariant observations as negative controls; actual judge clarification corrects this. Executor25 negative-control checks were inherited, not independently rerun by judge.",
+    "Actual clarification independently reaffirms PASS92 under narrowed evidence; no controller score or force-pass.",
+    "Original pre-ack contract/rubric reads and line-count navigation are disclosed. Actual diff/judgment/writes followed ack. Fresh clarification reads CLAUDE then acknowledges before all other context. Supervisor verifies actual result.details.acked=true, even where visible tool text is less explicit.",
+    "Upstream total33 means31 regex-derived plus2 explicit context refs476/2160; both original designer hashes reproduced.",
+    "M2-to-candidate log delta spans3fa65ad7 andc5e34151; M2 snapshot remains byte-exact to M2 commit. Never regenerate stage-bound old receipts.",
+    "Clarification corrects STATUS-vs-log archive naming, line-location and numeric-row-vs-all-table-row scope."
+  ],
+  "designer_telemetry": "failed input-preservation audit remains failed, despite completed assessment and repaired final record",
+  "final_additions_after_review": "Only original reports, curated factual receipts and factual judge/cost/dashboard annotations. No authority, source, tests, validation criteria or old evidence changed.",
+  "CI": "final full40 PR-head and merge-head each require all3 terminal successes before LANDED; delivery receipts external to avoid recursion",
+  "source_product": "PR515 remains draft needs-human-review FAIL85/LOCAL_CRITERION UNMET; OPEN D105/D110/D111/D112 retained"
+}

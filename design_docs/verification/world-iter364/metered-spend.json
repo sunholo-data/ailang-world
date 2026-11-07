@@ -1,0 +1,36 @@
+{
+  "iteration": 364,
+  "metered_usd": 0.51223248,
+  "imputed_usd": 0,
+  "ceiling_usd": 5,
+  "items": [
+    {
+      "role": "evaluator-probe",
+      "cost_usd": 0.00042479999999999997
+    },
+    {
+      "role": "evaluator-r1",
+      "cost_usd": 0.42314532
+    },
+    {
+      "role": "evaluator-clarification",
+      "cost_usd": 0.08866236
+    }
+  ],
+  "evaluator_usage": {
+    "input": 181749,
+    "output": 70420,
+    "cacheRead": 6220063,
+    "cacheWrite": 0,
+    "reasoning": 23822,
+    "totalTokens": 6472232
+  },
+  "counting": "sum turn_end once, cacheRead separate, reasoning subset output",
+  "known_codex_subscription_quota_tokens": 313859,
+  "quota_roles": {
+    "designer": 72246,
+    "planner_footer_sum": 161073,
+    "executor": 80540
+  },
+  "controller_and_agent_supervisor_usage": "not reported; no inferred zero"
+}

@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "iteration": 364,
+  "round": 1,
+  "evaluator": {
+    "role": "evaluator",
+    "declared_lane": "pi:openrouter/minimax/minimax-m3",
+    "actual_lane": "pi:openrouter/minimax/minimax-m3",
+    "basis": "User invocation; independent actual MiniMax evaluation",
+    "session_protocol": {
+      "claude_md_read": true,
+      "design_gate_read": true,
+      "record_plan_read": true,
+      "record_state_read": true,
+      "controller_plan_addendum_read": true,
+      "session_protocol_ack_called": true,
+      "session_protocol_ack_returned": "acked=true",
+      "mutating_tools_unlocked": true
+    },
+    "handshake_status": "COMPLETED"
+  },
+  "scope": {
+    "kind": "ADMIN-only documentary record evaluation",
+    "candidate": "c5e34151bd3797ad71cc6b34b17d4f2afc7a323f",
+    "base": "374696c0536809d7c7080d07339208570d5130cb",
+    "product_tests_run": false,
+    "full_suite_run": false,
+    "network_calls": false,
+    "git_writes": false,
+    "original_file_mutations": false,
+    "messages_sent": false,
+    "credentials_read": false,
+    "home_env_read": false,
+    "named_secret_access": false,
+    "tools_config_skill_edits": false,
+    "tmpdir_gotmpdir_overrides": false,
+    "additional_agents_spawned": false
+  },
+  "independent_measurements": {
+    "baseline_tracked_files": 6348,
+    "candidate_tracked_files": 6384,
+    "added_files": 36,
+    "deleted_files": 0,
+    "modified_files": 5,
+    "all_added_under_verification_world_iter364": true,
+    "all_modified_under_design_docs": true,
+    "git_diff_check_rc": 0,
+    "git_diff_check_stdout_empty": true,
+    "git_diff_check_stderr_empty": true,
+    "dashboard_lines": 18,
+    "dashboard_lines_within_40_cap": true,
+    "log_entry_count": 38,
+    "log_entry_count_transition": "37 -> 38",
+    "log_prefix_byte_identical_to_baseline": true,
+    "log_archive_byte_identical_to_baseline_through_m2": true,
+    "charter_lines": 6345,
+    "charter_lines_arithmetic": "6345+2-2=6345",
+    "archive_lines": 728,
+    "archive_lines_arithmetic": "726+2=728",
+    "pair_360_sha256": "ac6418a0a4148079afbfb34d71148ac79f690847212eeba1ee9d3218e00b2530",
+    "pair_360_sha256_match_in_source": true,
+    "pair_360_sha256_match_in_destination": true,
+    "control_359_preserved_in_archive": true,
+    "exact_364_title_present": "## 364 — 2026-11-07 — ADMIN record only; row 256 remains parked [ADMIN]",
+    "current_goal_substitution_exact": true,
+    "current_goal_old_phrase_absent": true,
+    "current_goal_new_phrase_count": 1,
+    "ledger_rows": 99,
+    "ledger_open_decisions": ["D-WORLD-105", "D-WORLD-110", "D-WORLD-111", "D-WORLD-112"],
+    "ledger_section_byte_identical_to_baseline": true,
+    "queue_suffix_byte_identical_to_baseline": true,
+    "index_data_rows_added": 1,
+    "index_data_rows_total_before": 350,
+    "index_data_rows_total_after": 351,
+    "index_364_added_once": true,
+    "index_baseline_ids_all_preserved": true,
+    "index_361_orphan_preserved": true,
+    "frozen_input_sha256_matches": 29,
+    "frozen_input_sha256_total": 29,
+    "frozen_input_sha256_mismatches": 0,
+    "trailing_whitespace_lines_in_modified_outputs": 0,
+    "negative_controls_passed": 19,
+    "negative_controls_total": 19
+  },
+  "verdict": "PASS",
+  "score": 92,
+  "score_max": 100,
+  "gate_threshold": 80,
+  "hard_failures": [],
+  "acceptance_criteria": {
+    "AC1_scope": {
+      "verdict": "PASS",
+      "evidence": "All 36 added tracked files under design_docs/verification/world-iter364/. All 5 modified tracked files under design_docs/. 0 deleted. 29/29 frozen input SHA256 match."
+    },
+    "AC2_log_dashboard": {
+      "verdict": "PASS",
+      "evidence": "Log entries 37 -> 38 with byte-exact prefix preserved. Exact 364 title present once. Dashboard 18 physical lines (cap 40). Archive unchanged through M2."
+    },
+    "AC3_safe3_current_goal": {
+      "verdict": "PASS",
+      "evidence": "Charter 6345+2-2=6345 (independent wc -l). Archive 726+2=728. 360 pair SHA256 ac6418a0a4... verified in both source charter and destination archive tail. 359 positive control preserved. Current-goal route substitution exact and singular."
+    },
+    "AC4_authority": {
+      "verdict": "PASS",
+      "evidence": "Ledger 99 rows; OPEN decisions exactly [D-WORLD-105, D-WORLD-110, D-WORLD-111, D-WORLD-112]. Ledger section byte-identical to baseline. Queue suffix byte-identical to baseline."
+    },
+    "AC5_index": {
+      "verdict": "PASS",
+      "evidence": "Index data rows 350 -> 351 (+1). 364 added exactly once. All 350 baseline IDs preserved. 361 orphan row preserved verbatim. M3 used supported existing fleet index-only tool with explicit checkout targeting; installed_registry_unchanged=true, source_streams_byte_identical=true."
+    },
+    "AC6_truthful_record": {
+      "verdict": "PASS",
+      "evidence": "364 log entry covers Gate0/1 provenance, ADMIN work, role/model/reroute, unknown controller identity/tokens explicit, retro/progress/next, human park, judge and landing state. Subscription 313,859 tokens; metered $0 / imputed $0; $5 ceiling. 363 usage not reused. Late-stage correction openly disclosed."
+    },
+    "AC7_gates_judge_delivery": {
+      "verdict": "PASS",
+      "evidence": "git diff --check BASE..CANDIDATE rc=0. git diff --check 374696c0 rc=0. Default full-record whitespace rc=0. No narrow/relabel. Narrow out-of-sandbox charter gate inherited controller-only (PASS rc0 on Go 1.26.6 darwin/arm64). PR515 remains draft CONFLICTING/DIRTY. Record PR/merge all-3-success CI explicitly pending; no landing claim."
+    }
+  },
+  "milestones": {
+    "M1": {
+      "verdict": "DONE",
+      "owner": "executor (codex:gpt-6.1-sol)",
+      "commit": "29bee58de6109c63da9f403c7f6ce0f7760e4f32",
+      "files_touched": ["design_docs/world-mission-dashboard.md", "design_docs/world-mission-log.md"],
+      "structural_receipts": "PASS"
+    },
+    "M2": {
+      "verdict": "DONE",
+      "owner": "executor (codex:gpt-6.1-sol)",
+      "commit": "8b09483fc5ac383a8065abeda899e1b2bd0b0338",
+      "files_touched": ["design_docs/world-mission.md", "design_docs/world-mission-status-archive.md"],
+      "structural_receipts": "PASS"
+    },
+    "M3": {
+      "verdict": "DONE",
+      "owner": "controller (Codex lane; resolver recipe codex:gpt-6.1-sol declared:provider-pin)",
+      "commit": "3fa65ad74247ed095d39c18173ce1ed4e663d87f",
+      "files_touched": ["design_docs/world-mission-index.md"],
+      "additional_new_receipts": [
+        "design_docs/verification/world-iter364/controller-M3-index.json",
+        "design_docs/verification/world-iter364/controller-structural.json",
+        "design_docs/verification/world-iter364/prejudge-spend.json"
+      ],
+      "disclosed_correction_commit": "c5e34151bd3797ad71cc6b34b17d4f2afc7a323f",
+      "structural_receipts": "PASS (with disclosed late-stage correction)"
+    }
+  },
+  "scoring_breakdown": {
+    "tests_pass": {"max": 20, "awarded": 18, "justification": "N/A product tests; substitute is default git diff --check rc0, 19/19 in-memory negative controls PASS, receipt SHA256 reconcile. -2 for late-stage c5e34151 log patch (disclosed)."},
+    "lint_clean": {"max": 10, "awarded": 10, "justification": "N/A product lint; substitute is full-record default-whitespace rc=0 and 0 trailing-whitespace lines across 7 in-scope files."},
+    "acceptance_criteria": {"max": 30, "awarded": 30, "justification": "All 7 AC met (AC1..AC7 PASS), each independently re-derived."},
+    "code_quality": {"max": 15, "awarded": 12, "justification": "N/A product code; substitute is receipt structure, frozen-input preservation, no original-file mutations. -2 for FAILED_INPUT_PRESERVATION process issue (controller in-flight 31->33 evidence expansion while designer hashing; disclosed but real); -1 for late-stage c5e34151 log patch."},
+    "documentation": {"max": 15, "awarded": 15, "justification": "Canonical 364 log entry covers Gate0/1 provenance, ADMIN work, role/model/reroute, unknowns, ruled-out actions, retro, progress/next, judge state, landing state. Index adds 364 once; prior IDs preserved. Dashboard accurately names parks and conditional order."},
+    "design_fidelity": {"max": 10, "awarded": 10, "justification": "Implementation matches design intent precisely; every required operation independently verifiable."},
+    "regression_surface_coverage": {"max": 10, "awarded": null, "justification": "N/A - ADMIN-only, no shared compilation infrastructure touched."},
+    "performance_verification": {"max": 10, "awarded": null, "justification": "N/A - not a perf sprint; no profile requirement."}
+  },
+  "score_total": 92,
+  "non_blocking_findings": [
+    {
+      "id": "NB1",
+      "title": "Late-stage routing-check correction (c5e34151)",
+      "description": "Routing-model check returned instrument rc2 at first run because the executor used 'Evaluator / routing' instead of the canonical Routing evidence block. Controller disclosed the failure and appended an explicit routing/progress/next block to the log entry before judge. The receipts are honest; the process gap is small. The original M2 snapshot bytes are unchanged.",
+      "recommendation": "Apply route-model check during M3 controller bank so it can be re-run on the actual final tree without late-stage patch."
+    },
+    {
+      "id": "NB2",
+      "title": "FAILED_INPUT_PRESERVATION and controller 31->33 in-flight expansion",
+      "description": "Designer finding is real and retained. Controller expanded the live upstream evidence from 31 to 33 regex references while designer hashes were being computed. controller-designer-disposition.json discloses this. Both original finding and disclosure are kept on the record.",
+      "recommendation": "Bank and hash each role's inputs before the next role begins, with explicit freeze timestamps, so that the original receipt is independent of any later controller provenance disclosure."
+    },
+    {
+      "id": "NB3",
+      "title": "M2 log SHA256 vs candidate log SHA256",
+      "description": "M2 receipts claim log SHA 7a6288.... Candidate log SHA is 42307... because of the c5e34151 disclosed correction. Receipts acknowledge this; M2 snapshot bytes are unchanged in .snap/M2/. Not a hidden mutation.",
+      "recommendation": "If a material log addition is anticipated, regenerate the M2 receipts with a documented 'post-M2 corrections' field rather than letting the candidate file SHA diverge from the receipts."
+    }
+  ],
+  "blocking_findings": [],
+  "delivery_state": {
+    "record_pr_head": "unknown until controller receipt; must be exact full40",
+    "record_merge_head": "unknown until controller receipt; must be exact full40",
+    "ci_required_checks": [
+      "ailang-code verify gate",
+      "go race gate (go test -race, own job)",
+      "go host build + test gate"
+    ],
+    "landing_status": "PENDING; not LANDED",
+    "pr515_status": "draft / CONFLICTING / DIRTY (inherited)",
+    "product_pr515_head": "7655388936b80bea9c4843f0a2e0abc085e52c0f",
+    "row_256_park_status": "HUMAN PARK / needs-human-review, independent FAIL85, LOCAL_CRITERION UNMET",
+    "decisions_open": ["D-WORLD-105", "D-WORLD-110", "D-WORLD-111", "D-WORLD-112"],
+    "narrow_out_of_sandbox_charter_gate": "inherited controller-only PASS rc0 on Go 1.26.6 darwin/arm64; not re-run by evaluator"
+  },
+  "caveats_and_inherited_claims": [
+    "Designer FAILED_INPUT_PRESERVATION retained verbatim, not erased.",
+    "Controller disclosed in-flight 31->33 upstream evidence expansion; no retroactive green or waiver.",
+    "Raw porcelain bytes preserved in SHA-verified JSON envelope (worktree-list-captured.json); no default-lint waiver claimed.",
+    "Planner M3 location in record-plan.md superseded by controller-plan-addendum.md (M3 cumulative snapshots in .snap/M3/); neither earlier proofs nor M3 work edited.",
+    "M2 log SHA vs candidate log SHA divergence is disclosed in the log entry itself (Record formatting correction before judge); original M2 snapshot bytes unchanged.",
+    "Publish-counter / net6 remain unattributed; sanitization does not undo prior exposure; clearing 111 does not clear 112.",
+    "Subscription quota 313,859 reconciles arithmetically (designer 72,246 + planner 161,073 + executor 80,540); metered $0 / imputed $0; $5 ceiling.",
+    "Controller / Agent-supervisor exact identity/tokens not reported; this API has no model override; required Agent roles supervise the actual recipe lanes.",
+    "Independent actual MiniMax evaluator verdict reported here; controller verification is not acceptance.",
+    "No earlier iteration usage is reused; no quota/metered/imputed fabrication."
+  ],
+  "outputs": [
+    "design_docs/verification/world-iter364/evaluator/report.md",
+    "design_docs/verification/world-iter364/evaluator/report.json"
+  ],
+  "outputs_excluded_from_input_preservation": "Only these two new evaluator outputs; no original file mutated.",
+  "verdict_marker": "EVALUATION_VERDICT: PASS score=92"
+}

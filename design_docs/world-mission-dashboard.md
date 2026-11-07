@@ -15,4 +15,4 @@
 - **Record:** M1 dashboard/log; M2 exact safe3/status and route-number change; stage proofs and cumulative .snap/M1/.snap/M2. M3 index controller-owned, later .snap/M3; index unchanged by executor.
 - **Review/delivery:** independent MiniMax verdict pending; narrow post-edit charter gate controller-only outside sandbox. Exact record PR-head and merge-head each need all3 successful CI checks/run URLs; no landing claim.
 - **Next/human:** only still-OPEN ledger asks105/110/111/112; attended111 validation and112 incident decisions independently. No new ask/policy; one iteration per fire; weekly sweep2026-11-09 07:00 Europe/Copenhagen.
-- **Evidence:** verification/world-iter364/executor-summary.md and executor-structural-proof.json; canonical log364. Anthropic quota routing note verbatim in log.
+- **Evidence:** log364; verification/world-iter364/ contains original reports, actual-judge clarification, supervisor receipts and reproduced findings. M1/M2 snapshots remain immutable; source product parks unchanged.
