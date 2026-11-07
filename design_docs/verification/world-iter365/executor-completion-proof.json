@@ -1,0 +1,1880 @@
+{
+  "schema_version": 1,
+  "iteration": 365,
+  "milestone": "M1",
+  "scope": "ADMIN_ONLY_HUMAN_PARK",
+  "owner": "actual pinned executor codex:gpt-6.1-sol",
+  "identity_provenance": "Explicit exact-session pinned continuation invocation; not supervisor or independent judge; no independent model probe",
+  "worktree": "/Users/voightkampff/.ailang/state/world-iter365-record",
+  "base": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+  "recorded_at_utc": "2026-11-07T17:20:43.421604+00:00",
+  "outcome": "SCOPED_STRUCTURAL_COMPARISONS_PASS; FINAL_PROOF_COPY_CHECK_IN_TERMINAL; INDEPENDENT_REVIEW_AND_CONTROLLER_ACCEPTANCE_PENDING",
+  "continuation_authorization": {
+    "source": "User/controller explicit MISSION-ROLE: executor exact-session continuation following stopped M1",
+    "scope": "Resume remaining M1 structural comparisons and publish NEW executor-completion-proof.json plus ONE cumulative .snap/M1 containing the same five unchanged record outputs and this NEW proof only.",
+    "finding_instruction": "Preserve original STOP proof and original supervisor receipt immutable. Additional full-file no-index style diagnostic is baseline-attributed context; explicit NEW-owned365 proof whitespace and required tracked default/base-relative checks remain. Fresh independent evaluator must adjudicate attribution; controller supplies no acceptance.",
+    "five_existing_record_bytes_must_remain_unchanged": true,
+    "original_guard_waiver": false,
+    "product_authority": false
+  },
+  "immutable_original_findings": {
+    "stop_proof": {
+      "path": "design_docs/verification/world-iter365/executor-structural-proof.json",
+      "sha256": "e5ac29681cec9ce461e29e3307bbc4b6558b878d4e246479fbbceda58328697e",
+      "mode": "0o644",
+      "type": "regular",
+      "outcome": "STOPPED_ON_WHITESPACE_FINDING; M1 INCOMPLETE; NO WAIVER OR ACCEPTANCE",
+      "blocking_finding": {
+        "stage": "Additional prepublication full-file whitespace inspection of five records intended as new snapshot payloads; failed before snapshot directory or proof creation",
+        "argv": [
+          "git",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "design_docs/world-mission-status-archive.md"
+        ],
+        "rc": 3,
+        "stdout": "design_docs/world-mission-status-archive.md:730: new blank line at EOF.\n",
+        "stderr": "",
+        "driver_argv": [
+          "python3",
+          "/private/tmp/world365-executor-aak1w4c7/publish.py"
+        ],
+        "driver_rc": 1,
+        "relationship_to_required_transformation": "AC2 requires exact362 line plus following blank appended unchanged, with archive730 lines. Actual whole-file structural comparison passes; final archive has the required blank line. This additional full-file whitespace instrument reported red.",
+        "disposition": "STOP/report under explicit any-red instruction. No narrowing, regeneration, waiver, replacement gate, whitespace removal or acceptance. No new baseline-red conclusion inferred without a baseline run of this extra instrument."
+      },
+      "report_publication_instrument_finding": {
+        "proof_created": true,
+        "snapshot_created": false,
+        "proof_whitespace_argv": [
+          "git",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "/Users/voightkampff/.ailang/state/world-iter365-record/design_docs/verification/world-iter365/executor-structural-proof.json"
+        ],
+        "proof_whitespace_rc": 1,
+        "proof_whitespace_stdout": "",
+        "proof_whitespace_stderr": "",
+        "interpretation": "No diagnostics: no-index rc1 reports new file content difference, explicitly permitted by plan; it is not a whitespace failure.",
+        "report_driver_rc": 1,
+        "report_driver_finding": "The report-only Python wrapper incorrectly asserted rc0 for the first proof whitespace check, despite no diagnostics. Original terminal assertion retained; this annotation records the instrument error. M1 remains stopped on the distinct archive rc3 whitespace diagnostic; no implementation or snapshot work resumed."
+      }
+    },
+    "original_supervisor_receipt": {
+      "path": "design_docs/verification/world-iter365/executor-supervisor-receipt.json",
+      "sha256": "8873323edfcf496b4eef88111f7d3a8e30ac44557c3992c0808b012131853558",
+      "mode": "0o644",
+      "type": "regular",
+      "boundary": "Original stage transport/usage only. Preserved unchanged; not new continuation usage or acceptance."
+    },
+    "original_base_read_and_findings_preserved": true,
+    "original_before_audit": {
+      "phase": "before",
+      "base_ancestor_rc": 0,
+      "base_paths": 6395,
+      "protected_paths": 6390,
+      "baseline_mismatches": [],
+      "mode_counts": {
+        "100644": 6316,
+        "100755": 79
+      },
+      "regular_paths_hashed_by_git": 6395,
+      "base_tree_inventory_sha256": "becb4967c87c814d916eff0ec0a541c0c8ec0f2c01fc6a03c392971e2a0f3d85",
+      "protected_tree_inventory_sha256": "6c301b41ec28600d8725d96b81bc551007fc67e6af3a9edccd0d9f8881c5b4bb",
+      "allowed_start_at_base": true,
+      "prior364": [
+        {
+          "path": "design_docs/verification/world-iter364/base-ci.json",
+          "base_blob": "0c281c8acd082eda4f43cf0ffde4035a6c92c695",
+          "actual_blob": "0c281c8acd082eda4f43cf0ffde4035a6c92c695"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/base-full-checks.json",
+          "base_blob": "0874db7546f51f4d48576cbcc3d3a6457d96d2b7",
+          "actual_blob": "0874db7546f51f4d48576cbcc3d3a6457d96d2b7"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/baseline-charter-gate.txt",
+          "base_blob": "1f2a79363d02fcce3f78ddd45724cb2eb2b5ce6b",
+          "actual_blob": "1f2a79363d02fcce3f78ddd45724cb2eb2b5ce6b"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/controller-M3-index.json",
+          "base_blob": "def01cfb756b135d2bd020b2be022c6c86268a1a",
+          "actual_blob": "def01cfb756b135d2bd020b2be022c6c86268a1a"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/controller-brief.json",
+          "base_blob": "ccf276b592a9a959a7a4eca7d8dda6e8fce395b0",
+          "actual_blob": "ccf276b592a9a959a7a4eca7d8dda6e8fce395b0"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/controller-designer-disposition.json",
+          "base_blob": "9010217a7bd427610671aa7111969e34600d5228",
+          "actual_blob": "9010217a7bd427610671aa7111969e34600d5228"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/controller-final-disposition.json",
+          "base_blob": "0a205bc11acff1bb2c01bc9670f6cdd4b49e1adc",
+          "actual_blob": "0a205bc11acff1bb2c01bc9670f6cdd4b49e1adc"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/controller-final-routing.json",
+          "base_blob": "74029211a6fda87371474b96f49f2b2563c8e940",
+          "actual_blob": "74029211a6fda87371474b96f49f2b2563c8e940"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/controller-final-structural.json",
+          "base_blob": "aed2b740482429e580f3f24c6815bf2ef83e8b2e",
+          "actual_blob": "aed2b740482429e580f3f24c6815bf2ef83e8b2e"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/controller-findings-reproduction.json",
+          "base_blob": "79beabf53de32b36820880a84bb131de94a983fc",
+          "actual_blob": "79beabf53de32b36820880a84bb131de94a983fc"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/controller-gate4-base.json",
+          "base_blob": "a5664e03866d80e0e767a31c06058e6c325e75ed",
+          "actual_blob": "a5664e03866d80e0e767a31c06058e6c325e75ed"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/controller-observations.json",
+          "base_blob": "aaa1a4bc1ebe9d04f640db2ddc6ddd9b95527ae7",
+          "actual_blob": "aaa1a4bc1ebe9d04f640db2ddc6ddd9b95527ae7"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/controller-plan-addendum.md",
+          "base_blob": "c867f057cb4b25d6c3793bf7deeac711d6dcfbdb",
+          "actual_blob": "c867f057cb4b25d6c3793bf7deeac711d6dcfbdb"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/controller-routing-check.json",
+          "base_blob": "0b4ae2384bc53d9acce60087853aa034ec2d59ee",
+          "actual_blob": "0b4ae2384bc53d9acce60087853aa034ec2d59ee"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/controller-structural.json",
+          "base_blob": "c8964ee0f662940eac3d4f455d5e6b48e6a3f899",
+          "actual_blob": "c8964ee0f662940eac3d4f455d5e6b48e6a3f899"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/design-gate.md",
+          "base_blob": "0f74dfd11f509663a824a1208735e813cb3f3690",
+          "actual_blob": "0f74dfd11f509663a824a1208735e813cb3f3690"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/designer-receipt.json",
+          "base_blob": "8b95c19ed7ec4836751d1f72ad7cdb726bde08a7",
+          "actual_blob": "8b95c19ed7ec4836751d1f72ad7cdb726bde08a7"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/designer-supervisor-receipt.json",
+          "base_blob": "d5954e26c27c41a6746a56236f4109b3cb83d8f4",
+          "actual_blob": "d5954e26c27c41a6746a56236f4109b3cb83d8f4"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/evaluator/clarification-supervisor-receipt.json",
+          "base_blob": "497f8ff1df16399748033a009c77b00589e68b6e",
+          "actual_blob": "497f8ff1df16399748033a009c77b00589e68b6e"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/evaluator/clarification.json",
+          "base_blob": "50b04633a9916c8c03a3bcc856dfed62214f33e3",
+          "actual_blob": "50b04633a9916c8c03a3bcc856dfed62214f33e3"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/evaluator/clarification.md",
+          "base_blob": "dffe9a1d167cb44fe9dfe5b65a0a19ae7b7900c3",
+          "actual_blob": "dffe9a1d167cb44fe9dfe5b65a0a19ae7b7900c3"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/evaluator/report.json",
+          "base_blob": "0bfd9ee64d38f376f63eef78e67d10293fcae7e7",
+          "actual_blob": "0bfd9ee64d38f376f63eef78e67d10293fcae7e7"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/evaluator/report.md",
+          "base_blob": "2de9b97e3041bd86a41828fbffb07d46795de013",
+          "actual_blob": "2de9b97e3041bd86a41828fbffb07d46795de013"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/evaluator/supervisor-receipt.json",
+          "base_blob": "db0558bd61b28923a86a38e4ff969ee55f82874f",
+          "actual_blob": "db0558bd61b28923a86a38e4ff969ee55f82874f"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/executor-structural-proof.json",
+          "base_blob": "9d4c23082f80a6b3f354fb617cbdb8f7c753a812",
+          "actual_blob": "9d4c23082f80a6b3f354fb617cbdb8f7c753a812"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/executor-summary.md",
+          "base_blob": "ceaf1e0384f3db349f252e749942161c0e28958d",
+          "actual_blob": "ceaf1e0384f3db349f252e749942161c0e28958d"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/executor-supervisor-receipt.json",
+          "base_blob": "31d1a7f5ce1ed1482fbf0e48ce88b8133d0e3399",
+          "actual_blob": "31d1a7f5ce1ed1482fbf0e48ce88b8133d0e3399"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/inbox-summary.json",
+          "base_blob": "82551ab97229e0a25102c9be49c8ccf7bf7db238",
+          "actual_blob": "82551ab97229e0a25102c9be49c8ccf7bf7db238"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/ledger-check.txt",
+          "base_blob": "2aebbb127059929cb50d9020078959c176b32b03",
+          "actual_blob": "2aebbb127059929cb50d9020078959c176b32b03"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/legacy-directives.txt",
+          "base_blob": "202ffd0604c3bc8dd6b15058834a65f6de1ffce3",
+          "actual_blob": "202ffd0604c3bc8dd6b15058834a65f6de1ffce3"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/main-tracked-baseline.json",
+          "base_blob": "22dff3f622619f10b433a8527dff4764b28f222f",
+          "actual_blob": "22dff3f622619f10b433a8527dff4764b28f222f"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/metered-spend.json",
+          "base_blob": "0a1fc2f227e6ef50ad6bf3434ca6152847fa598e",
+          "actual_blob": "0a1fc2f227e6ef50ad6bf3434ca6152847fa598e"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/open-decisions.txt",
+          "base_blob": "2a2dc2928028b4167553ffa28e3c855f096bd1f3",
+          "actual_blob": "2a2dc2928028b4167553ffa28e3c855f096bd1f3"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/planner-supervisor-receipt.json",
+          "base_blob": "c2bf007690e56506583b7bec11e3d0d427fdfd4d",
+          "actual_blob": "c2bf007690e56506583b7bec11e3d0d427fdfd4d"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/prejudge-spend.json",
+          "base_blob": "9656e07a077e6fd9f0cbd7c5add789cb95363503",
+          "actual_blob": "9656e07a077e6fd9f0cbd7c5add789cb95363503"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/previous-directives.txt",
+          "base_blob": "7cd468b35890cd7c5462d506dabae635b78b184f",
+          "actual_blob": "7cd468b35890cd7c5462d506dabae635b78b184f"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/product-pr515-fresh.json",
+          "base_blob": "eb114b997786220e8adf19a893d1f08b860b1c58",
+          "actual_blob": "eb114b997786220e8adf19a893d1f08b860b1c58"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/product-pr515.json",
+          "base_blob": "41a5a366efe5aabb09878d74b6f97e2820cb51a6",
+          "actual_blob": "41a5a366efe5aabb09878d74b6f97e2820cb51a6"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/record-plan.md",
+          "base_blob": "6802a55fa72e5ce9d201cbb91c7d25999da7c0a1",
+          "actual_blob": "6802a55fa72e5ce9d201cbb91c7d25999da7c0a1"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/record-state.json",
+          "base_blob": "06414d7c3ef41b48e70e08b6d2de5ed3e1274c6a",
+          "actual_blob": "06414d7c3ef41b48e70e08b6d2de5ed3e1274c6a"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/release-predicates.json",
+          "base_blob": "0c5dad91e0dff1170816b59b0982c686bffff431",
+          "actual_blob": "0c5dad91e0dff1170816b59b0982c686bffff431"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/retro-counts.json",
+          "base_blob": "507c43a8b4ce8941dd09a4bd8981a6ee611c62a0",
+          "actual_blob": "507c43a8b4ce8941dd09a4bd8981a6ee611c62a0"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/skill-currency.json",
+          "base_blob": "1413e9c069955749a4376a1c693ccdb25b11421b",
+          "actual_blob": "1413e9c069955749a4376a1c693ccdb25b11421b"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/thread.json",
+          "base_blob": "95002a34b61ed3995aeaf2f61b32d4b674f7f413",
+          "actual_blob": "95002a34b61ed3995aeaf2f61b32d4b674f7f413"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/upstream-predicates.json",
+          "base_blob": "e22b62a5cf217727804e8cf95d9ae33ad80c7958",
+          "actual_blob": "e22b62a5cf217727804e8cf95d9ae33ad80c7958"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/worktree-census.json",
+          "base_blob": "5326ac265eaef741795d09f6aa24420d456c2b31",
+          "actual_blob": "5326ac265eaef741795d09f6aa24420d456c2b31"
+        },
+        {
+          "path": "design_docs/verification/world-iter364/worktree-list-captured.json",
+          "base_blob": "bbae09e28ecac5c5599ce5b58383021e2597fe7b",
+          "actual_blob": "bbae09e28ecac5c5599ce5b58383021e2597fe7b"
+        }
+      ],
+      "frozen_inputs": {
+        "design_docs/verification/world-iter365/skill-currency.json": {
+          "sha256": "4bf30542706ed31460e12c646c770de26902f3de1bb8a9ac0c8b0b4e5ff11f13",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/controller-gate4-base.json": {
+          "sha256": "8bfe6affa94c8d989c150f30b73f4d20c7526c2a9f5532fd7cac3ea5ce9a5970",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/dedicated-baseline.json": {
+          "sha256": "9160b0474cdb93a140185c55721386f4fb9edf00839eab2cf5dd6dee41f1ab53",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/designer-receipt.json": {
+          "sha256": "43e71ae7d17e60516d311af7fcba8e3d329cd737149b3565f6c0052500a0935c",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/worktree-census.json": {
+          "sha256": "095cbe97f441085c6a30963e9b4468df7b95bbef693573e84402d1bb6e03075a",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/evaluator-preflight-diagnostics.json": {
+          "sha256": "1df03b124e5811c4b33d76e1828dd41a0d09ecb1cb6de2f81b2bda651e6f0bfd",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/designer-supervisor-receipt.json": {
+          "sha256": "99e1b9c755367a642258ce1e64ce951fd1162b66f7f7a621a4e6b44ce0be85b0",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/record-base-tracked-baseline.json": {
+          "sha256": "8c61ebf07282ad9c6d8e7836600967205b115d04917a882fbdf8adcbb6a939d7",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/current-issue.json": {
+          "sha256": "3de2cfa8a66404fa6aba99b9b273ca1b7501edd04fada9d955b1898be045073b",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/product-pr515-fresh.json": {
+          "sha256": "0d87fa0bb02ad0d346b06c036ae2bb5f3624c4063295d2a17b05947242103896",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/controller-observations.json": {
+          "sha256": "8b429c10e02fcba40a70bdd574986ef1436acc2531ed6854f0e05098a8f4b75c",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/upstream-predicates.json": {
+          "sha256": "cd2732c566444798ec88b31b6f2fdd3eb3ebcd6300154943dfe59e766352a7ee",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/inbox-triage.json": {
+          "sha256": "1d6c067c1a648410d7a2e198d678ac9f2991323faa447881f73fc7af36b3d082",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/record-plan.md": {
+          "sha256": "523008e17f783f19b955f45c54da454fcfc7a4c7dab21031d9a2a5ffb6fce57e",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/record-state.json": {
+          "sha256": "293d95564b3c5afae27d2479192547f5162c9219c92c84c55c05ca19eca01d42",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/main-tracked-baseline.json": {
+          "sha256": "5567bab2658d85979791fb17314fc7603d2a0a5265238d188ab887b1dc8c9915",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/planner-supervisor-receipt.json": {
+          "sha256": "426c0aa331aa5c56e40952a21aad862d2a1dac88107252f56534e34cadbf93a2",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/retro-counts.json": {
+          "sha256": "8496bf5235d552ce8123817c86c073fe8a3a9db8ba1aabb045d9182195dcb61b",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/upstream-open-control.json": {
+          "sha256": "c51765c72ca4c4a1386bf3a50b54408d09c9ac2fd0d84737345b7256b6de5b8d",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/controller-plan-addendum.md": {
+          "sha256": "fcd52eb649ceb8a230c2513e74bff591b22cfb1cebe64bdea17a03d044fc298d",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/index-cli-baseline.json": {
+          "sha256": "1233e79f644e71b047b2f2268df7944a57e965634a2e944a64d8b61bc12aa56e",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/base-checks.json": {
+          "sha256": "560962fd1457d9a0a6d2025b42532764078173f26ecc644a01ba4e28be6537de",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/evaluator-preflight.json": {
+          "sha256": "93180523a7450697c5cac2c6f8f4bd4851db5e7bb10251fd0b4ee8c9c9540471",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/record-design.md": {
+          "sha256": "39549a5d8d075e9a8a560475a6e4960bd2657184f6963cbd547a76255481e98c",
+          "mode": "0o644",
+          "type": "regular"
+        },
+        "design_docs/verification/world-iter365/index-cli-baseline-r2.json": {
+          "sha256": "12293a7c85faa0de276dc577a7adab96093ad64655a4feefee8558f9ac4d4cee",
+          "mode": "0o644",
+          "type": "regular"
+        }
+      },
+      "new_committed365_inputs": [
+        "design_docs/verification/world-iter365/base-checks.json",
+        "design_docs/verification/world-iter365/controller-gate4-base.json",
+        "design_docs/verification/world-iter365/controller-observations.json",
+        "design_docs/verification/world-iter365/controller-plan-addendum.md",
+        "design_docs/verification/world-iter365/current-issue.json",
+        "design_docs/verification/world-iter365/dedicated-baseline.json",
+        "design_docs/verification/world-iter365/designer-receipt.json",
+        "design_docs/verification/world-iter365/designer-supervisor-receipt.json",
+        "design_docs/verification/world-iter365/evaluator-preflight-diagnostics.json",
+        "design_docs/verification/world-iter365/evaluator-preflight.json",
+        "design_docs/verification/world-iter365/inbox-triage.json",
+        "design_docs/verification/world-iter365/index-cli-baseline-r2.json",
+        "design_docs/verification/world-iter365/index-cli-baseline.json",
+        "design_docs/verification/world-iter365/main-tracked-baseline.json",
+        "design_docs/verification/world-iter365/planner-supervisor-receipt.json",
+        "design_docs/verification/world-iter365/product-pr515-fresh.json",
+        "design_docs/verification/world-iter365/record-base-tracked-baseline.json",
+        "design_docs/verification/world-iter365/record-design.md",
+        "design_docs/verification/world-iter365/record-plan.md",
+        "design_docs/verification/world-iter365/record-state.json",
+        "design_docs/verification/world-iter365/retro-counts.json",
+        "design_docs/verification/world-iter365/skill-currency.json",
+        "design_docs/verification/world-iter365/upstream-open-control.json",
+        "design_docs/verification/world-iter365/upstream-predicates.json",
+        "design_docs/verification/world-iter365/worktree-census.json"
+      ],
+      "diff_name_status": [
+        "A\tdesign_docs/verification/world-iter365/base-checks.json",
+        "A\tdesign_docs/verification/world-iter365/controller-gate4-base.json",
+        "A\tdesign_docs/verification/world-iter365/controller-observations.json",
+        "A\tdesign_docs/verification/world-iter365/controller-plan-addendum.md",
+        "A\tdesign_docs/verification/world-iter365/current-issue.json",
+        "A\tdesign_docs/verification/world-iter365/dedicated-baseline.json",
+        "A\tdesign_docs/verification/world-iter365/designer-receipt.json",
+        "A\tdesign_docs/verification/world-iter365/designer-supervisor-receipt.json",
+        "A\tdesign_docs/verification/world-iter365/evaluator-preflight-diagnostics.json",
+        "A\tdesign_docs/verification/world-iter365/evaluator-preflight.json",
+        "A\tdesign_docs/verification/world-iter365/inbox-triage.json",
+        "A\tdesign_docs/verification/world-iter365/index-cli-baseline-r2.json",
+        "A\tdesign_docs/verification/world-iter365/index-cli-baseline.json",
+        "A\tdesign_docs/verification/world-iter365/main-tracked-baseline.json",
+        "A\tdesign_docs/verification/world-iter365/planner-supervisor-receipt.json",
+        "A\tdesign_docs/verification/world-iter365/product-pr515-fresh.json",
+        "A\tdesign_docs/verification/world-iter365/record-base-tracked-baseline.json",
+        "A\tdesign_docs/verification/world-iter365/record-design.md",
+        "A\tdesign_docs/verification/world-iter365/record-plan.md",
+        "A\tdesign_docs/verification/world-iter365/record-state.json",
+        "A\tdesign_docs/verification/world-iter365/retro-counts.json",
+        "A\tdesign_docs/verification/world-iter365/skill-currency.json",
+        "A\tdesign_docs/verification/world-iter365/upstream-open-control.json",
+        "A\tdesign_docs/verification/world-iter365/upstream-predicates.json",
+        "A\tdesign_docs/verification/world-iter365/worktree-census.json"
+      ],
+      "status_porcelain": [],
+      "commands": [
+        {
+          "argv": [
+            "git",
+            "merge-base",
+            "--is-ancestor",
+            "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+            "HEAD"
+          ],
+          "rc": 0,
+          "stdout_bytes": 0,
+          "stderr": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "argv": [
+            "git",
+            "ls-tree",
+            "-r",
+            "-z",
+            "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de"
+          ],
+          "rc": 0,
+          "stdout_bytes": 811486,
+          "stderr": "",
+          "stdout_sha256": "f714406df6c144c28dc0f73140e9b73e4a5ee703b96c596e02d3fee077625aa3"
+        },
+        {
+          "argv": [
+            "git",
+            "ls-tree",
+            "-r",
+            "-z",
+            "HEAD"
+          ],
+          "rc": 0,
+          "stdout_bytes": 814395,
+          "stderr": "",
+          "stdout_sha256": "cce2846a0144802998c24c932c7f583fe40e42e1a19b2b7a7e656b5091768d80"
+        },
+        {
+          "argv": [
+            "git",
+            "hash-object",
+            "--stdin-paths"
+          ],
+          "rc": 0,
+          "stdout_bytes": 262195,
+          "stderr": "",
+          "stdout_sha256": "a3243c727595c3cb374fa420b99d4c0387a454c301528e155d6b206541a469c1"
+        },
+        {
+          "argv": [
+            "git",
+            "diff",
+            "--name-status",
+            "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+            "--"
+          ],
+          "rc": 0,
+          "stdout_bytes": 1634,
+          "stderr": "",
+          "stdout_sha256": "ea1c81709610dbd76a3d1eaacb9122caaa90359f75ef1e7c82d189db7078aae3"
+        },
+        {
+          "argv": [
+            "git",
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=all"
+          ],
+          "rc": 0,
+          "stdout_bytes": 0,
+          "stderr": "",
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "at_utc": "2026-11-07T17:08:49.692713+00:00"
+    },
+    "history": "Original FAILED_INPUT_PRESERVATION, controller concurrent31-to33 disclosure, prior failure artifacts and stage receipts remain unchanged; no regeneration/rebase/overwriting."
+  },
+  "style_instrument_attribution": {
+    "base_read": {
+      "argv": [
+        "git",
+        "show",
+        "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de:design_docs/world-mission-status-archive.md"
+      ],
+      "rc": 0,
+      "stdout_bytes": 1623856,
+      "stdout_sha256": "33697b13222054fe70d4f892819b3a6a15f1b4bff59413c1037dcb54631cb599",
+      "stderr": ""
+    },
+    "style_diagnostics": [
+      {
+        "label": "pristine_base",
+        "argv": [
+          "git",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "/private/tmp/world365-m1-continuation-wkh0chmf/pristine-base-archive-lfk80b4k.md"
+        ],
+        "rc": 3,
+        "stdout": "/private/tmp/world365-m1-continuation-wkh0chmf/pristine-base-archive-lfk80b4k.md:728: new blank line at EOF.\n",
+        "stderr": "",
+        "lines": 728,
+        "sha256": "33697b13222054fe70d4f892819b3a6a15f1b4bff59413c1037dcb54631cb599",
+        "ends_with_blank_line": true
+      },
+      {
+        "label": "candidate",
+        "argv": [
+          "git",
+          "diff",
+          "--no-index",
+          "--check",
+          "/dev/null",
+          "/Users/voightkampff/.ailang/state/world-iter365-record/design_docs/world-mission-status-archive.md"
+        ],
+        "rc": 3,
+        "stdout": "/Users/voightkampff/.ailang/state/world-iter365-record/design_docs/world-mission-status-archive.md:730: new blank line at EOF.\n",
+        "stderr": "",
+        "lines": 730,
+        "sha256": "1829cc1e1a02022496c7ec7537368a9d0202daa43ad6bd65aef3b58fc1bc39e7",
+        "ends_with_blank_line": true
+      }
+    ],
+    "scope": "Additional whole-file style instrument; expected existing archive baseline diagnostic reproduced. Required tracked-diff whitespace and explicit NEW-owned365 proof checks remain separate, unchanged. Fresh independent evaluator must adjudicate attribution; no acceptance."
+  },
+  "whitespace_scope": {
+    "required_tracked_checks": "git diff --check and git diff --check b9816aefab82dc09cf9e3a9cec5e8191fb58a9de --; actual rc0 for both in structural_results, rerun at final terminal.",
+    "new_owned_artifacts": "Explicit no-index inspection of NEW-owned365 JSON proof and its copied proof payload; original STOP proof separately inspected unchanged. Snapshot record payloads are exact copies of five preexisting record files, verified by direct bytes and types/modes; full old archive is not treated as a newly authored artifact.",
+    "preserved_nonzero_results": "Original/candidate full-file archive rc3 and pristine fixed-base archive rc3 are retained, as are rc1 negative controls and no-index content-difference statuses. No assertion all commands returned0.",
+    "adjudication": "Fresh independent evaluator pending; no controller/executor acceptance or self-issued independent verdict."
+  },
+  "original_frozen_stage_inputs": {
+    "design_docs/verification/world-iter365/skill-currency.json": {
+      "sha256": "4bf30542706ed31460e12c646c770de26902f3de1bb8a9ac0c8b0b4e5ff11f13",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/controller-gate4-base.json": {
+      "sha256": "8bfe6affa94c8d989c150f30b73f4d20c7526c2a9f5532fd7cac3ea5ce9a5970",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/dedicated-baseline.json": {
+      "sha256": "9160b0474cdb93a140185c55721386f4fb9edf00839eab2cf5dd6dee41f1ab53",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/designer-receipt.json": {
+      "sha256": "43e71ae7d17e60516d311af7fcba8e3d329cd737149b3565f6c0052500a0935c",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/worktree-census.json": {
+      "sha256": "095cbe97f441085c6a30963e9b4468df7b95bbef693573e84402d1bb6e03075a",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/evaluator-preflight-diagnostics.json": {
+      "sha256": "1df03b124e5811c4b33d76e1828dd41a0d09ecb1cb6de2f81b2bda651e6f0bfd",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/designer-supervisor-receipt.json": {
+      "sha256": "99e1b9c755367a642258ce1e64ce951fd1162b66f7f7a621a4e6b44ce0be85b0",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/record-base-tracked-baseline.json": {
+      "sha256": "8c61ebf07282ad9c6d8e7836600967205b115d04917a882fbdf8adcbb6a939d7",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/current-issue.json": {
+      "sha256": "3de2cfa8a66404fa6aba99b9b273ca1b7501edd04fada9d955b1898be045073b",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/product-pr515-fresh.json": {
+      "sha256": "0d87fa0bb02ad0d346b06c036ae2bb5f3624c4063295d2a17b05947242103896",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/controller-observations.json": {
+      "sha256": "8b429c10e02fcba40a70bdd574986ef1436acc2531ed6854f0e05098a8f4b75c",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/upstream-predicates.json": {
+      "sha256": "cd2732c566444798ec88b31b6f2fdd3eb3ebcd6300154943dfe59e766352a7ee",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/inbox-triage.json": {
+      "sha256": "1d6c067c1a648410d7a2e198d678ac9f2991323faa447881f73fc7af36b3d082",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/record-plan.md": {
+      "sha256": "523008e17f783f19b955f45c54da454fcfc7a4c7dab21031d9a2a5ffb6fce57e",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/record-state.json": {
+      "sha256": "293d95564b3c5afae27d2479192547f5162c9219c92c84c55c05ca19eca01d42",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/main-tracked-baseline.json": {
+      "sha256": "5567bab2658d85979791fb17314fc7603d2a0a5265238d188ab887b1dc8c9915",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/planner-supervisor-receipt.json": {
+      "sha256": "426c0aa331aa5c56e40952a21aad862d2a1dac88107252f56534e34cadbf93a2",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/retro-counts.json": {
+      "sha256": "8496bf5235d552ce8123817c86c073fe8a3a9db8ba1aabb045d9182195dcb61b",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/upstream-open-control.json": {
+      "sha256": "c51765c72ca4c4a1386bf3a50b54408d09c9ac2fd0d84737345b7256b6de5b8d",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/controller-plan-addendum.md": {
+      "sha256": "fcd52eb649ceb8a230c2513e74bff591b22cfb1cebe64bdea17a03d044fc298d",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/index-cli-baseline.json": {
+      "sha256": "1233e79f644e71b047b2f2268df7944a57e965634a2e944a64d8b61bc12aa56e",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/base-checks.json": {
+      "sha256": "560962fd1457d9a0a6d2025b42532764078173f26ecc644a01ba4e28be6537de",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/evaluator-preflight.json": {
+      "sha256": "93180523a7450697c5cac2c6f8f4bd4851db5e7bb10251fd0b4ee8c9c9540471",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/record-design.md": {
+      "sha256": "39549a5d8d075e9a8a560475a6e4960bd2657184f6963cbd547a76255481e98c",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/index-cli-baseline-r2.json": {
+      "sha256": "12293a7c85faa0de276dc577a7adab96093ad64655a4feefee8558f9ac4d4cee",
+      "mode": "0o644",
+      "type": "regular"
+    }
+  },
+  "continuation_additional_frozen_inputs": {
+    "design_docs/verification/world-iter365/executor-structural-proof.json": {
+      "sha256": "e5ac29681cec9ce461e29e3307bbc4b6558b878d4e246479fbbceda58328697e",
+      "mode": "0o644",
+      "type": "regular"
+    },
+    "design_docs/verification/world-iter365/executor-supervisor-receipt.json": {
+      "sha256": "8873323edfcf496b4eef88111f7d3a8e30ac44557c3992c0808b012131853558",
+      "mode": "0o644",
+      "type": "regular"
+    }
+  },
+  "frozen_input_counts": {
+    "original": 25,
+    "additional": 2,
+    "total": 27
+  },
+  "input_policy": "Explicit named ready inputs individually frozen; do not freeze/snapshot directory. Genuinely NEW controller evidence may arrive untouched. Current inputs, original STOP proof and original supervisor receipt rechecked before publication and at final terminal.",
+  "unused_output_names_verified": {
+    "completion_proof": true,
+    "snapshot_M1": true,
+    "partial_snapshot_at_entry": false
+  },
+  "five_record_outputs_unchanged_since_STOP": {
+    "design_docs/world-mission.md": {
+      "sha256": "24225ebebd46c9829b508b279baca0d0195d93fb0ed4961c442daa46c6df5e82",
+      "bytes": 1387914,
+      "mode": "0o644"
+    },
+    "design_docs/world-mission-log.md": {
+      "sha256": "2b42b9a348cdffc7560b4ec53d0c5889d2183a619b49b32d8b091274f67f2547",
+      "bytes": 499105,
+      "mode": "0o644"
+    },
+    "design_docs/world-mission-dashboard.md": {
+      "sha256": "5e80a7397ad9354d06a6eab3bfb2a43aebf7f35fe673260bca4f515b9cc25160",
+      "bytes": 4549,
+      "mode": "0o644"
+    },
+    "design_docs/world-mission-status-archive.md": {
+      "sha256": "1829cc1e1a02022496c7ec7537368a9d0202daa43ad6bd65aef3b58fc1bc39e7",
+      "bytes": 1625146,
+      "mode": "0o644"
+    },
+    "design_docs/world-mission-index.md": {
+      "sha256": "a27f891f0f8b7dadaf022eebcdbcc4bb81a2b5e9295000c335cbfc08dbb9fdd7",
+      "bytes": 57770,
+      "mode": "0o644"
+    }
+  },
+  "structural_results": {
+    "at_utc": "2026-11-07T17:18:43.527007+00:00",
+    "structural_checks_rc": 0,
+    "positive_controls": [
+      {
+        "guard": "charter",
+        "rc": 0
+      },
+      {
+        "guard": "archive",
+        "rc": 0
+      },
+      {
+        "guard": "log",
+        "rc": 0
+      },
+      {
+        "guard": "index",
+        "rc": 0
+      },
+      {
+        "guard": "dashboard",
+        "rc": 0
+      },
+      {
+        "guard": "protected-byte",
+        "rc": 0
+      },
+      {
+        "guard": "frozen-inputs",
+        "rc": 0
+      }
+    ],
+    "negative_controls": [
+      {
+        "name": "protected-byte",
+        "mutation": "flip one byte of actual protected CLAUDE.md in memory, use git hash-object --stdin without -w",
+        "detected": true,
+        "guard_rejection": "protected Git blob comparison",
+        "rc": 1
+      },
+      {
+        "name": "duplicate365",
+        "mutation": "duplicate the actual365 STATUS pair in memory",
+        "detected": true,
+        "guard_rejection": "whole charter expected-byte comparison",
+        "rc": 1
+      },
+      {
+        "name": "drop363",
+        "mutation": "remove actual363 STATUS pair in memory",
+        "detected": true,
+        "guard_rejection": "whole charter expected-byte comparison",
+        "rc": 1
+      },
+      {
+        "name": "corrupt362-pair",
+        "mutation": "flip first byte of appended362 pair in memory, preserving old archive prefix",
+        "detected": true,
+        "guard_rejection": "whole archive expected pair and prefix comparison",
+        "rc": 1
+      },
+      {
+        "name": "other-route-byte",
+        "mutation": "change ADMIN byte outside the permitted route token substitution",
+        "detected": true,
+        "guard_rejection": "whole charter expected-byte comparison",
+        "rc": 1
+      },
+      {
+        "name": "prior-log-byte",
+        "mutation": "delete first byte of actual retained log prefix in memory",
+        "detected": true,
+        "guard_rejection": "entire prior log byte prefix comparison",
+        "rc": 1
+      },
+      {
+        "name": "orphan361",
+        "mutation": "change orphan361 prior row in memory",
+        "detected": true,
+        "guard_rejection": "entire index expected-byte comparison",
+        "rc": 1
+      },
+      {
+        "name": "dashboard-over40",
+        "mutation": "append in-memory lines to exactly41",
+        "detected": true,
+        "guard_rejection": "dashboard <=40 lines",
+        "rc": 1
+      },
+      {
+        "name": "frozen-input-hash",
+        "mutation": "change ready plan SHA256 in an in-memory actual-input hash map",
+        "detected": true,
+        "guard_rejection": "explicit frozen-input hash/type/mode comparison",
+        "rc": 1
+      }
+    ],
+    "negative_summary": {
+      "attempted": 9,
+      "detected": 9,
+      "survivors": 0
+    },
+    "counts": {
+      "charter_lines": 6345,
+      "archive_lines": 730,
+      "dashboard_lines": 22,
+      "canonical_log_entries": 39,
+      "active_statuses": [
+        365,
+        364,
+        363
+      ],
+      "ledger_rows": 99,
+      "index_added_rows": 1
+    },
+    "preservation_sha256": {
+      "marked_ledger": "58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01",
+      "queue_suffix": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4",
+      "status362_pair": "27fecc13ef71fc8811f1c426b134c9650c57d86a3399446aa5ccf5c37d5ab260",
+      "base_log_prefix": "f30ec0c3f8d54036b6c7c933ba2c5f9f0c27b691664a80c9e6eabf88642c4541",
+      "base_archive_prefix": "33697b13222054fe70d4f892819b3a6a15f1b4bff59413c1037dcb54631cb599"
+    },
+    "record_hashes": {
+      "design_docs/world-mission.md": {
+        "sha256": "24225ebebd46c9829b508b279baca0d0195d93fb0ed4961c442daa46c6df5e82",
+        "bytes": 1387914,
+        "mode": "0o644"
+      },
+      "design_docs/world-mission-log.md": {
+        "sha256": "2b42b9a348cdffc7560b4ec53d0c5889d2183a619b49b32d8b091274f67f2547",
+        "bytes": 499105,
+        "mode": "0o644"
+      },
+      "design_docs/world-mission-dashboard.md": {
+        "sha256": "5e80a7397ad9354d06a6eab3bfb2a43aebf7f35fe673260bca4f515b9cc25160",
+        "bytes": 4549,
+        "mode": "0o644"
+      },
+      "design_docs/world-mission-status-archive.md": {
+        "sha256": "1829cc1e1a02022496c7ec7537368a9d0202daa43ad6bd65aef3b58fc1bc39e7",
+        "bytes": 1625146,
+        "mode": "0o644"
+      },
+      "design_docs/world-mission-index.md": {
+        "sha256": "a27f891f0f8b7dadaf022eebcdbcc4bb81a2b5e9295000c335cbfc08dbb9fdd7",
+        "bytes": 57770,
+        "mode": "0o644"
+      }
+    },
+    "tracked_whitespace": [
+      {
+        "argv": [
+          "git",
+          "diff",
+          "--check"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "argv": [
+          "git",
+          "diff",
+          "--check",
+          "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+          "--"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ],
+    "commands": [
+      {
+        "argv": [
+          "git",
+          "show",
+          "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de:design_docs/world-mission.md"
+        ],
+        "rc": 0,
+        "stdout_bytes": 1388850,
+        "stderr": "",
+        "stdout_sha256": "e0c746e3c49ee2e02d151d5835292d03c47ce7d3d9b914b9ebc2e9426e117d04"
+      },
+      {
+        "argv": [
+          "git",
+          "show",
+          "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de:design_docs/world-mission-log.md"
+        ],
+        "rc": 0,
+        "stdout_bytes": 490492,
+        "stderr": "",
+        "stdout_sha256": "f30ec0c3f8d54036b6c7c933ba2c5f9f0c27b691664a80c9e6eabf88642c4541"
+      },
+      {
+        "argv": [
+          "git",
+          "show",
+          "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de:design_docs/world-mission-dashboard.md"
+        ],
+        "rc": 0,
+        "stdout_bytes": 3076,
+        "stderr": "",
+        "stdout_sha256": "85319e9561f03dba9281326eb3e01c92251b878403ffc50a68fbe5050b86ffd7"
+      },
+      {
+        "argv": [
+          "git",
+          "show",
+          "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de:design_docs/world-mission-status-archive.md"
+        ],
+        "rc": 0,
+        "stdout_bytes": 1623856,
+        "stderr": "",
+        "stdout_sha256": "33697b13222054fe70d4f892819b3a6a15f1b4bff59413c1037dcb54631cb599"
+      },
+      {
+        "argv": [
+          "git",
+          "show",
+          "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de:design_docs/world-mission-index.md"
+        ],
+        "rc": 0,
+        "stdout_bytes": 57697,
+        "stderr": "",
+        "stdout_sha256": "7e20cdca5fb0956eaed9bf9387c3ffd5a9400c3d85cbdd07c0703bc709f3a199"
+      },
+      {
+        "argv": [
+          "git",
+          "hash-object",
+          "--stdin"
+        ],
+        "rc": 0,
+        "stdout_bytes": 41,
+        "stderr": "",
+        "stdout_sha256": "1292d5a97923918e24b7e30a8f767c0fbf299de4e645382318b8afd354175155"
+      },
+      {
+        "argv": [
+          "git",
+          "rev-parse",
+          "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de:CLAUDE.md"
+        ],
+        "rc": 0,
+        "stdout_bytes": 41,
+        "stderr": "",
+        "stdout_sha256": "1292d5a97923918e24b7e30a8f767c0fbf299de4e645382318b8afd354175155"
+      },
+      {
+        "argv": [
+          "git",
+          "hash-object",
+          "--stdin"
+        ],
+        "rc": 0,
+        "stdout_bytes": 41,
+        "stderr": "",
+        "stdout_sha256": "60549ba2bad286c00713510c78e3e025badad2adf5d2131a99afbebf02f2b89b"
+      },
+      {
+        "argv": [
+          "git",
+          "rev-parse",
+          "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de:CLAUDE.md"
+        ],
+        "rc": 0,
+        "stdout_bytes": 41,
+        "stderr": "",
+        "stdout_sha256": "1292d5a97923918e24b7e30a8f767c0fbf299de4e645382318b8afd354175155"
+      }
+    ]
+  },
+  "complete_protected_tree_audit": {
+    "phase": "after",
+    "base_ancestor_rc": 0,
+    "base_paths": 6395,
+    "protected_paths": 6390,
+    "baseline_mismatches": [],
+    "mode_counts": {
+      "100644": 6316,
+      "100755": 79
+    },
+    "regular_paths_hashed_by_git": 6395,
+    "base_tree_inventory_sha256": "becb4967c87c814d916eff0ec0a541c0c8ec0f2c01fc6a03c392971e2a0f3d85",
+    "protected_tree_inventory_sha256": "6c301b41ec28600d8725d96b81bc551007fc67e6af3a9edccd0d9f8881c5b4bb",
+    "allowed_start_at_base": false,
+    "prior364": [
+      {
+        "path": "design_docs/verification/world-iter364/base-ci.json",
+        "base_blob": "0c281c8acd082eda4f43cf0ffde4035a6c92c695",
+        "actual_blob": "0c281c8acd082eda4f43cf0ffde4035a6c92c695"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/base-full-checks.json",
+        "base_blob": "0874db7546f51f4d48576cbcc3d3a6457d96d2b7",
+        "actual_blob": "0874db7546f51f4d48576cbcc3d3a6457d96d2b7"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/baseline-charter-gate.txt",
+        "base_blob": "1f2a79363d02fcce3f78ddd45724cb2eb2b5ce6b",
+        "actual_blob": "1f2a79363d02fcce3f78ddd45724cb2eb2b5ce6b"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/controller-M3-index.json",
+        "base_blob": "def01cfb756b135d2bd020b2be022c6c86268a1a",
+        "actual_blob": "def01cfb756b135d2bd020b2be022c6c86268a1a"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/controller-brief.json",
+        "base_blob": "ccf276b592a9a959a7a4eca7d8dda6e8fce395b0",
+        "actual_blob": "ccf276b592a9a959a7a4eca7d8dda6e8fce395b0"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/controller-designer-disposition.json",
+        "base_blob": "9010217a7bd427610671aa7111969e34600d5228",
+        "actual_blob": "9010217a7bd427610671aa7111969e34600d5228"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/controller-final-disposition.json",
+        "base_blob": "0a205bc11acff1bb2c01bc9670f6cdd4b49e1adc",
+        "actual_blob": "0a205bc11acff1bb2c01bc9670f6cdd4b49e1adc"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/controller-final-routing.json",
+        "base_blob": "74029211a6fda87371474b96f49f2b2563c8e940",
+        "actual_blob": "74029211a6fda87371474b96f49f2b2563c8e940"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/controller-final-structural.json",
+        "base_blob": "aed2b740482429e580f3f24c6815bf2ef83e8b2e",
+        "actual_blob": "aed2b740482429e580f3f24c6815bf2ef83e8b2e"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/controller-findings-reproduction.json",
+        "base_blob": "79beabf53de32b36820880a84bb131de94a983fc",
+        "actual_blob": "79beabf53de32b36820880a84bb131de94a983fc"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/controller-gate4-base.json",
+        "base_blob": "a5664e03866d80e0e767a31c06058e6c325e75ed",
+        "actual_blob": "a5664e03866d80e0e767a31c06058e6c325e75ed"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/controller-observations.json",
+        "base_blob": "aaa1a4bc1ebe9d04f640db2ddc6ddd9b95527ae7",
+        "actual_blob": "aaa1a4bc1ebe9d04f640db2ddc6ddd9b95527ae7"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/controller-plan-addendum.md",
+        "base_blob": "c867f057cb4b25d6c3793bf7deeac711d6dcfbdb",
+        "actual_blob": "c867f057cb4b25d6c3793bf7deeac711d6dcfbdb"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/controller-routing-check.json",
+        "base_blob": "0b4ae2384bc53d9acce60087853aa034ec2d59ee",
+        "actual_blob": "0b4ae2384bc53d9acce60087853aa034ec2d59ee"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/controller-structural.json",
+        "base_blob": "c8964ee0f662940eac3d4f455d5e6b48e6a3f899",
+        "actual_blob": "c8964ee0f662940eac3d4f455d5e6b48e6a3f899"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/design-gate.md",
+        "base_blob": "0f74dfd11f509663a824a1208735e813cb3f3690",
+        "actual_blob": "0f74dfd11f509663a824a1208735e813cb3f3690"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/designer-receipt.json",
+        "base_blob": "8b95c19ed7ec4836751d1f72ad7cdb726bde08a7",
+        "actual_blob": "8b95c19ed7ec4836751d1f72ad7cdb726bde08a7"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/designer-supervisor-receipt.json",
+        "base_blob": "d5954e26c27c41a6746a56236f4109b3cb83d8f4",
+        "actual_blob": "d5954e26c27c41a6746a56236f4109b3cb83d8f4"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/evaluator/clarification-supervisor-receipt.json",
+        "base_blob": "497f8ff1df16399748033a009c77b00589e68b6e",
+        "actual_blob": "497f8ff1df16399748033a009c77b00589e68b6e"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/evaluator/clarification.json",
+        "base_blob": "50b04633a9916c8c03a3bcc856dfed62214f33e3",
+        "actual_blob": "50b04633a9916c8c03a3bcc856dfed62214f33e3"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/evaluator/clarification.md",
+        "base_blob": "dffe9a1d167cb44fe9dfe5b65a0a19ae7b7900c3",
+        "actual_blob": "dffe9a1d167cb44fe9dfe5b65a0a19ae7b7900c3"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/evaluator/report.json",
+        "base_blob": "0bfd9ee64d38f376f63eef78e67d10293fcae7e7",
+        "actual_blob": "0bfd9ee64d38f376f63eef78e67d10293fcae7e7"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/evaluator/report.md",
+        "base_blob": "2de9b97e3041bd86a41828fbffb07d46795de013",
+        "actual_blob": "2de9b97e3041bd86a41828fbffb07d46795de013"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/evaluator/supervisor-receipt.json",
+        "base_blob": "db0558bd61b28923a86a38e4ff969ee55f82874f",
+        "actual_blob": "db0558bd61b28923a86a38e4ff969ee55f82874f"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/executor-structural-proof.json",
+        "base_blob": "9d4c23082f80a6b3f354fb617cbdb8f7c753a812",
+        "actual_blob": "9d4c23082f80a6b3f354fb617cbdb8f7c753a812"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/executor-summary.md",
+        "base_blob": "ceaf1e0384f3db349f252e749942161c0e28958d",
+        "actual_blob": "ceaf1e0384f3db349f252e749942161c0e28958d"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/executor-supervisor-receipt.json",
+        "base_blob": "31d1a7f5ce1ed1482fbf0e48ce88b8133d0e3399",
+        "actual_blob": "31d1a7f5ce1ed1482fbf0e48ce88b8133d0e3399"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/inbox-summary.json",
+        "base_blob": "82551ab97229e0a25102c9be49c8ccf7bf7db238",
+        "actual_blob": "82551ab97229e0a25102c9be49c8ccf7bf7db238"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/ledger-check.txt",
+        "base_blob": "2aebbb127059929cb50d9020078959c176b32b03",
+        "actual_blob": "2aebbb127059929cb50d9020078959c176b32b03"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/legacy-directives.txt",
+        "base_blob": "202ffd0604c3bc8dd6b15058834a65f6de1ffce3",
+        "actual_blob": "202ffd0604c3bc8dd6b15058834a65f6de1ffce3"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/main-tracked-baseline.json",
+        "base_blob": "22dff3f622619f10b433a8527dff4764b28f222f",
+        "actual_blob": "22dff3f622619f10b433a8527dff4764b28f222f"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/metered-spend.json",
+        "base_blob": "0a1fc2f227e6ef50ad6bf3434ca6152847fa598e",
+        "actual_blob": "0a1fc2f227e6ef50ad6bf3434ca6152847fa598e"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/open-decisions.txt",
+        "base_blob": "2a2dc2928028b4167553ffa28e3c855f096bd1f3",
+        "actual_blob": "2a2dc2928028b4167553ffa28e3c855f096bd1f3"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/planner-supervisor-receipt.json",
+        "base_blob": "c2bf007690e56506583b7bec11e3d0d427fdfd4d",
+        "actual_blob": "c2bf007690e56506583b7bec11e3d0d427fdfd4d"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/prejudge-spend.json",
+        "base_blob": "9656e07a077e6fd9f0cbd7c5add789cb95363503",
+        "actual_blob": "9656e07a077e6fd9f0cbd7c5add789cb95363503"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/previous-directives.txt",
+        "base_blob": "7cd468b35890cd7c5462d506dabae635b78b184f",
+        "actual_blob": "7cd468b35890cd7c5462d506dabae635b78b184f"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/product-pr515-fresh.json",
+        "base_blob": "eb114b997786220e8adf19a893d1f08b860b1c58",
+        "actual_blob": "eb114b997786220e8adf19a893d1f08b860b1c58"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/product-pr515.json",
+        "base_blob": "41a5a366efe5aabb09878d74b6f97e2820cb51a6",
+        "actual_blob": "41a5a366efe5aabb09878d74b6f97e2820cb51a6"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/record-plan.md",
+        "base_blob": "6802a55fa72e5ce9d201cbb91c7d25999da7c0a1",
+        "actual_blob": "6802a55fa72e5ce9d201cbb91c7d25999da7c0a1"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/record-state.json",
+        "base_blob": "06414d7c3ef41b48e70e08b6d2de5ed3e1274c6a",
+        "actual_blob": "06414d7c3ef41b48e70e08b6d2de5ed3e1274c6a"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/release-predicates.json",
+        "base_blob": "0c5dad91e0dff1170816b59b0982c686bffff431",
+        "actual_blob": "0c5dad91e0dff1170816b59b0982c686bffff431"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/retro-counts.json",
+        "base_blob": "507c43a8b4ce8941dd09a4bd8981a6ee611c62a0",
+        "actual_blob": "507c43a8b4ce8941dd09a4bd8981a6ee611c62a0"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/skill-currency.json",
+        "base_blob": "1413e9c069955749a4376a1c693ccdb25b11421b",
+        "actual_blob": "1413e9c069955749a4376a1c693ccdb25b11421b"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/thread.json",
+        "base_blob": "95002a34b61ed3995aeaf2f61b32d4b674f7f413",
+        "actual_blob": "95002a34b61ed3995aeaf2f61b32d4b674f7f413"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/upstream-predicates.json",
+        "base_blob": "e22b62a5cf217727804e8cf95d9ae33ad80c7958",
+        "actual_blob": "e22b62a5cf217727804e8cf95d9ae33ad80c7958"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/worktree-census.json",
+        "base_blob": "5326ac265eaef741795d09f6aa24420d456c2b31",
+        "actual_blob": "5326ac265eaef741795d09f6aa24420d456c2b31"
+      },
+      {
+        "path": "design_docs/verification/world-iter364/worktree-list-captured.json",
+        "base_blob": "bbae09e28ecac5c5599ce5b58383021e2597fe7b",
+        "actual_blob": "bbae09e28ecac5c5599ce5b58383021e2597fe7b"
+      }
+    ],
+    "frozen_inputs": {
+      "design_docs/verification/world-iter365/skill-currency.json": {
+        "sha256": "4bf30542706ed31460e12c646c770de26902f3de1bb8a9ac0c8b0b4e5ff11f13",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/controller-gate4-base.json": {
+        "sha256": "8bfe6affa94c8d989c150f30b73f4d20c7526c2a9f5532fd7cac3ea5ce9a5970",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/dedicated-baseline.json": {
+        "sha256": "9160b0474cdb93a140185c55721386f4fb9edf00839eab2cf5dd6dee41f1ab53",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/designer-receipt.json": {
+        "sha256": "43e71ae7d17e60516d311af7fcba8e3d329cd737149b3565f6c0052500a0935c",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/worktree-census.json": {
+        "sha256": "095cbe97f441085c6a30963e9b4468df7b95bbef693573e84402d1bb6e03075a",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/evaluator-preflight-diagnostics.json": {
+        "sha256": "1df03b124e5811c4b33d76e1828dd41a0d09ecb1cb6de2f81b2bda651e6f0bfd",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/designer-supervisor-receipt.json": {
+        "sha256": "99e1b9c755367a642258ce1e64ce951fd1162b66f7f7a621a4e6b44ce0be85b0",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/record-base-tracked-baseline.json": {
+        "sha256": "8c61ebf07282ad9c6d8e7836600967205b115d04917a882fbdf8adcbb6a939d7",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/current-issue.json": {
+        "sha256": "3de2cfa8a66404fa6aba99b9b273ca1b7501edd04fada9d955b1898be045073b",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/product-pr515-fresh.json": {
+        "sha256": "0d87fa0bb02ad0d346b06c036ae2bb5f3624c4063295d2a17b05947242103896",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/controller-observations.json": {
+        "sha256": "8b429c10e02fcba40a70bdd574986ef1436acc2531ed6854f0e05098a8f4b75c",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/upstream-predicates.json": {
+        "sha256": "cd2732c566444798ec88b31b6f2fdd3eb3ebcd6300154943dfe59e766352a7ee",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/inbox-triage.json": {
+        "sha256": "1d6c067c1a648410d7a2e198d678ac9f2991323faa447881f73fc7af36b3d082",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/record-plan.md": {
+        "sha256": "523008e17f783f19b955f45c54da454fcfc7a4c7dab21031d9a2a5ffb6fce57e",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/record-state.json": {
+        "sha256": "293d95564b3c5afae27d2479192547f5162c9219c92c84c55c05ca19eca01d42",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/main-tracked-baseline.json": {
+        "sha256": "5567bab2658d85979791fb17314fc7603d2a0a5265238d188ab887b1dc8c9915",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/planner-supervisor-receipt.json": {
+        "sha256": "426c0aa331aa5c56e40952a21aad862d2a1dac88107252f56534e34cadbf93a2",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/retro-counts.json": {
+        "sha256": "8496bf5235d552ce8123817c86c073fe8a3a9db8ba1aabb045d9182195dcb61b",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/upstream-open-control.json": {
+        "sha256": "c51765c72ca4c4a1386bf3a50b54408d09c9ac2fd0d84737345b7256b6de5b8d",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/controller-plan-addendum.md": {
+        "sha256": "fcd52eb649ceb8a230c2513e74bff591b22cfb1cebe64bdea17a03d044fc298d",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/index-cli-baseline.json": {
+        "sha256": "1233e79f644e71b047b2f2268df7944a57e965634a2e944a64d8b61bc12aa56e",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/base-checks.json": {
+        "sha256": "560962fd1457d9a0a6d2025b42532764078173f26ecc644a01ba4e28be6537de",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/evaluator-preflight.json": {
+        "sha256": "93180523a7450697c5cac2c6f8f4bd4851db5e7bb10251fd0b4ee8c9c9540471",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/record-design.md": {
+        "sha256": "39549a5d8d075e9a8a560475a6e4960bd2657184f6963cbd547a76255481e98c",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/index-cli-baseline-r2.json": {
+        "sha256": "12293a7c85faa0de276dc577a7adab96093ad64655a4feefee8558f9ac4d4cee",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/executor-structural-proof.json": {
+        "sha256": "e5ac29681cec9ce461e29e3307bbc4b6558b878d4e246479fbbceda58328697e",
+        "mode": "0o644",
+        "type": "regular"
+      },
+      "design_docs/verification/world-iter365/executor-supervisor-receipt.json": {
+        "sha256": "8873323edfcf496b4eef88111f7d3a8e30ac44557c3992c0808b012131853558",
+        "mode": "0o644",
+        "type": "regular"
+      }
+    },
+    "new_committed365_inputs": [
+      "design_docs/verification/world-iter365/base-checks.json",
+      "design_docs/verification/world-iter365/controller-gate4-base.json",
+      "design_docs/verification/world-iter365/controller-observations.json",
+      "design_docs/verification/world-iter365/controller-plan-addendum.md",
+      "design_docs/verification/world-iter365/current-issue.json",
+      "design_docs/verification/world-iter365/dedicated-baseline.json",
+      "design_docs/verification/world-iter365/designer-receipt.json",
+      "design_docs/verification/world-iter365/designer-supervisor-receipt.json",
+      "design_docs/verification/world-iter365/evaluator-preflight-diagnostics.json",
+      "design_docs/verification/world-iter365/evaluator-preflight.json",
+      "design_docs/verification/world-iter365/inbox-triage.json",
+      "design_docs/verification/world-iter365/index-cli-baseline-r2.json",
+      "design_docs/verification/world-iter365/index-cli-baseline.json",
+      "design_docs/verification/world-iter365/main-tracked-baseline.json",
+      "design_docs/verification/world-iter365/planner-supervisor-receipt.json",
+      "design_docs/verification/world-iter365/product-pr515-fresh.json",
+      "design_docs/verification/world-iter365/record-base-tracked-baseline.json",
+      "design_docs/verification/world-iter365/record-design.md",
+      "design_docs/verification/world-iter365/record-plan.md",
+      "design_docs/verification/world-iter365/record-state.json",
+      "design_docs/verification/world-iter365/retro-counts.json",
+      "design_docs/verification/world-iter365/skill-currency.json",
+      "design_docs/verification/world-iter365/upstream-open-control.json",
+      "design_docs/verification/world-iter365/upstream-predicates.json",
+      "design_docs/verification/world-iter365/worktree-census.json"
+    ],
+    "diff_name_status": [
+      "A\tdesign_docs/verification/world-iter365/base-checks.json",
+      "A\tdesign_docs/verification/world-iter365/controller-gate4-base.json",
+      "A\tdesign_docs/verification/world-iter365/controller-observations.json",
+      "A\tdesign_docs/verification/world-iter365/controller-plan-addendum.md",
+      "A\tdesign_docs/verification/world-iter365/current-issue.json",
+      "A\tdesign_docs/verification/world-iter365/dedicated-baseline.json",
+      "A\tdesign_docs/verification/world-iter365/designer-receipt.json",
+      "A\tdesign_docs/verification/world-iter365/designer-supervisor-receipt.json",
+      "A\tdesign_docs/verification/world-iter365/evaluator-preflight-diagnostics.json",
+      "A\tdesign_docs/verification/world-iter365/evaluator-preflight.json",
+      "A\tdesign_docs/verification/world-iter365/inbox-triage.json",
+      "A\tdesign_docs/verification/world-iter365/index-cli-baseline-r2.json",
+      "A\tdesign_docs/verification/world-iter365/index-cli-baseline.json",
+      "A\tdesign_docs/verification/world-iter365/main-tracked-baseline.json",
+      "A\tdesign_docs/verification/world-iter365/planner-supervisor-receipt.json",
+      "A\tdesign_docs/verification/world-iter365/product-pr515-fresh.json",
+      "A\tdesign_docs/verification/world-iter365/record-base-tracked-baseline.json",
+      "A\tdesign_docs/verification/world-iter365/record-design.md",
+      "A\tdesign_docs/verification/world-iter365/record-plan.md",
+      "A\tdesign_docs/verification/world-iter365/record-state.json",
+      "A\tdesign_docs/verification/world-iter365/retro-counts.json",
+      "A\tdesign_docs/verification/world-iter365/skill-currency.json",
+      "A\tdesign_docs/verification/world-iter365/upstream-open-control.json",
+      "A\tdesign_docs/verification/world-iter365/upstream-predicates.json",
+      "A\tdesign_docs/verification/world-iter365/worktree-census.json",
+      "M\tdesign_docs/world-mission-dashboard.md",
+      "M\tdesign_docs/world-mission-index.md",
+      "M\tdesign_docs/world-mission-log.md",
+      "M\tdesign_docs/world-mission-status-archive.md",
+      "M\tdesign_docs/world-mission.md"
+    ],
+    "status_porcelain": [
+      " M design_docs/world-mission-dashboard.md",
+      " M design_docs/world-mission-index.md",
+      " M design_docs/world-mission-log.md",
+      " M design_docs/world-mission-status-archive.md",
+      " M design_docs/world-mission.md",
+      "?? design_docs/verification/world-iter365/executor-structural-proof.json",
+      "?? design_docs/verification/world-iter365/executor-supervisor-receipt.json"
+    ],
+    "commands": [
+      {
+        "argv": [
+          "git",
+          "merge-base",
+          "--is-ancestor",
+          "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+          "HEAD"
+        ],
+        "rc": 0,
+        "stdout_bytes": 0,
+        "stderr": "",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "argv": [
+          "git",
+          "ls-tree",
+          "-r",
+          "-z",
+          "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de"
+        ],
+        "rc": 0,
+        "stdout_bytes": 811486,
+        "stderr": "",
+        "stdout_sha256": "f714406df6c144c28dc0f73140e9b73e4a5ee703b96c596e02d3fee077625aa3"
+      },
+      {
+        "argv": [
+          "git",
+          "ls-tree",
+          "-r",
+          "-z",
+          "HEAD"
+        ],
+        "rc": 0,
+        "stdout_bytes": 814395,
+        "stderr": "",
+        "stdout_sha256": "cce2846a0144802998c24c932c7f583fe40e42e1a19b2b7a7e656b5091768d80"
+      },
+      {
+        "argv": [
+          "git",
+          "hash-object",
+          "--stdin-paths"
+        ],
+        "rc": 0,
+        "stdout_bytes": 262195,
+        "stderr": "",
+        "stdout_sha256": "d0d55f04ae9d9e25812c36f7c3c73a6be599f566624bb60d0465bf0b37d58292"
+      },
+      {
+        "argv": [
+          "git",
+          "diff",
+          "--name-status",
+          "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+          "--"
+        ],
+        "rc": 0,
+        "stdout_bytes": 1824,
+        "stderr": "",
+        "stdout_sha256": "4d551f1a47aeaa8ce8b1599f9eb78e93967f50a6591d721f650144e2237142fb"
+      },
+      {
+        "argv": [
+          "git",
+          "status",
+          "--porcelain=v1",
+          "--untracked-files=all"
+        ],
+        "rc": 0,
+        "stdout_bytes": 343,
+        "stderr": "",
+        "stdout_sha256": "70e5fab86f57de91d94e1046cb0c501cf9beb8671887a58ea41139ea71e758b2"
+      }
+    ],
+    "at_utc": "2026-11-07T17:18:44.558184+00:00"
+  },
+  "all_original_guards_preserved": {
+    "detail": "Reused original complete audit and exact charter/archive/ledger/queue/log-prefix/index/dashboard/input guard logic plus all9 actual in-memory controls; only the newly owned proof path and explicit ready input map changed for continuation ownership.",
+    "guard_count": 7,
+    "negative_attempted": 9,
+    "negative_detected": 9,
+    "negative_survivors": 0,
+    "mutants": "protected byte; duplicate365; drop363; corrupt362 pair; another route byte; prior log byte; orphan361; dashboard41 lines; frozen-input hash. In-memory only; no shared-file mutation.",
+    "baseline_start": "Original before-audit preserved in STOP proof demonstrates allfive originally atbase; continuation verifies their original prepared hashes unchanged."
+  },
+  "log_archive": {
+    "path": "design_docs/world-mission-log-archive.md",
+    "base_blob": "e4f4ec5c939a819eb2a9b1f55eba268d649e2e0d",
+    "actual_blob": "e4f4ec5c939a819eb2a9b1f55eba268d649e2e0d",
+    "sha256": "32c90181c7c0ad86e8981e1992c3dfd2f57a4f5a43dd6de022d9eaa5b22bbcce",
+    "unchanged": true,
+    "commands": [
+      {
+        "argv": [
+          "git",
+          "rev-parse",
+          "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de:design_docs/world-mission-log-archive.md"
+        ],
+        "rc": 0,
+        "stdout_bytes": 41,
+        "stderr": "",
+        "stdout_sha256": "72da7733cb8c314bac9bc5275b5449ea1127453af0cd68fcc4d144d7810bcf7a"
+      },
+      {
+        "argv": [
+          "git",
+          "hash-object",
+          "--",
+          "design_docs/world-mission-log-archive.md"
+        ],
+        "rc": 0,
+        "stdout_bytes": 41,
+        "stderr": "",
+        "stdout_sha256": "72da7733cb8c314bac9bc5275b5449ea1127453af0cd68fcc4d144d7810bcf7a"
+      }
+    ]
+  },
+  "original_STOP_proof_whitespace_check": {
+    "argv": [
+      "git",
+      "diff",
+      "--no-index",
+      "--check",
+      "/dev/null",
+      "design_docs/verification/world-iter365/executor-structural-proof.json"
+    ],
+    "rc": 1,
+    "stdout": "",
+    "stderr": "",
+    "interpretation": "rc1/no diagnostics means new-file content difference, not whitespace failure."
+  },
+  "snapshot": {
+    "path": "design_docs/verification/world-iter365/.snap/M1/",
+    "manifest": [
+      {
+        "source": "design_docs/world-mission.md",
+        "snapshot": "design_docs/verification/world-iter365/.snap/M1/design_docs/world-mission.md",
+        "owner": "actual executor",
+        "source_kind": "unchanged-since-STOP record output",
+        "sha256": "24225ebebd46c9829b508b279baca0d0195d93fb0ed4961c442daa46c6df5e82"
+      },
+      {
+        "source": "design_docs/world-mission-log.md",
+        "snapshot": "design_docs/verification/world-iter365/.snap/M1/design_docs/world-mission-log.md",
+        "owner": "actual executor",
+        "source_kind": "unchanged-since-STOP record output",
+        "sha256": "2b42b9a348cdffc7560b4ec53d0c5889d2183a619b49b32d8b091274f67f2547"
+      },
+      {
+        "source": "design_docs/world-mission-dashboard.md",
+        "snapshot": "design_docs/verification/world-iter365/.snap/M1/design_docs/world-mission-dashboard.md",
+        "owner": "actual executor",
+        "source_kind": "unchanged-since-STOP record output",
+        "sha256": "5e80a7397ad9354d06a6eab3bfb2a43aebf7f35fe673260bca4f515b9cc25160"
+      },
+      {
+        "source": "design_docs/world-mission-status-archive.md",
+        "snapshot": "design_docs/verification/world-iter365/.snap/M1/design_docs/world-mission-status-archive.md",
+        "owner": "actual executor",
+        "source_kind": "unchanged-since-STOP record output",
+        "sha256": "1829cc1e1a02022496c7ec7537368a9d0202daa43ad6bd65aef3b58fc1bc39e7"
+      },
+      {
+        "source": "design_docs/world-mission-index.md",
+        "snapshot": "design_docs/verification/world-iter365/.snap/M1/design_docs/world-mission-index.md",
+        "owner": "actual executor",
+        "source_kind": "unchanged-since-STOP record output",
+        "sha256": "a27f891f0f8b7dadaf022eebcdbcc4bb81a2b5e9295000c335cbfc08dbb9fdd7"
+      },
+      {
+        "source": "design_docs/verification/world-iter365/executor-completion-proof.json",
+        "snapshot": "design_docs/verification/world-iter365/.snap/M1/design_docs/verification/world-iter365/executor-completion-proof.json",
+        "owner": "actual executor",
+        "source_kind": "new continuation completion proof",
+        "identity_check": "direct final byte comparison; no self-referential hash"
+      }
+    ],
+    "manifest_count": 6,
+    "record_members_already_copied_and_compared": [
+      {
+        "source": "design_docs/world-mission.md",
+        "snapshot": "design_docs/verification/world-iter365/.snap/M1/design_docs/world-mission.md",
+        "direct_bytes_equal": true,
+        "mode_equal": true,
+        "bytes": 1387914,
+        "rc": 0
+      },
+      {
+        "source": "design_docs/world-mission-log.md",
+        "snapshot": "design_docs/verification/world-iter365/.snap/M1/design_docs/world-mission-log.md",
+        "direct_bytes_equal": true,
+        "mode_equal": true,
+        "bytes": 499105,
+        "rc": 0
+      },
+      {
+        "source": "design_docs/world-mission-dashboard.md",
+        "snapshot": "design_docs/verification/world-iter365/.snap/M1/design_docs/world-mission-dashboard.md",
+        "direct_bytes_equal": true,
+        "mode_equal": true,
+        "bytes": 4549,
+        "rc": 0
+      },
+      {
+        "source": "design_docs/world-mission-status-archive.md",
+        "snapshot": "design_docs/verification/world-iter365/.snap/M1/design_docs/world-mission-status-archive.md",
+        "direct_bytes_equal": true,
+        "mode_equal": true,
+        "bytes": 1625146,
+        "rc": 0
+      },
+      {
+        "source": "design_docs/world-mission-index.md",
+        "snapshot": "design_docs/verification/world-iter365/.snap/M1/design_docs/world-mission-index.md",
+        "direct_bytes_equal": true,
+        "mode_equal": true,
+        "bytes": 57770,
+        "rc": 0
+      }
+    ],
+    "proof_identity_policy": "Write this finalized proof once, copy its exact bytes into the sole manifest destination, then compare both actual files directly in the terminal. No proof self-hash is stored. Controller may later attest proof hash.",
+    "final_inventory_policy": "Final terminal checks exact manifest file set and its required directory set, six regular file types/modes/direct byte identities, proof no-index whitespace and all protected/frozen inputs. These post-serialization observations are emitted by the actual terminal rather than recursively embedded into this immutable proof.",
+    "excludes": [
+      "original executor-structural-proof.json",
+      "original executor-supervisor-receipt.json",
+      "design/plan/state",
+      "all controller/designer/planner/judge and other-owner inputs",
+      "snapshot contents themselves",
+      "summary",
+      "M2",
+      "M3"
+    ],
+    "controller_boundary": "Snapshot bulk stays local; controller owns later reconstruction and any Git writes."
+  },
+  "continuation_runtime_usage": "Unreported pending separate supervisor receipt after actual terminal. Original supervisor receipt retains only original stage usage; no fabricated continuation totals/runtime.",
+  "routing_boundary": {
+    "base_evidence": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de@2026-11-07T16:58:29Z",
+    "actual_executor": "codex:gpt-6.1-sol per pinned invocation",
+    "all_four_Agent_supervisors_required": true,
+    "Agent_API_model_override": false,
+    "actual_roles": "Pinned CLI recipes; fresh actual judge separate from this executor.",
+    "judge": "PENDING separate fresh Codex gpt-6.1-sol under D-WORLD-48 FLAG judge-independence:same-model-fresh-context",
+    "judge_verdict": null,
+    "availability": "Supplied/controller-evidenced actual Sonnet and opus preflight rc1 weekly limit until Nov9 06:00 Europe/Copenhagen; OpenRouter over ration. No new probes/network."
+  },
+  "product_boundary": {
+    "row": 256,
+    "status": "PARKED needs-human-review",
+    "independent_MiniMax": "FAIL85",
+    "local_criterion": "UNMET",
+    "draft_PR": 515,
+    "fresh_controller_PR_state": "CONFLICTING/DIRTY",
+    "OPEN_decisions": [
+      "D-WORLD-105",
+      "D-WORLD-110",
+      "D-WORLD-111",
+      "D-WORLD-112"
+    ],
+    "defaults": [
+      "C build nothing,233 parked/fail closed",
+      "A255 as built",
+      "A exactly two named baseline failures and no additional failures",
+      "no autonomous credential change"
+    ],
+    "independent_human_gates": [
+      "D111",
+      "D112"
+    ],
+    "exposure": "Sanitization does not undo exposure",
+    "attribution": "Publish-counter/net6 remain unattributed; nonrecurrence is not attribution",
+    "no_autonomous_skip": [
+      257,
+      201,
+      243
+    ],
+    "conditional_attended_order": [
+      250,
+      255,
+      256,
+      257,
+      201,
+      243
+    ],
+    "acceptance": "ADMIN structural completion cannot accept product, clear either independent park or resolve human decisions."
+  },
+  "pending": {
+    "independent_record_review": "PENDING; includes instrument attribution and any material changes; no judge acceptance here",
+    "narrow_charter_test": "Controller-owned outside sandbox: go test ./host/verifygate -run '^TestMissionConfigRealCharter$' -count=1; not run here",
+    "sandbox_socket_result": "UNINFORMATIVE UNDER SANDBOX; no socket test attempted",
+    "final_record_CI": "Exact full40 record PR-head AND merge-head each require all3 terminal-success checks/URLs: ailang-code verify, Go race, Go host build/test. No final SHA/CI/landing claimed.",
+    "supervisor": "Separate new receipt only after actual terminal; this actual role writes no supervisor receipt."
+  },
+  "provenance": "Current controller observations, dedicated pristine narrow baseline and skill-currency remain frozen; base3/3 CI and clauses1.0 7/7 MET are inherited, goal unmoved. No new product test or product acceptance.",
+  "scope_compliance": "No Git writes, agents, network/imports/inbox/external messages, credentials/environment inspection, source/test/gate/harness/skill/driver/registry changes, full Go/product suite or TMPDIR/GOTMPDIR overrides. Five record outputs unchanged during continuation.",
+  "instrument_sources": {
+    "audit.py": "import pathlib, subprocess, hashlib, json, stat, re, datetime\nROOT=pathlib.Path('/Users/voightkampff/.ailang/state/world-iter365-record')\nSESSION=pathlib.Path('/private/tmp/world365-m1-continuation-wkh0chmf')\nBASE='b9816aefab82dc09cf9e3a9cec5e8191fb58a9de'\nDIR='design_docs/verification/world-iter365/'\nOWNED=['design_docs/world-mission.md','design_docs/world-mission-log.md','design_docs/world-mission-dashboard.md','design_docs/world-mission-status-archive.md','design_docs/world-mission-index.md']\nPROOF=DIR+'executor-completion-proof.json'\nSNAP=DIR+'.snap/M1/'\ncommands=[]\ndef run(args,inp=None):\n p=subprocess.run(args,input=inp,capture_output=True,cwd=ROOT)\n commands.append({'argv':args,'rc':p.returncode,'stdout_bytes':len(p.stdout),'stderr':p.stderr.decode(),'stdout_sha256':hashlib.sha256(p.stdout).hexdigest()})\n assert p.returncode==0,(args,p.returncode,p.stderr.decode())\n return p.stdout\ndef sha(b): return hashlib.sha256(b).hexdigest()\ndef blob(b): return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\\0'+b).hexdigest()\ndef read(p): return (ROOT/p).read_bytes()\ndef basebytes(p): return run(['git','show',BASE+':'+p])\ndef tree(rev):\n t={}\n for e in run(['git','ls-tree','-r','-z',rev]).split(b'\\0'):\n  if not e: continue\n  m,p=e.split(b'\\t',1); mode,typ,h=m.decode().split(); t[p.decode()]={'mode':mode,'type':typ,'blob':h}\n return t\ndef frozen_check():\n f=json.loads((SESSION/'session.json').read_text())['frozen_inputs']; out={}\n for p,v in f.items():\n  s=(ROOT/p).lstat(); actual={'sha256':sha(read(p)),'mode':oct(stat.S_IMODE(s.st_mode)),'type':'regular' if stat.S_ISREG(s.st_mode) else 'other'}\n  assert v==actual,'FROZEN INPUT DRIFT '+p\n  out[p]=actual\n return out\ndef audit(phase):\n run(['git','merge-base','--is-ancestor',BASE,'HEAD'])\n bt=tree(BASE); ht=tree('HEAD'); assert len(bt)==6395,len(bt)\n assert set(OWNED)<=set(bt)\n extra=set(ht)-set(bt); frozen=frozen_check()\n assert all(p in frozen and p.startswith(DIR) for p in extra),extra-set(frozen)\n assert set(bt)<=set(ht),'removed base paths'\n regular=[]; actual={}; mism=[]; mode_counts={}\n for p,v in bt.items():\n  s=(ROOT/p).lstat(); mode_counts[v['mode']]=mode_counts.get(v['mode'],0)+1\n  if v['mode']=='120000':\n   assert stat.S_ISLNK(s.st_mode),p\n   actual[p]=blob(str((ROOT/p).readlink()).encode())\n  else:\n   assert stat.S_ISREG(s.st_mode),p\n   want=0o755 if v['mode']=='100755' else 0o644\n   assert stat.S_IMODE(s.st_mode)==want,(p,oct(stat.S_IMODE(s.st_mode)),oct(want))\n   regular.append(p)\n hashes=run(['git','hash-object','--stdin-paths'],''.join(p+'\\n' for p in regular).encode()).decode().splitlines()\n assert len(hashes)==len(regular)\n actual.update(zip(regular,hashes))\n for p in bt:\n  if actual[p]!=bt[p]['blob'] and (phase=='before' or p not in OWNED): mism.append(p)\n assert not mism,('BASE DRIFT',mism)\n prior=[p for p in bt if p.startswith('design_docs/verification/world-iter364/')]\n assert len(prior)==47\n assert {p for p in ht if p.startswith('design_docs/verification/world-iter364/')}==set(prior)\n for p in prior: assert actual[p]==bt[p]['blob']\n diff=run(['git','diff','--name-status',BASE,'--']).decode().splitlines()\n modifications=[]; additions=[]\n for line in diff:\n  state,p=line.split('\\t'); assert state in ['A','M'],line\n  if state=='M': assert p in OWNED,line; modifications.append(p)\n  else: assert p.startswith(DIR) and p in frozen,line; additions.append(p)\n if phase=='before': assert not modifications\n else: assert set(modifications)==set(OWNED)\n status=run(['git','status','--porcelain=v1','--untracked-files=all']).decode().splitlines()\n for line in status:\n  state,p=line[:2],line[3:]\n  assert state[0]==' ' or state=='??',('STAGED OR UNEXPECTED',line)\n  if state==' M': assert p in OWNED,line\n  elif state=='??':\n   assert p.startswith(DIR),line\n   assert p in frozen or p==PROOF or (p.startswith(SNAP) and p[len(SNAP):] in OWNED+[PROOF]),line\n   assert stat.S_ISREG((ROOT/p).lstat().st_mode),line\n  else: raise AssertionError(line)\n result={'phase':phase,'base_ancestor_rc':0,'base_paths':len(bt),'protected_paths':len(bt)-len(OWNED),'baseline_mismatches':mism,'mode_counts':mode_counts,'regular_paths_hashed_by_git':len(regular),'base_tree_inventory_sha256':sha(json.dumps(bt,sort_keys=True).encode()),'protected_tree_inventory_sha256':sha(json.dumps({p:v for p,v in bt.items() if p not in OWNED},sort_keys=True).encode()),'allowed_start_at_base':phase=='before','prior364':[{'path':p,'base_blob':bt[p]['blob'],'actual_blob':actual[p]} for p in prior],'frozen_inputs':frozen,'new_committed365_inputs':sorted(extra),'diff_name_status':diff,'status_porcelain':status,'commands':commands.copy(),'at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat()}\n return result\nif __name__=='__main__':\n import sys\n phase=sys.argv[1]; result=audit(phase)\n (SESSION/(phase+'.json')).write_text(json.dumps(result,indent=2)+'\\n')\n print(json.dumps({k:v for k,v in result.items() if k in ['phase','base_paths','protected_paths','baseline_mismatches','mode_counts','regular_paths_hashed_by_git','at_utc']},indent=2))\n",
+    "verify.py": "import sys,re,json,subprocess,datetime\nsys.path.insert(0,'/private/tmp/world365-m1-continuation-wkh0chmf')\nimport audit as a\nC,L,D,A,I=a.OWNED\nbase={p:a.basebytes(p) for p in a.OWNED}; live={p:a.read(p) for p in a.OWNED}\npattern=rb'^## STATUS \\d{4}-\\d{2}-\\d{2} \\xe2\\x80\\x94 ITERATION (\\d+):[^\\n]*\\n\\n'\nstamps=list(re.finditer(pattern,base[C],re.M)); assert [m[1] for m in stamps]==[b'364',b'363',b'362']\npair=stamps[2][0]\nline='## STATUS 2026-11-07 — ITERATION 365: ADMIN record only; row 256 PARKED needs-human-review, independent MiniMax FAIL 85, LOCAL_CRITERION UNMET, draft PR #515. D-WORLD-105/110/111/112 remain OPEN; D111 and D112 are independent human gates. No autonomous skip257/201/243 or product acceptance. Evidence: verification/world-iter365/; full log entry 365.\\n\\n'.encode()\np=stamps[0].start(); expected_c=(base[C][:p]+line+base[C][p:]).replace(pair,b'',1).replace(b'Current route (iteration 364)',b'Current route (iteration 365)',1)\nrow=b'| 365 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |\\n'\np=re.search(rb'^\\| 364 \\|',base[I],re.M).start(); expected_i=base[I][:p]+row+base[I][p:]\nheading='## 365 — 2026-11-07 — ADMIN record only; row 256 remains parked [ADMIN]'.encode()\nledger_pat=rb'<!-- decision-ledger:start -->\\n.*?<!-- decision-ledger:end -->\\n'\ndef charter_guard(b):\n assert b==expected_c,'whole charter expected-byte comparison'\n assert re.findall(pattern,b,re.M)==[b'365',b'364',b'363'],'dated STATUS identity/order'\n assert b.count(b'Current route (iteration 365)')==1 and b.count(b'Current route (iteration 364)')==0,'route token uniqueness'\n assert b.count(b'\\n')==6345,'charter lines'\n ledger=re.search(ledger_pat,b,re.S).group(); queue=b[b.index(b'## Queue (top = next;'):]\n assert ledger==re.search(ledger_pat,base[C],re.S).group(),'whole marked ledger bytes'\n assert a.sha(ledger)=='58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01','whole marked ledger SHA256'\n assert len(re.findall(rb'^\\| D-WORLD-[^|]+\\|',ledger,re.M))==99,'ledger99'\n assert queue==base[C][base[C].index(b'## Queue (top = next;'):],'queue suffix bytes'\n assert a.sha(queue)=='f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4','queue SHA256'\n for n in [105,110,111,112]:\n  assert len(re.findall(rb'^\\| D-WORLD-'+str(n).encode()+rb' \\| OPEN \\|',ledger,re.M))==1,'OPEN decision'\ndef archive_guard(b):\n assert b==base[A]+pair,'whole archive expected pair and prefix comparison'\n assert b.startswith(base[A]),'old archive prefix'\n assert a.sha(b[len(base[A]):])=='27fecc13ef71fc8811f1c426b134c9650c57d86a3399446aa5ccf5c37d5ab260','362 pair SHA256'\n assert b.count(b'\\n')==730,'archive lines'\n prior359=re.findall(rb'^## STATUS \\d{4}-\\d{2}-\\d{2} \\xe2\\x80\\x94 ITERATION 359:[^\\n]*\\n\\n',base[A],re.M)\n assert len(prior359)==1 and b.count(prior359[0])==1,'prior359 exact retained'\ndef log_guard(b):\n assert b.startswith(base[L]),'entire prior log byte prefix comparison'\n assert len(re.findall(rb'^## \\d+ \\xe2\\x80\\x94 \\d{4}-\\d{2}-\\d{2} \\xe2\\x80\\x94 ',b,re.M))==39,'canonical log count39'\n assert b.count(heading)==1,'canonical365 heading identity'\n assert len(re.findall(rb'^## 365 \\xe2\\x80\\x94 ',b,re.M))==1,'only one365'\n assert not re.search(rb'^## 361 \\xe2\\x80\\x94 ',b,re.M),'no invented canonical361'\n routing=b'**Routing evidence:** base='+a.BASE.encode()+b'@2026-11-07T16:58:29Z;'\n assert b[len(base[L]):].count(routing)==1,'canonical routing evidence'\n note=json.loads((a.SESSION/'prepared.json').read_text())['driver_note_verbatim'].encode()\n assert b[len(base[L]):].count(note)==1,'verbatim driver note'\ndef index_guard(b):\n assert b==expected_i,'entire index expected-byte comparison'\n assert b.count(row)==1,'exact365 row'\n orphan=re.findall(rb'^\\| 361 \\|[^\\n]*\\n',base[I],re.M)\n assert len(orphan)==1 and b.count(orphan[0])==1,'orphan361 exact'\ndef dashboard_guard(b):\n assert 0<len(b.splitlines())<=40,'dashboard <=40 lines'\n for token in ['PARKED','FAIL85','UNMET','D105','D110','D111','D112','independently','250 →255 →256 →257 →201 →243','inherited','173284','pending','goal unmoved','no automatic product pick']:\n  assert token.encode() in b,'required dashboard token '+token\ndef protected_guard(b):\n actual=a.run(['git','hash-object','--stdin'],b).decode().strip()\n expected=a.run(['git','rev-parse',a.BASE+':CLAUDE.md']).decode().strip()\n assert actual==expected,'protected Git blob comparison'\nfrozen=json.loads((a.SESSION/'session.json').read_text())['frozen_inputs']\ndef input_guard(actual):\n assert actual==frozen,'explicit frozen-input hash/type/mode comparison'\npositive=[]\nfor name,fn,data in [('charter',charter_guard,live[C]),('archive',archive_guard,live[A]),('log',log_guard,live[L]),('index',index_guard,live[I]),('dashboard',dashboard_guard,live[D]),('protected-byte',protected_guard,a.read('CLAUDE.md')),('frozen-inputs',input_guard,a.frozen_check())]:\n fn(data);positive.append({'guard':name,'rc':0})\ncontrols=[]\ndef negative(name,fn,data,mutation):\n try: fn(data)\n except AssertionError as e: controls.append({'name':name,'mutation':mutation,'detected':True,'guard_rejection':str(e),'rc':1})\n else: controls.append({'name':name,'mutation':mutation,'detected':False,'guard_rejection':None,'rc':0})\nprotected=a.read('CLAUDE.md'); negative('protected-byte',protected_guard,bytes([protected[0]^1])+protected[1:],'flip one byte of actual protected CLAUDE.md in memory, use git hash-object --stdin without -w')\nnegative('duplicate365',charter_guard,live[C].replace(line,line+line,1),'duplicate the actual365 STATUS pair in memory')\nstamp363=re.search(rb'^## STATUS \\d{4}-\\d{2}-\\d{2} \\xe2\\x80\\x94 ITERATION 363:[^\\n]*\\n\\n',live[C],re.M)[0]\nnegative('drop363',charter_guard,live[C].replace(stamp363,b'',1),'remove actual363 STATUS pair in memory')\nmutpair=bytes([pair[0]^1])+pair[1:]\nnegative('corrupt362-pair',archive_guard,live[A][:-len(pair)]+mutpair,'flip first byte of appended362 pair in memory, preserving old archive prefix')\nnegative('other-route-byte',charter_guard,live[C].replace(b'Current route (iteration 365): ADMIN',b'Current route (iteration 365): aDMIN',1),'change ADMIN byte outside the permitted route token substitution')\nnegative('prior-log-byte',log_guard,live[L][1:],'delete first byte of actual retained log prefix in memory')\norphan=re.search(rb'^\\| 361 \\|[^\\n]*\\n',live[I],re.M)[0]\nnegative('orphan361',index_guard,live[I].replace(orphan,orphan.replace(b'orphan:',b'ORPHAN:',1),1),'change orphan361 prior row in memory')\nnegative('dashboard-over40',dashboard_guard,live[D]+b'overflow\\n'*(41-len(live[D].splitlines())),'append in-memory lines to exactly41')\nmut=json.loads(json.dumps(frozen)); key=a.DIR+'record-plan.md'; mut[key]['sha256']='0'*64\nnegative('frozen-input-hash',input_guard,mut,'change ready plan SHA256 in an in-memory actual-input hash map')\nassert len(controls)==9 and all(c['detected'] for c in controls),controls\n# Actual tracked checks; untracked files get explicit no-index checks at final publication.\nwhitespace=[]\nfor argv in [['git','diff','--check'],['git','diff','--check',a.BASE,'--']]:\n p=subprocess.run(argv,cwd=a.ROOT,capture_output=True,text=True)\n whitespace.append({'argv':argv,'rc':p.returncode,'stdout':p.stdout,'stderr':p.stderr}); assert p.returncode==0,whitespace[-1]\nresult={'at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'structural_checks_rc':0,'positive_controls':positive,'negative_controls':controls,'negative_summary':{'attempted':len(controls),'detected':sum(c['detected'] for c in controls),'survivors':sum(not c['detected'] for c in controls)},'counts':{'charter_lines':len(live[C].splitlines()),'archive_lines':len(live[A].splitlines()),'dashboard_lines':len(live[D].splitlines()),'canonical_log_entries':39,'active_statuses':[365,364,363],'ledger_rows':99,'index_added_rows':1},'preservation_sha256':{'marked_ledger':a.sha(re.search(ledger_pat,live[C],re.S).group()),'queue_suffix':a.sha(live[C][live[C].index(b'## Queue (top = next;'):]),'status362_pair':a.sha(pair),'base_log_prefix':a.sha(live[L][:len(base[L])]),'base_archive_prefix':a.sha(live[A][:len(base[A])])},'record_hashes':{p:{'sha256':a.sha(b),'bytes':len(b),'mode':oct((a.ROOT/p).stat().st_mode&0o777)} for p,b in live.items()},'tracked_whitespace':whitespace,'commands':a.commands}\n(a.SESSION/'structural.json').write_text(json.dumps(result,indent=2)+'\\n')\nprint(json.dumps({'structural_checks_rc':0,'positive_controls':len(positive),'negative_controls':result['negative_summary'],'counts':result['counts'],'tracked_whitespace_rc':[v['rc'] for v in whitespace]},indent=2))\n"
+  },
+  "instrument_location": "Unique executor-private /private/tmp tools; no repository test/gate/harness changed.",
+  "actual_successful_invocations": [
+    {
+      "argv": [
+        "python3",
+        "/private/tmp/world365-m1-continuation-wkh0chmf/verify.py"
+      ],
+      "rc": 0
+    },
+    {
+      "argv": [
+        "python3",
+        "/private/tmp/world365-m1-continuation-wkh0chmf/audit.py",
+        "after"
+      ],
+      "rc": 0
+    }
+  ],
+  "terminal_post_serialization_commands": [
+    "git diff --check",
+    "git diff --check b9816aefab82dc09cf9e3a9cec5e8191fb58a9de --",
+    "git diff --no-index --check /dev/null design_docs/verification/world-iter365/executor-completion-proof.json",
+    "git diff --no-index --check /dev/null design_docs/verification/world-iter365/.snap/M1/design_docs/verification/world-iter365/executor-completion-proof.json",
+    "Read-only full protected-tree/frozen-input audit; exact six-member snapshot directory/file inventory; direct byte/type/mode checks including the proof; no self-hash."
+  ]
+}

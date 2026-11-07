@@ -1,0 +1,14 @@
+{
+  "base": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+  "rc": 3,
+  "stdout": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-archive-style-baseline-aq8y3lk1/base-archive.md:728: new blank line at EOF.\n",
+  "stderr": "",
+  "argv": [
+    "git",
+    "diff",
+    "--no-index",
+    "--check",
+    "/dev/null",
+    "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-archive-style-baseline-aq8y3lk1/base-archive.md"
+  ]
+}

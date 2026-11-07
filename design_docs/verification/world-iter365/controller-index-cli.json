@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "ailang",
+    "mission",
+    "rotate-log",
+    "world",
+    "--index-only"
+  ],
+  "registry": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-registry-final-jdsfgo0_",
+  "rc": 0,
+  "stdout": "INDEX      /Users/voightkampff/.ailang/state/world-iter365-record/design_docs/world-mission-index.md\n  353 iterations, complete history \u2014 grep this before picking work\norphan rows preserved: 361\n",
+  "stderr": "",
+  "index_byte_identical": true
+}

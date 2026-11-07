@@ -1036,11 +1036,11 @@ watermark. Never infer resolution from related code landing.
 
 ## STATUS (rotation rule)
 
+## STATUS 2026-11-07 — ITERATION 365: ADMIN record only; row 256 PARKED needs-human-review, independent MiniMax FAIL 85, LOCAL_CRITERION UNMET, draft PR #515. D-WORLD-105/110/111/112 remain OPEN; D111 and D112 are independent human gates. No autonomous skip257/201/243 or product acceptance. Evidence: verification/world-iter365/; full log entry 365.
+
 ## STATUS 2026-11-07 — ITERATION 364: ADMIN record only; row 256 HUMAN PARK / PARKED needs-human-review, independent FAIL 85 and LOCAL_CRITERION UNMET; D-WORLD-105/110/111/112 remain OPEN; conditional attended 250 → 255 → 256 → 257 → 201 → 243, release150/151 priority only when routable; independent record review and PR/merge CI pending.
 
 ## STATUS 2026-11-07 — ITERATION 363: ADMIN only; row 256 PARKED needs-human-review, independent FAIL 85 and LOCAL_CRITERION UNMET; D-WORLD-111/112 await attended decisions; no automatic 257/201/243 route.
-
-## STATUS 2026-11-07 — ITERATION 362: **ROW 256 PARKED [PRODUCT].** Implemented frozen r3 at `76553889`, draft PR #515, but independent actual PI MiniMax M3 returned FAIL 85/100: AC8 and the explicit corrected full-local-Go criterion remain UNMET. Both failed full candidate attempts are retained; green product PR CI 3/3 does not discharge that criterion. No production code is merged by this record. D-WORLD-111 asks whether to retain the exact-two-failures gate (default: stay parked) or authorize a separately specified attribution gate; no criterion amendment or waiver is made here. The evaluator also exposed six credential values in an environment tool result; stored artifacts are sanitized, prior provider exposure cannot be undone, and D-WORLD-112 requests attended rotation. Original planner, execution and independent mutation receipts are retained. Orphan iteration 361 is credited. Clauses 1–7 MET; goal unmoved. D-WORLD-108/109 order remains 256 → 257 → 201 → 243, with 256 blocked pending review; release 150 waits on attended A1 and 151 on N2d/N4a. Cap-accounted before record judge $0.65550268 (metered $0.39196188 plus flat-rate Ollama imputation $0.2635408); source/controller checkout preserved. Evidence: `verification/world-iter362/`; full log entry 362.
 
 ## CURRENT GOAL
 
@@ -1061,7 +1061,7 @@ watermark. Never infer resolution from related code landing.
    doc → `implemented/`), and 4e's OD-1/OD-2 were ratified in the attended TRIPLE RATIFICATION 2.
    **Next items: `4e w-race-gate-blindspot` (RG.A / CF-K-1) and `4f w-bench-load-confound`
    (branch A) — both routable, neither blocked on Mark.**
-    When this line and the Queue disagree, the Queue governs; the Human Decision Ledger governs current authority. Current route (iteration 364): ADMIN record only. Row 256 remains PARKED needs-human-review, draft PR #515, independent FAIL 85 and LOCAL_CRITERION UNMET. D-WORLD-111 default A retains the exact-two-failures contract; no full reruns or source/gate changes. D-WORLD-112 stays OPEN with no autonomous credential changes; sanitization does not undo exposure. No automatic skip to 257, 201 or 243. The attended order 250 → 255 → 256 → 257 → 201 → 243 remains conditional on both parks being explicitly cleared; release rows 150/151 retain priority when routable. D-WORLD-105 and D-WORLD-110 remain OPEN with their existing defaults. History is in the log and status archive.
+    When this line and the Queue disagree, the Queue governs; the Human Decision Ledger governs current authority. Current route (iteration 365): ADMIN record only. Row 256 remains PARKED needs-human-review, draft PR #515, independent FAIL 85 and LOCAL_CRITERION UNMET. D-WORLD-111 default A retains the exact-two-failures contract; no full reruns or source/gate changes. D-WORLD-112 stays OPEN with no autonomous credential changes; sanitization does not undo exposure. No automatic skip to 257, 201 or 243. The attended order 250 → 255 → 256 → 257 → 201 → 243 remains conditional on both parks being explicitly cleared; release rows 150/151 retain priority when routable. D-WORLD-105 and D-WORLD-110 remain OPEN with their existing defaults. History is in the log and status archive.
 
 ## The bar — what "Ailang World 1.0" must meet (RATIFIED by Mark 2026-07-23, attended — see STATUS + issue #1 record)
 

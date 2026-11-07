@@ -1,18 +1,22 @@
-# World mission dashboard — iteration 364 (2026-11-07)
+# World mission dashboard — iteration 365 (2026-11-07)
 
-- **ADMIN:** no product pick or acceptance. Row256 HUMAN PARK / PARKED needs-human-review, independent FAIL85, LOCAL_CRITERION UNMET.
-- **Product receipt:** inherited controller PR515 OPEN/draft CONFLICTING/DIRTY, head7655388936b80bea9c4843f0a2e0abc085e52c0f; designer's earlier network failure remains history.
-- **OPEN defaults:** D105 C (row233 parked/fail closed); D110 A (row255 as built); D111 A (exact-two-named-baseline-failures, no additional failures); D112 no autonomous credential change.
-- **Causality/incident:** publish-counter/net6 unattributed; nonrecurrence is not attribution. Sanitization does not undo exposure; clearing111/112 is independent.
-- **Conditional attended order:** 250 → 255 → 256 → 257 → 201 → 243; no skipping257/201/243. Release150/151 priority only when routable; 201/243 use fakes/test keys, real-key exits attended.
-- **Release:** inherited150 waits on attended A1;151 needs188 N2d/N4a. No new ruling or release measurement.
-- **Gate0/1:** inherited controller billing CLEAN,35 comments/0 directives, crash0/transcript2, degraded watermark1/2; skill14/drift0, base374696c0536809d7c7080d07339208570d5130cb CI3/3 run42362989926.
-- **Gate4:** base374696c0536809d7c7080d07339208570d5130cb; helper2026-11-07T13:06:23Z, receipt2026-11-07T13:06:23.967186+00:00. No executor gate rerun.
-- **Goal/retro:** clauses1–7 MET are inherited assessment; goal unmoved. Prior product360/359/340 moved no UNMET; harness0/20; no routable UNMET, no DRIFT. No idle fingerprint: quota fallback/degraded watermark.
-- **Roles:** all4 required Agent roles completed actual prescribed recipes: Codex gpt-6.1-sol designer/planner/executor; independent PI OpenRouter MiniMax M3 judge. Controller/supervisor exact usage unreported.
-- **Accounting:** known Codex subscription313,859 tokens (designer72,246/planner161,073/executor80,540); actual evaluator probe+review+clarification metered$0.51223248, imputed$0, under$5. Controller/supervisor usage unreported.
-- **Preservation:** original designer FAILED_INPUT_PRESERVATION retained; controller disclosed in-flight31→33 upstream addition before freeze. Existing364 inputs frozen.
-- **Record:** M1/M2 committed from immutable cumulative snapshots; controller M3 index complete, orphan361 preserved. Log38 entries, ledger99 and all29 frozen inputs unchanged. No full log rotation.
-- **Review/delivery:** actual independent MiniMax PASS92, reaffirmed with corrected evidence scope and clean fresh handshake. Narrow charter PASS outside sandbox; final PR/merge each require3/3 CI. Delivery receipts on issue449.
-- **Next/human:** only still-OPEN ledger asks105/110/111/112; attended111 validation and112 incident decisions independently. No new ask/policy; one iteration per fire; weekly sweep2026-11-09 07:00 Europe/Copenhagen.
-- **Evidence:** log364; verification/world-iter364/ contains original reports, actual-judge clarification, supervisor receipts and reproduced findings. M1/M2 snapshots remain immutable; source product parks unchanged.
+- **ADMIN M1:** five record files plus owned structural proof and one cumulative .snap/M1; no product acceptance or automatic product pick. Execution proof: verification/world-iter365/executor-structural-proof.json.
+- **Product:** row256 PARKED needs-human-review; independent MiniMax FAIL85; LOCAL_CRITERION UNMET; draft PR515 OPEN, fresh controller CONFLICTING/DIRTY, head7655388936b80bea9c4843f0a2e0abc085e52c0f.
+- **Four OPEN defaults:** D105 C: build nothing,233 parked/fail closed; D110 A:255 as built; D111 A: exactly two named baseline failures, no additional failures; D112: no autonomous credential change.
+- **Human gates / incident:**111 and112 clear independently by attended ruling. Sanitization does not undo exposure. Publish-counter/net6 unattributed; nonrecurrence is not attribution. Human asks unchanged; no new decision.
+- **Conditional attended order:**250 →255 →256 →257 →201 →243; no autonomous skip257/201/243. Release150/151 priority only when routable.201/243 use fakes/test keys; real-key exits attended.
+- **Release/controller:**0 new A1 or N2d/N4a, known positive controls;150 waits attended A1,151 waits188 N2d/N4a. Upstream33/33 closed; census98 worktrees at observation time; orphan361 already credited362.
+- **Gate0/controller:** billing CLEAN,36 comments/0 directives, crash0/transcript2 old fires, degraded watermarks1/2;20 historical self-claim messages acknowledged by controller. No executor inbox/network reads.
+- **Currency / CI:** controller skill14/14 current,drift0; exact base dev CI3/3 run42379267599 inherited. No new product tests or final365 CI claim.
+- **Routing evidence:** base=b9816aefab82dc09cf9e3a9cec5e8191fb58a9de@2026-11-07T16:58:29Z; durable controller Gate4 helper. Dedicated pristine narrow baseline rc0 is controller-owned outside sandbox.
+- **Roles:** all4 Agent supervisors required; API has no model override, actual roles run pinned CLI. Designer/planner actual Codex gpt-6.1-sol completed; this actual executor pinned same lane per invocation. Evaluator pending separate fresh Codex gpt-6.1-sol.
+- **Degrade/judge:** actual Sonnet/opus preflight rc1 weekly limit, resets Nov9 06:00 Europe/Copenhagen; OpenRouter over ration. D48 FLAG judge-independence:same-model-fresh-context. Supplied verbatim MISSION_ROUTING_NOTE is in log365; permitted environment lookup absent.
+- **Usage:** designer101755 subscription tokens (probe11039/run90716), planner71529 (probe11069/run60460), known173284, metered$0 per controller. Imputed cost unreported; executor/evaluator final usage/runtime pending supervisor receipts. Controller/Agent-supervisor exact usage unreported.
+- **Preservation:**6395 baseline paths,6390 protected, all47 prior364 files; ledger99 and queue byte-exact. Charter6345, status365/364/363; exact362 pair archive728→730. Full log base prefix38→39, no rotation; log archive unchanged; single365 index row retains orphan361.
+- **Evidence limits:** current controller-observations.json/dedicated-baseline.json/skill-currency.json; clauses1–7 MET inherited. Record364 PASS92 with bounded clarification inherited, distinct from product FAIL85. ADMIN acceptance cannot accept product256.
+- **History/process:** original FAILED_INPUT_PRESERVATION and controller concurrent31→33 disclosure retained. Existing365 inputs individually frozen; new controller evidence allowed untouched. Freeze explicit inputs, absolute paths, safe diagnostics; no shared-skill/routing-policy edits.
+- **Retro:** harness0/20; last3 product360/359/340 moved no UNMET; none currently routable, no drift. NO idle fingerprint: quota fallback/degraded watermarks.
+- **Progress:**1.0 clauses7/7 MET inherited; goal unmoved.
+- **Next:** attended111/112 independently; preserve105/110 defaults, no automatic product pick. Weekly sweep/thread rotation2026-11-09 07:00 Europe/Copenhagen; one iteration per fire.
+- **Pending/controller:** narrow charter test outside sandbox, reconstruction, final independent review/material-change coverage. Sandbox socket verdict UNINFORMATIVE UNDER SANDBOX; no Go/full suite here. Exact full40 PR-head and merge-head each require3 terminal-success CI checks/URLs: ailang-code verify, Go race, Go host build/test. No judge acceptance or landing yet.
+- **Index/addendum:** later controller existing-CLI index-only reconciliation permitted with ephemeral registry; final bytes exactly base plus365 row. Initial registry rejection and corrected r2 remain original evidence; installed registry untouched.

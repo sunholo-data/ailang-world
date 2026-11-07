@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "role": "executor",
+  "stage": "supervisor_after_exact_session_continuation_terminal",
+  "actual_lane": "codex:gpt-6.1-sol",
+  "agent_supervisor_model": "unreported; API has no model override",
+  "session_id": "01a1b6fa-7b70-78a3-ad7c-99988b1bf4b7",
+  "worktree": "/Users/voightkampff/.ailang/state/world-iter365-record",
+  "directive": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-executor-_4gh50uu/continuation-directive.txt",
+  "actual": {
+    "rc": 0,
+    "runtime_seconds": 312.667,
+    "timeout": false,
+    "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world365-executor-_4gh50uu/continuation.log",
+    "footer_tokens": 113690,
+    "footer_raw": "113.690"
+  },
+  "subscription_tokens": 113690,
+  "metered_usd": 0,
+  "imputed_cost_usd": null,
+  "supervisor_usage": "unreported",
+  "original_receipt": "executor-supervisor-receipt.json immutable;104791 initial probe+run tokens",
+  "verdict_boundary": "Exact-session continuation transport and actual-role usage only; independent judge pending"
+}
