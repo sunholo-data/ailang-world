@@ -1,0 +1,54 @@
+{
+  "iteration": 368,
+  "milestone": "M1_ADMIN_BLOCK_RECORD",
+  "role": "executor",
+  "actual_lane": "codex:gpt-6.1-sol",
+  "entry_head": "bdb8ff4cb775ea0c213bab8645cfa1cd7cf86b31",
+  "status": "PARKED; executor record prepared, independent judgment/final parent checks pending",
+  "passes": null,
+  "immutable_initial_plan_state_unchanged": true,
+  "criteria": {
+    "AC1": "direct comparison observed",
+    "AC2": "direct comparison observed",
+    "AC3": "direct comparison observed",
+    "AC4": "direct comparison observed",
+    "AC5": "pending independent final368 judge",
+    "AC6": "pending final parent outside-sandbox checks"
+  },
+  "selected_D113_option": null,
+  "D113_status": "OPEN",
+  "parks": {
+    "PRODUCT256": "PARKED FAIL85/localUNMET/draft515",
+    "ADMIN367": "human-PARKED/unmerged PR521; PASS97/97/95 preserved; missing successfully executed final after-input-rehash proof remains unmet"
+  },
+  "usage": {
+    "designer": {
+      "actual_lane": "codex:gpt-6.1-sol",
+      "native_quota_tokens": 128330,
+      "basis": "designer-usage-accounting.json: probe11039 + same-session cumulative117291, initial103321 included; original231651 retained"
+    },
+    "planner": {
+      "actual_lane": "codex:gpt-6.1-sol",
+      "native_quota_tokens": 90482,
+      "basis": "planner-usage-accounting.json: probe10800 + actual79682"
+    },
+    "executor": {
+      "actual_lane": "codex:gpt-6.1-sol",
+      "final_native_usage": "not reported"
+    },
+    "evaluator": {
+      "final_actual_lane": "not reported",
+      "final_native_usage": "not reported"
+    },
+    "controller_supervisors": "not reported",
+    "cache_inclusive_metrics": "Separate designer1484746, planner783474; no pending-role aggregate",
+    "accounting_rule": "Separate native probes/fresh sessions additive; same-session resumed cumulative counted once"
+  },
+  "snapshot": ".snap/M1; all9 owned outputs; execution-manifest.json excludes itself",
+  "delivery": {
+    "owner": "parent",
+    "status": "pending reconstruction/commits/draft delivery; remain PARKED/unmerged",
+    "merge_authorized": false
+  },
+  "progress": "1.0: clauses1–7 MET (inherited assessment); goal unmoved."
+}

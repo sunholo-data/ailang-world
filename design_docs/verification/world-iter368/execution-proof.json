@@ -1,0 +1,238 @@
+{
+  "iteration": 368,
+  "role": "executor",
+  "actual_lane": "codex:gpt-6.1-sol",
+  "acceptance": false,
+  "entry_head": "bdb8ff4cb775ea0c213bab8645cfa1cd7cf86b31",
+  "reporting_blob_base": "ef012a0fcb06291fb9647f82b2428afc5b92a36f",
+  "canonical_local_blob_base": "ad13d835345efc2b78308817cc940f73a987165d",
+  "AC1": {
+    "result": "comparison observed",
+    "whole_charter_equals_four_allowed_transformations": true,
+    "prior_ledger_bytes": 219711,
+    "prior_rows": 99,
+    "prior_OPEN": [
+      "D-WORLD-105",
+      "D-WORLD-110",
+      "D-WORLD-111",
+      "D-WORLD-112"
+    ],
+    "prior_ledger_after_removing_only_exact113_equal": true,
+    "final_rows": 100,
+    "final_OPEN": 5,
+    "exact113_OPEN_no_option_selected": true,
+    "queue_bytes": 992586,
+    "queue_equal_reporting_and_canonical": true,
+    "row256_observed_bytes": 2029,
+    "unique_current_route368": 1,
+    "prior_ledger_sha256": "58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01",
+    "queue_sha256": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4"
+  },
+  "AC2": {
+    "result": "comparison observed",
+    "retained367_and366_exact_pairs": 2,
+    "exact365_pair_bytes": 354,
+    "exact365_transfer_once": true,
+    "status_archive_prior_prefix_bytes": 1625708,
+    "live_log_prior_prefix_bytes": 297450,
+    "prior367_park_annotation_in_preserved_prefix": true,
+    "live_entries_before": 20,
+    "live_entries_after": 21,
+    "log_archive_bytes": 3658789,
+    "log_archive_entries": 333,
+    "log_archive_exact": true
+  },
+  "AC4": {
+    "result": "comparison observed",
+    "index_cli": {
+      "command": "AILANG_MISSION_REGISTRY=/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-registry-edlym8fg ailang mission rotate-log world --index-only",
+      "rc": 0,
+      "actual_stdout": "INDEX      /Users/voightkampff/.ailang/state/world-iter368-record/design_docs/world-mission-index.md\n  356 iterations, complete history — grep this before picking work\norphan rows preserved: 361\n",
+      "printed_INDEX_inside_current_worktree": true,
+      "root_config_verified_before_CLI": true
+    },
+    "prior_numbered_rows": 354,
+    "prior_attended_rows": 1,
+    "numbered_rows_after": 355,
+    "all_prior_rows_exact": true,
+    "orphan361_verbatim": true,
+    "entire_index_equals_prior_plus_source_backed368_row": true,
+    "prior_blockquote_notes": 0,
+    "source_log_sha256_before_and_after_CLI": {
+      "design_docs/world-mission-log.md": "6049a9810bcc1973cfb3f527d3ec42311f86eb15c0e59f1ffec5e59069073325",
+      "design_docs/world-mission-log-archive.md": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68"
+    },
+    "source_logs_unchanged_by_CLI": true,
+    "dashboard_lines": 26,
+    "max_lines": 40
+  },
+  "AC3": {
+    "result": "comparison observed",
+    "entry_tracked_paths": 6608,
+    "entry_unowned_direct_blob_type_executable_mode_matches": 6603,
+    "reporting_inventory_paths": 6578,
+    "reporting_unowned_exact_mode_SHA256_matches": 6573,
+    "earlier_verification_paths": 4967,
+    "earlier_verification_blob_bytes": 52482197,
+    "prior367_paths": 85,
+    "entry368_protected_paths": 30,
+    "entry9495_original368_direct_blob_matches": 20,
+    "main_checkout": "/Users/voightkampff/dev/sunholo-data/ailang-world",
+    "main_inventory_head": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+    "main_individual_type_mode_SHA256_matches": 6056,
+    "immutable_individual_inputs_rehashed_unchanged": 31,
+    "mismatches": 0,
+    "changed_tracked_paths": [
+      "design_docs/world-mission-dashboard.md",
+      "design_docs/world-mission-index.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/world-mission.md"
+    ],
+    "owned_new_paths_at_comparison": [
+      "design_docs/verification/world-iter368/execution-inputs.json"
+    ],
+    "other_role_untracked_individual_observations": [
+      {
+        "path": "design_docs/verification/world-iter368/controller-planner-accounting-check.json",
+        "sha256": "faaafde09613aaf0526fe410fc71c3502a21894c27bf943655c28551e2ce6d62",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/designer-correction.directive.txt",
+        "sha256": "00eaaed9a3d601289dd46d57dee2b1aab078d9d8d9538da4df7096e2080b222a",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/designer-correction.final.txt",
+        "sha256": "f2fb596d42d02418fb0579270eb1e9bd3d54d6bd70e5994ac3bb8244b3b86c15",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/designer-correction.stderr.log",
+        "sha256": "ac34c7d1b21d429411dcd6a6f6f460b9dc7092704ff10a5864aca5a307cfcacf",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/designer-correction.stdout.log",
+        "sha256": "1d13d5a8e4713ac5c7a641dcda49e470feac3d1b827ba27bd265bad54d0fe1ec",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/designer-native.final.txt",
+        "sha256": "fab8fc37b5040d23c1af0eba8d69f1961003877e346553e5d1f350a9941d5768",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/designer-native.stderr.log",
+        "sha256": "b8a02e2739af93e4932741b9d966ad786b08ab5467d9bff7f4bf3b5913462ac2",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/designer-native.stdout.log",
+        "sha256": "be907a66a8610b589c5bf5448e3d4cbd57d4ed8a344c8fdce09b62d6eda8d24a",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/designer-probe.final.txt",
+        "sha256": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/designer-probe.stderr.log",
+        "sha256": "5ef644b6ab97b7a222ef5a334864e01dbb0b310d96dafcb7d59d1ef62cfb845f",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/designer-probe.stdout.log",
+        "sha256": "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/designer-runner.py",
+        "sha256": "c1355aa8d207f84974a3c755c519957621ccc4fe200c4ee7a84c53c45d430cac",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/designer.directive.txt",
+        "sha256": "d1e61f19fa19d1378109ae1e1e6c7452c88088267346dfacfe7fc9c95d0c33d3",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      },
+      {
+        "path": "design_docs/verification/world-iter368/fleet-tickets-local.json",
+        "sha256": "7202f65133a674d6779b245110eb14813baeeba414e89df1d163c3846884a228",
+        "mode": "0o644",
+        "type": "regular",
+        "ownership": "other role, not an accepted executor output"
+      }
+    ],
+    "no_evolving_directory_freeze": true,
+    "untracked_observation_limit": "First collected at preservation comparison, not before record edits. No executor command wrote these files; separately observed SHA256/modes will be checked again at snapshot. Genuinely new arrivals may be added without violating any freeze."
+  },
+  "AC5": {
+    "result": "pending independent final368 judge",
+    "owner": "parent",
+    "actual_final_evaluator": "not reported",
+    "executor_proof_is_acceptance": false,
+    "exact113_OPEN_no_option_selected": true,
+    "both_parks_preserved": true,
+    "preference": "cross-provider; any permitted same-model fresh-context fallback explicitly flagged"
+  },
+  "AC6": {
+    "result": "pending final parent outside-sandbox checks",
+    "owner": "parent",
+    "commands": [
+      "bash scripts/check_no_personal_email.sh",
+      "go test ./host/verifygate -run '^TestMissionConfigRealCharter$' -count=1"
+    ],
+    "whitespace": "Executor inspected new/changed material; parent final check pending",
+    "executor_tests_or_source_checks_run": false,
+    "baseline_checks_are_not_final_acceptance": true,
+    "sandbox_bind_denial_classification": "UNINFORMATIVE UNDER SANDBOX"
+  },
+  "execution_findings": [
+    "First comparison attempt failed at Python parse time: an en dash in a bytes regex. No comparisons or writes ran; corrected to UTF-8 encoding.",
+    "Next direct census used numeric-only decision IDs and counted97, whereas the actual generic D-WORLD row prefix counts99. Entire reconstructed charter equality and ledger equality already held; corrected only the census expression, no authority or data edits.",
+    "Preservation comparisons completed before an overly narrow untracked-files assumption rejected14 unowned role files. Corrected the assumption, explicitly observed those named files without treating the evolving directory as frozen, and reran preservation comparisons successfully."
+  ],
+  "limitations": [
+    "AC1–AC4 are executor observations only. AC5 final independent368 judgment, AC6 parent final checks, and reconstruction/commits/draft delivery are pending; no acceptance or merge permission.",
+    "Fourteen untracked other-role files were first individually hashed during preservation comparison, after record edits; no executor command wrote them. Their named observations are retained and checked again during snapshot packaging.",
+    "External/controller/release/retro/usage claims are attributed to individually hashed named receipts, not fresh network, product or credential observations."
+  ],
+  "scope": "Five authorized mission records only, four new executor receipts and one cumulative .snap/M1. No tests/source checks, source/test/harness edits, Git writes, network/messages, subagents/model calls, credentials or environment-value reads. No367 judge retry, proof waiver, harness repair, rebase/isolation or merge.",
+  "execution_inputs_identity": {
+    "path": "design_docs/verification/world-iter368/execution-inputs.json",
+    "sha256": "65ae0e89383510d3f23b97a3a26665e15e7ff76361c94fa326349d8bcd0d68bc",
+    "bytes": 10019,
+    "mode": "0o644",
+    "type": "regular",
+    "purpose": "Named immutable input/output-BEFORE identity list consumed by these direct comparisons; separate from its own manifest entry."
+  }
+}

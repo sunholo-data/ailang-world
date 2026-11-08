@@ -1,28 +1,26 @@
-# World mission dashboard — iteration 367 (2026-11-08)
+# World mission dashboard — iteration 368 (2026-11-08)
 
-- **ADMIN PARKED**: unmerged needs-human-review; independent actual PASS97/PASS97/PASS95 but executed G6 AFTER-rehash proof missing. No fourth call or ADMIN LANDED.
-- **Product**: row256 PARKED needs-human-review; independent MiniMax FAIL85; LOCAL_CRITERION UNMET; draft PR515 untouched.
-- **Independent holds**: D111 validation and D112 credential incident OPEN; sanitization does not resolve112 or undo exposure.
-- **OPEN defaults**: D105=C (233 parked/fail closed); D110=A (255 as built); D111=A; D112=no autonomous credential change.
-- **D111 exactly TWO baseline failures**: TestCheckSourceUnderPinnedInterpreter; TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter; no additional failures.
-- **Causality**: publish-counter/net6 unattributed; no recurrence/nonrecurrence claim.
-- **Conditional order**:250 →255 →256 →257 →201 →243; no skip256; release150/151 priority only when routable.
-- **Attended waits**: A1/188 N2d/N4a; real enrollment/approval/no-terminal exits attended;201/243 use fakes/test keys, no real mint/publish.
-- **Inherited parent observations**: corrected base3/3 green,0 directives/inbox,no routable product; no fresh executor network reads or record acceptance.
-- **Historical notices**:2, world-1793825318-10110 and world-1793839743-21731; inherited, no fresh recurrence check; watermarks1/2,control107:4.
-- **Corrected provenance/release**: D108/109 attended,D111/112 never-resolved;0 fresh A1/N2d/N4a; original instrument receipts retained.
-- **Routing evidence**: base=ad13d835345efc2b78308817cc940f73a987165d@2026-11-08T01:11:37Z; entry HEAD f25503490ed1500b0e8e70b54a742e3ce7a30048.
-- **Roles**: controller codex:gpt-6.1-sol usage not reported; all4 Agent supervisors spawned, API model override unavailable; actual designer/planner/executor pinned same recipe.
-- **Resolver**: executor codex:gpt-6.1-sol declared:provider-pin; planner declared:planner-lane-default-pin (planner-routing.json).
-- **Degradation**: designer opus and preferred evaluator sonnet quota rc1; independent MiniMax actual probe rc0,$0.00041718; actual judge PENDING, no verdict.
-- **Usage**: designer final cumulative quota167027, resumed footers not additive; planner93475; executor136972 (125575 actual+11397 probe); generator subtotal397474; judge pending.
-- **Preservation**: tracked6548/protected6542; charter6345,STATUS367/366/365; exact364 pair archived once,archive734; ledger99/following LF and Queue-through-EOF exact.
-- **Logs/index**: actual fleet CLI41→20,326–346 moved; numbered archive312→333 plus retained attended note; complete headers/internal bodies conserved, full index/orphan361/notes reconciled.
-- **Evidence**: exactly3 new executor receipts; immutable planning/launch inputs untouched; local snapshot9 payloads+self-excluding manifest; parent reconstructed and verified9 committed payloads (controller-committed-reconstruction.json).
-- **Boundary**: no Go/source tests, Git writes, agents, secrets/environment reads, credentials, network/messages or new policy/shared-skill edits; denials UNINFORMATIVE UNDER SANDBOX.
-- **Retro**: retain direct-git helper deviation, staged-whitespace rejection/commit continuation then clean lossless packaging correction, initial reader errors and false-vs-null checker correction; row258/D109 lane.
-- **Inherited metrics**: harness0/20; last3 product landings moved no UNMET;0 routable UNMET. Goal/human asks unchanged.
-- **Progress**: 1.0: clauses1–7 MET (inherited assessment); no product validation.
-- **Next**: independent actual evaluator; M1 committed/reconstructed; all3 exact full40 PR-head AND merge-head terminal-success CI with URLs; G8/delivery pending. No autonomous next pick.
-- **Final evidence/ask**: controller-park.json; proposed ADMIN367 A attended evidence/hook repair+fresh review (recommended), B abandon record; default unmerged now.
-- **Final cost**: metered$1.57784034; Codex known397474; evaluator20287576 provider tokens including caches; controller/supervisors unreported.
+- **ADMIN368**: PARKED/unmerged block record prepared; AC1–AC4 executor observations only. AC5 independent judgment and AC6 final parent checks pending; no acceptance.
+- **PRODUCT256**: PARKED needs-human-review, historical MiniMax FAIL85, LOCAL_CRITERION UNMET, draft PR515.
+- **ADMIN367**: separately human-PARKED/unmerged PR521 despite PASS97/97/95; missing successfully executed final after-input-rehash proof remains unmet.
+- **D113 OPEN**: A recommended attended evidence/hook repair then fresh review; B abandon367/retain canonical366. No option selected; default keeps367 and stacked records unmerged.
+- **Prior OPEN defaults**: D105=C (233 parked/fail closed); D110=A (255 as built); D111=A; D112=no autonomous credential changes.
+- **D111 exact two inherited failures**: TestCheckSourceUnderPinnedInterpreter; TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter. Additional failures block.
+- **D112 independent**: sanitization neither resolves incident nor undoes exposure. Publish-counter/net6 attribution unestablished; no recurrence finding.
+- **Route**:250 →255 →256 →257 →201 →243 conditional; no skip256. Release150/151 regain priority only when routable.
+- **Inherited waits**: attended A1/188 N2d/N4a; no real enrollment, release operation or product validation here. Last landed366 is controller-reported.
+- **Controller-reported**: Gate0 armed, correct gh account, CLEAN billing, zero449 directives, inbox null, devCI3/3 GREEN; no executor network verification.
+- **Receipts**:0 fresh A1/N2d/N4a subjects,4 historical N2c controls,33 closed upstream predicates; none clears parks. Inherited self-notice watermarks1/2 degraded.
+- **Provenance**: original UNPARSED observations intact; separate corrected receipt gives D108/109 attended, D111/112 never-resolved.
+- **Actual roles**: designer/planner/executor codex:gpt-6.1-sol; this is the actual pinned executor. Independent final368 evaluator pending.
+- **Attributed routing**: designer opus quota failure→Codex; preferred evaluator sonnet quota failure→pi:openrouter/minimax/minimax-m3; no verdict inferred.
+- **Designer quota correction**:128330=probe11039+cumulative117291; initial103321 included, resume delta13970. Original wrong231651 retained; designer-usage-accounting.json governs.
+- **Planner quota**:90482=probe10800+actual79682 from native events, no literal --json footer; planner-usage-accounting.json governs.
+- **Separate cache-inclusive totals**: designer1484746; planner783474. Final executor/evaluator and controller/supervisor usage not reported; no pending-role aggregate.
+- **Record preservation**:99 prior ledger rows exact +1 OPEN113; Queue-through-EOF exact; exact365 pair archived once,367/366 pairs retained. Initial plan/state passes:null immutable.
+- **Logs/index**:20→21 live, no rotation; log archive unchanged. Confined fleet index-only; prior354 numbered+1 attended, orphan361 and notes preserved.
+- **Evidence**: four small executor receipts; input hashes separate from output BEFORE hashes. One cumulative .snap/M1 of all9 outputs, manifest excludes itself; parent owns reconstruction/commits.
+- **Boundary**: no tests/source checks, Git writes, subagents/model calls, network/messages, credential/environment-value reads, source/test/harness/policy/shared-skill changes.
+- **Retro**: corrected authority0/20 harness; actual last3 product landings360/359/340 movednone;0 routableUNMET. No metered quorum under ADMIN exception.
+- **Progress**: 1.0: clauses1–7 MET (inherited assessment); goal unmoved.
+- **Next**: separate final368 judge, then parent outside-sandbox privacy+narrow charter test and whitespace; final delivery pending, stay PARKED/unmerged, no367 retry/waiver/repair/rebase.

@@ -1,0 +1,78 @@
+{
+  "iteration": 368,
+  "milestone": "M1_ADMIN_BLOCK_RECORD",
+  "snapshot_root": ".snap/M1",
+  "owned_outputs": [
+    "design_docs/world-mission.md",
+    "design_docs/world-mission-status-archive.md",
+    "design_docs/world-mission-log.md",
+    "design_docs/world-mission-dashboard.md",
+    "design_docs/world-mission-index.md",
+    "design_docs/verification/world-iter368/execution-state.json",
+    "design_docs/verification/world-iter368/execution-proof.json",
+    "design_docs/verification/world-iter368/execution-inputs.json",
+    "design_docs/verification/world-iter368/execution-manifest.json"
+  ],
+  "owned_output_count": 9,
+  "entries": [
+    {
+      "path": "design_docs/world-mission.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 1389257,
+      "sha256": "c033cc9f63bd316aeceba5782b935d6583d2ff29f399d623b625ebec6380e68f"
+    },
+    {
+      "path": "design_docs/world-mission-status-archive.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 1626062,
+      "sha256": "1f5fe0f7194ae448e5b2cfb79de98ee1917d2bbc0ac62e10b8db4fd65a9b0962"
+    },
+    {
+      "path": "design_docs/world-mission-log.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 304270,
+      "sha256": "6049a9810bcc1973cfb3f527d3ec42311f86eb15c0e59f1ffec5e59069073325"
+    },
+    {
+      "path": "design_docs/world-mission-dashboard.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 3789,
+      "sha256": "8d5588eea2cca4cfdeefee24316ed3f6bbfd50cb70608106b61d757f3ed48977"
+    },
+    {
+      "path": "design_docs/world-mission-index.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 58005,
+      "sha256": "535d4778cbf341300e80890f8246bf5c330b8947162eb44ed683e6a67eb7bb63"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/execution-state.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 2166,
+      "sha256": "fb461e6c9a72e6dd550d75804d7c90655534980c65495838d9c65f07f423f015"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/execution-proof.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 11528,
+      "sha256": "8ef8f36003e98c73a5958eb1865ad813d09461c0d4f61aa8644852b24593d958"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/execution-inputs.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 10019,
+      "sha256": "65ae0e89383510d3f23b97a3a26665e15e7ff76361c94fa326349d8bcd0d68bc"
+    }
+  ],
+  "hashed_payload_count_excluding_self": 8,
+  "self_excluded": "design_docs/verification/world-iter368/execution-manifest.json",
+  "policy": "Self-excluding cumulative owned-output manifest. No parent/other-role arrivals included. Snapshot includes all9 outputs, including this manifest; parent alone reconstructs/commits. No acceptance claimed."
+}
