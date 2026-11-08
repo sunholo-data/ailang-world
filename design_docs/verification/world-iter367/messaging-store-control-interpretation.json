@@ -1,0 +1,9 @@
+{
+  "source": "messaging-store-control.json",
+  "verdict": "CONTROL_FIRED",
+  "reason": "Exact current CLI says invalid storage selection and valid local,gcp; initial reader wrongly expected historical unknown phrasing. No send was attempted.",
+  "canonical_send_environment": {
+    "AILANG_STORAGE_MESSAGING": "gcp",
+    "AILANG_MESSAGES_PROJECT": "ailang-multivac"
+  }
+}

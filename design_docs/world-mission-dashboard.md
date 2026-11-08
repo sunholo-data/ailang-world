@@ -1,25 +1,26 @@
-# World mission dashboard — iteration 366 (2026-11-07)
+# World mission dashboard — iteration 367 (2026-11-08)
 
-- **ADMIN:** one M1, eight ACs; G1–G7 preparation only. Independent ADMIN PASS96; reconstruction complete; final CI/delivery PENDING; zero product/test LOC.
-- **Product:** row256 PARKED needs-human-review, independent MiniMax FAIL85, LOCAL_CRITERION UNMET; draft PR515 OPEN, CONFLICTING/DIRTY (inherited receipt).
-- **Independent holds:** D111 validation and D112 credential incident both OPEN. Sanitization does not resolve112 or undo exposure; no autonomous credential change.
-- **OPEN defaults:** D105 C (233 parked/fail closed); D110 A (255 as built); D111 A (exactly TWO named baseline failures, no additional failures); D112 no autonomous credential change.
-- **Causality:** publish-counter/net6 unattributed; no recurrence or attribution claim.
-- **Conditional order:**250 →255 →256 →257 →201 →243; no autonomous skip256. Release150/151 first only when routable.
-- **Attended waits:** A1 and188 N2d/N4a; real-key enrolment/approval and no-terminal exits. Rows201/243 use fakes/test keys.
-- **Inherited Gate0/1:**0 fresh directives/inbox; crash0; watermarks1/2 degraded, control107:4; release A1=0/N2d/N4a=0, N2c control2; fresh upstream33/33 closed.
-- **Historical notices:** transcript2count, fires world-1793825318-10110 and world-1793839743-21731; shared-self-notices.json, not recurrence this fire.
-- **Base provenance:** base=1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4@2026-11-07T20:55:57Z; actual execution HEAD e3f746457213857c5654654e2188d05d7dcf751a.
-- **Base CI:**3/3 terminal success at canonical base, run42399928994; inherited receipts only, no fresh record acceptance.
-- **Roles:** all4 Agent supervisors spawned; model override unavailable. Actual designer/planner/executor pinned codex:gpt-6.1-sol CLI; executor is not judge.
-- **Degradation:** Sonnet/opus preflights rc1 quota; OpenRouter over ration. Independent fresh actual Codex judge PASS96 under D48, FLAG judge-independence:same-model-fresh-context. Controller has no verdict.
-- **Usage:** designer97451 including probe; planner120602=6207+87696+26699; executor probe6199. Executor134744 including probe, actual433.096s/rc0; known roles352797; evaluator tokens/cost unreported (675.57s/rc0); controller/supervisor usage unreported. Metered$0; no quorum under ADMIN exception.
-- **Authority provenance:** D48 ancient fleet creation unchanged this fire; D108/109 attended; D111/112 never-resolved (inherited corrected r2 receipt).
-- **Preservation:**6345 charter lines; STATUS366/365/364; exact363 pair moved once; archive732; log40 NO rotation; ledger99/queue/history exact; orphan361 retained.
-- **Evidence:** verification/world-iter366/executor-proof.json and execution-state.json; original planning state immutable, passes=false forever. Local snapshot exactly7 payloads plus self-excluding manifest; reconstructed in M1 b371cdce; original manifest recoverable.
-- **Boundary:** no Go suites or child test verdict; narrow charter test and privacy passed outside sandbox after inspection/baseline; index regeneration byte-identical. Sandbox denial UNINFORMATIVE UNDER SANDBOX.
-- **Pending CI/delivery:** independent review PASS96 with40/40 own controls rejected; controller still needs all3 terminal-success jobs at exact full40 PR-head AND merge-head with run URLs; then external delivery/landing.
-- **Inherited metrics:** harness0/20; last3 product landings none moved UNMET;0 routable UNMET. Goal and human asks unchanged.
-- **Progress**: 1.0: clauses 1–7 MET (inherited assessment); goal unmoved.
-- **Next:** attended111/112 independently; preserve105/110 defaults and conditional route. No automatic product pick.
-- **Judge receipts:** untouched report/result; original failed transport and broad capture preserved; final anchored capture has no provider usage. No material fix or product acceptance.
+- **ADMIN**: one approved M1; G1–G7 preparation only. Independent judge, G8 and formal delivery pending; zero product/test LOC.
+- **Product**: row256 PARKED needs-human-review; independent MiniMax FAIL85; LOCAL_CRITERION UNMET; draft PR515 untouched.
+- **Independent holds**: D111 validation and D112 credential incident OPEN; sanitization does not resolve112 or undo exposure.
+- **OPEN defaults**: D105=C (233 parked/fail closed); D110=A (255 as built); D111=A; D112=no autonomous credential change.
+- **D111 exactly TWO baseline failures**: TestCheckSourceUnderPinnedInterpreter; TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter; no additional failures.
+- **Causality**: publish-counter/net6 unattributed; no recurrence/nonrecurrence claim.
+- **Conditional order**:250 →255 →256 →257 →201 →243; no skip256; release150/151 priority only when routable.
+- **Attended waits**: A1/188 N2d/N4a; real enrollment/approval/no-terminal exits attended;201/243 use fakes/test keys, no real mint/publish.
+- **Inherited parent observations**: corrected base3/3 green,0 directives/inbox,no routable product; no fresh executor network reads or record acceptance.
+- **Historical notices**:2, world-1793825318-10110 and world-1793839743-21731; inherited, no fresh recurrence check; watermarks1/2,control107:4.
+- **Corrected provenance/release**: D108/109 attended,D111/112 never-resolved;0 fresh A1/N2d/N4a; original instrument receipts retained.
+- **Routing evidence**: base=ad13d835345efc2b78308817cc940f73a987165d@2026-11-08T01:11:37Z; entry HEAD f25503490ed1500b0e8e70b54a742e3ce7a30048.
+- **Roles**: controller codex:gpt-6.1-sol usage not reported; all4 Agent supervisors spawned, API model override unavailable; actual designer/planner/executor pinned same recipe.
+- **Resolver**: executor codex:gpt-6.1-sol declared:provider-pin; planner declared:planner-lane-default-pin (planner-routing.json).
+- **Degradation**: designer opus and preferred evaluator sonnet quota rc1; independent MiniMax actual probe rc0,$0.00041718; actual judge PENDING, no verdict.
+- **Usage**: designer final cumulative quota167027, resumed footers not additive; planner93475; executor separate fresh probe11397,current run unreported/pending terminal supervisor footer; judge pending.
+- **Preservation**: tracked6548/protected6542; charter6345,STATUS367/366/365; exact364 pair archived once,archive734; ledger99/following LF and Queue-through-EOF exact.
+- **Logs/index**: actual fleet CLI41→20,326–346 moved; numbered archive312→333 plus retained attended note; complete headers/internal bodies conserved, full index/orphan361/notes reconciled.
+- **Evidence**: exactly3 new executor receipts; immutable planning/launch inputs untouched; local snapshot9 payloads+self-excluding manifest; parent reconstruction FUTURE.
+- **Boundary**: no Go/source tests, Git writes, agents, secrets/environment reads, credentials, network/messages or new policy/shared-skill edits; denials UNINFORMATIVE UNDER SANDBOX.
+- **Retro**: retain direct-git helper deviation, staged-whitespace rejection/commit continuation then clean lossless packaging correction, initial reader errors and false-vs-null checker correction; row258/D109 lane.
+- **Inherited metrics**: harness0/20; last3 product landings moved no UNMET;0 routable UNMET. Goal/human asks unchanged.
+- **Progress**: 1.0: clauses1–7 MET (inherited assessment); no product validation.
+- **Next**: independent actual evaluator; parent reconstruction/commits; all3 exact full40 PR-head AND merge-head terminal-success CI with URLs; G8/delivery pending. No autonomous next pick.

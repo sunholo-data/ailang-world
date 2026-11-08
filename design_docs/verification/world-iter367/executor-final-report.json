@@ -1,0 +1,62 @@
+{
+  "role": "executor-supervisor",
+  "at": "2026-11-08T01:25:21.514305+00:00",
+  "actual_pinned_provider": "codex:gpt-6.1-sol",
+  "entry_head": "f25503490ed1500b0e8e70b54a742e3ce7a30048",
+  "terminal_rc": 0,
+  "runtime_seconds": 646.744,
+  "current_fresh_run_quota_tokens": 125575,
+  "separate_probe_quota_tokens": 11397,
+  "additive_executor_quota_tokens": 136972,
+  "native_footer": [
+    "tokens used",
+    "125.575"
+  ],
+  "snapshot_manifest_self_excluding": true,
+  "snapshot_exact_payloads": 9,
+  "snapshot_root_and_payload_bytes_types_modes_equal": true,
+  "verified_payload_paths": [
+    "design_docs/world-mission.md",
+    "design_docs/world-mission-status-archive.md",
+    "design_docs/world-mission-log.md",
+    "design_docs/world-mission-log-archive.md",
+    "design_docs/world-mission-index.md",
+    "design_docs/world-mission-dashboard.md",
+    "design_docs/verification/world-iter367/executor-proof.json",
+    "design_docs/verification/world-iter367/execution-state.json",
+    "design_docs/verification/world-iter367/cli-rotation-receipt.json"
+  ],
+  "whitespace_checks": [
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+        "diff",
+        "--check"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "-C",
+        "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+        "diff",
+        "--check",
+        "ad13d835345efc2b78308817cc940f73a987165d",
+        "--"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "consumed_launch_inputs_unchanged": true,
+  "child_final_message": "G1\u2013G7 ADMIN preparation is complete: six existing ADMIN edits, exactly three new receipts, and the final snapshot.\n\n- Actual CLI rc0: 41\u219220 live entries; 326\u2013346 moved; numbered archive312\u2192333. All complete headers/bodies and the attended note preserved.\n- Full index reconciled:355 rows,369 lines; orphan361 unchanged. Dashboard26 lines.\n- Preserved6,542 protected tracked paths and28 immutable consumed inputs. Whitespace checks passed.\n- 100 controls:24 positives accepted,76 in-memory mutants rejected,0 survivors.\n- Findings retained: CLI `--help` rc1 and corrected ownership/ledger/queue instrument errors. Parent disclosures and original evidence remain untouched.\n\nArtifacts: [proof](/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/executor-proof.json), [execution state](/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/execution-state.json), [CLI receipt](/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/cli-rotation-receipt.json), [nine-payload snapshot manifest](/Users/voightkampff/dev/sunholo-data/.world-iter367-record/.snap/M1/manifest.json). Snapshot bytes/types/modes match; evidence remained unchanged afterward.\n\nG8 remains pending: independent actual evaluator, future parent reconstruction, and all three terminal-success CI jobs with URLs at both exact PR and merge heads. Formal M1 delivery is pending. Row256 remains parked; no product acceptance or ADMIN landing claimed. Current executor usage awaits supervisor accounting.",
+  "independent_evaluator": "pending separate actual role; this supervisor supplies no judge verdict",
+  "G8": "pending parent reconstruction, actual independent evaluator, all3 terminal-success CI at exact PR and merge heads with URLs",
+  "scope": "No supervisor implementation edits; child authored6existing+3new, supervisor authored new receipt and this final report; Git writes not performed"
+}

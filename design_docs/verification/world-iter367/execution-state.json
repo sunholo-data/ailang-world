@@ -1,0 +1,127 @@
+{
+  "sprint_id": "WORLD-ITER367-ADMIN",
+  "role": "actual executor",
+  "provider_lane": "codex:gpt-6.1-sol",
+  "entry_head": "f25503490ed1500b0e8e70b54a742e3ce7a30048",
+  "product_base": "ad13d835345efc2b78308817cc940f73a987165d",
+  "started": "2026-11-08T01:14:21.807Z",
+  "prepared_at": "2026-11-08T01:22:28.546Z",
+  "status": "G1-G7 ADMIN PREPARATION COMPLETE; G8 AND FORMAL M1 DELIVERY PENDING",
+  "preparation_passes": true,
+  "formal_m1_completed": false,
+  "features": [
+    {
+      "id": "M1",
+      "preparation": "complete",
+      "formal_delivery": "pending",
+      "gates": {
+        "G1": {
+          "preparation_passes": true
+        },
+        "G2": {
+          "preparation_passes": true
+        },
+        "G3": {
+          "preparation_passes": true
+        },
+        "G4": {
+          "preparation_passes": true
+        },
+        "G5": {
+          "preparation_passes": true
+        },
+        "G6": {
+          "preparation_passes": true
+        },
+        "G7": {
+          "preparation_passes": true
+        },
+        "G8": {
+          "passes": null,
+          "status": "pending independent actual evaluator and parent delivery"
+        }
+      }
+    }
+  ],
+  "planning_receipts": {
+    "immutable": true,
+    "plan": "design_docs/verification/world-iter367/record-plan.md",
+    "state": "design_docs/verification/world-iter367/record-state.json",
+    "lifecycle_null_intentional": true,
+    "untouched": true
+  },
+  "authority": {
+    "row256": "human-PARKED needs-human-review; independent MiniMax FAIL85; LOCAL_CRITERION UNMET",
+    "draft_pr515": "untouched",
+    "open_defaults": {
+      "D-WORLD-105": "C;233 parked/fail closed",
+      "D-WORLD-110": "A;255 as built",
+      "D-WORLD-111": "A; exactly TWO pinned-interpreter baseline failures, no additional failures",
+      "D-WORLD-112": "no autonomous credential change; independent credential incident"
+    },
+    "D111_exact_failures": [
+      "TestCheckSourceUnderPinnedInterpreter",
+      "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter"
+    ],
+    "D112": "Sanitization never resolves112 or undoes exposure; D111 validation and D112 credential incident independently gate.",
+    "conditional_order": [
+      250,
+      255,
+      256,
+      257,
+      201,
+      243
+    ],
+    "no_skip256": true,
+    "release_priority": "150/151 only when routable; attendedA1 and188N2d/N4a remain waits; no autonomous next pick.",
+    "attended": "Real-key enrollment/approval and no-terminal exits remain attended;201/243 build/judge with fakes/test keys only, no real enrollment/mint/publish.",
+    "unattributed": "publish-counter/net6 remain unattributed; no recurrence/nonrecurrence claim"
+  },
+  "local_snapshot": {
+    "root": ".snap/M1/",
+    "payload_count": 9,
+    "paths": [
+      "design_docs/world-mission.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-log-archive.md",
+      "design_docs/world-mission-index.md",
+      "design_docs/world-mission-dashboard.md",
+      "design_docs/verification/world-iter367/executor-proof.json",
+      "design_docs/verification/world-iter367/execution-state.json",
+      "design_docs/verification/world-iter367/cli-rotation-receipt.json"
+    ],
+    "self_excluding_manifest": "manifest.json",
+    "verification": "Local bytes/type/mode identity asserted after evidence finalization before return",
+    "parent_reconstruction": "FUTURE; not performed by executor"
+  },
+  "usage": {
+    "controller": "not reported",
+    "all_four_requested_Agent_supervisors": "actually spawned per launch; API has no model override",
+    "designer_cumulative_quota": 167027,
+    "designer_resumed_footers": "not additive",
+    "planner_quota": 93475,
+    "executor_separate_fresh_probe": 11397,
+    "current_executor_run": "unreported/pending supervisor terminal footer; no zero or estimate substituted",
+    "independent_MiniMax_probe": {
+      "rc": 0,
+      "cost_usd": 0.00041718
+    },
+    "actual_judge": "pending; no verdict or score"
+  },
+  "G8": {
+    "independent_actual_evaluator": "pending",
+    "parent_reconstruction": "future",
+    "commits_delivery_owner": "parent",
+    "PR_head_CI": "pending all3 terminal-success at exact full40 with URLs",
+    "merge_head_CI": "pending all3 terminal-success at exact full40 with URLs",
+    "required_jobs": [
+      "ailang-code verify gate",
+      "go race gate (go test -race, own job)",
+      "go host build + test gate"
+    ],
+    "admin_landed": false,
+    "product_acceptance": "unchanged; no product validation"
+  },
+  "prohibitions_observed": "No Git writes, Go commands/source/full tests, credentials/secrets/environment-value reads, network/messages, subagents, scripts or source/product/gate/policy/harness/skill/decision changes"
+}

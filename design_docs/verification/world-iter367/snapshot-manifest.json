@@ -1,0 +1,63 @@
+{
+  "iteration": 367,
+  "milestone": "M1",
+  "self_excluding": true,
+  "payload_count": 9,
+  "entries": [
+    {
+      "path": "design_docs/world-mission.md",
+      "type": "regular",
+      "mode": "0644",
+      "sha256": "c42e5b9bd5bf4934c880e285b118b1593f9bbdb1e52c5b7a3716803f2d95e9fd"
+    },
+    {
+      "path": "design_docs/world-mission-status-archive.md",
+      "type": "regular",
+      "mode": "0644",
+      "sha256": "96034191ecf0b0864bb022b0e1e762ad071e9f6075de04e81fd2609f03b0cac2"
+    },
+    {
+      "path": "design_docs/world-mission-log.md",
+      "type": "regular",
+      "mode": "0644",
+      "sha256": "d004ba2b02c89bbb35e764475fd3c6b52ab9ddddbdebf467d15246a2fc337915"
+    },
+    {
+      "path": "design_docs/world-mission-log-archive.md",
+      "type": "regular",
+      "mode": "0644",
+      "sha256": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68"
+    },
+    {
+      "path": "design_docs/world-mission-index.md",
+      "type": "regular",
+      "mode": "0644",
+      "sha256": "3a9946927218cb78dc46623ebcf7b32929c24005e835cdfacda3b216fe353b49"
+    },
+    {
+      "path": "design_docs/world-mission-dashboard.md",
+      "type": "regular",
+      "mode": "0644",
+      "sha256": "9d9041a2b0af6e439800cdfc99a03baffcce95bbae6066e17f3408fe755f39d0"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/executor-proof.json",
+      "type": "regular",
+      "mode": "0644",
+      "sha256": "9011be8f71384086a73c9c7721e6250ba305ccc22b4b2177951681c0793d4fc5"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/execution-state.json",
+      "type": "regular",
+      "mode": "0644",
+      "sha256": "6418572bdd9b0cdc135b852e6eb6ec57cc2eb34080b37431cb700a486c455d63"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/cli-rotation-receipt.json",
+      "type": "regular",
+      "mode": "0644",
+      "sha256": "a4f7a85ab12087253333174eacd38c12ed36d6e3e288d1f1082bc68d0f53552e"
+    }
+  ],
+  "scope": "Local snapshot byte/type/mode identity only; parent reconstruction and G8 future"
+}

@@ -1,0 +1,17 @@
+{
+  "at": "2026-11-08T01:13:24.262037+00:00",
+  "argv": [
+    "ailang",
+    "messages",
+    "list",
+    "--unread",
+    "--inbox",
+    "mission-world",
+    "--json"
+  ],
+  "store": "not-a-real-store",
+  "rc": 2,
+  "stdout": "",
+  "stderr": "Error: invalid storage selection: AILANG_STORAGE_MESSAGING=\"not-a-real-store\" (valid: local, gcp)\n",
+  "initial_assertion": "Expected unknown mode text, assertion failed before verdict; exact diagnostics govern."
+}

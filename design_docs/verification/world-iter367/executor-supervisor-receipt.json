@@ -1,0 +1,206 @@
+{
+  "role": "executor-supervisor",
+  "entry_head": "f25503490ed1500b0e8e70b54a742e3ce7a30048",
+  "actual_provider": "codex:gpt-6.1-sol",
+  "routing": "recipe codex:gpt-6.1-sol declared:provider-pin",
+  "started_utc": "2026-11-08T01:14:02.945446+00:00",
+  "runtime_seconds": 646.744,
+  "deadline_seconds": 1800,
+  "rc": 0,
+  "timed_out": false,
+  "stdin": "/dev/null",
+  "directive_bytes": 7085,
+  "directive_sha256": "1bbb9303d1e84515e71519581f92e4660e7e08ed901f00b763b92fb6e450bfba",
+  "private_run": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-executor-5d2baa238c8c4bf9bc0a230c4de0966c",
+  "model_headers": [
+    "OpenAI Codex v0.167.0",
+    "model: gpt-6.1-sol",
+    "provider: openai",
+    "approval: never",
+    "sandbox: workspace-write [workdir, /tmp, $TMPDIR, /Users/voightkampff/Library/Caches/go-build, /Users/voightkampff/go/pkg/mod]",
+    "session id: 01a1b8b8-37bc-7993-8fce-24f81cc0d9fd"
+  ],
+  "native_usage_footer": [
+    "tokens used",
+    "125.575"
+  ],
+  "usage_accounting": "Fresh actual run footer is additive to separate probe11397; never sum resumed-session cumulative footers.",
+  "consumed_inputs_entry_fingerprints": [
+    {
+      "path": "design_docs/verification/world-iter367/execution-launch-inputs.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 4016,
+      "sha256": "cbe1fa955b2cca639489e9e7207a67b8a6dce91cd159ffbe9ab7a6190c44d706"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/record-design.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 12344,
+      "sha256": "bc7c7c047377a9f792cce6345524bfdfc30497501617ee955bb7976f126ea7e0"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/record-plan.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 14280,
+      "sha256": "5f734f79ccbe3e488c459906aa16afae577b74a3bb7a8c9f57111218d0e67a43"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/record-state.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 31915,
+      "sha256": "a77badaced003acae63b0a8c9770f034edc014012b6a6f8148b27796e07cec1a"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/controller-gate4-base.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 419,
+      "sha256": "556b30d6a1fd0717cc1323cd03bcc7613d35e26efda2f1707acf3895d31a0745"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/controller-observations.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 1636,
+      "sha256": "6ccfef5dd99130a02c281bea8aad43837ed79cfbedf2aa441c389bd0589bbe4c"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/provenance-corrected.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 928,
+      "sha256": "fb4b9af48247d333eaee381d38e5d5c15de7e0f0515b5eb5161f9ff0c67cc333"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/release-predicates-corrected.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 2690,
+      "sha256": "d875eb1123679c069bc6c9de92c16e2eba1219b0711ef9144863feca29263bc2"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/registry-pointer.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 373,
+      "sha256": "066879e74b3a9563cab614473543627c3ea92cd87eda9c60f6448c1c9319496f"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/executor-preflight.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 4713,
+      "sha256": "c7b967f8ca195d5c42484055eaa1d806bd18dabf2a521dc214efc27d9b5f9f4c"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/evaluator-preflight.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 10728,
+      "sha256": "b2e444fd8388b38cdeb4c08081827ccfc147a520d71d132893c287df2e47efc2"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/designer-usage-accounting.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 4109,
+      "sha256": "8e603fb6767c8ba8a32f2349d860c31f1e66a4654079f51fe3455d0404113b65"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/planner-supervisor-receipt.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 7283,
+      "sha256": "c6335f3f41d201573c4c3bd2934a8f1b77263975f93b096aaefbbdc465158fa0"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/controller-packaging-correction.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 862,
+      "sha256": "732ca6d69565d6dbcac587e48bafffb1529349bf15d4a2472c0e658ca4d47732"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/controller-plan-schema-check.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 338,
+      "sha256": "f1450b5d982cfb4d409acd61628a1bd9017a46c6a0ccdba918331ffb93496a6c"
+    }
+  ],
+  "consumed_inputs_unchanged": true,
+  "actual_outputs": [
+    {
+      "path": "design_docs/world-mission.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 1388126,
+      "sha256": "c42e5b9bd5bf4934c880e285b118b1593f9bbdb1e52c5b7a3716803f2d95e9fd"
+    },
+    {
+      "path": "design_docs/world-mission-status-archive.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 1625708,
+      "sha256": "96034191ecf0b0864bb022b0e1e762ad071e9f6075de04e81fd2609f03b0cac2"
+    },
+    {
+      "path": "design_docs/world-mission-log.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 293640,
+      "sha256": "d004ba2b02c89bbb35e764475fd3c6b52ab9ddddbdebf467d15246a2fc337915"
+    },
+    {
+      "path": "design_docs/world-mission-log-archive.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 3658789,
+      "sha256": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68"
+    },
+    {
+      "path": "design_docs/world-mission-index.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 57916,
+      "sha256": "3a9946927218cb78dc46623ebcf7b32929c24005e835cdfacda3b216fe353b49"
+    },
+    {
+      "path": "design_docs/world-mission-dashboard.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 3676,
+      "sha256": "9d9041a2b0af6e439800cdfc99a03baffcce95bbae6066e17f3408fe755f39d0"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/executor-proof.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 1810799,
+      "sha256": "9011be8f71384086a73c9c7721e6250ba305ccc22b4b2177951681c0793d4fc5"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/execution-state.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 4812,
+      "sha256": "6418572bdd9b0cdc135b852e6eb6ec57cc2eb34080b37431cb700a486c455d63"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/cli-rotation-receipt.json",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 430065,
+      "sha256": "a4f7a85ab12087253333174eacd38c12ed36d6e3e288d1f1082bc68d0f53552e"
+    }
+  ],
+  "final_message_present": true,
+  "provider_output_sha256": "f69e9d147e6ccb735f771bb660bd62ca9d8453cf9abe16ecd6ed21e79386a949",
+  "snapshot_manifest_present": true,
+  "independent_evaluator": "pending parent separate actual role",
+  "G8": "pending independent evaluator/CI/delivery; no ADMIN LANDED claimed"
+}

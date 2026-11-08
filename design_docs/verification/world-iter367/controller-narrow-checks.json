@@ -1,0 +1,27 @@
+{
+  "at_utc": "2026-11-08T01:30:25.812089+00:00",
+  "scope": "Controller outside child sandbox, administrative schema/privacy only; no product256 validation",
+  "platform": "go1.26.6 darwin/arm64",
+  "commands": [
+    {
+      "command": "go test ./host/verifygate -run '^TestMissionConfigRealCharter$' -count=1",
+      "rc": 0,
+      "output": "ok github.com/sunholo-data/ailang-world/host/verifygate 0.365s",
+      "pristine_baseline_rc": 0,
+      "side_effect_inspection": "controller-gate-side-effect-inspection.json"
+    },
+    {
+      "command": "bash scripts/check_no_personal_email.sh",
+      "rc": 0,
+      "output": "no personal addresses in the loop-written surface",
+      "pristine_baseline_rc": 0
+    },
+    {
+      "command": "mission_routing_models_check.sh --file design_docs/world-mission-log.md --entry 367",
+      "rc": 0,
+      "output": ""
+    }
+  ],
+  "independent_judgment": "pending",
+  "CI": "pending"
+}

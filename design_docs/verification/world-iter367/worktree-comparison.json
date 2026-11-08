@@ -1,0 +1,42 @@
+{
+  "at": "2026-11-08T01:20:47.132837+00:00",
+  "prior_count": 103,
+  "current_count": 104,
+  "new_paths": [
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter366-evaluator",
+      "rc": 0,
+      "status": [
+        "?? .snap/",
+        "?? design_docs/verification/world-iter366/evaluator-report.md",
+        "?? design_docs/verification/world-iter366/evaluator-result.json",
+        "?? design_docs/verification/world-iter366/evaluator-review-supervisor-receipt.json",
+        "?? design_docs/verification/world-iter366/evaluator-supervisor-r2-receipt.json",
+        "?? design_docs/verification/world-iter366/evaluator-supervisor-receipt.json",
+        "?? design_docs/verification/world-iter366/evaluator-usage-capture-check.json",
+        "?? design_docs/verification/world-iter366/worktree-census.txt"
+      ]
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+      "rc": 0,
+      "status": [
+        "?? design_docs/verification/world-iter367/"
+      ]
+    }
+  ],
+  "changed_statuses": [
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter366-record",
+      "old_status": [
+        "?? design_docs/verification/world-iter366/worktree-census.txt"
+      ],
+      "current_status": [
+        "?? .snap/",
+        "?? design_docs/verification/world-iter366/worktree-census.txt"
+      ]
+    }
+  ],
+  "initial_reader": "Used results/worktrees instead of previous receipt rows; initial all104 new display is an instrument error, no orphan verdict taken from it.",
+  "disposition": "Existing orphan361 already credited by362. Product515 human-held; new/changed statuses are compared below, no adoption authority or cleanup."
+}
