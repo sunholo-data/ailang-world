@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-08T05:06:45.798246+00:00",
+  "registry": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-registry-edlym8fg",
+  "config": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-registry-edlym8fg/world.toml",
+  "config_sha256": "66d01a49d1bf04ea4d7563d48a42c877605ed9d4cdf055a7478187b150dbd75b",
+  "resolved_workdir": "/Users/voightkampff/.ailang/state/world-iter368-record",
+  "expected_index": "/Users/voightkampff/.ailang/state/world-iter368-record/design_docs/world-mission-index.md",
+  "authorization": "executor may invoke index-only CLI exactly against this root; no rotate/keep, no other mission registry or shared state edits"
+}

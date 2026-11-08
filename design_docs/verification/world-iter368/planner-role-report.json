@@ -1,0 +1,80 @@
+{
+  "role": "planner",
+  "lane": "codex:gpt-6.1-sol",
+  "routing_reason": "declared:planner-lane-default-pin",
+  "rc": 0,
+  "elapsed_seconds": 288,
+  "cap_seconds": 900,
+  "timed_out": false,
+  "native_log": "/tmp/world368-planner-native.jsonl",
+  "last_message": "/tmp/world368-planner-last.txt",
+  "stdin": "/dev/null",
+  "sandbox": "workspace-write",
+  "kind": "planner-supervisor-receipt",
+  "supervisor": "Agent tool planner role; actual task delegated to required provider recipe",
+  "derive": "codex:gpt-6.1-sol declared:planner-lane-default-pin",
+  "resolve": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin",
+  "role_spawn_error": null,
+  "fallback": null,
+  "actual_session": "01a1b987-8af1-7031-9a08-003afac1311d",
+  "native_model_evidence": "turn_context.model gpt-6.1-sol",
+  "native_rollout": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T06-00-30-01a1b987-8af1-7031-9a08-003afac1311d.jsonl",
+  "actual_usage": {
+    "input_tokens": 752673,
+    "cached_input_tokens": 685824,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 12833,
+    "reasoning_output_tokens": 2387,
+    "total_tokens": 765506
+  },
+  "probe": {
+    "rc": 0,
+    "elapsed_seconds": 6,
+    "usage": {
+      "input_tokens": 17963,
+      "cached_input_tokens": 7168,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 5,
+      "reasoning_output_tokens": 0,
+      "total_tokens": 17968
+    },
+    "native_log": "/tmp/world368-planner-probe-native.jsonl"
+  },
+  "total_native_tokens_probe_plus_actual": 783474,
+  "accounting": "Separate probe total plus final actual-session cumulative total once; do not add intermediate token_count events or cached/reasoning subtotals again. Includes cached input; no cost estimate.",
+  "directive": {
+    "path": "/tmp/codex_planner_directive_iter368.txt",
+    "bytes": 7469,
+    "sha256": "cca425ec26aa1b8088443f41dfd10637ff579074c3de1333228bb2b9efdaf9c3"
+  },
+  "outputs": [
+    {
+      "path": "design_docs/verification/world-iter368/record-plan.md",
+      "bytes": 15676,
+      "sha256": "f3602f32eca12cd44f9443a0302956c457e3b66267cf8328cfcde9db091b1160"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/record-state.json",
+      "bytes": 20695,
+      "sha256": "49c28eb8fd461866ea07772a3ef989def5c8376c472c820dbc3f5bf38d3f72d4"
+    }
+  ],
+  "supervisor_checks": {
+    "tracked_diff_rc": 0,
+    "untracked_before_receipt": [
+      "?? design_docs/verification/world-iter368/record-plan.md",
+      "?? design_docs/verification/world-iter368/record-state.json"
+    ],
+    "all_frozen_input_hashes_match": true,
+    "hashed_inputs": 27,
+    "future_self_hash_inputs": 2,
+    "one_milestone": true,
+    "initial_passes": null,
+    "criteria": 6,
+    "exact_controller_row": true,
+    "new_output_whitespace": "PASS",
+    "tests_run": false,
+    "external_mutations": false
+  },
+  "remaining": "Parent copy/commit; execution and outside-sandbox final gates; independent368 evaluator; draft-only bank/unmerged default. No execution or acceptance claimed."
+}

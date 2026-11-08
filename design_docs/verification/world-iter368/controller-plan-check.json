@@ -1,0 +1,114 @@
+{
+  "result": "valid explicit one milestone/six criteria; exact113row and all observed input hashes match",
+  "inputs_checked": 27,
+  "checks": [
+    {
+      "path": "design_docs/verification/world-iter368/record-design.md",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/controller-scope.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/baseline-checks.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/baseline-index.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/registry-pointer.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/ledger-provenance.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/ledger-provenance-corrected.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/controller-observations.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/release-predicates.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/upstream-predicates.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/controller-skill-drift.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/base-files.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/main-files.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/world-mission.md",
+      "matches": true
+    },
+    {
+      "path": "design_docs/world-mission-status-archive.md",
+      "matches": true
+    },
+    {
+      "path": "design_docs/world-mission-log.md",
+      "matches": true
+    },
+    {
+      "path": "design_docs/world-mission-dashboard.md",
+      "matches": true
+    },
+    {
+      "path": "design_docs/world-mission-index.md",
+      "matches": true
+    },
+    {
+      "path": "design_docs/world-mission-log-archive.md",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter367/controller-park.json",
+      "matches": true
+    },
+    {
+      "path": "design_docs/verification/world-iter367/evaluator-final-verdict-round3.json",
+      "matches": true
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/SKILL.md",
+      "matches": true
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/SKILL.md",
+      "matches": true
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-3-route.md",
+      "matches": true
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md",
+      "matches": true
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-2-pick.md",
+      "matches": true
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-4-record.md",
+      "matches": true
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "rows": [
+    {
+      "stage": "probe",
+      "verified_native_uncached_plus_output": 11039
+    },
+    {
+      "stage": "initial",
+      "verified_native_uncached_plus_output": 103321
+    },
+    {
+      "stage": "resumed",
+      "verified_native_uncached_plus_output": 117291
+    }
+  ],
+  "corrected_quota_tokens": 128330,
+  "result": "native usage event re-derived; same-session footers cumulative; no raw transcript printed"
+}

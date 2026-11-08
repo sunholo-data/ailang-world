@@ -1,0 +1,126 @@
+{
+  "at": "2026-11-08T05:02:25.129946+00:00",
+  "instrument": "full source canonical log headings, both streams; distinct from truncated index text",
+  "numbered_headings": 353,
+  "recent20": [
+    {
+      "iteration": 367,
+      "title": "ADMIN record only; row 256 remains parked [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 366,
+      "title": "ADMIN record only; row 256 remains parked [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 365,
+      "title": "ADMIN record only; row 256 remains parked [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 364,
+      "title": "ADMIN record only; row 256 remains parked [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 363,
+      "title": "ADMIN record only; row 256 remains parked [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 362,
+      "title": "row 256 implemented but PARKED: independent MiniMax FAIL 85, corrected local gate UNMET; evaluator credential incident escalated [PRODUCT]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 360,
+      "title": "row 255 built: a failed workspace-exec call records, returns and logs one bounded failure line; lazy store schema mark guards older binaries; design r3 via a controller carve-out; judge PASS 88 [PRODUCT]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 359,
+      "title": "row 250 built: arm 6 classifies each loopback accept (child / foreign / silent), so a local dialer no longer refuses the exec startup probe; design r3 via a controller carve-out; judge PASS 91 [PRODUCT-HYGIENE]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 358,
+      "title": "no pick: rule (d) block report 30 (repeats 341\u2013357); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12299; Gate 0 reads transcript=2 on #449); rows 250 and 244\u2013249 wait on D-WORLD-108; dev green at 2606f155 [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 357,
+      "title": "no pick: rule (d) block report 29 (repeats 341\u2013356); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12190; Gate 0 reads transcript=2 on #449); rows 250 and 244\u2013249 wait on D-WORLD-108; dev green at 69bf81a2 [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 356,
+      "title": "no pick: rule (d) block report 28 (repeats 341\u2013355); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12161; Gate 0 reads transcript=2 on #449); rows 250 and 244\u2013249 wait on D-WORLD-108; dev green at 7e5260bd [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 355,
+      "title": "no pick: rule (d) block report 27 (repeats 341\u2013354); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12183; Gate 0 reads transcript=2 on #449); rows 250 and 244\u2013249 wait on D-WORLD-108; dev green at 20f0cc93 [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 354,
+      "title": "no pick: rule (d) block report 26 (repeats 341\u2013353); rows 252 and 253's later-fire checks held again (post-fire scan clean with baseline=12161; Gate 0 reads transcript=2 on #449); rows 250 and 244\u2013249 wait on D-WORLD-108; dev green at 8cce2218 [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 353,
+      "title": "no pick: rule (d) block report 25 (repeats 341\u2013352); rows 252 and 253's later-fire checks held (post-fire scan clean with baseline=12170; Gate 0 reads transcript=2 on #449, the two old notices); rows 250 and 244\u2013249 wait on D-WORLD-108; dev green at a691bb9b [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 352,
+      "title": "bookkeeping pick: row 253 resolved on the fleet's harness-resolved reply (ailang #2132 `7e9e9192b`, in this fire's pin; Gate 0's self-notice script now counts transcript-scan notices); then rule (d) block report 24 (repeats 341\u2013351); dev green at d01503c5 [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 351,
+      "title": "no pick: rule (d) block report 23 (repeats 341\u2013350); row 252's next-fire check passed (fire world-1793854144-27678 scanned clean with baseline=12071); rows 250 and 244\u2013249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; dev green at 9d50ac63 [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 350,
+      "title": "bookkeeping pick: row 252 resolved on the fleet's harness-resolved reply (driver #2127 `9ea8adcf4`, in this fire's pin); Gate 0's missing read for transcript-scan notices filed to the fleet (row 253); then rule (d) block report 22 (repeats 341\u2013349); dev green at f17fe6bf [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 349,
+      "title": "no pick: rule (d) block report 21 (repeats 341\u2013348); rows 250 and 244\u2013249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; release rows 150/151 still wait on attended steps; transcript-scan misattribution filed to the fleet (row 252); dev green at e47129f7 [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 348,
+      "title": "no pick: rule (d) block report 20 (repeats 341\u2013347); rows 250 and 244\u2013249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; release rows 150/151 still wait on attended steps; dev green at 46e6de13 [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 347,
+      "title": "no pick: rule (d) block report 19 (repeats 341\u2013346); rows 250 and 244\u2013249 wait on D-WORLD-108; rows 251 and 233 are outside every granted scope; release rows 150/151 still wait on attended steps; dev green at 62d362ce [ADMIN]",
+      "source": "design_docs/world-mission-log.md"
+    }
+  ],
+  "harness_last20": 0,
+  "last3_product_landings": [
+    {
+      "iteration": 362,
+      "title": "row 256 implemented but PARKED: independent MiniMax FAIL 85, corrected local gate UNMET; evaluator credential incident escalated [PRODUCT]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 360,
+      "title": "row 255 built: a failed workspace-exec call records, returns and logs one bounded failure line; lazy store schema mark guards older binaries; design r3 via a controller carve-out; judge PASS 88 [PRODUCT]",
+      "source": "design_docs/world-mission-log.md"
+    },
+    {
+      "iteration": 359,
+      "title": "row 250 built: arm 6 classifies each loopback accept (child / foreign / silent), so a local dialer no longer refuses the exec startup probe; design r3 via a controller carve-out; judge PASS 91 [PRODUCT-HYGIENE]",
+      "source": "design_docs/world-mission-log.md"
+    }
+  ],
+  "bar_assessment": "none moved an UNMET clause, inherited assessment verified against current index/STATUS records; 0 routable UNMET, goal unmoved"
+}

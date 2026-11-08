@@ -1,0 +1,47 @@
+{
+  "role": "planner",
+  "kind": "separate-accounting-correction",
+  "supersedes_no_artifacts": true,
+  "clarifies": "planner-role-report.json cache-inclusive totals are native aggregate metrics, not quota-footer-convention tokens. Original remains immutable.",
+  "runs": [
+    {
+      "run": "probe",
+      "session": "01a1b986-abe9-7973-9409-f67fe52eb75d",
+      "source": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T05-59-33-01a1b986-abe9-7973-9409-f67fe52eb75d.jsonl",
+      "source_event": "last event_msg.token_count.info.total_token_usage",
+      "native_cache_inclusive": {
+        "input_tokens": 17963,
+        "cached_input_tokens": 7168,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 17968
+      },
+      "quota_footer_convention_tokens": 10800,
+      "native_token_count_events": 1,
+      "model": "gpt-6.1-sol"
+    },
+    {
+      "run": "actual",
+      "session": "01a1b987-8af1-7031-9a08-003afac1311d",
+      "source": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T06-00-30-01a1b987-8af1-7031-9a08-003afac1311d.jsonl",
+      "source_event": "last event_msg.token_count.info.total_token_usage",
+      "native_cache_inclusive": {
+        "input_tokens": 752673,
+        "cached_input_tokens": 685824,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 12833,
+        "reasoning_output_tokens": 2387,
+        "total_tokens": 765506
+      },
+      "quota_footer_convention_tokens": 79682,
+      "native_token_count_events": 13,
+      "model": "gpt-6.1-sol"
+    }
+  ],
+  "total_cache_inclusive_native_tokens": 783474,
+  "total_quota_footer_convention_tokens": 90482,
+  "formula": "For each separate session use final native cumulative total_tokens minus cached_input_tokens, then sum sessions once. Reasoning included in native output, not added again.",
+  "printed_footer": "No literal CLI tokens-used footer was emitted because --json was used. Quota-footer-convention metric is verified arithmetic from native token_count events, not a claimed printed footer.",
+  "no_extra_model_call": true
+}

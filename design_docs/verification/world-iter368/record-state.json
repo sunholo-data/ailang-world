@@ -1,0 +1,419 @@
+{
+  "sprint_id": "WORLD_ITER368_ADMIN_BLOCK_RECORD",
+  "iteration": 368,
+  "role": "planner",
+  "planner_lane": "codex:gpt-6.1-sol",
+  "status": "planned",
+  "executed": false,
+  "immutable_initial_planning_state": true,
+  "plan_path": "design_docs/verification/world-iter368/record-plan.md",
+  "design_doc": "design_docs/verification/world-iter368/record-design.md",
+  "controller_scope": "design_docs/verification/world-iter368/controller-scope.json",
+  "baseline_identities": {
+    "entry_design_commit": "9495f0db769b8575d05faa582a934b11985dd057",
+    "reporting_parked367_stack": "ef012a0fcb06291fb9647f82b2428afc5b92a36f",
+    "canonical_local_origin": "ad13d835345efc2b78308817cc940f73a987165d",
+    "main_inventory_head": "61a8d1c47b45fffc0f36137d29a5285c32da0145"
+  },
+  "estimated_work": {
+    "documentation_loc": 120,
+    "product_loc": 0,
+    "test_loc": 0,
+    "executor_hours": 1,
+    "estimated_days": 0.125,
+    "basis": "small ADMIN documentation work only; no velocity run; parent review/delivery elapsed time excluded"
+  },
+  "features": [
+    {
+      "id": "M1_ADMIN_BLOCK_RECORD",
+      "description": "Prepare one truthful ADMIN368 block record and exact OPEN D113 addition while preserving authority, prior bytes and independent parks; parent owns final checks and independent acceptance.",
+      "status": "planned",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "estimated_loc": 120,
+      "product_loc": 0,
+      "test_loc": 0,
+      "dependencies": [
+        "individually frozen inputs",
+        "parent-confined executor registry pointer before index write",
+        "parent outside-sandbox final gates",
+        "independent368 evaluation and parent acceptance"
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC1",
+          "description": "Executor and evaluator will reconstruct the entire expected charter from the actual reporting-baseline Git blob, applying only the canonical368 STATUS+blank insertion, exact365 pair removal, unique Current route (iteration 367) token replacement to368, and exact controller D113 row insertion immediately before the ledger end marker; final bytes will equal that reconstruction. Removing only the new row from the final ledger will recover every original ledger byte/status; Queue-through-EOF will equal the baseline and canonical-origin bytes.",
+          "positive_controls": {
+            "prior_ledger_rows": 99,
+            "prior_ledger_bytes": 219711,
+            "queue_bytes": 992586,
+            "new_OPEN_row": 1,
+            "final_ledger_rows": 100,
+            "current_route_token_occurrences": 1
+          },
+          "result": null
+        },
+        {
+          "id": "AC2",
+          "description": "Executor and evaluator will compare exact365 STATUS+blank transfer and prior archive bytes, retain367/366 STATUS pairs verbatim, and compare the complete prior live-log prefix including367 park annotation. Exactly the required368 heading will be appended; live entries will change20 to21. The log archive will remain byte-identical with no rotation.",
+          "positive_controls": {
+            "prior_status_pairs": 3,
+            "transferred_pair": 1,
+            "prior_live_entries": 20,
+            "expected_live_entries": 21,
+            "prior_live_log_bytes": 297450,
+            "prior_log_archive_entries": 333,
+            "prior_log_archive_bytes": 3658789,
+            "prior_status_archive_bytes": 1625708
+          },
+          "result": null
+        },
+        {
+          "id": "AC3",
+          "description": "Executor and evaluator will enumerate the actual pinned Git tree and compare original bytes, path types and executable modes for every unowned prior tracked path; only the five mission records may differ. They will preserve all earlier verification and all20 preexisting368 role artifacts against entry9495, and preserve the main checkout against its individually named byte inventory. They will enumerate new/untracked paths explicitly and reject writes outside controller-authorized outputs.",
+          "positive_controls": {
+            "reporting_baseline_tracked": 6578,
+            "unowned_prior_tracked": 6573,
+            "prior_verification_paths": 4967,
+            "prior_verification_bytes": 52482197,
+            "prior367_paths": 85,
+            "entry_tracked": 6598,
+            "preexisting368_paths": 20,
+            "main_inventory_paths": 6056
+          },
+          "result": null
+        },
+        {
+          "id": "AC4",
+          "description": "Only after checking the parent-supplied temporary registry resolves to the intended EXECUTOR tree, executor/controller will run fleet ailang mission rotate-log world --index-only and verify the printed INDEX destination is confined there. Evaluator will compare prior coverage, orphan361 verbatim, the attended row and any existing handwritten notes (observed blockquote notes0), plus a source-backed368 row. Both log sources will retain their exact pre-index bytes. Dashboard will have at most40 lines with observed, inherited, controller-reported and pending claims identified.",
+          "positive_controls": {
+            "prior_numbered_index_rows": 354,
+            "prior_attended_index_rows": 1,
+            "prior_index_lines": 369,
+            "prior_index_bytes": 57916,
+            "prior_dashboard_lines": 28,
+            "dashboard_max_lines": 40,
+            "orphan_iteration": 361
+          },
+          "result": null
+        },
+        {
+          "id": "AC5",
+          "description": "Evaluator will inspect final authority and native-usage claims: exact D113 remains OPEN and selects no option; D105/110/111/112 remain OPEN C/A/A/no autonomous credential change; product256 remains PARKED FAIL85/localUNMET/PR515 and ADMIN367 remains independently PARKED/unmerged PR521 despite preserved PASS97/97/95. Parent will obtain an independent368 judgment over final bytes, preferably cross-provider, with an actually permitted fresh-context fallback explicitly flagged. Parent acceptance and required judgment will remain pending until executed evidence exists; material later edits will receive independent review coverage.",
+          "positive_controls": {
+            "prior_OPEN_decisions": 4,
+            "new_OPEN_decision": 1,
+            "preserved367_model_PASS_scores": [
+              97,
+              97,
+              95
+            ]
+          },
+          "result": null
+        },
+        {
+          "id": "AC6",
+          "description": "Parent will inspect side effects and rerun only bash scripts/check_no_personal_email.sh and go test ./host/verifygate -run ^TestMissionConfigRealCharter$ -count=1 outside the sandbox on final bytes, recording actual commands/results. It will inspect whitespace for tracked changes and every new/untracked artifact explicitly. Baseline rc0 receipts will not discharge these final gates. Any socket-bind denial in sandbox will be UNINFORMATIVE UNDER SANDBOX, never PASS or product regression evidence.",
+          "positive_controls": {
+            "baseline_outside_sandbox_named_command_receipts": 2,
+            "baseline_named_command_rcs": [
+              0,
+              0
+            ],
+            "planned_mission_record_paths": 5
+          },
+          "result": null
+        }
+      ]
+    }
+  ],
+  "registry_reuse": [
+    {
+      "milestone": "M1_ADMIN_BLOCK_RECORD",
+      "action": "none",
+      "package": null,
+      "reason": "ADMIN mission charter/log/dashboard/index bookkeeping introduces no reusable package capability; registry search unnecessary."
+    }
+  ],
+  "planner_write_allowlist": [
+    "design_docs/verification/world-iter368/record-plan.md",
+    "design_docs/verification/world-iter368/record-state.json"
+  ],
+  "future_mission_write_allowlist": [
+    "design_docs/world-mission.md",
+    "design_docs/world-mission-status-archive.md",
+    "design_docs/world-mission-log.md",
+    "design_docs/world-mission-dashboard.md",
+    "design_docs/world-mission-index.md"
+  ],
+  "future_executor_receipts_if_parent_authorizes": [
+    "design_docs/verification/world-iter368/execution-state.json",
+    "design_docs/verification/world-iter368/execution-proof.json",
+    "design_docs/verification/world-iter368/execution-inputs.json",
+    "design_docs/verification/world-iter368/execution-manifest.json"
+  ],
+  "snapshot": {
+    "planner": "none",
+    "executor": "one cumulative .snap/M1 containing all owned outputs and a self-excluding manifest; no manifest hashes/freezes itself; parent reconstructs and commits"
+  },
+  "new_decision_row": "| D-WORLD-113 | OPEN | **ADMIN367 evidence review: repair or abandon its unmerged record?** Iteration367 remains needs-human-review because the final evaluator after-input-rehash proof did not execute successfully, despite three preserved model PASS verdicts. **A (recommended):** attended repair of the evidence/hook workflow, then fresh independent review; no proof waiver, product acceptance or merge permission. **B:** abandon unmerged ADMIN367 and retain canonical iteration366. **Default while unanswered:** keep ADMIN367 and its stacked records unmerged; no autonomous repair, extra judge call on367 or product acceptance. | Recorded unattended iteration368 from iteration367 proposed request ADMIN367; original verification/world-iter367/controller-park.json and final supervisor receipt remain unchanged. This row is OPEN, not a human ruling; PR521 remains unmerged. |",
+  "new_decision_id": "D-WORLD-113",
+  "new_decision_status": "OPEN",
+  "selected_option": null,
+  "default": "Keep ADMIN367 and its stacked records unmerged; no autonomous repair, extra367 judge call or product acceptance.",
+  "preserved_authority": {
+    "D-WORLD-105": {
+      "status": "OPEN",
+      "default": "C"
+    },
+    "D-WORLD-110": {
+      "status": "OPEN",
+      "default": "A"
+    },
+    "D-WORLD-111": {
+      "status": "OPEN",
+      "default": "A; exact-two-baseline-failures criterion retained"
+    },
+    "D-WORLD-112": {
+      "status": "OPEN",
+      "default": "no autonomous credential changes"
+    },
+    "product256": "PARKED needs-human-review; historical FAIL85; LOCAL_CRITERION UNMET; draft PR515",
+    "ADMIN367": "PARKED needs-human-review; unmerged PR521; PASS97/97/95 preserved; missing successfully executed final proof remains unmet"
+  },
+  "observations_not_acceptance": {
+    "ledger_rows": 99,
+    "ledger_bytes": 219711,
+    "queue_bytes": 992586,
+    "ledger_and_queue_equal_canonical_and_reporting_blobs": true,
+    "live_log_entries": 20,
+    "log_archive_entries": 333,
+    "prior_verification_paths": 4967,
+    "prior_verification_bytes": 52482197,
+    "preexisting368_paths": 20,
+    "index_numbered_rows": 354,
+    "index_attended_rows": 1,
+    "baseline_privacy_rc": 0,
+    "baseline_charter_rc": 0,
+    "baseline_platform": "darwin/arm64 outside sandbox; receipt only",
+    "baseline_index_unchanged": true,
+    "initial_provenance": "UNPARSED instrument failure preserved; typed corrected receipt supersedes",
+    "controller_inputs": "devCI3/3 success, armed/clean, zero directives/inbox null; attribution only; self-notice watermarks degraded1/2"
+  },
+  "inputs": [
+    {
+      "path": "design_docs/verification/world-iter368/record-design.md",
+      "sha256": "7f2f4fffcc5b6fec057afcdf2140b308c09815424727e7cda4945ddbb4345083",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/controller-scope.json",
+      "sha256": "011b8174c477547d8ebdd58123a81bef62130ba22ed93f998c69857450d5e304",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/baseline-checks.json",
+      "sha256": "0b2ad2b53a33a537897786a6c7c05cb746f93e03f44d44712190b5a935563679",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/baseline-index.json",
+      "sha256": "fccac94e25e214e17af4ed3f88a315722ac5b461534d429b39ba7195aedd9728",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/registry-pointer.json",
+      "sha256": "f40c802e08cc98575b66669f8c869cc16b2293d2b17f9ca583e487f707b8609a",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/ledger-provenance.json",
+      "sha256": "345b51ccb54e0bc5184f3d123dad4fe8d7668a0ed18a2a30a8ebecd1fbdfa087",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/ledger-provenance-corrected.json",
+      "sha256": "458dbed5aef7da6bb5388b56221f2e61a52f9042432593cb7ae16c1207297580",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/controller-observations.json",
+      "sha256": "7ed3ae8de443705d0558380f9586f64994fdab373979e26161bba9fc8bf6eb33",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/release-predicates.json",
+      "sha256": "3127b201a863f5156ca0462cf441a0333837f36cd3049ef75c30bd9727aa478b",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/upstream-predicates.json",
+      "sha256": "ffa1bfe6ed9e272eca04a0c46a984a270492022ec9dfffc933df218bd93d61cb",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/controller-skill-drift.json",
+      "sha256": "20fd1d6543d46de126899f92f99c66e58e064888f28520f89f7b640434854f45",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/base-files.json",
+      "sha256": "d8470c48c35bfb786f11a908ebd6efe7d4ed0d893b0cde76434eeef4bae3a7b0",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/main-files.json",
+      "sha256": "1982e0ec9f10d709627f69c0c4198af76f1d0106287f32d665d3f95f8eb2df4d",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/world-mission.md",
+      "sha256": "2f3c80e8a1afaa8bcb15375787e9b6ef96cbac3810a57b6461eb9a029e7fd301",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/world-mission-status-archive.md",
+      "sha256": "96034191ecf0b0864bb022b0e1e762ad071e9f6075de04e81fd2609f03b0cac2",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/world-mission-log.md",
+      "sha256": "928769ff942f5cdefe079840bea2387ae1197f8564e88d6b1f9d9aca2a36fb81",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/world-mission-dashboard.md",
+      "sha256": "0f2eb8d93488af6ef4aa8865b8c4944d9a18e2c15bb0c9d0118b8fda57ecddc6",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/world-mission-index.md",
+      "sha256": "3a9946927218cb78dc46623ebcf7b32929c24005e835cdfacda3b216fe353b49",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/world-mission-log-archive.md",
+      "sha256": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/controller-park.json",
+      "sha256": "049b0380bf04bd6f6678548800a2166b9912bf1b047e49ab36103a0023d5619c",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/evaluator-final-verdict-round3.json",
+      "sha256": "5ca67613466da91459139f6e4ac83e9f6218fd79d43df371bd3f6cb3881618a2",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/SKILL.md",
+      "sha256": "b4bcb489e2767930acc1c5cfc74fc54c43a67435a1fba4de7d3fd090e58c83fe",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/SKILL.md",
+      "sha256": "95a740b11cc44e9f31c7dc606e565f9f55c8d03b0c5d059e97d04e7c369fac89",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-3-route.md",
+      "sha256": "3d6cde1a7051e11c29ffcea3ca23b0b26b1e976796dc32c2b279ba1eddf71d53",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md",
+      "sha256": "fce81ea64a500f1707c3730d535fc56a9dba9b455aaf07fd9d18a461b806ff0c",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-2-pick.md",
+      "sha256": "544b8d249ea011d6ad8fbcc1b142f72793d73c24ae0227a3b611a45eafde064a",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-4-record.md",
+      "sha256": "c0ddb2f021872734a35970765a265c4e4f55032c47decfde8f563bb898944dbd",
+      "identity_kind": "planner_observed_local_bytes"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/record-plan.md",
+      "sha256": null,
+      "identity_kind": "parent_sha256_at_handoff_after_planner_completion; preserve immutable; no self-hash"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/record-state.json",
+      "sha256": null,
+      "identity_kind": "parent_sha256_at_handoff_after_planner_completion; preserve immutable; no self-hash"
+    }
+  ],
+  "input_freeze_policy": "Parent will verify exact listed SHA256 identities at handoff, add completed plan/state hashes externally without self-hash, and name/hash the newly confined executor pointer. Never freeze the whole evolving368 directory or mutate consumed/other-role evidence.",
+  "usage": {
+    "designer": {
+      "quota_tokens": 128330,
+      "basis": "parent-reported PROVEN correction in separate parent record WT designer-usage-accounting.json; absent here",
+      "probe_tokens": 11039,
+      "same_session_cumulative_tokens": 117291,
+      "initial_included_tokens": 103321,
+      "resume_delta_tokens": 13970,
+      "original_receipts": "immutable; initial not added again"
+    },
+    "planner": {
+      "quota_tokens": null,
+      "status": "pending/not reported; final native receipt unavailable while role is running"
+    },
+    "executor": {
+      "quota_tokens": null,
+      "status": "pending/not reported; no final receipt supplied"
+    },
+    "evaluator": {
+      "quota_tokens": null,
+      "status": "pending/not reported; no final receipt supplied"
+    },
+    "controller": {
+      "quota_tokens": null,
+      "status": "not reported"
+    },
+    "later_receipts": "parent may append factual native receipts separately; no zero/estimated token substitution"
+  },
+  "evaluation": {
+    "required": true,
+    "status": "pending",
+    "verdict": null,
+    "owner": "parent controller",
+    "preference": "cross-provider separate evaluator",
+    "fallback": "actual permitted fresh-context lane must be identified and flagged; controller assertions and367 verdicts cannot supply judgment",
+    "material_post_review_edits": "require independent review coverage"
+  },
+  "final_parent_gates": {
+    "status": "pending",
+    "commands": [
+      "bash scripts/check_no_personal_email.sh",
+      "go test ./host/verifygate -run ^TestMissionConfigRealCharter$ -count=1"
+    ],
+    "whitespace": "tracked diff plus explicit every new/untracked artifact",
+    "sandbox_socket_denial": "UNINFORMATIVE UNDER SANDBOX; outside-sandbox parent owns load-bearing gates"
+  },
+  "delivery": {
+    "status": "pending",
+    "authorized_finish": "PARKED; bank on stacked branch/draft PR only",
+    "merge_authorized": false,
+    "owner": "parent",
+    "human_dependent_actions": "parked; no waiting or autonomous resolution"
+  },
+  "prohibited": [
+    "execute plan in planner",
+    "further agents/model calls",
+    "messages or network mutations",
+    "git write operations",
+    "source/test/harness/skill/shared-state writes",
+    "full test suites or product validation",
+    "retry367 judge or repair hooks/harness",
+    "waiver or isolation/rebase around367",
+    "credential/release/enrollment operations",
+    "skip256",
+    "merge367/368",
+    "planner snapshots or other artifacts"
+  ]
+}

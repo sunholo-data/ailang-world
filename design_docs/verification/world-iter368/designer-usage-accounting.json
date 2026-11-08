@@ -1,0 +1,100 @@
+{
+  "role": "designer",
+  "accounting_status": "corrected-from-native-session-events",
+  "supersedes_only": "designer-role-report.json tokens_native_total231651 and same-session stage additivity; original report/receipts/design retained unchanged",
+  "instrument": "Native CLI footer equals cumulative session total_tokens minus cached_input_tokens (uncached input plus output), proven against three token_count source events. The resumed117291 already includes initial103321; resumed footers are not additive. Separate probe11039 is additive.",
+  "native_stage_measurements": [
+    {
+      "stage": "probe",
+      "native_footer_raw": "11.039",
+      "native_footer_numeric": 11039,
+      "footer_is_total_minus_cached_input": true,
+      "source_path": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T05-51-21-01a1b97f-2c91-7d93-a211-66623fc4d4e0.jsonl",
+      "source_line": 17,
+      "event_timestamp": "2026-11-08T04:51:24.427Z",
+      "total_token_usage": {
+        "input_tokens": 18202,
+        "cached_input_tokens": 7168,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 18207
+      }
+    },
+    {
+      "stage": "initial",
+      "native_footer_raw": "103.321",
+      "native_footer_numeric": 103321,
+      "footer_is_total_minus_cached_input": true,
+      "source_path": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T05-51-26-01a1b97f-3d42-7893-9dfd-c50d075348d0.jsonl",
+      "source_line": 143,
+      "event_timestamp": "2026-11-08T04:55:56.808Z",
+      "total_token_usage": {
+        "input_tokens": 1055275,
+        "cached_input_tokens": 963328,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 11374,
+        "reasoning_output_tokens": 2552,
+        "total_tokens": 1066649
+      }
+    },
+    {
+      "stage": "resumed",
+      "native_footer_raw": "117.291",
+      "native_footer_numeric": 117291,
+      "footer_is_total_minus_cached_input": true,
+      "source_path": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T05-51-26-01a1b97f-3d42-7893-9dfd-c50d075348d0.jsonl",
+      "source_line": 178,
+      "event_timestamp": "2026-11-08T04:57:15.858Z",
+      "total_token_usage": {
+        "input_tokens": 1452670,
+        "cached_input_tokens": 1349248,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 13869,
+        "reasoning_output_tokens": 2866,
+        "total_tokens": 1466539
+      }
+    }
+  ],
+  "same_session_resume_usage_delta": {
+    "input_tokens": 397395,
+    "cached_input_tokens": 385920,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 2495,
+    "reasoning_output_tokens": 314,
+    "total_tokens": 399890
+  },
+  "same_session_resume_uncached_plus_output_delta": 13970,
+  "aggregate_probe_plus_final_session_usage": {
+    "input_tokens": 1470872,
+    "cached_input_tokens": 1356416,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 13874,
+    "reasoning_output_tokens": 2866,
+    "total_tokens": 1484746
+  },
+  "corrected_native_quota_tokens": 128330,
+  "formula": "11039 + 117291 = 128330; equivalently11039 +103321 +(117291-103321)",
+  "prior_incorrect_total": 231651,
+  "prior_double_counted_initial_tokens": 103321,
+  "usage_scope": "native Codex usage only; supervisor/controller usage excluded; cache-inclusive API total separately retained in aggregate",
+  "original_artifacts_sha256": {
+    "design_docs/verification/world-iter368/designer-role-report.json": "d91c71cb5ebb11c86986615d0ecb7ea8eb5316f065467ce440ef4152cf805496",
+    "design_docs/verification/world-iter368/record-design.md": "7f2f4fffcc5b6fec057afcdf2140b308c09815424727e7cda4945ddbb4345083",
+    "design_docs/verification/world-iter368/designer-probe.result.json": "3a069a42151eb6c774ac7929419b85cb66c730c4b0dd8fa93eff2f006b351bb6",
+    "design_docs/verification/world-iter368/designer-probe.stdout.log": "dc51b8c96c2d745df3bd5590d990230a482fd247123599548e0632fdbf97fc22",
+    "design_docs/verification/world-iter368/designer-probe.stderr.log": "5ef644b6ab97b7a222ef5a334864e01dbb0b310d96dafcb7d59d1ef62cfb845f",
+    "design_docs/verification/world-iter368/designer-probe.final.txt": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+    "design_docs/verification/world-iter368/designer-native.result.json": "826b0c0731218264485b019fb1ae4d2711819d0fac319c30c9d3467b3e8bc1ce",
+    "design_docs/verification/world-iter368/designer-native.stdout.log": "be907a66a8610b589c5bf5448e3d4cbd57d4ed8a344c8fdce09b62d6eda8d24a",
+    "design_docs/verification/world-iter368/designer-native.stderr.log": "b8a02e2739af93e4932741b9d966ad786b08ab5467d9bff7f4bf3b5913462ac2",
+    "design_docs/verification/world-iter368/designer-native.final.txt": "fab8fc37b5040d23c1af0eba8d69f1961003877e346553e5d1f350a9941d5768",
+    "design_docs/verification/world-iter368/designer-correction.result.json": "e96326347c6857d29a994e65f0f8c291daa6a26ce81b5af941dad9d0e33c89bf",
+    "design_docs/verification/world-iter368/designer-correction.stdout.log": "1d13d5a8e4713ac5c7a641dcda49e470feac3d1b827ba27bd265bad54d0fe1ec",
+    "design_docs/verification/world-iter368/designer-correction.stderr.log": "ac34c7d1b21d429411dcd6a6f6f460b9dc7092704ff10a5864aca5a307cfcacf",
+    "design_docs/verification/world-iter368/designer-correction.final.txt": "f2fb596d42d02418fb0579270eb1e9bd3d54d6bd70e5994ac3bb8244b3b86c15"
+  },
+  "design_unchanged": true,
+  "receipts_unchanged": true,
+  "audit_privacy": "Read only namespaced session JSONL usage events and this iteration receipts; no credential or configuration file read."
+}
