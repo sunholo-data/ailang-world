@@ -15,12 +15,12 @@
 - **Roles**: controller codex:gpt-6.1-sol usage not reported; all4 Agent supervisors spawned, API model override unavailable; actual designer/planner/executor pinned same recipe.
 - **Resolver**: executor codex:gpt-6.1-sol declared:provider-pin; planner declared:planner-lane-default-pin (planner-routing.json).
 - **Degradation**: designer opus and preferred evaluator sonnet quota rc1; independent MiniMax actual probe rc0,$0.00041718; actual judge PENDING, no verdict.
-- **Usage**: designer final cumulative quota167027, resumed footers not additive; planner93475; executor separate fresh probe11397,current run unreported/pending terminal supervisor footer; judge pending.
+- **Usage**: designer final cumulative quota167027, resumed footers not additive; planner93475; executor136972 (125575 actual+11397 probe); generator subtotal397474; judge pending.
 - **Preservation**: tracked6548/protected6542; charter6345,STATUS367/366/365; exact364 pair archived once,archive734; ledger99/following LF and Queue-through-EOF exact.
 - **Logs/index**: actual fleet CLI41→20,326–346 moved; numbered archive312→333 plus retained attended note; complete headers/internal bodies conserved, full index/orphan361/notes reconciled.
-- **Evidence**: exactly3 new executor receipts; immutable planning/launch inputs untouched; local snapshot9 payloads+self-excluding manifest; parent reconstruction FUTURE.
+- **Evidence**: exactly3 new executor receipts; immutable planning/launch inputs untouched; local snapshot9 payloads+self-excluding manifest; parent reconstructed and verified9 committed payloads (controller-committed-reconstruction.json).
 - **Boundary**: no Go/source tests, Git writes, agents, secrets/environment reads, credentials, network/messages or new policy/shared-skill edits; denials UNINFORMATIVE UNDER SANDBOX.
 - **Retro**: retain direct-git helper deviation, staged-whitespace rejection/commit continuation then clean lossless packaging correction, initial reader errors and false-vs-null checker correction; row258/D109 lane.
 - **Inherited metrics**: harness0/20; last3 product landings moved no UNMET;0 routable UNMET. Goal/human asks unchanged.
 - **Progress**: 1.0: clauses1–7 MET (inherited assessment); no product validation.
-- **Next**: independent actual evaluator; parent reconstruction/commits; all3 exact full40 PR-head AND merge-head terminal-success CI with URLs; G8/delivery pending. No autonomous next pick.
+- **Next**: independent actual evaluator; M1 committed/reconstructed; all3 exact full40 PR-head AND merge-head terminal-success CI with URLs; G8/delivery pending. No autonomous next pick.

@@ -1,0 +1,17 @@
+{
+  "at_utc": "2026-11-08T01:30:49.736570+00:00",
+  "metered_ceiling_usd": 5,
+  "actual_metered_usd": 0.00041718,
+  "actual_source": "evaluator-preflight.json",
+  "reservation_usd": 1,
+  "reserved_total_usd": 1.00041718,
+  "quorum": "none under explicit ADMIN exception",
+  "quota_tokens": {
+    "designer": 167027,
+    "planner": 93475,
+    "executor": 136972,
+    "generator_subtotal": 397474
+  },
+  "controller_and_Agent_supervisor_tokens": "not reported",
+  "reservation_is_not_actual_spend": true
+}
