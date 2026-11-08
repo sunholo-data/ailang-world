@@ -1,0 +1,18 @@
+{
+  "failure": {
+    "argv": [
+      "git",
+      "diff",
+      "ad13d835345efc2b78308817cc940f73a987165d",
+      "HEAD",
+      "--check"
+    ],
+    "rc": 2,
+    "stdout": "design_docs/verification/world-iter367/designer-correction-diff.patch:9: trailing whitespace.\n+ \ndesign_docs/verification/world-iter367/designer-correction-diff.patch:13: trailing whitespace.\n+ \ndesign_docs/verification/world-iter367/designer-correction-diff.patch:27: trailing whitespace.\n+ \n",
+    "stderr": ""
+  },
+  "controller_mistake": "First commit command continued after failed staged whitespace check; corrected before planner, no gate waived.",
+  "preserved_original_sha256": "f53b1f6d05ed5d0ffa265ca653e8eeb78fe5abc8359a22b3781b70387c39f2e5",
+  "round_trip_exact": true,
+  "only_file_repackaged": "design_docs/verification/world-iter367/designer-correction-diff.patch"
+}
