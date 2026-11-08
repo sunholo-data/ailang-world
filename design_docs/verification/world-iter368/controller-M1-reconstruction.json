@@ -1,0 +1,65 @@
+{
+  "at": "2026-11-08T05:18:43.707521+00:00",
+  "milestone_commit": "029f8de9608d454a3a30e9576775ddd411240709",
+  "count": 9,
+  "self_excluding_manifest_entries": 8,
+  "all9_reconstructed_and_committed_byte_type_mode_exact": true,
+  "rows": [
+    {
+      "path": "design_docs/world-mission.md",
+      "sha256": "c033cc9f63bd316aeceba5782b935d6583d2ff29f399d623b625ebec6380e68f",
+      "type": "regular",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/world-mission-status-archive.md",
+      "sha256": "1f5fe0f7194ae448e5b2cfb79de98ee1917d2bbc0ac62e10b8db4fd65a9b0962",
+      "type": "regular",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/world-mission-log.md",
+      "sha256": "6049a9810bcc1973cfb3f527d3ec42311f86eb15c0e59f1ffec5e59069073325",
+      "type": "regular",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/world-mission-dashboard.md",
+      "sha256": "8d5588eea2cca4cfdeefee24316ed3f6bbfd50cb70608106b61d757f3ed48977",
+      "type": "regular",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/world-mission-index.md",
+      "sha256": "535d4778cbf341300e80890f8246bf5c330b8947162eb44ed683e6a67eb7bb63",
+      "type": "regular",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/execution-state.json",
+      "sha256": "fb461e6c9a72e6dd550d75804d7c90655534980c65495838d9c65f07f423f015",
+      "type": "regular",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/execution-proof.json",
+      "sha256": "8ef8f36003e98c73a5958eb1865ad813d09461c0d4f61aa8644852b24593d958",
+      "type": "regular",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/execution-inputs.json",
+      "sha256": "65ae0e89383510d3f23b97a3a26665e15e7ff76361c94fa326349d8bcd0d68bc",
+      "type": "regular",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter368/execution-manifest.json",
+      "sha256": "a8ecfbdcc528c64a2257e5aa2b42ff3b05160ca164526258e17130cc096b14c0",
+      "type": "regular",
+      "mode": "0o644"
+    }
+  ],
+  "original_snapshot_retained": "/Users/voightkampff/.ailang/state/world-iter368-record/.snap/M1",
+  "acceptance": "not a judge verdict; current and prior records remain unmerged"
+}

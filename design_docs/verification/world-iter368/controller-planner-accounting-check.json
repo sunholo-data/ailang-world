@@ -1,0 +1,16 @@
+{
+  "native_event_rows": [
+    {
+      "run": "probe",
+      "event_count": 1,
+      "quota": 10800
+    },
+    {
+      "run": "actual",
+      "event_count": 13,
+      "quota": 79682
+    }
+  ],
+  "verified_quota_tokens": 90482,
+  "source_transcript_output": "none, only selected usage arithmetic"
+}

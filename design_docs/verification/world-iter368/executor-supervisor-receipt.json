@@ -1,0 +1,138 @@
+{
+  "at": "2026-11-08T05:18:41.081896+00:00",
+  "iteration": 368,
+  "role": "executor",
+  "routing": {
+    "resolver": "$MISSION_DRIVER_ROOT/tools/launchd/resolve-role-spawn.sh executor",
+    "output": "recipe codex:gpt-6.1-sol declared:provider-pin",
+    "actual_lane": "codex:gpt-6.1-sol",
+    "Agent_supervisor_spawned": true,
+    "fallback": null,
+    "supervisor_tokens": "not reported"
+  },
+  "invocation": {
+    "binary": "codex",
+    "args": [
+      "exec",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "--sandbox",
+      "workspace-write",
+      "-C",
+      "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "-o",
+      "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-executor-selr_zrf/actual-last.txt",
+      "<directive positional content>"
+    ],
+    "stdin": "closed via /dev/null",
+    "OPENAI_API_KEY": "stripped, value never read",
+    "cap_seconds": 900,
+    "probe_cap_seconds": 120,
+    "directive_assertion": "exists and >=200bytes and nonempty",
+    "wrapper_elapsed_seconds": 531,
+    "actual_rc": 0
+  },
+  "native_sessions": {
+    "probe": {
+      "session_id": "01a1b98f-2764-7512-807f-cf32e364bd2e",
+      "source": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T06-08-49-01a1b98f-2764-7512-807f-cf32e364bd2e.jsonl",
+      "start": "2026-11-08T05:08:49.594Z",
+      "end": "2026-11-08T05:08:51.818Z",
+      "elapsed_session_seconds": 2.224,
+      "rc": 0,
+      "usage": {
+        "input_tokens": 17955,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 17960
+      },
+      "quota_tokens": 17960
+    },
+    "actual": {
+      "session_id": "01a1b98f-3698-7513-9f66-6b97bebcb4e6",
+      "source": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T06-08-53-01a1b98f-3698-7513-9f66-6b97bebcb4e6.jsonl",
+      "start": "2026-11-08T05:08:53.399Z",
+      "end": "2026-11-08T05:17:34.529Z",
+      "elapsed_session_seconds": 521.13,
+      "rc": 0,
+      "usage": {
+        "input_tokens": 1344540,
+        "cached_input_tokens": 1284352,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 24290,
+        "reasoning_output_tokens": 4742,
+        "total_tokens": 1368830
+      },
+      "quota_tokens": 84478
+    }
+  },
+  "usage_accounting": {
+    "quota_tokens": 102438,
+    "cache_inclusive_reported_tokens": 1386790,
+    "formula": "Each final session cumulative once. Fresh probe plus actual additive. Quota=input-cached_input+output; cache-inclusive reported total kept separate. Reasoning subset not added.",
+    "controller_and_supervisor": "not reported"
+  },
+  "outputs": {
+    "paths": [
+      "design_docs/world-mission.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-dashboard.md",
+      "design_docs/world-mission-index.md",
+      "design_docs/verification/world-iter368/execution-state.json",
+      "design_docs/verification/world-iter368/execution-proof.json",
+      "design_docs/verification/world-iter368/execution-inputs.json",
+      "design_docs/verification/world-iter368/execution-manifest.json"
+    ],
+    "snapshot_root": ".snap/M1",
+    "manifest_sha256": "a8ecfbdcc528c64a2257e5aa2b42ff3b05160ca164526258e17130cc096b14c0",
+    "snapshot_manifest_sha256": "a8ecfbdcc528c64a2257e5aa2b42ff3b05160ca164526258e17130cc096b14c0",
+    "supervisor_observed": "8 manifest hashes and all9 snapshot bytes match; parent alone reconstructs/commits; this is not acceptance"
+  },
+  "raw_local_only": {
+    "directive.txt": {
+      "path": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-executor-selr_zrf/directive.txt",
+      "sha256": "b3dfbb740e73ca37e27ef4a8d09a6b06241b2c717cdd37314977cf091260f62b"
+    },
+    "run.sh": {
+      "path": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-executor-selr_zrf/run.sh",
+      "sha256": "4a3235a328197e8d29e1463511f0a666c6ea18f1bf1549968d042c4c3544c82e"
+    },
+    "probe.log": {
+      "path": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-executor-selr_zrf/probe.log",
+      "sha256": "0eda1ea0fc74bbd0fa393652d75397a717b7e647dace00f3212a79f1f882bc01"
+    },
+    "actual.log": {
+      "path": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-executor-selr_zrf/actual.log",
+      "sha256": "740270d92607b2185dc01187833579cbf39689cf8e8c2b95fd294a1d7bb0562a"
+    },
+    "probe-last.txt": {
+      "path": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-executor-selr_zrf/probe-last.txt",
+      "sha256": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+    },
+    "actual-last.txt": {
+      "path": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-executor-selr_zrf/actual-last.txt",
+      "sha256": "5bcfccebbf0ea1befa5d47fde976acd1e1caadc15770d122355f04190dd1b392"
+    },
+    "status.txt": {
+      "path": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-executor-selr_zrf/status.txt",
+      "sha256": "8468162f4812ca2f12bd3eed4bd588286f9eadb7d041770a264b11031fcbbc06"
+    }
+  },
+  "preserved_attempt_findings": [
+    "One-off Python bytes-regex with en dash failed parse; corrected before comparisons/writes.",
+    "Numeric-only ledger census matched97 of99 IDs; corrected count to allD-WORLD rows.",
+    "Overnarrow untracked census found genuinely new parent arrivals; individually observed and preserved, excluded from owned snapshot."
+  ],
+  "handoff": {
+    "AC1_4": "actual executor proof has executed comparisons; not independent acceptance",
+    "AC5": "required independent final-material-bytes judge remains parent-owned",
+    "AC6": "final outside-sandbox privacy and narrow charter gate remains parent-owned",
+    "parent_known_finish_fields": "Parent will add explicit Routing evidence base/fullsha@iso, Ruled out field, standalone Progress line and factual terminal usage in a separately reviewed stage; original native payloads/snapshot preserved.",
+    "delivery": "PARKED/unmerged; no product256 or ADMIN367 acceptance; no merge permission"
+  }
+}

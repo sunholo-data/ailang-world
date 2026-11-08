@@ -1,0 +1,24 @@
+{
+  "at": "2026-11-08T05:19:20.107617+00:00",
+  "controller_id": "codex:gpt-6.1-sol",
+  "base_reading": "ad13d835345efc2b78308817cc940f73a987165d\t2026-11-08T04:55:29Z",
+  "milestone_commit": "029f8de9608d454a3a30e9576775ddd411240709",
+  "scope": "separate controller fields and factual completed executor usage; final candidate requires actual independent review",
+  "quota": {
+    "designer": 128330,
+    "planner": 90482,
+    "executor": 102438,
+    "known_generators": 321250,
+    "controller_supervisors": "not reported"
+  },
+  "changes": [
+    "standalone Progress line for weekly parser",
+    "Routing evidence full base/time and all actual generator lanes",
+    "Ruled out field",
+    "factual M1/usage/failed-instrument boundary note",
+    "factual dashboard completed executor usage"
+  ],
+  "prior_role_receipts": "immutable",
+  "evaluator": "pending",
+  "delivery": "PARKED/unmerged, no367or256acceptance"
+}

@@ -16,7 +16,8 @@
 - **Attributed routing**: designer opus quota failure→Codex; preferred evaluator sonnet quota failure→pi:openrouter/minimax/minimax-m3; no verdict inferred.
 - **Designer quota correction**:128330=probe11039+cumulative117291; initial103321 included, resume delta13970. Original wrong231651 retained; designer-usage-accounting.json governs.
 - **Planner quota**:90482=probe10800+actual79682 from native events, no literal --json footer; planner-usage-accounting.json governs.
-- **Separate cache-inclusive totals**: designer1484746; planner783474. Final executor/evaluator and controller/supervisor usage not reported; no pending-role aggregate.
+- **Executor completed**: actualCodex102438 quota tok (probe17960+actual84478),521.130s,rc0. Generators321250 quota; evaluator/controller/supervisor usage pending/unreported.
+- **Separate cache-inclusive totals**: designer1484746; planner783474; executor1386790. No invented pending-role total.
 - **Record preservation**:99 prior ledger rows exact +1 OPEN113; Queue-through-EOF exact; exact365 pair archived once,367/366 pairs retained. Initial plan/state passes:null immutable.
 - **Logs/index**:20→21 live, no rotation; log archive unchanged. Confined fleet index-only; prior354 numbered+1 attended, orphan361 and notes preserved.
 - **Evidence**: four small executor receipts; input hashes separate from output BEFORE hashes. One cumulative .snap/M1 of all9 outputs, manifest excludes itself; parent owns reconstruction/commits.

@@ -1,0 +1,29 @@
+{
+  "at": "2026-11-08T05:20:19.243463+00:00",
+  "base": "ef012a0fcb06291fb9647f82b2428afc5b92a36f",
+  "charter_exact_four_transformations": true,
+  "prior99_ledger_rows_and_queue_preserved": true,
+  "STATUS365_pair_append_exact": true,
+  "log_prefix_preserved_entries": 21,
+  "standalone_Progress": true,
+  "index_exact_one_newrow": true,
+  "protected_population": {
+    "base-files": 6573,
+    "main-files": 6056
+  },
+  "immutable_executor_inputs": 31,
+  "executor_native_usage_checked": [
+    {
+      "run": "probe",
+      "quota": 17960
+    },
+    {
+      "run": "actual",
+      "quota": 84478
+    }
+  ],
+  "known_generator_quota": 321250,
+  "changed_scope": "only5 mission files and current368evidence",
+  "original_M1_commit": "029f8de9608d454a3a30e9576775ddd411240709",
+  "independent_acceptance": "pending actual evaluator, this is controller observation only"
+}
