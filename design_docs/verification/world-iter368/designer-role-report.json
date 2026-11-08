@@ -1,0 +1,51 @@
+{
+  "role": "designer",
+  "resolved_route": "recipe codex:gpt-6.1-sol declared:provider-pin",
+  "role_status": "completed",
+  "product_route": "NONE;256 PARKED FAIL85/localUNMET;367 PARKED separately",
+  "outcome": "ADMIN368 design only; stack/draft delivery; one D113 OPEN addition to unchanged prior99 rows; no automatic parent merge",
+  "artifact": "design_docs/verification/world-iter368/record-design.md",
+  "artifact_sha256": "7f2f4fffcc5b6fec057afcdf2140b308c09815424727e7cda4945ddbb4345083",
+  "stages": [
+    {
+      "stage": "designer-probe",
+      "route": "recipe codex:gpt-6.1-sol declared:provider-pin",
+      "rc": 0,
+      "elapsed_seconds": 4.28,
+      "tokens_native": 11039,
+      "native_usage_raw": "11.039",
+      "result": "design_docs/verification/world-iter368/designer-probe.result.json",
+      "stdout": "design_docs/verification/world-iter368/designer-probe.stdout.log",
+      "stderr": "design_docs/verification/world-iter368/designer-probe.stderr.log",
+      "final": "design_docs/verification/world-iter368/designer-probe.final.txt"
+    },
+    {
+      "stage": "designer-native",
+      "route": "recipe codex:gpt-6.1-sol declared:provider-pin",
+      "rc": 0,
+      "elapsed_seconds": 272.25,
+      "tokens_native": 103321,
+      "native_usage_raw": "103.321",
+      "result": "design_docs/verification/world-iter368/designer-native.result.json",
+      "stdout": "design_docs/verification/world-iter368/designer-native.stdout.log",
+      "stderr": "design_docs/verification/world-iter368/designer-native.stderr.log",
+      "final": "design_docs/verification/world-iter368/designer-native.final.txt"
+    },
+    {
+      "stage": "designer-correction",
+      "route": "recipe codex:gpt-6.1-sol declared:provider-pin",
+      "rc": 0,
+      "elapsed_seconds": 61.36,
+      "tokens_native": 117291,
+      "native_usage_raw": "117.291",
+      "result": "design_docs/verification/world-iter368/designer-correction.result.json",
+      "stdout": "design_docs/verification/world-iter368/designer-correction.stdout.log",
+      "stderr": "design_docs/verification/world-iter368/designer-correction.stderr.log",
+      "final": "design_docs/verification/world-iter368/designer-correction.final.txt"
+    }
+  ],
+  "tokens_native_total": 231651,
+  "usage_note": "Native terminal aggregate tokens per stage; no input/output split supplied; supervisor usage excluded; same-session correction reported separately",
+  "elapsed_stage_seconds_total": 337.89,
+  "fallback": null
+}

@@ -1,0 +1,53 @@
+{
+  "at": "2026-11-08T04:54:27.367205+00:00",
+  "index_row_count": 354,
+  "recent20_ids": [
+    367,
+    366,
+    365,
+    364,
+    363,
+    362,
+    361,
+    360,
+    359,
+    358,
+    357,
+    356,
+    355,
+    354,
+    353,
+    352,
+    351,
+    350,
+    349,
+    348
+  ],
+  "recent20_harness": 0,
+  "last3_product_landings": [
+    {
+      "iteration": 360,
+      "unmet_clause_moved": "none"
+    },
+    {
+      "iteration": 359,
+      "unmet_clause_moved": "none"
+    },
+    {
+      "iteration": 340,
+      "unmet_clause_moved": "none"
+    }
+  ],
+  "routable_unmet": 0,
+  "weekly_rotation_due": false,
+  "next_boundary": "2026-11-09T07:00:00+01:00",
+  "routing_policy_changes": "none",
+  "idle_fingerprint": "ineligible: driver designer/evaluator fallbacks (degraded fire)",
+  "retro_lane": "process: apply existing typed provenance parser; preserve initial failure, correct before relying. No shared skill or policy repair.",
+  "product_landing_instrument": "current authoritative index rows360/359/340 and assessment inherited from prior367; no fresh re-evaluation of product bar",
+  "product_index_rows": [
+    "| 360 | 2026-11-06 | row 255 built: a failed workspace-exec call records, returns and logs one bounded failure line; lazy store schema mark guards older binaries; desig... |",
+    "| 359 | 2026-11-06 | row 250 built: arm 6 classifies each loopback accept (child / foreign / silent), so a local dialer no longer refuses the exec startup probe; design... |",
+    "| 340 | 2026-11-03 | row 242 built: every profile's net6 listener bound before the exec-probe fan-out (exclusion by construction), T1 behavioural + T2 source pin; desig... |"
+  ]
+}

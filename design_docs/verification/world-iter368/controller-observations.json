@@ -1,0 +1,289 @@
+{
+  "iteration": 368,
+  "fire": "world-1794113329-78235",
+  "time": "2026-11-08T04:51:55.781467+00:00",
+  "commands": {
+    "gate1_base": {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/tools/launchd/mission-base.sh",
+        "record",
+        "gate1"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "ad13d835345efc2b78308817cc940f73a987165d\t2026-11-08T04:51:55Z\n",
+      "stderr": ""
+    },
+    "directives_current": {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_directives.sh",
+        "--issue",
+        "449",
+        "--watermark-file",
+        "/Users/voightkampff/.ailang/state/mission-449-last-seen",
+        "--repo",
+        "sunholo-data/ailang-world"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "",
+      "stderr": "\u001b[1;33m\u26a0 mission_directives: watermark file /Users/voightkampff/.ailang/state/mission-449-last-seen is absent \u2014 reading every allowlisted comment on #449; the first --mark creates it\u001b[0m\n\u001b[1;33mmission_directives: #449 \u2014 0 directive(s) from [MarkEdmondson1234] since 1970-01-01T00:00:00Z inclusive, 0 new, 0 already processed (of 39 comments; the rest are public feedback, never directives)\u001b[0m\n"
+    },
+    "directives_older_world": {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_directives.sh",
+        "--issue",
+        "449",
+        "--watermark-file",
+        "/Users/voightkampff/.ailang/state/mission-world-last-seen",
+        "--repo",
+        "sunholo-data/ailang-world"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "",
+      "stderr": "\u001b[1;33m\u26a0 mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-world-last-seen (bare timestamp, no processed ids, written before #981) \u2014 the first --mark upgrades it\u001b[0m\n\u001b[1;33mmission_directives: #449 \u2014 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 39 comments; the rest are public feedback, never directives)\u001b[0m\n"
+    },
+    "directives_prev": {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_directives.sh",
+        "--issue",
+        "366",
+        "--watermark-file",
+        "/Users/voightkampff/.ailang/state/mission-366-last-seen",
+        "--repo",
+        "sunholo-data/ailang-world"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "",
+      "stderr": "\u001b[1;33m\u26a0 mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-366-last-seen (bare timestamp, no processed ids, written before #981) \u2014 the first --mark upgrades it\u001b[0m\n\u001b[1;33mmission_directives: #366 \u2014 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 35 comments; the rest are public feedback, never directives)\u001b[0m\n"
+    },
+    "ledger_check": {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_decisions.sh",
+        "--check",
+        "--file",
+        "design_docs/world-mission.md"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "decision ledger valid: 99 rows\n",
+      "stderr": ""
+    },
+    "ledger_open": {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_decisions.sh",
+        "--open",
+        "--file",
+        "design_docs/world-mission.md"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "D-WORLD-105\tOPEN\t**Row 233 (`w-exec-probe-holder-exit-reset`) parked after quorum r2: should World excuse a reverse-leg reset that closely follows a foreign answer, inside the fail-closed exec probe?** The design (r1) turns a sticky startup refusal into a retry when srt's mux, colliding on the probe port, exits mid-poll. Measured under load on Linux with real srt this happens in 49\u201354 of 100 collided cycles (collisions themselves are rare: one CI instance on record). `gpt6-1-sol` rejects: the safety proof needs \"a reachable child never resets a connection before its listener closes\", which is unmeasured on darwin and on Linux rests on an unenforced kernel setting; a wrong premise could let a broken sandbox pass on a later attempt. **A:** build r1 plus kimi's verbatim wiring fix (a testable `reverseLeg` seam and T13) and accept gpt's premise as a documented residual. Startup survives mux collisions; a small, unmeasured soundness risk in a security gate. **B:** before building, the loop measures the pre-close-reset premise on darwin and Linux (listen-queue overflow, accepted-socket teardown) and designs enforcement, then re-quorums. Probably several iterations; the outcome may still be no. **C (recommended):** close row 233 for 1.0 and keep today's behaviour: a mux collision refuses startup (fails closed) and the operator retries. The gate's soundness outranks availability on a rare event; the design and measurements stay as reference. **Default while unanswered:** C (nothing is built; row 233 stays PARKED).\nD-WORLD-110\tOPEN\t**Row 255's compatibility policy: may a store that holds a failure line refuse older World binaries, and must the read verbs match the daemon's build?** Row 255 records a failed `workspace-exec` call's reason in a new optional `failure` field on `world/effect-record/v1`. Every pre-change binary decodes records strictly, so none can read a record that has the field, and no carrier exists that old readers tolerate (the record law rules out reusing `denial` or `resultRef`). As built, just before the first such record the store's schema version is raised from 5 to 6, so an older binary refuses the store cleanly at open. A failed raise returns a write error and writes no record. No written store-compatibility or rollback policy exists in the charter, DESIGN.md, coding-standards or docs (measured), so the loop asks rather than asserts. **A (recommended):** ratify as built. After a store's first failure line, a `service upgrade` rollback to a build from before row 255 stops the service with `schema version future \u2026 use a compatible binary` instead of serving. An older `why` or `call` pointed at a newer daemon marks that one effect link \u2717, naming the unknown field. **B:** A, plus a new row making `why` and `call` refuse a daemon of a different build, as `episode start` already does (`episode.go:330`). That makes a mixed install fail loudly up front, at the cost of one more build check on every read verb. **C:** revert row 255's record field before the next release. Failed exec calls go back to recording no reason, and the 2026-11-03 failure class stays unattributable. **Default while unanswered: A** (it is what `dev` holds after row 255 lands).\nD-WORLD-111\tOPEN\t**Row 256 is implemented but independent judge FAIL 85: should its local validation contract be retained or explicitly redesigned before resuming?** Both candidate full suites have additional failures beyond two permitted baseline diagnostic failures. The filter failure reproduces at base; publish counter and net6 remain unattributed. **A:** retain the exact-two-failures criterion and keep PR #515 parked until it is met. No source or gate change. **B (recommended):** authorize a subsequent iteration to specify and independently judge an attribution-based criterion: every additional failure must reproduce at the pinned base under paired same-environment arms (at least 100 each), or receive a causal in-scope repair; unmeasured or candidate-only failures still block. Existing full runs remain evidence and Linux PR/merge CI remains required. This is permission to design/measure, not to waive a failure or merge. **Default while unanswered: A**, effective now; row 256 remains needs-human-review and later dependent rows wait.\nD-WORLD-112\tOPEN\t**Rotate/revoke the six credentials actually exposed by the evaluator's environment command?** Affected names: ZAI_API_KEY, TYPESAFE_API_KEY, LYCEUM_API_KEY, OLLAMA_API_KEY, GOOGLE_API_KEY, GEMINI_AGENTS_API_KEY. **A (recommended):** perform attended rotation/revocation and update authoritative vault entries and consumers; invalidates any exposed values but requires provider access. **B:** retain current credentials and explicitly accept possible OpenRouter/MiniMax exposure. **Default while unanswered:** no autonomous credential change; incident stays OPEN immediately and product work remains parked. Stored artifacts have been sanitized, which does not undo provider exposure.\n",
+      "stderr": ""
+    },
+    "inbox": {
+      "argv": [
+        "ailang",
+        "messages",
+        "list",
+        "--unread",
+        "--inbox",
+        "mission-world",
+        "--limit",
+        "1000",
+        "--json"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "null\n",
+      "stderr": "2026/11/08 05:51:59 Google Cloud OpenTelemetry Trace exporter for Go is deprecated and will be archived after January 1st, 2027. Please migrate to the OpenTelemetry OTLP exporters. For migration details, see https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/blob/main/MIGRATION.md\n"
+    },
+    "bookkeeping": {
+      "argv": [
+        "gh",
+        "issue",
+        "view",
+        "449",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--json",
+        "number,state,createdAt,comments"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stderr": "",
+      "summary": {
+        "number": 449,
+        "state": "OPEN",
+        "createdAt": "2026-11-02T08:01:35Z",
+        "comments": 39,
+        "author_counts": {
+          "sunholo-voight-kampff": 39
+        }
+      }
+    },
+    "dev_ci": {
+      "argv": [
+        "gh",
+        "run",
+        "list",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--workflow",
+        "CI",
+        "--branch",
+        "dev",
+        "--limit",
+        "1",
+        "--json",
+        "conclusion,headSha,databaseId"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "[{\"conclusion\":\"success\",\"databaseId\":42417583106,\"headSha\":\"ad13d835345efc2b78308817cc940f73a987165d\"}]\n",
+      "stderr": ""
+    },
+    "origin_sha": {
+      "argv": [
+        "git",
+        "rev-parse",
+        "origin/dev"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "ad13d835345efc2b78308817cc940f73a987165d\n",
+      "stderr": ""
+    },
+    "dev_checks": {
+      "argv": [
+        "gh",
+        "api",
+        "repos/sunholo-data/ailang-world/commits/ad13d835345efc2b78308817cc940f73a987165d/check-runs"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "{\"total_count\":3,\"check_runs\":[{\"id\":128538897729,\"name\":\"ailang-code verify gate\",\"node_id\":\"CR_kwDOThhN288AAAAd7YPtQQ\",\"head_sha\":\"ad13d835345efc2b78308817cc940f73a987165d\",\"external_id\":\"5930e961-06b2-5b3d-adbe-51a7491150e1\",\"url\":\"https://api.github.com/repos/sunholo-data/ailang-world/check-runs/128538897729\",\"html_url\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42417583106/job/128538897729\",\"details_url\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42417583106/job/128538897729\",\"status\":\"completed\",\"conclusion\":\"success\",\"started_at\":\"2026-11-07T21:48:18Z\",\"completed_at\":\"2026-11-07T21:48:57Z\",\"output\":{\"title\":null,\"summary\":null,\"text\":null,\"annotations_count\":2,\"annotations_url\":\"https://api.github.com/repos/sunholo-data/ailang-world/check-runs/128538897729/annotations\"},\"check_suite\":{\"id\":114915427752},\"app\":{\"id\":15368,\"client_id\":\"Iv1.05c79e9ad1f6bdfa\",\"slug\":\"github-actions\",\"node_id\":\"MDM6QXBwMTUzNjg=\",\"owner\":{\"login\":\"github\",\"id\":9919,\"node_id\":\"MDEyOk9yZ2FuaXphdGlvbjk5MTk=\",\"avatar_url\":\"https://avatars.githubusercontent.com/u/9919?v=4\",\"gravatar_id\":\"\",\"url\":\"https://api.github.com/users/github\",\"html_url\":\"https://github.com/github\",\"followers_url\":\"https://api.github.com/users/github/followers\",\"following_url\":\"https://api.github.com/users/github/following{/other_user}\",\"gists_url\":\"https://api.github.com/users/github/gists{/gist_id}\",\"starred_url\":\"https://api.github.com/users/github/starred{/owner}{/repo}\",\"subscriptions_url\":\"https://api.github.com/users/github/subscriptions\",\"organizations_url\":\"https://api.github.com/users/github/orgs\",\"repos_url\":\"https://api.github.com/users/github/repos\",\"events_url\":\"https://api.github.com/users/github/events{/privacy}\",\"received_events_url\":\"https://api.github.com/users/github/received_events\",\"type\":\"Organization\",\"user_view_type\":\"public\",\"site_admin\":false},\"name\":\"GitHub Actions\",\"description\":\"Automate your workflow from idea to production\",\"external_url\":\"https://help.github.com/en/actions\",\"html_url\":\"https://github.com/apps/github-actions\",\"created_at\":\"2018-07-30T09:30:17Z\",\"updated_at\":\"2026-06-18T16:17:48Z\",\"permissions\":{\"actions\":\"write\",\"administration\":\"read\",\"artifact_metadata\":\"write\",\"attestations\":\"write\",\"checks\":\"write\",\"code_quality\":\"write\",\"contents\":\"write\",\"copilot_requests\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"drives\":\"write\",\"issues\":\"write\",\"merge_queues\":\"write\",\"metadata\":\"read\",\"models\":\"read\",\"packages\":\"write\",\"pages\":\"write\",\"pull_requests\":\"write\",\"repository_hooks\":\"write\",\"repository_projects\":\"write\",\"security_events\":\"write\",\"statuses\":\"write\",\"vulnerability_alerts\":\"read\"},\"events\":[\"branch_protection_rule\",\"check_run\",\"check_suite\",\"create\",\"delete\",\"deployment\",\"deployment_status\",\"discussion\",\"discussion_comment\",\"fork\",\"gollum\",\"issues\",\"issue_comment\",\"label\",\"merge_group\",\"milestone\",\"page_build\",\"public\",\"pull_request\",\"pull_request_review\",\"pull_request_review_comment\",\"push\",\"registry_package\",\"release\",\"repository\",\"repository_dispatch\",\"status\",\"watch\",\"workflow_dispatch\",\"workflow_run\"]},\"pull_requests\":[]},{\"id\":128538897642,\"name\":\"go host build + test gate\",\"node_id\":\"CR_kwDOThhN288AAAAd7YPs6g\",\"head_sha\":\"ad13d835345efc2b78308817cc940f73a987165d\",\"external_id\":\"a6ec3c0b-f363-5627-850c-79969a21dbf5\",\"url\":\"https://api.github.com/repos/sunholo-data/ailang-world/check-runs/128538897642\",\"html_url\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42417583106/job/128538897642\",\"details_url\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42417583106/job/128538897642\",\"status\":\"completed\",\"conclusion\":\"success\",\"started_at\":\"2026-11-07T21:48:18Z\",\"completed_at\":\"2026-11-07T22:03:10Z\",\"output\":{\"title\":null,\"summary\":null,\"text\":null,\"annotations_count\":1,\"annotations_url\":\"https://api.github.com/repos/sunholo-data/ailang-world/check-runs/128538897642/annotations\"},\"check_suite\":{\"id\":114915427752},\"app\":{\"id\":15368,\"client_id\":\"Iv1.05c79e9ad1f6bdfa\",\"slug\":\"github-actions\",\"node_id\":\"MDM6QXBwMTUzNjg=\",\"owner\":{\"login\":\"github\",\"id\":9919,\"node_id\":\"MDEyOk9yZ2FuaXphdGlvbjk5MTk=\",\"avatar_url\":\"https://avatars.githubusercontent.com/u/9919?v=4\",\"gravatar_id\":\"\",\"url\":\"https://api.github.com/users/github\",\"html_url\":\"https://github.com/github\",\"followers_url\":\"https://api.github.com/users/github/followers\",\"following_url\":\"https://api.github.com/users/github/following{/other_user}\",\"gists_url\":\"https://api.github.com/users/github/gists{/gist_id}\",\"starred_url\":\"https://api.github.com/users/github/starred{/owner}{/repo}\",\"subscriptions_url\":\"https://api.github.com/users/github/subscriptions\",\"organizations_url\":\"https://api.github.com/users/github/orgs\",\"repos_url\":\"https://api.github.com/users/github/repos\",\"events_url\":\"https://api.github.com/users/github/events{/privacy}\",\"received_events_url\":\"https://api.github.com/users/github/received_events\",\"type\":\"Organization\",\"user_view_type\":\"public\",\"site_admin\":false},\"name\":\"GitHub Actions\",\"description\":\"Automate your workflow from idea to production\",\"external_url\":\"https://help.github.com/en/actions\",\"html_url\":\"https://github.com/apps/github-actions\",\"created_at\":\"2018-07-30T09:30:17Z\",\"updated_at\":\"2026-06-18T16:17:48Z\",\"permissions\":{\"actions\":\"write\",\"administration\":\"read\",\"artifact_metadata\":\"write\",\"attestations\":\"write\",\"checks\":\"write\",\"code_quality\":\"write\",\"contents\":\"write\",\"copilot_requests\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"drives\":\"write\",\"issues\":\"write\",\"merge_queues\":\"write\",\"metadata\":\"read\",\"models\":\"read\",\"packages\":\"write\",\"pages\":\"write\",\"pull_requests\":\"write\",\"repository_hooks\":\"write\",\"repository_projects\":\"write\",\"security_events\":\"write\",\"statuses\":\"write\",\"vulnerability_alerts\":\"read\"},\"events\":[\"branch_protection_rule\",\"check_run\",\"check_suite\",\"create\",\"delete\",\"deployment\",\"deployment_status\",\"discussion\",\"discussion_comment\",\"fork\",\"gollum\",\"issues\",\"issue_comment\",\"label\",\"merge_group\",\"milestone\",\"page_build\",\"public\",\"pull_request\",\"pull_request_review\",\"pull_request_review_comment\",\"push\",\"registry_package\",\"release\",\"repository\",\"repository_dispatch\",\"status\",\"watch\",\"workflow_dispatch\",\"workflow_run\"]},\"pull_requests\":[]},{\"id\":128538897509,\"name\":\"go race gate (go test -race, own job)\",\"node_id\":\"CR_kwDOThhN288AAAAd7YPsZQ\",\"head_sha\":\"ad13d835345efc2b78308817cc940f73a987165d\",\"external_id\":\"07e80542-e129-5458-9aa5-4b2c32331115\",\"url\":\"https://api.github.com/repos/sunholo-data/ailang-world/check-runs/128538897509\",\"html_url\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42417583106/job/128538897509\",\"details_url\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42417583106/job/128538897509\",\"status\":\"completed\",\"conclusion\":\"success\",\"started_at\":\"2026-11-07T21:48:18Z\",\"completed_at\":\"2026-11-07T21:58:22Z\",\"output\":{\"title\":null,\"summary\":null,\"text\":null,\"annotations_count\":1,\"annotations_url\":\"https://api.github.com/repos/sunholo-data/ailang-world/check-runs/128538897509/annotations\"},\"check_suite\":{\"id\":114915427752},\"app\":{\"id\":15368,\"client_id\":\"Iv1.05c79e9ad1f6bdfa\",\"slug\":\"github-actions\",\"node_id\":\"MDM6QXBwMTUzNjg=\",\"owner\":{\"login\":\"github\",\"id\":9919,\"node_id\":\"MDEyOk9yZ2FuaXphdGlvbjk5MTk=\",\"avatar_url\":\"https://avatars.githubusercontent.com/u/9919?v=4\",\"gravatar_id\":\"\",\"url\":\"https://api.github.com/users/github\",\"html_url\":\"https://github.com/github\",\"followers_url\":\"https://api.github.com/users/github/followers\",\"following_url\":\"https://api.github.com/users/github/following{/other_user}\",\"gists_url\":\"https://api.github.com/users/github/gists{/gist_id}\",\"starred_url\":\"https://api.github.com/users/github/starred{/owner}{/repo}\",\"subscriptions_url\":\"https://api.github.com/users/github/subscriptions\",\"organizations_url\":\"https://api.github.com/users/github/orgs\",\"repos_url\":\"https://api.github.com/users/github/repos\",\"events_url\":\"https://api.github.com/users/github/events{/privacy}\",\"received_events_url\":\"https://api.github.com/users/github/received_events\",\"type\":\"Organization\",\"user_view_type\":\"public\",\"site_admin\":false},\"name\":\"GitHub Actions\",\"description\":\"Automate your workflow from idea to production\",\"external_url\":\"https://help.github.com/en/actions\",\"html_url\":\"https://github.com/apps/github-actions\",\"created_at\":\"2018-07-30T09:30:17Z\",\"updated_at\":\"2026-06-18T16:17:48Z\",\"permissions\":{\"actions\":\"write\",\"administration\":\"read\",\"artifact_metadata\":\"write\",\"attestations\":\"write\",\"checks\":\"write\",\"code_quality\":\"write\",\"contents\":\"write\",\"copilot_requests\":\"write\",\"deployments\":\"write\",\"discussions\":\"write\",\"drives\":\"write\",\"issues\":\"write\",\"merge_queues\":\"write\",\"metadata\":\"read\",\"models\":\"read\",\"packages\":\"write\",\"pages\":\"write\",\"pull_requests\":\"write\",\"repository_hooks\":\"write\",\"repository_projects\":\"write\",\"security_events\":\"write\",\"statuses\":\"write\",\"vulnerability_alerts\":\"read\"},\"events\":[\"branch_protection_rule\",\"check_run\",\"check_suite\",\"create\",\"delete\",\"deployment\",\"deployment_status\",\"discussion\",\"discussion_comment\",\"fork\",\"gollum\",\"issues\",\"issue_comment\",\"label\",\"merge_group\",\"milestone\",\"page_build\",\"public\",\"pull_request\",\"pull_request_review\",\"pull_request_review_comment\",\"push\",\"registry_package\",\"release\",\"repository\",\"repository_dispatch\",\"status\",\"watch\",\"workflow_dispatch\",\"workflow_run\"]},\"pull_requests\":[]}]}",
+      "stderr": ""
+    },
+    "open_prs": {
+      "argv": [
+        "gh",
+        "pr",
+        "list",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--author",
+        "@me",
+        "--state",
+        "open",
+        "--limit",
+        "1000",
+        "--json",
+        "number,title,headRefName,headRefOid,isDraft,mergeable,mergeStateStatus"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "[{\"headRefName\":\"mission/world-iter367-record\",\"headRefOid\":\"ef012a0fcb06291fb9647f82b2428afc5b92a36f\",\"isDraft\":true,\"mergeStateStatus\":\"CLEAN\",\"mergeable\":\"MERGEABLE\",\"number\":521,\"title\":\"docs(world): park iteration 367 record for independent-evidence review\"},{\"headRefName\":\"sprint/world-iter362-row256\",\"headRefOid\":\"7655388936b80bea9c4843f0a2e0abc085e52c0f\",\"isDraft\":true,\"mergeStateStatus\":\"DIRTY\",\"mergeable\":\"CONFLICTING\",\"number\":515,\"title\":\"Row 256: isolate registry startup clock and show excluded exec profiles\"}]\n",
+      "stderr": ""
+    },
+    "pr521": {
+      "argv": [
+        "gh",
+        "pr",
+        "view",
+        "521",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--json",
+        "number,state,isDraft,headRefOid,mergeable,mergeStateStatus,statusCheckRollup"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "{\"headRefOid\":\"ef012a0fcb06291fb9647f82b2428afc5b92a36f\",\"isDraft\":true,\"mergeStateStatus\":\"CLEAN\",\"mergeable\":\"MERGEABLE\",\"number\":521,\"state\":\"OPEN\",\"statusCheckRollup\":[{\"__typename\":\"CheckRun\",\"completedAt\":\"2026-11-08T02:04:12Z\",\"conclusion\":\"SUCCESS\",\"detailsUrl\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42436873200/job/128597479235\",\"name\":\"ailang-code verify gate\",\"startedAt\":\"2026-11-08T02:03:30Z\",\"status\":\"COMPLETED\",\"workflowName\":\"CI\"},{\"__typename\":\"CheckRun\",\"completedAt\":\"2026-11-08T02:18:26Z\",\"conclusion\":\"SUCCESS\",\"detailsUrl\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42436873200/job/128597479058\",\"name\":\"go host build + test gate\",\"startedAt\":\"2026-11-08T02:03:29Z\",\"status\":\"COMPLETED\",\"workflowName\":\"CI\"},{\"__typename\":\"CheckRun\",\"completedAt\":\"2026-11-08T02:15:14Z\",\"conclusion\":\"SUCCESS\",\"detailsUrl\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42436873200/job/128597479280\",\"name\":\"go race gate (go test -race, own job)\",\"startedAt\":\"2026-11-08T02:03:29Z\",\"status\":\"COMPLETED\",\"workflowName\":\"CI\"}]}\n",
+      "stderr": ""
+    },
+    "pr515": {
+      "argv": [
+        "gh",
+        "pr",
+        "view",
+        "515",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--json",
+        "number,state,isDraft,headRefOid,mergeable,mergeStateStatus"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "{\"headRefOid\":\"7655388936b80bea9c4843f0a2e0abc085e52c0f\",\"isDraft\":true,\"mergeStateStatus\":\"DIRTY\",\"mergeable\":\"CONFLICTING\",\"number\":515,\"state\":\"OPEN\"}\n",
+      "stderr": ""
+    },
+    "load": {
+      "argv": [
+        "uptime"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": " 5:52  up 7 days, 11:11, 4 users, load averages: 1.84 2.79 2.98\n",
+      "stderr": ""
+    },
+    "main_status": {
+      "argv": [
+        "git",
+        "status",
+        "--porcelain"
+      ],
+      "cwd": "/Users/voightkampff/dev/sunholo-data/ailang-world",
+      "rc": 0,
+      "stdout": "?? .claude/worktrees/\n?? .wt-world-iter306-r0/\n",
+      "stderr": ""
+    },
+    "self_notices": {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_gate0_self_notices.sh",
+        "--issue",
+        "449",
+        "--prev-issue",
+        "366",
+        "--repo",
+        "sunholo-data/ailang-world",
+        "--self",
+        "sunholo-voight-kampff",
+        "--watermark-file",
+        "/Users/voightkampff/.ailang/state/mission-449-last-seen",
+        "--watermark-file",
+        "/Users/voightkampff/.ailang/state/mission-366-last-seen",
+        "--control",
+        "auto",
+        "--driver-src",
+        "/Users/voightkampff/.ailang-driver-pin/world/tools/launchd/mission-control.sh"
+      ],
+      "cwd": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "rc": 0,
+      "stdout": "gate0_self_notices: repo=sunholo-data/ailang-world self=sunholo-voight-kampff issues=449,366\nwatermark: /Users/voightkampff/.ailang/state/mission-449-last-seen ABSENT \u2014 DEGRADED: single-watermark read (iter-52 rule wants two)\nwatermark: /Users/voightkampff/.ailang/state/mission-366-last-seen = 2026-10-27T09:03:42Z ok\nsince: 2026-10-27T09:03:42Z (older of 1 readable watermark(s) of 2)\ntranscript: issue=449 at=2026-11-04T22:00:52Z hits=1 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6643217962 fire=world-1793825318-10110\ntranscript: issue=449 at=2026-11-05T01:43:10Z hits=1 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/449#issuecomment-6647302052 fire=world-1793839743-21731\nissue: 449 comments=39 self=39 crash=0 transcript=2 other=37\nissue: 366 comments=35 self=35 crash=0 transcript=0 other=35\ncontrol: issue=107 expect=4 got=4 ok\nsignature-source: /Users/voightkampff/.ailang-driver-pin/world/tools/launchd/mission-control.sh ok\nverdict: 0 crash notice(s) since 2026-10-27T09:03:42Z on #449,#366 \u2014 no death signal from the driver; Gate 2's traces (a)-(c) still run [mission_gate0_self_notices.sh, control 107:4, watermarks 1/2]; transcript notice(s) since watermark: 2; exposure reported: key names are in the private controlplane notice; report the count and fire id, never a value or path\n",
+      "stderr": ""
+    }
+  },
+  "kill_switch": false,
+  "billing_clean": true,
+  "routing_note": "lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `pi:openrouter/minimax/minimax-m3`",
+  "entry_head": "ef012a0fcb06291fb9647f82b2428afc5b92a36f",
+  "clause_map": {
+    "1": "MET (inherited assessed state; not a fresh product validation)",
+    "2": "MET (inherited assessed state; not a fresh product validation)",
+    "3": "MET (inherited assessed state; not a fresh product validation)",
+    "4": "MET (inherited assessed state; not a fresh product validation)",
+    "5": "MET (inherited assessed state; not a fresh product validation)",
+    "6": "MET (inherited assessed state; not a fresh product validation)",
+    "7": "MET (inherited assessed state; not a fresh product validation)"
+  }
+}

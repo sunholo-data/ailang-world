@@ -1,0 +1,22 @@
+{
+  "at": "2026-11-08T04:53:05.387654+00:00",
+  "delta_since_367_observation": {
+    "argv": [
+      "git",
+      "log",
+      "ad13d835345efc2b78308817cc940f73a987165d..origin/dev",
+      "--format=%H %s"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "N2c_control": {
+    "rc": 0,
+    "count": 4,
+    "stdout": "5c83f339433d09873e5592780d540b7b4e70c7f2 design(row 220): w-surface-index-follow r0 \u2014 the daemon follows local branches and running episodes; friction 46 (w220d, Codex)\n1e7b3cd35d45c5795a8fe99fda610e6de631a407 Merge pull request #374 from sunholo-data/trial/row188-n2c-surface-live\n6f2ba0397b022e22601ce9e01dea344dfb0b349f feat(row 188 N2c): live refresh in the World app over AG-UI (w188l, 3 rounds)\n41e6424ea1444062f870ae6f1707651226872489 feat(row 188 N2b): the World app at /surface, the approved v3 working copy on live data\n"
+  },
+  "fresh_A1_subjects": 0,
+  "fresh_N2d_N4a_subjects": 0,
+  "scope": "commit subjects since prior observation; prior accepted release blockers unchanged, no completed attended release is newly evidenced"
+}

@@ -1,0 +1,20 @@
+{
+  "at": "2026-11-08T04:55:29.207517+00:00",
+  "iteration": 368,
+  "scope": "mandatory ADMIN block report only; Gate2 bookkeeping quorum exception; no product or harness work",
+  "delivery": "bank on branch mission/world-iter368-record stacked on parked367; draft stacked PR only, no merge/approval for367 or368",
+  "new_decision_row": "| D-WORLD-113 | OPEN | **ADMIN367 evidence review: repair or abandon its unmerged record?** Iteration367 remains needs-human-review because the final evaluator after-input-rehash proof did not execute successfully, despite three preserved model PASS verdicts. **A (recommended):** attended repair of the evidence/hook workflow, then fresh independent review; no proof waiver, product acceptance or merge permission. **B:** abandon unmerged ADMIN367 and retain canonical iteration366. **Default while unanswered:** keep ADMIN367 and its stacked records unmerged; no autonomous repair, extra judge call on367 or product acceptance. | Recorded unattended iteration368 from iteration367 proposed request ADMIN367; original verification/world-iter367/controller-park.json and final supervisor receipt remain unchanged. This row is OPEN, not a human ruling; PR521 remains unmerged. |",
+  "existing_ledger": "all99 prior rows bytes and statuses must remain exact; append only new113 OPEN before end marker",
+  "paths": [
+    "design_docs/world-mission.md",
+    "design_docs/world-mission-status-archive.md",
+    "design_docs/world-mission-log.md",
+    "design_docs/world-mission-dashboard.md",
+    "design_docs/world-mission-index.md",
+    "design_docs/verification/world-iter368/"
+  ],
+  "protected": "all earlier verification files, entire Queue-through-EOF, all source/tests/harness/shared skill/state; no mutable existing role/consumed receipts",
+  "gate4_base": "ad13d835345efc2b78308817cc940f73a987165d\t2026-11-08T04:55:29Z",
+  "usage": "each role actual lane/native reported tokens or not reported, no estimates",
+  "no_go_suite": "narrow baseline charter gate+privacy only; no full-suite retry, no product validation"
+}

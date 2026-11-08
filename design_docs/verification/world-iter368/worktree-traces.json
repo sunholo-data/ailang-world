@@ -1,0 +1,861 @@
+{
+  "at": "2026-11-08T04:52:36.148896+00:00",
+  "rows": [
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world",
+      "branch": "refs/heads/dev",
+      "head": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+      "rc": 0,
+      "status": "?? .claude/worktrees/\n?? .wt-world-iter306-r0/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/claude-501/-Users-voightkampff-dev-sunholo-data-ailang-world/ae6f556a-f500-44de-9966-aae536bf2162/scratchpad/wt-d108",
+      "branch": "refs/heads/mission/attended-d-world-108",
+      "head": "89a92ea028464466542277f72ce69f809b42b7e8",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/claude-501/-Users-voightkampff-dev-sunholo-data-ailang-world/ae6f556a-f500-44de-9966-aae536bf2162/scratchpad/wt-d109",
+      "branch": "refs/heads/mission/attended-d-world-109",
+      "head": "8cd18a756e4107f4e69398d4472514cfa2879db2",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-final-2026-10-14/repo",
+      "branch": null,
+      "head": "fd321b6e8a0298ef6dd6a56e5b41d1d277b0b973",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-final-2026-10-15/repo",
+      "branch": null,
+      "head": "4e8299c1852fde92d13760e9b06202e7196177b3",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-final/repo",
+      "branch": "refs/heads/attended/row93-final",
+      "head": "38078934551393327bf3e16059f785add81dc695",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-smoke-2026-10-15/repo",
+      "branch": null,
+      "head": "82583411fb0cbdc1ff388f72184dcff579a071b6",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-tune/repo",
+      "branch": null,
+      "head": "748e7255e30ada38bd602112507d4555d40c149d",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/row114/wt",
+      "branch": "refs/heads/sprint/row114-k5-q7q8",
+      "head": "47cae3f6b13227671751085e912918da8fb82374",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/row182-e2e/repo",
+      "branch": null,
+      "head": "6f5f4fcf4a4f20c56f6aabb45ca8fddeb96f69c7",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/repo",
+      "branch": null,
+      "head": "a08ca14617430a667cfcbbe8d3eb75e74b7f562a",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610271234",
+      "branch": "refs/heads/world/h2610271234",
+      "head": "28ee2512f6c519ba01153905e893d349daf572b3",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610271506",
+      "branch": "refs/heads/world/h2610271506",
+      "head": "b4b4c2d0ccbb7e855d621dbd646a9a60af436805",
+      "rc": 0,
+      "status": " M README.md\n?? design_docs/planned/w-worldd-home-service.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610280901",
+      "branch": "refs/heads/world/h2610280901",
+      "head": "225428c4b454579c2473a7af4f04e06a30372913",
+      "rc": 0,
+      "status": " M design_docs/planned/w-all-agent-work-through-world.md\n M design_docs/verification/world-dogfood/friction.md\n M design_docs/world-mission.md\n?? design_docs/planned/w-episode-finish.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610281352",
+      "branch": "refs/heads/world/h2610281352",
+      "head": "9ec31fca4a78c6b106c8b9d72ce900276f107ecf",
+      "rc": 0,
+      "status": " M design_docs/verification/world-dogfood/friction.md\n M design_docs/world-mission.md\n?? design_docs/planned/w-episode-one-command.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610281541",
+      "branch": "refs/heads/world/h2610281541",
+      "head": "2769cff9477dc89f5eb61c6aaeb58079cb4120e3",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter350-record",
+      "branch": "refs/heads/mission/world-iter350-landed",
+      "head": "1a31b01332e450305f5afe5034c7967ee8e31573",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter351-landed",
+      "branch": "refs/heads/mission/world-iter351-landed",
+      "head": "b43607c19454b6124848c58e5943a645d837672d",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter351-record",
+      "branch": "refs/heads/mission/world-iter351-record",
+      "head": "d6a18c5d4bbba5be2aed704046fbc0ed017c6108",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter352-record",
+      "branch": "refs/heads/mission/world-iter352-landed",
+      "head": "d633efcbf2f7d4e5545e661c4d472c52e40a9ab4",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter353-record",
+      "branch": "refs/heads/mission/world-iter353-row247",
+      "head": "09bb07c0ef8b531e25e502e0436feb5e35a3eecf",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter354-record",
+      "branch": "refs/heads/mission/world-iter354-landed",
+      "head": "61d8c856cb10dde06d6076f5af12c1c7949c0d06",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter355-record",
+      "branch": "refs/heads/mission/world-iter355-landed",
+      "head": "6c9b40b4e62e123b19fa443b0df9f3df350d2b1a",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter356-record",
+      "branch": "refs/heads/mission/world-iter356-landed",
+      "head": "b4efa226f2903be99e56d683d1f706fa46096a83",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter357-landed",
+      "branch": "refs/heads/mission/world-iter357-landed",
+      "head": "bdf06f31200cc97575f60d4039eb06e03948ef68",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter357-record",
+      "branch": "refs/heads/mission/world-iter357-record",
+      "head": "1f2a83f83b104b8d343f143bcbd01f603aedff85",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter358-landed",
+      "branch": null,
+      "head": "8712ffc524f98e4768dae3c7d7242598d0cdd00d",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter358-record",
+      "branch": "refs/heads/mission/world-iter358-record",
+      "head": "21ba99cbddf940eb725c5926327652b4c623b6eb",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter363-record",
+      "branch": "refs/heads/mission/world-iter363-record",
+      "head": "456f9bd88a2bc79499734809629dad5a66e4e60e",
+      "rc": 0,
+      "status": "?? .snap/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter364-record",
+      "branch": "refs/heads/mission/world-iter364-record",
+      "head": "773c3bbe999762b39334e055b415a835e8fea1a0",
+      "rc": 0,
+      "status": "?? .snap/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter365-record",
+      "branch": "refs/heads/mission/world-iter365-record",
+      "head": "3628b40e5c0cbfe50a71b6e0327e6f7ee2dca669",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter365/.snap/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter368-record",
+      "branch": "refs/heads/mission/world-iter368-record",
+      "head": "ef012a0fcb06291fb9647f82b2428afc5b92a36f",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter368/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-wt/iter239-record",
+      "branch": "refs/heads/mission/world-iter239-park",
+      "head": "16988ff52ee632480e493dcf001298c019793121",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-wt/iter241-row153",
+      "branch": "refs/heads/sprint/row153-plan-phase-deadline-under-load",
+      "head": "0c67c9a02d5def7c4b2720d3d89491c0337685f5",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/world-ws/world-2611021047",
+      "branch": null,
+      "head": "2e667246cb4ef6e0b115442488c01071ad5c221d",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/world-ws/worldd-2611031015",
+      "branch": null,
+      "head": "eadad69a2ec4a22f5acad2fbf2dcaa9ab1c50320",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.base-world-iter362",
+      "branch": null,
+      "head": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.base-world-iter365",
+      "branch": null,
+      "head": "b9816aefab82dc09cf9e3a9cec5e8191fb58a9de",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter208",
+      "branch": null,
+      "head": "b858693b27a58ba05303bf3bd423cc623014063a",
+      "rc": 0,
+      "status": "?? eval-report-iter208.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter215-preflight",
+      "branch": null,
+      "head": "4e2600e601711f40dae42479167251d43a8a3bf6",
+      "rc": 0,
+      "status": "?? evaluator-administrative-recovery-report.md\n?? evaluator-r2-design.md\n?? evaluator-r2-evidence.json\n?? evaluator-readiness.txt\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter217",
+      "branch": null,
+      "head": "07df462508618218cb4dac0eaff485a8236ef049",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter217/native-astra-quorum-r1.json\n?? design_docs/verification/world-iter217/native-astra-quorum-r1.md\n?? design_docs/verification/world-iter217/native-sol6-quorum-r1.json\n?? design_docs/verification/world-iter217/native-sol6-quorum-r1.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter217-r2",
+      "branch": null,
+      "head": "077027ed1d74f62151947cacacb62e2a689fbead",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter217/native-astra-quorum-r2.json\n?? design_docs/verification/world-iter217/native-astra-quorum-r2.md\n?? design_docs/verification/world-iter217/native-sol6-quorum-r2.json\n?? design_docs/verification/world-iter217/native-sol6-quorum-r2.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter218",
+      "branch": null,
+      "head": "ba9fdc6611b9b5e3d9ee53eaf39c820795a1ed85",
+      "rc": 0,
+      "status": "?? record-eval-218-r1.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "branch": null,
+      "head": "481a73b587369b0fbd6e4ddb798982550d1a4c52",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter267/evaluator-r1.json\n?? design_docs/verification/world-iter267/evaluator-r1.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268",
+      "branch": "refs/heads/eval/world-iter268-r1",
+      "head": "67ee2efe5b2fdca3dcab4eaeda4849a8caea1c8c",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter268/evaluator-r1.json\n?? design_docs/verification/world-iter268/evaluator-r1.md\n?? design_docs/verification/world-iter268/evaluator-r1/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+      "branch": "refs/heads/eval/world-iter268-r2",
+      "head": "7ba691b732d327f6b38a16223152b876e7d197df",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter268/evaluator-r2.json\n?? design_docs/verification/world-iter268/evaluator-r2.md\n?? design_docs/verification/world-iter268/evaluator-r2/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r3",
+      "branch": "refs/heads/eval/world-iter268-r3",
+      "head": "763c60a20358f486df395043131557c1143735ba",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter268/evaluator-r3.json\n?? design_docs/verification/world-iter268/evaluator-r3.md\n?? design_docs/verification/world-iter268/evaluator-r3/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-record-r1",
+      "branch": "refs/heads/eval/world-iter268-record-r1",
+      "head": "d6e04632851bb3ebd31c2ef5c4d32a114bb6a1ca",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter268/record-evaluator-r1.json\n?? design_docs/verification/world-iter268/record-evaluator-r1.md\n?? design_docs/verification/world-iter268/record-evaluator-r1/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-record-r2",
+      "branch": "refs/heads/eval/world-iter268-record-r2",
+      "head": "b20bb350cf1d60c9020b4a831be0ae26ad915246",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter268/record-evaluator-r2.json\n?? design_docs/verification/world-iter268/record-evaluator-r2.md\n?? design_docs/verification/world-iter268/record-evaluator-r2/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter281-fallback",
+      "branch": null,
+      "head": "d8e17680b642b34736ce1e57c74c73aa54c07d60",
+      "rc": 0,
+      "status": "?? .judge/\n?? design_docs/verification/world-iter281/evaluator-r1.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter296",
+      "branch": null,
+      "head": "13b7cd671230ede17b71fe2f69869b29a8aa5007",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter302",
+      "branch": "refs/heads/eval/world-iter302-r1",
+      "head": "fa04df0070c84b68a49b0e57b7e13330e36edd47",
+      "rc": 0,
+      "status": "?? evaluator-r1.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter302-r2",
+      "branch": "refs/heads/eval/world-iter302-r2",
+      "head": "02e12be22143bcad7f79ccf2b6e4cb76bab268ce",
+      "rc": 0,
+      "status": "?? evaluator-r2.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter303-recovery",
+      "branch": "refs/heads/eval/world-iter303-recovery",
+      "head": "f615a9698370694664fbbc01431e4a2c549377cc",
+      "rc": 0,
+      "status": "?? evaluator-recovery-evidence/\n?? evaluator-recovery-report.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter313",
+      "branch": "refs/heads/eval/world-iter313-r1",
+      "head": "f6c8d8d43f51d520e5ec14c05bf1fed40f2fc5fe",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter313/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter313-r2",
+      "branch": "refs/heads/eval/world-iter313-r2",
+      "head": "94e1c08b0a29085c775ccf038bd498d9c078f47f",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter313/evaluator-r2.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-record",
+      "branch": "refs/heads/eval/world-iter362-record",
+      "head": "11b7a56902cf7935d506c7ccd157cc916499ee8a",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter362/record-evaluator/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-row256-r1",
+      "branch": "refs/heads/eval/world-iter362-row256-r1",
+      "head": "7655388936b80bea9c4843f0a2e0abc085e52c0f",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter362/controller-evaluation-brief.json\n?? design_docs/verification/world-iter362/controller-full-go-attempt1-summary.json\n?? design_docs/verification/world-iter362/controller-m1-verify-ail-candidate.txt\n?? design_docs/verification/world-iter362/controller-m1-verify-go-candidate-attempt2.txt\n?? design_docs/verification/world-iter362/controller-m1-verify-go-candidate.txt\n?? design_docs/verification/world-iter362/evaluator-r1/\n?? design_docs/verification/world-iter362/paired-broker-candidate-100.txt\n?? design_docs/verification/world-iter362/paired-broker-pristine-100.txt\n?? design_docs/verification/world-iter362/pr-ci-76553889.json\n?? design_docs/verification/world-iter362/pristine-publish-request-observation-400.txt\n?? design_docs/verification/world-iter362/publish-counter-observation.diff.txt\n?? design_docs/verification/world-iter362/publish-observation-restoration.json\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter363",
+      "branch": null,
+      "head": "9cd60c76d325a6779098d1d386cc740712290c35",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter363/evaluator/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter364",
+      "branch": "refs/heads/eval/world-iter364",
+      "head": "c5e34151bd3797ad71cc6b34b17d4f2afc7a323f",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter364/evaluator/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter365",
+      "branch": null,
+      "head": "9a43f9c1ab9e331e61753cfb86223710f93bbb30",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter365/evaluator-report.md\n?? design_docs/verification/world-iter365/evaluator-result.json\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.exec-world-iter303-recovery",
+      "branch": "refs/heads/exec/world-iter303-recovery",
+      "head": "f615a9698370694664fbbc01431e4a2c549377cc",
+      "rc": 0,
+      "status": "?? executor-recovery-evidence/\n?? executor-recovery-report.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256",
+      "branch": "refs/heads/review/world-iter362-validation",
+      "head": "9d9d18e28d43ab92a0021137c03892b2cce1ad64",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter362/executor-codex.txt\n?? design_docs/verification/world-iter362/executor-pid.json\n?? design_docs/verification/world-iter362/executor-probe-pid.json\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.judge-wt-iter337",
+      "branch": null,
+      "head": "9e88e94f95c79b567fe9997c9a6d84be2407de72",
+      "rc": 0,
+      "status": "?? evaluator-r1.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.probe-world-iter362-quorum",
+      "branch": "refs/heads/probe/world-iter362-quorum-v28",
+      "head": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+      "rc": 0,
+      "status": " M cmd/ailang-worldd/doctor.go\n M cmd/ailang-worldd/doctor_hosts.go\n M docs/QUICKSTART.md\n M host/broker/exec_probe.go\n M host/broker/exec_startup.go\n M host/daemon/daemon.go\n M host/daemon/workspace.go\n?? cmd/ailang-worldd/doctor_exec_profiles_test.go\n?? host/broker/exec_probe_out_of_time_test.go\n?? host/daemon/startup_callers_test.go\n?? host/daemon/startup_under_load_test.go\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.record-world-iter362",
+      "branch": "refs/heads/mission/world-iter362-record",
+      "head": "6068ed3060acc2bf9da1a676c219ac362dbc1c5d",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter362/record-merge-ci-565609ab.json\n?? design_docs/verification/world-iter362/record-pr-ci-6068ed30.json\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter366-baseline",
+      "branch": null,
+      "head": "1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter366-evaluator",
+      "branch": "refs/heads/judge/world-iter366-record",
+      "head": "57b449d2339cd16d115b280d56676e91c3aef454",
+      "rc": 0,
+      "status": "?? .snap/\n?? design_docs/verification/world-iter366/evaluator-report.md\n?? design_docs/verification/world-iter366/evaluator-result.json\n?? design_docs/verification/world-iter366/evaluator-review-supervisor-receipt.json\n?? design_docs/verification/world-iter366/evaluator-supervisor-r2-receipt.json\n?? design_docs/verification/world-iter366/evaluator-supervisor-receipt.json\n?? design_docs/verification/world-iter366/evaluator-usage-capture-check.json\n?? design_docs/verification/world-iter366/worktree-census.txt\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter366-record",
+      "branch": "refs/heads/mission/world-iter366-record",
+      "head": "f5cbc54879ad8d71d8bf825f5b202e3a03b01f37",
+      "rc": 0,
+      "status": "?? .snap/\n?? design_docs/verification/world-iter366/worktree-census.txt\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-baseline",
+      "branch": null,
+      "head": "ad13d835345efc2b78308817cc940f73a987165d",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-eval",
+      "branch": "refs/heads/mission/world-iter367-eval",
+      "head": "a6360932f357bc8ca803d69d3b2e73f1f34d0244",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter367/evaluator-addendum-result-round1.json\n?? design_docs/verification/world-iter367/evaluator-addendum-round1.md\n?? design_docs/verification/world-iter367/evaluator-controls-round1.json\n?? design_docs/verification/world-iter367/evaluator-final-proof-round3.json\n?? design_docs/verification/world-iter367/evaluator-final-verdict-round3.json\n?? design_docs/verification/world-iter367/evaluator-report-round1.md\n?? design_docs/verification/world-iter367/evaluator-result-round1.json\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+      "branch": "refs/heads/mission/world-iter367-record",
+      "head": "ef012a0fcb06291fb9647f82b2428afc5b92a36f",
+      "rc": 0,
+      "status": "?? .snap/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter182",
+      "branch": "refs/heads/sprint/w-prove-1-0-phase-a",
+      "head": "74052188cfdcf3745192bd57ec0a8aff6ad7259e",
+      "rc": 0,
+      "status": "?? .snap/\n?? .walk-scratch/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter198-design",
+      "branch": "refs/heads/design/w-kernel-exports-carry-no-contract",
+      "head": "12a02706f90118c653a80bf4f19e01743c0f22fd",
+      "rc": 0,
+      "status": " M .github/workflows/ci.yml\n M docs/SELF_MOD_PUBLISH.md\n M host/verifygate/module_manifest_gate_test.go\n M packages/world-core/world/contracts.ail\n M packages/world-core/world/logepoch.ail\n M packages/world-core/world/transitions.ail\n M scripts/verify_ail.sh\n M scripts/verify_world_package.sh\n M scripts/world_package_ready_packet.golden.json\n M world/contracts.ail\n M world/logepoch.ail\n M world/transitions.ail\n?? .iteration198/\n?? design_docs/planned/w-kernel-exports-carry-no-contract.md\n?? scripts/__pycache__/\n?? scripts/check_world_contract_quality.py\n?? scripts/test_kernel_contracts.py\n?? scripts/test_world_contract_history.py\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter208",
+      "branch": "refs/heads/sprint/w-transition-invocation-m5m6",
+      "head": "b858693b27a58ba05303bf3bd423cc623014063a",
+      "rc": 0,
+      "status": "?? .snap/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval",
+      "branch": null,
+      "head": "be286c1dbf29eb56c922f5015c0bc1a52055f087",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter217/product-evaluator-independent.json\n?? design_docs/verification/world-iter217/product-evaluator-independent.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval-r2",
+      "branch": null,
+      "head": "59870e58c4fc393aab62d2cf7ff8c83641ad6850",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter217/evaluator-product-round2/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval-r3-pi",
+      "branch": null,
+      "head": "741e3c371de3e558243e4ee77a09eeaddbac50a3",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter217/controller-final-profiles-terminal.json\n?? design_docs/verification/world-iter217/evaluator-product-round3/\n?? design_docs/verification/world-iter217/round3-final-verify-ail.json\n?? design_docs/verification/world-iter217/round3-final-verify-ail.log\n?? design_docs/verification/world-iter217/round3-final-verify-ail.log.raw.b64\n?? design_docs/verification/world-iter217/round3-final-verify-go.json\n?? design_docs/verification/world-iter217/round3-final-verify-go.log\n?? design_docs/verification/world-iter217/round3-final-verify-go.log.raw.b64\n?? design_docs/verification/world-iter217/round3-full-profile-raw-manifest.json\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-record-eval",
+      "branch": null,
+      "head": "8270b6521f854439469fd2e95948dd5ddfc7635c",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter217/evaluator-record-independent.json\n?? design_docs/verification/world-iter217/evaluator-record-independent.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220",
+      "branch": "refs/heads/sprint/world-iter220-followup",
+      "head": "cdb714e19811cb067d6fa0f00c135a1216876633",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter220/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-eval",
+      "branch": null,
+      "head": "cdb714e19811cb067d6fa0f00c135a1216876633",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter220/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-record-eval",
+      "branch": null,
+      "head": "c68887cce8c5fe70ddc0e1aa64b0614d5599185b",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter220/record-delta-evaluation.json\n?? design_docs/verification/world-iter220/record-delta-evaluation.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter222-evaluator",
+      "branch": null,
+      "head": "23a15d5ee4d9058a9e390ae913adf91d31d157c6",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter222/independent-ail.log\n?? design_docs/verification/world-iter222/independent-evaluation.json\n?? design_docs/verification/world-iter222/independent-evaluation.md\n?? design_docs/verification/world-iter222/independent-go.log\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter222-evaluator-delta",
+      "branch": null,
+      "head": "16803134c8db0d2360b001f43ba7b28879a87722",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter222/independent-delta-evaluation.json\n?? design_docs/verification/world-iter222/independent-delta-evaluation.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter249-eval",
+      "branch": "refs/heads/mission/world-iter249-eval",
+      "head": "e5ec562e2ec838e6d7e0802959c13c667c53afb5",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter249/independent-gate-review.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter307-row150-m7c2a",
+      "branch": "refs/heads/sprint/world-iter307-row150-m7c2a",
+      "head": "45ef80e6ee6b252b2529d1f42de93ac9638d7977",
+      "rc": 0,
+      "status": "?? snap/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter337-landed",
+      "branch": "refs/heads/mission/world-iter337-landed",
+      "head": "7e5c31b7365215ef678e80eec41a7d2629fdce3d",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter337-row239",
+      "branch": "refs/heads/sprint/world-iter337-still-probe-commit",
+      "head": "6df1e3c6b55a7eb2343c0cdaf54d3f6f46a27cd6",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-landed",
+      "branch": "refs/heads/mission/world-iter338-landed",
+      "head": "108171976f756cc6f4b84daf0f1e21efa84c9e6c",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240",
+      "branch": "refs/heads/sprint/world-iter338-tolerance-pins",
+      "head": "6839c7679e3565d4c13508c6491f904e61d132a6",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter361-row256",
+      "branch": "refs/heads/mission/world-iter361-row256",
+      "head": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+      "rc": 0,
+      "status": "?? .design-scratch/\n?? design_docs/planned/w-daemon-startup-under-load.md\n?? design_docs/planned/w-daemon-startup-under-load.patch\n?? design_docs/verification/world-iter361/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256",
+      "branch": "refs/heads/mission/world-iter362-row256",
+      "head": "7bd3f0fc501adc402b09e3755d96066463f2bc69",
+      "rc": 0,
+      "status": "?? design_docs/verification/world-iter362/controller-premise.txt\n?? design_docs/verification/world-iter362/designer-codex.txt\n?? design_docs/verification/world-iter362/main-before-roles-sha256.json\n?? design_docs/verification/world-iter362/planner-codex.txt\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.ailang/state/sol-pilot-2026-10-12/wt",
+      "branch": "refs/heads/attended/row93-paired-order",
+      "head": "78f9097c38b7dfc7fa8ea7a21a27c2dee6d44cd4",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a3e42abd198ce4e0c",
+      "branch": null,
+      "head": "0da335e7697cd2f45397f319ba2ec524b130ff2b",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a57e72f781b921db9",
+      "branch": "refs/heads/design/row145-long-run-lane",
+      "head": "243106a57c0dea99eef99cdb2de7bbec11ef7c6c",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a5fa785b78bd257d9",
+      "branch": null,
+      "head": "dded16ec3428f2c6f68499489b9b2739d3c72ac2",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a6d8f8eb391612df9",
+      "branch": null,
+      "head": "5713f79acec51ede645d9c437b75950243be458a",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aa124cbfa7ef55ceb",
+      "branch": "refs/heads/design/row189-world-onboarding",
+      "head": "59bbded417388861f3acae45c07eb9046f3cacaa",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aa3c8d42aed503afc",
+      "branch": "refs/heads/sprint/row184-worktree-delta",
+      "head": "27aa780bf6d1847e800a161b749bc6fded6517ae",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-ad349fba6d3f1cee4",
+      "branch": "refs/heads/r140-design",
+      "head": "34c9f71c331ef61b8d9f3f9ccaf59cb894427e40",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-add1db00be9c6cfa7",
+      "branch": "refs/heads/sprint/row183-trial-runner",
+      "head": "4a56e352cd2c750ca93b0c9ea7e151512482667f",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-ae2e5875bae5b36aa",
+      "branch": "refs/heads/final-work",
+      "head": "0bd6583c27535e667239f143e8884172d9e134ee",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aef12c361b7813e4a",
+      "branch": "refs/heads/sprint/row139-m1-release-manifest",
+      "head": "3c102cb227e99a96fe0f7afe4d77be18b35c17b1",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aefcb5933188c1497",
+      "branch": null,
+      "head": "f4f48841568826a572086c53b80237319effa45b",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aeffab2f36349e1da",
+      "branch": "refs/heads/sprint/row139-m2-nominate",
+      "head": "2e0da69fcb10e17094eaf91d44459c27615acee0",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-afa348be34236d498",
+      "branch": null,
+      "head": "99765883a9d6d7d3a35154a9d3a39b472cb9e32e",
+      "rc": 0,
+      "status": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter306-r0",
+      "branch": null,
+      "head": "eacd90e7d412ecb0a7363254549a6c3a0c71a589",
+      "rc": 0,
+      "status": "?? cmd/ailang-worldd/zz_iter305_bottoms_test.go\n",
+      "stderr": ""
+    }
+  ]
+}

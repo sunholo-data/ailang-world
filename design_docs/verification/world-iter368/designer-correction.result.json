@@ -1,0 +1,27 @@
+{
+  "role": "designer",
+  "route": "recipe codex:gpt-6.1-sol declared:provider-pin",
+  "same_session_correction": true,
+  "invocation": [
+    "/opt/homebrew/bin/codex",
+    "exec",
+    "--model",
+    "gpt-6.1-sol",
+    "-c",
+    "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+    "--sandbox",
+    "workspace-write",
+    "-C",
+    "/Users/voightkampff/.ailang/state/world-iter368-record",
+    "--color",
+    "never",
+    "resume",
+    "01a1b97f-3d42-7893-9dfd-c50d075348d0",
+    "-o",
+    "/Users/voightkampff/.ailang/state/world-iter368-record/design_docs/verification/world-iter368/designer-correction.final.txt",
+    "MISSION-ROLE: designer, same-session bounded correction only. Controller scope clarification: design currently hardcodes unchanged ledger/proposed-only ADMIN367 and has delivery isolation language. Correct only record-design.md with these precise authorized changes, no broad re-analysis or new framework. Prior99 ledger rows must remain byte-identical, but append ONE fresh D-WORLD-113 OPEN row carrying ADMIN367 choices A=attended evidence/hook workflow repair then fresh independent review without waiver or product acceptance; B=abandon unmerged367 and retain canonical366; recommend A, unattended default leave367 unmerged needs-human-review. This is Gate0/Gate5 OPEN-ask recording explicitly authorized by controller, not resolution or policy change. D105/110/111/112 remain OPEN unchanged. Delivery is bank368 on this stacked branch/draft PR, never merge367 parent or attempt isolation/rebase around367.368 can finish PARKED as authorized unattended outcome. Keep exact original99 rows and queue unchanged; validation may use direct before/after comparisons permitting exactly that one113 addition. If needing ledger-row census say99 prior +1 new OPEN, not99 total. Do not edit charter itself; later executor owns change. Parent fresh controller-observations.json and controller-skill-drift.json are available if essential. No scripts, tests, source, git writes, messages or other artifacts. Return concise revised DESIGN_DOC_PATH. Original initial design/receipt preserved by supervisor separately; don't regenerate them."
+  ],
+  "rc": 0,
+  "elapsed_seconds": 61.36,
+  "timeout": false
+}

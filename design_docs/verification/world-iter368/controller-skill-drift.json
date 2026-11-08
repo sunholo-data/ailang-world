@@ -1,0 +1,82 @@
+{
+  "time": "2026-11-08T04:51:15.865399+00:00",
+  "driver_origin": "252680e1beb4e6cf1709a010cc1c45838b91b9f8",
+  "resolved_skill": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control",
+  "cwd_skill_present": false,
+  "files": [
+    {
+      "file": "SKILL.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/ci-health.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/codex-lane-false-greens.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-0-preflight.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-1-observe.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-2-pick.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-3-route.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-3-triage.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-3b-ci-green.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-4-record.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/gate-5-retro.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/ref-drift.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/role-spawn-routing.md",
+      "git_rc": 0,
+      "matches_origin": true
+    },
+    {
+      "file": "resources/verification-protocol.md",
+      "git_rc": 0,
+      "matches_origin": true
+    }
+  ],
+  "control": {
+    "equal_self": true,
+    "synthetic_edited_differs": true
+  }
+}

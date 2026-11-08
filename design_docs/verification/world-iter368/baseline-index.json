@@ -1,0 +1,25 @@
+{
+  "at": "2026-11-08T04:56:09.153344+00:00",
+  "argv": [
+    "ailang",
+    "mission",
+    "rotate-log",
+    "world",
+    "--index-only"
+  ],
+  "registry": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-registry-edlym8fg",
+  "rc": 0,
+  "stdout": "INDEX      /Users/voightkampff/.ailang/state/world-iter368-record/design_docs/world-mission-index.md\n  355 iterations, complete history \u2014 grep this before picking work\norphan rows preserved: 361\n",
+  "stderr": "",
+  "before": {
+    "design_docs/world-mission-log.md": "928769ff942f5cdefe079840bea2387ae1197f8564e88d6b1f9d9aca2a36fb81",
+    "design_docs/world-mission-log-archive.md": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68",
+    "design_docs/world-mission-index.md": "3a9946927218cb78dc46623ebcf7b32929c24005e835cdfacda3b216fe353b49"
+  },
+  "after": {
+    "design_docs/world-mission-log.md": "928769ff942f5cdefe079840bea2387ae1197f8564e88d6b1f9d9aca2a36fb81",
+    "design_docs/world-mission-log-archive.md": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68",
+    "design_docs/world-mission-index.md": "3a9946927218cb78dc46623ebcf7b32929c24005e835cdfacda3b216fe353b49"
+  },
+  "unchanged": true
+}

@@ -1,0 +1,53 @@
+{
+  "platform": "darwin/arm64 outside sandbox",
+  "side_effect_inspection": "privacy script reads tracked mission/scripts; narrow Go test invokes verify_go --mission-config-check then mission validator, no full suite, no credentials or shared file writes",
+  "checks": [
+    {
+      "argv": [
+        "bash",
+        "scripts/check_no_personal_email.sh"
+      ],
+      "at": "2026-11-08T04:53:33.329386+00:00",
+      "rc": 0,
+      "stdout": "\u2713 check-no-personal-email: no personal addresses in the loop-written surface\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "go",
+        "test",
+        "./host/verifygate",
+        "-run",
+        "^TestMissionConfigRealCharter$",
+        "-count=1"
+      ],
+      "at": "2026-11-08T04:53:34.243717+00:00",
+      "rc": 0,
+      "stdout": "ok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.370s\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "at": "2026-11-08T04:53:35.598863+00:00",
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--check",
+        "ef012a0fcb06291fb9647f82b2428afc5b92a36f"
+      ],
+      "at": "2026-11-08T04:53:35.609917+00:00",
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}
