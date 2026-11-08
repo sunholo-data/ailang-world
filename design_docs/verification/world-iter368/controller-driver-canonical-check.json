@@ -1,0 +1,17 @@
+{
+  "at": "2026-11-08T05:27:57.311640+00:00",
+  "scope": "Gate4 driver canonical test only; reads driver repo mission streams, does not validate World pending charter or product256",
+  "command": [
+    "go",
+    "test",
+    "./internal/mission/",
+    "-run",
+    "Canonical",
+    "-count=1"
+  ],
+  "cwd": "/Users/voightkampff/.ailang-driver-pin/world",
+  "rc": 0,
+  "stdout": "ok github.com/sunholo-data/ailang/internal/mission 0.382s",
+  "side_effect_review": "matched tests read repo-local mission docs or in-memory headings only; no source/config edits",
+  "separate_world_requirement": "actual new World STATUS anchored regex plus earlier outside-sandbox narrow charter test, not discharged by driver ratchet"
+}

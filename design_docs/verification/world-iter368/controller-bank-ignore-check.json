@@ -1,0 +1,33 @@
+{
+  "paths": [
+    "design_docs/verification/world-iter368/evaluator-comparison-receipt.json",
+    "design_docs/verification/world-iter368/evaluator-report.md",
+    "design_docs/verification/world-iter368/evaluator-result.json",
+    "design_docs/verification/world-iter368/evaluator-round2-comparison-receipt.json",
+    "design_docs/verification/world-iter368/evaluator-round2-report.md",
+    "design_docs/verification/world-iter368/evaluator-round2-result.json",
+    "design_docs/verification/world-iter368/evaluator-round3-comparison-receipt.json",
+    "design_docs/verification/world-iter368/evaluator-round3-report.md",
+    "design_docs/verification/world-iter368/evaluator-round3-result.json",
+    "design_docs/verification/world-iter368/evaluator-supervisor-final.json",
+    "design_docs/verification/world-iter368/round1-supervisor.json",
+    "design_docs/verification/world-iter368/round2-supervisor.json",
+    "design_docs/verification/world-iter368/round2-tool-inventory.json",
+    "design_docs/verification/world-iter368/round3-tool-inventory.json",
+    "design_docs/verification/world-iter368/round2-estimate.json",
+    "design_docs/verification/world-iter368/round2-estimate-revision.json",
+    "design_docs/verification/world-iter368/round3-estimate.json",
+    "design_docs/verification/world-iter368/controller-evaluator-accounting-check.json",
+    "design_docs/verification/world-iter368/controller-driver-canonical-check.json",
+    "design_docs/verification/world-iter368/controller-final-ledger-check.json",
+    "design_docs/verification/world-iter368/controller-review-claims-reproduced.json",
+    "design_docs/verification/world-iter368/controller-round3-typo-reproduced.json",
+    "design_docs/verification/world-iter368/controller-final-review-routing.json",
+    "design_docs/verification/world-iter368/controller-review-index.md"
+  ],
+  "candidate_check_rc": 1,
+  "candidate_output": "",
+  "known_ignored_control_rc": 0,
+  "known_ignored_control_output": ".gitignore:3:**/.ailang/\t.ailang/world368-ignore-control\n",
+  "assertion": "decision-bearing artifacts are not ignored; control matcher fires"
+}

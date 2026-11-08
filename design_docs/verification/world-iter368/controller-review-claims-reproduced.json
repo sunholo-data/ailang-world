@@ -1,0 +1,15 @@
+{
+  "claims_reproduced": "preliminaryreview materialnotyetaccepted",
+  "line_counts": {
+    "design_docs/world-mission.md": 6346,
+    "design_docs/world-mission-status-archive.md": 736,
+    "design_docs/world-mission-log.md": 1548,
+    "design_docs/world-mission-dashboard.md": 27,
+    "design_docs/world-mission-index.md": 370
+  },
+  "baseline_git_modes": {
+    "100644": 6499,
+    "100755": 79
+  },
+  "finding": "all5<=800false; baselineall644false; current31ownrehashnotyetproven by supervisortranscriptaudit; no controllerverdict"
+}

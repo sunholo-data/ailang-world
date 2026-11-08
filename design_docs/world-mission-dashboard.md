@@ -1,6 +1,6 @@
 # World mission dashboard — iteration 368 (2026-11-08)
 
-- **ADMIN368**: PARKED/unmerged block record prepared; AC1–AC4 executor observations only. AC5 independent judgment and AC6 final parent checks pending; no acceptance.
+- **ADMIN368**: PARKED/unmerged draft PR522 stacked on521; independent MiniMax PASS100 round3, parent narrow gates rc0; no merge/product acceptance.
 - **PRODUCT256**: PARKED needs-human-review, historical MiniMax FAIL85, LOCAL_CRITERION UNMET, draft PR515.
 - **ADMIN367**: separately human-PARKED/unmerged PR521 despite PASS97/97/95; missing successfully executed final after-input-rehash proof remains unmet.
 - **D113 OPEN**: A recommended attended evidence/hook repair then fresh review; B abandon367/retain canonical366. No option selected; default keeps367 and stacked records unmerged.
@@ -12,11 +12,11 @@
 - **Controller-reported**: Gate0 armed, correct gh account, CLEAN billing, zero449 directives, inbox null, devCI3/3 GREEN; no executor network verification.
 - **Receipts**:0 fresh A1/N2d/N4a subjects,4 historical N2c controls,33 closed upstream predicates; none clears parks. Inherited self-notice watermarks1/2 degraded.
 - **Provenance**: original UNPARSED observations intact; separate corrected receipt gives D108/109 attended, D111/112 never-resolved.
-- **Actual roles**: designer/planner/executor codex:gpt-6.1-sol; this is the actual pinned executor. Independent final368 evaluator pending.
+- **Actual roles**: all4 Agent supervisors completed prescribed providers: designer/planner/executor codex:gpt-6.1-sol; independent evaluator pi:openrouter/minimax/minimax-m3.
 - **Attributed routing**: designer opus quota failure→Codex; preferred evaluator sonnet quota failure→pi:openrouter/minimax/minimax-m3; no verdict inferred.
 - **Designer quota correction**:128330=probe11039+cumulative117291; initial103321 included, resume delta13970. Original wrong231651 retained; designer-usage-accounting.json governs.
 - **Planner quota**:90482=probe10800+actual79682 from native events, no literal --json footer; planner-usage-accounting.json governs.
-- **Executor completed**: actualCodex102438 quota tok (probe17960+actual84478),521.130s,rc0. Generators321250 quota; evaluator/controller/supervisor usage pending/unreported.
+- **Executor completed**:102438 quota tok; generators321250 quota. Evaluator12119952 cache-inclusive provider tok; controller/Agent-supervisor usage not reported.
 - **Separate cache-inclusive totals**: designer1484746; planner783474; executor1386790. No invented pending-role total.
 - **Record preservation**:99 prior ledger rows exact +1 OPEN113; Queue-through-EOF exact; exact365 pair archived once,367/366 pairs retained. Initial plan/state passes:null immutable.
 - **Logs/index**:20→21 live, no rotation; log archive unchanged. Confined fleet index-only; prior354 numbered+1 attended, orphan361 and notes preserved.
@@ -24,4 +24,8 @@
 - **Boundary**: no tests/source checks, Git writes, subagents/model calls, network/messages, credential/environment-value reads, source/test/harness/policy/shared-skill changes.
 - **Retro**: corrected authority0/20 harness; actual last3 product landings360/359/340 movednone;0 routableUNMET. No metered quorum under ADMIN exception.
 - **Progress**: 1.0: clauses1–7 MET (inherited assessment); goal unmoved.
-- **Next**: separate final368 judge, then parent outside-sandbox privacy+narrow charter test and whitespace; final delivery pending, stay PARKED/unmerged, no367 retry/waiver/repair/rebase.
+- **Next**: attended D113 A evidence/hook repair+fresh review or B abandon367/retain366; default keeps367+stack unmerged. Final-head CI/delivery separate; no autonomous next pick.
+- **Final independent review**: R3 PASS100; R1/R2 actual PASS100 withheld for unsupported claims/gaps. Full6056 filesystem exact; R2 executed6573/20/31 checks.
+- **Review flags**:7 unauthorized round2 local helpers excluded; original archive-prefix prose typo and R1 missingEOFnewline preserved/disclosed; no fourth call.
+- **Metered**:$0.99931212 including probe+3 reviews (<$5). Original R2 estimate0.25 exceeded, revised0.50/actual0.45718326 retained.
+- **Current evidence**: final factual annotations supersede earlier pending dashboard lines; original M1/plan/role artifacts remain immutable.

@@ -1,0 +1,24 @@
+{
+  "title": "Approval Required: world/iter-368 record_delivery D-WORLD-113 stacked record",
+  "body": "World iteration368 record delivery remains human-parked under D-WORLD-113: A (recommended) attended repair of ADMIN367 evidence/hook workflow then fresh independent review, without waiver/product acceptance/merge permission; B abandon unmerged ADMIN367 and retain canonical366. Until answered, keep367 and stacked368 unmerged. Draft368 artifact https://github.com/sunholo-data/ailang-world/pull/522 (stacked on521); final independent368 MiniMax PASS100 is ADMIN-only and does not clear product256 or ADMIN367. Resolving113 determines repair versus abandonment; D111 validation and D112 credential incident independently still gate product256. This formalizes the unchanged prior ADMIN367 ask; no option selected.",
+  "rc": 0,
+  "stdout": "✓ Message sent to 'approvals' (ID: inbox_1794117033099_d0ef5f9b)\n✓ Pub/Sub notification published\n",
+  "stderr": "2026/11/08 06:50:32 Google Cloud OpenTelemetry Trace exporter for Go is deprecated and will be archived after January 1st, 2027. Please migrate to the OpenTelemetry OTLP exporters. For migration details, see https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/blob/main/MIGRATION.md\n2026/11/08 06:50:32 package agents: derived 22 inbox agent(s) from the registry index: pkg-sunholo-audio, pkg-sunholo-celestial, pkg-sunholo-content-library, pkg-sunholo-crew-core, pkg-sunholo-decisions, pkg-sunholo-discord, pkg-sunholo-economic, pkg-sunholo-eparse, pkg-sunholo-explainer, pkg-sunholo-gemini-agents, pkg-sunholo-gmail, pkg-sunholo-maintenance-bench, pkg-sunholo-mcp-files, pkg-sunholo-mcp-oauth, pkg-sunholo-oauth, pkg-sunholo-observe, pkg-sunholo-relativity, pkg-sunholo-social-dynamics, pkg-sunholo-specstore, pkg-sunholo-terminal-ui, pkg-sunholo-worlds, pkg-world-core\n",
+  "delivery_verified": true,
+  "message_id": "inbox_1794117033099_d0ef5f9b",
+  "readback_peek": true,
+  "readback": {
+    "id": "inbox_1794117033099_d0ef5f9b",
+    "message_id": "inbox_1794117033099_d0ef5f9b",
+    "from_agent": "mission-world",
+    "to_inbox": "approvals",
+    "message_type": "approval_request",
+    "title": "Approval Required: world/iter-368 record_delivery D-WORLD-113 stacked record",
+    "payload": "World iteration368 record delivery remains human-parked under D-WORLD-113: A (recommended) attended repair of ADMIN367 evidence/hook workflow then fresh independent review, without waiver/product acceptance/merge permission; B abandon unmerged ADMIN367 and retain canonical366. Until answered, keep367 and stacked368 unmerged. Draft368 artifact https://github.com/sunholo-data/ailang-world/pull/522 (stacked on521); final independent368 MiniMax PASS100 is ADMIN-only and does not clear product256 or ADMIN367. Resolving113 determines repair versus abandonment; D111 validation and D112 credential incident independently still gate product256. This formalizes the unchanged prior ADMIN367 ask; no option selected.",
+    "category": "approval_request",
+    "simhash": 5076077180096082102,
+    "status": "unread",
+    "created_at": "2026-11-08T05:50:33.099525Z"
+  },
+  "readback_stderr": "2026/11/08 06:50:47 Google Cloud OpenTelemetry Trace exporter for Go is deprecated and will be archived after January 1st, 2027. Please migrate to the OpenTelemetry OTLP exporters. For migration details, see https://github.com/GoogleCloudPlatform/opentelemetry-operations-go/blob/main/MIGRATION.md\n"
+}

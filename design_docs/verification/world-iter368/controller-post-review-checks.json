@@ -1,0 +1,57 @@
+{
+  "at": "2026-11-08T05:49:53.992857+00:00",
+  "outside_sandbox": true,
+  "commands": [
+    {
+      "command": [
+        "go",
+        "test",
+        "./host/verifygate",
+        "-run",
+        "^TestMissionConfigRealCharter$",
+        "-count=1"
+      ],
+      "rc": 0,
+      "stdout": "ok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.213s\n",
+      "stderr": "",
+      "elapsed_seconds": 0.975810999982059
+    },
+    {
+      "command": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_routing_models_check.sh",
+        "--file",
+        "design_docs/world-mission-log.md",
+        "--entry",
+        "368"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "",
+      "elapsed_seconds": 0.013358708005398512
+    }
+  ],
+  "separate_native_privacy_check": {
+    "command": [
+      "bash",
+      "scripts/check_no_personal_email.sh"
+    ],
+    "rc": 0,
+    "stdout": "✓ check-no-personal-email: no personal addresses in the loop-written surface",
+    "native_tool_chunk": "8d6c97",
+    "scope": "final factual docs and copiedreview artifacts"
+  },
+  "canonical_STATUS_count": 3,
+  "own_STATUS_canonical": true,
+  "charter_post_review_change": "only own368 one-line factual STATUS replacement; all other charter bytes exact vs6b8",
+  "copied_original_hashes_match": 22,
+  "preserved_instrument_failures": [
+    "first wrapper ran three commands successfully but asserted four broad STATUS-prefix matches==3, mistakenly including rotation-rule heading; receipt persistence was after assertion and did not run",
+    "diagnostic command accidentally used shared-main CWD, no368 STATUS there, IndexError; corrected diagnostic used explicit record path",
+    "earlier unsupported ailang mission decisions --help; existing scripts/mission_decisions.sh used for actual100-row/5-OPEN gate",
+    "earlier read-only rg/glob searches referenced nonexistent internal/chains and unmatched globs; no source/gate finding"
+  ],
+  "no_full_suite": true,
+  "delivery": "PARKED/unmerged; these checks do not validate product256",
+  "complete": true
+}

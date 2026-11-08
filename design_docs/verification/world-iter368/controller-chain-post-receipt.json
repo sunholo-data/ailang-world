@@ -1,0 +1,17 @@
+{
+  "command": [
+    "ailang",
+    "chains",
+    "post-iteration",
+    "--file",
+    "/Users/voightkampff/.ailang/state/world-iter368-record/design_docs/verification/world-iter368/controller-chain-post.json",
+    "--cloud",
+    "gcp"
+  ],
+  "rc": 0,
+  "stdout": "Posted iteration chain 2a15d261-54f1-4996-946a-6fd66fd74eb0 (source mission:world/iter-368, 9 stages, $0.9993, 12119952 tokens)\n",
+  "stderr": "",
+  "status_semantics": "R1/R2 runtimesrc0 but reviewacceptancewithheld=>failed; R3 actualPASS=>completed; record_deliveryhumanpark=>awaiting_approval; controller/supervisor quotaunknown omitted notinvented",
+  "metered_usd": 0.99931212,
+  "known_quota_tokens": 321250
+}

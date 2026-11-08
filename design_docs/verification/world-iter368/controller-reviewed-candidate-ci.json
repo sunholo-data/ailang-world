@@ -1,0 +1,45 @@
+{
+  "at": "2026-11-08T05:51:45.618195+00:00",
+  "observation": {
+    "baseRefName": "mission/world-iter367-record",
+    "headRefOid": "6b8ce5db21f985efa5dd358d772a7457b9674342",
+    "isDraft": true,
+    "mergeable": "MERGEABLE",
+    "mergedAt": null,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-08T05:23:17Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/42450542241/job/128638597580",
+        "name": "ailang-code verify gate",
+        "startedAt": "2026-11-08T05:22:46Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-08T05:38:34Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/42450542241/job/128638597857",
+        "name": "go host build + test gate",
+        "startedAt": "2026-11-08T05:22:46Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-08T05:36:08Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/sunholo-data/ailang-world/actions/runs/42450542241/job/128638597887",
+        "name": "go race gate (go test -race, own job)",
+        "startedAt": "2026-11-08T05:22:46Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      }
+    ]
+  },
+  "not_final_artifact_head_or_mergehead_proof": true,
+  "Gate3b": "UNMET because no merge head/defaultunmerged"
+}

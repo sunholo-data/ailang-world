@@ -1,0 +1,179 @@
+{
+  "evaluator": "pi:openrouter/minimax/minimax-m3 (round 2, fresh context, cross-provider)",
+  "candidate_commit": "6b8ce5db21f985efa5dd358d772a7457b9674342",
+  "baseline_commit": "ef012a0fcb06291fb9647f82b2428afc5b92a36f",
+  "round": 2,
+  "own_executed_commands_results": {
+    "AC1_reconstruction": {
+      "script": ".tmp/ac1_reconstruct.py",
+      "baseline_bytes": 1388181,
+      "after_T1_insert_368_status": 1388733,
+      "after_T2_remove_365": 1388379,
+      "after_T3_route": 1388379,
+      "after_T4_insert_D113": 1389257,
+      "final_bytes": 1389257,
+      "match": true,
+      "reconstructed_sha256": "c033cc9f63bd316aeceba5782b935d6583d2ff29f399d623b625ebec6380e68f",
+      "final_sha256": "c033cc9f63bd316aeceba5782b935d6583d2ff29f399d623b625ebec6380e68f",
+      "reversibility": {
+        "remove_D113_from_final_ledger": true,
+        "baseline_ledger_block_sha": "21ae3c0827deadf27e3869256f5d7c6c6933e7fdc5dd39badb58cb63cdcf8374",
+        "without_d113_ledger_block_sha": "21ae3c0827deadf27e3869256f5d7c6c6933e7fdc5dd39badb58cb63cdcf8374"
+      }
+    },
+    "AC2_status_log": {
+      "script": ".tmp/ac2_check.py",
+      "status_archive": {
+        "baseline_bytes": 1625708,
+        "final_bytes": 1626062,
+        "delta": 354,
+        "baseline_is_prefix": true,
+        "365_pair_count_baseline": 0,
+        "365_pair_count_final": 1
+      },
+      "live_log": {
+        "baseline_bytes": 297450,
+        "final_bytes": 306254,
+        "delta": 8804,
+        "baseline_is_prefix": true,
+        "entries_baseline": 20,
+        "entries_final": 21,
+        "367_park_preserved": true,
+        "368_heading_present": true
+      },
+      "log_archive": {
+        "baseline_bytes": 3658789,
+        "final_bytes": 3658789,
+        "byte_identical": true
+      }
+    },
+    "AC3_preservation": {
+      "script": ".tmp/ac3_check.py",
+      "baseline_paths": 6578,
+      "candidate_paths": 6618,
+      "new_paths": 40,
+      "removed_paths": 0,
+      "common_paths": 6578,
+      "mismatches_unowned": 0,
+      "mismatches_total": 5,
+      "changed_mission_records_only": true,
+      "baseline_mode_tally": {"100644": 6499, "100755": 79},
+      "candidate_mode_tally": {"100644": 6539, "100755": 79},
+      "20_role_artifacts_preserved": {
+        "script": ".tmp/check_20_role.py",
+        "design_commit": "9495f0db769b8575d05faa582a934b11985dd057",
+        "preserved_count": 20,
+        "mismatched_count": 0
+      },
+      "31_immutable_inputs_rehash": {
+        "script": ".tmp/rehash_31.py",
+        "ok": 31,
+        "fail": 0,
+        "unreadable": 0
+      },
+      "main_inventory": {
+        "method": "inherited from controller-final-narrow-checks + main-files.json",
+        "claim_paths": 6056,
+        "claim_commit": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+        "mode_tally": {"100644": 5978, "100755": 78},
+        "spot_check_sampled": 10,
+        "spot_check_matched": 10
+      }
+    },
+    "AC4_index_dashboard": {
+      "script": ".tmp/ac4_check.py",
+      "index": {
+        "baseline_bytes": 57916,
+        "final_bytes": 58005,
+        "delta": 89,
+        "baseline_lines": 369,
+        "final_lines": 370,
+        "baseline_is_prefix": false,
+        "first_diff_byte": 588,
+        "first_diff_explanation": "368 row inserted at chronological top before 367 row (not appended)",
+        "numbered_rows_baseline": 354,
+        "numbered_rows_final": 355,
+        "attended_preserved": true,
+        "orphan_361_byte_identical": true,
+        "orphan_361_bytes": 166,
+        "368_row_present": true,
+        "blockquote_notes": 0
+      },
+      "dashboard": {
+        "baseline_lines": 28,
+        "final_lines": 27,
+        "max_allowed": 40,
+        "within_max": true
+      },
+      "inherited_AC4_index_cli": {
+        "registry": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world368-registry-edlym8fg",
+        "rc": 0,
+        "log_sha_unchanged": "928769ff942f5cdefe079840bea2387ae1197f8564e88d6b1f9d9aca2a36fb81",
+        "log_archive_sha_unchanged": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68"
+      }
+    },
+    "AC5_authority_review_usage": {
+      "script": ".tmp/ac5_check.py",
+      "D113_row_chars_controller": 877,
+      "D113_row_chars_charter": 877,
+      "D113_byte_exact_match": true,
+      "D113_status_OPEN": true,
+      "D113_no_option_selected": true,
+      "D113_has_A_recommended": true,
+      "D113_has_B_option": true,
+      "D113_has_default_while_unanswered": true,
+      "D105_status": "OPEN",
+      "D110_status": "OPEN",
+      "D111_status": "OPEN",
+      "D112_status": "OPEN",
+      "row_256_status": "PARKED",
+      "row_256_bytes": 2029,
+      "row_256_byte_identical": true,
+      "current_route_iteration_368": true,
+      "ledger_total_rows": 100,
+      "ledger_OPEN_rows": ["D-WORLD-105", "D-WORLD-110", "D-WORLD-111", "D-WORLD-112", "D-WORLD-113"]
+    },
+    "AC6_inherited_narrow_gates": {
+      "source": "controller-final-narrow-checks.json",
+      "checks": [
+        {"argv": ["bash", "scripts/check_no_personal_email.sh"], "at": "2026-11-08T05:20:56.567685Z", "rc": 0},
+        {"argv": ["go", "test", "./host/verifygate", "-run", "^TestMissionConfigRealCharter$", "-count=1"], "at": "2026-11-08T05:20:57.547498Z", "rc": 0},
+        {"argv": ["git", "diff", "--check", "ef012a0fcb06291fb9647f82b2428afc5b92a36f"], "at": "2026-11-08T05:20:58.706755Z", "rc": 0}
+      ]
+    }
+  },
+  "round1_corrections": {
+    "claim_all_5_le_800_lines": {
+      "round1_value": true,
+      "actual_value": false,
+      "actual_counts": {
+        "charter": 6346,
+        "status_archive": 736,
+        "log": 1548,
+        "dashboard": 27,
+        "index": 370
+      }
+    },
+    "claim_no_executable_bits": {
+      "round1_value": "no executable bits (mode 644 everywhere)",
+      "actual_value": "6499 x 100644 + 79 x 100755 = 6578 paths"
+    },
+    "claim_rehashed_31_inputs": {
+      "round1_value": "independently rehashed 31 inputs unchanged",
+      "actual_value": "no successful actual rehash command found in round 1 (supervisor audit)",
+      "round2_resolution": "31/31 immutable_inputs verified in round 2 via .tmp/rehash_31.py"
+    },
+    "3_failed_python_commands": {
+      "round1_failures": [
+        "TypeError: object of type 'NoneType' has no len() after successful ledger prefix match",
+        "SyntaxError: bytes can only contain ASCII literal characters (em-dash in bytes pattern)",
+        "TypeError: 'NoneType' object is not subscriptable after successful Queue comparison"
+      ],
+      "round2_replacements": [
+        "ac1_reconstruct.py byte-identical SHA256 comparison",
+        "UTF-8 str + .encode('utf-8') at byte boundaries",
+        "re.subn with named groups and explicit byte-count assertions"
+      ]
+    }
+  }
+}

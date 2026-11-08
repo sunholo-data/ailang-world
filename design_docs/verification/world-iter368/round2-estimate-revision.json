@@ -1,0 +1,10 @@
+{
+  "original_estimate_usd": 0.25,
+  "observed_round2_metered_usd": 0.2563647,
+  "prior_metered_usd": 0.40497018,
+  "observed_iteration_metered_usd": 0.66133488,
+  "revised_round2_estimate_usd": 0.5,
+  "projected_iteration_usd": 0.90497018,
+  "iteration_cap_usd": 5,
+  "reason": "Actual independent correction review repeating scoped byteproofs; original estimate retained, no retroactive edit"
+}

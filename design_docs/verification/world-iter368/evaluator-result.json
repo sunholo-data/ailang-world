@@ -1,0 +1,60 @@
+{
+  "sprint_id": "WORLD_ITER368_ADMIN_BLOCK_RECORD",
+  "iteration": 368,
+  "role": "evaluator",
+  "evaluator_lane": "pi:openrouter/minimax/minimax-m3",
+  "evaluator_is_actual_independent_final": true,
+  "scope_substitutions": {
+    "tests_20": "Inherited AC6 narrow parent gates (privacy script rc0; TestMissionConfigRealCharter rc0) instead of full make invocation; no mechanical make in World.",
+    "lint_10": "Independent whitespace inspection (git diff --check rc=0; all 5 mission records + 40 new files have no trailing whitespace and end in LF) instead of mechanical lint."
+  },
+  "scoring": {
+    "tests": 20,
+    "lint": 10,
+    "acceptance": 30,
+    "quality": 15,
+    "documentation": 15,
+    "fidelity": 10,
+    "regression_surface_conditional": null,
+    "performance_conditional": null,
+    "total": 100,
+    "pass_threshold": 70
+  },
+  "criteria_scores": {
+    "AC1": {"points": 5, "verdict": "PASS", "evidence": "reconstructed=final=1389257 bytes byte-exact; ledger reversible to 219710 baseline bytes; queue 992586=992586; row256 2029=2029; 1 unique current-route token 368; 5 OPEN rows including D113"},
+    "AC2": {"points": 5, "verdict": "PASS", "evidence": "archive prefix 1625708 byte-exact + 365 pair (+354 bytes) appended once; log baseline is exact prefix of final +8804 bytes (368 entry); 367/366 STATUS pairs preserved; 20->21 entries; log archive byte-identical 3658789"},
+    "AC3": {"points": 5, "verdict": "PASS", "evidence": "6573 unowned paths byte/type/executable-mode identical; 0 mismatches; only 5 mission records differ; 40 new files all in world-iter368; 0 removed paths"},
+    "AC4": {"points": 5, "verdict": "PASS", "evidence": "369 baseline index lines preserved; 354 prior numbered + 1 attended + 1 new 368; orphan 361 verbatim; source logs SHA256 unchanged pre/post CLI; dashboard 27 lines <=40"},
+    "AC5": {"points": 5, "verdict": "PASS", "evidence": "D113 row 877 chars matches controller-scope.json exactly; OPEN no option selected; D105/110/111/112 unchanged defaults C/A/A/no-autonomous-credential; product256 PARKED FAIL85 PR515; ADMIN367 PARKED PR521 PASS97/97/95 preserved; missing executed proof UNMET preserved; original 231651 retained; corrected designer 128330 + planner 90482 + executor 102438 = 321250; controller/supervisor usage not reported; judge usage truthful pending; 368 DRAFT/unmerged stacked on parked367 PR#522"},
+    "AC6": {"points": 5, "verdict": "PASS", "evidence": "inherited narrow checks: bash scripts/check_no_personal_email.sh rc0; go test ./host/verifygate -run ^TestMissionConfigRealCharter$ -count=1 rc0; git diff --check ef012a0f rc0; whitespace inspection of all 5 mission records + 40 new files clean; sandbox denials UNINFORMATIVE UNDER SANDBOX classified correctly"}
+  },
+  "limitations": [
+    "Evaluator is fresh-context cross-provider (pi:openrouter/minimax/minimax-m3), independent of actual generator (codex:gpt-6.1-sol).",
+    "Narrow parent checks inherited as controller observations (controller-final-narrow-checks.json) — sandbox cannot run these.",
+    "Sandbox bind denials UNINFORMATIVE UNDER SANDBOX, never PASS.",
+    "No full test suite, no source/test/harness/policy edits, no merge/rebase/retry/repair.",
+    "Ex executor proof uses plan-commit bdb8ff4c as entry anchor vs state-design 9495f0db; minor reporting inconsistency that does not affect substantive AC3 conclusion (6573 unowned exact mode/SHA256 matches vs reporting baseline remains binding).",
+    "PR/merge CI/delivery remain separate gates not discharged by ADMIN review."
+  ],
+  "review": {
+    "candidate_commit": "6b8ce5db21f985efa5dd358d772a7457b9674342",
+    "baseline_commit": "ef012a0fcb06291fb9647f82b2428afc5b92a36f",
+    "canonical_dev_commit": "ad13d835345efc2b78308817cc940f73a987165d",
+    "original_m1_commit": "029f8de9608d454a3a30e9576775ddd411240709",
+    "design_commit": "9495f0db769b8575d05faa582a934b11985dd057",
+    "plan_commit": "bdb8ff4cb775ea0c213bab8645cfa1cd7cf86b31",
+    "draft_pr": 522,
+    "pr_target_branch": "mission/world-iter367-record",
+    "pr_status": "DRAFT",
+    "ci_status": "3 checks IN_PROGRESS at 42450542241",
+    "merge_authorized": false
+  },
+  "evaluation_score": "100/100",
+  "evaluation_result": "pass",
+  "evaluation_verdict": "PASS score=100 reasons=AC1-AC6 byte-verified; D113 exact controller row OPEN no option; 99 prior ledger rows+queue byte-preserved; 4 transforms reconstruct charter exactly; 5 mission records only differ; log archive byte-identical; inherited parent rc0 narrow checks; evaluator-controller-supervisor usage truthful pending/not-reported; 368 DRAFT/unmerged stacked on parked367",
+  "deliverables": [
+    "design_docs/verification/world-iter368/evaluator-report.md",
+    "design_docs/verification/world-iter368/evaluator-result.json",
+    "design_docs/verification/world-iter368/evaluator-comparison-receipt.json"
+  ]
+}

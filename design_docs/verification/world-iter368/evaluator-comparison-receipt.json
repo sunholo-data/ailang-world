@@ -1,0 +1,94 @@
+{
+  "evaluator": "pi:openrouter/minimax/minimax-m3 (fresh context, cross-provider)",
+  "candidate_commit": "6b8ce5db21f985efa5dd358d772a7457b9674342",
+  "baseline_commit": "ef012a0fcb06291fb9647f82b2428afc5b92a36f",
+  "comparisons": {
+    "charter": {
+      "path": "design_docs/world-mission.md",
+      "baseline_bytes": 1388181,
+      "final_bytes": 1389257,
+      "delta_bytes": 1076,
+      "baseline_sha256": "2f3c80e8a1afaa8bcb15375787e9b6ef96cbac3810a57b6461eb9a029e7fd301",
+      "final_sha256": "c033cc9f63bd316aeceba5782b935d6583d2ff29f399d623b625ebec6380e68f",
+      "byte_identical": false
+    },
+    "status_archive": {
+      "path": "design_docs/world-mission-status-archive.md",
+      "baseline_bytes": 1625708,
+      "final_bytes": 1626062,
+      "delta_bytes": 354,
+      "baseline_sha256": "96034191ecf0b0864bb022b0e1e762ad071e9f6075de04e81fd2609f03b0cac2",
+      "final_sha256": "1f5fe0f7194ae448e5b2cfb79de98ee1917d2bbc0ac62e10b8db4fd65a9b0962",
+      "byte_identical": false
+    },
+    "live_log": {
+      "path": "design_docs/world-mission-log.md",
+      "baseline_bytes": 297450,
+      "final_bytes": 306254,
+      "delta_bytes": 8804,
+      "baseline_sha256": "928769ff942f5cdefe079840bea2387ae1197f8564e88d6b1f9d9aca2a36fb81",
+      "final_sha256": "a4cc7bc89ff4d46645a84058854964f68e43b35c2c5c4bf69cee11776d45944b",
+      "byte_identical": false
+    },
+    "log_archive": {
+      "path": "design_docs/world-mission-log-archive.md",
+      "baseline_bytes": 3658789,
+      "final_bytes": 3658789,
+      "delta_bytes": 0,
+      "baseline_sha256": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68",
+      "final_sha256": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68",
+      "byte_identical": true
+    },
+    "dashboard": {
+      "path": "design_docs/world-mission-dashboard.md",
+      "baseline_bytes": 4062,
+      "final_bytes": 3915,
+      "delta_bytes": -147,
+      "baseline_sha256": "0f2eb8d93488af6ef4aa8865b8c4944d9a18e2c15bb0c9d0118b8fda57ecddc6",
+      "final_sha256": "471a440c53c6dde79471324edad6aa4472d155cfbdaf52ba38eaf9c59febc81e",
+      "byte_identical": false
+    },
+    "index": {
+      "path": "design_docs/world-mission-index.md",
+      "baseline_bytes": 57916,
+      "final_bytes": 58005,
+      "delta_bytes": 89,
+      "baseline_sha256": "3a9946927218cb78dc46623ebcf7b32929c24005e835cdfacda3b216fe353b49",
+      "final_sha256": "535d4778cbf341300e80890f8246bf5c330b8947162eb44ed683e6a67eb7bb63",
+      "byte_identical": false
+    }
+  },
+  "summary": {
+    "ledger_baseline": {
+      "rows_total": 99,
+      "rows_OPEN": 4
+    },
+    "ledger_final": {
+      "rows_total": 100,
+      "rows_OPEN": 5
+    },
+    "git_diff_check_rc": 0,
+    "git_diff_check_stdout": "",
+    "changed_tracked_paths_count": 45,
+    "changed_mission_records": [
+      "design_docs/world-mission-dashboard.md",
+      "design_docs/world-mission-index.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/world-mission.md"
+    ],
+    "new_files_in_world_iter368": 40,
+    "baseline_tracked_paths": 6578,
+    "final_tracked_paths": 6618,
+    "new_paths_total": 40,
+    "removed_paths_total": 0
+  },
+  "ac1_reconstruction": {
+    "baseline_bytes": 1388181,
+    "reconstructed_bytes": 1389257,
+    "final_bytes": 1389257,
+    "reconstructed_matches_final": true,
+    "reconstructed_sha256": "c033cc9f63bd316aeceba5782b935d6583d2ff29f399d623b625ebec6380e68f",
+    "final_sha256": "c033cc9f63bd316aeceba5782b935d6583d2ff29f399d623b625ebec6380e68f"
+  }
+}

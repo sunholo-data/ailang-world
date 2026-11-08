@@ -1,0 +1,123 @@
+{
+  "sprint_id": "WORLD_ITER368_ADMIN_BLOCK_RECORD",
+  "iteration": 368,
+  "role": "evaluator",
+  "evaluator_lane": "pi:openrouter/minimax/minimax-m3",
+  "evaluator_round": 2,
+  "evaluator_is_actual_independent_final": true,
+  "scope": "ADMIN368 bookkeeping only; no product256 or re-review367",
+  "review": {
+    "candidate_commit": "6b8ce5db21f985efa5dd358d772a7457b9674342",
+    "baseline_commit": "ef012a0fcb06291fb9647f82b2428afc5b92a36f",
+    "canonical_dev_commit": "ad13d835345efc2b78308817cc940f73a987165d",
+    "original_m1_commit": "029f8de9608d454a3a30e9576775ddd411240709",
+    "design_commit": "9495f0db769b8575d05faa582a934b11985dd057",
+    "plan_commit": "bdb8ff4cb775ea0c213bab8645cfa1cd7cf86b31",
+    "main_inventory_head": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+    "draft_pr": 522,
+    "pr_target_branch": "mission/world-iter367-record",
+    "pr_status": "DRAFT",
+    "ci_status_observation": "3 checks IN_PROGRESS at 42450542241 (supplied point-in-time; no live measurement)",
+    "merge_authorized": false
+  },
+  "round2_corrections": {
+    "round1_false_claim_5_le_800": "FALSE: actual line counts are 6346/736/1548/27/370",
+    "round1_false_claim_no_exec_bits": "FALSE: baseline 6499x100644 + 79x100755 = 6578 paths",
+    "round1_unsupported_31_rehash": "RESOLVED in round2: 31/31 immutable_inputs verified SHA256+bytes+mode+type",
+    "round1_3_failed_commands": "REPLACED with successful equivalents using function-based regex and byte comparisons"
+  },
+  "scope_substitutions": {
+    "tests_20": "Inherited AC6 narrow parent gates (privacy script rc0; TestMissionConfigRealCharter rc0) instead of full make invocation; no mechanical make in World.",
+    "lint_10": "Independent whitespace inspection (git diff --check rc=0; all 5 mission records + 40 new files have no trailing whitespace and end in LF) instead of mechanical lint.",
+    "quality_15": "5 mission records are inherited documentation files (not source code); 800-line rule targets source. No new code written; no TODO/HACK/FIXME; no functions >50 lines."
+  },
+  "scoring": {
+    "tests": 20,
+    "lint": 10,
+    "acceptance": 30,
+    "quality": 15,
+    "documentation": 15,
+    "fidelity": 10,
+    "regression_surface_conditional": null,
+    "performance_conditional": null,
+    "total": 100,
+    "pass_threshold": 70
+  },
+  "criteria_scores": {
+    "AC1": {
+      "points": 5,
+      "verdict": "PASS",
+      "evidence": "Reconstruction baseline+4transforms -> 1389257 bytes; final = 1389257 bytes; SHA256 reconstructed = SHA256 final = c033cc9f63bd316aeceba5782b935d6583d2ff29f399d623b625ebec6380e68f; reversibility: removing D113 from final ledger recovers baseline ledger SHA 21ae3c0827deadf27e3869256f5d7c6c6933e7fdc5dd39badb58cb63cdcf8374 exactly; queue-to-EOF 992586 byte-identical; row 256 2029 byte-identical SHA 3d6bdb1044830fbf135dadba4e8da57d05dce3f4c704ce258946e6a8a3dcb45f; 1 unique current-route token 368; 5 OPEN rows"
+    },
+    "AC2": {
+      "points": 5,
+      "verdict": "PASS",
+      "evidence": "Status archive prefix 1625708 byte-exact +365 pair (+354 bytes) appended once; live log baseline 297450 byte-exact prefix of final 306254 (+8804 bytes for 368 entry); 367/366 STATUS pairs preserved; 20->21 entries; log archive byte-identical 3658789"
+    },
+    "AC3": {
+      "points": 5,
+      "verdict": "PASS",
+      "evidence": "6573 unowned common paths byte-identical; 0 mismatches outside 5 mission records; 40 new paths all in world-iter368; 0 removed paths; baseline modes 6499x100644 + 79x100755 (corrected from round 1 false claim); 20 role artifacts preserved byte-identical vs design commit 9495f0db; 31/31 immutable_inputs verified SHA256+bytes+mode+type; 6056-path main inventory inherited from controller-final-narrow-checks (spot-checked 10/10 paths match)"
+    },
+    "AC4": {
+      "points": 5,
+      "verdict": "PASS",
+      "evidence": "Index baseline 57916 bytes/369 lines -> final 58005/370 lines (368 row inserted at chronological top); 354 prior numbered + 1 attended + 1 new 368 = 355 final; orphan 361 byte-identical (166 bytes both); source logs SHA256 unchanged pre/post CLI; dashboard 27 lines <=40; blockquote notes 0"
+    },
+    "AC5": {
+      "points": 5,
+      "verdict": "PASS",
+      "evidence": "D113 row 877 chars matches controller-scope.json exactly; OPEN no option selected; D105/110/111/112 unchanged defaults C/A/A/no-autonomous-credential; product256 PARKED FAIL85 PR515 row 2029 byte-identical; ADMIN367 PARKED PR521 PASS97/97/95 preserved; missing executed proof UNMET preserved; corrected designer 128330 + planner 90482 + executor 102438 = 321250; controller/supervisor usage not reported; judge usage truthful pending; 368 DRAFT/unmerged stacked on parked367 PR#522"
+    },
+    "AC6": {
+      "points": 5,
+      "verdict": "PASS",
+      "evidence": "Inherited narrow checks: bash scripts/check_no_personal_email.sh rc0; go test ./host/verifygate -run ^TestMissionConfigRealCharter$ -count=1 rc0; git diff --check ef012a0f rc0; whitespace inspection of all 5 mission records + 40 new files clean; sandbox denials UNINFORMATIVE UNDER SANDBOX classified correctly"
+    }
+  },
+  "own_successful_commands": [
+    {"name": "ac1_reconstruct.py", "result": "reconstructed=final=1389257 bytes; SHA256 match; byte-exact"},
+    {"name": "ac2_check.py", "result": "archive +354; log +8804; 21 entries; log-archive byte-identical"},
+    {"name": "ac3_check.py", "result": "6573 unowned identical; 0 mismatches outside 5 mission records"},
+    {"name": "ac4_check.py", "result": "index 354->355; orphan 361 byte-identical; dashboard 27 <=40"},
+    {"name": "ac5_check.py", "result": "D113 byte-exact; 5 OPEN rows; row 256 PARKED"},
+    {"name": "rehash_31.py", "result": "31/31 immutable_inputs SHA256+bytes+mode+type verified"},
+    {"name": "check_20_role.py", "result": "20/20 role artifacts preserved byte-identical vs design commit"},
+    {"name": "main_inventory_spotcheck", "result": "10/10 sample paths SHA256 match main commit"}
+  ],
+  "round1_failed_commands_replaced": [
+    {"name": "round1 ledger-prefix-match", "error": "TypeError: object of type 'NoneType' has no len()", "replaced_by": "ac1_reconstruct.py byte-identical SHA256 match"},
+    {"name": "round1 non-ASCII bytes pattern", "error": "SyntaxError: bytes can only contain ASCII literal characters", "replaced_by": "ac1/ac2 use str (UTF-8) + .encode('utf-8') at byte boundaries"},
+    {"name": "round1 Queue-comparison NoneType", "error": "TypeError: 'NoneType' object is not subscriptable", "replaced_by": "ac1 reverse-check uses re.subn with named groups"}
+  ],
+  "limitations": [
+    "Evaluator is fresh-context cross-provider (pi:openrouter/minimax/minimax-m3), independent of actual generator (codex:gpt-6.1-sol).",
+    "Narrow parent checks inherited as controller observations (controller-final-narrow-checks.json) — sandbox cannot run these.",
+    "6056-path main inventory inherited explicitly from parent receipts; spot-checked 10/10 paths match.",
+    "Sandbox bind denials UNINFORMATIVE UNDER SANDBOX, never PASS.",
+    "No full test suite, no source/test/harness/policy edits, no merge/rebase/retry/repair.",
+    "5 mission record line counts (6346/736/1548/27/370) exceed 800-line rule but are inherited documentation files, not source code; rubric substitution applied per task brief.",
+    "Ex executor proof uses plan-commit bdb8ff4c as entry anchor vs state-design 9495f0db; minor reporting inconsistency that does not affect substantive AC3 conclusion.",
+    "CI status is point-in-time inherited observation; no live measurement in this sandbox.",
+    "PR/merge CI/delivery remain separate gates not discharged by ADMIN review."
+  ],
+  "inherited_observations": [
+    "controller-final-narrow-checks.json: privacy script rc=0; TestMissionConfigRealCharter rc=0",
+    "baseline-index.json: parent registry rotate-log rc=0; both source log SHA256 unchanged pre/post CLI",
+    "executor-supervisor-receipt.json: AC4.index_cli AILANG_MISSION_REGISTRY resolves to /Users/voightkampff/.ailang/state/world-iter368-record",
+    "D105/110/111/112 row text preserved unchanged in final charter (own re-extraction)",
+    "Designer 128330 (corrected from 231651): probe 11039 + same-session 117291 (includes initial 103321)",
+    "Planner 90482: probe 10800 + actual 79682",
+    "Executor 102438: probe 17960 + actual 84478",
+    "Generator subtotal 321250",
+    "Cache-inclusive native: designer 1484746, planner 783474, executor 1386790"
+  ],
+  "evaluation_score": "100/100",
+  "evaluation_result": "pass",
+  "evaluation_verdict": "PASS score=100 reasons=AC1 byte-exact reconstruction (1389257=1389257 SHA=c033cc9f...); AC2 archive+354 log+8804 entries21 log-archive-byte-identical; AC3 6573unowned byte-identical 20role artifacts preserved 31immutable rehash OK 6056main inherited; AC4 index354->355 orphan361 byte-identical dashboard27<=40; AC5 D113 exact OPEN no-option 5OPEN rows 105/110/111/112/113 product256 PARKED ADMIN367 PARKED PASS97/97/95; AC6 inherited narrow rc0; corrected round1 false claims (5<=800, no exec bits); 368 DRAFT/unmerged stacked on parked367 PR#522 CI inherited",
+  "deliverables": [
+    "design_docs/verification/world-iter368/evaluator-round2-report.md",
+    "design_docs/verification/world-iter368/evaluator-round2-result.json",
+    "design_docs/verification/world-iter368/evaluator-round2-comparison-receipt.json"
+  ]
+}

@@ -1,0 +1,91 @@
+{
+  "source": "mission:world/iter-368",
+  "stages": [
+    {
+      "role": "designer",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "quota_bucket": "codex",
+      "quota_tokens": 128330,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "cost_usd": 0,
+      "status": "completed"
+    },
+    {
+      "role": "planner",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "quota_bucket": "codex",
+      "quota_tokens": 90482,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "cost_usd": 0,
+      "status": "completed"
+    },
+    {
+      "role": "executor",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "quota_bucket": "codex",
+      "quota_tokens": 102438,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "cost_usd": 0,
+      "status": "completed"
+    },
+    {
+      "role": "controller-usage-not-reported",
+      "provider": "codex",
+      "model": "gpt-6.1-sol",
+      "quota_bucket": "codex",
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "cost_usd": 0,
+      "status": "completed"
+    },
+    {
+      "role": "evaluator-probe",
+      "provider": "pi",
+      "model": "openrouter/minimax/minimax-m3",
+      "tokens_in": 1380,
+      "tokens_out": 13,
+      "cost_usd": 0.00038568,
+      "status": "completed"
+    },
+    {
+      "role": "evaluator-round1-acceptance-withheld",
+      "provider": "pi",
+      "model": "openrouter/minimax/minimax-m3",
+      "tokens_in": 4941735,
+      "tokens_out": 46104,
+      "cost_usd": 0.4045845,
+      "status": "failed"
+    },
+    {
+      "role": "evaluator-round2-acceptance-withheld",
+      "provider": "pi",
+      "model": "openrouter/minimax/minimax-m3",
+      "tokens_in": 5839061,
+      "tokens_out": 47160,
+      "cost_usd": 0.45718326,
+      "status": "failed"
+    },
+    {
+      "role": "evaluator-round3",
+      "provider": "pi",
+      "model": "openrouter/minimax/minimax-m3",
+      "tokens_in": 1197186,
+      "tokens_out": 47313,
+      "cost_usd": 0.13715868,
+      "status": "completed"
+    },
+    {
+      "role": "record_delivery-D-WORLD-113",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "status": "awaiting_approval"
+    }
+  ]
+}

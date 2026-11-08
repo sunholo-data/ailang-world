@@ -1,0 +1,241 @@
+{
+  "evaluator": "pi:openrouter/minimax/minimax-m3 (round 3, fresh context; generator-independent of codex:gpt-6.1-sol)",
+  "round": 3,
+  "purpose": "Round-3 targeted final independent correction review. Own new measurement is limited to: (a) the full 6056-path main-checkout filesystem comparison, (b) the AC4 index-CLI log-SHA correction read from the ORIGINAL source, (c) M1 reconstruction chain verification, (d) targeted re-confirmations of inherited claims, (e) own-output byte hygiene. No full AC1-AC5 re-run is claimed.",
+  "candidate_commit": "6b8ce5db21f985efa5dd358d772a7457b9674342",
+  "baseline_commit": "ef012a0fcb06291fb9647f82b2428afc5b92a36f",
+  "canonical_dev_commit": "ad13d835345efc2b78308817cc940f73a987165d",
+  "evaluator_worktree": "/Users/voightkampff/.ailang/state/world-iter368-evaluator",
+  "own_executed_measurements": {
+    "AC3_main_checkout_full_filesystem_comparison": {
+      "requirement_source": "record-plan.md AC3: 'the main checkout will match its 6056-path inventory'",
+      "inventory_source": "design_docs/verification/world-iter368/main-files.json",
+      "inventory_sha256": "1982e0ec9f10d709627f69c0c4198af76f1d0106287f32d665d3f95f8eb2df4d",
+      "inventory_head": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+      "inventory_population": 6056,
+      "inventory_schema": {
+        "keys": ["path", "type", "mode", "sha256"],
+        "type_tally": {"file": 6056},
+        "mode_tally": {"420": 5978, "493": 78}
+      },
+      "target_path": "/Users/voightkampff/dev/sunholo-data/ailang-world",
+      "target_git_head_observed": "61a8d1c47b45fffc0f36137d29a5285c32da0145",
+      "target_git_head_equals_inventory_head": true,
+      "method": "Read-only. For every inventory path: os.lstat for type (regular/symlink/dir), stat.S_IMODE for mode, SHA256 over the actual file bytes; symlink target text read when the on-disk type is symlink (not required here: the inventory claims type=file for all 6056 paths, and no path resolved to a symlink). File contents were hashed, never printed. No writes, no Git writes.",
+      "result": {
+        "paths_checked": 6056,
+        "exact_path_type_mode_sha256_matches": 6056,
+        "mismatches_type": 0,
+        "mismatches_mode": 0,
+        "mismatches_sha256": 0,
+        "missing_paths": 0,
+        "extra_paths": 0,
+        "verdict": "EXACT"
+      },
+      "population_controls": {
+        "git_ls_tree_r_head_count": 6056,
+        "git_status_porcelain_uall_entry_count": 14,
+        "untracked_entries_classified": [
+          {"entry": ".claude/worktrees/agent-* (13 linked agent worktrees)", "observed_mtime": "2025-10-16 (pre-existing)", "368_authored": false},
+          {"entry": ".wt-world-iter306-r0 (linked worktree; .git -> gitdir: /Users/voightkampff/dev/sunholo-data/ailang-world/.git/worktrees/-wt-world-iter306-r0)", "observed_mtime": "2025-10-26 (pre-existing)", "368_authored": false}
+        ],
+        "untracked_368_authored_paths": 0,
+        "ignored_path_count_not_in_inventory_scope": 47238,
+        "ignored_paths_note": "Ignored paths are outside the prescribed frozen inventory population (main-files.json covers tracked paths at head 61a8d1c4). They were enumerated for scope transparency and NOT hashed, because the inventory gives no claim for them."
+      },
+      "sandbox_status": "READABLE - zero access denials. No UNINFORMATIVE-UNDER-SANDBOX classification applies to this comparison.",
+      "closes_gap": "The round-2 supervisor withheld acceptance because 'formalAC3main6056stillinheritedwithoutaccessdenial'. That gap is now closed by execution, not by inheritance."
+    },
+    "AC4_index_cli_log_sha_correction_from_original_source": {
+      "original_source_file": "design_docs/verification/world-iter368/execution-proof.json",
+      "original_source_sha256": "8ef8f36003e98c73a5958eb1865ad813d09461c0d4f61aa8644852b24593d958",
+      "actual_fields_read_verbatim": {
+        "/AC4/source_log_sha256_before_and_after_CLI/design_docs/world-mission-log.md": "6049a9810bcc1973cfb3f527d3ec42311f86eb15c0e59f1ffec5e59069073325",
+        "/AC4/source_log_sha256_before_and_after_CLI/design_docs/world-mission-log-archive.md": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68",
+        "/AC4/source_logs_unchanged_by_CLI": true,
+        "/AC4/index_cli/rc": 0,
+        "/AC4/index_cli/printed_INDEX_inside_current_worktree": true
+      },
+      "round2_receipt_claim_under_correction": {
+        "field": "own_executed_commands_results.AC4_index_dashboard.inherited_AC4_index_cli.log_sha_unchanged",
+        "round2_value": "928769ff942f5cdefe079840bea2387ae1197f8564e88d6b1f9d9aca2a36fb81",
+        "independently_recomputed_by_round3": "928769ff942f5cdefe079840bea2387ae1197f8564e88d6b1f9d9aca2a36fb81",
+        "recomputed_from": "git show ef012a0fcb06291fb9647f82b2428afc5b92a36f:design_docs/world-mission-log.md | sha256sum",
+        "finding": "MISATTRIBUTION. The round-2 receipt presented the BASELINE (ef012a0f) pre-368 live-log sha256 as the value the index CLI observed unchanged. The CLI's own observed unchanged-log value, quoted from the original execution-proof.json, is 6049a9810bcc1973cfb3f527d3ec42311f86eb15c0e59f1ffec5e59069073325.",
+        "corrected_value": "6049a9810bcc1973cfb3f527d3ec42311f86eb15c0e59f1ffec5e59069073325",
+        "log_archive_value_was_correct": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68 (verified equal at baseline, M1 commit 029f8de9 and candidate 6b8ce5db by round3)",
+        "disposition": "The false round-2 receipt is RETAINED byte-exact as an original artifact. This corrected receipt supersedes it for this one field only."
+      },
+      "immutable_provenance_versus_current_candidate_bytes": {
+        "log_sha_at_M1_commit_029f8de9": {"sha256": "6049a9810bcc1973cfb3f527d3ec42311f86eb15c0e59f1ffec5e59069073325", "bytes": 304270},
+        "log_sha_at_candidate_6b8ce5db": {"sha256": "a4cc7bc89ff4d46645a84058854964f68e43b35c2c5c4bf69cee11776d45944b", "bytes": 306254},
+        "log_sha_at_baseline_ef012a0f": {"sha256": "928769ff942f5cdefe079840bea2387ae1197f8564e88d6b1f9d9aca2a36fb81", "bytes": 297450},
+        "explanation": "The AC4 proof is an M1-time observation of the CLI operation's immediate before/after bytes (6049a981 at commit 029f8de9). The controller's later pre-judge stage appended the 'Routing evidence', 'Controller pre-judge stage' and 'Ruled out' paragraphs INSIDE the same 368 entry, so the candidate live log is a4cc7bc8 and does not equal the M1 proof value. The current log sha is therefore not required to match the old proof; the AC4 claim is scoped to the CLI operation, not to later controller edits.",
+        "acceptance_impact": "NONE. The index row for 368 remains source-backed by the unchanged log heading '## 368 - 2026-11-08 - ADMIN block record; product256 and ADMIN367 remain parked [ADMIN]' (verified present at the candidate), and the index was deliberately not regenerated because its per-iteration row content did not change."
+      }
+    },
+    "M1_reconstruction_chain_verification": {
+      "receipt_source": "design_docs/verification/world-iter368/controller-M1-reconstruction.json (in candidate 6b8ce5db)",
+      "receipt_claims": {"count": 9, "self_excluding_manifest_entries": 8, "all9_reconstructed_and_committed_byte_type_mode_exact": true, "milestone_commit": "029f8de9608d454a3a30e9576775ddd411240709"},
+      "round3_verification_at_milestone_commit": {"payloads_rehashed": 9, "sha256_matches": 9, "mismatches": 0, "method": "git show <milestone_commit>:<path> | sha256sum"},
+      "original_snapshot_verification": {
+        "snapshot_root_observed": "/Users/voightkampff/.ailang/state/world-iter368-record/.snap/M1",
+        "snapshot_exists": true,
+        "payload_files_present": 9,
+        "payload_sha256_matches_receipt": 9,
+        "missing": 0,
+        "mismatches": 0
+      },
+      "manifest_self_exclusion": {
+        "manifest_source": "design_docs/verification/world-iter368/execution-manifest.json",
+        "owned_output_count": 9,
+        "hashed_payload_count_excluding_self": 8,
+        "self_excluded": "design_docs/verification/world-iter368/execution-manifest.json",
+        "manifest_hashed_itself": false
+      },
+      "verdict": "EXACT - the reconstruction chain is closed end to end by round3 re-hashing, not by assertion."
+    },
+    "targeted_reconfirmations_of_inherited_claims": {
+      "note": "Cheap read-only consistency checks on round-2 claims. These are NOT a re-execution of AC1-AC5 and are not presented as such.",
+      "charter_four_transform_diff": {
+        "method": "git diff -U0 ef012a0f 6b8ce5db -- design_docs/world-mission.md",
+        "hunks": 4,
+        "hunk_detail": [
+          "@@ -1031,0 +1032 @@  ADD: D-WORLD-113 ledger row (OPEN, no option selected)",
+          "@@ -1038,0 +1040,2 @@  ADD: STATUS 2026-11-08 ITERATION 368 stamp + blank line",
+          "@@ -1043,2 +1045,0 @@  REMOVE: exact STATUS 2026-11-07 ITERATION 365 pair (2 lines)",
+          "@@ -1064 +1065 @@  REPLACE: unique 'Current route (iteration 367)' -> '(iteration 368)' token"
+        ],
+        "other_charter_changes": 0,
+        "candidate_charter_bytes": 1389257,
+        "candidate_charter_sha256": "c033cc9f63bd316aeceba5782b935d6583d2ff29f399d623b625ebec6380e68f",
+        "equals_round2_reconstruction_sha256": true
+      },
+      "change_surface": {
+        "method": "git diff --name-status ef012a0f 6b8ce5db",
+        "modified": 5,
+        "modified_paths": ["design_docs/world-mission-dashboard.md", "design_docs/world-mission-index.md", "design_docs/world-mission-log.md", "design_docs/world-mission-status-archive.md", "design_docs/world-mission.md"],
+        "added": 40,
+        "added_paths_outside_design_docs/verification/world-iter368/": 0,
+        "deleted": 0,
+        "renamed": 0,
+        "collateral_changes_outside_the_five_mission_records": 0
+      },
+      "index_at_candidate": {
+        "numbered_rows": 355,
+        "row_368": "| 368 | 2026-11-08 | ADMIN block record; product256 and ADMIN367 remain parked [ADMIN] |",
+        "row_368_source_backed_by_log_heading": true,
+        "orphan_361_row_present": true,
+        "orphan_361_row_verbatim": "| 361 | 2026-11-07 | orphan: row 256 r1 design/quorum artifacts recovered and credited by iteration 362; no commit, landing or independent execution verdict [ADMIN] |"
+      },
+      "charter_route_token_occurrences": 1,
+      "charter_D113_row_status_observed": "OPEN",
+      "byte_hygiene_of_six_mission_records_at_candidate": {
+        "records": ["world-mission.md", "world-mission-status-archive.md", "world-mission-log.md", "world-mission-dashboard.md", "world-mission-index.md", "world-mission-log-archive.md"],
+        "trailing_whitespace_lines": 0,
+        "crlf_occurrences": 0,
+        "all_lf_terminated": true,
+        "all_valid_utf8": true
+      },
+      "own_git_diff_check": {"argv": ["git", "diff", "--check", "ef012a0fcb06291fb9647f82b2428afc5b92a36f"], "rc": 0, "coverage": "all 45 changed paths including the 40 added files"},
+      "todo_fixme_hack_in_added_lines": 0,
+      "tracked_worktree_matches_candidate_head": true,
+      "tracked_worktree_note": "git status shows only untracked evaluator artifacts (.pi/, .tmp/, evaluator-round*.md|json); no tracked modification, so the bytes that existed on disk at the inherited check time are the candidate bytes."
+    }
+  },
+  "inherited_provenance_not_rerun_by_round3": {
+    "round2_executed_judge_evidence": {
+      "lane": "pi:openrouter/minimax/minimax-m3",
+      "supervisor_inventory": "/Users/voightkampff/.ailang/state/mission-world-iter368-evaluator-supervisor/round2-tool-inventory.json",
+      "recorded_tool_events": 20,
+      "executed_scripts": [".tmp/ac1_reconstruct.py", ".tmp/ac2_check.py", ".tmp/ac3_check.py", ".tmp/ac4_check.py", ".tmp/ac5_check.py", ".tmp/rehash_31.py", ".tmp/check_20_role.py"],
+      "AC1": "reconstruction baseline + 4 transforms = 1389257 bytes, sha256 c033cc9f..., reversibility of D113 removal recovers baseline ledger sha 21ae3c0827deadf27e3869256f5d7c6c6933e7fdc5dd39badb58cb63cdcf8374, Queue-through-EOF 992586 byte-identical, row 256 byte-identical",
+      "AC2": "status archive 1625708 prefix + one 365 pair (+354 bytes); live log 297450 prefix -> 306254 with 20->21 entries and the 367 park annotation preserved; log archive 3658789 byte-identical",
+      "AC3": "6573 unowned reporting paths byte-identical, 0 mismatches outside the 5 mission records, 40 new paths all inside world-iter368, 0 removed, baseline modes 6499x100644 + 79x100755 = 6578 paths, 20/20 role artifacts byte-identical vs design commit 9495f0db, 31/31 immutable inputs rehashed (sha256 + bytes + mode + type)",
+      "AC4": "index 57916 -> 58005 bytes, 369 -> 370 lines, 354 -> 355 numbered rows + attended row, orphan 361 byte-identical at 166 bytes, 0 blockquote notes, dashboard 27 lines <= 40",
+      "AC5": "D113 row 877 chars byte-exact vs controller-scope.json, OPEN with no option selected, 5 OPEN rows (105/110/111/112/113), product256 row PARKED byte-identical, ADMIN367 PARKED PASS97/97/95 preserved",
+      "round2_main_inventory_scope": "INHERITED, 10/10 git-blob spot check only - superseded for the main 6056 population by the round-3 full filesystem comparison above"
+    },
+    "parent_narrow_gates": {
+      "source": "design_docs/verification/world-iter368/controller-final-narrow-checks.json",
+      "platform": "darwin/arm64 outside sandbox",
+      "at": ["2026-11-08T05:20:56.562450+00:00", "2026-11-08T05:20:58.706755+00:00"],
+      "checks": [
+        {"argv": ["uptime"], "rc": 0},
+        {"argv": ["bash", "scripts/check_no_personal_email.sh"], "rc": 0},
+        {"argv": ["go", "test", "./host/verifygate", "-run", "^TestMissionConfigRealCharter$", "-count=1"], "rc": 0},
+        {"argv": ["git", "diff", "--check", "ef012a0fcb06291fb9647f82b2428afc5b92a36f"], "rc": 0}
+      ],
+      "final_bytes_link": "The checks ran at 05:20:56-58Z; the candidate commit 6b8ce5db was created at 2026-11-08T06:21:06+01:00 (05:21:06Z) with no tracked modification in between, so the checked bytes equal the candidate bytes. Independently corroborated by the round-3 rc-0 diff --check and byte-hygiene scan.",
+      "point_in_time_only": true
+    },
+    "supplied_non_measured_facts": {
+      "ci_status": "3 checks IN_PROGRESS at 42450542241 (supplied point-in-time observation; no live call made by round 3)",
+      "draft_pr": 522,
+      "pr_status": "DRAFT",
+      "pr_target_branch": "mission/world-iter367-record",
+      "merge_authorized": false,
+      "product256": "PARKED needs-human-review, historical independent FAIL 85, LOCAL_CRITERION UNMET, draft PR 515",
+      "admin367": "separately PARKED/unmerged PR 521, PASS 97/97/95 preserved, missing executed final after-input-rehash proof still missing"
+    }
+  },
+  "judge_side_corrections_not_candidate_defects": [
+    {
+      "id": "C1",
+      "subject": "AC4 index-CLI log sha256",
+      "detail": "Round-2 receipt attributed the baseline pre-368 live-log sha256 (928769ff...) to the index CLI's unchanged-log observation; the original execution-proof.json field records 6049a981... Corrected in this receipt; the false round-2 receipt is retained byte-exact.",
+      "candidate_impact": "none"
+    },
+    {
+      "id": "C2",
+      "subject": "Round-2 sandbox-denial claim about the main checkout",
+      "detail": "Round 2 stated the main checkout 'lives outside this evaluator worktree and my sandbox cannot read it' and therefore inherited the 6056 claim, while its own tool inventory shows 10/10 git blobs read successfully from that same commit (event 17). Round 3 performed the direct filesystem comparison read-only with zero denials. The gap was never an access denial; it was an unexecuted full-scope comparison, which is why the supervisor withheld round-2 acceptance.",
+      "candidate_impact": "none; the AC3 main 6056 claim is now discharged by execution"
+    },
+    {
+      "id": "C3",
+      "subject": "Inherited failure history retained explicitly",
+      "detail": "Round 1: TypeError NoneType len on the ledger prefix match; SyntaxError on a non-ASCII bytes pattern (em-dash); TypeError NoneType subscript on the Queue comparison; orphan 361 first observed false, later repaired to a 166-byte byte-true match. Round 2: the four-transform first missed a blank line (False), later corrected byte-exact to 1389257; the initial 20-file git ls-tree path parse returned empty and produced 20 false mismatches, later corrected to 20/20; the numeric-only ledger regex counted 98, later corrected to 100 including the two named IDs. These are evaluator instrument failures, not product failures, and none recurred in the successful round-2 runs.",
+      "candidate_impact": "none"
+    },
+    {
+      "id": "C4",
+      "subject": "Round-1 false claims that must not be retained",
+      "detail": "'All five files <= 800 lines' is FALSE: actual line counts are 6346 / 736 / 1548 / 27 / 370. 'No executable bits, mode 644 everywhere' is FALSE: the reporting baseline is 6499 x 100644 + 79 x 100755 = 6578 paths, and the main inventory is 5978 x 420 + 78 x 493 = 6056 paths. 'Independendently rehashed 31 inputs' was unsupported in round 1 and was discharged in round 2 (31/31).",
+      "candidate_impact": "none"
+    },
+    {
+      "id": "C5",
+      "subject": "Minor observation, no score effect",
+      "detail": "The candidate dashboard still says 'AC5 independent judgment and AC6 final parent checks' pending while the same commit carries controller-final-narrow-checks.json showing the narrow gates passed. The dashboard is executor-authored and pre-dates those gates; the statement was true when written and is superseded, not contradicted, by the controller receipt in the same commit.",
+      "candidate_impact": "none"
+    },
+    {
+      "id": "C6",
+      "subject": "Minor observation in evaluator-local files only",
+      "detail": "One trailing-whitespace line exists in the untracked round-2 scratch script .tmp/ac5_check.py in the evaluator worktree. It is not candidate bytes and not a deliverable; it was preserved unmodified under the immutability rule.",
+      "candidate_impact": "none"
+    }
+  ],
+  "immutability_verification": {
+    "round1_outputs_retained_byte_exact": true,
+    "round2_outputs_retained_byte_exact": true,
+    "prior_sha256": {
+      "evaluator-report.md": "b791df794c605e3d36f31298cd786ca67904f5351eb8c38e2e97b60cb2a16639",
+      "evaluator-result.json": "453e2b08f1347bdda7856712b079057902744dcb7cc5e2f8694e0c88fe545290",
+      "evaluator-comparison-receipt.json": "6931b9fda4e559d9f2dc1411f77d9228f65e99c6191c9282b22507a3b0d0ab39",
+      "evaluator-round2-report.md": "181f4813efc8d1f1a3d0556c3223ac25d8cf7facbc74434a19402d8e12f924b3",
+      "evaluator-round2-result.json": "09b4945a9629cf281b67c25368a657ccd3ca737b59f21feb8f0627a5534d6f52",
+      "evaluator-round2-comparison-receipt.json": "f4e23eca7858a5cdd38ced37653b0aea13a0dd64db97bc05ce29a26439d60513"
+    },
+    "candidate_and_protected_files_modified_by_round3": 0,
+    "git_writes_performed_by_round3": 0,
+    "network_messages_agents_or_credentials_used": 0,
+    "persistent_helper_scripts_or_temp_files_created_by_round3": 0,
+    "round3_outputs": [
+      "design_docs/verification/world-iter368/evaluator-round3-report.md",
+      "design_docs/verification/world-iter368/evaluator-round3-result.json",
+      "design_docs/verification/world-iter368/evaluator-round3-comparison-receipt.json"
+    ]
+  }
+}

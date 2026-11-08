@@ -1,0 +1,9 @@
+{
+  "claim": "round3report inherited archive-prefix numeric transcription",
+  "reported_in_round3_prose": 1627608,
+  "actual_baseline_blob_bytes": 1625708,
+  "source": "ef012a0f:design_docs/world-mission-status-archive.md",
+  "original_report_preserved": true,
+  "no_fourth_call": true,
+  "disposition": "numeric transcription flag; does not change actual byte-equal prefix comparison, no controller score or replacement verdict"
+}

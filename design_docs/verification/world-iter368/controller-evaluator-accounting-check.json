@@ -1,0 +1,269 @@
+{
+  "method": "Sum each provider message_end usage exactly once; cached input included, reasoning is subset and not added; originalrawcapturesremainlocal",
+  "runs": [
+    {
+      "source": "/Users/voightkampff/.ailang/state/mission-world-iter368-evaluator-supervisor/probe.ndjson",
+      "sha256": "d05aea109a7966e100515125a6800f9f8f5131d04f40d5a78c9b23de35b36db4",
+      "usage_message_end_events": 1,
+      "usage": {
+        "input": 1197,
+        "output": 13,
+        "cacheRead": 183,
+        "cacheWrite": 0,
+        "reasoning": 12,
+        "totalTokens": 1393
+      },
+      "billed_usd": 0.00038568,
+      "agent_end_events": 1
+    },
+    {
+      "source": "/Users/voightkampff/.ailang/state/mission-world-iter368-evaluator-supervisor/review.ndjson",
+      "sha256": "98cf18be579951148fb43270e1127df008807367b77caa50f1ed463dbe613cfa",
+      "usage_message_end_events": 75,
+      "usage": {
+        "input": 219815,
+        "output": 46104,
+        "cacheRead": 4721920,
+        "cacheWrite": 0,
+        "reasoning": 11641,
+        "totalTokens": 4987839
+      },
+      "billed_usd": 0.40458449999999996,
+      "agent_end_events": 1
+    },
+    {
+      "source": "/Users/voightkampff/.ailang/state/mission-world-iter368-evaluator-supervisor/review-round2.ndjson",
+      "sha256": "cae0c40f038c4c9d362cb91d9eceba02c998e4a8d97faed995d2a2f410cbb6b9",
+      "usage_message_end_events": 84,
+      "usage": {
+        "input": 209365,
+        "output": 47160,
+        "cacheRead": 5629696,
+        "cacheWrite": 0,
+        "reasoning": 12687,
+        "totalTokens": 5886221
+      },
+      "billed_usd": 0.45718326,
+      "agent_end_events": 1
+    },
+    {
+      "source": "/Users/voightkampff/.ailang/state/mission-world-iter368-evaluator-supervisor/review-round3.ndjson",
+      "sha256": "18ba63fd0cc1470394d5feccb2cc41ca6ea73b7a932b88e23bec609b684cd378",
+      "usage_message_end_events": 29,
+      "usage": {
+        "input": 35633,
+        "output": 47313,
+        "cacheRead": 1161553,
+        "cacheWrite": 0,
+        "reasoning": 22635,
+        "totalTokens": 1244499
+      },
+      "billed_usd": 0.13715868,
+      "agent_end_events": 1
+    }
+  ],
+  "metered_total_usd": 0.9993121199999999,
+  "provider_reported_cache_inclusive_tokens": 12119952,
+  "known_generator_quota_tokens": 321250,
+  "controller_and_Agent_supervisor_quota": "not reported; not zero",
+  "targeted_actual_tool_events": [
+    {
+      "source": "review-round2.ndjson",
+      "event": {
+        "type": "tool_execution_start",
+        "toolCallId": "call_54ca79ce5ccc4f6abc8a9922",
+        "toolName": "bash",
+        "args": {
+          "command": "python3 .tmp/rehash_31.py 2>&1"
+        }
+      },
+      "event_type": "tool_execution_start"
+    },
+    {
+      "source": "review-round2.ndjson",
+      "event": {
+        "type": "tool_execution_update",
+        "toolCallId": "call_54ca79ce5ccc4f6abc8a9922",
+        "toolName": "bash",
+        "args": {
+          "command": "python3 .tmp/rehash_31.py 2>&1"
+        },
+        "partialResult": {
+          "content": []
+        }
+      },
+      "event_type": "tool_execution_update"
+    },
+    {
+      "source": "review-round2.ndjson",
+      "event": {
+        "type": "tool_execution_update",
+        "toolCallId": "call_54ca79ce5ccc4f6abc8a9922",
+        "toolName": "bash",
+        "args": {
+          "command": "python3 .tmp/rehash_31.py 2>&1"
+        },
+        "partialResult": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Verifying 31 immutable inputs...\n\nOK: 31\nFAIL: 0\nUNREADABLE: 0\n\n"
+            }
+          ],
+          "details": {}
+        }
+      },
+      "event_type": "tool_execution_update"
+    },
+    {
+      "source": "review-round2.ndjson",
+      "event": {
+        "type": "tool_execution_end",
+        "toolCallId": "call_54ca79ce5ccc4f6abc8a9922",
+        "toolName": "bash",
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Verifying 31 immutable inputs...\n\nOK: 31\nFAIL: 0\nUNREADABLE: 0\n\n"
+            }
+          ]
+        },
+        "isError": false
+      },
+      "event_type": "tool_execution_end"
+    },
+    {
+      "source": "review-round2.ndjson",
+      "event": {
+        "type": "tool_execution_start",
+        "toolCallId": "call_f6fa09cb0a04401085668738",
+        "toolName": "bash",
+        "args": {
+          "command": "python3 .tmp/check_20_role.py 2>&1"
+        }
+      },
+      "event_type": "tool_execution_start"
+    },
+    {
+      "source": "review-round2.ndjson",
+      "event": {
+        "type": "tool_execution_update",
+        "toolCallId": "call_f6fa09cb0a04401085668738",
+        "toolName": "bash",
+        "args": {
+          "command": "python3 .tmp/check_20_role.py 2>&1"
+        },
+        "partialResult": {
+          "content": []
+        }
+      },
+      "event_type": "tool_execution_update"
+    },
+    {
+      "source": "review-round2.ndjson",
+      "event": {
+        "type": "tool_execution_update",
+        "toolCallId": "call_f6fa09cb0a04401085668738",
+        "toolName": "bash",
+        "args": {
+          "command": "python3 .tmp/check_20_role.py 2>&1"
+        },
+        "partialResult": {
+          "content": [
+            {
+              "type": "text",
+              "text": "20 role artifact paths at design commit:\nTotal: 20\nPreserved (byte-identical): 20\nMismatched: 0\n"
+            }
+          ],
+          "details": {}
+        }
+      },
+      "event_type": "tool_execution_update"
+    },
+    {
+      "source": "review-round2.ndjson",
+      "event": {
+        "type": "tool_execution_end",
+        "toolCallId": "call_f6fa09cb0a04401085668738",
+        "toolName": "bash",
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "20 role artifact paths at design commit:\nTotal: 20\nPreserved (byte-identical): 20\nMismatched: 0\n"
+            }
+          ]
+        },
+        "isError": false
+      },
+      "event_type": "tool_execution_end"
+    },
+    {
+      "source": "review-round3.ndjson",
+      "event": {
+        "type": "tool_execution_start",
+        "toolCallId": "call_function_1ihs4vib3jaw_2",
+        "toolName": "bash",
+        "args": {
+          "command": "cd /Users/voightkampff/dev/sunholo-data/ailang-world && python3 -c \"\nimport json,os,hashlib,stat,collections\nroot='/Users/voightkampff/dev/sunholo-data/ailang-world'\ninv=json.load(open('/Users/voightkampff/.ailang/state/world-iter368-evaluator/design_docs/verification/world-iter368/main-files.json'))\nfiles=inv['files']\nres=collections.Counter(); mism=[]; missing=[]; ok=0\nfor e in files:\n    p=os.path.join(root,e['path'])\n    try:\n        st=os.lstat(p)\n    except OSError as ex:\n        missing.append((e['path'],'MISSING:'+str(ex.errno))); res['missing']+=1; continue\n    if stat.S_ISLNK(st.st_mode):\n        typ='symlink'; data=os.readlink(p).encode()\n    elif stat.S_ISDIR(st.st_mode):\n        typ='dir'; data=b''\n    elif stat.S_ISREG(st.st_mode):\n        typ='file'\n        h=hashlib.sha256()\n        with open(p,'rb') as f:\n            for chunk in iter(lambda: f.read(1<<20), b''): h.update(chunk)\n        data=h.hexdigest()\n    else:\n        typ='other'; data=b''\n    mode=stat.S_IMODE(st.st_mode)\n    if typ!=e['type']:\n        mism.append((e['path'],'type',e['type'],typ)); res['type']+=1\n    if typ=='file' and mode!=e['mode']:\n        mism.append((e['path'],'mode',oct(e['mode']),oct(mode))); res['mode']+=1\n    if typ=='file' and data!=e['sha256']:\n        mism.append((e['path'],'sha256',e['sha256'][:12],data[:12])); res['sha']+=1\n    if typ=='file' and mode==e['mode'] and data==e['sha256']: ok+=1\nprint('inventory_len',len(files))\nprint('exact_match',ok)\nprint('mismatch_counts',dict(res))\nprint('missing',len(missing))\nprint('mismatch_sample',mism[:10])\nprint('missing_sample',missing[:10])\n\"\n"
+        }
+      },
+      "event_type": "tool_execution_start"
+    },
+    {
+      "source": "review-round3.ndjson",
+      "event": {
+        "type": "tool_execution_update",
+        "toolCallId": "call_function_1ihs4vib3jaw_2",
+        "toolName": "bash",
+        "args": {
+          "command": "cd /Users/voightkampff/dev/sunholo-data/ailang-world && python3 -c \"\nimport json,os,hashlib,stat,collections\nroot='/Users/voightkampff/dev/sunholo-data/ailang-world'\ninv=json.load(open('/Users/voightkampff/.ailang/state/world-iter368-evaluator/design_docs/verification/world-iter368/main-files.json'))\nfiles=inv['files']\nres=collections.Counter(); mism=[]; missing=[]; ok=0\nfor e in files:\n    p=os.path.join(root,e['path'])\n    try:\n        st=os.lstat(p)\n    except OSError as ex:\n        missing.append((e['path'],'MISSING:'+str(ex.errno))); res['missing']+=1; continue\n    if stat.S_ISLNK(st.st_mode):\n        typ='symlink'; data=os.readlink(p).encode()\n    elif stat.S_ISDIR(st.st_mode):\n        typ='dir'; data=b''\n    elif stat.S_ISREG(st.st_mode):\n        typ='file'\n        h=hashlib.sha256()\n        with open(p,'rb') as f:\n            for chunk in iter(lambda: f.read(1<<20), b''): h.update(chunk)\n        data=h.hexdigest()\n    else:\n        typ='other'; data=b''\n    mode=stat.S_IMODE(st.st_mode)\n    if typ!=e['type']:\n        mism.append((e['path'],'type',e['type'],typ)); res['type']+=1\n    if typ=='file' and mode!=e['mode']:\n        mism.append((e['path'],'mode',oct(e['mode']),oct(mode))); res['mode']+=1\n    if typ=='file' and data!=e['sha256']:\n        mism.append((e['path'],'sha256',e['sha256'][:12],data[:12])); res['sha']+=1\n    if typ=='file' and mode==e['mode'] and data==e['sha256']: ok+=1\nprint('inventory_len',len(files))\nprint('exact_match',ok)\nprint('mismatch_counts',dict(res))\nprint('missing',len(missing))\nprint('mismatch_sample',mism[:10])\nprint('missing_sample',missing[:10])\n\"\n"
+        },
+        "partialResult": {
+          "content": []
+        }
+      },
+      "event_type": "tool_execution_update"
+    },
+    {
+      "source": "review-round3.ndjson",
+      "event": {
+        "type": "tool_execution_update",
+        "toolCallId": "call_function_1ihs4vib3jaw_2",
+        "toolName": "bash",
+        "args": {
+          "command": "cd /Users/voightkampff/dev/sunholo-data/ailang-world && python3 -c \"\nimport json,os,hashlib,stat,collections\nroot='/Users/voightkampff/dev/sunholo-data/ailang-world'\ninv=json.load(open('/Users/voightkampff/.ailang/state/world-iter368-evaluator/design_docs/verification/world-iter368/main-files.json'))\nfiles=inv['files']\nres=collections.Counter(); mism=[]; missing=[]; ok=0\nfor e in files:\n    p=os.path.join(root,e['path'])\n    try:\n        st=os.lstat(p)\n    except OSError as ex:\n        missing.append((e['path'],'MISSING:'+str(ex.errno))); res['missing']+=1; continue\n    if stat.S_ISLNK(st.st_mode):\n        typ='symlink'; data=os.readlink(p).encode()\n    elif stat.S_ISDIR(st.st_mode):\n        typ='dir'; data=b''\n    elif stat.S_ISREG(st.st_mode):\n        typ='file'\n        h=hashlib.sha256()\n        with open(p,'rb') as f:\n            for chunk in iter(lambda: f.read(1<<20), b''): h.update(chunk)\n        data=h.hexdigest()\n    else:\n        typ='other'; data=b''\n    mode=stat.S_IMODE(st.st_mode)\n    if typ!=e['type']:\n        mism.append((e['path'],'type',e['type'],typ)); res['type']+=1\n    if typ=='file' and mode!=e['mode']:\n        mism.append((e['path'],'mode',oct(e['mode']),oct(mode))); res['mode']+=1\n    if typ=='file' and data!=e['sha256']:\n        mism.append((e['path'],'sha256',e['sha256'][:12],data[:12])); res['sha']+=1\n    if typ=='file' and mode==e['mode'] and data==e['sha256']: ok+=1\nprint('inventory_len',len(files))\nprint('exact_match',ok)\nprint('mismatch_counts',dict(res))\nprint('missing',len(missing))\nprint('mismatch_sample',mism[:10])\nprint('missing_sample',missing[:10])\n\"\n"
+        },
+        "partialResult": {
+          "content": [
+            {
+              "type": "text",
+              "text": "inventory_len 6056\nexact_match 6056\nmismatch_counts {}\nmissing 0\nmismatch_sample []\nmissing_sample []\n"
+            }
+          ],
+          "details": {}
+        }
+      },
+      "event_type": "tool_execution_update"
+    },
+    {
+      "source": "review-round3.ndjson",
+      "event": {
+        "type": "tool_execution_end",
+        "toolCallId": "call_function_1ihs4vib3jaw_2",
+        "toolName": "bash",
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "inventory_len 6056\nexact_match 6056\nmismatch_counts {}\nmissing 0\nmismatch_sample []\nmissing_sample []\n"
+            }
+          ]
+        },
+        "isError": false
+      },
+      "event_type": "tool_execution_end"
+    }
+  ]
+}

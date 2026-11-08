@@ -1,0 +1,7 @@
+{
+  "prior_actual_metered_usd": 0.40497018,
+  "additional_estimate_usd": 0.25,
+  "iteration_cap_usd": 5,
+  "why": "Actual independent MiniMax correction review, factual false claims and unsupported ownproof; originaloutputs immutable",
+  "resume": "canonical --no-session no persisted context; freshcontext same independentMiniMax"
+}

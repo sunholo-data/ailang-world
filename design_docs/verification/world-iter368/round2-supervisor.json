@@ -1,0 +1,64 @@
+{
+  "round": 2,
+  "typed_runner": {
+    "verdict": "ok",
+    "rc": 0,
+    "fenced": true,
+    "model": "openrouter/minimax/minimax-m3",
+    "pi_rc": 0,
+    "elapsed_seconds": 365,
+    "worktree_changed_files": 8,
+    "predirty_files": 4,
+    "worktree_changed_since_start": true,
+    "base_head": "6b8ce5db21f985efa5dd358d772a7457b9674342",
+    "head_after": "6b8ce5db21f985efa5dd358d772a7457b9674342",
+    "commits_since_start": 0,
+    "tool_executions": 104,
+    "hung_tool": "",
+    "provider_errors": 0,
+    "provider_error": "",
+    "agent_end_events": 1,
+    "ndjson_bytes_filtered": 2313425,
+    "ndjson": "/Users/voightkampff/.ailang/state/mission-world-iter368-evaluator-supervisor/review-round2.ndjson",
+    "snapshot": "/Users/voightkampff/.ailang/state/mission-world-iter368-evaluator-supervisor/review-round2.ndjson.snapshot.ndjson",
+    "stderr": "/Users/voightkampff/.ailang/state/mission-world-iter368-evaluator-supervisor/review-round2.ndjson.stderr"
+  },
+  "usage": {
+    "input": 209365,
+    "output": 47160,
+    "cacheRead": 5629696,
+    "cacheWrite": 0,
+    "reasoning": 12687,
+    "totalTokens": 5886221,
+    "billed_usd": 0.45718326
+  },
+  "prior_metered_usd": 0.40497018,
+  "iteration_metered_usd": 0.8621534399999999,
+  "original_outputs": {
+    "evaluator-round2-report.md": {
+      "bytes": 25833,
+      "sha256": "181f4813efc8d1f1a3d0556c3223ac25d8cf7facbc74434a19402d8e12f924b3"
+    },
+    "evaluator-round2-result.json": {
+      "bytes": 9390,
+      "sha256": "09b4945a9629cf281b67c25368a657ccd3ca737b59f21feb8f0627a5534d6f52"
+    },
+    "evaluator-round2-comparison-receipt.json": {
+      "bytes": 6762,
+      "sha256": "f4e23eca7858a5cdd38ced37653b0aea13a0dd64db97bc05ce29a26439d60513"
+    }
+  },
+  "actual_model_result": "PASS100",
+  "supervisor_acceptance": "WITHHELD; formalAC3main6056stillinheritedwithoutaccessdenial; round3authorized",
+  "original_round1_retained": true,
+  "tool_inventory": "round2-tool-inventory.json",
+  "round2_failures": [
+    "fourtransforminitialmissingblankFalse latercorrected",
+    "20initialGitls-treepathparseempty20mismatcheslatercorrected",
+    "firstledgerIDnumericregexcount98latercorrectedtonamed2+96numeric100"
+  ],
+  "other_claim_audit": [
+    "round2receiptAC4logSHAappearsbaseline9287...,round1reportactualpre/postindexSHA6049...; round3mustinspectoriginalexecutionproof",
+    "round2reportclaimssandboxcannotreadmaincommitbutown10Gitblobsreadsuccessfully; noactual6056filesystemattemptdenial"
+  ]
+}

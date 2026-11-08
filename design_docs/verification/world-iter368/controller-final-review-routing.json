@@ -1,0 +1,171 @@
+{
+  "at": "2026-11-08T05:48:15.258888+00:00",
+  "iteration": 368,
+  "reviewed_candidate": "6b8ce5db21f985efa5dd358d772a7457b9674342",
+  "final_judge_original": "evaluator-round3-result.json",
+  "actual_judge_score": "100/100",
+  "actual_judge_verdict": "PASS ADMIN368 only",
+  "controller_or_supervisor_score": null,
+  "agent_roles": {
+    "designer": "/root/designer",
+    "planner": "/root/planner",
+    "executor": "/root/executor",
+    "evaluator": "/root/evaluator"
+  },
+  "role_spawn_errors": [],
+  "actual_generator_lane": "codex:gpt-6.1-sol",
+  "actual_evaluator_lane": "pi:openrouter/minimax/minimax-m3",
+  "role_usage_quota": {
+    "designer": 128330,
+    "planner": 90482,
+    "executor": 102438,
+    "controller": "not reported",
+    "Agent_supervisors": "not reported"
+  },
+  "known_quota_total": 321250,
+  "evaluator_provider_cache_inclusive_tokens": 12119952,
+  "metered_total_usd": 0.99931212,
+  "driver_routing_note_verbatim": "lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` — quota-limited) → handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` — quota-limited) → handed to `pi:openrouter/minimax/minimax-m3`",
+  "gate4_base": "ad13d835345efc2b78308817cc940f73a987165d\t2026-11-08T05:46:54Z",
+  "gate3b": "UNMET: no merge head; reviewed candidate CI3success not final-artifact-head proof",
+  "formal_milestone_passes": null,
+  "delivery": "PARKED draft522 on parked521; no merge authorized",
+  "human_decisions": [
+    "D-WORLD-105",
+    "D-WORLD-110",
+    "D-WORLD-111",
+    "D-WORLD-112",
+    "D-WORLD-113"
+  ],
+  "review_flags": [
+    "Round1actualPASS100WITHHELD for falseallfive<=800/noexecbits and unsupported own31claim; errors retained",
+    "Round2actualPASS100WITHHELD for main6056inherited-only and baselineCLIlogstageSHA misattribution; alloriginalsretained",
+    "Round2outputscopeviolation: sevenpersistentcomparisonhelpers in .tmp; neveracceptedcandidatepayload orframework, paths/hashes retained below",
+    "Round3reportsection6archiveprefixnumerictypo1627608, actualbaseline1625708: parentreproduced; originalJSONAC2correct; nofourthcall",
+    "Controller/supervisor nativequotausage notmeasured and notzero; actualproviderusage recorded separately",
+    "Originalround1evaluator-comparison-receipt.json lacks finalLF(3566bytes),0CR/0trailingwhitespace; originalretainedbyteexact, nofourthcall/noinlinefix; parentownsartifactdisposition",
+    "Round3 pre-ack Bash refused by protocolhook; ack preceded successful measurements"
+  ],
+  "post_review_scope": "only factual annotations in own368 STATUS/dashboard/log, original judge/supervisor receipts and current368 controller receipts; permitted by AC5, no material edits",
+  "copied_originals": [
+    {
+      "path": "design_docs/verification/world-iter368/evaluator-comparison-receipt.json",
+      "sha256": "6931b9fda4e559d9f2dc1411f77d9228f65e99c6191c9282b22507a3b0d0ab39",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/evaluator-report.md",
+      "sha256": "b791df794c605e3d36f31298cd786ca67904f5351eb8c38e2e97b60cb2a16639",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/evaluator-result.json",
+      "sha256": "453e2b08f1347bdda7856712b079057902744dcb7cc5e2f8694e0c88fe545290",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/evaluator-round2-comparison-receipt.json",
+      "sha256": "f4e23eca7858a5cdd38ced37653b0aea13a0dd64db97bc05ce29a26439d60513",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/evaluator-round2-report.md",
+      "sha256": "181f4813efc8d1f1a3d0556c3223ac25d8cf7facbc74434a19402d8e12f924b3",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/evaluator-round2-result.json",
+      "sha256": "09b4945a9629cf281b67c25368a657ccd3ca737b59f21feb8f0627a5534d6f52",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/evaluator-round3-comparison-receipt.json",
+      "sha256": "81b7e1e77199d809dadc2283a9974bd7722747b39bde28a44e767cc1e0a678c3",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/evaluator-round3-report.md",
+      "sha256": "412b3b871dd89a79771e5db72f54afcdf10ac74b6f23e9479fa60d7e5f3aaf83",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/evaluator-round3-result.json",
+      "sha256": "126fcc3e2b5a99358ffa4c68516fcc5bb965cd8a815f05f24e41678284e8d3ec",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/evaluator-supervisor-final.json",
+      "sha256": "e2532d33659260359e7e0e499ecdeac423a13e31ae9d4920b448dd81672621b5",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/round1-supervisor.json",
+      "sha256": "1cc193915c12bcc79cf77168e6eab7562a913b18b884f0077a011ebbb84883fc",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/round2-supervisor.json",
+      "sha256": "934ea2b8b05e7cf67c0a1d087b5104947f7b6a04c58c1163944551253e4abcfe",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/round2-tool-inventory.json",
+      "sha256": "ca7b258e19f3c1bc04ceea92ff24e059bb30f505cb9a9fd1788413f335b7bdc5",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/round3-tool-inventory.json",
+      "sha256": "94f746a57cf549e2563060cc50f707f256845859245574a3fc3d9c0f51d1b886",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/round2-estimate.json",
+      "sha256": "c1610ab3177c943122f89b62447b8bb5f52a1b2e4b46b44108e998b5079a4931",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/round2-estimate-revision.json",
+      "sha256": "be3023e82343efd1f98edcb9e38a4f2be692f8f070f6b8ee1a259ae727842826",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/round3-estimate.json",
+      "sha256": "aa0e8e8660ee6ec894c1d077981f5af408b5cdb7a8edda4e8170c2205b1d10ac",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/controller-evaluator-accounting-check.json",
+      "sha256": "0c7e56d4fc58b3b7c7d72c191b5bc569cf74a683b058bee2630cc016d4973a8e",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/controller-driver-canonical-check.json",
+      "sha256": "7aea4e4720775994f82879304038413f9cf12cbdbbd836da9e4c8cc8f2802ebb",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/controller-final-ledger-check.json",
+      "sha256": "4529a48cc8b7784e723c761685fb1ea7d600bcf0a831fe8b7a235e589acc0a5a",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/controller-review-claims-reproduced.json",
+      "sha256": "d4984ae276313be7f988c50d7a3e783e60c13c7df9ccc7e2913db9bef8a47a69",
+      "original_bytes_preserved": true
+    },
+    {
+      "path": "design_docs/verification/world-iter368/controller-round3-typo-reproduced.json",
+      "sha256": "0e367f15acc96c47b08d6eea2d71818189df36e325c125307590c1498d4d3ce8",
+      "original_bytes_preserved": true
+    }
+  ],
+  "final_record_doc_sha256": {
+    "design_docs/world-mission.md": "af242e0d0a7a26c39cd305e53dcfcc02efe4ff07c66aa71e95a7589babd3d1f2",
+    "design_docs/world-mission-log.md": "469f7bbd89fe4bdb315521267d7a61213b1e051254a5a25ba4f7d11edc7067b8",
+    "design_docs/world-mission-dashboard.md": "753c375a993a2ea544b26799723fa1a94807b0b425fea4f72daad44fb4be42af"
+  },
+  "retro_route": "existing attended backlog258/D109 for review/instrument friction; no sharedskill/harness/policy changes; no idle fingerprint due degraded fire",
+  "telemetry_chain": "2a15d261-54f1-4996-946a-6fd66fd74eb0",
+  "approval_message_verified": "inbox_1794117033099_d0ef5f9b",
+  "parent_check_instrument_correction": "rotation-rule header excluded from canonical dated STATUS count; actual3 retained"
+}
