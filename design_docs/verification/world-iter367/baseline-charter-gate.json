@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "go",
+    "test",
+    "./host/verifygate",
+    "-run",
+    "^TestMissionConfigRealCharter$",
+    "-count=1"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.world-iter367-baseline",
+  "rc": 0,
+  "stdout": "ok  \tgithub.com/sunholo-data/ailang-world/host/verifygate\t0.368s\n",
+  "stderr": ""
+}

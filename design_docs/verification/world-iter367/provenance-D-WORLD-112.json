@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "bash",
+    "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_ledger_provenance.sh",
+    "--id",
+    "D-WORLD-112",
+    "--file",
+    "design_docs/world-mission.md"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+  "rc": 0,
+  "safe_lines": [],
+  "safe_stderr": ""
+}

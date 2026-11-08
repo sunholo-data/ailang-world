@@ -1,0 +1,78 @@
+{
+  "origin_ref": "252680e1beb4e6cf1709a010cc1c45838b91b9f8",
+  "resolved": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control",
+  "cwd_copy": false,
+  "files": [
+    {
+      "file": "SKILL.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/ci-health.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/codex-lane-false-greens.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/gate-0-preflight.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/gate-1-observe.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/gate-2-pick.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/gate-3-route.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/gate-3-triage.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/gate-3b-ci-green.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/gate-4-record.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/gate-5-retro.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/ref-drift.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/role-spawn-routing.md",
+      "same": true,
+      "rc": 0
+    },
+    {
+      "file": "resources/verification-protocol.md",
+      "same": true,
+      "rc": 0
+    }
+  ],
+  "negative_control": true
+}

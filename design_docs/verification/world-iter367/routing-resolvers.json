@@ -1,0 +1,17 @@
+{
+  "designer": {
+    "rc": 0,
+    "result": "recipe codex:gpt-6.1-sol declared:provider-pin",
+    "stderr": ""
+  },
+  "executor": {
+    "rc": 0,
+    "result": "recipe codex:gpt-6.1-sol declared:provider-pin",
+    "stderr": ""
+  },
+  "evaluator": {
+    "rc": 0,
+    "result": "recipe pi:openrouter/minimax/minimax-m3 declared:provider-pin",
+    "stderr": ""
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "at": "2026-11-08T01:02:18.562292+00:00",
+  "command": [
+    "go",
+    "test",
+    "./host/verifygate",
+    "-run",
+    "^TestMissionConfigRealCharter$",
+    "-count=1"
+  ],
+  "inspection": [
+    "host/verifygate/mission_config_gate_test.go:191 invokes scripts/verify_go.sh --mission-config-check with bounded10s process-group cleanup",
+    "scripts/verify_go.sh:142-173 validates scripts/mission_decisions.sh and World charter; no product suite in this mode",
+    "privacy command scripts/check_no_personal_email.sh performs scoped read-only scan; no sentinel shared-state writes"
+  ],
+  "environment": "controller darwin/arm64 outside sandbox; no TMPDIR/GOTMPDIR override; no full product suite or third product retry"
+}

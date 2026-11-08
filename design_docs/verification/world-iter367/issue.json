@@ -1,0 +1,17 @@
+{
+  "argv": [
+    "gh",
+    "issue",
+    "view",
+    "449",
+    "--repo",
+    "sunholo-data/ailang-world",
+    "--json",
+    "number,state,createdAt,comments",
+    "--jq",
+    "{number,state,createdAt,comment_count:(.comments|length),allowlisted:[.comments[]|select(.author.login==\"MarkEdmondson1234\")|{id,createdAt,body}]}"
+  ],
+  "rc": 0,
+  "stdout": "{\"allowlisted\":[],\"comment_count\":38,\"createdAt\":\"2026-11-02T08:01:35Z\",\"number\":449,\"state\":\"OPEN\"}\n",
+  "stderr": ""
+}

@@ -1,0 +1,142 @@
+{
+  "role": "designer",
+  "iteration": 367,
+  "agent_api_model_override": "unavailable; actual pinned provider CLI supervised by Agent",
+  "lane": "codex:gpt-6.1-sol",
+  "resolver": "recipe codex:gpt-6.1-sol declared:provider-pin",
+  "subscription_key_stripped": true,
+  "private_raw_dir": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-designer-l5_4skwp",
+  "probe": {
+    "name": "probe",
+    "returncode": 0,
+    "wall_seconds": 2.389,
+    "timed_out": false,
+    "model_header_present": true,
+    "footer_literal": "11.069",
+    "footer_tokens": 11069,
+    "command": [
+      "/opt/homebrew/bin/codex",
+      "exec",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "--sandbox",
+      "workspace-write",
+      "-C",
+      "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+      "<prompt sha256:6f8058c844175af587d33188928a414713ad251b16fa0507ecadb77c51b33782>"
+    ],
+    "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-designer-l5_4skwp/probe.log"
+  },
+  "actual": {
+    "name": "actual-attempt0",
+    "returncode": 0,
+    "wall_seconds": 233.857,
+    "timed_out": false,
+    "model_header_present": true,
+    "footer_literal": "122.447",
+    "footer_tokens": 122447,
+    "command": [
+      "/opt/homebrew/bin/codex",
+      "exec",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "--sandbox",
+      "workspace-write",
+      "-C",
+      "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+      "--add-dir",
+      "/Users/voightkampff/Library/Caches/go-build",
+      "--add-dir",
+      "/Users/voightkampff/go/pkg/mod",
+      "-o",
+      "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-designer-l5_4skwp/actual-final.txt",
+      "<prompt sha256:ab51dcecf1e4a67aa78b49b04734f2993ceae2c80632d915da82d5fe396b52ce>"
+    ],
+    "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-designer-l5_4skwp/actual-attempt0.log"
+  },
+  "attempts": [
+    {
+      "name": "probe",
+      "returncode": 0,
+      "wall_seconds": 2.389,
+      "timed_out": false,
+      "model_header_present": true,
+      "footer_literal": "11.069",
+      "footer_tokens": 11069,
+      "command": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--model",
+        "gpt-6.1-sol",
+        "-c",
+        "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+        "--sandbox",
+        "workspace-write",
+        "-C",
+        "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+        "<prompt sha256:6f8058c844175af587d33188928a414713ad251b16fa0507ecadb77c51b33782>"
+      ],
+      "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-designer-l5_4skwp/probe.log"
+    },
+    {
+      "name": "actual-attempt0",
+      "returncode": 0,
+      "wall_seconds": 233.857,
+      "timed_out": false,
+      "model_header_present": true,
+      "footer_literal": "122.447",
+      "footer_tokens": 122447,
+      "command": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--model",
+        "gpt-6.1-sol",
+        "-c",
+        "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+        "--sandbox",
+        "workspace-write",
+        "-C",
+        "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+        "--add-dir",
+        "/Users/voightkampff/Library/Caches/go-build",
+        "--add-dir",
+        "/Users/voightkampff/go/pkg/mod",
+        "-o",
+        "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-designer-l5_4skwp/actual-final.txt",
+        "<prompt sha256:ab51dcecf1e4a67aa78b49b04734f2993ceae2c80632d915da82d5fe396b52ce>"
+      ],
+      "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-designer-l5_4skwp/actual-attempt0.log"
+    }
+  ],
+  "adaptations": [],
+  "input_hashes": {
+    "CLAUDE.md": "68f6fd16ede4c598a93590c3de20a2fc661a128c241eed747fab4d68d74a9141",
+    "design_docs/coding-standards.md": "a6951ab19b301c821dabc6eadc5061e6dded79c8af749ae080454e50e80239e4",
+    "design_docs/DESIGN.md": "a8b87a7ca9cec01676d6d6eb00f2116bd60114638df4bab286189a46dfa17836",
+    "design_docs/world-mission.md": "8888e17aa5a81f97b65b320c947783ae95c90759435846a91dbdd93cc238dcf3",
+    "design_docs/world-mission-status-archive.md": "2bedadd7e79e9befa2b141d35049ea3f82b9dc26aea44eab3478f8f17100569b",
+    "design_docs/world-mission-log.md": "922525f32cdb93ef76ca779b2ce639bb60f388e99634dc5661578eb2939c4d6a",
+    "design_docs/world-mission-log-archive.md": "32c90181c7c0ad86e8981e1992c3dfd2f57a4f5a43dd6de022d9eaa5b22bbcce",
+    "design_docs/world-mission-index.md": "4dd52a91b130d330ccb9e12da15feb537fbc6f452673610aa640eedbe860669c",
+    "design_docs/world-mission-dashboard.md": "4700a0cd64ef98da2efde1a3f4ec67aed610ae6bb07b321c3f6960a6739d9fe2",
+    "design_docs/verification/world-iter366/record-design.md": "cb625155d298e01d53f6835e9df6e834a8def626910ea4a32afd43689ba829d2"
+  },
+  "input_drift": [],
+  "artifacts": {
+    "design_docs/verification/world-iter367/record-design.md": {
+      "exists": true,
+      "bytes": 10018
+    },
+    "design_docs/verification/world-iter367/designer-receipt.json": {
+      "exists": true,
+      "bytes": 6713
+    }
+  },
+  "completion": "actual terminal result; no future waits",
+  "usage_note": "footer parses grouping separators; unreported usage stays null",
+  "metered_cost_usd": null
+}

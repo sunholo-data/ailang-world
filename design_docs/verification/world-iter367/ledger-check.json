@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "bash",
+    "scripts/mission_decisions.sh",
+    "--check"
+  ],
+  "rc": 0,
+  "stdout": "decision ledger valid: 99 rows\n",
+  "stderr": ""
+}

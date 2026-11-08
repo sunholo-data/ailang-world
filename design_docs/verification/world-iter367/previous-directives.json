@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "bash",
+    "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_directives.sh",
+    "--issue",
+    "366",
+    "--watermark-file",
+    "/Users/voightkampff/.ailang/state/mission-366-last-seen",
+    "--repo",
+    "sunholo-data/ailang-world"
+  ],
+  "rc": 0,
+  "stdout": "",
+  "stderr": "\u001b[1;33m\u26a0 mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-366-last-seen (bare timestamp, no processed ids, written before #981) \u2014 the first --mark upgrades it\u001b[0m\n\u001b[1;33mmission_directives: #366 \u2014 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 35 comments; the rest are public feedback, never directives)\u001b[0m\n"
+}

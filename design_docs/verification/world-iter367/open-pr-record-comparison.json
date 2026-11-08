@@ -1,0 +1,7 @@
+{
+  "branch": "origin/sprint/world-iter362-row256",
+  "rc": 0,
+  "newest_log_heading": "## 360 \u2014 2026-11-06 \u2014 row 255 built: a failed workspace-exec call records, returns and logs one bounded failure line; lazy store schema mark guards older binaries; design r3 via a controller carve-out; judge PASS 88 [PRODUCT]",
+  "base_newest": 366,
+  "disposition": "Open PR515 belongs to World product row256, remains human-parked; no newer record supersedes366."
+}

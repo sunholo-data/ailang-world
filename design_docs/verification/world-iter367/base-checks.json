@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "gh",
+    "api",
+    "repos/sunholo-data/ailang-world/commits/ad13d835345efc2b78308817cc940f73a987165d/check-runs",
+    "--jq",
+    "{total_count,check_runs:[.check_runs[]|{name,status,conclusion,head_sha,html_url}]}"
+  ],
+  "rc": 0,
+  "stdout": "{\"check_runs\":[{\"conclusion\":\"success\",\"head_sha\":\"ad13d835345efc2b78308817cc940f73a987165d\",\"html_url\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42417583106/job/128538897729\",\"name\":\"ailang-code verify gate\",\"status\":\"completed\"},{\"conclusion\":\"success\",\"head_sha\":\"ad13d835345efc2b78308817cc940f73a987165d\",\"html_url\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42417583106/job/128538897642\",\"name\":\"go host build + test gate\",\"status\":\"completed\"},{\"conclusion\":\"success\",\"head_sha\":\"ad13d835345efc2b78308817cc940f73a987165d\",\"html_url\":\"https://github.com/sunholo-data/ailang-world/actions/runs/42417583106/job/128538897509\",\"name\":\"go race gate (go test -race, own job)\",\"status\":\"completed\"}],\"total_count\":3}\n",
+  "stderr": ""
+}

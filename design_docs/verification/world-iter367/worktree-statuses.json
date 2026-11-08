@@ -1,0 +1,1253 @@
+{
+  "count": 104,
+  "results": [
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? .claude/worktrees/\n?? .wt-world-iter306-r0/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/claude-501/-Users-voightkampff-dev-sunholo-data-ailang-world/ae6f556a-f500-44de-9966-aae536bf2162/scratchpad/wt-d108",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/private/tmp/claude-501/-Users-voightkampff-dev-sunholo-data-ailang-world/ae6f556a-f500-44de-9966-aae536bf2162/scratchpad/wt-d109",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-final-2026-10-14/repo",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-final-2026-10-15/repo",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-final/repo",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-smoke-2026-10-15/repo",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/floor-tune/repo",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/row114/wt",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/row182-e2e/repo",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/repo",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610271234",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610271506",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": " M README.md\n?? design_docs/planned/w-worldd-home-service.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610280901",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": " M design_docs/planned/w-all-agent-work-through-world.md\n M design_docs/verification/world-dogfood/friction.md\n M design_docs/world-mission.md\n?? design_docs/planned/w-episode-finish.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610281352",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": " M design_docs/verification/world-dogfood/friction.md\n M design_docs/world-mission.md\n?? design_docs/planned/w-episode-one-command.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/trial-2026-10-16/ws/h2610281541",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter350-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter351-landed",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter351-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter352-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter353-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter354-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter355-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter356-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter357-landed",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter357-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter358-landed",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter358-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter363-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? .snap/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter364-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? .snap/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-iter365-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter365/.snap/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-wt/iter239-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/state/world-wt/iter241-row153",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/world-ws/world-2611021047",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/.ailang/world-ws/worldd-2611031015",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.base-world-iter362",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.base-world-iter365",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter208",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? eval-report-iter208.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter215-preflight",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? evaluator-administrative-recovery-report.md\n?? evaluator-r2-design.md\n?? evaluator-r2-evidence.json\n?? evaluator-readiness.txt\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter217",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter217/native-astra-quorum-r1.json\n?? design_docs/verification/world-iter217/native-astra-quorum-r1.md\n?? design_docs/verification/world-iter217/native-sol6-quorum-r1.json\n?? design_docs/verification/world-iter217/native-sol6-quorum-r1.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter217-r2",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter217/native-astra-quorum-r2.json\n?? design_docs/verification/world-iter217/native-astra-quorum-r2.md\n?? design_docs/verification/world-iter217/native-sol6-quorum-r2.json\n?? design_docs/verification/world-iter217/native-sol6-quorum-r2.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter218",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? record-eval-218-r1.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter267",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter267/evaluator-r1.json\n?? design_docs/verification/world-iter267/evaluator-r1.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter268/evaluator-r1.json\n?? design_docs/verification/world-iter268/evaluator-r1.md\n?? design_docs/verification/world-iter268/evaluator-r1/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r2",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter268/evaluator-r2.json\n?? design_docs/verification/world-iter268/evaluator-r2.md\n?? design_docs/verification/world-iter268/evaluator-r2/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-r3",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter268/evaluator-r3.json\n?? design_docs/verification/world-iter268/evaluator-r3.md\n?? design_docs/verification/world-iter268/evaluator-r3/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-record-r1",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter268/record-evaluator-r1.json\n?? design_docs/verification/world-iter268/record-evaluator-r1.md\n?? design_docs/verification/world-iter268/record-evaluator-r1/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter268-record-r2",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter268/record-evaluator-r2.json\n?? design_docs/verification/world-iter268/record-evaluator-r2.md\n?? design_docs/verification/world-iter268/record-evaluator-r2/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter281-fallback",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? .judge/\n?? design_docs/verification/world-iter281/evaluator-r1.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter296",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter302",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? evaluator-r1.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter302-r2",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? evaluator-r2.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter303-recovery",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? evaluator-recovery-evidence/\n?? evaluator-recovery-report.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter313",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter313/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter313-r2",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter313/evaluator-r2.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter362/record-evaluator/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter362-row256-r1",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter362/controller-evaluation-brief.json\n?? design_docs/verification/world-iter362/controller-full-go-attempt1-summary.json\n?? design_docs/verification/world-iter362/controller-m1-verify-ail-candidate.txt\n?? design_docs/verification/world-iter362/controller-m1-verify-go-candidate-attempt2.txt\n?? design_docs/verification/world-iter362/controller-m1-verify-go-candidate.txt\n?? design_docs/verification/world-iter362/evaluator-r1/\n?? design_docs/verification/world-iter362/paired-broker-candidate-100.txt\n?? design_docs/verification/world-iter362/paired-broker-pristine-100.txt\n?? design_docs/verification/world-iter362/pr-ci-76553889.json\n?? design_docs/verification/world-iter362/pristine-publish-request-observation-400.txt\n?? design_docs/verification/world-iter362/publish-counter-observation.diff.txt\n?? design_docs/verification/world-iter362/publish-observation-restoration.json\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter363",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter363/evaluator/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter364",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter364/evaluator/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.eval-world-iter365",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter365/evaluator-report.md\n?? design_docs/verification/world-iter365/evaluator-result.json\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.exec-world-iter303-recovery",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? executor-recovery-evidence/\n?? executor-recovery-report.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.exec-world-iter362-row256",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter362/executor-codex.txt\n?? design_docs/verification/world-iter362/executor-pid.json\n?? design_docs/verification/world-iter362/executor-probe-pid.json\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.judge-wt-iter337",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? evaluator-r1.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.probe-world-iter362-quorum",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": " M cmd/ailang-worldd/doctor.go\n M cmd/ailang-worldd/doctor_hosts.go\n M docs/QUICKSTART.md\n M host/broker/exec_probe.go\n M host/broker/exec_startup.go\n M host/daemon/daemon.go\n M host/daemon/workspace.go\n?? cmd/ailang-worldd/doctor_exec_profiles_test.go\n?? host/broker/exec_probe_out_of_time_test.go\n?? host/daemon/startup_callers_test.go\n?? host/daemon/startup_under_load_test.go\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.record-world-iter362",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter362/record-merge-ci-565609ab.json\n?? design_docs/verification/world-iter362/record-pr-ci-6068ed30.json\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter366-baseline",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter366-evaluator",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? .snap/\n?? design_docs/verification/world-iter366/evaluator-report.md\n?? design_docs/verification/world-iter366/evaluator-result.json\n?? design_docs/verification/world-iter366/evaluator-review-supervisor-receipt.json\n?? design_docs/verification/world-iter366/evaluator-supervisor-r2-receipt.json\n?? design_docs/verification/world-iter366/evaluator-supervisor-receipt.json\n?? design_docs/verification/world-iter366/evaluator-usage-capture-check.json\n?? design_docs/verification/world-iter366/worktree-census.txt\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter366-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? .snap/\n?? design_docs/verification/world-iter366/worktree-census.txt\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter367/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter182",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? .snap/\n?? .walk-scratch/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter198-design",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": " M .github/workflows/ci.yml\n M docs/SELF_MOD_PUBLISH.md\n M host/verifygate/module_manifest_gate_test.go\n M packages/world-core/world/contracts.ail\n M packages/world-core/world/logepoch.ail\n M packages/world-core/world/transitions.ail\n M scripts/verify_ail.sh\n M scripts/verify_world_package.sh\n M scripts/world_package_ready_packet.golden.json\n M world/contracts.ail\n M world/logepoch.ail\n M world/transitions.ail\n?? .iteration198/\n?? design_docs/planned/w-kernel-exports-carry-no-contract.md\n?? scripts/__pycache__/\n?? scripts/check_world_contract_quality.py\n?? scripts/test_kernel_contracts.py\n?? scripts/test_world_contract_history.py\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter208",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? .snap/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter217/product-evaluator-independent.json\n?? design_docs/verification/world-iter217/product-evaluator-independent.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval-r2",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter217/evaluator-product-round2/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-product-eval-r3-pi",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter217/controller-final-profiles-terminal.json\n?? design_docs/verification/world-iter217/evaluator-product-round3/\n?? design_docs/verification/world-iter217/round3-final-verify-ail.json\n?? design_docs/verification/world-iter217/round3-final-verify-ail.log\n?? design_docs/verification/world-iter217/round3-final-verify-ail.log.raw.b64\n?? design_docs/verification/world-iter217/round3-final-verify-go.json\n?? design_docs/verification/world-iter217/round3-final-verify-go.log\n?? design_docs/verification/world-iter217/round3-final-verify-go.log.raw.b64\n?? design_docs/verification/world-iter217/round3-full-profile-raw-manifest.json\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter217-record-eval",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter217/evaluator-record-independent.json\n?? design_docs/verification/world-iter217/evaluator-record-independent.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter220/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-eval",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter220/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter220-record-eval",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter220/record-delta-evaluation.json\n?? design_docs/verification/world-iter220/record-delta-evaluation.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter222-evaluator",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter222/independent-ail.log\n?? design_docs/verification/world-iter222/independent-evaluation.json\n?? design_docs/verification/world-iter222/independent-evaluation.md\n?? design_docs/verification/world-iter222/independent-go.log\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter222-evaluator-delta",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter222/independent-delta-evaluation.json\n?? design_docs/verification/world-iter222/independent-delta-evaluation.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter249-eval",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter249/independent-gate-review.md\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter307-row150-m7c2a",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? snap/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter337-landed",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter337-row239",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-landed",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter338-row240",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter361-row256",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? .design-scratch/\n?? design_docs/planned/w-daemon-startup-under-load.md\n?? design_docs/planned/w-daemon-startup-under-load.patch\n?? design_docs/verification/world-iter361/\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter362-row256",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? design_docs/verification/world-iter362/controller-premise.txt\n?? design_docs/verification/world-iter362/designer-codex.txt\n?? design_docs/verification/world-iter362/main-before-roles-sha256.json\n?? design_docs/verification/world-iter362/planner-codex.txt\n",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.ailang/state/sol-pilot-2026-10-12/wt",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a3e42abd198ce4e0c",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a57e72f781b921db9",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a5fa785b78bd257d9",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-a6d8f8eb391612df9",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aa124cbfa7ef55ceb",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aa3c8d42aed503afc",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-ad349fba6d3f1cee4",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-add1db00be9c6cfa7",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-ae2e5875bae5b36aa",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aef12c361b7813e4a",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aefcb5933188c1497",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-aeffab2f36349e1da",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.claude/worktrees/agent-afa348be34236d498",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter306-r0",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=normal"
+      ],
+      "rc": 0,
+      "stdout": "?? cmd/ailang-worldd/zz_iter305_bottoms_test.go\n",
+      "stderr": ""
+    }
+  ]
+}

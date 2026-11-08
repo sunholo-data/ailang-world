@@ -1,0 +1,6 @@
+Created both evidence files, 83 combined lines:
+
+- [record-design.md](design_docs/verification/world-iter367/record-design.md)
+- [designer-receipt.json](design_docs/verification/world-iter367/designer-receipt.json)
+
+Design requires six-file M1 scope with rotation at 41 entries. All 15 consumed inputs remain unchanged; tracked diff is empty. Product authority is preserved; acceptance gates remain future obligations.

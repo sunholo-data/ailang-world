@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "bash",
+    "/Users/voightkampff/dev/sunholo-data/ailang/scripts/mission_directives.sh",
+    "--issue",
+    "449",
+    "--watermark-file",
+    "/Users/voightkampff/.ailang/state/mission-449-last-seen",
+    "--repo",
+    "sunholo-data/ailang-world"
+  ],
+  "rc": 0,
+  "stdout": "",
+  "stderr": "\u001b[1;33m\u26a0 mission_directives: watermark file /Users/voightkampff/.ailang/state/mission-449-last-seen is absent \u2014 reading every allowlisted comment on #449; the first --mark creates it\u001b[0m\n\u001b[1;33mmission_directives: #449 \u2014 0 directive(s) from [MarkEdmondson1234] since 1970-01-01T00:00:00Z inclusive, 0 new, 0 already processed (of 38 comments; the rest are public feedback, never directives)\u001b[0m\n"
+}

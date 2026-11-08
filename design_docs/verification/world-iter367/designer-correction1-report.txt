@@ -1,0 +1,8 @@
+Corrected only:
+
+- [record-design.md](/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/record-design.md)
+- [designer-receipt.json](/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/designer-receipt.json)
+
+Replaced manual rotation/index editing with future fleet CLI rotation through the proven ephemeral registry and source-backed index regeneration. Removed unmeasured separator assumptions.
+
+JSON and whitespace checks passed; 17 inputs, all originals, and the supervisor receipt remain unchanged. No rotation or acceptance verdict was performed.

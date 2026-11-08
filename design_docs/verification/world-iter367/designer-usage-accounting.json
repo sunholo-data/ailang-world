@@ -1,0 +1,119 @@
+{
+  "role": "designer",
+  "iteration": 367,
+  "lane": "codex:gpt-6.1-sol",
+  "session": "01a1b8a4-c83f-75c2-b282-5ca5c6454980",
+  "rollout": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T01-52-49-01a1b8a4-c83f-75c2-b282-5ca5c6454980.jsonl",
+  "source_filter": "Only event_msg/token_count info used; no prompts/tool payloads banked",
+  "instrument": "Native CLI footer = cumulative session total_tokens minus cached_input_tokens (uncached input + output); three stage footer/source event matches verified. Resumed footers are not additive.",
+  "stage_matches": [
+    {
+      "stage": "initial",
+      "footer": 122447,
+      "source_event": {
+        "timestamp": "2026-11-08T00:56:42.546Z",
+        "total_token_usage": {
+          "input_tokens": 1172913,
+          "cached_input_tokens": 1060352,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 9886,
+          "reasoning_output_tokens": 1723,
+          "total_tokens": 1182799
+        },
+        "uncached_plus_output": 122447
+      }
+    },
+    {
+      "stage": "cli_correction",
+      "footer": 135576,
+      "source_event": {
+        "timestamp": "2026-11-08T00:59:44.572Z",
+        "total_token_usage": {
+          "input_tokens": 1812531,
+          "cached_input_tokens": 1691392,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 14437,
+          "reasoning_output_tokens": 2706,
+          "total_tokens": 1826968
+        },
+        "uncached_plus_output": 135576
+      }
+    },
+    {
+      "stage": "boundary_correction",
+      "footer": 144889,
+      "source_event": {
+        "timestamp": "2026-11-08T01:01:44.091Z",
+        "total_token_usage": {
+          "input_tokens": 2224688,
+          "cached_input_tokens": 2096896,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 17097,
+          "reasoning_output_tokens": 3114,
+          "total_tokens": 2241785
+        },
+        "uncached_plus_output": 144889
+      }
+    }
+  ],
+  "incremental_author_footers": [
+    122447,
+    13129,
+    9313
+  ],
+  "separate_probes": [
+    {
+      "stage": "probe",
+      "session": "01a1b8a4-be47-72a3-bbe6-707a6fb49716",
+      "rollout": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T01-52-46-01a1b8a4-be47-72a3-bbe6-707a6fb49716.jsonl",
+      "footer": 11069,
+      "source_event": {
+        "timestamp": "2026-11-08T00:52:48.757Z",
+        "total_token_usage": {
+          "input_tokens": 18232,
+          "cached_input_tokens": 7168,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 18237
+        },
+        "uncached_plus_output": 11069
+      }
+    },
+    {
+      "stage": "correction-probe",
+      "session": "01a1b8a9-18c3-72d1-a3ec-429a912aef59",
+      "rollout": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T01-57-32-01a1b8a9-18c3-72d1-a3ec-429a912aef59.jsonl",
+      "footer": 11069,
+      "source_event": {
+        "timestamp": "2026-11-08T00:57:34.775Z",
+        "total_token_usage": {
+          "input_tokens": 18232,
+          "cached_input_tokens": 7168,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 18237
+        },
+        "uncached_plus_output": 11069
+      }
+    }
+  ],
+  "quota_tokens": 167027,
+  "metered_cost_usd": 0,
+  "billing_provenance": "Subscription CLI with OPENAI_API_KEY removed; no metered provider call",
+  "runtime_seconds": 404.663,
+  "failed_transport": {
+    "role": "designer correction supervisor",
+    "error": "Error: thread/resume: thread/resume failed: no rollout found for thread id 01a1b8a7-17d9-7087-8904-41b32cf743a2 (code -32600)",
+    "rc": 1,
+    "seconds": 0.412,
+    "cause": "Supervisor mistyped resume UUID; no provider model header or usage",
+    "fallback": "Same lane; resumed exact header-derived session UUID; original failed receipt retained"
+  },
+  "controls": {
+    "session_token_events": 23,
+    "author_footer_matches": 3,
+    "separate_probe_footer_matches": 2
+  }
+}

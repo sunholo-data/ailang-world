@@ -1,0 +1,15 @@
+{
+  "argv": [
+    "gh",
+    "pr",
+    "view",
+    "515",
+    "--repo",
+    "sunholo-data/ailang-world",
+    "--json",
+    "number,state,isDraft,headRefOid,headRefName,mergeable,mergeStateStatus"
+  ],
+  "rc": 0,
+  "stdout": "{\"headRefName\":\"sprint/world-iter362-row256\",\"headRefOid\":\"7655388936b80bea9c4843f0a2e0abc085e52c0f\",\"isDraft\":true,\"mergeStateStatus\":\"UNKNOWN\",\"mergeable\":\"UNKNOWN\",\"number\":515,\"state\":\"OPEN\"}\n",
+  "stderr": ""
+}

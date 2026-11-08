@@ -1,0 +1,23 @@
+{
+  "derive": {
+    "argv": [
+      "bash",
+      "/Users/voightkampff/.ailang-driver-pin/world/tools/launchd/derive-planner-lane.sh",
+      "/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/record-design.md"
+    ],
+    "rc": 0,
+    "stdout": "codex:gpt-6.1-sol declared:planner-lane-default-pin\n",
+    "stderr": ""
+  },
+  "resolve": {
+    "argv": [
+      "bash",
+      "/Users/voightkampff/.ailang-driver-pin/world/tools/launchd/resolve-role-spawn.sh",
+      "planner",
+      "/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/record-design.md"
+    ],
+    "rc": 0,
+    "stdout": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin\n",
+    "stderr": ""
+  }
+}

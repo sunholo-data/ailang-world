@@ -1,0 +1,36 @@
+{
+  "at": "2026-11-08T00:52:24.086045+00:00",
+  "base": "ad13d835345efc2b78308817cc940f73a987165d",
+  "base_read_at": "2026-11-08T00:49:57Z",
+  "kill_switch": false,
+  "billing": "CLEAN from explicit specific presence test",
+  "routing_note": "lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `pi:openrouter/minimax/minimax-m3`",
+  "clause_map": {
+    "1": "MET (inherited ratified assessment, not remeasured)",
+    "2": "MET (inherited ratified assessment, not remeasured)",
+    "3": "MET (inherited ratified assessment, not remeasured)",
+    "4": "MET (inherited ratified assessment, not remeasured)",
+    "5": "MET (inherited ratified assessment, not remeasured)",
+    "6": "MET (inherited ratified assessment, not remeasured)",
+    "7": "MET (inherited ratified assessment, not remeasured)"
+  },
+  "next": "ADMIN only; row256 human parked FAIL85/local criterion UNMET; no autonomous product skip",
+  "release_probe": {
+    "new_A1_subjects": 3,
+    "N2d_N4a_subjects": 0,
+    "positive_control_N2c": 1
+  },
+  "worktrees": 104,
+  "retro": {
+    "harness_last20": 0,
+    "last3_product_landings": [
+      "360:none",
+      "359:none",
+      "340:none"
+    ],
+    "routable_unmet": 0
+  },
+  "skill_currency": "14/14 match V1 origin/dev; no CWD copy",
+  "weekly_boundary": "2026-11-09T07:00:00+01:00; not due",
+  "agent_interface": "required four Agent supervisors execute actual resolved provider recipes; no API model override"
+}

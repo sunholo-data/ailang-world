@@ -1,0 +1,76 @@
+{
+  "role": "designer",
+  "iteration": 367,
+  "lane": "codex:gpt-6.1-sol",
+  "kind": "authorized same-doc correction; reused original actual session",
+  "session": "01a1b8a4-c83f-75c2-b282-5ca5c6454980",
+  "private_raw_dir": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-designer-l5_4skwp",
+  "probe": {
+    "name": "correction-probe",
+    "returncode": 0,
+    "wall_seconds": 3.172,
+    "timed_out": false,
+    "model_header_present": true,
+    "footer_literal": "11.069",
+    "footer_tokens": 11069,
+    "command": [
+      "/opt/homebrew/bin/codex",
+      "exec",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "--sandbox",
+      "workspace-write",
+      "-C",
+      "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+      "<prompt sha256:6f8058c844175af587d33188928a414713ad251b16fa0507ecadb77c51b33782>"
+    ],
+    "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-designer-l5_4skwp/correction-probe.log"
+  },
+  "actual": {
+    "name": "correction-boundary-actual",
+    "returncode": 0,
+    "wall_seconds": 62.209,
+    "timed_out": false,
+    "model_header_present": true,
+    "footer_literal": "144.889",
+    "footer_tokens": 144889,
+    "command": [
+      "/opt/homebrew/bin/codex",
+      "exec",
+      "resume",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "-o",
+      "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-designer-l5_4skwp/correction-boundary-final.txt",
+      "01a1b8a4-c83f-75c2-b282-5ca5c6454980",
+      "<prompt sha256:b30106f1bd7f5222df48ad4c8fdc4c26b73eee6ea5a9015468cc905058e40424>"
+    ],
+    "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-designer-l5_4skwp/correction-boundary-actual.log"
+  },
+  "earlier_failed_attempt": {
+    "receipt": "designer-correction-supervisor-receipt.json",
+    "rc": 1,
+    "wall_seconds": 0.412,
+    "cause": "Supervisor typed wrong session UUID; actual no-rollout error, not lane quota/capability failure; corrected UUID read directly from original header-derived file"
+  },
+  "reason": "Controller-measured rotate.go notice/boundary-LF normalization; replace inherited raw-prefix acceptance with exact header/body conservation and source-backed multiset coverage.",
+  "original_hashes": {
+    "designer-original-record-design.md": "c005a35f98c1c8cc2b9e268da69aa5a8413432658ae06b662b783f86e8ea8b17",
+    "designer-original-receipt.json": "c08f3c147f9d89ed7404a2c938e7c774dfb09056d4bd69e041b3ff9a3e2a414b",
+    "designer-original-report.txt": "48a22f571c4af0dfeed73ae73909121cb57e9958eb25aff77394879c65b9fbf3",
+    "designer-correction1-record-design.md": "e7574c4d3889b1781d270a55941667575ae84942c161d14d3319b5b4ce267326",
+    "designer-correction1-receipt.json": "3d7f7390fa645b6832b751b7406411eea2e832ead30e9ccfd012d4d625e4cd4a",
+    "designer-correction1-report.txt": "365d756bcb599882b50e32c297c0200a86e711ccf68786a072e0faf2632483b9"
+  },
+  "corrected_hashes": {
+    "record-design.md": "bc7c7c047377a9f792cce6345524bfdfc30497501617ee955bb7976f126ea7e0",
+    "designer-receipt.json": "21d79f9ca83693b3672c7debb0a41f9083fcd7fdd0215d7a79f8f30c0e1a4d4a"
+  },
+  "subscription_key_stripped": true,
+  "metered_cost_usd": null,
+  "usage_note": "provider footer tokens with grouping parsed; unreported dollar usage null"
+}

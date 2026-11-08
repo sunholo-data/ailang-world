@@ -1,0 +1,6 @@
+{
+  "ephemeral_registry": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-registry-rtm5mxnc",
+  "source": "/Users/voightkampff/.ailang-driver-pin/world/missions/world.toml",
+  "target": "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+  "initial_json_source_probe": "world.json absent; registry actually TOML, no CLI called against absent source"
+}

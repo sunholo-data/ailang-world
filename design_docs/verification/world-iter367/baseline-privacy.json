@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "bash",
+    "scripts/check_no_personal_email.sh"
+  ],
+  "cwd": "/Users/voightkampff/dev/sunholo-data/.world-iter367-baseline",
+  "rc": 0,
+  "stdout": "\u2713 check-no-personal-email: no personal addresses in the loop-written surface\n",
+  "stderr": ""
+}

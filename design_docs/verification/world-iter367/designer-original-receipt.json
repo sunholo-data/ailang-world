@@ -1,0 +1,38 @@
+{
+  "role":"designer","lane":"codex:gpt-6.1-sol","distinct_from_agent_supervisor":true,
+  "status":"DESIGN_AUTHORED_ADMIN_ONLY","runtime_seconds":null,"tokens":null,"cost_usd":null,
+  "usage_note":"Unknown in child; supervisor captures provider usage separately. No probe claimed.",
+  "base":"ad13d835345efc2b78308817cc940f73a987165d","observed_utc":"2026-11-08T00:54:33.679525+00:00",
+  "skill":"design-doc-creator; explicit destination/bookkeeping exception override scaffolding, search and quorum",
+  "commands_and_controls":[
+    {"command":"git rev-parse HEAD; git --no-optional-locks status --short --untracked-files=all (separate read-only invocations)","output":"HEAD=base; tracked clean;18 untracked concurrent controller367 paths at first status","control":"No whole367 inventory/hash freeze; these artifacts were not consumed"},
+    {"command":"git ls-files -z; git show <full-base>:<each-six-admin-path>; Python byte comparisons","output":"6493 tracked;4882 earlier verification;51 prior366;6/6 admin inputs match base","control":"Nonzero census and all six existing files"},
+    {"command":"git --no-optional-locks diff --exit-code <base> --; git diff --check; git diff --check <base>","output":"rc0/0/0; stdout/stderr empty","control":"Census and6/6 matches; baseline observations only"},
+    {"command":"Python read_bytes, anchored canonical headings, exact markers and SHA256; wc -l","output":"99 ledger rows;OPEN105/110/111/112;STATUS366/365/364;route366 once;log40(27 ADMIN),archive312;index366=1/367=0/orphan361=1","control":"Unique ledger boundaries/queue header;archive363=1 against364=0"},
+    {"command":"Read Gate4 lines29-40 and charter manual-index profile; Python heading-position byte slicing","output":"Append367 makes41;rotate21 full entries326-346;retain19 existing347-366 excluding361 plus367=20","control":"R+K partitions all original entry bytes; no prior366 no-rotation assumption"},
+    {"command":"Read named inputs/sections only; hashlib.sha256 of each explicit file","output":"15 individual input freezes below","control":"No controller367 content, network, environment values, tests or shared-state scripts consumed/run"}
+  ],
+  "structural_freezes":{"ledger":{"bytes":219711,"sha256":"58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01"},"queue":{"bytes":992586,"sha256":"f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4","header_count":1},"status364_pair":{"bytes":353,"sha256":"2f251247ebe91eaeb6003e4a17f647c024e30d35fb53be26422286f37dd3c477","charter_count":1,"archive_count":0,"archive363_control":1},"rotated":{"bytes":234396,"lines":1614,"sha256":"69f2790cd8f13e99a984bb96e9784f4b1f8f2858cd24a04a3900cfa8922dcb7b"},"kept_existing":{"bytes":286166,"lines":1468,"sha256":"a36d1f9cf0e9b8eef0eea11e66407e58368a002aaeaa639c2d1d23f2af7fae76"}},
+  "boundaries":"Ledger start marker through end marker plus LF; queue unique full header through EOF; STATUS364 line+blank; R326 through before347; K347 through old EOF.",
+  "input_hashes":{
+    "CLAUDE.md":{"sha256":"68f6fd16ede4c598a93590c3de20a2fc661a128c241eed747fab4d68d74a9141","bytes":2945,"lines":50,"mode":"0o644","type":"regular"},
+    "design_docs/coding-standards.md":{"sha256":"a6951ab19b301c821dabc6eadc5061e6dded79c8af749ae080454e50e80239e4","bytes":8738,"lines":130,"mode":"0o644","type":"regular"},
+    "design_docs/DESIGN.md":{"sha256":"a8b87a7ca9cec01676d6d6eb00f2116bd60114638df4bab286189a46dfa17836","bytes":48945,"lines":793,"mode":"0o644","type":"regular"},
+    "design_docs/world-mission.md":{"sha256":"8888e17aa5a81f97b65b320c947783ae95c90759435846a91dbdd93cc238dcf3","bytes":1388066,"lines":6345,"mode":"0o644","type":"regular"},
+    "design_docs/world-mission-status-archive.md":{"sha256":"2bedadd7e79e9befa2b141d35049ea3f82b9dc26aea44eab3478f8f17100569b","bytes":1625355,"lines":732,"mode":"0o644","type":"regular"},
+    "design_docs/world-mission-log.md":{"sha256":"922525f32cdb93ef76ca779b2ce639bb60f388e99634dc5661578eb2939c4d6a","bytes":520974,"lines":3093,"mode":"0o644","type":"regular"},
+    "design_docs/world-mission-log-archive.md":{"sha256":"32c90181c7c0ad86e8981e1992c3dfd2f57a4f5a43dd6de022d9eaa5b22bbcce","bytes":3424393,"lines":26726,"mode":"0o644","type":"regular"},
+    "design_docs/world-mission-index.md":{"sha256":"4dd52a91b130d330ccb9e12da15feb537fbc6f452673610aa640eedbe860669c","bytes":57843,"lines":368,"mode":"0o644","type":"regular"},
+    "design_docs/world-mission-dashboard.md":{"sha256":"4700a0cd64ef98da2efde1a3f4ec67aed610ae6bb07b321c3f6960a6739d9fe2","bytes":3857,"lines":25,"mode":"0o644","type":"regular"},
+    "design_docs/verification/world-iter366/record-design.md":{"sha256":"cb625155d298e01d53f6835e9df6e834a8def626910ea4a32afd43689ba829d2","bytes":7953,"lines":50,"mode":"0o644","type":"regular"},
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/design-doc-creator/SKILL.md":{"sha256":"5dec198456b398758b90cfe9f9924f1002767ac3f530c8f1a08ce909d105e896","bytes":27158,"lines":578,"mode":"0o644","type":"regular"},
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-2-pick.md":{"sha256":"544b8d249ea011d6ad8fbcc1b142f72793d73c24ae0227a3b611a45eafde064a","bytes":57235,"lines":679,"mode":"0o644","type":"regular"},
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-3-route.md":{"sha256":"3d6cde1a7051e11c29ffcea3ca23b0b26b1e976796dc32c2b279ba1eddf71d53","bytes":91163,"lines":879,"mode":"0o644","type":"regular"},
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-4-record.md":{"sha256":"c0ddb2f021872734a35970765a265c4e4f55032c47decfde8f563bb898944dbd","bytes":31504,"lines":390,"mode":"0o644","type":"regular"},
+    "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md":{"sha256":"fce81ea64a500f1707c3730d535fc56a9dba9b455aaf07fd9d18a461b806ff0c","bytes":13312,"lines":158,"mode":"0o644","type":"regular"}
+  },
+  "inherited_only":"Prior366 assessments/findings, clauses1-7 MET, goal unchanged, prior/base CI3/3 and0 directives/inbox; not367 acceptance. Parent supplies fresh external observations.",
+  "future":"M1 six-file bookkeeping with rotation; separate evaluator and exact PR-head AND merge-head all3 CI before LANDED; no controller self-verdict.",
+  "designer_verification":"Python explicit-file rehash/mode comparison:15 inputs unchanged;receipt JSON valid;exact Planner-Lane header;two new outputs whitespace-clean;tracked diff rc0. No test or future acceptance gate run.",
+  "writes":["design_docs/verification/world-iter367/record-design.md","design_docs/verification/world-iter367/designer-receipt.json"]
+}

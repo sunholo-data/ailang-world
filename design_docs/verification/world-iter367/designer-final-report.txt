@@ -1,0 +1,5 @@
+Updated only [record-design.md](/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/record-design.md) and [designer-receipt.json](/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/designer-receipt.json).
+
+Removed raw log-prefix/slice equality requirements. Exact iteration content remains required, allowing only controller-verified CLI notice and boundary-LF normalization.
+
+Both files are 47 lines. JSON, whitespace, and preservation checks passed; original evidence remains unchanged. No acceptance verdict issued.
