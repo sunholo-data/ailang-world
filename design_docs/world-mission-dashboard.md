@@ -1,6 +1,6 @@
 # World mission dashboard — iteration 367 (2026-11-08)
 
-- **ADMIN**: one approved M1; G1–G7 preparation only. Independent judge, G8 and formal delivery pending; zero product/test LOC.
+- **ADMIN PARKED**: unmerged needs-human-review; independent actual PASS97/PASS97/PASS95 but executed G6 AFTER-rehash proof missing. No fourth call or ADMIN LANDED.
 - **Product**: row256 PARKED needs-human-review; independent MiniMax FAIL85; LOCAL_CRITERION UNMET; draft PR515 untouched.
 - **Independent holds**: D111 validation and D112 credential incident OPEN; sanitization does not resolve112 or undo exposure.
 - **OPEN defaults**: D105=C (233 parked/fail closed); D110=A (255 as built); D111=A; D112=no autonomous credential change.
@@ -24,3 +24,5 @@
 - **Inherited metrics**: harness0/20; last3 product landings moved no UNMET;0 routable UNMET. Goal/human asks unchanged.
 - **Progress**: 1.0: clauses1–7 MET (inherited assessment); no product validation.
 - **Next**: independent actual evaluator; M1 committed/reconstructed; all3 exact full40 PR-head AND merge-head terminal-success CI with URLs; G8/delivery pending. No autonomous next pick.
+- **Final evidence/ask**: controller-park.json; proposed ADMIN367 A attended evidence/hook repair+fresh review (recommended), B abandon record; default unmerged now.
+- **Final cost**: metered$1.57784034; Codex known397474; evaluator20287576 provider tokens including caches; controller/supervisors unreported.

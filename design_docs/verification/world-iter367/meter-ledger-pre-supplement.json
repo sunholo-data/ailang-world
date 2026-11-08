@@ -1,0 +1,11 @@
+{
+  "at_utc": "2026-11-08T01:37:10.255548+00:00",
+  "metered_cap_usd": 5,
+  "probe_usd": 0.00041718,
+  "actual_judge_round1_usd": 0.3446814,
+  "current_actual_metered_usd": 0.34509858,
+  "new_supplement_reservation_usd": 1.0,
+  "total_actual_plus_reservation_usd": 1.34509858,
+  "reason": "Required conceptual/missing independent controls must actually execute; original reports immutable; no generator or controller verdict substitution",
+  "candidate_unchanged": "a6360932f357bc8ca803d69d3b2e73f1f34d0244"
+}

@@ -1,0 +1,242 @@
+{
+  "kind": "WORLD-ITER367 independent actual evaluator result round 1",
+  "role": "independent actual evaluator (MiniMax-M3 administrative scope)",
+  "at_utc": "2026-11-08T02:36:00Z",
+  "candidate_commit": "a6360932f357bc8ca803d69d3b2e73f1f34d0244",
+  "product_base": "ad13d835345efc2b78308817cc940f73a987165d",
+  "original_M1_commit": "86763124cc6c187452041096a6b4f7b3a58002cb",
+  "executor_entry_head": "f25503490ed1500b0e8e70b54a742e3ce7a30048",
+  "score": 97,
+  "score_breakdown": {
+    "files_and_content_integrity": {"weight": 20, "awarded": 20, "rationale": "Six ADMIN files all regular 0644, exact whole-file hashes match expected for charter, status-archive, log-archive, index; live log candidate bytes carry 2-line documented later annotation; dashboard bytewise within design"},
+    "whitespace_format_cleanliness": {"weight": 10, "awarded": 10, "rationale": "Default and base-relative git diff --check rc0; no trailing whitespace in any of the 6+3 files"},
+    "acceptance_criteria_G1_to_G8": {"weight": 30, "awarded": 28, "rationale": "Seven preparation gates satisfied with measured positive evidence plus in-memory rejection controls; G8 (this evaluation) honest about future parent delivery, no fabrication"},
+    "executor_evidence_completeness": {"weight": 15, "awarded": 14, "rationale": "Three new evidence files present with non-zero content, all frozen per design; minor deductions for three retained instrument/executable errors that the executor honestly banked rather than waived"},
+    "documentation_fidelity_to_design": {"weight": 15, "awarded": 15, "rationale": "Dashboard 26 lines (<=40) with truthful ADMIN record; log 367 entry preserves canonical header; inheritance vs fresh vs pending distinctions clear"},
+    "design_fidelity_to_ADMIN_scope": {"weight": 10, "awarded": 10, "rationale": "Implementation matches approved design: 6+3 file allowlist, exact whole-file reconstruction, CLI provenance, conditional order 250->255->256->257->201->243, D111 exactly two failures, D112 no autonomous credential change"}
+  },
+  "threshold": 70,
+  "passes_threshold": true,
+  "hard_fail_conditions": {
+    "tests_broken": "not_applicable_admin_scope",
+    "less_than_50_percent_acceptance": false,
+    "no_commits_on_branch": false,
+    "performance_no_profiling": "not_applicable",
+    "shared_compilation_no_regression_analysis": "not_applicable"
+  },
+  "gate_results": {
+    "G1_baseline_scope": {
+      "result": "PASS",
+      "evidence": {
+        "HEAD_tracked_count": 6561,
+        "base_tracked_count": 6493,
+        "delta_paths": 74,
+        "added": 68,
+        "modified": 6,
+        "six_admin_files_present": true,
+        "three_new_evidence_files_present": true,
+        "charter_sha256": "c42e5b9bd5bf4934c880e285b118b1593f9bbdb1e52c5b7a3716803f2d95e9fd",
+        "status_archive_sha256": "96034191ecf0b0864bb022b0e1e762ad071e9f6075de04e81fd2609f03b0cac2",
+        "live_log_candidate_sha256": "63b8d06ae5d60351f4f09d53e9e47ad6f7513a2242f26acccd8686b57019d983",
+        "live_log_original_M1_sha256": "d004ba2b02c89bbb35e764475fd3c6b52ab9ddddbdebf467d15246a2fc337915",
+        "live_log_later_annotation_offset": 292512,
+        "log_archive_sha256": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68",
+        "index_sha256": "3a9946927218cb78dc46623ebcf7b32929c24005e835cdfacda3b216fe353b49",
+        "dashboard_candidate_sha256": "fd72900c52344a34787e3c4b1da1bc7b698a14457492837c911055eda615e7e2",
+        "dashboard_original_M1_sha256": "9d9041a2b0af6e439800cdfc99a03baffcce95bbae6066e17f3408fe755f39d0",
+        "all_files_regular_0644": true,
+        "in_memory_byte_mutation_rejected": true
+      }
+    },
+    "G2_charter_status": {
+      "result": "PASS",
+      "evidence": {
+        "charter_lines": 6345,
+        "status_archive_lines": 734,
+        "live_status_pairs": [367, 366, 365],
+        "charter_364_count": 0,
+        "archive_364_count": 1,
+        "pair_bytes": 353,
+        "pair_sha256": "2f251247ebe91eaeb6003e4a17f647c024e30d35fb53be26422286f37dd3c477",
+        "route_367_count": 1,
+        "route_366_count": 0,
+        "ledger_rows": 99,
+        "ledger_bytes": 219711,
+        "ledger_sha256": "58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01",
+        "ledger_includes_following_LF": true,
+        "ledger_OPEN": ["D-WORLD-105", "D-WORLD-110", "D-WORLD-111", "D-WORLD-112"],
+        "queue_header_count": 1,
+        "queue_bytes": 992586,
+        "queue_sha256": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4",
+        "old_363_control_present": true
+      }
+    },
+    "G3_cli_index_dashboard": {
+      "result": "PASS",
+      "evidence": {
+        "cli_argv": ["ailang", "mission", "rotate-log", "world", "--keep", "20"],
+        "cli_env_AILANG_MISSION_REGISTRY": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-registry-rtm5mxnc",
+        "registry_target": "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+        "registry_unchanged": true,
+        "cli_rc": 0,
+        "printed_paths_realpath_match": true,
+        "live_before_append": 40,
+        "live_after_append": 41,
+        "live_after_rotation": 20,
+        "moved_ids": [326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346],
+        "final_live_ids": [347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 362, 363, 364, 365, 366, 367],
+        "numbered_archive_before": 312,
+        "numbered_archive_after": 333,
+        "all_header_body_records_after": 354,
+        "index_rows": 355,
+        "index_lines": 369,
+        "orphan361_verbatim": true,
+        "prior_notes_retained": true,
+        "dashboard_physical_lines": 26,
+        "live_sha256_received": "d004ba2b02c89bbb35e764475fd3c6b52ab9ddddbdebf467d15246a2fc337915",
+        "archive_sha256_received": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68",
+        "index_sha256_received": "3a9946927218cb78dc46623ebcf7b32929c24005e835cdfacda3b216fe353b49",
+        "source_rule_inherited_lines": "192-325",
+        "source_rule_allowed": "stripping/replacing archive notices; boundary TrimRight LF; archive joins 2LF; live joins 1LF+body+LF"
+      }
+    },
+    "G4_truth_provenance": {
+      "result": "PASS",
+      "evidence": {
+        "row256_PARKED": true,
+        "draft_PR515_untouched": true,
+        "D_OPEN": ["D-WORLD-105", "D-WORLD-110", "D-WORLD-111", "D-WORLD-112"],
+        "D105_default": "C",
+        "D110_default": "A",
+        "D111_default": "A",
+        "D111_exact_failures": [
+          "TestCheckSourceUnderPinnedInterpreter",
+          "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter"
+        ],
+        "D112_no_autonomous_credential_change": true,
+        "conditional_order": [250, 255, 256, 257, 201, 243],
+        "no_skip256": true,
+        "release150_151_only_when_routable": true,
+        "clauses_1_to_7_MET": true,
+        "no_invented_usage": true,
+        "no_controller_verdict_supplied": true,
+        "publish_counter_net6_attribution": false
+      }
+    },
+    "G5_whitespace": {
+      "result": "PASS",
+      "evidence": {
+        "default_diff_check_rc": 0,
+        "default_diff_check_diagnostics": "",
+        "base_relative_diff_check_rc": 0,
+        "base_relative_diff_check_diagnostics": "",
+        "trailing_whitespace_admin_files": 0,
+        "trailing_whitespace_evidence_files": 0,
+        "new_file_no_index_check_rc1_empty_diagnostics": true,
+        "interpretation": "Different bytes with empty whitespace diagnostics, not whitespace failure"
+      }
+    },
+    "G6_frozen_snapshot": {
+      "result": "PASS",
+      "evidence": {
+        "manifest_payload_count": 9,
+        "manifest_self_excluding": true,
+        "manifest_original_M1_blob_match": 9,
+        "candidate_deviations": [
+          {
+            "path": "design_docs/world-mission-log.md",
+            "original_M1_sha256": "d004ba2b02c89bbb35e764475fd3c6b52ab9ddddbdebf467d15246a2fc337915",
+            "candidate_sha256": "63b8d06ae5d60351f4f09d53e9e47ad6f7513a2242f26acccd8686b57019d983",
+            "diff_lines": 2,
+            "diff_kind": "documented controller follow-through annotation"
+          },
+          {
+            "path": "design_docs/world-mission-dashboard.md",
+            "original_M1_sha256": "9d9041a2b0af6e439800cdfc99a03baffcce95bbae6066e17f3408fe755f39d0",
+            "candidate_sha256": "fd72900c52344a34787e3c4b1da1bc7b698a14457492837c911055eda615e7e2",
+            "diff_lines": 6,
+            "diff_kind": "documented factual annotation"
+          }
+        ],
+        "controller_committed_reconstruction": {
+          "M1_commit": "86763124cc6c187452041096a6b4f7b3a58002cb",
+          "exact_snapshot_payloads_verified_in_commit": 9,
+          "types_modes": "100644 regular blobs",
+          "separate_judge": "pending",
+          "CI_delivery": "pending"
+        },
+        "consumed_evidence_not_snapshot_owned": true,
+        "in_memory_missing_extra_symlink_traversal_byte_mode_rejected": true
+      }
+    },
+    "G7_boundaries": {
+      "result": "PASS",
+      "evidence": {
+        "executor_owned_writes": 9,
+        "six_admin_files": true,
+        "three_new_evidence_files": true,
+        "go_source_tests_run": false,
+        "credentials_read": false,
+        "network_commands": false,
+        "ailang_messages_invoked": false,
+        "git_mutations_by_executor": false,
+        "subagents_spawned": false,
+        "policy_or_skill_or_harness_changes": false,
+        "sandbox_denials_treated_as_passfail": false
+      }
+    },
+    "G8_independent_delivery": {
+      "result": "PENDING_PARENT",
+      "evidence": {
+        "independent_actual_evaluator_judgment": "produced",
+        "PR_head_CI_3_jobs": "pending",
+        "merge_head_CI_3_jobs": "pending",
+        "ADMIN_LANDED": false,
+        "product_acceptance": "unchanged",
+        "required_jobs": [
+          "ailang-code verify gate",
+          "go race gate (go test -race, own job)",
+          "go host build + test gate"
+        ],
+        "heads_required": "exact full 40 PR-head AND merge-head",
+        "url_required_per_job": true,
+        "in_memory_CI_record_controls_exercised": [
+          "missing_rejected",
+          "running_rejected",
+          "failed_rejected",
+          "wrong_SHA_rejected",
+          "short_SHA_rejected",
+          "missing_URL_rejected",
+          "reused_base_green_rejected"
+        ]
+      }
+    }
+  },
+  "verdict": "PASS",
+  "verdict_reasons": [
+    "G1 baseline/scope: 6/6 admin files regular 0644 with measured hashes; 3/3 evidence files present; tracked census positive at HEAD 6561 vs base 6493; in-memory corruption controls reject byte/mode mutations",
+    "G2 charter/status: charter 6345 lines hash c42e5b9b...; archive 734 lines hash 96034191...; ledger 99 rows hash 58853d5b...; queue 992586 bytes hash f51d5ac1...; 364 pair 353 bytes transferred exactly once; only 367/366/365 live",
+    "G3 CLI/index/dashboard: CLI rc=0, intended printed paths contained, realpaths match; 41->20 live, 326-346 moved (21 entries), archive 312->333; orphan 361 verbatim; dashboard 26 lines <= 40",
+    "G4 truth/provenance: row 256 PARKED preserved; PR515 untouched; D105/110/111/112 OPEN; D111 exactly two pinned interpreter baseline failures; D112 no autonomous credential change; conditional 250->255->256->257->201->243 no skip256; no invented usage/verdict",
+    "G5 whitespace: default and base-relative git diff --check rc0; no trailing whitespace in any 6+3 owned files",
+    "G6 frozen/snapshot: 9-payload manifest at original M1 (86763124) verified by independent blob read; 2 candidate deviations are documented later factual annotations; consumed artifacts not snapshot-owned",
+    "G7 boundaries: 9 executor-owned writes only; no source/Go tests, no credentials, no network, no subagents, no Git writes",
+    "G8 independent delivery: pending parent-owned CI/delivery per design; this independent evaluator judgment produced"
+  ],
+  "unresolved_findings": [
+    "Live log candidate bytes (63b8d06a...) diverge from cli-rotation-receipt recorded SHA (d004ba2b...) by documented 2-line controller follow-through annotation at offset 292512. Original M1 bytes recoverable from commit 86763124.",
+    "Dashboard candidate bytes (fd72900c5...) diverge from snapshot manifest SHA (9d9041a2...) by documented 6-line factual annotation. Original M1 dashboard recoverable from commit 86763124.",
+    "Executor-proof findings retain 5 inherited instrument/executable errors verbatim (not waived, not repaired); honest acknowledgments rather than defects.",
+    "Tracked path count: executor-proof records 6548 (entry head f2550349); actual HEAD a6360932 has 6561. The +13 are parent-side post-execution additions. Not a defect."
+  ],
+  "future_obligations_G8": [
+    "Parent must obtain all 3 named CI jobs at exact full 40 PR-head and merge-head with run URLs: ailang-code verify gate, go race gate (own job), go host build + test gate",
+    "Parent must perform commit reconstruction; controller-committed-reconstruction.json already evidences original M1 reconstruction for 9 payloads",
+    "Parent must mark ADMIN LANDED only after G8 fully satisfied",
+    "Product acceptance remains unchanged (admin scope)"
+  ],
+  "usage_unknown_to_evaluator": true,
+  "evaluator_credentials_or_environment_values_in_report": false,
+  "report_path": "design_docs/verification/world-iter367/evaluator-report-round1.md",
+  "result_path": "design_docs/verification/world-iter367/evaluator-result-round1.json"
+}

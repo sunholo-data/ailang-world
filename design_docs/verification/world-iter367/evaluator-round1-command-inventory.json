@@ -1,0 +1,835 @@
+{
+  "count": 92,
+  "commands": [
+    {
+      "event_index": 9,
+      "end_event_index": 10,
+      "tool": "read",
+      "args": {
+        "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-eval/CLAUDE.md"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 17,
+      "end_event_index": 18,
+      "tool": "session_protocol_ack",
+      "args": {},
+      "is_error": false
+    },
+    {
+      "event_index": 25,
+      "end_event_index": 34,
+      "tool": "bash",
+      "args": {
+        "command": "pwd && git log --oneline -20"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 26,
+      "end_event_index": 32,
+      "tool": "bash",
+      "args": {
+        "command": "ls design_docs/verification/world-iter367/ 2>/dev/null && echo \"---\" && ls -la"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 43,
+      "end_event_index": 45,
+      "tool": "read",
+      "args": {
+        "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/record-design.md"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 44,
+      "end_event_index": 46,
+      "tool": "read",
+      "args": {
+        "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/record-plan.md"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 55,
+      "end_event_index": 60,
+      "tool": "read",
+      "args": {
+        "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/record-state.json"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 56,
+      "end_event_index": 58,
+      "tool": "read",
+      "args": {
+        "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/execution-state.json"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 57,
+      "end_event_index": 62,
+      "tool": "read",
+      "args": {
+        "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/executor-proof.json"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 73,
+      "end_event_index": 76,
+      "tool": "read",
+      "args": {
+        "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-evaluator/SKILL.md"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 74,
+      "end_event_index": 77,
+      "tool": "read",
+      "args": {
+        "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-evaluator/resources/scoring_rubric.md"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 86,
+      "end_event_index": 89,
+      "tool": "bash",
+      "args": {
+        "command": "cat /Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/executor-proof.json | python3 -c \"\nimport json, sys\nd = json.load(sys.stdin)\nprint('Keys at root:', list(d.keys()))\nprint('---')\nfor k, v in d.items():\n    if isinstance(v, list):\n        print(f'{k}: list of {len(v)} items')\n    elif isinstance(v, dict):\n        print(f'{k}: dict with {len(v)} keys')\n    else:\n        s = str(v)\n        print(f'{k}: {s[:120]}')\n\"\n"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 96,
+      "end_event_index": 99,
+      "tool": "bash",
+      "args": {
+        "command": "cat /Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/executor-proof.json | python3 -c \"\nimport json, sys\nd = json.load(sys.stdin)\nprint('=== BASELINE ===')\nfor k, v in d['baseline'].items():\n    s = str(v)\n    print(f'{k}: {s[:200]}')\nprint('=== STRUCTURAL OBSERVATIONS ===')\nfor k, v in d['structural_observations'].items():\n    s = str(v)\n    print(f'{k}: {s[:200]}')\nprint('=== G1_G7 ===')\nfor k, v in d['G1_G7'].items():\n    if isinstance(v, dict):\n        print(f'  GATE {k}:')\n        for k2, v2 in v.items():\n            s = str(v2)\n            print(f'    {k2}: {s[:200]}')\n\"\n"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 106,
+      "end_event_index": 109,
+      "tool": "bash",
+      "args": {
+        "command": "cat /Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/executor-proof.json | python3 -c \"\nimport json, sys\nd = json.load(sys.stdin)\nprint('=== WHITESPACE ===')\nfor k, v in d['whitespace'].items():\n    s = str(v)\n    print(f'{k}: {s[:300]}')\nprint('=== SNAPSHOT ===')\nfor k, v in d['snapshot'].items():\n    s = str(v)\n    print(f'{k}: {s[:300]}')\nprint('=== G8 ===')\nfor k, v in d['G8'].items():\n    s = str(v)\n    print(f'{k}: {s[:300]}')\nprint('=== FINDINGS ===')\nfor f in d['findings']:\n    print('  -', f)\n\"\n"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 116,
+      "end_event_index": 124,
+      "tool": "bash",
+      "args": {
+        "command": "git rev-parse HEAD && git log -1 --format=\"%H %s\""
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 117,
+      "end_event_index": 127,
+      "tool": "bash",
+      "args": {
+        "command": "git diff --stat ad13d835..HEAD"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 118,
+      "end_event_index": 125,
+      "tool": "bash",
+      "args": {
+        "command": "git status --short"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 138,
+      "end_event_index": 149,
+      "tool": "bash",
+      "args": {
+        "command": "git status"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 139,
+      "end_event_index": 147,
+      "tool": "bash",
+      "args": {
+        "command": "git ls-files --others --exclude-standard | head -30"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 140,
+      "end_event_index": 146,
+      "tool": "bash",
+      "args": {
+        "command": "git ls-tree --full-tree -r ad13d835 | wc -l && git ls-tree --full-tree -r HEAD | wc -l"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 160,
+      "end_event_index": 164,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"Actual tracked files at HEAD:\"\ngit ls-tree --full-tree -r HEAD | wc -l\necho \"Actual tracked files at base:\"\ngit ls-tree --full-tree -r ad13d835 | wc -l\necho \"Original M1 commit:\"\ngit ls-tree --full-tree -r 86763124 | wc -l\necho \"\"\necho \"Tracked files changed base->candidate:\"\ngit diff --name-only ad13d835..HEAD | wc -l\necho \"Added tracked files:\"\ngit diff --name-only --diff-filter=A ad13d835..HEAD | wc -l\necho \"Modified tracked files:\"\ngit diff --name-only --diff-filter=M ad13d835..HEAD | wc -l"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 171,
+      "end_event_index": 174,
+      "tool": "bash",
+      "args": {
+        "command": "cat /Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/executor-proof.json | python3 -c \"\nimport json, sys\nd = json.load(sys.stdin)\nprint('full_tracked_census count:', len(d['baseline']['full_tracked_census']))\nprint('first 3 census entries:')\nfor e in d['baseline']['full_tracked_census'][:3]:\n    print(' ', e)\nprint('Sample world-iter367 entries:')\nfor e in d['baseline']['full_tracked_census']:\n    if 'world-iter367' in e['path']:\n        print(' ', e['path'], e['type'], e['mode'], e['bytes'])\n\" | head -50\n"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 181,
+      "end_event_index": 185,
+      "tool": "bash",
+      "args": {
+        "command": "git ls-tree --full-tree -r HEAD | wc -l\necho \"---\"\n# Compare to executor-proof's full_tracked_census count\necho \"Executor proof claims: 6548\"\necho \"Actual HEAD: 6561\"\necho \"Diff: $((6561 - 6548))\"\n# Check what files exist in actual HEAD but not in census\ncat /Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/executor-proof.json | python3 -c \"\nimport json, sys\nd = json.load(sys.stdin)\ncensus_paths = set(e['path'] for e in d['baseline']['full_tracked_census'])\nprint('Census entries:', len(census_paths))\n# Get actual tracked paths\n\" \ngit ls-tree --full-tree -r HEAD | awk '{print $4}' | sort > /tmp/head-tracked.txt\necho \"HEAD tracked paths:\"\nwc -l /tmp/head-tracked.txt"
+      },
+      "is_error": true
+    },
+    {
+      "event_index": 192,
+      "end_event_index": 196,
+      "tool": "bash",
+      "args": {
+        "command": "mkdir -p ~/.tmp_eval && git ls-tree --full-tree -r HEAD | awk '{print $4}' | sort > ~/.tmp_eval/head-tracked.txt\necho \"HEAD tracked paths:\"\nwc -l ~/.tmp_eval/head-tracked.txt"
+      },
+      "is_error": true
+    },
+    {
+      "event_index": 203,
+      "end_event_index": 207,
+      "tool": "bash",
+      "args": {
+        "command": "pwd && touch test-write.txt && ls test-write.txt && rm test-write.txt"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 214,
+      "end_event_index": 218,
+      "tool": "bash",
+      "args": {
+        "command": "mkdir -p design_docs/verification/world-iter367/eval-tmp 2>/dev/null\nls -la design_docs/verification/world-iter367/ | head -5\necho \"---\"\nmkdir -p .tmp\nls -la .tmp"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 225,
+      "end_event_index": 229,
+      "tool": "bash",
+      "args": {
+        "command": "git ls-tree --full-tree -r HEAD | awk '{print $4}' > .tmp_head_tracked.txt\nwc -l .tmp_head_tracked.txt\necho \"Census count from executor-proof:\"\npython3 -c \"\nimport json\nwith open('design_docs/verification/world-iter367/executor-proof.json') as f:\n    d = json.load(f)\ncensus = d['baseline']['full_tracked_census']\nprint(len(census))\n\"\nrm .tmp_head_tracked.txt"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 236,
+      "end_event_index": 240,
+      "tool": "bash",
+      "args": {
+        "command": "git log --oneline f2550349..a6360932\necho \"---\"\ngit log -1 f2550349 --format=\"%H %s\"\necho \"---\"\ngit log -1 a6360932 --format=\"%H %s\"\necho \"---\"\n# Check how many tracked files at f2550349\ngit ls-tree --full-tree -r f2550349 | wc -l"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 247,
+      "end_event_index": 251,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G1: BASELINE CENSUS ===\"\necho \"Candidate HEAD:\"\ngit log -1 --format=\"%H\"\necho \"Base ad13d835:\"\ngit log -1 ad13d835 --format=\"%H\"\necho \"Original M1 86763124:\"\ngit log -1 86763124 --format=\"%H\"\necho \"Entry head f2550349:\"\ngit log -1 f2550349 --format=\"%H\"\necho \"\"\necho \"Tracked files at each commit:\"\nfor ref in ad13d835 86763124 f2550349 a6360932; do\n  cnt=$(git ls-tree --full-tree -r $ref 2>/dev/null | wc -l)\n  echo \"  $ref: $cnt\"\ndone"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 258,
+      "end_event_index": 263,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G1: 6 ADMIN FILES (existing paths at base) ===\"\nfor f in design_docs/world-mission.md \\\n         design_docs/world-mission-status-archive.md \\\n         design_docs/world-mission-log.md \\\n         design_docs/world-mission-log-archive.md \\\n         design_docs/world-mission-index.md \\\n         design_docs/world-mission-dashboard.md; do\n  bytes=$(wc -c < \"$f\")\n  mode=$(stat -f \"%p\" \"$f\" 2>/dev/null || echo \"unknown\")\n  type=$(stat -f \"%HT\" \"$f\" 2>/dev/null || echo \"unknown\")\n  sha=$(shasum -a 256 \"$f\" 2>/dev/null | awk '{print $1}')\n  echo \"  $f\"\n  echo \"    type=$type mode=$mode bytes=$bytes sha=$sha\"\ndone"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 270,
+      "end_event_index": 274,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G1: 3 NEW EVIDENCE FILES ===\"\nfor f in design_docs/verification/world-iter367/executor-proof.json \\\n         design_docs/verification/world-iter367/execution-state.json \\\n         design_docs/verification/world-iter367/cli-rotation-receipt.json; do\n  bytes=$(wc -c < \"$f\")\n  mode=$(stat -f \"%p\" \"$f\" 2>/dev/null)\n  type=$(stat -f \"%HT\" \"$f\" 2>/dev/null)\n  sha=$(shasum -a 256 \"$f\" 2>/dev/null | awk '{print $1}')\n  echo \"  $f\"\n  echo \"    type=$type mode=$mode bytes=$bytes sha=$sha\"\ndone"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 281,
+      "end_event_index": 285,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G2: CHARTER LINE COUNT ===\"\ncharter_lines=$(wc -l < design_docs/world-mission.md)\necho \"world-mission.md lines: $charter_lines (expected 6345)\"\necho \"\"\necho \"=== G2: STATUS ARCHIVE LINE COUNT ===\"\narchive_lines=$(wc -l < design_docs/world-mission-status-archive.md)\necho \"world-mission-status-archive.md lines: $archive_lines (expected 734)\"\necho \"\"\necho \"=== G2: EXACT 364 PAIR ===\"\n# Find 364 STATUS line\ngrep -n \"## STATUS 2026-09-13 \u2014 ITERATION 364\" design_docs/world-mission-status-archive.md\necho \"---\"\ngrep -n \"## STATUS 2026-09-13 \u2014 ITERATION 364\" design_docs/world-mission.md"
+      },
+      "is_error": true
+    },
+    {
+      "event_index": 292,
+      "end_event_index": 296,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G2: 364 pair in archive ===\"\ngrep -n \"ITERATION 364\" design_docs/world-mission-status-archive.md | head -10\necho \"---\"\necho \"=== G2: STATUS lines in archive ===\"\ngrep -c \"^## STATUS\" design_docs/world-mission-status-archive.md\necho \"---\"\necho \"=== G2: STATUS lines in charter ===\"\ngrep -c \"^## STATUS\" design_docs/world-mission.md\necho \"---\"\necho \"=== G2: STATUS iterations in charter ===\"\ngrep -oE \"ITERATION [0-9]+\" design_docs/world-mission.md | sort -u | tail -10\necho \"---\"\necho \"=== G2: STATUS iterations in archive ===\"\ngrep -oE \"ITERATION [0-9]+\" design_docs/world-mission-status-archive.md | sort -u | tail -10"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 303,
+      "end_event_index": 307,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G2: STATUS iterations in archive (sorted) ===\"\ngrep -oE \"ITERATION [0-9]+\" design_docs/world-mission-status-archive.md | sort -u\necho \"---\"\necho \"=== G2: 364 STATUS line in archive ===\"\nsed -n '733,734p' design_docs/world-mission-status-archive.md\necho \"---\"\necho \"=== G2: 367 STATUS line in charter ===\"\ngrep -n \"ITERATION 367\" design_docs/world-mission.md\necho \"---\"\necho \"=== G2: Route unique in charter ===\"\ngrep -n \"Current route\" design_docs/world-mission.md"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 314,
+      "end_event_index": 318,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== ITERATION 999 in archive ===\"\ngrep -n \"ITERATION 999\" design_docs/world-mission-status-archive.md\necho \"---\"\necho \"=== ITERATION 999 in charter ===\"\ngrep -n \"ITERATION 999\" design_docs/world-mission.md | head -5"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 325,
+      "end_event_index": 329,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Route check: unique 367 (not 366) ===\"\ngrep -c \"Current route (iteration 367)\" design_docs/world-mission.md\necho \"Should be 1\"\ngrep -c \"Current route (iteration 366)\" design_docs/world-mission.md\necho \"Should be 0\"\necho \"\"\necho \"=== Ledger marker presence (charter) ===\"\npython3 -c \"\nwith open('design_docs/world-mission.md', 'rb') as f:\n    data = f.read()\n# Find ledger start/end markers and following LF\nstart = data.find(b'<!-- LEDGER START -->')\nend = data.find(b'<!-- LEDGER END -->')\nprint(f'LEDGER START at offset {start}')\nprint(f'LEDGER END at offset {end}')\n# Check following LF after LEDGER END\nif end >= 0:\n    after_end = end + len(b'<!-- LEDGER END -->')\n    print(f'Following byte: {data[after_end:after_end+20]!r}')\n\""
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 336,
+      "end_event_index": 340,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Find ledger markers ===\"\ngrep -n \"LEDGER START\\|LEDGER END\" design_docs/world-mission.md | head -5\necho \"---\"\ngrep -n \"Ledger Start\\|Ledger End\" design_docs/world-mission.md | head -5\necho \"---\"\necho \"=== Look for ledger boundary markers ===\"\npython3 -c \"\nwith open('design_docs/world-mission.md', 'r') as f:\n    lines = f.readlines()\n# Find any text resembling ledger start\nfor i, l in enumerate(lines):\n    if 'LEDGER' in l.upper() and ('START' in l.upper() or 'END' in l.upper()):\n        print(f'  {i+1}: {l.strip()[:120]}')\n\" | head -20"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 347,
+      "end_event_index": 351,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Ledger HTML comments ===\"\ngrep -n \"decision-ledger:\" design_docs/world-mission.md\necho \"---\"\necho \"=== Decision ledger boundaries ===\"\npython3 -c \"\nwith open('design_docs/world-mission.md', 'rb') as f:\n    data = f.read()\n# Find ledger boundaries\nfor needle in [b'decision-ledger:start', b'decision-ledger:end', b'<!-- LEDGER START', b'<!-- LEDGER END']:\n    pos = data.find(needle)\n    print(f'{needle!r}: pos={pos}')\n    if pos > 0:\n        print(f'  context: {data[pos:pos+80]!r}')\n\""
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 358,
+      "end_event_index": 362,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Ledger end + following LF ===\"\npython3 -c \"\nwith open('design_docs/world-mission.md', 'rb') as f:\n    data = f.read()\n# Find ledger end marker\nneedle = b'<!-- decision-ledger:end -->'\npos = data.find(needle)\nprint(f'LEDGER END at pos: {pos}')\nend_pos = pos + len(needle)\nprint(f'After end (next 5 bytes): {data[end_pos:end_pos+5]!r}')\n# Now compute the slice from start to end (inclusive)\nstart_needle = b'<!-- decision-ledger:start -->'\nstart_pos = data.find(start_needle)\nprint(f'START at: {start_pos}')\nprint(f'Slice length (start through end, inclusive): {end_pos - start_pos}')\n# Hash of the slice + following LF\nif data[end_pos:end_pos+1] == b'\\n':\n    slice_hash = __import__('hashlib').sha256(data[start_pos:end_pos+1]).hexdigest()\n    print(f'Hash with following LF: {slice_hash}')\nslice_hash_nolf = __import__('hashlib').sha256(data[start_pos:end_pos]).hexdigest()\nprint(f'Hash without following LF: {slice_hash_nolf}')\n# Compare to executor-proof's claim: 58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01\n\"\n"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 369,
+      "end_event_index": 373,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Count ledger rows (table rows) ===\"\npython3 -c \"\nwith open('design_docs/world-mission.md', 'r') as f:\n    data = f.read()\n# Slice the ledger region\nstart_marker = '<!-- decision-ledger:start -->'\nend_marker = '<!-- decision-ledger:end -->'\nstart_pos = data.find(start_marker)\nend_pos = data.find(end_marker)\nledger = data[start_pos:end_pos]\n# Count rows that look like decision rows (start with '| D-WORLD-' or similar)\nimport re\nrows = re.findall(r'^\\| (D-WORLD-\\d+|D-WORLD-DRIVER-\\d+) \\|', ledger, re.MULTILINE)\nprint(f'Decision rows in ledger: {len(rows)}')\n# Check OPEN decisions\nopens = re.findall(r'\\| D-WORLD-\\d+ \\| OPEN', ledger)\nprint(f'OPEN rows: {opens}')\n\""
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 380,
+      "end_event_index": 384,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Detailed ledger row check ===\"\npython3 -c \"\nwith open('design_docs/world-mission.md', 'r') as f:\n    data = f.read()\nstart_marker = '<!-- decision-ledger:start -->'\nend_marker = '<!-- decision-ledger:end -->'\nstart_pos = data.find(start_marker)\nend_marker_pos = data.find(end_marker)\nledger = data[start_pos:end_marker_pos]\nlines = ledger.split('\\n')\nprint(f'Total lines in ledger: {len(lines)}')\n# Look at lines starting with | that could be rows\ncandidate_rows = []\nfor line in lines:\n    if line.startswith('|') and ('D-WORLD' in line or 'D-WORLD-DRIVER' in line):\n        candidate_rows.append(line)\nprint(f'Candidate rows: {len(candidate_rows)}')\n# Print first and last\nif candidate_rows:\n    print(f'First: {candidate_rows[0][:80]}')\n    print(f'Last: {candidate_rows[-1][:80]}')\n\""
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 391,
+      "end_event_index": 395,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Queue header count ===\"\ngrep -c \"## Queue (top = next\" design_docs/world-mission.md\necho \"---\"\necho \"=== Queue 150 row ===\"\ngrep -n \"^| 150 |\" design_docs/world-mission.md | head -3\necho \"---\"\necho \"=== Queue 363 row ===\"\ngrep -n \"^| 363 |\" design_docs/world-mission.md | head -3\necho \"---\"\necho \"=== Queue EOF check ===\"\npython3 -c \"\nwith open('design_docs/world-mission.md', 'rb') as f:\n    data = f.read()\n# Find queue header start\nqueue_start = data.find(b'## Queue (top = next')\nprint(f'Queue header at: {queue_start}')\n# Find END marker for queue\n# Look for what's after queue\nprint(f'Total bytes: {len(data)}')\n# Check last bytes\nprint(f'Last 50 bytes: {data[-50:]!r}')\n\""
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 402,
+      "end_event_index": 406,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Queue rows 150, 363 ===\"\npython3 -c \"\nwith open('design_docs/world-mission.md', 'r') as f:\n    data = f.read()\nqueue_start = data.find('## Queue (top = next')\n# Look for lines starting with '| 150 ' or '| 363 '\nimport re\nmatches_150 = [m.start() for m in re.finditer(r'^\\| 150 \\|', data, re.MULTILINE)]\nmatches_363 = [m.start() for m in re.finditer(r'^\\| 363 \\|', data, re.MULTILINE)]\nprint(f'| 150 | matches: {matches_150}')\nprint(f'| 363 | matches: {matches_363}')\n# Show the row content\nfor m in matches_150:\n    start = m\n    end = data.find('\\n', start)\n    print(f'  150 row: {data[start:end][:200]}')\nfor m in matches_363:\n    start = m\n    end = data.find('\\n', start)\n    print(f'  363 row: {data[start:end][:200]}')\n\""
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 413,
+      "end_event_index": 417,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Queue table structure ===\"\npython3 -c \"\nwith open('design_docs/world-mission.md', 'r') as f:\n    data = f.read()\nqueue_start = data.find('## Queue (top = next')\n# Show first few hundred chars of queue\nprint(data[queue_start:queue_start+800])\n\""
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 424,
+      "end_event_index": 428,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Check end of queue section ===\"\npython3 -c \"\nwith open('design_docs/world-mission.md', 'r') as f:\n    lines = f.readlines()\n# Find the Queue header line\nqueue_start_line = None\nfor i, l in enumerate(lines):\n    if l.startswith('## Queue'):\n        queue_start_line = i\n        break\nprint(f'Queue starts at line {queue_start_line+1}')\n# Find any line starting with | 150 or | 363 etc\nfor i, l in enumerate(lines):\n    if l.startswith('| 1'):\n        if '150' in l[:10] or '363' in l[:10]:\n            print(f'  Line {i+1}: {l.strip()[:200]}')\n# Now check the entire tail of the file\nprint('---')\nprint('Last 20 lines:')\nfor l in lines[-20:]:\n    print(f'  {l.rstrip()[:120]}')\n\""
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 435,
+      "end_event_index": 439,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Queue bytes/hash check ===\"\npython3 -c \"\nwith open('design_docs/world-mission.md', 'rb') as f:\n    data = f.read()\nqueue_header = b'## Queue (top = next; tags: [NEXT] [IN-SPRINT] [PARKED] [LANDED] [RULED OUT] [ROUTED])'\nqstart = data.find(queue_header)\nprint(f'Queue header at offset: {qstart}')\n# Slice from header to EOF\nqueue_slice = data[qstart:]\nprint(f'Queue slice length: {len(queue_slice)}')\nimport hashlib\nh = hashlib.sha256(queue_slice).hexdigest()\nprint(f'Queue slice hash: {h}')\nprint(f'Expected hash: f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64...')\n# Count expected\n\""
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 446,
+      "end_event_index": 450,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== In-memory corruption controls ===\"\npython3 << 'EOF'\nimport hashlib, copy\n\n# Read the charter\nwith open('design_docs/world-mission.md', 'rb') as f:\n    charter = f.read()\nwith open('design_docs/world-mission-status-archive.md', 'rb') as f:\n    archive = f.read()\n\n# Expected hashes from design\nEXPECTED_CHARTER_HASH = 'c42e5b9bd5bf4934c880e285b118b1593f9bbdb1e52c5b7a3716803f2d95e9fd'\nEXPECTED_ARCHIVE_HASH = '96034191ecf0b0864bb022b0e1e762ad071e9f6075de04e81fd2609f03b0cac2'\n\n# Hash\ncharter_hash = hashlib.sha256(charter).hexdigest()\narchive_hash = hashlib.sha256(archive).hexdigest()\n\nprint(f'Charter hash: {charter_hash}')\nprint(f'  Match: {charter_hash == EXPECTED_CHARTER_HASH}')\nprint(f'Archive hash: {archive_hash}')\nprint(f'  Match: {archive_hash == EXPECTED_ARCHIVE_HASH}')\n\n# Check 364 pair size and uniqueness\nline_start = b'## STATUS 2026-11-07 \u2014 ITERATION 364: ADMIN record only;'\n# Find the line + following blank\npos = archive.find(line_start)\nprint(f'364 STATUS line at: {pos}')\nif pos > 0:\n    line_end = archive.find(b'\\n', pos)\n    # Include following LF\n    line_with_blank = archive[pos:line_end+1]  # +1 for the LF after the line\n    next_byte = archive[line_end+1:line_end+2]\n    print(f'Following byte after LF: {next_byte!r}')\n    pair_size = len(line_with_blank) + (1 if next_byte == b'\\n' else 0)\n    pair_bytes = archive[pos:pos+pair_size+1]\n    pair_hash = hashlib.sha256(pair_bytes).hexdigest()\n    print(f'364 pair size: {pair_size}')\n    print(f'364 pair hash: {pair_hash}')\n    print(f'Expected size: 353, hash: 2f251247ebe91eaeb6003e4a17f647c024e30d35fb53be26422286f37dd3c477')\n    \n# Count 364 occurrences in both files\ncharter_364 = charter.count(line_start)\narchive_364 = archive.count(line_start)\nprint(f'Charter 364 occurrences: {charter_364} (should be 0)')\nprint(f'Archive 364 occurrences: {archive_364} (should be 1)')\n\n# Count 367 occurrences\nline_367 = b'## STATUS 2026-11-08 \u2014 ITERATION 367'\nprint(f'Charter 367: {charter.count(line_367)} (should be 1)')\nprint(f'Archive 367: {archive.count(line_367)} (should be 0)')\n\n# Count 366, 365 in charter\nline_366 = b'## STATUS 2026-11-07 \u2014 ITERATION 366'\nline_365 = b'## STATUS 2026-11-04 \u2014 ITERATION 365'\nprint(f'Charter 366: {charter.count(line_366)} (should be 1)')\nprint(f'Charter 365: {charter.count(line_365)} (should be 1)')\nEOF"
+      },
+      "is_error": true
+    },
+    {
+      "event_index": 457,
+      "end_event_index": 460,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport hashlib, copy\n\nwith open('design_docs/world-mission.md', 'rb') as f:\n    charter = f.read()\nwith open('design_docs/world-mission-status-archive.md', 'rb') as f:\n    archive = f.read()\n\nEXPECTED_CHARTER_HASH = 'c42e5b9bd5bf4934c880e285b118b1593f9bbdb1e52c5b7a3716803f2d95e9fd'\nEXPECTED_ARCHIVE_HASH = '96034191ecf0b0864bb022b0e1e762ad071e9f6075de04e81fd2609f03b0cac2'\n\ncharter_hash = hashlib.sha256(charter).hexdigest()\narchive_hash = hashlib.sha256(archive).hexdigest()\nprint(f'Charter hash matches: {charter_hash == EXPECTED_CHARTER_HASH}')\nprint(f'Archive hash matches: {archive_hash == EXPECTED_ARCHIVE_HASH}')\n\nline_364 = '## STATUS 2026-11-07 \u2014 ITERATION 364: ADMIN record only;'.encode('utf-8')\nline_366 = '## STATUS 2026-11-07 \u2014 ITERATION 366'.encode('utf-8')\nline_365 = '## STATUS 2026-11-04 \u2014 ITERATION 365'.encode('utf-8')\nline_367 = '## STATUS 2026-11-08 \u2014 ITERATION 367'.encode('utf-8')\n\nprint(f'Charter 364: {charter.count(line_364)} (should be 0)')\nprint(f'Archive 364: {archive.count(line_364)} (should be 1)')\nprint(f'Charter 366: {charter.count(line_366)} (should be 1)')\nprint(f'Charter 365: {charter.count(line_365)} (should be 1)')\nprint(f'Charter 367: {charter.count(line_367)} (should be 1)')\nprint(f'Archive 367: {archive.count(line_367)} (should be 0)')\n\n# Verify 364 pair hash\npos = archive.find(line_364)\nif pos > 0:\n    line_end = archive.find(b'\\n', pos)\n    pair_bytes = archive[pos:line_end+2]  # include line + LF + blank LF\n    pair_hash = hashlib.sha256(pair_bytes).hexdigest()\n    print(f'364 pair bytes length: {len(pair_bytes)}')\n    print(f'364 pair hash: {pair_hash}')\n    expected = '2f251247ebe91eaeb6003e4a17f647c024e30d35fb53be26422286f37dd3c477'\n    print(f'Expected size: 353, hash: {expected}')\n    print(f'Match: {pair_hash == expected and len(pair_bytes) == 353}')\n\n# Lines count\nprint(f'Charter lines: {charter.count(b\"\\n\")} (expected 6345)')\nprint(f'Archive lines: {archive.count(b\"\\n\")} (expected 734)')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 467,
+      "end_event_index": 470,
+      "tool": "bash",
+      "args": {
+        "command": "grep -n \"ITERATION 365\" design_docs/world-mission.md"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 477,
+      "end_event_index": 480,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nwith open('design_docs/world-mission.md', 'rb') as f:\n    charter = f.read()\n\n# 365 with various dates\nfor date in ['2026-09-30', '2026-10-08', '2026-10-15', '2026-10-29', '2026-11-04', '2026-11-07', '2026-11-08']:\n    needle = f'## STATUS {date} \u2014 ITERATION 365'.encode('utf-8')\n    cnt = charter.count(needle)\n    if cnt > 0:\n        print(f'Charter 365 ({date}): {cnt}')\n\n# Show all ITERATION 365 hits\nimport re\nmatches = re.findall(rb'## STATUS [^\u2014]+ \u2014 ITERATION 365[^\\n]*', charter)\nprint(f'Total 365 matches: {len(matches)}')\nfor m in matches:\n    print(f'  {m.decode(\"utf-8\")[:120]}')\nEOF"
+      },
+      "is_error": true
+    },
+    {
+      "event_index": 487,
+      "end_event_index": 490,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport re\n\nwith open('design_docs/world-mission.md', 'r') as f:\n    charter = f.read()\n\n# 365 with various dates\nfor date in ['2026-09-30', '2026-10-08', '2026-10-15', '2026-10-29', '2026-11-04', '2026-11-07', '2026-11-08']:\n    needle = f'## STATUS {date} \u2014 ITERATION 365'\n    cnt = charter.count(needle)\n    if cnt > 0:\n        print(f'Charter 365 ({date}): {cnt}')\n\n# Show all ITERATION 365 hits\npattern = re.compile(r'## STATUS [^\u2014]+ \u2014 ITERATION 365[^\\n]*')\nmatches = pattern.findall(charter)\nprint(f'Total 365 matches: {len(matches)}')\nfor m in matches:\n    print(f'  {m[:120]}')\n\n# Also check 366\npattern = re.compile(r'## STATUS [^\u2014]+ \u2014 ITERATION 366[^\\n]*')\nmatches = pattern.findall(charter)\nprint(f'Total 366 matches: {len(matches)}')\nfor m in matches:\n    print(f'  {m[:120]}')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 497,
+      "end_event_index": 501,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G3: Index file structure ===\"\nwc -l design_docs/world-mission-index.md\necho \"---\"\necho \"First 30 lines:\"\nhead -30 design_docs/world-mission-index.md\necho \"---\"\necho \"=== Index 367 row ===\"\ngrep -n \"367\" design_docs/world-mission-index.md | head -10\necho \"---\"\necho \"=== Index 361 row (orphan) ===\"\ngrep -n \"361\" design_docs/world-mission-index.md | head -10"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 508,
+      "end_event_index": 512,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Index row count ===\"\npython3 << 'EOF'\nimport re\nwith open('design_docs/world-mission-index.md', 'r') as f:\n    data = f.read()\n# Count table rows\nrows = re.findall(r'^\\| \\d+ \\|', data, re.MULTILINE)\nprint(f'Index table rows: {len(rows)}')\n# Check for orphan361 verbatim\nneedle = \"| 361 | 2026-11-07 | orphan:\"\nprint(f'Orphan 361 verbatim: {needle in data}')\n# Check for notes section\nnotes_marker = data.find('## Notes')\nprint(f'Notes marker present: {notes_marker > 0}')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 519,
+      "end_event_index": 522,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport re\nwith open('design_docs/world-mission-index.md', 'r') as f:\n    data = f.read()\nlines = data.split('\\n')\nprint(f'Total lines: {len(lines)}')\n# Find lines starting with | and a number\nfor i, l in enumerate(lines):\n    if l.startswith('|') and re.match(r'^\\| \\d+ \\|', l):\n        # Show first few and last few\n        if i < 3 or i > len(lines) - 5:\n            print(f'  Line {i+1}: {l[:80]}')\n        pass\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 529,
+      "end_event_index": 532,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport json\nwith open('design_docs/verification/world-iter367/cli-rotation-receipt.json') as f:\n    r = json.load(f)\nprint('Keys:', list(r.keys()))\nfor k, v in r.items():\n    if isinstance(v, dict):\n        print(f'{k}:')\n        for k2, v2 in v.items():\n            print(f'  {k2}: {str(v2)[:200]}')\n    else:\n        print(f'{k}: {str(v)[:200]}')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 539,
+      "end_event_index": 542,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport hashlib\nwith open('design_docs/world-mission-index.md', 'rb') as f:\n    data = f.read()\nprint(f'Index SHA256: {hashlib.sha256(data).hexdigest()}')\nprint(f'Expected: 3a9946927218cb78dc46623ebcf7b32929c24005e835cdfacda3b216fe353b49')\n\n# Verify live and archive hashes\nwith open('design_docs/world-mission-log.md', 'rb') as f:\n    live = f.read()\nwith open('design_docs/world-mission-log-archive.md', 'rb') as f:\n    arc = f.read()\nprint(f'Live SHA256: {hashlib.sha256(live).hexdigest()}')\nprint(f'Expected live: d004ba2b02c89bbb35e764475fd3c6b52ab9ddddbdebf467d15246a2fc337915')\nprint(f'Archive SHA256: {hashlib.sha256(arc).hexdigest()}')\nprint(f'Expected archive: 78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 549,
+      "end_event_index": 553,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Git log for world-mission-log.md ===\"\ngit log --oneline -5 -- design_docs/world-mission-log.md\necho \"---\"\necho \"=== Git log for world-mission-log-archive.md ===\"\ngit log --oneline -5 -- design_docs/world-mission-log-archive.md\necho \"---\"\necho \"=== Git log for world-mission-index.md ===\"\ngit log --oneline -5 -- design_docs/world-mission-index.md"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 560,
+      "end_event_index": 564,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Diff f2550349..a6360932 on world-mission-log.md ===\"\ngit diff --stat f2550349..a6360932 -- design_docs/world-mission-log.md\necho \"---\"\necho \"=== Diff 86763124..a6360932 on world-mission-log.md ===\"\ngit diff --stat 86763124..a6360932 -- design_docs/world-mission-log.md\necho \"---\"\necho \"=== Original M1 (86763124) world-mission-log.md SHA ===\"\ngit show 86763124:design_docs/world-mission-log.md | shasum -a 256\necho \"---\"\necho \"=== Candidate (a6360932) world-mission-log.md SHA ===\"\ngit show a6360932:design_docs/world-mission-log.md | shasum -a 256"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 571,
+      "end_event_index": 574,
+      "tool": "bash",
+      "args": {
+        "command": "git diff 86763124..a6360932 -- design_docs/world-mission-log.md"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 581,
+      "end_event_index": 586,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Per-file diffs base..candidate ===\"\ngit diff --stat ad13d835..a6360932 | tail -15\necho \"---\"\necho \"=== Per-file diffs f2550349..a6360932 ===\"\ngit diff --stat f2550349..a6360932 | tail -15\necho \"---\"\necho \"=== Original M1 (86763124) to candidate (a6360932) ===\"\ngit diff --stat 86763124..a6360932 | head -20"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 593,
+      "end_event_index": 596,
+      "tool": "bash",
+      "args": {
+        "command": "git diff 86763124..a6360932 -- design_docs/world-mission-dashboard.md"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 603,
+      "end_event_index": 607,
+      "tool": "bash",
+      "args": {
+        "command": "git diff 86763124..a6360932 -- design_docs/verification/world-iter367/meter-ledger-prejudge.json\necho \"---\"\ngit diff 86763124..a6360932 -- design_docs/verification/world-iter367/controller-committed-reconstruction.json"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 614,
+      "end_event_index": 618,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Dashboard physical lines ===\"\nwc -l design_docs/world-mission-dashboard.md\necho \"Expected \u2264 40\"\necho \"---\"\necho \"=== Dashboard content ===\"\nhead -30 design_docs/world-mission-dashboard.md"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 625,
+      "end_event_index": 629,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G3: Live log 367 entry ===\"\ngrep -n \"## 367\" design_docs/world-mission-log.md\necho \"---\"\necho \"=== Show 367 entry ===\"\npython3 << 'EOF'\nwith open('design_docs/world-mission-log.md', 'r') as f:\n    lines = f.readlines()\n# Find 367 entry start\nfor i, l in enumerate(lines):\n    if l.startswith('## 367'):\n        # Print 50 lines from this position\n        for j in range(max(0, i-2), min(len(lines), i+15)):\n            print(f'  Line {j+1}: {lines[j].rstrip()[:120]}')\n        break\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 636,
+      "end_event_index": 639,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport re\nwith open('design_docs/world-mission-log.md', 'r') as f:\n    data = f.read()\n# Count ## entries\nentries = re.findall(r'^## (\\d+) \u2014 ', data, re.MULTILINE)\nprint(f'Live ## entries: {len(entries)}')\nprint(f'Entry IDs: {entries[:50]}')\n# Last 5\nprint(f'Last 5: {entries[-5:]}')\n\n# Check archive\nwith open('design_docs/world-mission-log-archive.md', 'r') as f:\n    arc = f.read()\narc_entries = re.findall(r'^## (\\d+) \u2014 ', arc, re.MULTILINE)\nprint(f'\\nArchive ## entries: {len(arc_entries)}')\nprint(f'Archive entry IDs (first 30): {arc_entries[:30]}')\nprint(f'Last 5: {arc_entries[-5:]}')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 646,
+      "end_event_index": 649,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport re\n\n# Live entries 326-346 should be in archive\n# Live entries 347-360, 362-367 should be in live (not archive)\n# Entry 361 is orphan (in index only)\n\nwith open('design_docs/world-mission-log.md', 'r') as f:\n    live = f.read()\nwith open('design_docs/world-mission-log-archive.md', 'r') as f:\n    arc = f.read()\n\nlive_entries = sorted([int(m) for m in re.findall(r'^## (\\d+) \u2014 ', live, re.MULTILINE)])\narc_entries = sorted([int(m) for m in re.findall(r'^## (\\d+) \u2014 ', arc, re.MULTILINE)])\n\n# Check 326-346 are in archive (moved)\nmoved = list(range(326, 347))\nin_arc = [e for e in moved if e in arc_entries]\nin_live = [e for e in moved if e in live_entries]\nprint(f'Moved (326-346) in archive: {len(in_arc)} (expected 21)')\nprint(f'Moved (326-346) in live: {len(in_live)} (expected 0)')\n\n# Check 347-360, 362-367 in live\nretained_live = list(range(347, 361)) + [362, 363, 364, 365, 366, 367]\nin_live_retained = [e for e in retained_live if e in live_entries]\nin_arc_retained = [e for e in retained_live if e in arc_entries]\nprint(f'Retained (347-360, 362-367) in live: {len(in_live_retained)} (expected 20)')\nprint(f'Retained (347-360, 362-367) in archive: {len(in_arc_retained)} (expected 0)')\n\n# 361 should be missing from both\nprint(f'\\n361 in live: {361 in live_entries} (expected False)')\nprint(f'361 in archive: {361 in arc_entries} (expected False)')\n\n# Conservation: full archive 0-346 plus 1..325 should equal\n# Pre-rotation archive had 0..325 plus 326..346 in live\n# Final archive 0..346\n# 367 is added to live\nprint(f'\\nTotal live+archive: {len(live_entries) + len(arc_entries)} = {len(live_entries) + len(arc_entries)}')\n\n# Original baseline: 312 archive + 40 live = 352 records\n# Final: 333 archive + 20 live = 353 records\n# That's +1 (the new 367 entry)\nprint(f'Final count - baseline 353: {len(live_entries) + len(arc_entries) - 353}')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 656,
+      "end_event_index": 659,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport hashlib, copy, re\n\n# Read original M1 files\nimport subprocess\n\n# Compare original M1 (86763124) live log to candidate (a6360932) live log\ndef read_blob(commit, path):\n    return subprocess.run(['git', 'show', f'{commit}:{path}'], capture_output=True, text=True).stdout\n\norig_live = read_blob('86763124', 'design_docs/world-mission-log.md')\ncurr_live = open('design_docs/world-mission-log.md').read()\norig_arc = read_blob('86763124', 'design_docs/world-mission-log-archive.md')\ncurr_arc = open('design_docs/world-mission-log-archive.md').read()\norig_idx = read_blob('86763124', 'design_docs/world-mission-index.md')\ncurr_idx = open('design_docs/world-mission-index.md').read()\n\nprint(f'Orig live size: {len(orig_live)}')\nprint(f'Curr live size: {len(curr_live)}')\nprint(f'Orig archive size: {len(orig_arc)}')\nprint(f'Curr archive size: {len(curr_arc)}')\nprint(f'Orig index size: {len(orig_idx)}')\nprint(f'Curr index size: {len(curr_idx)}')\n\n# Hash check\nprint(f'\\nOrig live hash: {hashlib.sha256(orig_live.encode()).hexdigest()[:16]}')\nprint(f'Curr live hash: {hashlib.sha256(curr_live.encode()).hexdigest()[:16]}')\nprint(f'Orig arc hash: {hashlib.sha256(orig_arc.encode()).hexdigest()[:16]}')\nprint(f'Curr arc hash: {hashlib.sha256(curr_arc.encode()).hexdigest()[:16]}')\n\n# The 2-line addition to live\norig_lines = orig_live.count('\\n')\ncurr_lines = curr_live.count('\\n')\nprint(f'\\nOrig live lines: {orig_lines}')\nprint(f'Curr live lines: {curr_lines}')\nprint(f'Diff: {curr_lines - orig_lines}')\n\n# Check if curr live has the controller follow-through annotation\nhas_controller = 'Controller follow-through before independent judgment' in curr_live\nprint(f'\\nCurr live has controller annotation: {has_controller}')\nprint(f'Orig live has controller annotation: {\"Controller follow-through\" in orig_live}')\n\n# Compare first 1500 lines (pre-annotation)\nprint(f'\\nFirst 1500 lines identical: {orig_live[:len(orig_live)] == curr_live[:len(orig_live)]}')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 666,
+      "end_event_index": 669,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport subprocess\n\norig_live = subprocess.run(['git', 'show', '86763124:design_docs/world-mission-log.md'], capture_output=True, text=True).stdout\n\n# Check end of orig live\nprint('Last 800 chars of orig live:')\nprint(orig_live[-800:])\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 676,
+      "end_event_index": 679,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport subprocess\n\norig_live = subprocess.run(['git', 'show', '86763124:design_docs/world-mission-log.md'], capture_output=True, text=True).stdout\ncurr_live = open('design_docs/world-mission-log.md').read()\n\n# Check end of both\nprint('=== Orig live last 500 chars ===')\nprint(orig_live[-500:])\nprint('\\n\\n=== Curr live last 500 chars ===')\nprint(curr_live[-500:])\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 686,
+      "end_event_index": 689,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport subprocess\n\norig_live = subprocess.run(['git', 'show', '86763124:design_docs/world-mission-log.md'], capture_output=True, text=True).stdout\ncurr_live = open('design_docs/world-mission-log.md').read()\n\n# Re-check substring\nneedle = 'Controller follow-through before independent judgment'\nprint(f'Orig live has \"{needle}\": {needle in orig_live}')\nprint(f'Curr live has \"{needle}\": {needle in curr_live}')\n\n# Just to verify\nprint(f'Orig live length: {len(orig_live)}')\nprint(f'Curr live length: {len(curr_live)}')\n\n# Count diffs\nprint(f'\\nFirst 1500 bytes identical: {orig_live[:1500] == curr_live[:1500]}')\nprint(f'First 292000 bytes identical: {orig_live[:292000] == curr_live[:292000]}')\n\n# Position of annotation in curr\npos = curr_live.find(needle)\nprint(f'\\nAnnotation position in curr: {pos}')\nprint(f'Same position in orig: {orig_live.find(needle)}')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 696,
+      "end_event_index": 700,
+      "tool": "bash",
+      "args": {
+        "command": "ls /Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/ 2>/dev/null || echo \"Parent record checkout not found\"\necho \"---\"\necho \"=== Check ephemeral registry ===\"\nls -la /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-registry-rtm5mxnc 2>/dev/null || echo \"Registry not found (may have been ephemeral)\""
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 707,
+      "end_event_index": 711,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Parent record-checkout file SHAs ===\"\ncd /Users/voightkampff/dev/sunholo-data/.world-iter367-record && for f in design_docs/world-mission.md design_docs/world-mission-status-archive.md design_docs/world-mission-log.md design_docs/world-mission-log-archive.md design_docs/world-mission-index.md design_docs/world-mission-dashboard.md; do\n  sha=$(shasum -a 256 \"$f\" 2>/dev/null | awk '{print $1}')\n  echo \"  $f: $sha\"\ndone\necho \"---\"\necho \"=== Ephemeral registry content ===\"\ncat /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-registry-rtm5mxnc/world.toml | head -40"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 718,
+      "end_event_index": 722,
+      "tool": "bash",
+      "args": {
+        "command": "cd /Users/voightkampff/dev/sunholo-data/.world-iter367-eval && pwd\necho \"---\"\necho \"=== Check ephemeral registry workdir matches parent record-checkout ===\"\ngrep -E \"workdir\" /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-registry-rtm5mxnc/world.toml | head -3"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 729,
+      "end_event_index": 730,
+      "tool": "read",
+      "args": {
+        "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/snapshot-manifest.json"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 737,
+      "end_event_index": 741,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Verify M1 (86763124) snapshot payloads vs current ===\"\necho \"Comparing each manifest entry to original M1 blob...\"\necho \"\"\npython3 << 'EOF'\nimport subprocess, json, hashlib\n\n# Read manifest at M1 commit\nmanifest_blob = subprocess.run(['git', 'show', '86763124:design_docs/verification/world-iter367/snapshot-manifest.json'], capture_output=True, text=True).stdout\nm = json.loads(manifest_blob)\n\nprint(f'Payload count: {m[\"payload_count\"]}')\nprint()\n\nmismatches = 0\nfor entry in m['entries']:\n    # Read original M1 blob\n    orig = subprocess.run(['git', 'show', f'86763124:{entry[\"path\"]}'], capture_output=True).stdout\n    orig_hash = hashlib.sha256(orig).hexdigest()\n    orig_mode = '0%o' % int(oct(int.from_bytes(orig[:0], 'big')), 8))  # placeholder\n    match_orig = (orig_hash == entry['sha256'])\n    \n    # Read current file\n    with open(entry['path'], 'rb') as f:\n        curr = f.read()\n    curr_hash = hashlib.sha256(curr).hexdigest()\n    \n    print(f'{entry[\"path\"]}:')\n    print(f'  Type: {entry[\"type\"]} Mode: {entry[\"mode\"]}')\n    print(f'  Manifest SHA: {entry[\"sha256\"][:16]}...')\n    print(f'  Original M1 blob SHA: {orig_hash[:16]}... match={match_orig}')\n    print(f'  Current file SHA: {curr_hash[:16]}... {\"DIFFERENT\" if curr_hash != entry[\"sha256\"] else \"SAME\"}')\n    \n    if curr_hash != entry[\"sha256\"]:\n        mismatches += 1\n    print()\n\nprint(f'Mismatches: {mismatches}')\nEOF"
+      },
+      "is_error": true
+    },
+    {
+      "event_index": 748,
+      "end_event_index": 751,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport subprocess, json, hashlib, stat\n\nmanifest_blob = subprocess.run(['git', 'show', '86763124:design_docs/verification/world-iter367/snapshot-manifest.json'], capture_output=True, text=True).stdout\nm = json.loads(manifest_blob)\n\nprint(f'Payload count: {m[\"payload_count\"]}')\nprint()\n\nmismatches = 0\nfor entry in m['entries']:\n    # Read original M1 blob from git\n    orig = subprocess.run(['git', 'show', f'86763124:{entry[\"path\"]}'], capture_output=True).stdout\n    orig_hash = hashlib.sha256(orig).hexdigest()\n    match_orig = (orig_hash == entry['sha256'])\n    \n    # Read current file\n    with open(entry['path'], 'rb') as f:\n        curr = f.read()\n    curr_hash = hashlib.sha256(curr).hexdigest()\n    curr_stat = os.stat(entry['path']) if False else None\n    \n    import os\n    curr_mode = oct(os.stat(entry['path']).st_mode)[-3:]\n    \n    print(f'{entry[\"path\"]}:')\n    print(f'  Type: {entry[\"type\"]} Manifest mode: {entry[\"mode\"]} Actual mode: {curr_mode}')\n    print(f'  Manifest SHA: {entry[\"sha256\"][:16]}...')\n    print(f'  Original M1 blob SHA: {orig_hash[:16]}... match={match_orig}')\n    print(f'  Current file SHA: {curr_hash[:16]}... {\"DIFFERENT\" if curr_hash != entry[\"sha256\"] else \"SAME\"}')\n    \n    if curr_hash != entry[\"sha256\"]:\n        mismatches += 1\n    print()\n\nprint(f'Mismatches vs current: {mismatches}')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 758,
+      "end_event_index": 759,
+      "tool": "read",
+      "args": {
+        "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/controller-committed-reconstruction.json"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 766,
+      "end_event_index": 770,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== controller-reconstruction.json ===\"\npython3 << 'EOF'\nimport json\nwith open('design_docs/verification/world-iter367/controller-reconstruction.json') as f:\n    r = json.load(f)\nprint(json.dumps(r, indent=2)[:1500])\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 777,
+      "end_event_index": 780,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport json\nwith open('design_docs/verification/world-iter367/executor-proof.json') as f:\n    d = json.load(f)\nprint('=== command_inventory ===')\nprint(json.dumps(d['command_inventory'], indent=2)[:2000])\nprint()\nprint('=== write_inventory ===')\nprint(json.dumps(d['write_inventory'], indent=2)[:2000])\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 787,
+      "end_event_index": 792,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G5: Whitespace checks ===\"\necho \"Default (base..candidate) diff --check:\"\ngit --no-optional-locks diff --check ad13d835..HEAD\necho \"RC: $?\"\necho \"---\"\necho \"Full base-relative diff --check:\"\ngit --no-optional-locks diff --check\necho \"RC: $?\"\necho \"---\"\necho \"Status / log / index / archive / dashboard: trailing whitespace?\"\nfor f in design_docs/world-mission.md design_docs/world-mission-status-archive.md design_docs/world-mission-log.md design_docs/world-mission-log-archive.md design_docs/world-mission-index.md design_docs/world-mission-dashboard.md; do\n  has_trailing=$(grep -c \" $\" \"$f\" 2>/dev/null || echo 0)\n  echo \"  $f: trailing-space count=$has_trailing\"\ndone"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 799,
+      "end_event_index": 803,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G5: New file whitespace (rc1 means different bytes) ===\"\nfor f in design_docs/verification/world-iter367/executor-proof.json \\\n         design_docs/verification/world-iter367/execution-state.json \\\n         design_docs/verification/world-iter367/cli-rotation-receipt.json; do\n  echo \"--- $f ---\"\n  git --no-optional-locks diff --no-index --check /dev/null \"$f\" 2>&1 | head -10\n  echo \"RC: $?\"\ndone"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 810,
+      "end_event_index": 814,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G5: New file whitespace - trailing space check ===\"\nfor f in design_docs/verification/world-iter367/executor-proof.json \\\n         design_docs/verification/world-iter367/execution-state.json \\\n         design_docs/verification/world-iter367/cli-rotation-receipt.json; do\n  has_trailing=$(grep -c \" $\" \"$f\" 2>/dev/null | head -1)\n  size=$(wc -c < \"$f\")\n  echo \"  $f: bytes=$size trailing-ws-lines=$has_trailing\"\ndone\n\necho \"\"\necho \"=== G5: --check on each new file (no-index) ===\"\nfor f in design_docs/verification/world-iter367/executor-proof.json \\\n         design_docs/verification/world-iter367/execution-state.json \\\n         design_docs/verification/world-iter367/cli-rotation-receipt.json; do\n  result=$(git --no-optional-locks diff --no-index --check /dev/null \"$f\" 2>&1; echo \"RC=$?\")\n  echo \"  $f:\"\n  echo \"$result\" | head -5\ndone"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 821,
+      "end_event_index": 825,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G5: --check verbose ===\"\nfor f in design_docs/verification/world-iter367/executor-proof.json \\\n         design_docs/verification/world-iter367/execution-state.json \\\n         design_docs/verification/world-iter367/cli-rotation-receipt.json; do\n  result=$(git --no-optional-locks diff --no-index --check /dev/null \"$f\" 2>&1)\n  echo \"  $f: $result\"\n  echo \"---\"\ndone"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 832,
+      "end_event_index": 836,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G1: My own in-memory corruption control ===\"\npython3 << 'EOF'\nimport hashlib\n\n# Read the current protected ADMIN file\nwith open('design_docs/world-mission.md', 'rb') as f:\n    orig = f.read()\n\n# Apply a 1-byte change\nmodified = orig[:100] + bytes([(orig[100] + 1) % 256]) + orig[101:]\nmod_hash = hashlib.sha256(modified).hexdigest()\norig_hash = hashlib.sha256(orig).hexdigest()\nprint(f'Original SHA: {orig_hash[:16]}...')\nprint(f'Modified SHA: {mod_hash[:16]}...')\nprint(f'Different: {orig_hash != mod_hash}')\n\n# Verify the G2 expected hash matches\nEXPECTED = 'c42e5b9bd5bf4934c880e285b118b1593f9bbdb1e52c5b7a3716803f2d95e9fd'\nprint(f'Original matches expected: {orig_hash == EXPECTED}')\nprint(f'Modified does NOT match expected: {mod_hash != EXPECTED}')\n\n# Verify mode is 0644 (not changed)\nimport os\nmode = oct(os.stat('design_docs/world-mission.md').st_mode)[-3:]\nprint(f'Current mode: {mode}')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 843,
+      "end_event_index": 847,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== G3: Index orphan 361 verbatim ===\"\npython3 << 'EOF'\nwith open('design_docs/world-mission-index.md', 'r') as f:\n    data = f.read()\n# Find orphan 361 row\nimport re\nneedle = \"| 361 | 2026-11-07 | orphan: row 256 r1 design/quorum artifacts recovered and credited by iteration 362; no commit, landing or independent execution verdict [ADMIN] |\"\nprint(f'Orphan 361 verbatim present: {needle in data}')\n\n# Check 367 row\nneedle_367 = \"| 367 | 2026-11-08 | ADMIN record only; row 256 remains parked [ADMIN] |\"\nprint(f'367 row present: {needle_367 in data}')\n\n# Check notes section preserved\nnotes_needle = \"## Notes\"\nprint(f'Notes section present: {notes_needle in data}')\n\n# Show notes section if present\nif notes_needle in data:\n    pos = data.find(notes_needle)\n    print(data[pos:pos+500])\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 854,
+      "end_event_index": 857,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport json\nwith open('design_docs/verification/world-iter367/cli-rotation-receipt.json') as f:\n    r = json.load(f)\nprint('prior_notes_retained:')\nprint(json.dumps(r['index']['prior_notes_retained'], indent=2))\nprint()\nprint('orphan361_verbatim:')\nprint(repr(r['index']['orphan361_verbatim']))\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 864,
+      "end_event_index": 867,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nwith open('design_docs/world-mission-index.md', 'r') as f:\n    data = f.read()\n\n# Check for attended continuation note\nneedle = \"ATTENDED CONTINUATION \u2014 D-WORLD-71 single follow-up completed; M1 implementation PASS86, M2 UNRUN [ADMIN handoff]\"\nprint(f'Note in index: {needle in data}')\n\n# Look for it\nimport re\nfor line in data.split('\\n'):\n    if 'ATTENDED CONTINUATION' in line:\n        print(f'Found: {line[:200]}')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 874,
+      "end_event_index": 877,
+      "tool": "bash",
+      "args": {
+        "command": "python3 << 'EOF'\nimport json\nwith open('design_docs/verification/world-iter367/executor-proof.json') as f:\n    d = json.load(f)\nprint('=== structural_observations ===')\nfor k, v in d['structural_observations'].items():\n    print(f'{k}: {v}')\nEOF"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 884,
+      "end_event_index": 888,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Verify output paths absent ===\"\nls -la design_docs/verification/world-iter367/evaluator-report-round1.md design_docs/verification/world-iter367/evaluator-result-round1.json 2>&1 || echo \"Both paths absent (good)\""
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 895,
+      "end_event_index": 896,
+      "tool": "write",
+      "args": {
+        "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/evaluator-report-round1.md",
+        "content_bytes": 28688,
+        "content_sha256": "c09acde67527cdb252da00a52b44b2718640573d5a13371caca545625e30fbe4"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 903,
+      "end_event_index": 904,
+      "tool": "write",
+      "args": {
+        "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-eval/design_docs/verification/world-iter367/evaluator-result-round1.json",
+        "content_bytes": 13562,
+        "content_sha256": "e178d31f009795220e6e17d3cba394dbb35ed2ded4c1767974fe646452b332fa"
+      },
+      "is_error": false
+    },
+    {
+      "event_index": 911,
+      "end_event_index": 915,
+      "tool": "bash",
+      "args": {
+        "command": "echo \"=== Verify result JSON is valid ===\"\npython3 -c \"import json; d = json.load(open('design_docs/verification/world-iter367/evaluator-result-round1.json')); print('Valid JSON, keys:', list(d.keys()))\"\necho \"---\"\necho \"=== Verify report file exists ===\"\nls -la design_docs/verification/world-iter367/evaluator-report-round1.md design_docs/verification/world-iter367/evaluator-result-round1.json\necho \"---\"\necho \"=== Verify no other files were created ===\"\ngit status --short"
+      },
+      "is_error": false
+    }
+  ]
+}

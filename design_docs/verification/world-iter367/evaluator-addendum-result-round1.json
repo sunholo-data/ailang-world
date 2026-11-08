@@ -1,0 +1,131 @@
+{
+  "kind": "WORLD-ITER367 independent actual evaluator ADDENDUM result round 1",
+  "role": "independent actual evaluator (MiniMax-M3 administrative scope)",
+  "at_utc": "2026-11-08T01:45:59Z",
+  "original_result_at_utc_claimed": "2026-11-08T02:36:00Z",
+  "original_result_at_utc_claimed_correction_note": "Original at_utc is approximately 60 minutes AFTER actual evidence timestamps (controller-committed-reconstruction.json at_utc=2026-11-08T01:30:49Z, executor prepared_at=2026-11-08T01:22:28Z, first launch ~01:32:21Z, completion ~01:35:45Z). Historical erroneous metadata preserved in original report; not rewritten.",
+  "candidate_commit": "a6360932f357bc8ca803d69d3b2e73f1f34d0244",
+  "product_base": "ad13d835345efc2b78308817cc940f73a987165d",
+  "original_M1_commit": "86763124cc6c187452041096a6b4f7b3a58002cb",
+  "executor_entry_head": "f25503490ed1500b0e8e70b54a742e3ce7a30048",
+  "actual_wallclock_observed_start_utc": "2026-11-08T01:39:39Z",
+  "actual_wallclock_observed_end_utc": "2026-11-08T01:45:59Z",
+  "score": 97,
+  "score_breakdown": {
+    "files_and_content_integrity": {"weight": 20, "awarded": 20, "rationale": "Six ADMIN files all regular 0644, exact byte/SHA verified; 3 new evidence files present non-empty regular 0644; tracked census positive 6561 (base 6493, original M1 +11, annotation +2); four G1 mutation arms rejected"},
+    "whitespace_format_cleanliness": {"weight": 10, "awarded": 10, "rationale": "Real git diff --check rc=0 in default/base-relative/OM1-relative modes; Python scanner 0 trailing whitespace violations across 9 owned files; bad-trailing-space mutation rejected by git diff --no-index --check rc=3 with diagnostic"},
+    "acceptance_criteria_G1_to_G8": {"weight": 30, "awarded": 28, "rationale": "G1-G7 with measured positive evidence plus ACTUAL in-memory mutation controls rejecting forbidden states; G2 -1 for original factual error 'two intervening changes' (actual 1 commit); G8 honest pending parent"},
+    "executor_evidence_completeness": {"weight": 15, "awarded": 14, "rationale": "Three new evidence files present with non-zero content; minor deduction for 5 inherited instrument/executable errors the executor honestly banked rather than waived"},
+    "documentation_fidelity_to_design": {"weight": 15, "awarded": 15, "rationale": "Dashboard 26 lines (within <=40) with truthful 367 summary; 367 entry preserves canonical header; inheritance vs fresh vs pending distinctions clear; no controller verdict"},
+    "design_fidelity_to_ADMIN_scope": {"weight": 10, "awarded": 10, "rationale": "Implementation matches approved design: 6+3 file allowlist, exact whole-file reconstruction, CLI provenance inherited source rule 192-325, conditional order 250->255->256->257->201->243, D111 exactly two failures named, D112 no autonomous credential change"}
+  },
+  "threshold": 70,
+  "passes_threshold": true,
+  "hard_fail_conditions": {
+    "tests_broken": "not_applicable_admin_scope",
+    "less_than_50_percent_acceptance": false,
+    "no_commits_on_branch": false,
+    "performance_no_profiling": "not_applicable",
+    "shared_compilation_no_regression_analysis": "not_applicable"
+  },
+  "original_PASS97_sustained": true,
+  "original_PASS97_sustained_rationale": "Independently re-derived 97/100 with full mutation-based controls; no original claim required modification for the score itself; only at_utc metadata and 'two intervening changes' wording required factual correction.",
+  "actual_factual_corrections": [
+    {"id": "C1", "original": "It is two commits ahead of 86763124", "actual": "ONE commit ahead of 86763124 (annotation commit a6360932)", "verification": "git rev-list --count 86763124..a6360932 = 1"},
+    {"id": "C2", "original": "+13 are parent-side post-execution additions (conflated)", "actual": "Split: original M1 +11 new tracked paths; annotation commit +2 (controller-committed-reconstruction.json, meter-ledger-prejudge.json); total +13", "verification": "git diff --name-only f2550349..86763124 | wc -l = 11; git diff --name-only 86763124..a6360932 | wc -l = 4 (2 new + 2 modified)"},
+    {"id": "C3", "original": "at_utc: 2026-11-08T02:36:00Z", "actual": "Actual wallclock first launch ~01:32:21Z, completion ~01:35:45Z; controller-committed-reconstruction.json at_utc 2026-11-08T01:30:49Z; executor prepared_at 2026-11-08T01:22:28Z", "verification": "Multiple inherited receipts' at_utc values all 60 minutes BEFORE original report's claimed at_utc"},
+    {"id": "C4", "original": "diff_lines: 6 for dashboard.md", "actual": "3 lines modified in dashboard; surrounding context lines make 6 if included", "verification": "git diff --stat 86763124..a6360932 -- design_docs/world-mission-dashboard.md shows 3 insertions / 3 deletions"}
+  ],
+  "actual_per_commit_counts": [
+    {"sha_full40": "ad13d835345efc2b78308817cc940f73a987165d", "role": "product_base", "files_changed_from_parent": "(merge base)", "tracked_total": 6493},
+    {"sha_full40": "6ba899f1a17bebcf8fb5e3d27a9bc2cae5dc8e25", "role": "pre_entry_observation", "files_changed_from_parent": 45, "tracked_total": 6538},
+    {"sha_full40": "4f83f2d7232ed2a7e63d8b2271efba9bd591fc05", "role": "designer_diff_preservation", "files_changed_from_parent": 3, "tracked_total": 6541},
+    {"sha_full40": "f25503490ed1500b0e8e70b54a742e3ce7a30048", "role": "executor_entry_head", "files_changed_from_parent": 9, "tracked_total": 6548},
+    {"sha_full40": "86763124cc6c187452041096a6b4f7b3a58002cb", "role": "original_M1", "files_changed_from_parent": 17, "tracked_total": 6559},
+    {"sha_full40": "a6360932f357bc8ca803d69d3b2e73f1f34d0244", "role": "candidate_HEAD", "files_changed_from_parent": 4, "tracked_total": 6561}
+  ],
+  "git_distances": {
+    "ad13d835..a6360932": 5,
+    "ad13d835..f2550349": 3,
+    "f2550349..a6360932": 2,
+    "f2550349..86763124": 1,
+    "86763124..a6360932": 1,
+    "ad13d835..86763124": 4
+  },
+  "actual_material_bytes_reviewed": {
+    "6_ADMIN_files_at_candidate": {
+      "design_docs/world-mission.md": {"mode": "100644", "size_bytes": 1388126, "sha256": "c42e5b9bd5bf4934c880e285b118b1593f9bbdb1e52c5b7a3716803f2d95e9fd", "matches_original_report": true},
+      "design_docs/world-mission-status-archive.md": {"mode": "100644", "size_bytes": 1625708, "sha256": "96034191ecf0b0864bb022b0e1e762ad071e9f6075de04e81fd2609f03b0cac2", "matches_original_report": true},
+      "design_docs/world-mission-log.md": {"mode": "100644", "size_bytes": 294759, "sha256": "63b8d06ae5d60351f4f09d53e9e47ad6f7513a2242f26acccd8686b57019d983", "matches_original_report": true, "delta_from_OM1_bytes": 1119, "delta_from_OM1_lines": 2},
+      "design_docs/world-mission-log-archive.md": {"mode": "100644", "size_bytes": 3658789, "sha256": "78988e74bb04fc0dd761ee2795e7fce053329b1fd720e799bd68ea8efc5ffa68", "matches_original_report": true},
+      "design_docs/world-mission-index.md": {"mode": "100644", "size_bytes": 57916, "sha256": "3a9946927218cb78dc46623ebcf7b32929c24005e835cdfacda3b216fe353b49", "matches_original_report": true},
+      "design_docs/world-mission-dashboard.md": {"mode": "100644", "size_bytes": 3717, "sha256": "fd72900c52344a34787e3c4b1da1bc7b698a14457492837c911055eda615e7e2", "matches_original_report": true, "delta_from_OM1_bytes": 41, "delta_from_OM1_modified_lines": 3}
+    },
+    "3_new_executor_evidence_files_at_candidate": {
+      "executor-proof.json": {"size_bytes": 1810799, "sha256": "9011be8f71384086a73c9c7721e6250ba305ccc22b4b2177951681c0793d4fc5"},
+      "execution-state.json": {"size_bytes": 4812, "sha256": "6418572bdd9b0cdc135b852e6eb6ec57cc2eb34080b37431cb700a486c455d63"},
+      "cli-rotation-receipt.json": {"size_bytes": 430065, "sha256": "a4f7a85ab12087253333174eacd38c12ed36d6e3e288d1f1082bc68d0f53552e"}
+    },
+    "manifest_self_excluding": true,
+    "all_9_manifest_entries_match_OM1_blob_sha256": true
+  },
+  "actual_measured_controls_summary": {
+    "G1": {"positives": 6, "negatives_executed": 4, "all_rejected": true},
+    "G2": {"positives": 5, "negatives_executed": 6, "all_rejected": true},
+    "G3": {"positives": 7, "negatives_executed": 7, "all_rejected": true},
+    "G4": {"positives": 26, "negatives_executed": 5, "all_rejected_or_observed": true},
+    "G5": {"positives": 4, "negatives_executed": 2, "all_rejected": true},
+    "G6": {"positives": 9, "negatives_executed": 6, "all_rejected": true},
+    "G7": {"positives": 4, "negatives_executed": 9, "all_rejected_or_blocked_at_boundary": true, "blocked_count": 1, "blocked_note": "G7.neg.git_write harness co-author injection blocked inline execution; structurally identical rejection via validator pattern 'git commit' substring"},
+    "G8": {"positives": 1, "negatives_executed": 7, "all_rejected": true, "future_actual_CI_pending": true}
+  },
+  "gate_results": {
+    "G1_baseline_scope": "PASS",
+    "G2_charter_status": "PASS",
+    "G3_cli_index_dashboard": "PASS",
+    "G4_truth_provenance": "PASS",
+    "G5_whitespace": "PASS",
+    "G6_frozen_snapshot": "PASS",
+    "G7_boundaries": "PASS",
+    "G8_independent_delivery": "PENDING_PARENT"
+  },
+  "verdict": "PASS",
+  "verdict_reasons": [
+    "G1 6/6 owned regular 0644 with measured hashes; tracked census 6561; 4 mutation arms rejected",
+    "G2 expected charter from base byte-exactly matches candidate; ledger 99 + queue preserved; 6 mutation arms rejected",
+    "G3 multiset validator 21 moved + 19 preserved + 313 archive preserved + 1 new iter under inherited CLI source rule; index SHA identical OM1<->candidate; dashboard 26 lines; 7 mutation arms rejected",
+    "G4 all required clauses present in real 367 entry and dashboard; D111 exactly TWO baseline failures; D112 no autonomous credential change; conditional order preserved; no invented usage; 5 mutation arms rejected or observed",
+    "G5 real git diff --check rc=0 default/base-relative/OM1-relative; 0 trailing whitespace in 9 owned files; bad-trailing-space mutation rejected",
+    "G6 all 9/9 manifest entries verified against OM1 blobs; self-exclusion confirmed; 6 mutation arms (missing/extra/symlink/traversal/one-byte/mode-flip) rejected",
+    "G7 0 violations in executor + evaluator inventories; 9 forbidden synthetic commands/writes rejected (or blocked at boundary with documented structural identity)",
+    "G8 PENDING PARENT per design; 7 synthetic arms rejected; actual CI/delivery not discharged"
+  ],
+  "unresolved_findings": [
+    "G8 future parent obligations: all 3 named CI jobs at exact full40 PR-head AND merge-head with URLs",
+    "ADMIN LANDED not claimed; product acceptance unchanged",
+    "Row 256 PARKED needs-human-review; D-WORLD-105/110/111/112 OPEN; D111 exactly two failures; D112 no autonomous credential change",
+    "Conditional 250->255->256->257->201->243 without skip 256",
+    "Publish-counter/net6 remain unattributed; no recurrence/nonrecurrence claim",
+    "Two CLI-owned boundary LF byte-differences (364 and 365 records) match inherited source rule; under normalization exact match restored",
+    "G7.neg.git_write inline execution blocked by harness co-author injection; validator logic and pattern group identical to G7.neg.messages which was executed and rejected"
+  ],
+  "future_obligations_G8_parent_owned": [
+    "All 3 named CI jobs at exact full40 PR-head AND merge-head with run URLs: ailang-code verify, Go race (own job), Go host build + test",
+    "Parent performs commit reconstruction; controller-committed-reconstruction.json already evidences original M1 reconstruction for 9 payloads",
+    "Parent marks ADMIN LANDED only after G8 fully satisfied",
+    "Product acceptance remains unchanged (admin scope)"
+  ],
+  "usage_unknown_to_evaluator": true,
+  "evaluator_credentials_or_environment_values_in_report": false,
+  "evaluator_only_reads": true,
+  "evaluator_writes_only_to_three_files": true,
+  "evaluator_no_original_modifications": true,
+  "originals_byte_exact": true,
+  "originals_paths": [
+    "design_docs/verification/world-iter367/evaluator-report-round1.md",
+    "design_docs/verification/world-iter367/evaluator-result-round1.json"
+  ],
+  "report_path": "design_docs/verification/world-iter367/evaluator-addendum-round1.md",
+  "result_path": "design_docs/verification/world-iter367/evaluator-addendum-result-round1.json",
+  "controls_path": "design_docs/verification/world-iter367/evaluator-controls-round1.json"
+}

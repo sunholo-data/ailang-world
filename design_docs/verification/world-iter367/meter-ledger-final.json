@@ -1,0 +1,12 @@
+{
+  "at_utc": "2026-11-08T02:02:13.406310+00:00",
+  "actual_metered_usd": 1.57784034,
+  "ceiling_usd": 5,
+  "probe": 0.00041718,
+  "review1": 0.3446814,
+  "supplement": 1.13073324,
+  "final": 0.10200852,
+  "cost_source": "Provider-reported actual message_end usage.cost.total sums in immutable supervisor receipts",
+  "no_further_calls": true,
+  "reservation_estimates_are_not_actual_cost": true
+}

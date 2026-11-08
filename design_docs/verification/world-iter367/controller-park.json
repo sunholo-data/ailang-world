@@ -1,0 +1,93 @@
+{
+  "at_utc": "2026-11-08T02:02:13.406310+00:00",
+  "iteration": 367,
+  "class": "ADMIN",
+  "outcome": "PARKED",
+  "status": "needs-human-review",
+  "reviewed_candidate": "a6360932f357bc8ca803d69d3b2e73f1f34d0244",
+  "actual_independent_model": "pi:openrouter/minimax/minimax-m3",
+  "actual_judge_verdicts": [
+    {
+      "attempt": 1,
+      "verdict": "PASS",
+      "score": 97
+    },
+    {
+      "attempt": 2,
+      "verdict": "PASS",
+      "score": 97
+    },
+    {
+      "attempt": 3,
+      "verdict": "PASS",
+      "score": 95
+    }
+  ],
+  "mandatory_acceptance": "UNMET: actual after-review input rehash not successfully executed; the final judge claimed it anyway",
+  "evidence": "evaluator-final-round3-supervisor-receipt.json critical_unexecuted_claim; failed combined script event242",
+  "actual_score_not_overwritten": true,
+  "controller_supplies_no_replacement_verdict_or_rehash": "No controller after-check is substituted for missing independent executed proof.",
+  "fourth_call": false,
+  "downstream_G8": "Not discharged; no merge or ADMIN LANDED. CI cannot replace the unmet independent gate.",
+  "product256": "PARKED unchanged, historical independent FAIL85, LOCAL_CRITERION UNMET; draft515 untouched",
+  "canonical_ledger": "99rows preserved; OPEN105/110/111/112 unchanged; ADMIN367 is a separate proposed attended-review request",
+  "proposal": {
+    "id": "ADMIN367",
+    "status": "PROPOSED attended review request; not a new adopted decision-ledger row",
+    "question": "How should the unmerged iteration367 record resume after three independent reviews left mandatory execution proof unmet?",
+    "options": {
+      "A": "Attended evidence/hook workflow repair, then fresh independent review; no product acceptance or waiver.",
+      "B": "Abandon the unmerged367 record and retain the canonical366 record."
+    },
+    "recommendation": "A",
+    "default": "Keep367 unmerged needs-human-review immediately; no fourth judge call this iteration."
+  },
+  "metered_usd": 1.57784034,
+  "quota_tokens": {
+    "designer": 167027,
+    "planner": 93475,
+    "executor": 136972,
+    "known_codex_total": 397474,
+    "controller_and_Agent_supervisors": "not reported"
+  },
+  "evaluator_provider_reported_tokens": {
+    "probe": 1391,
+    "review1": 4336390,
+    "supplement": 14958956,
+    "final": 990839,
+    "total_including_cached_inputs": 20287576,
+    "reasoning_is_subset_not_added": true
+  },
+  "routing_note": "lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `codex:gpt-6.1-sol`; `evaluator`: **anthropic** lane `sonnet` unusable (probe rc=`1` \u2014 quota-limited) \u2192 handed to `pi:openrouter/minimax/minimax-m3`",
+  "retro": {
+    "harness_last20": 0,
+    "last3_product_landings": [
+      "360:none",
+      "359:none",
+      "340:none"
+    ],
+    "routable_UNMET": 0,
+    "DRIFT": false,
+    "local_sprint_retros_directory": "absent",
+    "new_friction_route": "backlog / attended existing row258 scope; proposed ADMIN367 attended review. No autonomous harness, shared-skill or policy fix.",
+    "index_instrument": "Classify full source headings; CLI index truncates some class tags. Earlier index-only product search is not landing evidence."
+  },
+  "idle_fingerprint": "Not promoted: fire degraded; review parked",
+  "non_gating_metadata_corrections": {
+    "actual_base_to_candidate_full_shas": [
+      "6ba899f1238b00e3e2c895e2c9bc63a1cd748757",
+      "4f83f2d7232ed2a7e63d8b2271efba9bd591fc05",
+      "f25503490ed1500b0e8e70b54a742e3ce7a30048",
+      "86763124cc6c187452041096a6b4f7b3a58002cb",
+      "a6360932f357bc8ca803d69d3b2e73f1f34d0244"
+    ],
+    "actual_first_commit_full_sha": "6ba899f1238b00e3e2c895e2c9bc63a1cd748757",
+    "prior_addendum_guessed_first_full_sha_incorrect": true,
+    "reverse_range_originalM1_to_executorentry_actual_count": 0,
+    "finalproof_reverse_range_claim1_incorrect": true,
+    "finalproof_all_prior_counts_match_true_incorrect": true,
+    "finalproof_exact_code_omitted": "Exact actual code banked in separate command inventory to preserve immutable judge outputs.",
+    "first_G7_script_contains_literal_in_comment": "First attempt event180 contains forbidden literal in comment and failed; revised event190 uses chr-only and succeeds. Proof statement never present in any Bashinput overbroad; actual successful arm remains valid.",
+    "G1_symlink_hash_branch": "Uses rawlink SHA1 instead of Gitblobheader SHA1; census reports zero symlinks mismatches/errors on observed inputs, so regular-file census remains actual."
+  }
+}

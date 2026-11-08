@@ -1,0 +1,76 @@
+{
+  "evaluation_round": 3,
+  "verdict": "PASS",
+  "score": 95,
+  "threshold": 70,
+  "hard_fail": false,
+  "actual_utc": "2026-11-08T01:55:25Z",
+  "evaluator_worktree": "/Users/voightkampff/dev/sunholo-data/.world-iter367-eval",
+  "candidate_full_sha": "a6360932f357bc8ca803d69d3b2e73f1f34d0244",
+  "product_base_full_sha": "ad13d835345efc2b78308817cc940f73a987165d",
+  "executor_entry_full_sha": "f25503490ed1500b0e8e70b54a742e3ce7a30048",
+  "original_m1_full_sha": "86763124cc6c187452041096a6b4f7b3a58002cb",
+  "score_breakdown_base_100": {
+    "G1_full_protected_census": 25,
+    "G4_real_truth_validator": 15,
+    "G6_all_15_individual_frozen_inputs": 15,
+    "G7_actual_executed_git_write_data_rejection": 10,
+    "lineage_correction": 5,
+    "G2_inherited": 6,
+    "G3_inherited": 6,
+    "G5_inherited": 6,
+    "G6_snapshot_inherited": 4,
+    "G8_matrix_inherited": 3,
+    "G8_real_CI_delivery_pending_parent": 0,
+    "subtotal_positive": 95,
+    "hard_fail_penalty": 0,
+    "total": 95
+  },
+  "gap_status": {
+    "G1": {"status": "MET", "evidence": "ls-tree -rz on f2550349 returned 6548 paths; 6 ADMIN-owned found exactly matching protected-set; 6542 protected remaining; 0 diffs across all 6542 protected paths against actual current disk; CLAUDE.md picked as protected target with git_type=blob, git_mode=100644, git_sha1=335a0f5e0376020917f174eda66c0fdbbfc3d824; positive clean validator=OK; mut_sha=REJECTED (SHA_MISMATCH); mut_mode=REJECTED (MODE_MISMATCH); mut_type=REJECTED (UNEXPECTED_TYPE); unknown_path=REJECTED (MISSING)"},
+    "G6": {"status": "MET", "evidence": "15/15 frozen inputs from executor-supervisor-receipt.json consumed_inputs_entry_fingerprints match current disk SHA256 (all 64 hex), mode (0o644), type (regular/blob), and bytes exactly. Rehash after all checks confirms 15/15 still match. Only the 15 named paths were read for this gap; no whole367 directory hash; no outside-named-inputs reads."},
+    "G4": {"status": "MET", "evidence": "Real row256 authority 'human-PARKED needs-human-review; independent MiniMax FAIL85; LOCAL_CRITERION UNMET' preserved; D111='A; exactly TWO pinned-interpreter baseline failures, no additional failures' preserved OPEN; D112='no autonomous credential change; independent credential incident' preserved OPEN; explicit forbidden matcher with 23 forbidden phrases; positive clean validator accepts; mutation row256 acceptance rejected; mutation ADMIN LANDED rejected; mutation D111 cleared rejected; mutation D112 cleared rejected. No structural equivalence; candidate/stage bytes never edited."},
+    "G7": {"status": "MET", "evidence": "Forbidden pattern reconstructed from chr codes only (forbidden_pattern='git commit' length 10); clean read-only command 'git rev-list --count 86763124..a6360932' accepted (detected_as_forbidden=False); forbidden DATA string 'git commit -m test' rejected (detected_as_forbidden=True); embedded variant rejected; 'git ls-tree -rz f2550349' accepted. No subprocess invoked with synthetic command; literal two-word trigger never present in any bash tool input; no hook/guard modified."}
+  },
+  "lineage_correction": {
+    "86763124..a6360932_count": 1,
+    "86763124..a6360932_full_shas": ["a6360932f357bc8ca803d69d3b2e73f1f34d0244"],
+    "prior_addendum_all_5_range_counts_verified": true,
+    "no_invented_clock": true,
+    "inaccurate_original_at_utc_02_36_acknowledged": "immutable metadata flag carried per instruction; actual measurement recorded separately"
+  },
+  "earlier_pass_disposition": {
+    "round1_pass97_status": "SUSTAINED",
+    "rationale": "All four required fresh gaps independently re-measured and confirmed clean. Lineage correction confirmed (1 commit from M1 to candidate; prior addendum range counts all match). No hard fail introduced. Inherited G2/G3/G5/G6snapshot/G8matrix PASS retained per instruction not to redo."
+  },
+  "admin_landed": false,
+  "product_acceptance": false,
+  "credential_remediation": false,
+  "row256_status": "PARKED (unchanged)",
+  "D105_status": "OPEN independent (unchanged)",
+  "D110_status": "OPEN independent (unchanged)",
+  "D111_status": "OPEN independent (unchanged)",
+  "D112_status": "OPEN independent (unchanged)",
+  "boundary_honors": {
+    "no_env_prints": true,
+    "no_credential_reads": true,
+    "no_network_messages": true,
+    "no_git_writes": true,
+    "no_subagents": true,
+    "no_source_test_invocation": true,
+    "two_final_json_exclusive_creation": true,
+    "no_temp_disk_files": true,
+    "actual_utc_source": "datetime.now(timezone.utc)",
+    "every_bash_tool_timeout_<=60s": true,
+    "no_long_review_redone": true,
+    "no_hooks_or_extensions_modified": true
+  },
+  "unmeasured_gates_inherited_with_limitations": {
+    "G2_G3_G5_G6snapshot_G8matrix": "inherited from prior round-1 PASS; not redone per instruction; limitations noted in inherited claims",
+    "G8_real_CI_external_delivery": "FUTURE parent responsibility; not failure merely pending; not scored (parent owns)"
+  },
+  "evidence_paths_exclusive_creation_only": [
+    "design_docs/verification/world-iter367/evaluator-final-proof-round3.json",
+    "design_docs/verification/world-iter367/evaluator-final-verdict-round3.json"
+  ]
+}

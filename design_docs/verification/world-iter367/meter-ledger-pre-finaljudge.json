@@ -1,0 +1,11 @@
+{
+  "at_utc": "2026-11-08T01:49:48.399410+00:00",
+  "actual_metered_usd": 1.47583182,
+  "new_final_judge_reservation_usd": 1,
+  "actual_plus_reservation": 2.47583182,
+  "cap_usd": 5,
+  "actual_judge_attempt": 3,
+  "further_attempts_authorized": false,
+  "scope": "Only unresolved proof gaps; independent own verdict required; otherwise park unmerged",
+  "candidate": "a6360932f357bc8ca803d69d3b2e73f1f34d0244"
+}
