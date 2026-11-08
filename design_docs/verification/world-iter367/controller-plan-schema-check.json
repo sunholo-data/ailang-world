@@ -1,0 +1,6 @@
+{
+  "initial": "controller assumed passes:false; actual approved planning contract uses null lifecycle, initial assertion stopped launch before execution/commit",
+  "corrected": "passes:null, one feature M1 and8 criteria; future execution/delivery not asserted",
+  "rc": 0,
+  "origin_steady": "ad13d835345efc2b78308817cc940f73a987165d"
+}

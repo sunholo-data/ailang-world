@@ -1,0 +1,232 @@
+{
+  "kind": "evaluator-preflight-only",
+  "iteration": 367,
+  "created_at": "2026-11-08T01:06:05.314157+00:00",
+  "supervisor": "Codex Agent evaluator supervisor; no judgment performed",
+  "candidate_review_status": "NOT_STARTED; committed final candidate and isolated sibling worktree pending parent handoff",
+  "resolver_observed": "recipe pi:openrouter/minimax/minimax-m3 declared:provider-pin",
+  "preferred_lane": "pi:openrouter/minimax/minimax-m3",
+  "prepared_runner": "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_pi_run.sh",
+  "runner_args_template": [
+    "--model",
+    "openrouter/minimax/minimax-m3",
+    "--directive",
+    "<new per-invocation absolute directive path>",
+    "--workdir",
+    "<parent-supplied isolated evaluator sibling worktree at committed candidate full40>",
+    "--out",
+    "<new per-invocation absolute NDJSON path>",
+    "--verdict",
+    "<new per-invocation absolute transport JSON path>",
+    "--max-seconds",
+    "1800",
+    "--stall-seconds",
+    "600"
+  ],
+  "extension_resolution": {
+    "mc_pi_ext_args_record_worktree": [],
+    "reason": "No repository .pi/extensions; global discovery retained. Re-resolve helper at actual evaluator worktree.",
+    "global_session_protocol_extension_exists": true,
+    "required_explicit_extensions": [
+      "<private canonical runner stage>/sandbox/index.ts",
+      "<private canonical runner stage>/worktree-fence.ts"
+    ],
+    "runner_sandbox_sources": [
+      "/Users/voightkampff/.ailang-driver-pin/world/tools/pi-extensions/sandbox/index.ts",
+      "/Users/voightkampff/.ailang-driver-pin/world/tools/pi-extensions/worktree-fence.ts"
+    ],
+    "sandbox_runtime_dependency_found": "/Users/voightkampff/dev/sunholo-data/ailang/tools/pi-extensions/sandbox/node_modules/@anthropic-ai/sandbox-runtime/package.json",
+    "runtime_found": true,
+    "extensions_or_fence_removed": false
+  },
+  "runner_child_nonsecret_environment": {
+    "AILANG_MISSION_STAGE": "1",
+    "AILANG_STORAGE_MESSAGING": "gcp",
+    "AILANG_MESSAGES_PROJECT": "ailang-multivac",
+    "AILANG_STORAGE": "unchanged"
+  },
+  "mandatory_exact_directive_preamble": "MISSION-ROLE: evaluator\nComplete this handshake in YOUR OWN pi session before judge work or report/mutation writes.\n1. Use the read tool to read CLAUDE.md completely in the evaluator worktree.\n2. Classify this task as independent evaluation under the supplied approved design and sprint plan. This is an unattended mission stage: do not run `ailang messages`.\n3. Call the session_protocol_ack tool with {} and verify its result reports acked=true.\n4. Only after that success, perform the supplied independent evaluation and write its report.\nController-provided triage is context, not evidence that this session completed the protocol.\nIf a prerequisite or acknowledgement fails, report the exact missing step or tool error and stop this attempt. This is a role transport failure for the existing fallback route, never a judge verdict. Do not loop on denied writes, remove extensions, or bypass the guard.\n",
+  "mandatory_post_preamble_boundary": "Forbid env, printenv, set, all environment dumps, os.environ iteration, and secret/config-file reads; never inspect or emit credential values. No credential change, new exposure, network tools/commands, messages, Git mutations, new agents, source/policy/skill/shared-state changes. Provider transport is the only authorized network path. Bound every bash/read command to <=60s and keep active bounded artifact polling until child completes. Report protocol errors as transport failure with no verdict. Only judge report and explicitly authorized local in-memory mutation evidence after handshake.",
+  "future_evaluation_contract": {
+    "read_before_judging": [
+      "supplied approved design",
+      "supplied sprint plan",
+      "candidate full40 and full actual diff",
+      "G1-G8 and mutation matrix supplied in handoff",
+      "sprint-evaluator rubric"
+    ],
+    "administrative_scope_only": true,
+    "ci_and_landing_parent_owned": true,
+    "no_product_verdict": true,
+    "no_supervisor_substitute_judgment": true,
+    "protocol_proof_required": [
+      "CLAUDE.md read completely in own pi session",
+      "task classification independent unattended evaluation",
+      "session_protocol_ack called with {}",
+      "tool result acked=true before judge work/report/mutation writes"
+    ],
+    "delivery_assertions": [
+      "new unique directive exists",
+      "directive >=200 bytes",
+      "preamble byte-exact at byte zero",
+      "closed stdin via canonical runner",
+      "actual own-session protocol event proof",
+      "new nonempty report at supplied path"
+    ],
+    "transport_verdict_not_judge_verdict": true
+  },
+  "probe": {
+    "started_at": "2026-11-08T01:04:51.540174+00:00",
+    "command": [
+      "/opt/homebrew/bin/pi",
+      "--mode",
+      "json",
+      "--no-session",
+      "--no-tools",
+      "--no-extensions",
+      "--model",
+      "openrouter/minimax/minimax-m3",
+      "-p",
+      "reply with exactly: ok"
+    ],
+    "closed_stdin": true,
+    "deadline_seconds": 120,
+    "rc": 0,
+    "timed_out": false,
+    "runtime_seconds": 1.931,
+    "events": 46,
+    "models": [
+      "minimax/minimax-m3"
+    ],
+    "providers": [
+      "openrouter"
+    ],
+    "reported_usage": [
+      {
+        "input": 1229,
+        "output": 34,
+        "cacheRead": 128,
+        "cacheWrite": 0,
+        "reasoning": 33,
+        "totalTokens": 1391,
+        "cost": {
+          "input": 0.00036869999999999996,
+          "output": 4.0799999999999996e-05,
+          "cacheRead": 7.68e-06,
+          "cacheWrite": 0,
+          "total": 0.00041717999999999996
+        }
+      }
+    ],
+    "assistant_content": [
+      [
+        {
+          "type": "thinking",
+          "thinking": "The user is asking me to reply with exactly \"ok\". This is a simple request with no tool use needed. I should just respond with \"ok\".",
+          "thinkingSignature": "[{\"type\":\"reasoning.text\",\"text\":\"The user is asking me to reply with exactly \\\"ok\\\". This is a simple request with no tool use needed. I should just respond with \\\"ok\\\".\",\"format\":\"unknown\",\"index\":0}]"
+        },
+        {
+          "type": "text",
+          "text": "ok"
+        }
+      ]
+    ],
+    "errors": [],
+    "stderr": ""
+  },
+  "accounting": {
+    "budget_ceiling_usd": 5,
+    "this_supervisor_metered_total_usd": 0.00041718,
+    "probe_cost_source": "provider-reported assistant message_end usage.cost.total",
+    "reported_input_tokens": 1229,
+    "reported_output_tokens": 34,
+    "reported_reasoning_tokens": 33,
+    "reported_cache_read_tokens": 128,
+    "reported_total_tokens": 1391,
+    "preflight_estimated_max_probe_usd": 0.05,
+    "actual_judge_reservation_usd": 1.0,
+    "this_subtask_remaining_usd": 4.99958282,
+    "whole_iteration_tally": "parent must add all other real iteration spend before actual metered launch; unknown here; no fabricated whole-iteration total",
+    "before_next_metered_call": "post this probe spend to controller ledger; assert parent tally plus reservation <=5 USD"
+  },
+  "fallback_prepared": {
+    "remaining_declared_chain": [
+      "claude:claude-sonnet-4-6",
+      "opus"
+    ],
+    "anthropic_billing": "claude-sub subscription wrapper only; never Anthropic API; bounded no-tool probe before full attempt",
+    "last_resort": "D-WORLD-48 fresh actual codex:gpt-6.1-sol context with FLAGGED same-model-fresh-context if quota remains",
+    "dead_lanes": [],
+    "no_fallback_needed": true,
+    "death_record_command": "/Users/voightkampff/.ailang-driver-pin/world/tools/launchd/mission-lane-dead.sh evaluator <exact-declared-lane> <exact-safe-evidence>",
+    "retry_exceptions": "canonical runner stream_dead rc12 once; tool_hang rc18 once avoiding named command; all other transport failures traverse remaining declared chain",
+    "astra_forbidden": true
+  },
+  "credential_incident": "D-WORLD-112 remains OPEN; no credential change or remediation claimed; no credential values/config/secrets read or output by this preflight",
+  "consumed_file_freezes": [
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/SKILL.md",
+      "type": "regular",
+      "mode": "0o644",
+      "size": 54999,
+      "sha256": "95a740b11cc44e9f31c7dc606e565f9f55c8d03b0c5d059e97d04e7c369fac89"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-3-route.md",
+      "type": "regular",
+      "mode": "0o644",
+      "size": 91163,
+      "sha256": "3d6cde1a7051e11c29ffcea3ca23b0b26b1e976796dc32c2b279ba1eddf71d53"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md",
+      "type": "regular",
+      "mode": "0o644",
+      "size": 13312,
+      "sha256": "fce81ea64a500f1707c3730d535fc56a9dba9b455aaf07fd9d18a461b806ff0c"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-evaluator/SKILL.md",
+      "type": "regular",
+      "mode": "0o644",
+      "size": 17228,
+      "sha256": "8bc8d78f74c55ec1b03c6e4a047cbbacf7abd83c9e6a369f77e27b9478570b32"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-evaluator/resources/scoring_rubric.md",
+      "type": "regular",
+      "mode": "0o644",
+      "size": 8921,
+      "sha256": "c7051d3fd3c886c1617571451fa2022c16999f7b11a9ec85bd097d9edbab951d"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/record-design.md",
+      "type": "regular",
+      "mode": "0o644",
+      "size": 12344,
+      "sha256": "bc7c7c047377a9f792cce6345524bfdfc30497501617ee955bb7976f126ea7e0"
+    },
+    {
+      "path": "/Users/voightkampff/.ailang-driver-pin/world/scripts/mission_pi_run.sh",
+      "type": "regular",
+      "mode": "0o755",
+      "size": 27354,
+      "sha256": "64e3d19a7225f62b60485538b341426f89a22f62cf48137f5bc1838e2407ef8e"
+    },
+    {
+      "path": "/Users/voightkampff/.ailang-driver-pin/world/tools/launchd/lib/pi-ext-args.sh",
+      "type": "regular",
+      "mode": "0o644",
+      "size": 1555,
+      "sha256": "d47703d33a451bea3adea6ce1ee97165c87963e9b449b949886c4f571548f635"
+    },
+    {
+      "path": "/Users/voightkampff/.pi/agent/extensions/session-protocol-gate.ts",
+      "type": "regular",
+      "mode": "0o644",
+      "size": 17311,
+      "sha256": "63d7296ee946ccb47e797fae4973d92e32542e9d5e87c02005270e55f0938dc7"
+    }
+  ],
+  "writes_scope": "Only this new evaluator-preflight.json in record tree plus genuinely new temporary probe receipt; no product/admin outputs, messages or Git mutations."
+}

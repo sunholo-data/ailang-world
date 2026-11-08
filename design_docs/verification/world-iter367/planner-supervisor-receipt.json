@@ -1,0 +1,209 @@
+{
+  "role": "planner",
+  "iteration": 367,
+  "lane": "codex:gpt-6.1-sol",
+  "agent_supervisor": "Agent API has no model override; heavy planner authored by actual pinned CLI",
+  "head": "4f83f2d7232ed2a7e63d8b2271efba9bd591fc05",
+  "base": "ad13d835345efc2b78308817cc940f73a987165d",
+  "routing_recheck": [
+    {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/tools/launchd/derive-planner-lane.sh",
+        "/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/record-design.md"
+      ],
+      "rc": 0,
+      "stdout": "codex:gpt-6.1-sol declared:planner-lane-default-pin\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "bash",
+        "/Users/voightkampff/.ailang-driver-pin/world/tools/launchd/resolve-role-spawn.sh",
+        "planner",
+        "/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/record-design.md"
+      ],
+      "rc": 0,
+      "stdout": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin\n",
+      "stderr": ""
+    }
+  ],
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.planner-wt-iter367-xt7gsqmw",
+  "worktree_creation": {
+    "argv": [
+      "git",
+      "worktree",
+      "add",
+      "--detach",
+      "/Users/voightkampff/dev/sunholo-data/.planner-wt-iter367-xt7gsqmw",
+      "4f83f2d7232ed2a7e63d8b2271efba9bd591fc05"
+    ],
+    "rc": 0,
+    "stdout": "HEAD is now at 4f83f2d7 Preserve World367 designer diff losslessly with clean whitespace\n",
+    "stderr": "Preparing worktree (detached HEAD 4f83f2d7)\n"
+  },
+  "worktree_cleanup": {
+    "argv": [
+      "git",
+      "worktree",
+      "remove",
+      "--force",
+      "/Users/voightkampff/dev/sunholo-data/.planner-wt-iter367-xt7gsqmw"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "private_raw_dir": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-planner-xt7gsqmw",
+  "subscription_key_stripped": true,
+  "attempts": [
+    {
+      "name": "probe",
+      "command": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--model",
+        "gpt-6.1-sol",
+        "-c",
+        "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+        "--sandbox",
+        "workspace-write",
+        "-C",
+        "/Users/voightkampff/dev/sunholo-data/.planner-wt-iter367-xt7gsqmw",
+        "<prompt sha256:ba32b3bd639b79fbd55ed51ed3ea625734c4723eeb4737eda6b234656e29a449>"
+      ],
+      "directive_sha256": "ba32b3bd639b79fbd55ed51ed3ea625734c4723eeb4737eda6b234656e29a449",
+      "directive_bytes": 22,
+      "rc": 0,
+      "wall_seconds": 3.397,
+      "timed_out": false,
+      "stdin": "DEVNULL",
+      "deadline_seconds": 120,
+      "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-planner-xt7gsqmw/probe.log",
+      "model_header_present": true,
+      "footer_tokens": 11119,
+      "session_id": "01a1b8b0-659a-7c81-b41b-5cc6b5f67787"
+    },
+    {
+      "name": "actual",
+      "command": [
+        "/opt/homebrew/bin/codex",
+        "exec",
+        "--model",
+        "gpt-6.1-sol",
+        "-c",
+        "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+        "--sandbox",
+        "workspace-write",
+        "-C",
+        "/Users/voightkampff/dev/sunholo-data/.planner-wt-iter367-xt7gsqmw",
+        "--add-dir",
+        "/Users/voightkampff/Library/Caches/go-build",
+        "--add-dir",
+        "/Users/voightkampff/go/pkg/mod",
+        "-o",
+        "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-planner-xt7gsqmw/actual-final.txt",
+        "<prompt sha256:256887aa3b4133dc50f14749cc5abab2c5c85504e960a1b30b478772fb3c4755>"
+      ],
+      "directive_sha256": "256887aa3b4133dc50f14749cc5abab2c5c85504e960a1b30b478772fb3c4755",
+      "directive_bytes": 6784,
+      "rc": 0,
+      "wall_seconds": 292.395,
+      "timed_out": false,
+      "stdin": "DEVNULL",
+      "deadline_seconds": 1800,
+      "log": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-planner-xt7gsqmw/actual.log",
+      "model_header_present": true,
+      "footer_tokens": 82356,
+      "session_id": "01a1b8b0-72f3-79e2-b0d3-5234393540c2"
+    }
+  ],
+  "quota_tokens": 93475,
+  "usage_note": "Separate probe and actual sessions. Each footer matches final native total_tokens minus cached_input_tokens (uncached input plus output). No resumed footers summed; only event_msg/token_count info read for accounting.",
+  "metered_cost_usd": null,
+  "input_manifest": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-planner-xt7gsqmw/initial-input-freeze.json",
+  "protected_tracked_path_count": 6539,
+  "input_drift": [],
+  "artifacts": {
+    "design_docs/verification/world-iter367/record-plan.md": {
+      "bytes": 14280,
+      "sha256": "5f734f79ccbe3e488c459906aa16afae577b74a3bb7a8c9f57111218d0e67a43"
+    },
+    "design_docs/verification/world-iter367/record-state.json": {
+      "bytes": 31915,
+      "sha256": "a77badaced003acae63b0a8c9770f034edc014012b6a6f8148b27796e07cec1a"
+    }
+  },
+  "validation": {
+    "nonempty_plan": true,
+    "names_design": true,
+    "state_json_valid": true,
+    "no_placeholders": true,
+    "only_two_new_child_files": true,
+    "all_preexisting_tracked_bytes_types_modes_preserved": true
+  },
+  "completion": "actual terminal result banked; no future waits",
+  "native_usage_accounting": [
+    {
+      "stage": "probe",
+      "session_id": "01a1b8b0-659a-7c81-b41b-5cc6b5f67787",
+      "footer_tokens": 11119,
+      "native_rollout": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T02-05-30-01a1b8b0-659a-7c81-b41b-5cc6b5f67787.jsonl",
+      "source_event": {
+        "timestamp": "2026-11-08T01:05:33.506Z",
+        "usage": {
+          "input_tokens": 18282,
+          "cached_input_tokens": 7168,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 5,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 18287
+        }
+      },
+      "uncached_plus_output": 11119,
+      "footer_matches_native": true
+    },
+    {
+      "stage": "actual",
+      "session_id": "01a1b8b0-72f3-79e2-b0d3-5234393540c2",
+      "footer_tokens": 82356,
+      "native_rollout": "/Users/voightkampff/.codex-missions/sessions/2026/11/08/rollout-2026-11-08T02-05-33-01a1b8b0-72f3-79e2-b0d3-5234393540c2.jsonl",
+      "source_event": {
+        "timestamp": "2026-11-08T01:10:25.142Z",
+        "usage": {
+          "input_tokens": 708956,
+          "cached_input_tokens": 640128,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 13528,
+          "reasoning_output_tokens": 2707,
+          "total_tokens": 722484
+        }
+      },
+      "uncached_plus_output": 82356,
+      "footer_matches_native": true
+    }
+  ],
+  "copied_outputs_validation": {
+    "record-plan.md": {
+      "nonempty": true,
+      "no_trailing_whitespace": true,
+      "regular": true
+    },
+    "record-state.json": {
+      "nonempty": true,
+      "no_trailing_whitespace": true,
+      "regular": true
+    },
+    "planner-final-report.txt": {
+      "nonempty": true,
+      "no_trailing_whitespace": true,
+      "regular": true
+    },
+    "planner-supervisor-receipt.json": {
+      "nonempty": true,
+      "no_trailing_whitespace": true,
+      "regular": true
+    },
+    "base_relative_whitespace_rc": 0
+  }
+}

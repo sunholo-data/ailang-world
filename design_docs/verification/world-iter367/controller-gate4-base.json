@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "bash",
+    "/Users/voightkampff/.ailang-driver-pin/world/tools/launchd/mission-base.sh",
+    "record",
+    "gate4"
+  ],
+  "rc": 0,
+  "base": "ad13d835345efc2b78308817cc940f73a987165d",
+  "read_at": "2026-11-08T01:11:37Z",
+  "routing_evidence": "base=ad13d835345efc2b78308817cc940f73a987165d@2026-11-08T01:11:37Z",
+  "context": "pre-write re-confirmation for ADMIN milestone; formal delivery later"
+}

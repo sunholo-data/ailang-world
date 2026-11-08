@@ -1,0 +1,87 @@
+{
+  "at": "2026-11-08T01:12:19.301733+00:00",
+  "self_excluding": true,
+  "inputs": [
+    {
+      "path": "design_docs/verification/world-iter367/record-design.md",
+      "sha256": "bc7c7c047377a9f792cce6345524bfdfc30497501617ee955bb7976f126ea7e0",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/record-plan.md",
+      "sha256": "5f734f79ccbe3e488c459906aa16afae577b74a3bb7a8c9f57111218d0e67a43",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/record-state.json",
+      "sha256": "a77badaced003acae63b0a8c9770f034edc014012b6a6f8148b27796e07cec1a",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/controller-gate4-base.json",
+      "sha256": "556b30d6a1fd0717cc1323cd03bcc7613d35e26efda2f1707acf3895d31a0745",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/controller-observations.json",
+      "sha256": "6ccfef5dd99130a02c281bea8aad43837ed79cfbedf2aa441c389bd0589bbe4c",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/provenance-corrected.json",
+      "sha256": "fb4b9af48247d333eaee381d38e5d5c15de7e0f0515b5eb5161f9ff0c67cc333",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/release-predicates-corrected.json",
+      "sha256": "d875eb1123679c069bc6c9de92c16e2eba1219b0711ef9144863feca29263bc2",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/registry-pointer.json",
+      "sha256": "066879e74b3a9563cab614473543627c3ea92cd87eda9c60f6448c1c9319496f",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/executor-preflight.json",
+      "sha256": "c7b967f8ca195d5c42484055eaa1d806bd18dabf2a521dc214efc27d9b5f9f4c",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/evaluator-preflight.json",
+      "sha256": "b2e444fd8388b38cdeb4c08081827ccfc147a520d71d132893c287df2e47efc2",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/designer-usage-accounting.json",
+      "sha256": "8e603fb6767c8ba8a32f2349d860c31f1e66a4654079f51fe3455d0404113b65",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/planner-supervisor-receipt.json",
+      "sha256": "c6335f3f41d201573c4c3bd2934a8f1b77263975f93b096aaefbbdc465158fa0",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/controller-packaging-correction.json",
+      "sha256": "732ca6d69565d6dbcac587e48bafffb1529349bf15d4a2472c0e658ca4d47732",
+      "mode": "0o644"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/controller-plan-schema-check.json",
+      "sha256": "f1450b5d982cfb4d409acd61628a1bd9017a46c6a0ccdba918331ffb93496a6c",
+      "mode": "0o644"
+    }
+  ],
+  "controller_identity": "codex:gpt-6.1-sol",
+  "controller_tokens": "not reported",
+  "agent_api": "no model override; all4 required Agent supervisors spawned, actual recipes pinned",
+  "authority": "ONE ADMIN M1; no product pick; row256 remains human-parked; independent actual MiniMax judge required",
+  "controller_disclosures": [
+    "initial worktree creation used direct git rather than helper; operation completed rc0 in<1s and actual full HEAD matched base; evaluator worktree will use canonical helper",
+    "first staged whitespace check failed on generated patch but commit continued; lossless JSON envelope correction landed before planner and full base whitespace passed",
+    "initial release/provenance readers were instrument errors; corrected typed reads govern, originals retained",
+    "initial parent plan checker incorrectly required false instead of documented null; corrected before execution, no plan edit"
+  ],
+  "retro_lane": "Existing bookkeeping/process discipline; preserve instrument failures in log under existing triage row258/D109, no new policy or shared-skill edit."
+}

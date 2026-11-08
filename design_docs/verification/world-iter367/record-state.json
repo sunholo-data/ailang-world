@@ -1,0 +1,669 @@
+{
+  "sprint_id": "WORLD-ITER367-ADMIN",
+  "role": "planner",
+  "provider_lane": "codex:gpt-6.1-sol",
+  "status": "IMMUTABLE_PLANNING_RECEIPT",
+  "design_doc": "design_docs/verification/world-iter367/record-design.md",
+  "sprint_plan": "design_docs/verification/world-iter367/record-plan.md",
+  "planning_state": "design_docs/verification/world-iter367/record-state.json",
+  "product_base": "ad13d835345efc2b78308817cc940f73a987165d",
+  "planner_head": "4f83f2d7232ed2a7e63d8b2271efba9bd591fc05",
+  "authorization": "User authorized final design, ADMIN-only M1 and all four actual routed roles; no additional approval requested.",
+  "passes": null,
+  "started": null,
+  "completed": null,
+  "state_contract": {
+    "immutable": true,
+    "executor_must_never_edit": [
+      "design_docs/verification/world-iter367/record-plan.md",
+      "design_docs/verification/world-iter367/record-state.json"
+    ],
+    "separate_executor_state": "design_docs/verification/world-iter367/execution-state.json",
+    "planning_does_not_claim": "M1 preparation, independent evaluation, CI, delivery and product acceptance are not discharged."
+  },
+  "routing_provenance": {
+    "source": "design_docs/verification/world-iter367/planner-routing.json",
+    "derive_output": "codex:gpt-6.1-sol declared:planner-lane-default-pin",
+    "resolve_output": "recipe codex:gpt-6.1-sol declared:planner-lane-default-pin",
+    "provider_probe": "passed per parent instruction; planner did not rerun probe",
+    "planner_actual": "actual pinned codex:gpt-6.1-sol provider child authored these receipts; no subagents",
+    "evaluator": "pending separate actual routed evaluator; no verdict claimed",
+    "usage": "runtime/tokens/cost not measured here; parent records actual usage, never estimates role usage"
+  },
+  "velocity": {
+    "basis": "Task sizing for administrative work, not measured product velocity; day fraction rounded.",
+    "target_loc_per_day": 480,
+    "estimated_total_loc": 120,
+    "estimated_days": 0.25,
+    "estimated_hours": 1.5,
+    "product_loc": 0,
+    "test_loc": 0,
+    "loc_scope": "Approximate authored ADMIN/evidence lines; excludes CLI moved/regenerated content and planning receipts.",
+    "parent_review_ci_elapsed_time": "unestimated; pending external work"
+  },
+  "dependencies": [
+    {
+      "id": "approved-final-design",
+      "requirement": "Committed final record-design.md and explicit mission overrides; no original manual-rotation prescription."
+    },
+    {
+      "id": "frozen-inputs",
+      "requirement": "Individually fingerprint consumed existing inputs and both immutable planner receipts on executor entry; no broad directory freeze."
+    },
+    {
+      "id": "six-admin-baselines",
+      "requirement": "Independent bytes/type/mode baselines of six existing files, full tracked scope and protected ledger/queue."
+    },
+    {
+      "id": "record-checkout-cli",
+      "requirement": "Existing fleet rotate-log through proven ephemeral TOML registry targeting record checkout; parent may perform coordinated transformation outside isolated child."
+    }
+  ],
+  "registry_reuse": [
+    {
+      "milestone": "M1",
+      "action": "none",
+      "reason": "M1 only prepares existing administrative records with the existing fleet rotate-log CLI and bounded JSON evidence. It introduces no product code or package-like capability, so no dependency/contribution or registry network search is needed."
+    }
+  ],
+  "features": [
+    {
+      "id": "M1",
+      "description": "Prepare six final World iteration367 ADMIN files, exactly three new executor receipts and a local nine-payload snapshot for independent review; preserve all product acceptance and human parks.",
+      "estimated_loc": 120,
+      "estimated_hours": 1.5,
+      "estimated_days": 0.25,
+      "product_loc": 0,
+      "test_loc": 0,
+      "dependencies": [
+        "approved-final-design",
+        "frozen-inputs",
+        "six-admin-baselines",
+        "record-checkout-cli"
+      ],
+      "tasks": [
+        {
+          "minutes": 20,
+          "work": "Independent baselines, ownership, frozen inputs and expected whole charter/status-archive bytes."
+        },
+        {
+          "minutes": 35,
+          "work": "STATUS/364 transfer/route, truthful367 append, coordinated actual fleet CLI rotation and full index, dashboard."
+        },
+        {
+          "minutes": 35,
+          "work": "In-memory G1-G7 positive/negative controls, three final receipts and exact local snapshot verification."
+        }
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "G1",
+          "name": "baseline/scope",
+          "requirement": "Independently record full40 product base and execution HEAD, tracked census/bytes/types/modes, actual tracked diff and separate untracked ownership. Planning census6539, protected6533, earlier verification4882 including51 prior366; remeasure at execution rather than reuse original designer6493. Positive6/6 existing owned files and nonzero protected census. Reject protected-byte/mode changes and unknown owned paths in memory; preserve every preexisting artifact.",
+          "phase": "ADMIN preparation",
+          "owner": "executor; parent coordinates record-checkout CLI if needed",
+          "dependencies": [],
+          "passes": null
+        },
+        {
+          "id": "G2",
+          "name": "charter/status",
+          "requirement": "Independently construct whole expected charter/archive bytes from frozen baseline:367/366/365 only; exact364 pair transferred once; route366→367 once;6345/734 lines. Freeze entire marked ledger through end marker INCLUDING following LF, and unique Queue-header-through-EOF. Positive99 ledger rows, four OPEN decisions,353-byte364 pair and existing363/queue150/header controls. Reject one wrong364 byte, missing destination, duplicate pair, ledger byte/following-LF or queue mutation.",
+          "phase": "ADMIN preparation",
+          "owner": "executor; parent coordinates record-checkout CLI if needed",
+          "dependencies": [
+            "G1"
+          ],
+          "passes": null
+        },
+        {
+          "id": "G3",
+          "name": "CLI/index/dashboard",
+          "requirement": "Require inherited source/CLI provenance AND actual successful invocation with intended printed paths. Positive41→20 live,21 moved326–346,archive312→333; final347–360,362–367. Independently compare complete header/body multisets across both logs to old+367 under only actual CLI-owned boundary-LF/notice normalization. Reconcile ENTIRE regenerated index with source headings/prior index, retain orphan361 verbatim and notes, only actual source-supported title deltas; dashboard≤40. Reject body/header loss, duplicate entry, wrong split, out-of-tree path, internal reflow, orphan/notes loss, unrelated index edit and41-line dashboard.",
+          "phase": "ADMIN preparation",
+          "owner": "executor; parent coordinates record-checkout CLI if needed",
+          "dependencies": [
+            "G1"
+          ],
+          "passes": null
+        },
+        {
+          "id": "G4",
+          "name": "truth/provenance",
+          "requirement": "Truthful ADMIN record includes actual routing, roles, degradation, usage or explicit unknowns, retro, unchanged goal/asks/next. Positive traceable base3/3,0 directives/inbox,two historical notices,no routable product are parent in367 observations inherited by child, not final acceptance. Use corrected provenance and release-predicate receipts; reject old broad-match conclusions, inherited→fresh relabel, invented role/usage/verdict, product acceptance or clearing111/112. Controller cannot supply evaluator verdict.",
+          "phase": "ADMIN preparation",
+          "owner": "executor; parent coordinates record-checkout CLI if needed",
+          "dependencies": [
+            "G1"
+          ],
+          "passes": null
+        },
+        {
+          "id": "G5",
+          "name": "whitespace",
+          "requirement": "Baseline default and full-base-relative `git diff --check`, preserve findings; repeat for final delta. Explicitly inspect all three owned new files because Git omits untracked files. Positive nonzero touched/new-file census; in-memory trailing-whitespace mutation must fail corresponding check. For new-file no-index checks,rc1 can mean differing bytes: inspect whitespace diagnostics separately. Do not impose unbaselined whole-old-archive style gates or repair inherited evidence.",
+          "phase": "ADMIN preparation",
+          "owner": "executor; parent coordinates record-checkout CLI if needed",
+          "dependencies": [
+            "G1"
+          ],
+          "passes": null
+        },
+        {
+          "id": "G6",
+          "name": "freezes/snapshot",
+          "requirement": "Rehash individual consumed inputs before/after, including frozen planner receipts. Positive exact9-file payload and preserved consumed inputs; verify local manifest self-exclusion and parent reconstruction bytes/types/modes. Reject missing/extra file, symlink, traversal, one-byte or mode mismatch in memory; consumed evidence must never appear in snapshot. Concurrent controller files remain untouched and outside ownership.",
+          "phase": "ADMIN preparation",
+          "owner": "executor; parent coordinates record-checkout CLI if needed",
+          "dependencies": [
+            "G1"
+          ],
+          "passes": null
+        },
+        {
+          "id": "G7",
+          "name": "boundaries",
+          "requirement": "Positive complete executed-command/write inventories tied to exactly six admin files+three new evidence outputs and local snapshot. Reject a synthetic command/ownership record for secret/environment-value reads, credentials, network/messages, shared-state/source/policy/harness/skill/decision/test/Git writes, subagents or source tests/full suites. Preservation guards are observations, never seeded shared writes. Sandbox denials are UNINFORMATIVE UNDER SANDBOX.",
+          "phase": "ADMIN preparation",
+          "owner": "executor; parent coordinates record-checkout CLI if needed",
+          "dependencies": [
+            "G1"
+          ],
+          "passes": null
+        },
+        {
+          "id": "G8",
+          "name": "independent delivery",
+          "requirement": "Parent obtains separate evaluator judgment of final material record bytes; then prove all3 CI terminal-success with URLs and exact full40 `head_sha` at BOTH PR-head AND merge-head:ailang-code verify,Go race,Go host build/test. Positive three named jobs per head; reject missing/running/failed job, wrong SHA, shortened SHA, missing URL or reused base/prior green. Evaluator/delivery remain pending; no ADMIN LANDED before G8.",
+          "phase": "parent independent evaluation and delivery",
+          "owner": "parent obtains separate evaluator judgment and exact-head CI",
+          "dependencies": [
+            "G1",
+            "G2",
+            "G3",
+            "G4",
+            "G5",
+            "G6",
+            "G7"
+          ],
+          "passes": null
+        }
+      ],
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": "G1-G7 are preparation only. G8 independent evaluator and exact full40 PR-head AND merge-head all3 terminal-success CI with URLs are parent-owned; M1 and delivery are pending."
+    }
+  ],
+  "ownership": {
+    "existing_admin_paths": [
+      "design_docs/world-mission.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-log-archive.md",
+      "design_docs/world-mission-index.md",
+      "design_docs/world-mission-dashboard.md"
+    ],
+    "transformations": [
+      {
+        "path": "design_docs/world-mission.md",
+        "required_final_transformation": "Prepend canonical `## STATUS 2026-11-08 — ITERATION 367: ADMIN record only;` plus truthful suffix and one blank before366; retain exact366/365 pairs, remove only exact364 pair; replace unique `Current route (iteration 366)` with367 once. Independently expected whole file, 6345 lines; all other bytes preserved."
+      },
+      {
+        "path": "design_docs/world-mission-status-archive.md",
+        "required_final_transformation": "Preserve entire old byte prefix; append exact353-byte364 STATUS+blank once, 732→734 lines;363 remains."
+      },
+      {
+        "path": "design_docs/world-mission-log.md",
+        "required_final_transformation": "Append blank-separated entry headed exactly `## 367 — 2026-11-08 — ADMIN record only; row 256 remains parked [ADMIN]`; then mandatory existing fleet CLI,41→20 live entries:347–360,362–367."
+      },
+      {
+        "path": "design_docs/world-mission-log-archive.md",
+        "required_final_transformation": "Existing CLI moves21 complete entries326–346;312→333 archive entries. Preserve exact entry headers/bodies across both logs, subject only to the narrowly defined CLI separator/notice rule below."
+      },
+      {
+        "path": "design_docs/world-mission-index.md",
+        "required_final_transformation": "FULL CLI regeneration, independently reconcile every row to both logs' headings and prior index. Retain orphan361 verbatim, prior coverage/notes; exactly one367 row. Only actual source-supported invocation title changes; report actual resulting line count."
+      },
+      {
+        "path": "design_docs/world-mission-dashboard.md",
+        "required_final_transformation": "Truthful367 summary ≤40 physical lines, unchanged parks/defaults/order, clear inherited/fresh/pending observations."
+      }
+    ],
+    "new_executor_paths": [
+      {
+        "path": "design_docs/verification/world-iter367/executor-proof.json",
+        "unused_at_planning": true,
+        "creation": "exclusive; recheck no existing file or symlink before creation"
+      },
+      {
+        "path": "design_docs/verification/world-iter367/execution-state.json",
+        "unused_at_planning": true,
+        "creation": "exclusive; recheck no existing file or symlink before creation"
+      },
+      {
+        "path": "design_docs/verification/world-iter367/cli-rotation-receipt.json",
+        "unused_at_planning": true,
+        "creation": "exclusive; recheck no existing file or symlink before creation"
+      }
+    ],
+    "new_executor_roles": {
+      "executor-proof.json": "Independent G1-G7 observations/controls, baselines, consumed fingerprints and final inventory.",
+      "execution-state.json": "Mutable execution progress separate from immutable planning receipt; G8 remains pending until parent evidence.",
+      "cli-rotation-receipt.json": "Actual argv/registry/target/rc/stdout/stderr/printed containment, conservation and entire index reconciliation."
+    },
+    "no_other_evidence_destination": true,
+    "frozen_planner_inputs_at_executor_entry": [
+      "design_docs/verification/world-iter367/record-plan.md",
+      "design_docs/verification/world-iter367/record-state.json"
+    ],
+    "exclude_from_executor_ownership": "All consumed controller/designer/planner artifacts, all prior verification and every preexisting367 artifact. No whole367 ownership/freeze/hash/snapshot. Preserve concurrent controller arrivals untouched."
+  },
+  "planner_baseline": {
+    "tracked_paths": 6539,
+    "protected_paths_excluding_six": 6533,
+    "earlier_verification_paths": 4882,
+    "prior366_paths": 51,
+    "six_existing_controls": 6,
+    "new_executor_unused_controls": 3,
+    "checks": [
+      {
+        "argv": [
+          "git",
+          "--no-optional-locks",
+          "diff",
+          "--exit-code",
+          "HEAD",
+          "--"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "scope": "planner read-only baseline; no execution acceptance"
+      },
+      {
+        "argv": [
+          "git",
+          "--no-optional-locks",
+          "diff",
+          "--check"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "scope": "planner read-only baseline; no execution acceptance"
+      },
+      {
+        "argv": [
+          "git",
+          "--no-optional-locks",
+          "diff",
+          "--check",
+          "ad13d835345efc2b78308817cc940f73a987165d"
+        ],
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "scope": "planner read-only baseline; no execution acceptance"
+      }
+    ],
+    "existing_admin_fingerprints": [
+      {
+        "path": "design_docs/world-mission.md",
+        "type": "regular",
+        "mode": "0644",
+        "bytes": 1388066,
+        "sha256": "8888e17aa5a81f97b65b320c947783ae95c90759435846a91dbdd93cc238dcf3"
+      },
+      {
+        "path": "design_docs/world-mission-status-archive.md",
+        "type": "regular",
+        "mode": "0644",
+        "bytes": 1625355,
+        "sha256": "2bedadd7e79e9befa2b141d35049ea3f82b9dc26aea44eab3478f8f17100569b"
+      },
+      {
+        "path": "design_docs/world-mission-log.md",
+        "type": "regular",
+        "mode": "0644",
+        "bytes": 520974,
+        "sha256": "922525f32cdb93ef76ca779b2ce639bb60f388e99634dc5661578eb2939c4d6a"
+      },
+      {
+        "path": "design_docs/world-mission-log-archive.md",
+        "type": "regular",
+        "mode": "0644",
+        "bytes": 3424393,
+        "sha256": "32c90181c7c0ad86e8981e1992c3dfd2f57a4f5a43dd6de022d9eaa5b22bbcce"
+      },
+      {
+        "path": "design_docs/world-mission-index.md",
+        "type": "regular",
+        "mode": "0644",
+        "bytes": 57843,
+        "sha256": "4dd52a91b130d330ccb9e12da15feb537fbc6f452673610aa640eedbe860669c"
+      },
+      {
+        "path": "design_docs/world-mission-dashboard.md",
+        "type": "regular",
+        "mode": "0644",
+        "bytes": 3857,
+        "sha256": "4700a0cd64ef98da2efde1a3f4ec67aed610ae6bb07b321c3f6960a6739d9fe2"
+      }
+    ],
+    "structural_guards": {
+      "ledger_including_following_lf": {
+        "bytes": 219711,
+        "sha256": "58853d5b3207b3cbcdc4d16c69616babc90534a92cad71f621f0b931a6bc8f01"
+      },
+      "queue_header_through_eof": {
+        "header": "## Queue (top = next; tags: [NEXT] [IN-SPRINT] [PARKED] [LANDED] [RULED OUT] [ROUTED])",
+        "bytes": 992586,
+        "sha256": "f51d5ac1b9a8026e3ec4feb5a7dd5344cb77483c9837a23b2a64867f652190e4",
+        "unique_header_count": 1
+      },
+      "status364_exact_pair": {
+        "bytes": 353,
+        "sha256": "2f251247ebe91eaeb6003e4a17f647c024e30d35fb53be26422286f37dd3c477",
+        "charter_count": 1,
+        "status_archive_count": 0
+      }
+    },
+    "provenance": "Planner read-only observations, not future executor acceptance. Original designer6493 census predates newly committed evidence; executor remeasures its own baseline."
+  },
+  "frozen_consumed_inputs": [
+    {
+      "path": "CLAUDE.md",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 2945,
+      "sha256": "68f6fd16ede4c598a93590c3de20a2fc661a128c241eed747fab4d68d74a9141"
+    },
+    {
+      "path": "design_docs/coding-standards.md",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 8738,
+      "sha256": "a6951ab19b301c821dabc6eadc5061e6dded79c8af749ae080454e50e80239e4"
+    },
+    {
+      "path": "design_docs/DESIGN.md",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 48945,
+      "sha256": "a8b87a7ca9cec01676d6d6eb00f2116bd60114638df4bab286189a46dfa17836"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/record-design.md",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 12344,
+      "sha256": "bc7c7c047377a9f792cce6345524bfdfc30497501617ee955bb7976f126ea7e0"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/designer-receipt.json",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 10528,
+      "sha256": "21d79f9ca83693b3672c7debb0a41f9083fcd7fdd0215d7a79f8f30c0e1a4d4a"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/registry-pointer.json",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 373,
+      "sha256": "066879e74b3a9563cab614473543627c3ea92cd87eda9c60f6448c1c9319496f"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/provenance-corrected.json",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 928,
+      "sha256": "fb4b9af48247d333eaee381d38e5d5c15de7e0f0515b5eb5161f9ff0c67cc333"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/release-predicates-corrected.json",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 2690,
+      "sha256": "d875eb1123679c069bc6c9de92c16e2eba1219b0711ef9144863feca29263bc2"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/planner-routing.json",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 765,
+      "sha256": "196f72cc0512897c064924c28f60753c5713221e482e338f4338c6eb2f006c53"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/baseline-index-cli.json",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 442,
+      "sha256": "8f06863db6fc1fdc0e66e22b0bf17970063f4833e638bd22aea4a51a106a6332"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/controller-packaging-correction.json",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 862,
+      "sha256": "732ca6d69565d6dbcac587e48bafffb1529349bf15d4a2472c0e658ca4d47732"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/controller-observations.json",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 1636,
+      "sha256": "6ccfef5dd99130a02c281bea8aad43837ed79cfbedf2aa441c389bd0589bbe4c"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/base-checks.json",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 1098,
+      "sha256": "7a637f14d1883dd76546f87598c0394096b85f38b24090b979f8fbb388163c22"
+    },
+    {
+      "path": "design_docs/verification/world-iter367/shared-self-notices.json",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 2005,
+      "sha256": "d261f61bf580bb13b4695a0419e4fcaab59a9a666bb1d52a60ee9f00b9453889"
+    }
+  ],
+  "read_only_external_references": [
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-planner/SKILL.md",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 22384,
+      "sha256": "b4bcb489e2767930acc1c5cfc74fc54c43a67435a1fba4de7d3fd090e58c83fe"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-3-route.md",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 91163,
+      "sha256": "3d6cde1a7051e11c29ffcea3ca23b0b26b1e976796dc32c2b279ba1eddf71d53"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md",
+      "type": "regular",
+      "mode": "0644",
+      "bytes": 13312,
+      "sha256": "fce81ea64a500f1707c3730d535fc56a9dba9b455aaf07fd9d18a461b806ff0c"
+    }
+  ],
+  "executor_input_policy": "Before/after fingerprints of each consumed existing input; freeze planner outputs on entry in executor-proof.json. Name/fingerprint each later consumed controller artifact individually. Do not freeze/hash/copy the entire367 directory. All preexisting protected paths retain bytes/type/mode; concurrent new controller files remain untouched.",
+  "cli_rotation": {
+    "status": "pending; not invoked by planner",
+    "registry_pointer": "design_docs/verification/world-iter367/registry-pointer.json",
+    "registry": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-registry-rtm5mxnc",
+    "registry_format": "TOML",
+    "record_checkout": "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+    "future_command": "AILANG_MISSION_REGISTRY='/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-registry-rtm5mxnc' ailang mission rotate-log world --keep 20",
+    "coordination": "After append, parent may execute on canonical record checkout outside isolated child; executor final six files and snapshot must represent actual coordinated final outputs.",
+    "printed_path_requirement": "Before banking output, prove actual printed live/archive/INDEX resolved paths lie within record checkout and equal intended log/log-archive/index paths; reject escape and symlink redirection. Never installed-registry writes or retargeting to planner/executor worktree.",
+    "expected_live_before_append": 40,
+    "expected_live_after_append": 41,
+    "expected_live_after_rotation": 20,
+    "moved_entry_ids": [
+      326,
+      327,
+      328,
+      329,
+      330,
+      331,
+      332,
+      333,
+      334,
+      335,
+      336,
+      337,
+      338,
+      339,
+      340,
+      341,
+      342,
+      343,
+      344,
+      345,
+      346
+    ],
+    "final_live_entry_ids": [
+      347,
+      348,
+      349,
+      350,
+      351,
+      352,
+      353,
+      354,
+      355,
+      356,
+      357,
+      358,
+      359,
+      360,
+      362,
+      363,
+      364,
+      365,
+      366,
+      367
+    ],
+    "archive_before": 312,
+    "archive_after": 333,
+    "exact_new_header": "## 367 — 2026-11-08 — ADMIN record only; row 256 remains parked [ADMIN]",
+    "source_provenance": "Final design correction2 inherits controller verification of current fleet internal/mission/rotate.go lines192-325; planner did not read source or rerun CLI.",
+    "only_allowed_log_formatting": "Actual CLI-owned archive-notice stripping/replacement; boundary-only TrimRight LF; archive joins2LF; live joins1LF+body+LF. Exact iteration headers and internal bodies preserved.",
+    "conservation": "Independently compare complete header/body multisets across old live+archive and final live+archive; final equals old plus exactly367. Reject loss, duplication, wrong split, internal reflow or normalization beyond source rule and actual invocation.",
+    "rejected_assertions": "Original manual-rotation/tool-gap claim; final raw archive-prefix/preamble/R-K raw-slice equality; calculated live/archive line-count formulas. These are not final-byte requirements.",
+    "full_index": "Regenerate FULL index by same actual invocation; independently reconcile every row with both logs headings and prior index. Orphan361 verbatim, prior coverage/notes retained, one367 row; only actual source-supported title deltas. Report actual line count.",
+    "inherited_only": "design_docs/verification/world-iter367/baseline-index-cli.json proves prior index-only rc0 and orphan retention; does not prove future rotation."
+  },
+  "snapshot": {
+    "status": "pending; planner creates no snapshot",
+    "root": ".snap/M1/",
+    "payload_paths": [
+      "design_docs/world-mission.md",
+      "design_docs/world-mission-status-archive.md",
+      "design_docs/world-mission-log.md",
+      "design_docs/world-mission-log-archive.md",
+      "design_docs/world-mission-index.md",
+      "design_docs/world-mission-dashboard.md",
+      "design_docs/verification/world-iter367/executor-proof.json",
+      "design_docs/verification/world-iter367/execution-state.json",
+      "design_docs/verification/world-iter367/cli-rotation-receipt.json"
+    ],
+    "payload_count": 9,
+    "manifest": "manifest.json",
+    "manifest_self_excluding": true,
+    "fields": [
+      "path",
+      "type",
+      "mode",
+      "sha256"
+    ],
+    "rejection_controls": [
+      "missing payload",
+      "extra payload",
+      "symlink",
+      "traversal",
+      "one-byte mismatch",
+      "mode mismatch"
+    ],
+    "excludes": "All consumed designer/controller/planner and prior evidence; no whole367 directory. Snapshot is local, never tracked payload.",
+    "parent_reconstruction": "Parent owns reconstruction and Git writes; prove exact final content/types/modes identity. Any material change requires updated evidence/snapshot and independent review before G8."
+  },
+  "authority": {
+    "row256": "human-PARKED needs-human-review; independent MiniMax FAIL85; LOCAL_CRITERION UNMET",
+    "draft_pr515": "untouched",
+    "open_defaults": {
+      "D-WORLD-105": "C;233 parked/fail closed",
+      "D-WORLD-110": "A;255 as built",
+      "D-WORLD-111": "A; exactly TWO pinned-interpreter baseline failures, no additional failures",
+      "D-WORLD-112": "no autonomous credential change; independent credential incident"
+    },
+    "D111_exact_failures": [
+      "TestCheckSourceUnderPinnedInterpreter",
+      "TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter"
+    ],
+    "D112": "Sanitization never resolves112 or undoes exposure; D111 validation and D112 credential incident independently gate.",
+    "conditional_order": [
+      250,
+      255,
+      256,
+      257,
+      201,
+      243
+    ],
+    "no_skip256": true,
+    "release_priority": "150/151 only when routable; attendedA1 and188N2d/N4a remain waits; no autonomous next pick.",
+    "attended": "Real-key enrollment/approval and no-terminal exits remain attended;201/243 build/judge with fakes/test keys only, no real enrollment/mint/publish.",
+    "unattributed": "publish-counter/net6 remain unattributed; no recurrence/nonrecurrence claim"
+  },
+  "inherited_context": {
+    "controller_observations": "design_docs/verification/world-iter367/controller-observations.json",
+    "corrected_provenance": "design_docs/verification/world-iter367/provenance-corrected.json",
+    "corrected_release_predicates": "design_docs/verification/world-iter367/release-predicates-corrected.json",
+    "observations": "Parent in367 observations: actual product-base3/3green,0directives/inbox,two historical notices,no routable product. Inherited by child, not final acceptance. Corrected full-line provenance supersedes empty initial filters; corrected release predicates supersede broad historical A1 matches.",
+    "goal_clauses": "Unchanged goal and clauses1-7 MET inherited assessments.",
+    "actual_role_limits": "Planner authored these files; designer provenance inherited; executor/evaluator work and actual usage are not invented. Parent records actual routing degradation and usage or explicit unknowns."
+  },
+  "execution_boundaries": {
+    "prohibited": [
+      "secret/environment-value reads",
+      "credential access/change",
+      "network",
+      "messages",
+      "shared-state writes except parent-authorized narrow coordinated record-checkout transformation",
+      "source/policy/harness/skill/decision/test changes",
+      "source tests",
+      "full suites",
+      "subagents",
+      "Git write operations",
+      "generic scripts/coordinator/import-GitHub actions",
+      "admin transformations or CLI invocation by planner"
+    ],
+    "guards": "Read-only observations and in-memory negative controls, never seeded writes to shared/protected artifacts. No scripts/tests created.",
+    "parent_only_narrow_gate": "go test ./host/verifygate -run '^TestMissionConfigRealCharter$' -count=1",
+    "parent_gate_conditions": "Outside sandbox only after pristine baseline and side-effect review; no child reruns. Baseline proposed executable gates; baseline reds remain findings, never waivers/repair.",
+    "sandbox_denials": "UNINFORMATIVE UNDER SANDBOX",
+    "future_child_guards": "Parent asserts delivered nonempty directive/output, closed stdin and bounded date deadlines; polls any started job to terminal completion. Monitor is event stream, not wait.",
+    "planner_background_jobs": "none"
+  },
+  "delivery": {
+    "owner": "parent",
+    "status": "pending",
+    "independent_evaluator": "separate actual routed role evaluates final material bytes; controller never supplies verdict",
+    "required_ci": [
+      "ailang-code verify",
+      "Go race",
+      "Go host build/test"
+    ],
+    "head_requirements": "All3 completed/terminal-success with URLs and exact full40 head_sha at PR-head AND merge-head; reject base/prior substitutions, absent/running/failing jobs, missing URLs and wrong/short SHAs.",
+    "admin_landed": "forbidden before G8",
+    "product_acceptance": "unchanged; ADMIN preparation confers no product acceptance"
+  }
+}

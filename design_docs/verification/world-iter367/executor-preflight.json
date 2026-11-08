@@ -1,0 +1,102 @@
+{
+  "role": "executor",
+  "phase": "preparation_preflight_only",
+  "status": "complete",
+  "heavy_execution_started": false,
+  "awaiting": "explicit parent followup with committed plan, state, exact execution HEAD, ownership/freeze/snapshot instructions",
+  "root": "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+  "head": "4f83f2d7232ed2a7e63d8b2271efba9bd591fc05",
+  "canonical_product_base": "ad13d835345efc2b78308817cc940f73a987165d",
+  "resolved_lane": "codex:gpt-6.1-sol",
+  "resolved_path": "recipe",
+  "reason_token": "declared:provider-pin",
+  "supervisor_is_actual_executor": false,
+  "actual_provider_probe": {
+    "started_utc": "2026-11-08T01:05:53.227926+00:00",
+    "deadline_seconds": 120,
+    "runtime_seconds": 3.159,
+    "argv": [
+      "/opt/homebrew/bin/codex",
+      "exec",
+      "--model",
+      "gpt-6.1-sol",
+      "-c",
+      "features.multi_agent_v2.expose_spawn_agent_model_overrides=false",
+      "--sandbox",
+      "workspace-write",
+      "--add-dir",
+      "/Users/voightkampff/Library/Caches/go-build",
+      "--add-dir",
+      "/Users/voightkampff/go/pkg/mod",
+      "-C",
+      "/Users/voightkampff/dev/sunholo-data/.world-iter367-record",
+      "-o",
+      "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-executor-preflight-final-f9e110b2d45144308e2f9d0ab94bc2ef.txt",
+      "MISSION-ROLE: executor\nPreflight only. Reply with exactly: ok. Do not use tools, read files, execute commands, or make any changes. No implementation is authorized by this probe."
+    ],
+    "stdin": "/dev/null",
+    "return_code": 0,
+    "timed_out": false,
+    "model_headers": [
+      "OpenAI Codex v0.167.0",
+      "model: gpt-6.1-sol",
+      "provider: openai",
+      "approval: never",
+      "sandbox: workspace-write [workdir, /tmp, $TMPDIR, /Users/voightkampff/Library/Caches/go-build, /Users/voightkampff/go/pkg/mod]",
+      "reasoning effort: high",
+      "session id: 01a1b8b0-beb1-7600-bc7a-ea302aff845e"
+    ],
+    "safe_error_lines": [],
+    "usage_footer": [
+      "tokens used",
+      "11.397"
+    ],
+    "final_message": "ok",
+    "final_path": "/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world367-executor-preflight-final-f9e110b2d45144308e2f9d0ab94bc2ef.txt",
+    "provider_output_sha256": "0c6a883f6519b280cc14c45e00e2a3c37092f0e95280b889df1ea146546057d4",
+    "provider_output_bytes": 639,
+    "passed": true
+  },
+  "consumed_inputs": [
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/SKILL.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 54999,
+      "sha256": "95a740b11cc44e9f31c7dc606e565f9f55c8d03b0c5d059e97d04e7c369fac89"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/gate-3-route.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 91163,
+      "sha256": "3d6cde1a7051e11c29ffcea3ca23b0b26b1e976796dc32c2b279ba1eddf71d53"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/mission-control/resources/codex-lane-false-greens.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 13312,
+      "sha256": "fce81ea64a500f1707c3730d535fc56a9dba9b455aaf07fd9d18a461b806ff0c"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/ailang/.claude/skills/sprint-executor/SKILL.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 37647,
+      "sha256": "cc4e87fbc2d308312b25956fad591706ccd6d02d902fc2d1cd1d4607011a56f8"
+    },
+    {
+      "path": "/Users/voightkampff/dev/sunholo-data/.world-iter367-record/design_docs/verification/world-iter367/record-design.md",
+      "type": "regular",
+      "mode": "0o644",
+      "bytes": 12344,
+      "sha256": "bc7c7c047377a9f792cce6345524bfdfc30497501617ee955bb7976f126ea7e0"
+    }
+  ],
+  "consumed_inputs_unchanged": true,
+  "scope": "No existing repository file written; only this new preflight record. Private final-message file is provider-owned output. No execution, rotation, Git mutation, shared-state script, message/network action apart from provider transport, test, freeze of whole367, or snapshot performed.",
+  "future_scope": "ONE ADMIN M1; exact six admin existing outputs; mandatory existing fleet rotate-log keep20 and regenerated index; body/header conservation permitting source-backed CLI notices and boundary LF formatting only.",
+  "authority": "row256 human-parked independent FAIL85 LOCAL_CRITERION UNMET; D-WORLD-105/110/111/112 OPEN; draft515 untouched; no autonomous next pick; evaluator separate.",
+  "usage_accounting": "This independent fresh probe is additive. Any later resumed native Codex session footers are cumulative and must not be summed."
+}
