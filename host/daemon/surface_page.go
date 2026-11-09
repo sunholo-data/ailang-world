@@ -60,14 +60,18 @@ func (d *Daemon) handleSurface(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	status := http.StatusOK
-	_, ix, empty, err := d.readSurfaceIndex()
-	switch {
-	case err != nil:
-		status = http.StatusServiceUnavailable
-	case empty != "":
-	case stack:
-		if _, err := surfacepage.LayoutStack(ix, q.Get("brane"), q.Get("at"), time.Now()); err != nil {
-			status = http.StatusNotFound
+	if d.follow != nil {
+		status = d.followShellStatus(q, stack)
+	} else {
+		_, ix, empty, err := d.readSurfaceIndex()
+		switch {
+		case err != nil:
+			status = http.StatusServiceUnavailable
+		case empty != "":
+		case stack:
+			if _, err := surfacepage.LayoutStack(ix, q.Get("brane"), q.Get("at"), time.Now()); err != nil {
+				status = http.StatusNotFound
+			}
 		}
 	}
 	setSurfaceHeaders(w)
@@ -80,6 +84,10 @@ func (d *Daemon) handleSurface(w http.ResponseWriter, r *http.Request) {
 func (d *Daemon) handleSurfaceStatic(w http.ResponseWriter, r *http.Request) {
 	q, stackQuery, ok := surfaceQuery(w, r)
 	if !ok {
+		return
+	}
+	if d.follow != nil {
+		d.handleFollowStatic(w, r, q, stackQuery)
 		return
 	}
 	ctx, cancel := d.readCtx(r)

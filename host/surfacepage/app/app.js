@@ -29,6 +29,8 @@
   const summaryOf = n => String(n.summary || '').replace(/\s+-\s+/g, ' ').replace(/\s{2,}/g, ' ').trim();
   // A lane's label: its name and, for a row whose name is not already "row N", the row.
   const rowLabel = (name, row) => row && name !== 'row ' + row ? `${name} · row ${row}` : String(name || '');
+  // A shared world's lane: "shared" in v1, "<repo>:brane:shared" in follow mode (row 220 M4).
+  const isSharedKey = k => k === 'shared' || /^[a-z][a-z0-9-]*:brane:shared$/.test(String(k == null ? '' : k));
 
   // ---------- Glyphs (one shape per brane; colour from the data) ----------
   const CLIP = { square: 'none', triangle: 'polygon(50% 4%, 100% 96%, 0 96%)', diamond: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)',
@@ -71,34 +73,65 @@
     const parents = {}, kids = {};
     const addEdge = (p, c) => { (kids[p] = kids[p] || []).push(c); (parents[c] = parents[c] || []).push(p); };
     (D.links || []).forEach(k => { if (N[k.from] && N[k.to]) addEdge(k.from, k.to); }); // links run parent (from) → child (to)
-    const SH = (LANES.shared ? LANES.shared.states || [] : []).filter(s => s.kind === 'shared').sort((a, b) => a.rank - b.rank).map(s => s.id);
-    for (let i = 1; i < SH.length; i++) addEdge(SH[i - 1], SH[i]);  // the shared world's own first-parent line
+    // Groups: follow mode's repos in config order, each with its own shared world and branes; else the one world.
+    const repos = Array.isArray(D.repos) ? D.repos.filter(r => r.shared && LANES[r.shared]) : [];
+    const GROUPS = repos.length ? repos.map(r => ({ id: r.id, shared: r.shared, repo: r })) : [{ id: '', shared: 'shared', repo: null }];
+    const multi = GROUPS.length > 1;
+    const groupOf = key => { const l = LANES[key]; return (l && l.repo && GROUPS.find(g => g.id === l.repo)) || GROUPS[0]; };
+    const dipOf = g => multi ? 'dip|' + g.id : 'dip', otherOf = g => multi ? 'other|' + g.id : 'other';
+    const SH = Object.values(N).filter(n => n.kind === 'shared').sort((a, b) => a.rank - b.rank).map(n => n.id);
+    GROUPS.forEach(g => {   // each shared world's own first-parent line; no edge joins two repos
+      const line = SH.filter(id => N[id].lane === g.shared);
+      for (let i = 1; i < line.length; i++) addEdge(line[i - 1], line[i]);
+    });
     const nameOf = key => { const l = LANES[key]; return l ? l.name || l.title || key : String(key); };
     const laneTitle = key => rowLabel(nameOf(key), LANES[key] && LANES[key].row);
     const glyphOf = (key, size) => { const l = LANES[key] || {}; return gl(l.glyph, l.glyph === 'circle' ? SHARED_INK : l.colour, size); };
-    const glyphOfNode = (n, size) => n.kind === 'shared' ? gl('circle', SHARED_INK, size) : n.lane === 'shared' ? gl(null, null, size) : glyphOf(n.lane, size);
+    const glyphOfNode = (n, size) => n.kind === 'shared' ? gl('circle', SHARED_INK, size) : isSharedKey(n.lane) ? gl(null, null, size) : glyphOf(n.lane, size);
     const mergeOf = id => (kids[id] || []).find(c => N[c].kind === 'shared');
     const STEPS = Object.values(N).filter(n => n.kind === 'step');
+    const OPEN = Object.values(N).filter(n => n.kind === 'open');
     const TNOW = Date.parse(D.now), NOW_D = new Date(D.now);
     const NS = SH.length;                         // index NS is "now"
     const SIDX = {}; SH.forEach((id, i) => { SIDX[id] = i; });
     const TT = SH.map(id => Date.parse(N[id].at)).concat([TNOW]);
     const LX = levelXs(TT);
     // Rows: the most recent brane above the shared world, the next three below, the rest share one quiet lane.
+    // Several repos: each repo's shared world, then its newest branes, then its quiet lane, in config order.
     const recent = {};
-    STEPS.forEach(n => { if (n.lane !== 'shared') recent[n.lane] = Math.max(recent[n.lane] == null ? -1 : recent[n.lane], n.rank); });
+    STEPS.concat(OPEN).forEach(n => { if (!isSharedKey(n.lane)) recent[n.lane] = Math.max(recent[n.lane] == null ? -1 : recent[n.lane], n.rank); });
     const byRecent = Object.keys(recent).sort((a, b) => recent[b] - recent[a]);
-    const above = byRecent.slice(0, 1), below = byRecent.slice(1, 4);
-    const quiet = Object.keys(LANES).filter(k => k !== 'shared' && !above.includes(k) && !below.includes(k));
-    const LY = {};
-    above.forEach(k => { LY[k] = 182; }); LY.shared = 320; below.forEach((k, i) => { LY[k] = 440 + i * 98; }); LY.other = 440 + below.length * 98 - 6;
-    const ROWS = above.concat(['shared'], below, quiet.length ? ['other'] : []);
-    const rowOf = id => { const n = N[id]; return n.kind === 'shared' ? 'shared' : n.lane === 'shared' ? 'dip' : LY[n.lane] != null && n.lane !== 'other' ? n.lane : 'other'; };
-    const rowY = r => r === 'dip' ? LY.shared + 44 : LY[r];
+    const LY = {}, QUIET = {}, HOME = {};
+    let above = [], below = [], quiet = [], ROWS = [], GAP = 98;
+    if (!multi) {
+      const g = GROUPS[0];
+      above = byRecent.slice(0, 1); below = byRecent.slice(1, 4);
+      quiet = Object.keys(LANES).filter(k => !isSharedKey(k) && !above.includes(k) && !below.includes(k));
+      above.forEach(k => { LY[k] = 182; }); LY[g.shared] = 320; below.forEach((k, i) => { LY[k] = 440 + i * 98; }); LY[otherOf(g)] = 440 + below.length * 98 - 6;
+      ROWS = above.concat([g.shared], below, quiet.length ? [otherOf(g)] : []);
+      QUIET[otherOf(g)] = quiet; HOME[dipOf(g)] = g.shared;
+    } else {
+      const per = GROUPS.length === 2 ? 2 : GROUPS.length === 3 ? 1 : 0;
+      GROUPS.forEach(g => {
+        const shown = byRecent.filter(k => groupOf(k) === g).slice(0, per);
+        const q = Object.keys(LANES).filter(k => groupOf(k) === g && !isSharedKey(k) && !shown.includes(k));
+        ROWS.push(g.shared, ...shown); below.push(...shown); quiet.push(...q);
+        if (q.length) { ROWS.push(otherOf(g)); QUIET[otherOf(g)] = q; }
+        HOME[dipOf(g)] = g.shared;
+      });
+      GAP = Math.min(98, (716 - 160) / Math.max(1, ROWS.length - 1));
+      ROWS.forEach((r, i) => { LY[r] = 160 + i * GAP; });
+    }
+    const rowOf = id => { const n = N[id], g = groupOf(n.lane); return n.kind === 'shared' ? g.shared : isSharedKey(n.lane) ? dipOf(g) : LY[n.lane] != null ? n.lane : otherOf(g); };
+    const rowY = r => HOME[r] ? LY[HOME[r]] + (multi ? Math.round(GAP * 0.45) : 44) : LY[r];
+    const isDip = r => !!HOME[r], isOther = r => !!QUIET[r] || r === 'other';
+    const homeRow = r => HOME[r] || r;
     const isBreak = i => breakAt(TT, i);
     const lastStep = key => STEPS.filter(n => n.lane === key).sort((a, b) => b.rank - a.rank)[0];
     const lastState = key => ((LANES[key] && LANES[key].states) || []).reduce((a, s) => !a || s.rank > a.rank ? s : a, null);
-    return { D, LANES, N, parents, kids, SH, NS, SIDX, TT, LX, MAXU: LX.length - 1, STEPS, TNOW, NOW_D, above, below, quiet, LY, ROWS,
+    const aliasOf = {}; (D.aliases || []).forEach(a => { if (N[a.target]) aliasOf[a.id] = a.target; });
+    return { D, LANES, N, parents, kids, SH, NS, SIDX, TT, LX, MAXU: LX.length - 1, STEPS, OPEN, TNOW, NOW_D, above, below, quiet, LY, ROWS,
+      GROUPS, multi, GAP, QUIET, groupOf, isDip, isOther, homeRow, aliasOf,
       nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, rowOf, rowY, isBreak, lastStep, lastState };
   }
 
@@ -108,7 +141,7 @@
     const { N, SIDX, NS, LY } = T, POS = {}, REP = {}, DISP = {};
     Object.keys(N).forEach(id => {
       const n = N[id], r = T.rowOf(id);
-      if (n.kind === 'shared') { POS[id] = [XS[SIDX[id]], LY.shared]; return; }
+      if (n.kind === 'shared') { POS[id] = [XS[SIDX[id]], LY[r]]; return; }
       const m = T.mergeOf(id);
       let x;
       if (m != null && SIDX[m] != null) { const i = SIDX[m], xm = XS[i], xp = i > 0 ? XS[i - 1] : xm - 52; x = xm - Math.min(26, Math.max(0, (xm - xp) / 2)); }
@@ -120,7 +153,7 @@
     Object.keys(POS).forEach(id => { (byRow[T.rowOf(id)] = byRow[T.rowOf(id)] || []).push(id); });
     Object.entries(byRow).forEach(([row, ids]) => {
       ids.sort((a, b) => POS[a][0] - POS[b][0] || N[a].rank - N[b].rank);
-      const SEP = row === 'shared' ? 15 : 19;
+      const SEP = isSharedKey(row) ? 15 : 19;
       let g = [];
       const flush = () => {
         if (!g.length) return;
@@ -136,7 +169,7 @@
     const lastX = {};
     Object.keys(DISP).filter(id => !isCluster(id)).sort((a, b) => DISP[b].x - DISP[a].x).forEach(id => {
       const d = DISP[id], n = N[id];
-      if (n.kind === 'shared' || d.row === 'dip') return;
+      if (n.kind === 'shared' || T.isDip(d.row)) return;
       if (lastX[d.row] == null || lastX[d.row] - d.x >= 112) { LABELED.add(id); lastX[d.row] = d.x; }
     });
     return { POS, REP, DISP, LABELED };
@@ -158,7 +191,7 @@
     return out;
   }
   function barHTML(b) {
-    const c = b.card, g = c.kind === 'shared' ? gl('circle', SHARED_INK, 11) : b.col.brane === 'shared' ? gl(null, null, 11) : gl(b.col.glyph, b.col.colour, 11);
+    const c = b.card, g = c.kind === 'shared' ? gl('circle', SHARED_INK, 11) : isSharedKey(b.col.brane) ? gl(null, null, 11) : gl(b.col.glyph, b.col.colour, 11);
     const t = cleanTitle(c.title);
     return `<span class="a">${b.dir < 0 ? '↑' : '↓'}</span>${g}<span class="tag">${esc(tagOf(c))}</span>${t ? `<span class="ttl">${esc(t)}</span>` : ''}<span style="flex:1"></span><span class="w">${esc(c.rel)}</span>${c.badge > 0 ? `<span class="nb inl">${c.badge}</span>` : ''}${b.laneLab ? `<span class="ln">${esc(b.laneLab)}</span>` : ''}`;
   }
@@ -168,7 +201,7 @@
   const stateChip = (T, s, via) => {
     if (!s) return '';
     const n = (T && T.N[s.id]) || s;
-    const g = n.kind === 'shared' ? gl('circle', SHARED_INK, 10) : T && n.lane && n.lane !== 'shared' ? T.glyphOf(n.lane, 10) : gl(null, null, 10);
+    const g = n.kind === 'shared' ? gl('circle', SHARED_INK, 10) : T && n.lane && !isSharedKey(n.lane) ? T.glyphOf(n.lane, 10) : gl(null, null, 10);
     return chip(n.id, n.kind === 'shared' ? (n.pr ? `#${n.pr}` : n.label) : (n.episode || n.label), g, via, false, 'node:' + n.id);
   };
   const ACT = { you: ['var(--you)', 'var(--onYou)', 'var(--you)'], agent: ['#eaf1f7', '#2f6690', '#b9cfe1'], world: ['#f6f8fa', '#526677', '#dce3e8'], review: ['#f1edf6', '#6b4f8a', '#d6cbe4'], loop: ['#eaf3ee', '#3f7a5e', '#c3dccf'] };
@@ -187,6 +220,7 @@
   function frontHTML(S, T) {
     const F = S.front, step = F.kind === 'step';
     const none = t => `<div class="muted">${esc(t)}</div>`;
+    if (F.kind === 'open') return openFrontHTML(S, T, none);
     const tag = F.episode ? F.episode + (F.model ? ' · ' + prettyModel(F.model) : '') : F.label;
     const bar = `<div class="fbar"><span id="cb-tag" style="font-weight:700">${esc(tag)}</span><span class="sub" id="cb-when">${esc(`${F.rel} · ${F.exact}`)}</span><span style="flex:1"></span><span class="sub" style="display:inline-flex;align-items:center;gap:7px">${gl(F.glyph, F.glyph === 'circle' ? SHARED_INK : F.colour, 11)}${esc(rowLabel(F.name, F.row))}</span><span class="sub" id="cb-pos">${esc(F.position)}</span></div>`;
     const summ = summaryOf(F);
@@ -241,6 +275,25 @@
     const checks = `<div class="col g9"><div class="colh">Checks</div>${v ? `<div class="verdict">${esc(v)}</div>` : none(step ? 'No episode record for this step.' : 'A merge has no checks of its own.')}${tiles ? `<div class="tiles">${tiles}</div>` : ''}</div>`;
 
     return bar + `<div class="fbody">${head}${view}<div class="cols">${inputs}${outputs}${decisions}${checks}</div></div>`;
+  }
+
+  // openFrontHTML is an open episode's minimal card (row 220 M4): what it is, what it was built on,
+  // its lifecycle label. Nothing has landed, so outputs and checks are honest gaps; N2d owns the richer card.
+  function openFrontHTML(S, T, none) {
+    const F = S.front, o = F.open || {};
+    const bar = `<div class="fbar"><span id="cb-tag" style="font-weight:700">${esc(F.episode + (F.model ? ' · ' + prettyModel(F.model) : ''))}</span><span class="sub" id="cb-when">${esc(`started ${F.rel} · ${F.exact}`)}</span><span style="flex:1"></span><span class="sub" style="display:inline-flex;align-items:center;gap:7px">${gl(F.glyph, F.colour, 11)}${esc(rowLabel(F.name, F.row))}</span><span class="sub" id="cb-pos" data-open-state="${esc(o.state)}">${esc(o.label)}</span></div>`;
+    const head = `<div class="head"><div class="h">${esc(F.title || F.episode)}</div><div class="outcome">${esc(o.label + (o.ended ? ' · ended ' + o.ended : ''))}</div></div>`;
+    let grid = '';
+    if (F.model) grid += `<span class="k">Agent</span><div>${esc(agentLine(F))}</div>`;
+    if (F.task) grid += `<span class="k top">Task</span><div class="task"><div class="tl1">${esc(F.task)}</div></div>`;
+    if (o.branch) grid += `<span class="k">Branch</span><div>${esc(o.branch)}</div>`;
+    const came = F.builtOn ? `<div class="sect"><div class="l">↑ Came from</div><div class="chips">${stateChip(T, F.builtOn, 'built on')}</div></div>`
+      : none(o.baseOutsideWindow ? `Built on ${o.base || 'an unrecorded base'}, outside the retained window.` : 'Base not recorded.');
+    const inputs = `<div class="col"><div class="colh">Inputs</div>${grid ? `<div class="ingrid">${grid}</div>` : ''}${came}</div>`;
+    const outputs = `<div class="col g6"><div class="colh">Outputs</div>${F.pr ? `<div class="prpill">#${F.pr} · waiting for merge</div>` : none('Nothing has landed yet.')}</div>`;
+    const decisions = `<div class="col g9"><div class="colh">Decisions</div>${none('None recorded.')}</div>`;
+    const checks = `<div class="col g9"><div class="colh">Checks</div>${none('No checks until it lands.')}</div>`;
+    return bar + `<div class="fbody">${head}<div class="cols">${inputs}${outputs}${decisions}${checks}</div></div>`;
   }
 
   // railHTML is the whole brane, newest at the top; a long lane shows a window around the front.
@@ -324,12 +377,51 @@
     return 'Live · up to entry ' + s.cursor + ' · checked ' + s.checked;
   }
 
+  // ---------- Follow mode (row 220 M4): sources, running, polling ----------
+  // sourcesHTML is each repo's freshness, as the daemon worded it ("local branch checked": remote freshness is unknown).
+  function sourcesHTML(repos) {
+    if (!Array.isArray(repos) || !repos.length) return '';
+    return `<div class="nsec" data-sources><div class="nh">Sources</div>${repos.map(r => `<div class="nl sub" data-repo="${esc(r.id)}" data-state="${esc(r.state)}"${r.warn ? ' style="color:var(--you)"' : ''}>${esc(r.line)}</div>`).join('')}</div>`;
+  }
+  // openRunningHTML is the Running section from the open-episode overlay. An unavailable or incomplete read never says "Nothing running".
+  function openRunningHTML(o) {
+    const live = o.live || [], known = o.status === 'complete' || o.status === 'incomplete';
+    const rows = live.slice(0, 4).map(r => r.id
+      ? `<button type="button" class="nl run" data-go="${esc(r.id)}"><b>${esc(r.episode)}</b>${r.repo ? ' · ' + esc(r.repo) : ''} · ${esc(r.label)}</button>`
+      : `<div class="nl sub"><b>${esc(r.episode)}</b> · ${esc(r.reason)}</div>`).join('');
+    const counts = [o.prOpen ? `${o.prOpen} PR open` : '', o.ended ? `${o.ended} ended, outcome unknown` : '', o.failed ? `${o.failed} finish not landed` : ''].filter(Boolean).join(' · ');
+    const head = known ? `Running · ${live.length}${o.status === 'incomplete' ? '+' : ''}` : 'Running';
+    return `<div class="nsec" data-running><div class="nh">${head}</div>${rows}${live.length > 4 ? `<div class="nl sub">+${live.length - 4} more</div>` : ''}` +
+      `${!live.length && o.status === 'complete' ? '<div class="nl sub">Nothing running</div>' : ''}${counts ? `<div class="nl sub">${esc(counts)}</div>` : ''}${o.note ? `<div class="nl sub">${esc(o.note)}</div>` : ''}</div>`;
+  }
+  // fetchCoherent reads the model and, with a brane open, its stack from ONE generation. "same": the generation on
+  // screen, nothing to re-render; "apply": a coherent pair (stack null with missing when the selection is gone);
+  // "keep": the generations disagreed twice, keep the previous view; "fail": the model answered an error.
+  async function fetchCoherent(get, selection, shown) {
+    let missing = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const model = await get('/surface/model.json');
+      if (!model.ok || !model.body || !Array.isArray(model.body.lanes)) return { kind: 'fail', status: model.status, body: model.body };
+      const gen = model.body.generation;
+      if (gen != null && gen === shown) return { kind: 'same', model: model.body };
+      if (!selection) return { kind: 'apply', model: model.body, stack: null };
+      const stack = await get(stackPath(selection.brane, selection.at));
+      if (stack.ok && stack.body && stack.body.front) {
+        if (stack.body.generation === gen) return { kind: 'apply', model: model.body, stack: stack.body };
+        missing = null;
+      } else {
+        if (gen == null) return { kind: 'fail', status: stack.status, body: stack.body };
+        missing = (stack.body && stack.body.reason) || 'the selection could not be read (HTTP ' + stack.status + ')';
+      }
+    }
+    return missing ? { kind: 'apply', missing } : { kind: 'keep' };
+  }
   function serviceLineHTML(service) {
     if (!service) return '';
     return '<div class="nl sub" data-service' + (service.warn ? ' style="color:var(--you)"' : '') + '>' + esc(service.line) + '</div>';
   }
 
-  if (typeof module !== 'undefined') module.exports = { serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
+  if (typeof module !== 'undefined') module.exports = { isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
     adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW } };
   if (typeof document === 'undefined') return;
 
@@ -400,14 +492,18 @@
     return r;
   };
   const dayDiff = iso => { const a = new Date(iso), b = NOW_D; return Math.round((Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate()) - Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate())) / 864e5); };
+  const lastShared = key => ((LANES[key] && LANES[key].states) || []).filter(s => s.kind === 'shared').reduce((a, s) => !a || s.rank > a.rank ? s : a, null);
   function statusOf(key) {
-    const s = key === 'shared' ? N[SH[NS - 1]] : lastStep(key);
+    const run = T.OPEN.find(n => n.lane === key && n.open && n.open.sessionLive);
+    if (run) return `<span class="stat on" data-tip="node:${esc(run.id)}">running</span>`;
+    const s = isSharedKey(key) ? (key === 'shared' ? N[SH[NS - 1]] : lastShared(key)) : lastStep(key);
     const on = s && dayDiff(s.at) <= 1;
     return `<span class="stat${on ? ' on' : ''}" data-tip="${s ? 'node:' + s.id : ''}">${on ? 'active' : 'quiet'}</span>`;
   }
   function progressOf(key) {
     const l = LANES[key];
     if (key === 'shared') return `<div class="prog">${NS} merges into dev</div>`;
+    if (isSharedKey(key)) { const g = T.groupOf(key), n = (l.states || []).filter(s => s.kind === 'shared').length; return `<div class="prog">${n} merge${n === 1 ? "" : "s"} into ${esc(g.repo ? g.repo.branch : 'dev')}</div>`; }
     const ms = l.milestones;
     if (ms && ms.names) {
       const dots = ms.names.map(nm => {
@@ -424,14 +520,15 @@
   function laneHead(key, y) {
     const l = LANES[key];
     return `<button type="button" class="lhead" data-lane="${esc(key)}" data-brane="${esc(key)}" style="top:${y - 32}px">
-      <span class="l1">${glyphOf(key, 11)}<span class="nm">${esc(nameOf(key))}</span></span>
-      ${l.goal ? `<span class="goal" data-tip="goal:${esc(key)}">${esc(l.goal)}</span>` : ''}
+      <span class="l1">${glyphOf(key, 11)}<span class="nm"${T.multi && l.goal ? ` data-tip="goal:${esc(key)}"` : ''}>${esc(nameOf(key))}</span></span>
+      ${l.goal && !T.multi ? `<span class="goal" data-tip="goal:${esc(key)}">${esc(l.goal)}</span>` : ''}
       ${progressOf(key).replace('</div>', statusOf(key) + '</div>')}</button>`;
   }
-  function otherHead(y) {
+  function otherHead(y, row) {
+    const quiet = T.QUIET[row] || [];
     const steps = quiet.reduce((a, k) => a + (LANES[k].stepsLanded != null ? LANES[k].stepsLanded : LANES[k].states.length), 0);
     const last = quiet.map(lastStep).filter(Boolean).sort((a, b) => b.rank - a.rank)[0];
-    return `<button type="button" class="lhead" id="quiet" aria-expanded="false" style="top:${y - 24}px">
+    return `<button type="button" class="lhead" data-quiet="${esc(row)}" aria-expanded="false" style="top:${y - 24}px">
       <span class="l1"><span class="nm">${quiet.length} quieter branes</span><span class="gs">${quiet.map(k => glyphOf(k, 9)).join('')}</span></span>
       <span class="prog">${steps} steps landed${last ? ' · last ' + esc(last.rel) : ''}</span></button>`;
   }
@@ -439,10 +536,10 @@
   function renderTimeline(keepView = false) {
     let h = '';
     ROWS.forEach((key, k) => {
-      const y = LY[key], tall = key === 'other' ? 72 : 98;
+      const y = LY[key], tall = T.multi ? T.GAP : T.isOther(key) ? 72 : 98;
       h += `<div class="band" style="top:${y - tall / 2 - 4}px;height:${tall}px;width:${PR}px;background:${k % 2 === 0 ? 'var(--laneBand)' : 'transparent'}"></div>`;
       h += `<div class="lrule" style="top:${y}px;left:${PL}px;width:${PW}px"></div>`;
-      h += key === 'other' ? otherHead(y) : laneHead(key, y);
+      h += T.isOther(key) ? otherHead(y, key) : laneHead(key, y);
     });
     h += `<div class="pedge" style="left:${PL - 1}px;top:96px;height:${TICK_T + 36 - 96}px"></div><div class="pedge" style="left:${PR}px;top:96px;height:${TICK_T + 36 - 96}px"></div>`;
     h += `<div class="plot" id="plot" style="left:${PL}px;top:0;width:${PW}px;height:${TICK_T + 40}px"><div class="world" id="world"></div></div>`;
@@ -461,10 +558,12 @@
     h += nowCard();
     h += `<div class="mini-lab" style="top:${MINI_T + 2}px">Overview<span>drag the window · click to jump</span></div>`;
     h += `<div class="mini" id="mini" style="left:${PL}px;top:${MINI_T}px;width:${PW}px;height:${MINI_H}px"></div>`;
-    h += `<div class="quiet-list" id="quiet-list" style="left:16px;bottom:${936 - (LY.other - 28)}px" hidden>${quiet.map(k => {
-      const s = lastStep(k);
-      return `<div data-brane="${esc(k)}">${glyphOf(k, 11)}<span class="qn"><b>${esc(nameOf(k))}</b><span class="qg">${esc(LANES[k].goal || ('row ' + LANES[k].row))}</span></span><span class="w">${esc(s ? s.rel : '')}</span></div>`;
-    }).join('')}</div>`;
+    ROWS.filter(T.isOther).forEach(row => {
+      h += `<div class="quiet-list" data-quiet-list="${esc(row)}" style="left:16px;bottom:${936 - (LY[row] - 28)}px" hidden>${(T.QUIET[row] || []).map(k => {
+        const s = lastStep(k);
+        return `<div data-brane="${esc(k)}">${glyphOf(k, 11)}<span class="qn"><b>${esc(nameOf(k))}</b><span class="qg">${esc(LANES[k].goal || (LANES[k].row ? 'row ' + LANES[k].row : ''))}</span></span><span class="w">${esc(s ? s.rel : '')}</span></div>`;
+      }).join('')}</div>`;
+    });
     h += `<div class="legend" aria-label="Legend" style="top:${LEGEND_T}px">
       <span><span class="nb inl">1</span>your decisions</span>
       <span><span style="width:14px;height:14px;border-radius:7px;box-shadow:0 0 0 4px var(--halo)"></span>connected to the step you point at</span>
@@ -491,7 +590,7 @@
         <div class="nl sub">${td.firstRound} first-round pass${td.firstRound === 1 ? '' : 'es'} · ${td.fixRounds} fix round${td.fixRounds === 1 ? '' : 's'} · ${Math.round(td.agentMinutes)} agent-minutes</div></div>`;
     }
     const run = sess[0], runLane = run && Object.keys(LANES).find(k => LANES[k].row && new RegExp('^w' + LANES[k].row + '[a-z]?$').test(run.episode));
-    const running = ne.sessionsUnavailable ? `<div class="nsec"><div class="nh">Running</div><div class="nl sub">${esc(ne.sessionsUnavailable)}</div></div>`
+    const running = ne.open ? openRunningHTML(ne.open) : ne.sessionsUnavailable ? `<div class="nsec"><div class="nh">Running</div><div class="nl sub">${esc(ne.sessionsUnavailable)}</div></div>`
       : `<div class="nsec"><div class="nh">Running · ${sess.length}</div>
         ${run ? `<div class="nl"><b>${esc(run.episode)}</b>${runLane ? ` · ${esc(nameOf(runLane))}` : ''}</div><div class="nl sub">started ${esc(run.started)}</div>` : '<div class="nl sub">Nothing running</div>'}</div>`;
     return `<div class="now" data-now style="left:${PR + 22}px;top:56px">
@@ -499,6 +598,8 @@
       <div style="display:flex;gap:9px;align-items:center"><span style="width:9px;height:9px;border-radius:5px;background:${healthy ? 'var(--okDot)' : 'var(--you)'};flex:none"></span><span style="font-weight:700;color:var(--ok)">${healthy ? 'Healthy' : esc(ne.health)}</span><span style="font-size:12.5px;color:var(--sub)">checked ${esc(ne.checked)}</span></div>
       ${serviceLineHTML(ne.service)}
       <div class="nl sub" data-live>${esc(liveStatus(live))}</div>
+      ${poll.note ? `<div class="nl sub" data-poll style="color:var(--you)">${esc(poll.note)}</div>` : ''}
+      ${sourcesHTML(D.repos)}
       ${today}
       ${running}
       <div class="nsec"><div class="nh" style="color:${needs.length ? 'var(--youShell)' : 'var(--sub)'}">Needs you · ${needs.length}</div>
@@ -507,11 +608,12 @@
   }
 
   // The empty and refused states: the reason, quietly, where the timeline would be.
-  function renderVoid(kind, reason) {
+  function renderVoid(kind, reason, repos) {
     T = null;
-    $('tl').innerHTML = `<div style="position:absolute;left:${PL}px;top:360px;width:${PW}px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">
+    $('tl').innerHTML = `<div data-void style="position:absolute;left:${PL}px;top:360px;width:${PW}px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center">
       <div style="font-size:15px;font-weight:700;color:var(--sub)">${kind === 'empty' ? 'Nothing to show yet' : 'The world could not be read'}</div>
-      <div style="font-size:13px;color:var(--sub);max-width:640px">${esc(reason)}</div></div>`;
+      <div style="font-size:13px;color:var(--sub);max-width:640px">${esc(reason)}</div>
+      ${(repos || []).map(r => `<div style="font-size:12.5px;color:${r.warn ? 'var(--you)' : 'var(--sub)'};max-width:640px" data-repo="${esc(r.id)}">${esc(r.line)}</div>`).join('')}</div>`;
     setView(kind);
     return false;
   }
@@ -524,28 +626,31 @@
     // Axis breaks (long quiet gaps).
     for (let i = 1; i <= NS; i++) if (isBreak(i)) {
       const days = Math.round((TT[i] - TT[i - 1]) / 864e5), mx = (XS[i - 1] + XS[i]) / 2;
-      h += `<div class="brk" style="left:${mx - 40}px;top:${LY.shared - 30}px">${days} quiet days</div><div class="brk-z" style="left:${mx - 4}px;top:${LY.shared - 9}px"></div>`;
+      const sy = LY[T.GROUPS[0].shared];
+      h += `<div class="brk" style="left:${mx - 40}px;top:${sy - 30}px">${days} quiet days</div><div class="brk-z" style="left:${mx - 4}px;top:${sy - 9}px"></div>`;
     }
     Object.entries(DISP).forEach(([id, d]) => {
       const { x, y } = d;
       if (isCluster(id)) {
-        const ns = d.ids.map(k => N[k]), shared = d.row === 'shared';
+        const ns = d.ids.map(k => N[k]), shared = isSharedKey(d.row);
         const word = shared ? 'merges' : 'steps';
-        const col = shared || d.row === 'dip' ? 'var(--edge)' : d.row === 'other' ? 'var(--edge)' : LANES[d.row].colour;
+        const col = shared || T.isDip(d.row) || T.isOther(d.row) ? 'var(--edge)' : LANES[d.row].colour;
         const badge = ns.reduce((a, n) => a + (n.badge || 0), 0);
         h += `<button type="button" class="node bub-n" data-id="${id}" data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${ns.length} ${word}, ${esc(exactOf(ns[0].at))} to ${esc(exactOf(ns[ns.length - 1].at))}"><span class="halo"><span class="bub" style="border-color:${col}">${ns.length}</span></span>${d.ids.map(k => `<span data-state="${esc(k)}" hidden></span>`).join('')}</button>`;
         if (badge) h += `<div class="nb" style="left:${x + 8}px;top:${y - 21}px">${badge}</div>`;
         return;
       }
-      const n = N[id], shared = n.kind === 'shared', unfiled = !shared && n.lane === 'shared';
+      const n = N[id], shared = n.kind === 'shared', unfiled = !shared && isSharedKey(n.lane), opened = n.kind === 'open';
       const l = LANES[n.lane];
       const size = shared ? 9 : unfiled ? 9 : l.glyph === 'square' ? 15 : 18;
+      // An open episode: a dashed ring in its lane's colour, filled while its session is live. Never a commit glyph.
       const inner = shared ? `<span class="g ring" style="width:9px;height:9px;border-radius:50%;background:var(--shellBg);border:2px solid var(--edge)"></span>`
+        : opened ? `<span class="g open" data-open="${esc(n.open.state)}" style="width:14px;height:14px;border-radius:50%;border:2px dashed ${l.colour};background:${n.open.sessionLive ? l.colour + '55' : 'var(--shellBg)'}"></span>`
         : unfiled ? gl(null, null, 9) : gl(l.glyph, l.colour, size);
-      const what = shared ? `Merged ${n.pr ? '#' + n.pr : n.label}` : (cleanTitle(n.title) || n.episode || n.label);
+      const what = shared ? `Merged ${n.pr ? '#' + n.pr : n.label}` : opened ? `${n.open.label}: ${n.title || n.episode}` : (cleanTitle(n.title) || n.episode || n.label);
       h += `<button type="button" class="node${shared ? ' sh' : ''}" data-id="${id}" data-state="${esc(id)}" data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${esc((shared ? 'Shared world' : nameOf(n.lane)) + ': ' + what + ', ' + n.rel + (n.badge ? ', ' + n.badge + ' of your decisions' : ''))}"><span class="halo">${inner}</span></button>`;
       if (n.badge > 0) h += `<div class="nb" style="left:${x + 6}px;top:${y - 19}px">${n.badge}</div>`;
-      if (LABELED.has(id)) h += `<div class="nlab" data-l="${id}" style="left:${x - 56}px;bottom:${936 - (y - 18)}px"><span class="tx">${esc(shortTitle(n.title || '') || n.episode || n.label)}</span></div>`;
+      if (LABELED.has(id)) h += `<div class="nlab" data-l="${id}" style="left:${x - 56}px;bottom:${936 - (y - 18)}px"><span class="tx">${esc(opened ? n.episode + ' · ' + n.open.label : shortTitle(n.title || '') || n.episode || n.label)}</span></div>`;
       h += `<div class="nlab" data-r="${id}" style="left:${x - 56}px;top:${y + (shared ? 9 : 14)}px"><div class="rel"></div></div>`;
     });
     h += `<div class="nowline" style="left:${XS[NS]}px;top:92px;height:${TICK_T + 30 - 92}px"></div>`;
@@ -597,23 +702,24 @@
     const lit = (pr, cr) => (pr === fr && linkedR.has(cr)) || (cr === fr && linkedR.has(pr));
     let e = '';
     const W = XS[NS] + 260;
-    e += `<path d="M 0 ${LY.shared} L ${XS[0]} ${LY.shared}" fill="none" stroke="var(--edge)" stroke-width="1.4" stroke-dasharray="3 5"></path>`;
+    T.GROUPS.forEach(g => { e += `<path d="M 0 ${LY[g.shared]} L ${XS[0]} ${LY[g.shared]}" fill="none" stroke="var(--edge)" stroke-width="1.4" stroke-dasharray="3 5"></path>`; });
     const seen = new Set();
     Object.keys(POS).forEach(c => {
       const n = N[c], rc = REP[c], [x2, y2] = [DISP[rc].x, DISP[rc].y];
       const ps = parents[c] || [];
-      if (n.kind === 'step' && !ps.length && T.rowOf(c) !== 'dip') {  // its base is further back than this data: it arrives from the left
-        e += `<path d="M ${x2 - 70} ${y2} L ${x2} ${y2}" fill="none" stroke="${n.lane === 'shared' ? 'var(--edge)' : LANES[n.lane].colour}" stroke-width="1.4" stroke-dasharray="3 5" opacity="0.6"></path>`;
+      if ((n.kind === 'step' || n.kind === 'open') && !ps.length && !T.isDip(T.rowOf(c))) {  // its base is further back than this data: it arrives from the left
+        e += `<path d="M ${x2 - 70} ${y2} L ${x2} ${y2}" fill="none" stroke="${isSharedKey(n.lane) ? 'var(--edge)' : LANES[n.lane].colour}" stroke-width="1.4" stroke-dasharray="3 5" opacity="0.6"></path>`;
       }
       ps.forEach(p => {
         const rp = REP[p]; if (!rp || rp === rc) return;
         const key = rp + '>' + rc; if (seen.has(key)) return; seen.add(key);
         const [x1, y1] = [DISP[rp].x, DISP[rp].y], L = lit(rp, rc);
-        const ownKey = n.kind === 'step' ? n.lane : N[p].kind === 'step' ? N[p].lane : 'shared';
-        const col = L ? 'var(--lit)' : ownKey === 'shared' ? 'var(--edge)' : LANES[ownKey].colour;
-        const w = L ? 2.6 : 1.6, op = L || ownKey === 'shared' ? 1 : 0.6;
+        const stepish = k => k === 'step' || k === 'open';
+        const ownKey = stepish(n.kind) ? n.lane : stepish(N[p].kind) ? N[p].lane : 'shared';
+        const col = L ? 'var(--lit)' : isSharedKey(ownKey) ? 'var(--edge)' : LANES[ownKey].colour;
+        const w = L ? 2.6 : 1.6, op = L || isSharedKey(ownKey) ? 1 : 0.6;
         let d;
-        const brk = n.kind === 'shared' && N[p].kind === 'shared' && isBreak(SIDX[c]);
+        const brk = (n.kind === 'shared' && N[p].kind === 'shared' && isBreak(SIDX[c])) || n.kind === 'open';
         if (y1 === y2) d = `M ${x1} ${y1} L ${x2} ${y2}`;
         else if (n.kind === 'shared') d = `M ${x1} ${y1} C ${x2} ${y1}, ${x2} ${y2}, ${x2} ${y2}`;
         else { const k = Math.min(30, Math.max(4, (x2 - x1) / 2)); d = `M ${x1} ${y1} C ${x1 + k} ${y1}, ${x1} ${y2}, ${x1 + k} ${y2} L ${x2} ${y2}`; }
@@ -701,7 +807,7 @@
   const MX = f => { f = Math.max(0, Math.min(NS, f)); const i = Math.floor(f), j = Math.min(NS, i + 1); return MXS[i] + (MXS[j] - MXS[i]) * (f - i); };
   const fOfMX = mx => { if (mx <= MXS[0]) return 0; if (mx >= MXS[NS]) return NS; let i = 0; while (i < NS && MXS[i + 1] < mx) i++; return i + (MXS[i + 1] === MXS[i] ? 0 : (mx - MXS[i]) / (MXS[i + 1] - MXS[i])); };
   function renderMini() {
-    const rowH = 4, top = 5;
+    const rowH = T.multi ? 3 : 4, top = 5;
     let h = '';
     const start = Math.floor(TT[0] / 864e5) * 864e5;
     for (let t = start; t <= TNOW; t += 864e5) {
@@ -711,11 +817,11 @@
     }
     for (let i = 1; i <= NS; i++) if (isBreak(i)) h += `<div class="mbrk" style="left:${(MXS[i - 1] + MXS[i]) / 2 - 6}px">≈</div>`;
     ROWS.forEach((r, k) => { h += `<div class="mrow" style="top:${top + k * (rowH + 1)}px"></div>`; });
-    SH.forEach((id, i) => { h += `<div class="mk" style="left:${MXS[i]}px;top:${top + ROWS.indexOf('shared') * (rowH + 1)}px;height:${rowH}px;width:1px;background:var(--edge)"></div>`; });
+    SH.forEach((id, i) => { h += `<div class="mk" style="left:${MXS[i]}px;top:${top + ROWS.indexOf(T.rowOf(id)) * (rowH + 1)}px;height:${rowH}px;width:1px;background:var(--edge)"></div>`; });
     STEPS.forEach(n => {
       const m = mergeOf(n.id); if (m == null) return;
-      const r = T.rowOf(n.id) === 'dip' ? 'shared' : T.rowOf(n.id), k = ROWS.indexOf(r);
-      h += `<div class="mk" style="left:${MX(SIDX[m] - 0.15) - 1}px;top:${top + k * (rowH + 1)}px;height:${rowH}px;width:3px;background:${n.lane === 'shared' ? 'var(--edge)' : LANES[n.lane].colour}"></div>`;
+      const r = T.homeRow(T.rowOf(n.id)), k = ROWS.indexOf(r);
+      h += `<div class="mk" style="left:${MX(SIDX[m] - 0.15) - 1}px;top:${top + k * (rowH + 1)}px;height:${rowH}px;width:3px;background:${isSharedKey(n.lane) ? 'var(--edge)' : LANES[n.lane].colour}"></div>`;
     });
     h += `<div class="mnow" style="left:${MXS[NS]}px"></div><div class="mwin" id="mwin"></div>`;
     $('mini').innerHTML = h;
@@ -757,10 +863,10 @@
   }
 
   // ---------- Header ----------
-  const addrOf = () => `${F.brane}@${railIdx() + 1}`;
+  const addrOf = () => F.kind === 'open' ? String(F.id).replace(/:episode:/, ':') : `${String(F.brane).replace(/^([a-z][a-z0-9-]*):brane:/, '$1:')}@${railIdx() + 1}`;
   function renderCrumbs() {
     $('crumbs').innerHTML = crumbsHTML(st.d === 1 && F ? addrOf() : null);
-    $('addr').placeholder = st.d === 0 ? 'go to a place — row-189@6 · shared@0ffbb9c' : '';
+    $('addr').placeholder = st.d !== 0 ? '' : T && T.GROUPS[0].id ? 'go to a place — ' + T.GROUPS.map(g => g.id).join(' · ') + ' · ' + T.GROUPS[0].id + ':row-N@1' : 'go to a place — row-189@6 · shared@0ffbb9c';
   }
   let msgT;
   function say(t) { const m = $('hmsg'); m.textContent = t; m.style.opacity = '1'; clearTimeout(msgT); msgT = setTimeout(() => { m.style.opacity = '0'; }, 2600); }
@@ -773,17 +879,22 @@
     try { body = await r.json(); } catch (_) { body = null; }
     return { ok: r.ok, status: r.status, body };
   }
+  const FOLLOW_MODEL = 'world/surface-model/v2', POLL_MS = 15000;
+  let followMode = false, shownGen = null, shownAt = '', pollTimer = null, liveStarted = false;
+  const poll = { note: '' };
   async function loadModel() {
     let res;
     try { res = await getJSON('/surface/model.json'); } catch (e) { return renderVoid('error', 'the surface model could not be fetched: ' + e.message); }
     const b = res.body || {};
-    if (!res.ok) return renderVoid('error', b.reason || `the surface model answered HTTP ${res.status}`);
+    followMode = b.schema === FOLLOW_MODEL;
+    if (!res.ok) return renderVoid('error', b.reason || `the surface model answered HTTP ${res.status}`, b.repos);
     if (b.empty) return renderVoid('empty', b.reason || 'the surface index is empty');
-    if (!Array.isArray(b.lanes) || !b.lanes.some(l => l.states && l.states.length)) return renderVoid('empty', 'The surface index holds no states yet.');
+    if (!Array.isArray(b.lanes) || !b.lanes.some(l => l.states && l.states.length)) return renderVoid('empty', 'The surface index holds no states yet.', b.repos);
     setModel(b);
+    shownGen = b.generation == null ? null : b.generation; shownAt = hm(new Date());
     const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);   // the latest work, as v3 opened on its front
     st.focus = newest ? newest.id : SH[NS - 1] || null;
-    renderTimeline();
+    renderTimeline(); renderCrumbs();
     setView('timeline');
     return true;
   }
@@ -809,49 +920,87 @@
     if (liveRefresh) return;
     liveRefresh = setTimeout(refreshLive, 300);
   }
-  async function refreshLive() {
-    liveRefresh = null;
+  const refreshLive = () => refresh('live');
+  // repaintNow redraws the now card alone: a status change is visible even when the graph did not change.
+  function repaintNow() { const el = document.querySelector('[data-now]'); if (el && T) el.outerHTML = nowCard(); }
+  // schedulePoll: follow mode polls the model every 15 s while the page is visible, independently of AG-UI.
+  function schedulePoll(delay) {
+    clearTimeout(pollTimer); pollTimer = null;
+    if (!followMode || !liveVisible()) return;
+    pollTimer = setTimeout(() => { pollTimer = null; refresh('poll'); }, delay == null ? POLL_MS : delay);
+  }
+  // applyModel replaces the render with a coherent model (and stack), keeping pan, zoom, focus and address.
+  function applyModel(r, selection) {
+    if (!T) {
+      setModel(r.model);
+      const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);
+      st.focus = newest ? newest.id : SH[NS - 1] || null;
+      renderTimeline(); renderCrumbs(); setView('timeline');
+      if (!liveStarted) startLive();
+      return;
+    }
+    const active = document.activeElement, activeId = active && active.id;
+    const activeKey = active && ['data-id', 'data-state', 'data-go', 'data-rail', 'data-lane'].find(k => active.hasAttribute(k));
+    const activeValue = activeKey && active.getAttribute(activeKey);
+    const focus = st.focus, u = view.u, L = view.L, depth = st.d;
+    const railTop = $('rail') ? $('rail').scrollTop : 0, address = $('addr').value;
+    setModel(r.model);
+    const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);
+    st.focus = N[focus] ? focus : T.aliasOf[focus] ? T.aliasOf[focus] : newest ? newest.id : SH[NS - 1] || null;
+    view.u = u; view.L = L;
+    renderTimeline(true);
+    applyView(true);
+    if (depth === 1 && selection && selection.seq === openSeq) {
+      if (!r.stack) { say(r.missing || 'the selection is no longer on the surface'); out(); return; }
+      setStack(r.stack); renderBrane(false); $('rail').scrollTop = railTop;
+      if (N[F.id]) st.focus = F.id;
+      follow(appPath(F.brane, F.id)); renderCrumbs();
+    }
+    st.d = depth;
+    setView(depth === 1 ? 'brane' : 'timeline');
+    $('addr').value = address;
+    if (active && active.isConnected) active.focus({preventScroll: true});
+    else {
+      const replacement = activeId ? $(activeId) : activeKey ? Array.from(document.querySelectorAll('[' + activeKey + ']')).find(e => e.getAttribute(activeKey) === activeValue && e.tabIndex >= 0) : null;
+      if (replacement) replacement.focus({preventScroll: true});
+    }
+  }
+  // refresh is N2c's refresh on a committed log entry ("live") and follow mode's model poll ("poll"): fetch
+  // everything before touching the old render; an unchanged generation repaints only the now card.
+  async function refresh(trigger) {
+    if (trigger === 'live') liveRefresh = null;
+    if (refreshing) { if (trigger === 'live') queued = true; return; }
     refreshing = true;
     const count = live.count;
     try {
-      const selection = st.d === 1 && F ? {brane: F.brane, at: F.id, seq: openSeq} : null;
-      const model = await getJSON('/surface/model.json');
-      if (!model.ok || !model.body || !Array.isArray(model.body.lanes)) throw new Error('refresh failed (HTTP ' + model.status + ')');
-      const stack = selection ? await getJSON(stackPath(selection.brane, selection.at)) : null;
-      if (stack && (!stack.ok || !stack.body || !stack.body.front)) throw new Error('refresh failed (HTTP ' + stack.status + ')');
-      // Fetch everything before touching the old render. Navigation during the fetch wins.
-      const active = document.activeElement, activeId = active && active.id;
-      const activeKey = active && ['data-id', 'data-state', 'data-go', 'data-rail', 'data-lane'].find(k => active.hasAttribute(k));
-      const activeValue = activeKey && active.getAttribute(activeKey);
-      const focus = st.focus, u = view.u, L = view.L, depth = st.d;
-      const railTop = $('rail') ? $('rail').scrollTop : 0, address = $('addr').value;
-      setModel(model.body);
-      const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);
-      st.focus = N[focus] ? focus : newest ? newest.id : SH[NS - 1] || null;
-      view.u = u; view.L = L;
-      renderTimeline(true);
-      applyView(true);
-      if (stack && selection.seq === openSeq && depth === 1) { setStack(stack.body); renderBrane(false); $('rail').scrollTop = railTop; }
-      st.d = depth;
-      setView(depth === 1 ? 'brane' : 'timeline');
-      $('addr').value = address;
-      if (active && active.isConnected) active.focus({preventScroll: true});
-      else {
-        const replacement = activeId ? $(activeId) : activeKey ? Array.from(document.querySelectorAll('[' + activeKey + ']')).find(e => e.getAttribute(activeKey) === activeValue && e.tabIndex >= 0) : null;
-        if (replacement) replacement.focus({preventScroll: true});
+      const selection = T && st.d === 1 && F ? {brane: F.brane, at: F.id, seq: openSeq} : null;
+      const r = await fetchCoherent(getJSON, selection, T ? shownGen : null);
+      if (r.kind === 'fail') {
+        if (!followMode) throw new Error('refresh failed (HTTP ' + r.status + ')');
+        const reason = (r.body && r.body.reason) || 'HTTP ' + r.status;
+        if (!T) renderVoid('error', reason, r.body && r.body.repos);
+        poll.note = 'Model refresh failed: ' + reason + (T ? ' · showing the view from ' + shownAt : '');
+      } else if (r.kind === 'keep') {
+        poll.note = 'The graph changed during the refresh · showing the view from ' + shownAt;
+      } else {
+        if (r.kind === 'same') { D.nowEdge = r.model.nowEdge; D.repos = r.model.repos; D.now = r.model.now; NOW_D = new Date(r.model.now); }
+        else { applyModel(r, selection); indexP = null; }
+        if (r.model) { shownGen = r.model.generation == null ? null : r.model.generation; shownAt = hm(new Date()); }
+        poll.note = '';
+        const cursor = r.model && r.model.nowEdge && r.model.nowEdge.live;
+        if (cursor && live.cursor != null) live.cursor = Math.max(live.cursor, cursor.lastIndex);
+        if (trigger === 'live') { live.count = Math.max(0, live.count - count); live.checked = hm(new Date()); }
       }
-      const cursor = model.body.nowEdge && model.body.nowEdge.live;
-      if (cursor) live.cursor = Math.max(live.cursor, cursor.lastIndex);
-      live.count = Math.max(0, live.count - count);
-      live.checked = hm(new Date());
-      indexP = null;
     } catch (e) {
       queued = false;
-      livePause(/^refresh failed/.test(e.message) ? e.message : 'refresh failed (HTTP 0)');
+      if (followMode) poll.note = 'Model refresh failed: the daemon could not be reached · showing the view from ' + shownAt;
+      else livePause(/^refresh failed/.test(e.message) ? e.message : 'refresh failed (HTTP 0)');
     } finally {
       refreshing = false;
       if (queued) { queued = false; queueRefresh(); }
+      repaintNow();
       livePaint();
+      if (followMode) schedulePoll();
     }
   }
   async function liveFollow() {
@@ -897,6 +1046,7 @@
     else if (live.mode === 'live') liveFollow();
   }
   function startLive() {
+    liveStarted = true;
     const ne = D.nowEdge || {};
     if (!ne.live) {
       Object.assign(live, {mode: 'unavailable', reason: ne.liveUnavailable || 'the log could not be read'});
@@ -914,6 +1064,9 @@
       liveRetry = null; live.mode = 'hidden'; livePaint();
     } else { live.mode = 'live'; livePaint(); if (live.count) queueRefresh(); liveFollow(); }
   });
+
+  // Follow mode's poll is independent of the stream: hidden pauses it, visible fetches at once.
+  document.addEventListener('visibilitychange', () => { if (liveVisible()) schedulePoll(0); else { clearTimeout(pollTimer); pollTimer = null; } });
 
   let indexP = null;
   function loadIndex() {
@@ -947,7 +1100,7 @@
     if (!res.ok || !b.front) { say(b.reason || `no such state (HTTP ${res.status})`); if (st.d === 0) follow(appPath()); return false; }
     const was = st.d === 1;
     setStack(b);
-    if (!was && T) { const sx = screenX(F.id), d = DISP[REP[F.id]]; setOrigin(sx != null ? Math.max(PL, Math.min(PR, sx)) : PL, d ? d.y : LY.shared); }
+    if (!was && T) { const sx = screenX(F.id), d = DISP[REP[F.id]]; setOrigin(sx != null ? Math.max(PL, Math.min(PR, sx)) : PL, d ? d.y : LY[T.GROUPS[0].shared]); }
     st.d = 1; st.focus = F.id; $('tip').hidden = true;
     renderBrane(was);
     $('root').classList.add('zoomed'); setView('brane');
@@ -1039,13 +1192,21 @@
     }
     const n = N[id]; if (!n) return '';
     const shared = n.kind === 'shared';
-    const ids = [n.episode, n.pr ? '#' + n.pr : '', id.slice(0, 7)].filter(Boolean).join(' · ');
+    const ids = [n.episode, n.pr ? '#' + n.pr : '', String(id).replace(/^.*:commit:/, '').slice(0, 7)].filter(Boolean).join(' · ');
     if (shared) {
       const from = (parents[id] || []).map(p => N[p]).find(p => p.kind === 'step');
       return `<div class="hc"><div class="hk">${gl('circle', SHARED_INK, 9)}Merged into the shared world · ${esc(n.rel)}</div>
         ${n.title ? `<div class="ht">${esc(cleanTitle(n.title))}</div>` : ''}
-        ${from && from.lane !== 'shared' ? `<div class="hm">from ${esc(nameOf(from.lane))}${from.episode ? ' · ' + esc(from.episode) : ''}</div>` : ''}
+        ${from && !isSharedKey(from.lane) ? `<div class="hm">from ${esc(nameOf(from.lane))}${from.episode ? ' · ' + esc(from.episode) : ''}</div>` : ''}
         <div class="hw">${esc(exactOf(n.at))}</div><div class="hid">${esc(ids)}</div></div>`;
+    }
+    if (n.kind === 'open') {
+      const o = n.open || {}, base = o.baseOutsideWindow ? `base ${o.base || 'unrecorded'} is outside the retained window` : o.base ? 'built on ' + o.base : '';
+      return `<div class="hc"><div class="hk">${glyphOfNode(n, 9)}${esc(nameOf(n.lane))} · ${esc(o.label)}</div>
+        <div class="ht">${esc(n.title || n.episode)}</div>
+        ${n.model ? `<div class="hm"><b>${esc(agentLine(n))}</b></div>` : ''}
+        <div class="hm">${esc([o.branch, base, n.pr ? 'PR #' + n.pr : ''].filter(Boolean).join(' · '))}</div>
+        <div class="hw">started ${esc(n.rel)}${o.ended ? ' · ended ' + esc(o.ended) : ''}</div><div class="hid">${esc(n.episode)}</div></div>`;
     }
     const s = summaryOf(n);
     const g = n.graders ? `${esc(n.graders)} graders · ${n.firstRoundPass ? 'first round ✓' : `${n.rounds} round${n.rounds === 1 ? '' : 's'}`}` : '';
@@ -1054,6 +1215,7 @@
       ${s ? `<div class="hs">${esc(s)}</div>` : `<div class="hs none">No agent episode recorded.</div>`}
       ${n.model ? `<div class="hm"><b>${esc(agentLine(n))}</b>${g ? ' · ' + g : ''}${n.minutes != null ? ` · ${n.minutes} agent-min` : ''}</div>` : ''}
       ${n.badge ? `<div class="hm"><span class="nb inl">${n.badge}</span> ${n.badge === 1 ? 'decision' : 'decisions'} of yours</div>` : ''}
+      ${n.sessionLive ? '<div class="hm">its episode\'s session is still live</div>' : ''}
       <div class="hw">${esc(n.rel)} · ${esc(exactOf(n.at))}</div><div class="hid">${esc(ids)}</div></div>`;
   }
   function tipHTML(spec) {
@@ -1103,7 +1265,8 @@
     if (suppressClick) { suppressClick = false; e.stopPropagation(); return; }
     const n = e.target.closest('#tl .node');
     if (n) return open(n.dataset.id);
-    if (e.target.closest('#quiet')) { const l = $('quiet-list'); l.hidden = !l.hidden; $('quiet').setAttribute('aria-expanded', String(!l.hidden)); return; }
+    const qb = e.target.closest('[data-quiet]');
+    if (qb) { const l = [...document.querySelectorAll('[data-quiet-list]')].find(x => x.dataset.quietList === qb.dataset.quiet); if (l) { l.hidden = !l.hidden; qb.setAttribute('aria-expanded', String(!l.hidden)); } return; }
     const lab = e.target.closest('.lhead');
     if (lab) { const key = lab.dataset.lane, s = lastState(key); return s ? openState(key, s.id) : say(`${nameOf(key)} has no states yet`); }
     if (e.target.closest('#now-b')) return goNow();
@@ -1118,7 +1281,8 @@
     if (ch) {
       const id = ch.dataset.go, k = RAIL.findIndex(r => r.id === id);
       if (F && id === F.id) return;
-      return k >= 0 ? openRail(k) : N[id] ? openState(N[id].lane, id) : say(`${ch.textContent.trim() || id.slice(0, 7)} is outside the timeline`);
+      const to = T && T.aliasOf[id] ? T.aliasOf[id] : id;
+      return k >= 0 ? openRail(k) : N[to] ? openState(N[to].lane, to) : say(`${ch.textContent.trim() || id.slice(0, 7)} is outside the timeline`);
     }
   }, true);
 
@@ -1218,7 +1382,7 @@
       if (k === 'ArrowLeft') nx = list[Math.max(0, i - 1)];
       else if (k === 'ArrowRight') nx = list[Math.min(list.length - 1, i + 1)];
       else {
-        const j = ROWS.indexOf(d.row === 'dip' ? 'shared' : d.row) + (k === 'ArrowUp' ? -1 : 1);
+        const j = ROWS.indexOf(T.homeRow(d.row)) + (k === 'ArrowUp' ? -1 : 1);
         if (ROWS[j]) { const cand = onRow(ROWS[j]); if (cand.length) nx = cand.reduce((b, id) => Math.abs(DISP[id].x - d.x) < Math.abs(DISP[b].x - d.x) ? id : b); }
       }
       if (nx && nx !== cur) { st.focus = nx; applyFocus(); ensureVisible(nx); }
@@ -1228,7 +1392,8 @@
   window.addEventListener('resize', fit);
 
   // Exposed for the screenshot driver.
-  window.World = { open: label => { const n = Object.values(N).find(x => x.id === label || x.episode === label || x.label === label); if (n) open(n.id); return !!n; }, out: () => out(), rail: k => openRail(k),
+  window.World = { open: label => { const n = Object.values(N).find(x => x.id === label || x.episode === label || x.label === label) || (T && N[T.aliasOf[label]]); if (n) open(n.id); return !!n; }, out: () => out(), rail: k => openRail(k),
+    poll: () => refresh('poll'), generation: () => shownGen,
     focus: id => { st.focus = id; applyFocus(); }, zoom: (u, ax) => zoomTo(u, ax == null ? PL + PW / 2 : ax, false), pan: L => panTo(L, false), now: () => goNow(false),
     view: () => ({ u: view.u, L: view.L, level: levelName(), atNow: atNow() }), screenX: id => screenX(id) };
 
@@ -1239,6 +1404,7 @@
     const q = parseAppQuery(location.search);
     const ok = await loadModel();
     if (ok) startLive();
+    if (followMode) schedulePoll();
     if (ok && q && q.brane != null) await openState(q.brane, q.at);   // a deep link, or a reload inside a brane
     document.documentElement.dataset.ready = '1';
     $('root').focus({ preventScroll: true });

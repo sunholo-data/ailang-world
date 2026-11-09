@@ -24,6 +24,9 @@ type Stack struct {
 	Task, Agent, Model, ReadSummary string
 	Graders, Rounds, Calls, Minutes string
 	PR                              int
+	// Follow mode (row 220 M4): the address bar's text when ids are
+	// repo-qualified, and the repo's freshness when it is not fresh.
+	Address, Status string
 }
 
 // StackCard is a local navigation target with the lane's consistent glyph.

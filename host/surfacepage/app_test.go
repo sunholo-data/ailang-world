@@ -171,8 +171,8 @@ const seams = require('./surface.js');
 const model = JSON.parse(fs.readFileSync('model.json', 'utf8'));
 const stacks = JSON.parse(fs.readFileSync('stacks.json', 'utf8'));
 const index = JSON.parse(fs.readFileSync('index.json', 'utf8'));
-assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'applyDelta', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'esc', 'frontHTML',
-  'geometry', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'nextBackoff', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'serviceLineHTML', 'shortTitle', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict']);
+assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'applyDelta', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'esc', 'fetchCoherent', 'frontHTML',
+  'geometry', 'isSharedKey', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'nextBackoff', 'openRunningHTML', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'serviceLineHTML', 'shortTitle', 'sourcesHTML', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict']);
 
 assert.equal(app.serviceLineHTML(undefined), '');
 assert.equal(app.serviceLineHTML({line:'<build & file>',warn:false}), '<div class="nl sub" data-service>&lt;build &amp; file&gt;</div>');

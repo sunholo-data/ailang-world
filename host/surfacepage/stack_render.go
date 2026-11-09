@@ -19,6 +19,9 @@ func RenderStack(s Stack) ([]byte, error) {
 // StackAddress is the stack's address bar text: "world KEY@SHORT", or as
 // much of it as the page has.
 func StackAddress(s Stack) string {
+	if s.Address != "" {
+		return s.Address
+	}
 	addr := "world"
 	if s.Lane.Key != "" {
 		addr += " " + s.Lane.Key
@@ -70,6 +73,7 @@ li { margin:8px 0 }
 [data-actor="you"] .actor { background:var(--you); color:#FFFFFF; border-color:var(--you) }
 .check { display:block; font-size:24px; font-weight:600 }
 small { color:var(--sub) }
+.status { color:var(--you) }
 .rail { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px }
 .rail a { padding:4px 8px; border:1px solid var(--line); border-radius:3px }
 .rail [aria-current] { border-color:var(--ink); font-weight:700 }
@@ -79,6 +83,7 @@ a:focus-visible { outline:2px solid var(--you); outline-offset:2px }
 </style><script src="/surface/surface.js" defer></script></head><body>
 <header class="top"><span class="tile" aria-hidden="true">{{.Logo}}</span><span class="name">World</span>{{template "chrome-head" .Address}}</header>
 <main><a class="back" href="/surface/static">{{template "laneGlyph" .Lane}} {{.Lane.Title}} · World timeline</a>
+{{if .Status}}<p class="status">{{.Status}}</p>{{end}}
 {{if .Reason}}<p class="reason">{{.Reason}}</p>{{else}}
 <section class="earlier">{{range .Earlier}}<div class="column" data-brane="{{.Brane}}">{{range .Cards}}{{template "card" .}}{{end}}</div>{{end}}</section>
 <article class="front" data-state="{{.Front.ID}}" data-brane="{{.Front.Brane}}">

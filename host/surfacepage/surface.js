@@ -2,7 +2,7 @@
    The app shell (data-app) loads it for its seams only: window.WorldSurface. */
 (() => {
   "use strict";
-  const SHARED = "shared";
+  const SHARED = "shared", FOLLOW = "world/surface-follow-index/v1";
   const APP = "/surface", STATIC = "/surface/static";
   const LOOK_KEY = "world.appearance";
   const LOOKS = {theme: ["paper", "slate", "night", "system"], marks: ["colour", "shape"], motion: ["full", "reduced", "system"]};
@@ -30,6 +30,53 @@
     }
     return names;
   }
+  // atOnLane resolves "@N" or "@HASH" on one lane; label names the lane in errors, ref maps a state to its href.
+  function atOnLane(lane, at, label, ref) {
+    if (lane.length === 0) return {error: label + " has no states"};
+    if (at === undefined) return {href: ref(lane[lane.length - 1])};
+    if (/^[0-9]+$/.test(at)) {
+      const n = Number(at);
+      if (n >= 1 && n <= lane.length) return {href: ref(lane[n - 1])};
+      if (at.length < 4) return {error: label + " has states 1 to " + lane.length + ", not " + at};
+    }
+    if (!/^[0-9a-f]{4,}$/.test(at)) return {error: '"@' + at + '" is neither a state number nor 4 or more hex characters'};
+    const hits = lane.filter(s => String(s.id).toLowerCase().startsWith(at));
+    if (hits.length === 1) return {href: ref(hits[0])};
+    if (hits.length > 1) return {error: '"' + at + '" matches ' + hits.length + " states on " + label + ": type more of the hash"};
+    return {error: "no state on " + label + ' starts with "' + at + '"'};
+  }
+  // parseFollowAddress is the grammar over a follow envelope (row 220 M4): NAME may be "REPO:NAME" or a repo id
+  // (its shared world); an episode id opens its open state or, once merged, its landed step. A short name is
+  // accepted only when it is unique across repos; otherwise the error lists the repo-qualified choices.
+  function parseFollowAddress(name, at, index, base) {
+    const repos = Array.isArray(index.repos) ? index.repos : [];
+    let only = null, nm = name;
+    const q = /^([a-z][a-z0-9-]*):(.+)$/.exec(name);
+    if (q && repos.some(r => r.id === q[1])) { only = q[1]; nm = q[2]; }
+    else if (repos.some(r => r.id === name)) { only = name; nm = SHARED; }
+    const hits = [];
+    for (const r of repos) {
+      if (only && r.id !== only) continue;
+      const ix = r.index || {}, rev = String((ix.source || {}).rev || "").toLowerCase(), keys = [];
+      if (nm === SHARED || nm === "dev" || nm === rev) keys.push(SHARED);
+      for (const b of Array.isArray(ix.branes) ? ix.branes : []) if (braneNames(b).includes(nm) && !keys.includes(b.key)) keys.push(b.key);
+      keys.forEach(key => hits.push({repo: r.id, key, ix}));
+    }
+    const open = index.open || {};
+    if (at === undefined) {
+      for (const e of Array.isArray(open.episodes) ? open.episodes : []) if (e.episode === nm && (!only || e.repo === only)) hits.push({repo: e.repo, key: e.episode, id: e.id});
+      for (const a of Array.isArray(open.aliases) ? open.aliases : []) {
+        const [repo, , ep] = String(a.id).split(":");
+        if (ep === nm && (!only || repo === only)) hits.push({repo, key: ep, id: a.id});
+      }
+    }
+    if (hits.length === 0) return {error: 'no brane or episode is named "' + name + '"'};
+    if (hits.length > 1) return {error: 'ambiguous name "' + name + '": choose ' + hits.map(h => h.repo + ":" + h.key).join(", ")};
+    const h = hits[0];
+    // The stack resolves an episode id by itself; its brane is the repo's shared world until it loads.
+    if (h.id) return {href: stateHref(h.repo + ":brane:" + SHARED, h.id, base)};
+    return atOnLane(laneStates(h.ix, h.key), at, h.repo + ":" + h.key, s => stateHref(h.repo + ":brane:" + h.key, h.repo + ":commit:" + s.id, base));
+  }
   // base is the page the hrefs land on: the app (the default) or the static pages.
   function parseAddress(text, index, base) {
     base = base || APP;
@@ -38,6 +85,7 @@
     const m = words.length === 2 && words[0] === "world" ? /^([^@]+)(?:@(.*))?$/.exec(words[1]) : null;
     if (!m) return {error: "unknown address: " + ADDRESS_HELP};
     const name = m[1], at = m[2];
+    if (index && index.schema === FOLLOW) return parseFollowAddress(name, at, index, base);
     const keys = [];
     if (name === SHARED || name === "dev") keys.push(SHARED);
     for (const b of index && Array.isArray(index.branes) ? index.branes : []) {
@@ -45,19 +93,8 @@
     }
     if (keys.length === 0) return {error: 'no brane is named "' + name + '"'};
     if (keys.length > 1) return {error: 'ambiguous name "' + name + '": ' + keys.join(", ")};
-    const key = keys[0], lane = laneStates(index, key);
-    if (lane.length === 0) return {error: key + " has no states"};
-    if (at === undefined) return {href: stateHref(key, lane[lane.length - 1].id, base)};
-    if (/^[0-9]+$/.test(at)) {
-      const n = Number(at);
-      if (n >= 1 && n <= lane.length) return {href: stateHref(key, lane[n - 1].id, base)};
-      if (at.length < 4) return {error: key + " has states 1 to " + lane.length + ", not " + at};
-    }
-    if (!/^[0-9a-f]{4,}$/.test(at)) return {error: '"@' + at + '" is neither a state number nor 4 or more hex characters'};
-    const hits = lane.filter(s => String(s.id).toLowerCase().startsWith(at));
-    if (hits.length === 1) return {href: stateHref(key, hits[0].id, base)};
-    if (hits.length > 1) return {error: '"' + at + '" matches ' + hits.length + " states on " + key + ": type more of the hash"};
-    return {error: "no state on " + key + ' starts with "' + at + '"'};
+    const key = keys[0];
+    return atOnLane(laneStates(index, key), at, key, s => stateHref(key, s.id, base));
   }
 
   function timelineKey(key, model, focus) {

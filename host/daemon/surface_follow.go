@@ -14,15 +14,16 @@ import (
 	"github.com/sunholo-data/ailang-world/host/surfacefollow"
 )
 
-const groupedFollowReason = "the grouped multi-repo model arrives in row 220 M4; use /surface/index.json and /surface/follow-status.json"
-
 type surfaceFollow struct {
 	config    surfacefollow.Config
 	publisher *surfacefollow.Publisher
 	collector *surfacefollow.Collector
 	// episodes is the open-episode source; nil selects the daemon's
 	// credentials store and finish records at start.
-	episodes      surfacefollow.EpisodeSource
+	episodes surfacefollow.EpisodeSource
+	// snapshot, when set, replaces the publisher's snapshot for the
+	// surface routes (tests inject a published envelope).
+	snapshot      func() *surfacefollow.Snapshot
 	mu            sync.Mutex
 	cancel        context.CancelFunc
 	followerDone  chan struct{}
@@ -116,7 +117,7 @@ func (d *Daemon) stopSurfaceFollow() {
 }
 
 func (d *Daemon) handleFollowIndex(w http.ResponseWriter, _ *http.Request) {
-	s := d.follow.publisher.Snapshot()
+	s := d.followSnapshot()
 	if len(s.Envelope.Repos) == 0 {
 		var states []string
 		for _, r := range s.Status.Repos {
@@ -138,7 +139,7 @@ func (d *Daemon) handleSurfaceFollowStatus(w http.ResponseWriter, _ *http.Reques
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	status := surfacefollow.StatusDocument{Schema: surfacefollow.StatusSchema, Mode: "none", Repos: []surfacefollow.RepoStatus{}}
 	if d.follow != nil {
-		s := d.follow.publisher.Snapshot()
+		s := d.followSnapshot()
 		status = s.Status
 	} else if d.cfg.SurfaceIndex != "" {
 		status.Mode = "index"

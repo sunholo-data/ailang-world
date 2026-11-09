@@ -25,6 +25,8 @@ type surfaceReason struct {
 	Empty   bool   `json:"empty,omitempty"`
 	Refused bool   `json:"refused,omitempty"`
 	Reason  string `json:"reason"`
+	// Repos is follow mode's per-repo status when no repo has a graph.
+	Repos []surfacepage.ModelRepo `json:"repos,omitempty"`
 }
 
 // writeSurfaceJSON writes v with the index route's headers, bounded by
@@ -67,8 +69,15 @@ func (d *Daemon) surfaceIndexFor(w http.ResponseWriter, r *http.Request, schema 
 // handleSurfaceModel serves GET /surface/model.json; any query is a 400.
 func (d *Daemon) handleSurfaceModel(w http.ResponseWriter, r *http.Request) {
 	schema := surfacepage.ModelSchema
+	if d.follow != nil {
+		schema = surfacepage.FollowModelSchema
+	}
 	if r.URL.RawQuery != "" {
 		d.writeSurfaceJSON(w, r, http.StatusBadRequest, schema, surfaceReason{Schema: schema, Reason: unknownSurfaceKeyMessage})
+		return
+	}
+	if d.follow != nil {
+		d.handleFollowModel(w, r)
 		return
 	}
 	ix, ok := d.surfaceIndexFor(w, r, schema)
@@ -99,9 +108,16 @@ func (d *Daemon) handleSurfaceModel(w http.ResponseWriter, r *http.Request) {
 // closed grammar, exactly one brane and one at.
 func (d *Daemon) handleSurfaceStack(w http.ResponseWriter, r *http.Request) {
 	schema := surfacepage.StackSchema
+	if d.follow != nil {
+		schema = surfacepage.FollowStackSchema
+	}
 	q, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil || len(q) != 2 || len(q["brane"]) != 1 || len(q["at"]) != 1 {
 		d.writeSurfaceJSON(w, r, http.StatusBadRequest, schema, surfaceReason{Schema: schema, Reason: unknownSurfaceKeyMessage})
+		return
+	}
+	if d.follow != nil {
+		d.handleFollowStack(w, r, q)
 		return
 	}
 	ix, ok := d.surfaceIndexFor(w, r, schema)
