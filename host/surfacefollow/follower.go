@@ -34,6 +34,11 @@ type Follower struct {
 	Sink      Sink
 	// Seed contains accepted cache partitions, checked again by the first probe.
 	Seed map[string]surface.FollowPartition
+	// Episodes, when set, is reconciled at startup and on every poll tick
+	// even when no head changed; reconciles never overlap. EpisodeSink
+	// receives each result and must return promptly.
+	Episodes    EpisodeSource
+	EpisodeSink EpisodeSink
 }
 
 type repoState struct {
@@ -52,12 +57,13 @@ type job struct {
 }
 
 type event struct {
-	repo      int
-	head      string
-	err       error
-	pollDone  bool
-	job       *job
-	partition surface.FollowPartition
+	reconciled bool
+	repo       int
+	head       string
+	err        error
+	pollDone   bool
+	job        *job
+	partition  surface.FollowPartition
 }
 
 func retryDelay(n int) time.Duration {
@@ -146,6 +152,42 @@ func (f *Follower) Run(ctx context.Context) error {
 			send(event{pollDone: true})
 		}()
 	}
+	reconciling, reconcileAgain := false, false
+	// endObserved is touched only by the single reconcile goroutine; the
+	// events channel orders successive reconciles.
+	endObserved := map[string]time.Time{}
+	startReconcile := func() {
+		if f.Episodes == nil {
+			return
+		}
+		if reconciling {
+			reconcileAgain = true
+			return
+		}
+		reconciling = true
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			now := c.Clock.Now()
+			ctx, closeScope := bounded(runCtx, c.Clock, OverlayTimeout)
+			facts, err := f.Episodes.ReadEpisodes(ctx, now, f.Config.Repos)
+			if err == nil && ctx.Err() != nil {
+				err = context.DeadlineExceeded
+			}
+			closeScope()
+			if runCtx.Err() != nil {
+				return
+			}
+			if err == nil {
+				facts.ReadAt = now
+				facts.EndObserved = observeEnds(endObserved, facts, now)
+			}
+			if f.EpisodeSink != nil {
+				f.EpisodeSink(facts, err != nil)
+			}
+			send(event{reconciled: true})
+		}()
+	}
 	running := 0
 	dispatch := func() {
 		// Finish probes before starting new history reads; the reserved
@@ -188,6 +230,7 @@ func (f *Follower) Run(ctx context.Context) error {
 	timer := c.Clock.NewTimer(PollInterval)
 	defer func() { timer.Stop() }()
 	startPoll()
+	startReconcile()
 	for {
 		select {
 		case <-runCtx.Done():
@@ -199,9 +242,18 @@ func (f *Follower) Run(ctx context.Context) error {
 			}
 			timer = c.Clock.NewTimer(next.Sub(now))
 			startPoll()
+			startReconcile()
 		case e := <-events:
 			if runCtx.Err() != nil {
 				return ctx.Err()
+			}
+			if e.reconciled {
+				reconciling = false
+				if reconcileAgain {
+					reconcileAgain = false
+					startReconcile()
+				}
+				continue
 			}
 			if e.pollDone {
 				polling = false
@@ -282,4 +334,34 @@ func (f *Follower) Run(ctx context.Context) error {
 			dispatch()
 		}
 	}
+}
+
+// observeEnds records when each started episode was first seen without a live
+// session, forgets episodes that are live again or no longer read, and
+// returns an immutable copy for the published facts.
+func observeEnds(seen map[string]time.Time, facts EpisodeFacts, now time.Time) map[string]time.Time {
+	live := map[string]bool{}
+	for _, s := range facts.Sessions {
+		if now.Unix() < s.ExpiresAt {
+			live[s.Episode] = true
+		}
+	}
+	started := map[string]bool{}
+	for _, st := range facts.Starts {
+		started[st.Episode] = true
+		if live[st.Episode] {
+			delete(seen, st.Episode)
+		} else if _, ok := seen[st.Episode]; !ok {
+			seen[st.Episode] = now
+		}
+	}
+	out := make(map[string]time.Time, len(seen))
+	for ep, t := range seen {
+		if !started[ep] {
+			delete(seen, ep)
+			continue
+		}
+		out[ep] = t
+	}
+	return out
 }

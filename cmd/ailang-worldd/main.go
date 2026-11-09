@@ -261,6 +261,9 @@ serve flags:
   --surface-follow <file>
                        follow config; mutually exclusive with --surface-index;
                        must be outside --workspace-root; restart to apply changes
+                       /surface/index.json also carries "open": live and recently
+                       ended episodes from this daemon's sessions and starts,
+                       reconciled every 15 s; its status is never a silent zero
   --proof-key-file <file>
                        a file holding exactly 32 bytes: the MAC key the
                        workbench grade validator authenticates stored proof
