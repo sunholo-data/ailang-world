@@ -1,0 +1,48 @@
+World iteration 371 — Gate 0-2 readings (controller claude:claude-opus-5-5, fire world-1794228547-72992, attempt 1)
+Read 2026-11-09 12:45-13:10Z. Commands are the ones run; outputs are summarised only where noted.
+
+GATE 0
+kill switch: ~/.ailang/state/mission-world.disabled absent -> armed
+gh: sunholo-voight-kampff (active)
+billing tripwire: ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN empty -> CLEAN
+directives: mission_directives.sh --issue 524 --watermark-file ~/.ailang/state/mission-524-last-seen
+  -> watermark ABSENT (read every allowlisted comment); 0 directives from [MarkEdmondson1234] of 2 comments; rc 0
+  rotation-week catch: mission_directives.sh --issue 449 --watermark-file ~/.ailang/state/mission-449-last-seen
+  -> watermark ABSENT; 0 directives of 47 comments. Nothing to --mark on either issue.
+self-notices: mission_gate0_self_notices.sh --issue 524 --prev-issue 449 --control auto
+  -> rc 2 INSTRUMENT FAILURE (not a verdict): "no readable watermark among 2 file(s)" — neither
+     mission-524-last-seen nor mission-449-last-seen exists (no --mark has ever been run on either issue;
+     iteration 370 ran it against 449/366, where the 366 watermark file existed).
+  manual substitute (no authority, context only): #524 holds 2 comments, both by this account
+     (08:53Z weekly report, 09:19Z iteration-370 digest); no driver crash notice (rc=) and no transcript-scan notice among them.
+inbox: World-addressed unread = 2 stale items (inbox world: a Sep-14 UNDELIVERED coordinator note on row 73;
+  inbox ailang-world: the Oct-17 v0.54.15 release note), both pre-date this week and were seen by earlier fires.
+  New since 370: mission-fleet "[normal] Mission fleet iteration 97: idle-record design parked — D-FLEET-45 needs Mark"
+  (inbox_1794216754378_4072cac6). Not harness-resolved; World's row 259 stays OPEN. No github-untrusted: message, no directive.
+
+GATE 1
+local dev == origin/dev == ad13d835345efc2b78308817cc940f73a987165d (rev-parse rc 0)
+base: mission-base.sh record gate1 -> ad13d835345efc2b78308817cc940f73a987165d 2026-11-09T12:50:53Z
+skill drift: SKILL.md + 13 resources/*.md, per-file cmp at the resolved symlink target against ailang origin/dev -> 14/14 same;
+  pin (MISSION_DRIVER_ROOT) copy vs running copy -> 13/13 resources same
+dev CI: commits/ad13d835/check-runs -> checks=3, all success (ailang-code verify gate, go host build + test gate, go race gate)
+open PRs by this account: #525 (370 record, base mission/world-iter369-record, MERGEABLE, 3/3 checks SUCCESS),
+  #523 (369), #522 (368), #521 (367), #515 (row 256 draft, OPEN, CONFLICTING, updated 2026-11-07T06:31:12Z) -> all accounted parks
+newest record: mission/world-iter370-record (log head 370) -> this record stacks on it (branch mission/world-iter371-record)
+
+GATE 2
+died-mid-flight traces: worktrees modified after 2026-11-09T09:00 local = world-iter370-record and this fire's own
+  world-iter371-record only; newest remote branches = the 370/369/368/367 record chain. No branch, PR or worktree from an
+  iteration after 370. 0 orphans.
+ledger: mission_decisions.sh --check (370 branch charter) -> valid, 100 rows; --open -> D-WORLD-105, 110, 111, 112, 113
+clause map: clauses 1-7 MET (ratified; unchanged since iteration 370) -> no UNMET clause, no critical-path row
+queue head row 256: PARKED needs-human-review (draft PR #515 OPEN, CONFLICTING, untouched since 2026-11-07T06:31Z) behind D-WORLD-111/112
+rows 257/201/243: sequenced behind 256 (D-WORLD-108 attended order), no autonomous skip
+release rows: git log origin/dev --since=2026-11-01 --oneline | grep -ciE "N2d|N4a" -> 0 (control: "iteration" -> 109 of 246 commits)
+upstream predicates: see upstream-predicates.txt (re-run this fire: 58/58 closed, controls fired)
+pick: NONE -> rule (d) (D-WORLD-46) block record
+
+GATE 5 inputs
+idle fingerprint: NOT recorded — this fire degraded (planner and executor codex gpt-6.1-sol probe rc 75 -> handed off,
+  per MISSION_ROUTING_NOTE), which the shared IDLE RECORD rule bars. Same defect as queue row 259 (now fleet D-FLEET-45).
+weekly duties: not owed (rotation and sweep were done by iteration 370 this Monday).

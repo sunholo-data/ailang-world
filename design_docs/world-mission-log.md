@@ -1680,3 +1680,47 @@ Its non-blocking notes:
 Report: `verification/world-iter370/evaluator-report.md`.
 
 **Controller correction after the judge (count only):** the streak note above prompted a check of the index. Iteration **362** was a PRODUCT build (row 256 implemented, then parked FAIL 85), not a no-pick record, so the streak is **363–370 = eight** fires, not 362–370 = nine. Retro 1 and queue row 259 are corrected in place. The fleet ticket's already-filed evidence text still says "362–370 … 9". This entry is the correction of record, and the defect claim is unchanged. The judge was resumed by SendMessage (same context, 1 tool call, 18.8 s; cumulative subagent tokens 44,502 as reported by the harness) and returned **CORRECTION CONFIRMED, score unchanged 96/100, no blocking finding**. It confirmed rows 363–370 are ADMIN/no-pick and 362 is PRODUCT (log heading at line 1146), that the diff touches only those two sentences plus the appended paragraphs, and that the banked report `cmp`s identical to its own. Its caveat: the token and duration figures are harness metering it cannot see from inside.
+
+## 371 — 2026-11-09 — no pick: rule (d) ADMIN block record; fleet parked World's idle-record ticket as D-FLEET-45 (row 259 annotated); row 256 and the 367–370 record chain remain human-parked [ADMIN]
+
+**Kind:** a bookkeeping-only iteration under rule (d) (D-WORLD-46). There was no design, plan, product code or merge. The record covers STATUS 371, the 368 stamp rotated to the archive, the CURRENT GOAL route line, a status note on queue row 259, the dashboard, this entry, the regenerated index and `verification/world-iter371/`. An independent record judge reviews it before it is banked.
+
+**Pick and why:** none. The only input that moved since iteration 370 is fleet-side. Fleet iteration 97 picked World's row-259 ticket (`skill:idle-record-barred-on-degraded-no-pick-fire`) and parked its design as **D-FLEET-45** after two blocked quorum rounds. That is a fleet decision with a fleet default (B: no change, ticket stays open). It unblocks nothing in World's queue.
+- **Clause map at `ad13d835`:** clauses 1–7 MET (ratified; unchanged since 370). No UNMET clause exists, so there is no critical-path row and rule (d) applies.
+- **Row 256** (queue head) is PARKED needs-human-review. Draft PR #515 is OPEN and CONFLICTING, untouched since 2026-11-07T06:31Z. Independent FAIL 85 and LOCAL_CRITERION UNMET still stand. It waits on D-WORLD-111 and D-WORLD-112, both OPEN.
+- **Rows 257, 201 and 243** sit behind 256 in the attended D-WORLD-108 order, with no autonomous skip.
+- **Records 367/368/369/370** (PRs #521/#522/#523/#525) are PARKED and unmerged behind D-WORLD-113 (default: keep the chain unmerged). This record stacks on `mission/world-iter370-record`.
+- **Release rows 150/151:** row 150 waits on the attended A1. Row 151 waits on row 188's N2d/N4a, re-measured at 0 subjects in `git log origin/dev --since=2026-11-01` (control "iteration" → 109 of 246). Neither is loop-routable.
+- **Upstream predicates:** 58/58 closed, re-run this fire (control 885 closed; the open-issue enumeration returned 3).
+
+**Gate 0:** kill switch armed, gh `sunholo-voight-kampff`, billing tripwire CLEAN. Directives: 0 allowlisted of 2 comments on #524 and 0 of 47 on #449 (rotation-week catch). Both watermark files are absent, so every comment was read, and there was nothing to `--mark`.
+- **Self-notices: rc 2, an instrument failure, not a verdict.** `mission_gate0_self_notices.sh --issue 524 --prev-issue 449` refuses with "no readable watermark among 2 file(s)". Neither `mission-524-last-seen` nor `mission-449-last-seen` exists, because no directive has ever been marked on either issue. Iteration 370 ran the same script against 449/366 and got a reading, because the 366 file existed. The rotation removed the last readable watermark from the pair. As a no-authority substitute, #524's 2 comments are both this account's (the weekly report and the 370 digest) and neither is a crash or transcript-scan notice. The gap clears the first time Mark comments and a directive is marked. It is noted here as a retro observation, not ticketed (one instance).
+- **Inbox:** two stale World-addressed items (Sep 14 and Oct 17), both seen by earlier fires. The fleet D-FLEET-45 message above is new. There is no `github-untrusted:` message, no `harness-resolved` reply and no directive.
+- **Weekly duties:** not owed. Iteration 370 ran the sweep and the rotation this Monday.
+
+**Gate 1:** local `dev` == `origin/dev` == `ad13d835` (rev-parse rc 0). Base `ad13d835345efc2b78308817cc940f73a987165d@2026-11-09T12:50:53Z`. Skill drift is 0 of 14 files at the resolved symlink target, and the pin's 13 resource files match the running copy. Dev CI at `ad13d835` shows 3 checks, all success. Open PRs from this account are #525, #523, #522, #521 and #515, all accounted parks. #525 (370) is MERGEABLE with 3/3 checks green. The newest record branch is 370's.
+
+**Gate 2:** died-mid-flight traces are clean. The only worktrees modified since 09:00 local are 370's record and this fire's own. No branch, PR or worktree postdates 370. The ledger is valid at 100 rows with 5 OPEN (105/110/111/112/113).
+
+**Routing evidence:** base `ad13d835345efc2b78308817cc940f73a987165d@2026-11-09T12:50:53Z`.
+- Controller `claude:claude-opus-5-5` (tok: not reported).
+- Designer, planner and executor were not spawned, because there was no pick and the routing table sends them nothing. Their resolved lanes were designer `claude:claude-opus-5-5` (recipe), planner `opus` (Agent tool; codex `gpt-6.1-sol` probe rc 75 → handed off) and executor `claude:claude-haiku-5-5` (recipe; codex rc 75 → handed off). No spawn was attempted, so none failed.
+- Evaluator (record judge): `sonnet` via the Agent tool, per `MISSION_EVALUATOR_RESOLVED` / `MISSION_EVALUATOR_PATH=agent-tool`. Its result is appended below.
+- Quorum: none owed (bookkeeping-only pick). Metered $0 from the controller.
+- `MISSION_ROUTING_NOTE` verbatim: lanes degraded: ; `planner`: **codex** lane `gpt-6.1-sol` unusable (probe rc=`75` — quota UNREADABLE (not measured — the lane may be fine;  see `ailang mission quota`)) → handed to `opus`; `executor`: **codex** lane `gpt-6.1-sol` unusable (probe rc=`75` — quota UNREADABLE (not measured — the lane may be fine;  see `ailang mission quota`)) → handed to `claude:claude-haiku-5-5`
+
+**Ruled out:**
+- Any product, release or hygiene work without authority (rule (d)). That includes skipping row 256, rebasing or repairing PR #515, merging the parked record chain, and any credential action (D-WORLD-112 default).
+- Acting on D-FLEET-45. It is the fleet's decision. World's row 259 records it and stays OPEN.
+- Hand-writing a watermark file to make the self-notice instrument read. Gate 0 forbids writing `$WATERMARK` by hand, and only `--mark` may create it.
+- Idle fingerprint: NOT recorded. This fire degraded (planner and executor handoffs), and the IDLE RECORD rule bars recording a degraded fire. That is row 259's defect, now held by D-FLEET-45.
+
+**Retro:**
+1. **The no-pick streak is 363–371 = nine fires.** Row 259's defect is unchanged, and the fleet's own measurement says the narrowed rule would not have helped World anyway. No new World lane exists for it. The ticket stays open and the fleet's D-FLEET-45 is the decision that moves it.
+2. **Self-notice instrument after a rotation (one instance, observation only):** when neither the current nor the previous issue has ever had a directive marked, `mission_gate0_self_notices.sh` has no watermark and refuses with rc 2. It will clear on the first marked directive. It is not ticketed; a second instance would make it a ticket.
+3. **Harness share (2b):** 0 of the last 20 index rows are tagged `[HARNESS]`. Row 259 is an escalation, not loop-built harness work.
+4. **Drift alarm (2c):** the last three landings (360, 359, 340) moved no UNMET clause, but no routable UNMET-clause row exists, because every clause is MET. So there is no DRIFT line.
+
+**Progress**: 1.0: clauses 1–7 MET; goal unmoved.
+
+**Next:** unchanged. Row 256 waits on D-WORLD-111/112 and the 367–371 chain on D-WORLD-113. Release rows 150/151 wait on attended steps. Row 259 waits on the fleet (D-FLEET-45). The next Gate 0 reads directives on **#524** (3 comments after this report) and on **#449** (closed, 47). The self-notice script stays rc 2 until a watermark exists. The upstream predicate union stays at 58.
