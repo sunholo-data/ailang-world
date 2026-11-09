@@ -730,3 +730,5 @@ Clause map: 1 MET · 2 MET · 3 MET · 4 UNMET (152 → 153 → 93) · 5 UNMET (
 
 ## STATUS 2026-11-07 — ITERATION 363: ADMIN only; row 256 PARKED needs-human-review, independent FAIL 85 and LOCAL_CRITERION UNMET; D-WORLD-111/112 await attended decisions; no automatic 257/201/243 route.
 
+## STATUS 2026-11-07 — ITERATION 364: ADMIN record only; row 256 HUMAN PARK / PARKED needs-human-review, independent FAIL 85 and LOCAL_CRITERION UNMET; D-WORLD-105/110/111/112 remain OPEN; conditional attended 250 → 255 → 256 → 257 → 201 → 243, release150/151 priority only when routable; independent record review and PR/merge CI pending.
+

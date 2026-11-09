@@ -1,25 +1,12 @@
-# World mission dashboard — iteration 366 (2026-11-07)
+# World mission dashboard — iteration 372 (2026-11-09)
 
-- **ADMIN:** one M1, eight ACs; G1–G7 preparation only. Independent ADMIN PASS96; reconstruction complete; final CI/delivery PENDING; zero product/test LOC.
-- **Product:** row256 PARKED needs-human-review, independent MiniMax FAIL85, LOCAL_CRITERION UNMET; draft PR515 OPEN, CONFLICTING/DIRTY (inherited receipt).
-- **Independent holds:** D111 validation and D112 credential incident both OPEN. Sanitization does not resolve112 or undo exposure; no autonomous credential change.
-- **OPEN defaults:** D105 C (233 parked/fail closed); D110 A (255 as built); D111 A (exactly TWO named baseline failures, no additional failures); D112 no autonomous credential change.
-- **Causality:** publish-counter/net6 unattributed; no recurrence or attribution claim.
-- **Conditional order:**250 →255 →256 →257 →201 →243; no autonomous skip256. Release150/151 first only when routable.
-- **Attended waits:** A1 and188 N2d/N4a; real-key enrolment/approval and no-terminal exits. Rows201/243 use fakes/test keys.
-- **Inherited Gate0/1:**0 fresh directives/inbox; crash0; watermarks1/2 degraded, control107:4; release A1=0/N2d/N4a=0, N2c control2; fresh upstream33/33 closed.
-- **Historical notices:** transcript2count, fires world-1793825318-10110 and world-1793839743-21731; shared-self-notices.json, not recurrence this fire.
-- **Base provenance:** base=1ad7c8fdc80bdc6e1d5532fb17eb6b7406809dd4@2026-11-07T20:55:57Z; actual execution HEAD e3f746457213857c5654654e2188d05d7dcf751a.
-- **Base CI:**3/3 terminal success at canonical base, run42399928994; inherited receipts only, no fresh record acceptance.
-- **Roles:** all4 Agent supervisors spawned; model override unavailable. Actual designer/planner/executor pinned codex:gpt-6.1-sol CLI; executor is not judge.
-- **Degradation:** Sonnet/opus preflights rc1 quota; OpenRouter over ration. Independent fresh actual Codex judge PASS96 under D48, FLAG judge-independence:same-model-fresh-context. Controller has no verdict.
-- **Usage:** designer97451 including probe; planner120602=6207+87696+26699; executor probe6199. Executor134744 including probe, actual433.096s/rc0; known roles352797; evaluator tokens/cost unreported (675.57s/rc0); controller/supervisor usage unreported. Metered$0; no quorum under ADMIN exception.
-- **Authority provenance:** D48 ancient fleet creation unchanged this fire; D108/109 attended; D111/112 never-resolved (inherited corrected r2 receipt).
-- **Preservation:**6345 charter lines; STATUS366/365/364; exact363 pair moved once; archive732; log40 NO rotation; ledger99/queue/history exact; orphan361 retained.
-- **Evidence:** verification/world-iter366/executor-proof.json and execution-state.json; original planning state immutable, passes=false forever. Local snapshot exactly7 payloads plus self-excluding manifest; reconstructed in M1 b371cdce; original manifest recoverable.
-- **Boundary:** no Go suites or child test verdict; narrow charter test and privacy passed outside sandbox after inspection/baseline; index regeneration byte-identical. Sandbox denial UNINFORMATIVE UNDER SANDBOX.
-- **Pending CI/delivery:** independent review PASS96 with40/40 own controls rejected; controller still needs all3 terminal-success jobs at exact full40 PR-head AND merge-head with run URLs; then external delivery/landing.
-- **Inherited metrics:** harness0/20; last3 product landings none moved UNMET;0 routable UNMET. Goal and human asks unchanged.
-- **Progress**: 1.0: clauses 1–7 MET (inherited assessment); goal unmoved.
-- **Next:** attended111/112 independently; preserve105/110 defaults and conditional route. No automatic product pick.
-- **Judge receipts:** untouched report/result; original failed transport and broad capture preserved; final anchored capture has no provider usage. No material fix or product acceptance.
+- **Landed this fire:** row 257 `w-exec-cache-seed-at-bind` — PR #531, merge `72079fbe`, CI 3/3 on the PR head (attempt 2, after a 0-job start-up failure) and on the merge. Judge sonnet PASS 91, zero blocking.
+- **What it does:** the exec GOCACHE seed is copied when the episode's exec handler is bound, on its own 60 s clock, into staging unique to the daemon process and attempt, then published by one rename with a `.world-seed-complete` marker. A cache without a valid marker is copied again. Exec calls only check, join, or re-attempt (cap 3). `episode report` shows a live `exec_cache` line.
+- **Attended today (PR #527):** D-WORLD-110 A, 111 B, 112 A (six keys rotated), 113 B. Records 367–371 abandoned; iteration 366 was canonical until this record.
+- **Row 256:** taken by an attended session (rebasing #515, measuring the D-WORLD-111 = B attribution criterion). The loop does not pick, edit or rerun it.
+- **OPEN decisions:** D-WORLD-105 only (default C: row 233 parked, fail closed).
+- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 (attended A1) and 151 (row 188 N2d/N4a) not routable.
+- **Next loop row:** 201 `w-world-approvals-by-key`, then 243 — fakes and test keys only (D-WORLD-109 = A); the real-key exit runs stay attended.
+- **Routing this fire:** controller opus; designer opus (Agent); quorum glm-5.3 / kimi-k3 / gpt-6.1-sol, $0.63; planner opus (Agent); executor haiku (Agent, three runs); judge sonnet (Agent). Codex unusable at preflight (probe rc 75).
+- **Instrument notes:** the head-SHA check-runs poll is blind to `pull_request` runs — poll the run id. Gate-0 self-notice script rc 2 until a directive is marked on #524.
+- **Bookkeeping thread:** #524 (rotates Monday 2026-11-16 07:00).
