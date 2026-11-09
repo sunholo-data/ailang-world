@@ -1521,3 +1521,94 @@ lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (pro
 - An Actions start-up failure with 0 jobs looks like a red in `gh run list`. Read the job count before diagnosing.
 
 **Next:** row 201 `w-world-approvals-by-key` (D-WORLD-109 = A: fakes and test keys only), unless row 256's attended session asks otherwise or a release row becomes routable.
+
+## 373 — 2026-11-09 — row 201 sprint 1 built: the mint request's pure core and a stdlib SSHSIG verifier on real ssh-keygen fixtures; design r3 via a controller carve-out; judge PASS 90 [PRODUCT]
+
+**Pick:** row 201 `w-world-approvals-by-key`, next in the attended **D-WORLD-109 = A** order (after 250, 255 → 257, all landed; row 256 taken attended). Built and judged against fakes and test keys only; no real key, mint or publish.
+- Re-measured at pick: no open PR from this account; no `host/approval`, `sshsig` or approver code on `origin/dev`; release rows not routable (row 150 A1: 0 subjects since 2026-11-07; row 151 N2d/N4a: 0 since 2026-10-01; control N2c: 2).
+- Ledger valid; OPEN: D-WORLD-105 only.
+- The parent design (attended, 93 lines, A0–A4) had no quorum artifact (`mc_quorum_gate2` rc 1), so the route was design → quorum → plan → build → judge, as D-WORLD-109 says.
+- **Progress:** 1.0 clauses 1–7 MET; goal unmoved (clause 5, already MET: the human surface). The row moves the "no terminal" path Mark asked for, but sprint 1 changes no behaviour.
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
+- Directives: 0 allowlisted on #524 (4 comments; the issue-scoped watermark is absent, so all were read) and 0 on #449 since the mission-scoped watermark (2026-10-27T09:03:42Z, 47 comments).
+- Self-notices: `mission_gate0_self_notices.sh` rc 2 (instrument failure, not a verdict): neither `mission-524-last-seen` nor `mission-449-last-seen` exists. Same cause as 372.
+- Skill drift: no file differs from the driver clone's `origin/dev` (SKILL.md plus resources; resolved symlink and pin copies).
+- Dev at `693f704e`, CI success, `checks=3`.
+
+**Design** (`w-world-approvals-by-key-a0a1.md`, a child of the attended parent). Resolver `recipe claude:claude-opus-5-5 declared:provider-pin`; spawned as Agent `opus` (the 318–372 precedent). The rotation file reads `claude:claude-opus-5-5`; the resolver's answer was followed, and codex was over ration anyway.
+- r1 (15 min): A0 + A1 would not fit, so the designer took the brief's fallback, A0 plus the SSHSIG verifier (A1a). Enrolment, `approve --signature` and the approvers table move to A1b. The doc is ~2,800 lines in six milestones, with a clean split at M1–M3 / M4–M6. A ~120-line stdlib verifier prototype agreed with `ssh-keygen -Y verify` on every arm. Found false: `crypto/sha512` is required, since `-Y sign` hashes with SHA-512 by default. Also found: `-Y sign -f k msg` exits 0 without writing when `msg.sig` exists.
+- **Quorum r1 BLOCKED 2/3** ($0.355; author Anthropic benched; seats kimi-k3, gpt-6.1-sol, gemini-4-argon).
+  - kimi: "everything the approval executes is inside the request" was never mapped against `mintOptions`/`mintRequest`.
+  - gpt: approve inherits `provisionEpisode`'s unbounded y/N read.
+  - gemini passed, noting the size.
+  - Controller measured both first (rule 3f): `session_new.go:181-224` has fields with no request counterpart (`existingBranch`, `startPoint`, `git`, `db`, …). The y/N read at `:438` precedes the first deadline at `:444`, so the wait is pre-existing at HEAD, with approve as a new caller.
+- r2 (5 min, the designer resumed by `SendMessage`):
+  - a complete field map with a reflective completeness test (CL14);
+  - `MintMatches` over all seven `session_credentials` columns;
+  - approve's read bounded by the request's remaining life, via a goroutine + timer. Measured: darwin `/dev/tty` refuses `SetReadDeadline`, and `Close` does not unblock the read;
+  - sprint boundary M1–M3.
+- **Quorum r2 BLOCKED 2/3** ($0.429), on two new narrow surfaces:
+  - kimi: `broker.Capability` was never dumped, and CL14 could not see the element type.
+  - gpt: `consume.Now` was sampled before worktree preparation, so the SQL expiry check used a stale time.
+  - gemini passed (reap the timed-out read goroutine in tests).
+  - Per round: r1 = field completeness + prompt wait; r2 = Capability element completeness + consume-time clock.
+- **r3, controller narrow-refinement carve-out.** Both rejects carried a concrete `proposed_fix`, and neither disputes the direction. The fixes were applied verbatim:
+  - kimi: the `db` row, the `grants` row, CL14 extended over `broker.Capability`, SG1's regenerate-and-re-pin sentence, and V34 (controller-measured: `Capability{Effect, Scope, ExpiresAt, Budget}`, no json tags, `json.Marshal(grants)` at `authority/mint.go:83`).
+  - gpt: `RequestConsume.Clock`, read once inside the transaction, and CL19.
+  - gemini: the comment constraint and `t.Cleanup`.
+  - Committed `63766f2f`.
+
+**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus` (26 min). Sprint 1 = M1a, M1b, M2a, M2b, M3; ~1,770 LOC; 68 mutants. Two design premises found false and routed around:
+- A checked-in 90-byte `message.bin` holds a NUL at offset 17, which `scripts/tracked_binary_gate.sh` (run by `verify_go.sh`) rejects, so `message.hex` is checked in instead.
+- A constant and a function both named `Admit` do not compile; the constant is now `Admitted = iota + 1`.
+- Sprint-2 risk R5: `MintMatches`' `created_at` upper bound needs the in-transaction clock, so sprint 2 runs that check inside the transaction.
+- Committed `7c8bce58`.
+
+**Executor:** resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`; spawned as Agent `haiku`.
+- Three runs: M1a+M1b (3 min), M2a+M2b (4 min), M3 + sprint gates (8 min). No git writes; per-milestone `.snap/`.
+- The controller restored each milestone from its snapshot, re-ran its package tests at every boundary, checked byte-identity with the executor's final tree, and committed `d9e12564`, `a0138e3f`, `ea472f3f`, `05ff0f5a`, `9c8f8744`.
+- Fixtures came from one `generate.sh` run with `/usr/bin/ssh-keygen` (OpenSSH_10.3p1). No private key, no NUL bytes.
+- One deviation: SG4's doubled-armor arm expects `ErrBase64`, not `ErrArmor` (see the judge).
+
+**Controller gates** at `9c8f8744`:
+- `host/approval` 17 tests plus `-race`; the cross-check with `WORLD_REQUIRE_SSH_KEYGEN=1`; compile fence; `TestDaemonDependencyAllowlist`; `TestProductionContextRoots`.
+- `VERIFY_GO_LEGS=plain verify_go.sh` rc 0 (60 packages ok, 64 evidence tests, tracked-binary gate 24/0).
+- My first standalone run of `tracked_binary_gate.sh` went red on the three pinned fonts. That was the instrument: I had called it without `verify_go.sh`'s `--allow-font` pins. With the caller's flags: 0 other binary blobs among 6,570 tracked files.
+
+**Judge:** sonnet via the Agent tool (generator ≠ judge: executor haiku, designer and planner opus), on an isolated `git archive` copy. **PASS 90/100, zero blocking.**
+- Mutants: 48 of 56 killed.
+- Independent check: 240 fresh `ssh-keygen` signatures (Ed25519 and P-256, sha256 and sha512) all agree with our verifier.
+- SG4 adjudicated for the executor: the doubled block passes the armor frame and fails as base64.
+- Non-blocking notes, logged, not filed (D-WORLD-109):
+  - The sha256 hash path is unguarded. Controller reproduced: `hashalg` appears in 0 test files.
+  - Three strictness branches have no killing test: signature-string trailing bytes, P-256 mpint-pair trailing bytes, `Strict()` base64.
+  - Parse-level `ErrHashAlg` is not asserted directly.
+  - Two equivalent mutants.
+  - Carried into sprint 2's directive.
+
+**Gate 3b:** PR #533, head `9c8f8744`.
+- `pull_request` run `42709886967`: 3/3 success (ailang-code verify gate, go host build + test gate, go race gate).
+- The new step ran on ubuntu-24.04 with `OpenSSH_9.6p1` and printed `--- PASS` for the parent and both subtests. This closes the design's one UNVERIFIED premise; evidence in `ci-ubuntu-ssh-keygen-proof.txt`.
+- Merged by merge commit **`dba0e8b2`** (`--match-head-commit`).
+- Push run `42712373029` on the merge `dba0e8b2`: 3/3 success.
+- Row 201 sprint 1 LANDED; row 201 stays open.
+- **Record PR #534 head `a856609f` (docs only) went red once** in the race job: `TestMarketingSupervisorFakeDaemonCleanup/shell-hup` (`supervisor_test.go:706`, trap killed instead of exiting 129; cleanup 29.9 s against its bound), `scripts/marketingcheck`, run `42714585184`. This is the known row-254 flake class (folded into row 258), not this record's doing: the same tree's code passed `-race` on the sprint head and on the merge. Logged here per D-WORLD-109, not filed. The two `DATA RACE` lines in that job are the gate's own positive control (`w-race-gate-blindspot/racecontrol`).
+
+**Routing evidence:** controller `claude-opus-5-5` (tok: not reported) · designer `claude:claude-opus-5-5` via Agent opus (r1 231,360 tok; r2 resume 273,283 tok as reported) · quorum kimi-k3 / gpt-6.1-sol / gemini-4-argon ($0.784 metered over two rounds) · planner `opus` via Agent (251,775 tok) · executor `claude:claude-haiku-5-5` via Agent haiku (89,565 + 105,080 + 68,091 tok) · evaluator `sonnet` via Agent (72,298 tok). The driver noted codex unusable at preflight (probe rc 75, quota unreadable). Metered spend: $0.784 (quorum only).
+
+**Progress**: 1.0: clauses 1–7 MET; goal unmoved.
+
+**Ruled out:**
+- A0 + A1 in one sprint: ~3,500 lines.
+- Checking in `message.bin`: the NUL byte.
+- A third quorum round: the carve-out applied.
+- Treating the bare `tracked_binary_gate.sh` red as a regression: wrong flags, green with the caller's allowances.
+- Fixing `session new`'s pre-existing unbounded y/N wait here: out of scope, logged as the design's R7.
+
+**Retro:**
+- Two consecutive quorum rounds blocked on completeness of the request ↔ mint mapping, at successively deeper layers (struct fields, then element type). The designer directive should ask for a reflective completeness test over every struct a security digest claims to cover, element types included, from r1.
+- The planner caught a design premise that three quorum rounds and the designer missed, because only it ran the repo's own gates: the NUL byte against the tracked-binary gate. Directives for any design that checks in fixtures should name `verify_go.sh`'s binary gate explicitly.
+
+**Next:** row 201 sprint 2 (M4–M6 of `w-world-approvals-by-key-a0a1.md`: store schema 4, `episode start --request`, `approve` by typed `y`), carrying the judge's four test-gap notes. Then A1b, then row 243.
