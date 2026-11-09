@@ -1,0 +1,23 @@
+{
+  "verdict": "ok",
+  "rc": 0,
+  "fenced": true,
+  "model": "openrouter/minimax/minimax-m3",
+  "pi_rc": 0,
+  "elapsed_seconds": 153,
+  "worktree_changed_files": 1,
+  "predirty_files": 0,
+  "worktree_changed_since_start": true,
+  "base_head": "a41de82ec426a1369742d1e188227ce1182bd8e5",
+  "head_after": "a41de82ec426a1369742d1e188227ce1182bd8e5",
+  "commits_since_start": 0,
+  "tool_executions": 60,
+  "hung_tool": "",
+  "provider_errors": 0,
+  "provider_error": "",
+  "agent_end_events": 1,
+  "ndjson_bytes_filtered": 1387387,
+  "ndjson": "/tmp/world-iter369/judge-run.ndjson",
+  "snapshot": "/tmp/world-iter369/judge-run.ndjson.snapshot.ndjson",
+  "stderr": "/tmp/world-iter369/judge-run.ndjson.stderr"
+}
