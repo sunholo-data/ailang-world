@@ -134,6 +134,26 @@ jobs:
           go version
           go env GOVERSION
 
+      # Row 201 (w-world-approvals-by-key-a0a1 §2.8, test XC1): the SSHSIG verifier is cross-checked
+      # against REAL ssh-keygen. WORLD_REQUIRE_SSH_KEYGEN=1 turns a missing ssh-keygen into a red,
+      # and the PASS grep turns a SKIP into a red. Whether ubuntu-24.04 ships ssh-keygen is
+      # UNVERIFIED; if it does not, this step fails naming the apt-get line.
+      - name: Row 201 SSHSIG cross-check with real ssh-keygen, verbose
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
+          command -v ssh-keygen || { echo "::error::ssh-keygen missing (apt-get install openssh-client)"; exit 1; }
+          ssh -V
+          log="$RUNNER_TEMP/sshsig-crosscheck.log"
+          rc=0
+          WORLD_REQUIRE_SSH_KEYGEN=1 go test ./host/approval/ -count=1 -v \
+            -run '^TestSSHSIGCrossCheckWithSSHKeygen$' >"$log" 2>&1 || rc=$?
+          cat "$log"
+          [ "$rc" -eq 0 ] || exit "$rc"
+          for t in TestSSHSIGCrossCheckWithSSHKeygen TestSSHSIGCrossCheckWithSSHKeygen/ed25519 TestSSHSIGCrossCheckWithSSHKeygen/ecdsa-p256; do
+            grep -qE -- "^ *--- PASS: $t " "$log" || { echo "::error::$t did not PASS (SKIP?)"; exit 1; }
+          done
+
       - name: Install PINNED v0.41.0 ailang (AILANG_BIN — one pin, current AILANG)
         run: |
           set -euo pipefail
