@@ -1724,3 +1724,18 @@ Report: `verification/world-iter370/evaluator-report.md`.
 **Progress**: 1.0: clauses 1–7 MET; goal unmoved.
 
 **Next:** unchanged. Row 256 waits on D-WORLD-111/112 and the 367–371 chain on D-WORLD-113. Release rows 150/151 wait on attended steps. Row 259 waits on the fleet (D-FLEET-45). The next Gate 0 reads directives on **#524** (3 comments after this report) and on **#449** (closed, 47). The self-notice script stays rc 2 until a watermark exists. The upstream predicate union stays at 58.
+
+**Record judge (independent evaluator, on record commit `d5801bb1`):** **PASS 97/100, zero blocking** (`sonnet` via the Agent tool, fresh foreground context, read-only, isolated `git archive` copy plus read-only git on the worktree; its prompt forbade printing environment values per D-WORLD-112; 47,810 subagent tokens, 6 tool calls, 82 s as reported by the harness). Scores: charter integrity 25/25, archive move 10/10, log/index/dashboard 15/15, facts 33/35, compliance 14/15. It re-derived these itself:
+- the charter diff is exactly the four allowed edits, and no ledger line changed; the ledger is valid at 100 rows with 5 OPEN;
+- the 368 stamp appears byte-identical once in the archive (control 367);
+- no routable row exists; #515 is OPEN, draft and CONFLICTING; N2d/N4a = 0;
+- #524 holds 2 comments and #449 holds 47, none from Mark; `ad13d835` has 3/3 checks green; #525 is MERGEABLE with 3/3 checks;
+- neither watermark file exists; predicates 58/58 on its own re-run; the streak 363–371 = nine (362 PRODUCT); 0 of 20 `[HARNESS]`;
+- the fleet message is real, and the row-259 note is faithful and takes no action on D-FLEET-45;
+- the closing-keyword scan found nothing (its control fired).
+
+Its non-blocking notes:
+- this judge paragraph was owed at `d5801bb1` (banked now);
+- row 259's original text still says "eight consecutive", which is historical and consistent; the live streak is nine.
+
+Report: `verification/world-iter371/evaluator-report.md`.
