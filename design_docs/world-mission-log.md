@@ -1594,6 +1594,7 @@ lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (pro
 - Merged by merge commit **`dba0e8b2`** (`--match-head-commit`).
 - Push run `42712373029` on the merge `dba0e8b2`: 3/3 success.
 - Row 201 sprint 1 LANDED; row 201 stays open.
+- **Record PR #534 head `a856609f` (docs only) went red once** in the race job: `TestMarketingSupervisorFakeDaemonCleanup/shell-hup` (`supervisor_test.go:706`, trap killed instead of exiting 129; cleanup 29.9 s against its bound), `scripts/marketingcheck`, run `42714585184`. This is the known row-254 flake class (folded into row 258), not this record's doing: the same tree's code passed `-race` on the sprint head and on the merge. Logged here per D-WORLD-109, not filed. The two `DATA RACE` lines in that job are the gate's own positive control (`w-race-gate-blindspot/racecontrol`).
 
 **Routing evidence:** controller `claude-opus-5-5` (tok: not reported) · designer `claude:claude-opus-5-5` via Agent opus (r1 231,360 tok; r2 resume 273,283 tok as reported) · quorum kimi-k3 / gpt-6.1-sol / gemini-4-argon ($0.784 metered over two rounds) · planner `opus` via Agent (251,775 tok) · executor `claude:claude-haiku-5-5` via Agent haiku (89,565 + 105,080 + 68,091 tok) · evaluator `sonnet` via Agent (72,298 tok). The driver noted codex unusable at preflight (probe rc 75, quota unreadable). Metered spend: $0.784 (quorum only).
 
