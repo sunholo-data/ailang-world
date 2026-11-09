@@ -65,6 +65,10 @@ type EpisodeReport struct {
 	BySurface       map[string]int    `json:"calls_by_surface"`
 	Uncommitted     int               `json:"uncommitted_intents"`
 	Notes           map[string]string `json:"notes"`
+	// ExecCache (row 257) is the bound exec handler's seed state, one entry
+	// per seeded cache. It is LIVE daemon state, not store state: empty after
+	// a daemon restart until the episode's next bind.
+	ExecCache []ReportExecCache `json:"exec_cache,omitempty"`
 }
 
 // ReportEffect counts one (effect, decision) pair. Decision is why's verdict:
@@ -73,6 +77,17 @@ type ReportEffect struct {
 	Effect   string `json:"effect"`
 	Decision string `json:"decision"`
 	Count    int    `json:"count"`
+}
+
+// ReportExecCache is one seeded exec cache's live state (row 257 §3.6).
+type ReportExecCache struct {
+	Project  string `json:"project"`
+	Cache    string `json:"cache"`
+	State    string `json:"state"` // copying | ready | failed | gave-up
+	Attempts int    `json:"attempts"`
+	By       string `json:"by"` // bind | call
+	TookMS   int64  `json:"took_ms"`
+	Failure  string `json:"failure"`
 }
 
 // ReportBudget is one grant's budget as the effect records show it: Left is
@@ -717,7 +732,8 @@ func (d *Daemon) handleEpisodeReport(w http.ResponseWriter, r *http.Request) {
 		d.writeInternalError(w, r, err)
 		return
 	}
-	if !ok && start == nil && rep.Finish == nil {
+	rep.ExecCache = d.workspace.execCacheStatus(episode)
+	if !ok && start == nil && rep.Finish == nil && len(rep.ExecCache) == 0 {
 		writeAPIError(w, "NotFound", "episode "+episode+" has no committed calls", http.StatusNotFound)
 		return
 	}
