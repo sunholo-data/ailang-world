@@ -147,7 +147,9 @@ func TestSurfaceFollowRoutes(t *testing.T) {
 	cancel()
 	<-done
 	startFollowTest(t, d, &followGit{})
-	waitFollow(t, func() bool { return len(d.follow.publisher.Snapshot().Envelope.Repos) == 2 })
+	// Settled: both partitions and the first episode read are published, so
+	// the generation cannot move under the comparisons below.
+	waitFollow(t, func() bool { e := d.follow.publisher.Snapshot().Envelope; return len(e.Repos) == 2 && e.Open != nil })
 	for _, path := range []string{"/surface/index.json", "/surface/follow-status.json"} {
 		w = followRequest(d, path)
 		if w.Code != 200 {
@@ -191,7 +193,9 @@ func TestSurfaceFollowServesGroupedModel(t *testing.T) {
 				t.Fatalf("%d %s", w.Code, w.Body)
 			}
 			startFollowTest(t, d, &followGit{})
-			waitFollow(t, func() bool { return len(d.follow.publisher.Snapshot().Envelope.Repos) == n })
+			// Settled: partitions and the first episode read (startup reconcile)
+			// are published, so the generation cannot move under the read below.
+			waitFollow(t, func() bool { e := d.follow.publisher.Snapshot().Envelope; return len(e.Repos) == n && e.Open != nil })
 			w = followRequest(d, "/surface/model.json")
 			var m surfacepage.FollowModel
 			if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &m) != nil || m.Schema != surfacepage.FollowModelSchema || len(m.Repos) != n ||
