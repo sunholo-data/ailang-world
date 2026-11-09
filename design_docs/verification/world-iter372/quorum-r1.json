@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-exec-cache-seed-at-bind.md",
+  "iso_ts": "2026-11-09T17:13:15Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0623594,
+      "tokens_in": 9333,
+      "tokens_out": 11203,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§4's 'No call runs against a partial copy' is false at the transition, by the doc's own evidence. §1 item 4 establishes that TODAY's code can leave a partial copy at the FINAL path `\u003ccache\u003e/\u003cname\u003e` (daemon killed mid-copy, or RemoveAll failing), and §2 makes closing exactly this fail-open gap the soundness condition of the row ('a check that the copy exists is only sound if dst exists only when the copy completed'). But the new design's check is still bare existence: StartSeed 'marks the state ready and spawns nothing' when the dst exists (§3.1), and §3.2 step 1 returns nil on the same existence test. A partial dst produced by the pre-upgrade code (which persists across the daemon restart the upgrade itself is) is therefore accepted as complete forever — 'existing means complete' holds only for dst's the new rename path created. The test plan does not catch it: S4 plants a staging dir (the NEW code's crash artifact), never a marker-less partial at the final path, so the mutant 'old partial dst accepted' survives.",
+        "catch": "The load-bearing premises about the files the new code hooks into have no verification rows: `session_self.go:46-62` token resolution (the entire mechanism of the recommended quorum default D-257-1 B), `episode_report.go:692` and the `:720-721` NotFound guard whose pass-when-ExecCache-non-empty behavior D1's premise rests on, `episode_preset.go:301`, the 'bounded at 3 s' warm-GET claim, and `health_exec_tool_status_test.go:101`. V1 hashes these files but never displays the content the claims depend on; every other premise in the doc got a sed/grep row, these did not.",
+        "proposed_fix": "Make completeness verifiable: write a completion marker INSIDE the staging copy before the rename (e.g. create `\u003cstaging\u003e/.seed-complete` after cp returns 0), so the rename atomically publishes dst+marker. Change StartSeed and §3.2 step 1 to require both `Lstat(dst)` and the marker; a dst without the marker is treated as missing — at bind, RemoveAll it and re-seed (an agent deleting its own cache or marker already spends attempts under R7, which is stated as intended). Add test S9: plant a partial `\u003ccache\u003e/GOCACHE` with no marker (an old-code crash artifact), call StartSeed, assert it is removed, re-seeded, and never accepted by an Execute. Separately, before the D-257-1 quorum, add verification rows: `sed -n 40,70p host/daemon/session_self.go`, `sed -n 685,725p host/daemon/episode_report.go`, `sed -n 290,310p cmd/ailang-worldd/episode_preset.go`, and the command showing the 3 s bound constant, so B's claims about existing machinery are observed rather than asserted."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.209997,
+      "tokens_in": 9244,
+      "tokens_out": 12151,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§3.1's attempt sequence (remove staging → cp seed→staging → os.Rename staging→\u003ccache\u003e/\u003cname\u003e) never creates the directories it writes into, and the doc's own evidence says those dirs are created only inside the per-call prepareCache: §1 item 5 / V10 show the startup probe creating the cache dirs by hand (exec_probe.go:462-470) precisely because NewExecHandler does not. With the recommended D-257-1=B, the warm GET fires immediately after the mint — before any prepareCache has ever run for the episode — so cp into \u003cstate\u003e/exec-cache/\u003cep\u003e/.\u003cproject\u003e.\u003cname\u003e.seeding (whose parent \u003cep\u003e may not exist) and/or the rename into \u003cep\u003e/\u003cproject\u003e/GOCACHE fail ENOENT on every fresh episode: attempt 1 burns on a deterministic error, the report shows a spurious 'failed at bind (attempt 1 of 3)', and 'seeded at bind' never actually happens in the configuration the doc recommends. This is an unverified load-bearing premise ('the parent tree already exists at bind') in a doc whose pass case rests entirely on its verification log, and none of the 16 rows check it; S1 likely wouldn't catch it either if newExecFixture pre-creates the cache tree.",
+        "catch": "Verify or fix two things. (1) Quote the line numbers of where \u003cstate\u003e/exec-cache/\u003cep\u003e/\u003cproject\u003e is first created today (the MkdirAll inside prepareCache, or provisioning/handler construction) — if nothing creates it before the first prepareCache, the bind-time cp and rename fail ENOENT on fresh episodes, which the recommended warm-GET path (B) always is; fix by making every attempt start with os.MkdirAll(filepath.Dir(\u003ccache\u003e/\u003cname\u003e)) and adding a test that runs StartSeed against a bare state dir with no fixture-created exec-cache tree. (2) The central definition 'bind is the episode's first effectful call of any tool' (§1 item 1), load-bearing for §3.5's claim that option A starts the copy before the first exec when the first call is a read/check, is asserted from construction-site greps (workspace.go:468/:496, daemon.go:917) without ever quoting the body of registry() showing it invokes w.execHandler eagerly on every effectful call — add that evidence or weaken §3.5.",
+        "proposed_fix": "(a) Amend §3.1's attempt steps to begin with step 0: 'create the parent tree: os.MkdirAll(\u003cstate\u003e/exec-cache/\u003cep\u003e/\u003cproject\u003e, 0o755) — idempotent, inside the state dir so the sandbox cannot observe it, and required because nothing else runs before bind on a fresh episode (covers D-257-1=B's pre-first-call warm GET and daemon restart)'. (b) Add test D3 to host/daemon/exec_seed_test.go: provision a fresh episode with an empty state dir, invoke warmExec with no prior prepareCache and no fixture-created dirs, assert state ready and \u003ccache\u003e/GOCACHE populated. (c) Add verification-log rows: V17 'project cache dir creation site' — quote the MkdirAll line in prepareCache and confirm NewExecHandler/provisionEpisode do not create it; V18 'bind trigger' — grep -n 'execHandler(' host/daemon and quote registry()'s body proving every effectful call constructs the exec handler, or reword §1 item 1 and §3.5-A's claimed benefit to 'the first call that wires the exec tool' and make the D-257-1 analysis conditional on that."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.021664000000000003,
+      "tokens_in": 9287,
+      "tokens_out": 309,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The central fail-closed guarantee is false across upgrades and restarts. §1 explicitly establishes that the current implementation can leave a partial final cache directory, but §§3.1–3.2 and test S8 accept any existing directory as ready without verifying its provenance. Atomic rename protects newly published copies; it does not make pre-existing directories complete. Consequently, this design still permits execution against exactly the partial caches it claims to reject.",
+        "catch": "Remove the inference that “existing means complete” and the unconditional restart fast path. S8 currently locks in the unsafe behavior. Add a migration test that plants a partial final GOCACHE directory left by the old implementation—not merely a staging directory—and verifies that it cannot reach srt before successful reseeding.",
+        "proposed_fix": "Replace the readiness rule with: “Existence alone is not readiness. Seed publication must carry versioned completion evidence produced only after a successful copy, with its trust boundary and crash behavior specified. Existing final directories without that evidence are treated as legacy/unverified and quarantined or removed before reseeding; cleanup or publication errors return FailSeedCache, never readiness. Restart reuse is allowed only for caches whose completion evidence validates.” Revise S8 to test reuse of a verified completed cache, and add tests for a legacy partial final directory and crashes between copy completion, publication, and completion-evidence persistence."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller in-session read: atomic staging+rename closes the Lstat partial-copy gap; copy on its own 60s background bound; capped 3 attempts surface via row-255 seed-cache class and live episode report. Open question for reviewers: D-257-1 B puts a side effect on GET /v1/session/self."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: §4's 'No call runs against a partial copy' is false at the transition, by the doc's own evidence. §1 item 4 establishes that TODAY's code can leave a partial copy at the FINAL path `\u003ccache\u003e/\u003cname\u003e` (daemon killed mid-copy, or RemoveAll failing), and §2 makes closing exactly this fail-open gap the soundness condition of the row ('a check that the copy exists is only sound if dst exists only when the copy completed'). But the new design's check is still bare existence: StartSeed 'marks the state ready and spawns nothing' when the dst exists (§3.1), and §3.2 step 1 returns nil on the same existence test. A partial dst produced by the pre-upgrade code (which persists across the daemon restart the upgrade itself is) is therefore accepted as complete forever — 'existing means complete' holds only for dst's the new rename path created. The test plan does not catch it: S4 plants a staging dir (the NEW code's crash artifact), never a marker-less partial at the final path, so the mutant 'old partial dst accepted' survives.",
+      "oc-kimi-k3: §3.1's attempt sequence (remove staging → cp seed→staging → os.Rename staging→\u003ccache\u003e/\u003cname\u003e) never creates the directories it writes into, and the doc's own evidence says those dirs are created only inside the per-call prepareCache: §1 item 5 / V10 show the startup probe creating the cache dirs by hand (exec_probe.go:462-470) precisely because NewExecHandler does not. With the recommended D-257-1=B, the warm GET fires immediately after the mint — before any prepareCache has ever run for the episode — so cp into \u003cstate\u003e/exec-cache/\u003cep\u003e/.\u003cproject\u003e.\u003cname\u003e.seeding (whose parent \u003cep\u003e may not exist) and/or the rename into \u003cep\u003e/\u003cproject\u003e/GOCACHE fail ENOENT on every fresh episode: attempt 1 burns on a deterministic error, the report shows a spurious 'failed at bind (attempt 1 of 3)', and 'seeded at bind' never actually happens in the configuration the doc recommends. This is an unverified load-bearing premise ('the parent tree already exists at bind') in a doc whose pass case rests entirely on its verification log, and none of the 16 rows check it; S1 likely wouldn't catch it either if newExecFixture pre-creates the cache tree.",
+      "gpt6-1-sol: The central fail-closed guarantee is false across upgrades and restarts. §1 explicitly establishes that the current implementation can leave a partial final cache directory, but §§3.1–3.2 and test S8 accept any existing directory as ready without verifying its provenance. Atomic rename protects newly published copies; it does not make pre-existing directories complete. Consequently, this design still permits execution against exactly the partial caches it claims to reject."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.2940204,
+    "total_tokens_in": 27864,
+    "total_tokens_out": 23663
+  }
+}

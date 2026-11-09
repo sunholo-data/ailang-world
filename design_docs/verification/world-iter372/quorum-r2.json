@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-exec-cache-seed-at-bind.md",
+  "iso_ts": "2026-11-09T17:26:20Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.12450380000000001,
+      "tokens_in": 13729,
+      "tokens_out": 23928,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "M2 adds the first non-dispatch callers of `workspaceTools`' per-episode ExecHandler cache — `execCacheStatus` from `handleEpisodeReport` (unconditional, not gated on D-257-1) and, under the recommended option B, a *writing* caller `warmExec` from `handleSessionSelf` — without verifying that the cache is safe for concurrent access. The doc's own V18 shows `registry()` on the coordinator dispatch path is the only caller of `execHandler()` today, and no verification row, §4 bullet, or test establishes either that the episode→handler map at `workspace.go:468` is mutex-protected or that Dispatch calls are serialized. If the map is plain and dispatch is serialized, an `episode report` GET racing any episode's first dispatched call (the map write at bind) is a fatal 'concurrent map read and map write' panic in the daemon; if dispatch is already concurrent, today's code is already racy and the doc must say which invariant it inherits. This is an unverified, load-bearing premise for the entire M2 daemon surface and a missing conflict-surface analysis (HTTP read path vs dispatch path sharing mutable `workspaceTools` state), and it stands regardless of whether the quorum picks A, B or C.",
+        "catch": "Verify and state the concurrency invariant of the `workspaceTools` exec-handler cache (`workspace.go:468`) before M2 ships: a new verification row quoting the cache field and its lock (or the coordinator's dispatch serialization), plus a design bullet naming every goroutine that reaches it — dispatch (`registry()`), `warmExec`, `execCacheStatus`. Secondarily, the r2 claim that the rebase onto `dc907675` 'changed only the charter, so every line number below still holds' has no verification-log row behind it, and every post-r2 line citation rests on it.",
+        "proposed_fix": "(1) Add V24: `sed -n` around `host/daemon/workspace.go:468` quoting the handler-cache map's declaration, a grep for any `sync.Mutex`/`RWMutex` on `workspaceTools`, and the evidence for whether two coordinator Dispatch calls can overlap (V18 grepped callers, never synchronization). (2) Add a §4 bullet: 'The episode→handler cache is reached from three goroutines — dispatch (`registry()`), the session-self warm path (`warmExec`) and the report fill (`execCacheStatus`); all access goes through one mutex-protected accessor `(*workspaceTools).boundExecHandler(episode)`' — and route `workspace.go:450`, `warmExec` and `execCacheStatus` through that accessor; if the map is already guarded, the V24 row plus the bullet naming the existing lock suffice. (3) Add test D4 in `host/daemon/exec_seed_test.go`: a `GET /v1/episodes/\u003cep\u003e/report` issued concurrently with the episode's first dispatched call, run under `-race`, asserting no panic and a well-formed `exec_cache` view. (4) Append V25 logging `git diff --stat ad13d835 dc907675` and the four file shas re-run at `dc907675` to back the r2 charter-only-rebase claim."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.182451,
+      "tokens_in": 13512,
+      "tokens_out": 9461,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The recommended option (D-257-1 = B) rests on an unverified load-bearing premise: that immediately after `provisionEpisode` returns (episode.go:343, episode_preset.go:301) the freshly minted session token is (a) written to the session file the CLI is supposed to read back, and (b) resolvable by `d.resolver.ResolveContext` on the daemon side at that instant — before any other request has touched the session. V12 verifies only the *negative* ('episode start ... only reads GET /v1/health') and quotes provisionEpisode's call sites; V17 shows the session-file MkdirAll at session_new.go:492 but never shows the session file actually being written/flushed before provisionEpisode returns, and no row establishes whether the resolver reads the credentials store fresh per request or caches at startup. If the mint is not resolvable until some later sync, the flagship behavior of the recommended option — caching started before the agent runs via `episode start` — silently no-ops on every start, and the doc's 23-row verification discipline simply stops one step short of the claim the whole M2 CLI half depends on. The soft-fallback ('not started; the first call will start it') turns this into option A rather than a failure, but the doc recommends B without evidence B can fire on the start path.",
+        "catch": "Rebase-blocker is secondary but note it: the §3.2 control flow has an underspecified edge — with attempts==3, the last attempt *succeeded* (ok=true), and the agent has since deleted the cache or its marker, step 1 fails, step 2 finds nothing running, step 3 requires attempts\u003c3, and step 4 requires 'the last one failed'; no step applies, so the refusal behavior on that path is undefined (and the by-construction argument in §4 silently skips it). Also the literal 'an unverified dst ... goes to step 3' wording bypasses the step-2 join for a copy that is currently running. Fix the sequencing proof for B and state the cap-edge outcome explicitly.",
+        "proposed_fix": "Add verification-log row V24: on both start paths, quote the line inside provisionEpisode (session_new.go, between :396 and its return) that writes and closes the session file (proving it precedes episode.go:343 / episode_preset.go:301), AND quote resolveCredentials/ResolveContext showing it reads the credentials store per-request with no caching (or a quote of the cache invalidation on mint); ideally also an instrumented build issuing the warm GET at the proposed insertion point and recording the observed status plus `exec_cache` state. Until that row exists, demote the recommendation from B to A. Separately, add one sentence to §3.2: 'If attempts == 3 and the last attempt succeeded but the cache is again missing, refuse at once with the same give-up line (no spawn)' — or whatever outcome execSeedNext (S7's cap edge) is intended to return — and reword step 1's 'goes to step 3' as 'falls through to 2' so the join cannot be skipped while a copy is running."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.03026,
+      "tokens_in": 13670,
+      "tokens_out": 292,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The fixed staging path is reused without fencing a copy process that survives daemon death. R4 explicitly allows that process to remain running, while §3.1 step 3 lets the restarted daemon delete and recreate its output path. The old and new copies can then write into the same staging tree; the new copy can publish its completion marker while the old process is still modifying that tree. This defeats the claimed single-writer and completion guarantees.",
+        "catch": "The mutex protects only one live handler, not subprocesses surviving a daemon restart. R4's assertion that the next attempt can safely remove staging, and that disk use remains bounded to one staging copy, is unsupported. S10 plants inert directories rather than exercising a surviving writer.",
+        "proposed_fix": "Replace the fixed staging path with an exclusively created, unique directory per daemon incarnation and attempt, never reused by another copy. Publish only that attempt's directory after its own child has exited successfully. Specify lifecycle ownership and bounded cleanup of surviving children and abandoned directories; do not claim a one-copy disk bound without enforcing it. Add a restart test with a controlled old copy process that continues writing while the replacement daemon seeds: verify that it cannot modify the replacement attempt's staging or published cache, and that orphan cleanup obeys the documented resource bound."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r2 applies all three r1 reviewers' fixes: versioned completion marker published by rename, unverified final dirs removed/re-seeded, step-0 MkdirAll, tests S8-S12/D3, V17-V23 observation rows."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: M2 adds the first non-dispatch callers of `workspaceTools`' per-episode ExecHandler cache — `execCacheStatus` from `handleEpisodeReport` (unconditional, not gated on D-257-1) and, under the recommended option B, a *writing* caller `warmExec` from `handleSessionSelf` — without verifying that the cache is safe for concurrent access. The doc's own V18 shows `registry()` on the coordinator dispatch path is the only caller of `execHandler()` today, and no verification row, §4 bullet, or test establishes either that the episode→handler map at `workspace.go:468` is mutex-protected or that Dispatch calls are serialized. If the map is plain and dispatch is serialized, an `episode report` GET racing any episode's first dispatched call (the map write at bind) is a fatal 'concurrent map read and map write' panic in the daemon; if dispatch is already concurrent, today's code is already racy and the doc must say which invariant it inherits. This is an unverified, load-bearing premise for the entire M2 daemon surface and a missing conflict-surface analysis (HTTP read path vs dispatch path sharing mutable `workspaceTools` state), and it stands regardless of whether the quorum picks A, B or C.",
+      "oc-kimi-k3: The recommended option (D-257-1 = B) rests on an unverified load-bearing premise: that immediately after `provisionEpisode` returns (episode.go:343, episode_preset.go:301) the freshly minted session token is (a) written to the session file the CLI is supposed to read back, and (b) resolvable by `d.resolver.ResolveContext` on the daemon side at that instant — before any other request has touched the session. V12 verifies only the *negative* ('episode start ... only reads GET /v1/health') and quotes provisionEpisode's call sites; V17 shows the session-file MkdirAll at session_new.go:492 but never shows the session file actually being written/flushed before provisionEpisode returns, and no row establishes whether the resolver reads the credentials store fresh per request or caches at startup. If the mint is not resolvable until some later sync, the flagship behavior of the recommended option — caching started before the agent runs via `episode start` — silently no-ops on every start, and the doc's 23-row verification discipline simply stops one step short of the claim the whole M2 CLI half depends on. The soft-fallback ('not started; the first call will start it') turns this into option A rather than a failure, but the doc recommends B without evidence B can fire on the start path.",
+      "gpt6-1-sol: The fixed staging path is reused without fencing a copy process that survives daemon death. R4 explicitly allows that process to remain running, while §3.1 step 3 lets the restarted daemon delete and recreate its output path. The old and new copies can then write into the same staging tree; the new copy can publish its completion marker while the old process is still modifying that tree. This defeats the claimed single-writer and completion guarantees."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.33721480000000004,
+    "total_tokens_in": 40911,
+    "total_tokens_out": 33681
+  }
+}
