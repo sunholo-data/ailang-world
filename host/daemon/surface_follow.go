@@ -17,9 +17,12 @@ import (
 const groupedFollowReason = "the grouped multi-repo model arrives in row 220 M4; use /surface/index.json and /surface/follow-status.json"
 
 type surfaceFollow struct {
-	config        surfacefollow.Config
-	publisher     *surfacefollow.Publisher
-	collector     *surfacefollow.Collector
+	config    surfacefollow.Config
+	publisher *surfacefollow.Publisher
+	collector *surfacefollow.Collector
+	// episodes is the open-episode source; nil selects the daemon's
+	// credentials store and finish records at start.
+	episodes      surfacefollow.EpisodeSource
 	mu            sync.Mutex
 	cancel        context.CancelFunc
 	followerDone  chan struct{}
@@ -73,7 +76,11 @@ func (d *Daemon) startSurfaceFollow(ctx context.Context) {
 	}
 	ctx, f.cancel = context.WithCancel(ctx)
 	f.followerDone, f.publisherDone = make(chan struct{}), make(chan struct{})
-	follower := &surfacefollow.Follower{Config: f.config, Collector: f.collector, Sink: f.publisher.Sink, Seed: f.publisher.Seed()}
+	if f.episodes == nil {
+		f.episodes = newFollowEpisodes(d.credentialsPath, d.store)
+	}
+	follower := &surfacefollow.Follower{Config: f.config, Collector: f.collector, Sink: f.publisher.Sink, Seed: f.publisher.Seed(),
+		Episodes: f.episodes, EpisodeSink: f.publisher.SinkEpisodes}
 	go func() {
 		defer close(f.publisherDone)
 		f.publisher.Run(ctx)

@@ -40,4 +40,18 @@
 // Failures retain accepted partitions and back off 15, 30, then 60 seconds;
 // observed head changes reset backoff. Budget refusals retry on the next poll.
 // Sinks must return promptly and must not mutate delivered indexes.
+//
+// Open episodes (row 220 M3): with Follower.Episodes set, the same scheduler
+// reconciles episode facts at startup and on every 15-second tick, even when
+// no head moved; reconciles never overlap and each has a 10-second deadline.
+// The daemon's source pages the credentials store read-only (sessions and a
+// json_extract projection of start records, 10000 rows each) and reads row
+// 218's operator-written finish records (at most 2000 per reconcile).
+// Publisher.SinkEpisodes keeps the last good facts; BuildOverlay joins them
+// with the partitions of the same publication into the envelope's "open"
+// collection: deduplicated live sessions, whitelisted start fields, anchors or
+// base_outside_window, "PR open" only from a done finish, aliases to a landed
+// step, a Running list for missing starts and unconfigured repos, seven-day
+// retention for ended states, a 1000-state cap, and an explicit incomplete or
+// unavailable status whenever the read was bounded or failed.
 package surfacefollow

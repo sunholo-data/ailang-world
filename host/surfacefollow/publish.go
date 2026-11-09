@@ -36,6 +36,20 @@ type StatusDocument struct {
 	Mode       string       `json:"mode"`
 	Generation string       `json:"generation"`
 	Repos      []RepoStatus `json:"repos"`
+	// Open summarizes the open-episode overlay; absent before the first read.
+	Open *OpenStatus `json:"open,omitempty"`
+}
+
+// OpenStatus repeats the overlay's completeness so a status reader never
+// mistakes an unavailable or capped read for zero running episodes.
+type OpenStatus struct {
+	Status           string `json:"status"`
+	Reason           string `json:"reason,omitempty"`
+	CheckedAt        string `json:"checked_at"`
+	Episodes         int    `json:"episodes"`
+	Running          int    `json:"running"`
+	Omitted          int    `json:"omitted"`
+	RemainderUnknown bool   `json:"remainder_unknown"`
 }
 
 // Snapshot and everything reachable from it are immutable after publication.
@@ -84,8 +98,12 @@ type Publisher struct {
 	current atomic.Pointer[Snapshot]
 	mu      sync.Mutex
 	latest  map[string]Status
-	wake    chan struct{}
-	cleaned bool
+	// facts is the last successful episode read; factsFailed says the
+	// latest read failed. Both are guarded by mu.
+	facts       *EpisodeFacts
+	factsFailed bool
+	wake        chan struct{}
+	cleaned     bool
 }
 
 func cacheRefusal(reason string) error {
@@ -126,7 +144,7 @@ func NewPublisher(cfg Config, configBytes []byte, stateDir string, forbiddenRoot
 		p.latest[r.ID] = Status{ID: r.ID}
 	}
 	p.recover()
-	initial := p.makeSnapshot(p.latest)
+	initial := p.makeSnapshot(p.latest, nil)
 	_ = encodeSnapshot(initial) // recovered partitions were strictly decoded
 	p.current.Store(initial)
 	return p, nil
@@ -200,6 +218,22 @@ func (p *Publisher) Sink(s Status) {
 	}
 }
 
+// SinkEpisodes records a reconcile result. A failed read keeps the previous
+// facts, which are then published as unavailable rather than as zero.
+func (p *Publisher) SinkEpisodes(facts EpisodeFacts, failed bool) {
+	p.mu.Lock()
+	p.factsFailed = failed
+	if !failed {
+		f := facts
+		p.facts = &f
+	}
+	p.mu.Unlock()
+	select {
+	case p.wake <- struct{}{}:
+	default:
+	}
+}
+
 func (p *Publisher) Run(ctx context.Context) {
 	for {
 		select {
@@ -238,7 +272,24 @@ func repoStatus(s Status) RepoStatus {
 	return r
 }
 
-func (p *Publisher) makeSnapshot(states map[string]Status) *Snapshot {
+// overlayFor builds and validates the overlay for exactly the partitions
+// this snapshot publishes.
+func (p *Publisher) overlayFor(states map[string]Status, facts *EpisodeFacts, failed bool) *surface.FollowOpen {
+	var parts []surface.FollowPartition
+	for _, r := range p.config.Repos {
+		if st := states[r.ID]; st.Partition != nil {
+			parts = append(parts, *st.Partition)
+		}
+	}
+	open := BuildOverlay(parts, facts, failed)
+	if open != nil && surface.ValidateFollowOpen(*open, parts) != nil {
+		fmt.Fprintln(p.log, "surface follow overlay: candidate")
+		open = refusedOverlay()
+	}
+	return open
+}
+
+func (p *Publisher) makeSnapshot(states map[string]Status, open *surface.FollowOpen) *Snapshot {
 	s := &Snapshot{Envelope: surface.FollowIndex{Schema: surface.FollowSchema},
 		Status: StatusDocument{Schema: StatusSchema, Mode: "follow", Repos: []RepoStatus{}}}
 	keys := make([][3]string, 0, len(p.config.Repos))
@@ -252,7 +303,20 @@ func (p *Publisher) makeSnapshot(states map[string]Status) *Snapshot {
 			keys = append(keys, [3]string{part.ID, part.Head, part.BuiltAt})
 		}
 	}
-	b, _ := json.Marshal(keys)
+	s.Envelope.Open = open
+	var overlayKey []byte
+	if open != nil {
+		// checked_at advances every reconcile; it is not a new generation.
+		o := *open
+		o.CheckedAt = ""
+		overlayKey, _ = json.Marshal(o)
+		s.Status.Open = &OpenStatus{Status: open.Status, Reason: open.Reason, CheckedAt: open.CheckedAt,
+			Episodes: len(open.Episodes), Running: len(open.Running), Omitted: open.Omitted, RemainderUnknown: open.RemainderUnknown}
+	}
+	b, _ := json.Marshal(struct {
+		Keys [][3]string
+		Open json.RawMessage `json:",omitempty"`
+	}{keys, overlayKey})
 	h := sha256.Sum256(b)
 	s.Envelope.Generation = "g" + hex.EncodeToString(h[:8])
 	s.Status.Generation = s.Envelope.Generation
@@ -282,8 +346,9 @@ func (p *Publisher) publish() {
 	for id, s := range p.latest {
 		states[id] = s
 	}
+	facts, failed := p.facts, p.factsFailed
 	p.mu.Unlock()
-	candidate := p.makeSnapshot(states)
+	candidate := p.makeSnapshot(states, p.overlayFor(states, facts, failed))
 	old := p.Snapshot()
 	class := encodeSnapshot(candidate)
 	if class == "" && len(candidate.Envelope.Repos) > 0 && candidate.Status.Generation != old.Status.Generation {
@@ -306,7 +371,8 @@ func (p *Publisher) publish() {
 			st.LastFailure = publishFailure(class)
 			states[id] = st
 		}
-		candidate = p.makeSnapshot(states)
+		// The last accepted overlay was validated against these partitions.
+		candidate = p.makeSnapshot(states, old.Envelope.Open)
 		_ = encodeSnapshot(candidate) // last-good data plus fixed failure text
 	}
 	p.current.Store(candidate)

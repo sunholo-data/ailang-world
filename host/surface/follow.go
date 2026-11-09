@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// FollowSchema wraps unchanged v1 partitions. The episode overlay is absent
-// until M3 defines its validation contract.
+// FollowSchema wraps unchanged v1 partitions and, once episode facts have been
+// read, the separately validated open-episode overlay (follow_open.go).
 const FollowSchema = "world/surface-follow-index/v1"
 
 var repoSlug = regexp.MustCompile(`^[a-z][a-z0-9-]{0,31}$`)
@@ -21,6 +21,8 @@ type FollowIndex struct {
 	Schema     string            `json:"schema"`
 	Generation string            `json:"generation"`
 	Repos      []FollowPartition `json:"repos"`
+	// Open is absent until the first episode read; absence never means zero.
+	Open *FollowOpen `json:"open,omitempty"`
 }
 
 // FollowFailure contains a short, path-free cause, never raw child stderr.
@@ -103,6 +105,12 @@ func ValidateFollow(ix FollowIndex) error {
 			return fmt.Errorf("surface follow: repo %s index: %w", p.ID, err)
 		}
 		total += len(p.Index.States)
+	}
+	if ix.Open != nil {
+		if err := ValidateFollowOpen(*ix.Open, ix.Repos); err != nil {
+			return err
+		}
+		total += len(ix.Open.Episodes)
 	}
 	if total > MaxStates {
 		return fmt.Errorf("surface follow: summed states exceed %d; lower a repo limit", MaxStates)

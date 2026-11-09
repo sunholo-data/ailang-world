@@ -179,7 +179,7 @@ It does not replace World's event store with git, rebuild all history without bo
 
 ## §8 Milestones
 
-**M0/M1 built (w220a); M2 built (w220b):** D-WORLD-103 all defaults; strict follow envelope, pinned collector/config and bounded scheduler; atomic config-keyed cache, restart seeds, snapshot/status readers, daemon lifecycle and serve/service flags. M3 onward remains unbuilt; host timing and attended exit remain unverified.
+**M0/M1 built (w220a); M2 built (w220b):** D-WORLD-103 all defaults; strict follow envelope, pinned collector/config and bounded scheduler; atomic config-keyed cache, restart seeds, snapshot/status readers, daemon lifecycle and serve/service flags. M3 built (attended, branch `attended/row220-m3-open-episodes`): validated `open` overlay in the same snapshot/generation, paged read-only session/start reads, row-218 finish records trusted by operator provenance, merge aliases, 7-day ended retention, 1000 cap, 15 s reconcile; the operator has not yet verified the 218 reader on a real finish. M4 onward remains unbuilt; host timing and attended exit remain unverified.
 
 | M | what | gate |
 |---|---|---|
