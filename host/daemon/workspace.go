@@ -489,17 +489,19 @@ func (w *workspaceTools) execHandler(episodeID, epRoot string) broker.Handler {
 	}
 	w.execMu.Lock()
 	defer w.execMu.Unlock()
-	if cached, ok := w.execH[episodeID]; ok && cached.root == epRoot && cached.profile == profile {
+	if cached, ok := w.execEntryLocked(episodeID); ok && cached.root == epRoot && cached.profile == profile {
 		return cached.h
 	}
 	var h broker.Handler
 	eh, err := broker.NewExecHandler(broker.ExecHandlerConfig{Tools: w.exec.toolState, Profile: profile, Sandbox: w.exec.sandbox,
 		Episode: episodeID, Worktree: epRoot, WorkspaceRoot: w.root, StateDir: w.stateDir,
-		OperatorHome: w.exec.operatorHome, MaxOutputBytes: w.exec.maxOutputBytes})
+		OperatorHome: w.exec.operatorHome, MaxOutputBytes: w.exec.maxOutputBytes, Log: w.errLog})
 	if err != nil {
 		fmt.Fprintf(w.errLog, "ailang-worldd: workspace-exec unavailable for episode %q: %v\n", episodeID, err)
 		return execFailedHandler{err: err}
 	}
+	// Row 257: the exec cache seed copy starts at bind, on its own clock.
+	eh.StartSeed()
 	h = eh
 	if w.execH == nil {
 		w.execH = map[string]episodeTool{}

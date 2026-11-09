@@ -245,3 +245,39 @@ func TestEpisodeReportFollowReprintsOnChangeLoopback(t *testing.T) {
 		}
 	}
 }
+
+// Row 257: the report prints one exec cache line per seeded cache, and none
+// when the report carries no entries.
+func TestEpisodeReportPrintsExecCache(t *testing.T) {
+	rep := sampleReport()
+	rep.ExecCache = []daemon.ReportExecCache{{Project: "ailang-world", Cache: "GOCACHE", State: "failed", Attempts: 1, By: "bind",
+		Failure: "seed-cache: GOCACHE: timed out after 1m0s (attempt 1 of 3)"}}
+	var out bytes.Buffer
+	printReport(&out, rep)
+	want := "exec cache   ailang-world GOCACHE failed at bind (attempt 1 of 3): seed-cache: GOCACHE: timed out after 1m0s (attempt 1 of 3)\n"
+	if !strings.Contains(out.String(), want) {
+		t.Errorf("table lacks %q:\n%s", want, out.String())
+	}
+	for _, c := range []struct {
+		e    daemon.ReportExecCache
+		want string
+	}{
+		{daemon.ReportExecCache{Project: "ailang-world", Cache: "GOCACHE", State: "ready", Attempts: 1, By: "call", TookMS: 380},
+			"exec cache   ailang-world GOCACHE ready at call (attempt 1 of 3) in 380ms"},
+		{daemon.ReportExecCache{Project: "ailang-world", Cache: "GOCACHE", State: "ready", Attempts: 0, By: "bind"},
+			"exec cache   ailang-world GOCACHE ready"},
+	} {
+		var one bytes.Buffer
+		rep := sampleReport()
+		rep.ExecCache = []daemon.ReportExecCache{c.e}
+		printReport(&one, rep)
+		if !strings.Contains(one.String(), c.want+"\n") {
+			t.Errorf("table lacks %q:\n%s", c.want, one.String())
+		}
+	}
+	var plain bytes.Buffer
+	printReport(&plain, sampleReport())
+	if strings.Contains(plain.String(), "exec cache") {
+		t.Errorf("report without entries prints an exec cache line:\n%s", plain.String())
+	}
+}

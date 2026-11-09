@@ -247,6 +247,24 @@ func printReport(w io.Writer, r daemon.EpisodeReport) {
 	if r.Uncommitted > 0 {
 		fmt.Fprintf(w, "uncommitted intents: %d\n", r.Uncommitted)
 	}
+	for _, e := range r.ExecCache {
+		fmt.Fprintln(w, execCacheLine(e))
+	}
+}
+
+// execCacheLine is one exec_cache entry of the report table (row 257).
+func execCacheLine(e daemon.ReportExecCache) string {
+	line := fmt.Sprintf("exec cache   %s %s %s", e.Project, e.Cache, e.State)
+	if e.Attempts > 0 {
+		line += fmt.Sprintf(" at %s (attempt %d of 3)", e.By, e.Attempts)
+	}
+	if e.State == "ready" && e.Attempts > 0 {
+		line += fmt.Sprintf(" in %dms", e.TookMS)
+	}
+	if e.Failure != "" {
+		line += ": " + e.Failure
+	}
+	return line
 }
 
 // readsLine is the one-line reads summary; --json carries the file list.
