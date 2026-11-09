@@ -1,0 +1,4 @@
+OpenSSH_10.3p1, LibreSSL 3.3.6
+2026-11-09T21:54:26Z
+256 SHA256:pHMYJm+CndqyZGrzMHQQBH0tNeNGj1U9sy0JrVsYdSQ world-approval-fixture-ed25519 (ED25519)
+256 SHA256:yMwGgMZdq1aVNYRG/HO2T69s/Fb14yPZW0GBWtwRyEo world-approval-fixture-p256 (ECDSA)
