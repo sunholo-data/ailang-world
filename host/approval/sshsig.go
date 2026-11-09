@@ -6,10 +6,12 @@ import (
 	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/big"
 	"strings"
 )
 
@@ -253,4 +255,109 @@ func parseSSHSIGBlob(b []byte) (*SSHSig, error) {
 		SigType:   string(sigType),
 		Sig:       bytes.Clone(sigBlob),
 	}, nil
+}
+
+// VerifySSHSIG checks s over message under namespace with the expected key. The steps run in a
+// fixed order (design §2.7): namespace, then key identity, then the key type, then the signature.
+func VerifySSHSIG(s *SSHSig, namespace string, message []byte, key SSHPublicKey) error {
+	if s == nil {
+		return ErrBadSignature
+	}
+	if s.Namespace != namespace {
+		return ErrNamespace
+	}
+	if !bytes.Equal(s.PublicKey.Blob, key.Blob) {
+		return ErrKeyMismatch
+	}
+	km, err := parseKeyBlob(key.Blob)
+	if err != nil {
+		return err
+	}
+	if s.SigType != km.typ {
+		return ErrSigType
+	}
+	sd, err := signedData(namespace, s.HashAlg, message)
+	if err != nil {
+		return err
+	}
+	switch km.typ {
+	case keyEd25519:
+		if len(s.Sig) != ed25519.SignatureSize || !ed25519.Verify(km.ed, sd, s.Sig) {
+			return ErrBadSignature
+		}
+	case keyP256:
+		sr := sshReader{s.Sig}
+		rb, err := sr.readString()
+		if err != nil {
+			return fmt.Errorf("%w: %v", ErrBadSignature, err)
+		}
+		sb, err := sr.readString()
+		if err != nil {
+			return fmt.Errorf("%w: %v", ErrBadSignature, err)
+		}
+		if err := sr.end(); err != nil {
+			return fmt.Errorf("%w: %v", ErrBadSignature, err)
+		}
+		rv, err := parseMpint(rb)
+		if err != nil {
+			return err
+		}
+		sv, err := parseMpint(sb)
+		if err != nil {
+			return err
+		}
+		h := sha256.Sum256(sd)
+		if !ecdsa.Verify(km.ec, h[:], rv, sv) {
+			return ErrBadSignature
+		}
+	default:
+		return ErrKeyType
+	}
+	return nil
+}
+
+// signedData is the byte string an SSHSIG signature covers.
+func signedData(namespace, hashAlg string, message []byte) ([]byte, error) {
+	var h []byte
+	switch hashAlg {
+	case "sha512":
+		d := sha512.Sum512(message)
+		h = d[:]
+	case "sha256":
+		d := sha256.Sum256(message)
+		h = d[:]
+	default:
+		return nil, ErrHashAlg
+	}
+	out := []byte("SSHSIG")
+	out = appendString(out, []byte(namespace))
+	out = appendString(out, nil)
+	out = appendString(out, []byte(hashAlg))
+	out = appendString(out, h)
+	return out, nil
+}
+
+// parseMpint parses an SSH mpint, refusing negative and non-minimal encodings.
+func parseMpint(b []byte) (*big.Int, error) {
+	if len(b) > 0 && b[0]&0x80 != 0 {
+		return nil, fmt.Errorf("%w: negative mpint", ErrBadSignature)
+	}
+	if len(b) > 0 && b[0] == 0 && (len(b) == 1 || b[1]&0x80 == 0) {
+		return nil, fmt.Errorf("%w: non-minimal mpint", ErrBadSignature)
+	}
+	return new(big.Int).SetBytes(b), nil
+}
+
+// VerifyApproval parses an armored SSHSIG over the approval message for (digest, challenge,
+// expiry) and verifies it under Namespace with key. It returns the first error.
+func VerifyApproval(armored []byte, digest, challenge [32]byte, expiry int64, key SSHPublicKey) error {
+	s, err := ParseSSHSIG(armored)
+	if err != nil {
+		return err
+	}
+	msg, err := SignedMessage(digest, challenge, expiry)
+	if err != nil {
+		return err
+	}
+	return VerifySSHSIG(s, Namespace, msg, key)
 }

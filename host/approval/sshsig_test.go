@@ -530,3 +530,125 @@ func TestParseAuthorizedKeyRefusals(t *testing.T) {
 		}
 	}
 }
+
+func TestSSHSIGFixturesVerify(t *testing.T) {
+	msg := fixtureMessage(t)
+	for _, c := range []struct{ sig, pub, typ string }{
+		{"ed25519.sig", "ed25519.pub", "ssh-ed25519"},
+		{"p256.sig", "p256.pub", "ecdsa-sha2-nistp256"},
+	} {
+		s, err := ParseSSHSIG(fixtureBytes(t, c.sig))
+		if err != nil || s == nil {
+			t.Fatalf("%s: ParseSSHSIG: %v", c.sig, err)
+		}
+		key := fixtureKey(t, c.pub)
+		if s.PublicKey.Type != c.typ || s.SigType != c.typ {
+			t.Errorf("%s: types %q/%q, want %q", c.sig, s.PublicKey.Type, s.SigType, c.typ)
+		}
+		if s.HashAlg != "sha512" {
+			t.Errorf("%s: hash %q, want sha512", c.sig, s.HashAlg)
+		}
+		if s.Namespace != Namespace {
+			t.Errorf("%s: namespace %q", c.sig, s.Namespace)
+		}
+		if !bytes.Equal(s.PublicKey.Blob, key.Blob) {
+			t.Errorf("%s: publickey blob differs from %s", c.sig, c.pub)
+		}
+		if err := VerifySSHSIG(s, Namespace, msg, key); err != nil {
+			t.Errorf("%s: VerifySSHSIG: %v", c.sig, err)
+		}
+	}
+}
+
+func TestSSHSIGRefusals(t *testing.T) {
+	msg := fixtureMessage(t)
+	ed := fixtureBytes(t, "ed25519.sig")
+	p := fixtureBytes(t, "p256.sig")
+	gitNS := fixtureBytes(t, "git-ns-ed25519.sig")
+	edK := fixtureKey(t, "ed25519.pub")
+	pK := fixtureKey(t, "p256.pub")
+	cases := []struct {
+		name    string
+		armored []byte
+		message []byte
+		key     SSHPublicKey
+		want    error
+		reason  string
+	}{
+		{"git-namespace", gitNS, msg, edK, ErrNamespace, ""},
+		{"wrong-key", ed, msg, pK, ErrKeyMismatch, ""},
+		{"msg-flip-ed", ed, flipByte(msg, 0), edK, ErrBadSignature, ""},
+		{"msg-flip-p256", p, flipByte(msg, 0), pK, ErrBadSignature, ""},
+		{"challenge-flip-ed", ed, flipByte(msg, 50), edK, ErrBadSignature, ""},
+		{"challenge-flip-p256", p, flipByte(msg, 50), pK, ErrBadSignature, ""},
+		{"expiry-flip-ed", ed, flipByte(msg, 89), edK, ErrBadSignature, ""},
+		{"expiry-flip-p256", p, flipByte(msg, 89), pK, ErrBadSignature, ""},
+		{"sig-flip-ed", withLastSigByteFlipped(t, ed), msg, edK, ErrBadSignature, ""},
+		{"sig-flip-p256", withLastSigByteFlipped(t, p), msg, pK, ErrBadSignature, ""},
+		{"sk-type", withKeyType(t, ed, "sk-ssh-ed25519@openssh.com"), msg, edK, ErrKeyType, "security-key"},
+		{"rsa-type", withKeyType(t, ed, "rsa-sha2-512"), msg, edK, ErrKeyType, ""},
+		{"p384-type", withKeyType(t, p, "ecdsa-sha2-nistp384"), msg, pK, ErrKeyType, ""},
+		{"curve", withCurveName(t, p, "nistp384"), msg, pK, ErrKeyType, ""},
+		{"point", withPointByteFlipped(t, p), msg, pK, ErrKeyType, "point"},
+		{"short-ed-key", withShortEd25519Key(t, ed), msg, edK, ErrKeyType, ""},
+		{"hash-sha1", withHashAlg(t, ed, "sha1"), msg, edK, ErrHashAlg, ""},
+		{"version-2", withVersion(t, ed, 2), msg, edK, ErrVersion, ""},
+		{"magic", withMagic(t, ed, "SSHSIH"), msg, edK, ErrMagic, ""},
+		{"reserved", withReserved(t, ed, "x"), msg, edK, ErrReserved, ""},
+		{"trailing", withTrailingByte(t, ed), msg, edK, ErrTrailing, ""},
+		{"sigtype-ed", withSigType(t, ed, "ecdsa-sha2-nistp256"), msg, edK, ErrSigType, ""},
+		{"sigtype-p256", withSigType(t, p, "ssh-ed25519"), msg, pK, ErrSigType, ""},
+		{"mpint-negative", withNegativeMpint(t, p), msg, pK, ErrBadSignature, "negative mpint"},
+		{"mpint-non-minimal", withNonMinimalMpint(t, p), msg, pK, ErrBadSignature, "non-minimal mpint"},
+	}
+	for _, c := range cases {
+		s, err := ParseSSHSIG(c.armored)
+		if err == nil {
+			err = VerifySSHSIG(s, Namespace, c.message, c.key)
+		}
+		if !errors.Is(err, c.want) {
+			t.Errorf("%s: got %v, want %v", c.name, err, c.want)
+			continue
+		}
+		if c.reason != "" && !strings.Contains(err.Error(), c.reason) {
+			t.Errorf("%s: error %q lacks reason %q", c.name, err, c.reason)
+		}
+	}
+	if err := VerifySSHSIG(nil, Namespace, msg, edK); !errors.Is(err, ErrBadSignature) {
+		t.Errorf("nil signature: got %v, want ErrBadSignature", err)
+	}
+}
+
+func TestVerifyApprovalBindsTheRequest(t *testing.T) {
+	digest := fixtureDigest(t)
+	challenge := fixtureChallenge()
+	for _, c := range []struct{ sig, pub string }{
+		{"ed25519.sig", "ed25519.pub"},
+		{"p256.sig", "p256.pub"},
+	} {
+		sig := fixtureBytes(t, c.sig)
+		key := fixtureKey(t, c.pub)
+		if err := VerifyApproval(sig, digest, challenge, fixtureExpiry, key); err != nil {
+			t.Errorf("%s: good approval: %v", c.sig, err)
+		}
+		d := digest
+		d[0] ^= 0x01
+		if err := VerifyApproval(sig, d, challenge, fixtureExpiry, key); !errors.Is(err, ErrBadSignature) {
+			t.Errorf("%s: digest flip: got %v", c.sig, err)
+		}
+		ch := challenge
+		ch[0] ^= 0x01
+		if err := VerifyApproval(sig, digest, ch, fixtureExpiry, key); !errors.Is(err, ErrBadSignature) {
+			t.Errorf("%s: challenge flip: got %v", c.sig, err)
+		}
+		if err := VerifyApproval(sig, digest, challenge, fixtureExpiry+1, key); !errors.Is(err, ErrBadSignature) {
+			t.Errorf("%s: expiry+1: got %v", c.sig, err)
+		}
+		if err := VerifyApproval(sig, digest, challenge, -1, key); !errors.Is(err, ErrNegativeExpiry) {
+			t.Errorf("%s: negative expiry: got %v", c.sig, err)
+		}
+	}
+	if err := VerifyApproval(fixtureBytes(t, "git-ns-ed25519.sig"), digest, challenge, fixtureExpiry, fixtureKey(t, "ed25519.pub")); !errors.Is(err, ErrNamespace) {
+		t.Errorf("git namespace: got %v, want ErrNamespace", err)
+	}
+}
