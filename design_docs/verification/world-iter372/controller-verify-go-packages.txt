@@ -1,0 +1,59 @@
+ok 01-valid-png-in-dir
+ok 02-valid-png-outside-dir (not-allowlisted)
+ok 03-renamed-binary (bad-signature)
+ok 04-polyglot-after-iend (trailing-bytes)
+ok 05-text-chunk (chunk-not-allowed:tEXt)
+ok 06-corrupt-idat (bad-crc)
+ok 07-over-file-cap (file-cap-exceeded)
+ok 08-over-dir-cap (dir-cap-exceeded)
+ok 09-gitattributes-in-dir (bad-signature)
+ok 10-gitattributes-tree-wide (not-allowlisted)
+ok 11-empty-tree (enumerated 0 blobs)
+ok 12-nul-past-8000-bytes (not-allowlisted)
+ok 13-row150-deliverable-names
+ok 14-bad-name-and-subdir (not-allowlisted)
+ok 15-no-allowance-no-images (not-allowlisted)
+ok 16-pinned-font-in-dir
+ok 17-renamed-binary-pinned (bad-signature)
+ok 18-unpinned-font (not-allowlisted)
+ok 19-pinned-name-other-bytes (sha256-mismatch)
+ok 20-font-over-file-cap (file-cap-exceeded)
+ok 21-font-outside-dir (not-allowlisted)
+ok 22-font-in-subdirectory (not-allowlisted)
+ok 23-font-dir-cap (dir-cap-exceeded)
+ok 24-png-and-font-together
+ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	312.663s
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	85.760s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	47.221s
+ok  	github.com/sunholo-data/ailang-world/host/agui	9.092s
+ok  	github.com/sunholo-data/ailang-world/host/archive	46.000s
+ok  	github.com/sunholo-data/ailang-world/host/authority	1.446s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	3.226s
+ok  	github.com/sunholo-data/ailang-world/host/broker	441.235s
+ok  	github.com/sunholo-data/ailang-world/host/canon	1.509s
+ok  	github.com/sunholo-data/ailang-world/host/capsule	93.873s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	2.964s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	2.218s
+ok  	github.com/sunholo-data/ailang-world/host/coordinator	117.905s
+ok  	github.com/sunholo-data/ailang-world/host/daemon	470.730s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	36.080s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	3.149s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	3.133s
+ok  	github.com/sunholo-data/ailang-world/host/pins	3.478s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	57.132s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.337s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	3.077s
+ok  	github.com/sunholo-data/ailang-world/host/projection	16.625s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	2.904s
+ok  	github.com/sunholo-data/ailang-world/host/registry	2.768s
+ok  	github.com/sunholo-data/ailang-world/host/replay	60.790s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	5.778s
+ok  	github.com/sunholo-data/ailang-world/host/store	14.585s
+ok  	github.com/sunholo-data/ailang-world/host/surface	3.250s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	3.247s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	2.936s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	75.015s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	454.815s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	4.176s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	14.405s
+ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	136.548s

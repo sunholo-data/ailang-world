@@ -1,0 +1,6 @@
+full-cand rc=0
+full-base rc=0
+TestExecProbeNet6ForeignDialIsRetriedNotRefused base_fail=0/100 cand_fail=5/100
+TestAttendedPublishMintsThroughTheLandedTraversalAndSpendsExactlyOnce base_fail=0/100 cand_fail=0/100
+TestWorktreeSnapshotRefusesAConfiguredFilter base_fail=2/100 cand_fail=0/100
+DONE

@@ -217,7 +217,7 @@ func (w *workspaceTools) healthProfiles() ([]HealthExecProfile, []HealthExecExcl
 	}
 	var excluded []HealthExecExclusion
 	for _, x := range w.exec.excluded {
-		excluded = append(excluded, HealthExecExclusion{Project: x.Project, File: x.File, Reason: x.Reason})
+		excluded = append(excluded, HealthExecExclusion{Project: x.Project, File: x.File, Reason: x.Reason, OutOfTime: x.OutOfTime})
 	}
 	return loaded, excluded
 }
@@ -266,9 +266,19 @@ func (w *workspaceTools) configureExec(ctx context.Context, cfg Config) error {
 	// refuses with the reason.
 	for _, x := range st.Excluded {
 		w.exec.excludedWhy[x.Project] = x.Reason
-		fmt.Fprintf(w.errLog, "ailang-worldd: exec profile %q (%s) left out: %s\n", x.Project, x.File, x.Reason)
+		logExecProfileExclusion(w.errLog, x)
 	}
 	return nil
+}
+
+// logExecProfileExclusion keeps late-recording advice observational.
+func logExecProfileExclusion(out io.Writer, x broker.ExecProfileExclusion) {
+	fmt.Fprintf(out, "ailang-worldd: exec profile %q (%s) left out: %s\n", x.Project, x.File, x.Reason)
+	if x.OutOfTime {
+		// Row 256: observation only; a genuine refusal can be recorded late.
+		fmt.Fprintf(out, "ailang-worldd: exec profile %q: %s Review the failure reasons and restart serve if appropriate.\n",
+			x.Project, broker.ExecProbeDeadlineObservation)
+	}
 }
 
 // execFailedHandler answers every call with the error that kept the
@@ -489,17 +499,19 @@ func (w *workspaceTools) execHandler(episodeID, epRoot string) broker.Handler {
 	}
 	w.execMu.Lock()
 	defer w.execMu.Unlock()
-	if cached, ok := w.execH[episodeID]; ok && cached.root == epRoot && cached.profile == profile {
+	if cached, ok := w.execEntryLocked(episodeID); ok && cached.root == epRoot && cached.profile == profile {
 		return cached.h
 	}
 	var h broker.Handler
 	eh, err := broker.NewExecHandler(broker.ExecHandlerConfig{Tools: w.exec.toolState, Profile: profile, Sandbox: w.exec.sandbox,
 		Episode: episodeID, Worktree: epRoot, WorkspaceRoot: w.root, StateDir: w.stateDir,
-		OperatorHome: w.exec.operatorHome, MaxOutputBytes: w.exec.maxOutputBytes})
+		OperatorHome: w.exec.operatorHome, MaxOutputBytes: w.exec.maxOutputBytes, Log: w.errLog})
 	if err != nil {
 		fmt.Fprintf(w.errLog, "ailang-worldd: workspace-exec unavailable for episode %q: %v\n", episodeID, err)
 		return execFailedHandler{err: err}
 	}
+	// Row 257: the exec cache seed copy starts at bind, on its own clock.
+	eh.StartSeed()
 	h = eh
 	if w.execH == nil {
 		w.execH = map[string]episodeTool{}

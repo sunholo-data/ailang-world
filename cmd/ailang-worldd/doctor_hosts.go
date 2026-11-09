@@ -25,7 +25,7 @@ func doctorClass(name string) (string, int) {
 		return "session", 11
 	case "host":
 		return "host", 12
-	case "exec tools":
+	case "exec tools", "exec profiles":
 		return "exec", 13
 	default:
 		return "other", 1

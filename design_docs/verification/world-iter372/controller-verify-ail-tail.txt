@@ -1,0 +1,5 @@
+   ✓ compiler pinned by exact bytes: AILANG v0.41.0 on Darwin/arm64
+   ✓ canonical JSON equals committed golden byte-for-byte
+✓ world package gate PASSED: 9/9 steps performed non-zero work
+PUB011 ratchet passed: uncontracted_exports=3
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
