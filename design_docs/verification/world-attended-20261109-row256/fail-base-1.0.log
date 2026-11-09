@@ -1,0 +1,8 @@
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused
+=== RUN   TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy
+    exec_probe_net6_dial_test.go:185: TIMING ArchiveExecSandbox took 54.044208ms
+    exec_probe_net6_dial_test.go:186: ops ["connect 56856:6418535a0fb1bf467cb1bd92186b8f2c" "connect 56856:6418535a0fb1bf467cb1bd92186b8f2c" "connect 56856:6418535a0fb1bf467cb1bd92186b8f2c" "proxy 56856:6418535a0fb1bf467cb1bd92186b8f2c" "proxy 56856:6418535a0fb1bf467cb1bd92186b8f2c"] dials ["foreign:ok" "foreign:ok+foreign:ok" "" "foreign:ok" ""]
+    exec_probe_net6_dial_test.go:188: arm 6 refused on foreign dials alone: a raw connect to World's live listener: inconclusive after 3 attempts: every attempt's window held an accept that was not the child's (foreign 1, 2, 1)
+--- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused (1.82s)
+    --- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused/raw-twice-proxy (1.81s)
+FAIL

@@ -659,10 +659,14 @@ type HealthExecProfile struct {
 }
 
 // HealthExecExclusion is one left-out profile of --exec-profiles-dir.
+// OutOfTime (row 256) means every failed arm was recorded at or after the
+// startup deadline; startup timeout may have contributed. Review the failure
+// reasons and restart if appropriate. The profile remains excluded.
 type HealthExecExclusion struct {
-	Project string `json:"project"`
-	File    string `json:"file"`
-	Reason  string `json:"reason"`
+	Project   string `json:"project"`
+	File      string `json:"file"`
+	Reason    string `json:"reason"`
+	OutOfTime bool   `json:"out_of_time,omitempty"`
 }
 
 // resolveErrorLog turns Config.ErrorLog's optional nil into the concrete
@@ -687,9 +691,21 @@ func resolveErrorLog(w io.Writer) io.Writer {
 // misconfigured bind never disturbs a database another process is serving.
 // Every failure after store.Open closes the store, releasing the writer lock:
 // a refused startup must not strand writer authority.
-// ctx is threaded to bootstrap reads; it does not bound every startup operation.
-// Pass the caller's intended bootstrap-read ctx; this API supplies no default timeout.
+// ctx is threaded to the steps up to and including the exec startup probe;
+// it does not bound every startup operation, and this API supplies no default
+// timeout for them. The registry phase (the registry bootstrap, the template
+// report and the integrity sweep) runs under its own clock of
+// registryPhaseBudget, started from ctx when that phase starts (row 256).
 func New(ctx context.Context, cfg Config) (*Daemon, error) {
+	return newDaemon(ctx, ctx, registryPhaseBudget, cfg)
+}
+
+// newDaemon is New with the registry phase's clock started from phaseParent
+// rather than from ctx. Run passes serve's own context as phaseParent and,
+// as ctx, the startup clock it derived from it, so the registry phase never
+// inherits the startup deadline (row 256). This separates context allowances;
+// it does not establish the cause of a probe failure or bound ctx-free work.
+func newDaemon(ctx, phaseParent context.Context, registryBudget time.Duration, cfg Config) (*Daemon, error) {
 	_ = CurrentBuild()
 	if cfg.SurfaceIndex != "" && cfg.SurfaceFollow != "" {
 		return nil, &StartupError{Stage: StageConfig, Detail: "surface follow refused: --surface-follow and --surface-index are mutually exclusive; next: ailang-worldd serve --help"}
@@ -855,19 +871,25 @@ func New(ctx context.Context, cfg Config) (*Daemon, error) {
 		return nil, d.abort(StageConfig, "invocation deadline must be shorter than write timeout", nil)
 	}
 
+	// Row 256: the registry phase has its own clock, started now. Nothing
+	// before this line shares it. Its context allowance is bounded:
+	// registryBudget, under phaseParent.
+	regCtx, cancelReg := context.WithTimeout(phaseParent, registryBudget)
+	defer cancelReg()
+
 	// Idempotent by construction; a head naming different bytes is a genuine
 	// divergence and registry.Bootstrap returns an error for it. Surfacing that
 	// as a fatal StartupError is the point: a divergent registry head must never
 	// be silently accepted or rewritten.
-	if err := d.bootstrapRegistry(ctx, release); err != nil {
+	if err := d.bootstrapRegistry(regCtx, release); err != nil {
 		return nil, err
 	}
 
 	// Row 153 M3b: say, per descriptor, whether its compile-cache template is
 	// ready. A stat each, no build; the rebuild runs from Run after Listen.
-	d.reportTemplates(ctx)
+	d.reportTemplates(regCtx)
 
-	d.integrity = d.scanIntegrity(ctx)
+	d.integrity = d.scanIntegrity(regCtx)
 
 	// The A2A projection (w-a2a-session-projection) mounts two additive routes
 	// over the handles New already owns: the ONE resolver instance (F3), the
@@ -1279,9 +1301,31 @@ func startBounded(ctx context.Context, cfg Config, budget time.Duration, constru
 	return construct(startupCtx, cfg)
 }
 
+// serve's two startup clocks (row 256). startupBudget is HEAD's one 9 s
+// clock, unchanged; pre-registry context-aware work observes this deadline.
+// Context-free archives do not. registryPhaseBudget is a second, fresh clock for the registry
+// phase, the same 9 s: the registry bootstrap never gets less time than HEAD
+// gave it when nothing before it was slow. Both are bounded, and together
+// (18 s) account for ctx-aware work. The three archives and scheduling
+// have no established wall-time bound; the 30 s health wait can still expire.
+// They are vars only as test seams; TestServeStartupClocksArePinned pins
+// the production values.
+var (
+	startupBudget       = 9 * time.Second
+	registryPhaseBudget = 9 * time.Second
+)
+
+// startDaemon is Run's construction: pre-registry work receives the startup
+// context; the registry phase's clock starts from serve's own ctx.
+func startDaemon(ctx context.Context, cfg Config, startup, registry time.Duration) (*Daemon, error) {
+	return startBounded(ctx, cfg, startup, func(startupCtx context.Context, cfg Config) (*Daemon, error) {
+		return newDaemon(startupCtx, ctx, registry, cfg)
+	})
+}
+
 func Run(ctx context.Context, cfg Config, announce io.Writer) error {
 	_ = CurrentBuild() // Freeze executable bytes before any listener accepts.
-	d, err := startBounded(ctx, cfg, 9*time.Second, New)
+	d, err := startDaemon(ctx, cfg, startupBudget, registryPhaseBudget)
 	if err != nil {
 		return err
 	}
