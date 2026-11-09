@@ -732,3 +732,4 @@ Clause map: 1 MET · 2 MET · 3 MET · 4 UNMET (152 → 153 → 93) · 5 UNMET (
 
 ## STATUS 2026-11-07 — ITERATION 364: ADMIN record only; row 256 HUMAN PARK / PARKED needs-human-review, independent FAIL 85 and LOCAL_CRITERION UNMET; D-WORLD-105/110/111/112 remain OPEN; conditional attended 250 → 255 → 256 → 257 → 201 → 243, release150/151 priority only when routable; independent record review and PR/merge CI pending.
 
+## STATUS 2026-11-07 — ITERATION 365: ADMIN record only; row 256 PARKED needs-human-review, independent MiniMax FAIL 85, LOCAL_CRITERION UNMET, draft PR #515. D-WORLD-105/110/111/112 remain OPEN; D111 and D112 are independent human gates. No autonomous skip257/201/243 or product acceptance. Evidence: verification/world-iter365/; full log entry 365.

@@ -1,0 +1,18 @@
+2026-11-09T22:13:40.4222053Z   -run '^TestSSHSIGCrossCheckWithSSHKeygen$' >"$log" 2>&1 || rc=$?
+2026-11-09T22:13:40.4223812Z for t in TestSSHSIGCrossCheckWithSSHKeygen TestSSHSIGCrossCheckWithSSHKeygen/ed25519 TestSSHSIGCrossCheckWithSSHKeygen/ecdsa-p256; do
+2026-11-09T22:13:40.4354485Z OpenSSH_9.6p1 Ubuntu-3ubuntu13.20, OpenSSL 3.0.13 30 Jan 2024
+2026-11-09T22:13:45.7395878Z === RUN   TestSSHSIGCrossCheckWithSSHKeygen
+2026-11-09T22:13:45.7396421Z === RUN   TestSSHSIGCrossCheckWithSSHKeygen/ed25519
+2026-11-09T22:13:45.7399155Z     sshsig_crosscheck_test.go:144: ssh-keygen [-Y verify -f /tmp/TestSSHSIGCrossCheckWithSSHKeygened255192313994630/001/allowed -I xc1 -n world-approval@sunholo -s /tmp/TestSSHSIGCrossCheckWithSSHKeygened255192313994630/001/tampered-message.sig] exited 255: Signature verification failed: incorrect signature
+2026-11-09T22:13:45.7405052Z     sshsig_crosscheck_test.go:144: ssh-keygen [-Y verify -f /tmp/TestSSHSIGCrossCheckWithSSHKeygened255192313994630/001/allowed -I xc1 -n world-approval@sunholo -s /tmp/TestSSHSIGCrossCheckWithSSHKeygened255192313994630/001/git-namespace.sig] exited 255: Couldn't verify signature: namespace does not match
+2026-11-09T22:13:45.7409627Z     sshsig_crosscheck_test.go:144: ssh-keygen [-Y verify -f /tmp/TestSSHSIGCrossCheckWithSSHKeygened255192313994630/001/allowed -I xc1 -n world-approval@sunholo -s /tmp/TestSSHSIGCrossCheckWithSSHKeygened255192313994630/001/another-key.sig] exited 255: 
+2026-11-09T22:13:45.7414536Z     sshsig_crosscheck_test.go:144: ssh-keygen [-Y verify -f /tmp/TestSSHSIGCrossCheckWithSSHKeygened255192313994630/001/allowed -I xc1 -n world-approval@sunholo -s /tmp/TestSSHSIGCrossCheckWithSSHKeygened255192313994630/001/flipped-signature.sig] exited 255: Signature verification failed: incorrect signature
+2026-11-09T22:13:45.7417146Z === RUN   TestSSHSIGCrossCheckWithSSHKeygen/ecdsa-p256
+2026-11-09T22:13:45.7419294Z     sshsig_crosscheck_test.go:144: ssh-keygen [-Y verify -f /tmp/TestSSHSIGCrossCheckWithSSHKeygenecdsa-p2563858215109/001/allowed -I xc1 -n world-approval@sunholo -s /tmp/TestSSHSIGCrossCheckWithSSHKeygenecdsa-p2563858215109/001/tampered-message.sig] exited 255: Signature verification failed: incorrect signature
+2026-11-09T22:13:45.7421948Z     sshsig_crosscheck_test.go:144: ssh-keygen [-Y verify -f /tmp/TestSSHSIGCrossCheckWithSSHKeygenecdsa-p2563858215109/001/allowed -I xc1 -n world-approval@sunholo -s /tmp/TestSSHSIGCrossCheckWithSSHKeygenecdsa-p2563858215109/001/git-namespace.sig] exited 255: Couldn't verify signature: namespace does not match
+2026-11-09T22:13:45.7425040Z     sshsig_crosscheck_test.go:144: ssh-keygen [-Y verify -f /tmp/TestSSHSIGCrossCheckWithSSHKeygenecdsa-p2563858215109/001/allowed -I xc1 -n world-approval@sunholo -s /tmp/TestSSHSIGCrossCheckWithSSHKeygenecdsa-p2563858215109/001/another-key.sig] exited 255: 
+2026-11-09T22:13:45.7427553Z     sshsig_crosscheck_test.go:144: ssh-keygen [-Y verify -f /tmp/TestSSHSIGCrossCheckWithSSHKeygenecdsa-p2563858215109/001/allowed -I xc1 -n world-approval@sunholo -s /tmp/TestSSHSIGCrossCheckWithSSHKeygenecdsa-p2563858215109/001/flipped-signature.sig] exited 255: Signature verification failed: incorrect signature
+2026-11-09T22:13:45.7429064Z --- PASS: TestSSHSIGCrossCheckWithSSHKeygen (0.09s)
+2026-11-09T22:13:45.7429543Z     --- PASS: TestSSHSIGCrossCheckWithSSHKeygen/ed25519 (0.05s)
+2026-11-09T22:13:45.7430056Z     --- PASS: TestSSHSIGCrossCheckWithSSHKeygen/ecdsa-p256 (0.04s)
+source: run 42709886967 (pull_request, head 9c8f8744), job 'go host build + test gate', step 'Row 201 SSHSIG cross-check with real ssh-keygen, verbose' = success
