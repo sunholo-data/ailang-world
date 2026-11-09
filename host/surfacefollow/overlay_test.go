@@ -193,11 +193,36 @@ func TestOverlayFinishBeforeRevokeAndFailureOutcomes(t *testing.T) {
 		o.Episodes[0].Label != "PR open" {
 		t.Fatalf("live finish: %+v", o.Episodes)
 	}
-	// Revoke removes the credential: still PR open, and kept past seven days.
-	st.LastExpiry = overlayNow.Add(-30 * 24 * time.Hour).Unix()
-	o = build(t, parts, facts(nil, []StartFact{st}, map[string]FinishFact{"w1": done}), false)
+	// Revoke removes the credential: still PR open, and kept past seven days
+	// while the episode started inside the repo's merge window.
+	floor := time.Time{}
+	for _, s := range parts[0].Index.States {
+		if at, err := time.Parse(time.RFC3339, s.At); err == nil && (floor.IsZero() || at.Before(floor)) {
+			floor = at
+		}
+	}
+	if floor.IsZero() {
+		t.Fatal("fixture has no merge times")
+	}
+	old := startFact("w1", "world")
+	old.LastExpiry = overlayNow.Add(-30 * 24 * time.Hour).Unix()
+	old.StartedAt = floor.Format(time.RFC3339)
+	o = build(t, parts, facts(nil, []StartFact{old}, map[string]FinishFact{"w1": done}), false)
 	if len(o.Episodes) != 1 || o.Episodes[0].State != surface.OpenPR || o.Episodes[0].SessionLive {
-		t.Fatalf("revoked finish: %+v", o.Episodes)
+		t.Fatalf("revoked finish inside the window: %+v", o.Episodes)
+	}
+	// Started before the window: its merge or close could be unseen, so it
+	// is not claimed as PR open past seven days.
+	old.StartedAt = floor.Add(-time.Second).Format(time.RFC3339)
+	o = build(t, parts, facts(nil, []StartFact{old}, map[string]FinishFact{"w1": done}), false)
+	if len(o.Episodes) != 0 || len(o.Aliases) != 0 {
+		t.Fatalf("PR open outside the window kept forever: %+v", o.Episodes)
+	}
+	// Within seven days it is still shown, window or not.
+	old.LastExpiry = overlayNow.Add(-time.Hour).Unix()
+	o = build(t, parts, facts(nil, []StartFact{old}, map[string]FinishFact{"w1": done}), false)
+	if len(o.Episodes) != 1 || o.Episodes[0].State != surface.OpenPR {
+		t.Fatalf("recent PR open outside the window: %+v", o.Episodes)
 	}
 	for outcome, want := range map[string]string{"push-failed": surface.OpenPushFailed, "pr-failed": surface.OpenPRFailed,
 		"ambiguous": surface.OpenAmbiguous, "invented": surface.OpenAmbiguous, "done-without-pr": surface.OpenAmbiguous} {

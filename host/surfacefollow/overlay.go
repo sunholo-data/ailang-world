@@ -16,8 +16,9 @@ import (
 // publication.
 
 const (
-	// RetainEnded keeps a state whose session ended without a PR for seven
-	// days after its last expiry or observed end.
+	// RetainEnded keeps a state whose session ended for seven days after
+	// its last expiry or observed end. A PR-open state is kept longer only
+	// while it started inside its repo's merge window (BuildOverlay).
 	RetainEnded = 7 * 24 * time.Hour
 	// Read bounds for one reconcile. Reaching one marks the overlay
 	// incomplete with an unknown remainder; nothing is silently dropped.
@@ -144,9 +145,17 @@ func BuildOverlay(parts []surface.FollowPartition, facts *EpisodeFacts, failed b
 
 	states := map[string]map[string]surface.State{}
 	steps := map[string][]surface.State{}
+	// floor is each repo's oldest retained merge time: a PR-open episode
+	// started before it could have merged outside the window unseen.
+	floor := map[string]time.Time{}
 	for _, p := range parts {
 		m := map[string]surface.State{}
 		for _, s := range p.Index.States {
+			if t, err := time.Parse(time.RFC3339, s.At); err == nil {
+				if f, ok := floor[p.ID]; !ok || t.Before(f) {
+					floor[p.ID] = t
+				}
+			}
 			m[s.ID] = s
 			if s.Kind == surface.KindStep {
 				steps[p.ID] = append(steps[p.ID], s)
@@ -203,7 +212,14 @@ func BuildOverlay(parts []surface.FollowPartition, facts *EpisodeFacts, failed b
 		}
 		finish, finished := facts.Finishes[ep]
 		prOpen := finished && finish.Outcome == "done" && finish.PR > 0
-		retained := live[ep] || prOpen || now.Sub(end) <= RetainEnded
+		// PR open outlives RetainEnded only while its merge would still be
+		// visible: the episode started inside its repo's merge window.
+		// Otherwise a merge or close outside the window would leave it
+		// "PR open" forever.
+		started, startErr := time.Parse(time.RFC3339, start.StartedAt)
+		f, hasFloor := floor[start.RepoID]
+		inWindow := startErr == nil && hasFloor && !started.Before(f)
+		retained := live[ep] || (prOpen && inWindow) || now.Sub(end) <= RetainEnded
 		if !retained {
 			continue
 		}
