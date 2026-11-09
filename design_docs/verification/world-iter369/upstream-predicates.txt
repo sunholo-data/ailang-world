@@ -1,0 +1,9 @@
+charter ailang#N distinct: 25
+union distinct: 58
+closed: 58
+open: none
+control closed-885: closed (expect closed)
+control open-list (expect >=1, proves the enumeration sees OPEN issues):
+2157
+2156
+2154

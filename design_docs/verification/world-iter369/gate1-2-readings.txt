@@ -1,0 +1,42 @@
+World iteration 369 — Gate 1–2 readings (controller: pi:ollama/glm-5.3:cloud, fire world-1794185342-94773)
+
+GATE 0 (preflight)
+- Kill switch: armed (no mission-world.disabled)
+- gh account: sunholo-voight-kampff (required account)
+- Billing tripwire: CLEAN (no ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN in env)
+- Working tree (main checkout): dev @ 61a8d1c4, only untracked residue (.claude/worktrees/, .wt-world-iter306-r0/)
+- Directives: mission_directives.sh (driver pin copy) → 0 allowlisted on #449 (44 comments; watermark mission-449-last-seen ABSENT → all read)
+  and 0 on #366 since 2026-10-27T09:03:42Z (35 comments). Both World watermarks agree (mission-world-last-seen = mission-366-last-seen = 2026-10-27T09:03:42Z). Nothing to --mark.
+- Self-notices (mission_gate0_self_notices.sh): rc=0. 0 crash notices (control 107:4 ok). transcript=2 — the two old notices of fires
+  world-1793825318-10110 and world-1793839743-21731, adjudicated at iterations 348/349 (live attended transcript; occurrences predate the scan window;
+  fleet-ticket disposition). Post-fire driver-log scans read verdict=clean for every fire since.
+- Weekly sweep + thread rotation: NOT due — fire at 2026-11-09 01:51 local is before the Monday 07:00 boundary.
+
+GATE 1 (observe)
+- Sync: local dev 61a8d1c4 = 34 BEHIND origin/dev ad13d835 (origin is ground truth; mission state read from the newest record branch
+  mission/world-iter368-record = open PR #522, stacked on human-parked PR #521)
+- Gate-1 base (mission-base.sh record gate1): ad13d835345efc2b78308817cc940f73a987165d@2026-11-09T00:51:20Z
+- Skill drift: per-file cmp of SKILL.md + 13 resources at the resolved symlink target vs driver origin/dev 252680e1 (fetched first): 0 of 14 drifted.
+  Negative control fired (the cmp detects a difference when fed one). Rules read from the resolved target.
+- Dev CI: commits/ad13d835/check-runs → checks=3, all success (no NOT-GREEN); workflow CI on dev: success @ ad13d835
+- Open PRs (own account): #522 (iter 368 record), #521 (iter 367 record), #515 (row 256 sprint) — all accounted parks; no orphan
+- Died-mid-flight traces: the four 2026-11-08 fires PAUSED before spawning a controller (driver: "not burning the slot on a doomed run"); no new
+  worktree/branch/commit from them. .wt-world-iter306-r0 = known historical residue. Orphan 361 remains credited by 362.
+
+GATE 2 (pick + reality-check)
+- mission_decisions.sh --check (newest-branch charter): valid, 100 rows, 5 OPEN on the branch (D-WORLD-105/110/111/112/113);
+  origin/dev copy: 99 rows, 4 OPEN (per driver idle snapshot: ledger=99 open=4)
+- Clause map at ad13d835: clauses 1–7 MET. Re-verified first-party: clause 4 = attended D-WORLD-77 (row 93 LANDED, 2026-10-15 floor FINAL HOLDS);
+  clause 5 = attended D-WORLD-80 (row 114 LANDED) — both citations from the archive log, quoted in the log entry.
+- Queue head row 256: PARKED needs-human-review re-measured — PR #515 OPEN/draft, untouched since 2026-11-07; D-WORLD-111 default A + D-WORLD-112
+  default (no autonomous credential change) both OPEN → not routable
+- Release predicates: git log origin/dev --since=2026-11-01 N2d|N4a → 0 (control N2c|record|iteration → 375); rows 150/151 not loop-routable
+- Upstream predicates: union 58 distinct (25 charter ailang#N refs + 33 prior), 58/58 closed. Controls: known-closed #885 → closed;
+  open-issue enumeration → 2157/2156/2154 visible (the check can see OPEN issues). Evidence: upstream-predicates.{sh,txt}
+- VERDICT: no routable critical-path row (all 7 clauses MET; every open row human-parked) → standing rule (d): pick NOTHING, block report.
+
+GATE 3 (routing) — this fire, degraded end to end
+- Controller: pi:ollama/glm-5.3:cloud (Anthropic rungs quota-limited rc=1; codex bucket over ration; glm-5.3 fallback rung — the 4 prior fires PAUSED on its bucket)
+- Resolved lanes: designer pi:ollama/glm-5.3:cloud, planner pi:ollama/kimi-k3:cloud, executor pi:ollama/deepseek-v4.1-flash:cloud, evaluator pi:openrouter/minimax/minimax-m3
+- Designer/planner/executor: NOT spawned (no pick; precedent 257–264, 317, 319–368). No spawn attempted, none failed.
+- Evaluator (record judge): REQUIRED and run — pi:openrouter/minimax/minimax-m3, generator≠judge vs the glm-5.3 controller. See evaluator-report.md.

@@ -1037,11 +1037,11 @@ watermark. Never infer resolution from related code landing.
 
 ## STATUS (rotation rule)
 
+## STATUS 2026-11-09 — ITERATION 369: rule (d) ADMIN block record; no autonomous pick. Row 256 remains PARKED needs-human-review (draft PR #515 OPEN, independent MiniMax FAIL 85, LOCAL_CRITERION UNMET) behind OPEN D-WORLD-111 (default A) and D-WORLD-112 (no autonomous credential change); rows 257/201/243 stay sequenced behind 256 with no autonomous skip. ADMIN367/368 records remain PARKED/unmerged (PRs #521/#522) behind OPEN D-WORLD-113 (default: keep the chain unmerged). Release rows 150/151 are not loop-routable (attended A1; row 188 N2d/N4a re-measured 0 since 2026-11-01). Upstream predicates 58/58 closed (controls fired). Dev green at ad13d835 (3/3). First live controller after four PAUSED lane fires; every role ran on a degraded pi lane; generator != judge held (glm-5.3 controller, minimax-m3 record judge). Evidence: verification/world-iter369/; full log369.
+
 ## STATUS 2026-11-08 — ITERATION 368: ADMIN block record PARKED/unmerged; D-WORLD-113 OPEN, no option selected. ADMIN367 remains PARKED needs-human-review, unmerged PR521 despite PASS97/97/95; missing successfully executed final after-input-rehash proof remains unmet. PRODUCT256 remains PARKED FAIL85, LOCAL_CRITERION UNMET, draft PR515. D105/110/111/112 OPEN defaults C/A/A/no autonomous credential changes. Independent368 MiniMax PASS100 round3; narrow parent gates rc0, review limitations recorded. Draft PR522 stacked/unmerged; final-head CI/delivery not discharged, no merge or product acceptance. Evidence: verification/world-iter368/; full log368.
 
 ## STATUS 2026-11-08 — ITERATION 367: ADMIN record PARKED unmerged needs-human-review; three independent model PASS verdicts do not discharge missing executed G6 after-rehash proof. No fourth judge call or ADMIN LANDED. Row256 remains PARKED, historical FAIL85, LOCAL_CRITERION UNMET; PR515 untouched. Canonical99-row ledger and four OPEN105/110/111/112 unchanged. Proposed attended request ADMIN367 in verification/world-iter367/controller-park.json; full log367.
-
-## STATUS 2026-11-07 — ITERATION 366: ADMIN record only; row 256 PARKED needs-human-review, independent MiniMax FAIL 85, LOCAL_CRITERION UNMET, draft PR #515. D-WORLD-105/110/111/112 remain OPEN; D111 and D112 are independent human gates. Independent record review and PR/merge CI/delivery pending. Evidence: verification/world-iter366/; full log entry 366.
 
 ## CURRENT GOAL
 
@@ -1062,7 +1062,7 @@ watermark. Never infer resolution from related code landing.
    doc → `implemented/`), and 4e's OD-1/OD-2 were ratified in the attended TRIPLE RATIFICATION 2.
    **Next items: `4e w-race-gate-blindspot` (RG.A / CF-K-1) and `4f w-bench-load-confound`
    (branch A) — both routable, neither blocked on Mark.**
-    When this line and the Queue disagree, the Queue governs; the Human Decision Ledger governs current authority. Current route (iteration 368): ADMIN record only. Row 256 remains PARKED needs-human-review, draft PR #515, independent FAIL 85 and LOCAL_CRITERION UNMET. D-WORLD-111 default A retains the exact-two-failures contract; no full reruns or source/gate changes. D-WORLD-112 stays OPEN with no autonomous credential changes; sanitization does not undo exposure. No automatic skip to 257, 201 or 243. The attended order 250 → 255 → 256 → 257 → 201 → 243 remains conditional on both parks being explicitly cleared; release rows 150/151 retain priority when routable. D-WORLD-105 and D-WORLD-110 remain OPEN with their existing defaults. History is in the log and status archive.
+    When this line and the Queue disagree, the Queue governs; the Human Decision Ledger governs current authority. Current route (iteration 369): ADMIN record only; nothing loop-routable moved this fire. Row 256 remains PARKED needs-human-review, draft PR #515, independent FAIL 85 and LOCAL_CRITERION UNMET. D-WORLD-111 default A retains the exact-two-failures contract; no full reruns or source/gate changes. D-WORLD-112 stays OPEN with no autonomous credential changes; sanitization does not undo exposure. No automatic skip to 257, 201 or 243. The attended order 250 → 255 → 256 → 257 → 201 → 243 remains conditional on both parks being explicitly cleared; release rows 150/151 retain priority when routable. D-WORLD-105 and D-WORLD-110 remain OPEN with their existing defaults. History is in the log and status archive.
 
 ## The bar — what "Ailang World 1.0" must meet (RATIFIED by Mark 2026-07-23, attended — see STATUS + issue #1 record)
 

@@ -1560,3 +1560,59 @@ lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (pro
 **Final delivery projection**: iteration chain `2a15d261-54f1-4996-946a-6fd66fd74eb0` posted local+GCP,9 truthful stages, metered$0.99931212/provider12119952 tok/known quota321250. Independent R1/R2 review acceptance-withheld stages failed; final R3 completed; record_delivery awaiting_approval. Decision-spine message `inbox_1794117033099_d0ef5f9b` exact body/title read back with peek; no human ruling. Final narrow charter and routing checks rc0; corrected canonical-only STATUS count3. Initial parent counter mistakenly included the rotation-rule header; failed observation and corrected check retained in controller-post-review-checks.json. Both required final digest reports are the next delivery step; no unattended merge or idle promotion.
 
 **Progress**: 1.0: clauses1–7 MET (inherited assessment); goal unmoved; harness0/20.
+
+## 369 — 2026-11-09 — no pick: rule (d) ADMIN block record; row 256 and the 367/368 record chain remain human-parked; first live controller after four PAUSED lane fires; dev green at ad13d835 [ADMIN]
+
+**Kind:** bookkeeping-only iteration under standing rule (d) (D-WORLD-46). No design, no plan, no product code, no merge: the record chain stays PARKED/unmerged behind D-WORLD-113, exactly as iteration 368's Next line requires ("no autonomous next pick"). The deliverable is this record — STATUS stamp 366 rotated to the archive, CURRENT GOAL route line, dashboard, this entry, the regenerated index, and `verification/world-iter369/` readings — plus an independent record judge before any merge that a future ruling unblocks.
+
+**Pick and why:** none.
+- **Clause map at `ad13d835`:** clauses 1–7 MET. Re-verified first-party this fire rather than inherited blind: clause 4 = attended D-WORLD-77 (row 93 LANDED, 2026-10-15 floor FINAL HOLDS, Δ 0 both agents, 414/414 graded cells); clause 5 = attended D-WORLD-80 (row 114 LANDED); clauses 1/2/3/6/7 ratified as previously recorded (archive-log citations in the verification readings). No UNMET clause → no critical-path row → rule (d) applies.
+- **Queue head (row 256, `w-daemon-startup-under-load`) re-measured:** PARKED needs-human-review — draft PR #515 OPEN and untouched since 2026-11-07; independent MiniMax FAIL 85 and LOCAL_CRITERION UNMET stand; D-WORLD-111 (default A: exact-two-baseline-failures contract) and D-WORLD-112 (default: no autonomous credential change; product work stays parked) are both OPEN. **One action that unblocks:** Mark answers D-WORLD-111 and D-WORLD-112.
+- **Rows 257, 201, 243:** sequenced behind 256 in the attended D-WORLD-108 order; no autonomous skip.
+- **ADMIN367/368 records (PRs #521/#522):** remain PARKED/unmerged behind D-WORLD-113 (A: attended evidence/hook repair then fresh independent review; B: abandon unmerged ADMIN367, retain canonical 366; default: keep the chain unmerged). This iteration's record stacks on `mission/world-iter368-record` and shares that park. **One action:** Mark answers D-WORLD-113.
+- **Release rows 150/151:** 150 waits on the attended A1 publish window; 151 waits on row 188's N2d/N4a — re-measured `git log origin/dev --since=2026-11-01` → 0 N2d/N4a subjects (control: N2c/record/iteration patterns → 375). Not loop-routable.
+- **Row 233:** PARKED on D-WORLD-105 (default C). **Row 255 compatibility policy:** D-WORLD-110 OPEN (default A: as built) — a ratification ask, not a blocker.
+- **What moved since iteration 368:** nothing. Four fires (2026-11-08 08:52–20:50) PAUSED before spawning a controller ("every controller rung is unusable or its bucket is spent" — issue #449 comments 41–44); no orphaned work exists from them. No new directive, regression or lane event changed the pick.
+
+**Gate 0:**
+- Kill switch armed (`mission-world.disabled` absent). gh `sunholo-voight-kampff`. Billing tripwire CLEAN.
+- Directives: 0 allowlisted on #449 (44 comments, all self; watermark `mission-449-last-seen` absent → every allowlisted comment read) and 0 on #366 since `2026-10-27T09:03:42Z` (35 comments). Both of World's watermark files agree this fire (`mission-world-last-seen` = `mission-366-last-seen` = `2026-10-27T09:03:42Z`), so no window was missed. Nothing to `--mark`.
+- Self-notices (`mission_gate0_self_notices.sh`): rc 0 — **0 crash notices** (control 107:4 ok). `transcript=2`: the two old notices of fires `world-1793825318-10110` and `world-1793839743-21731`, already adjudicated at iterations 348/349 (live attended transcript; occurrences predate the scan window; fleet-ticket disposition) — no third row, and the post-fire scans in the driver log read `verdict=clean` for every fire since.
+- Unread inbox: 922 unread, dominated by `controlplane` eval-suite events (100% pass runs and two partial runs); one `pkg:sunholo/billing_store` upgrade-available notice. Nothing addressed to World, nothing `github-untrusted:`, no `mission-fleet` reply, no human directive.
+- Weekly external-issue sweep and thread rotation: NOT due — this fire ran at 01:51 local, before the Monday 2026-11-09 07:00 boundary; the first fire after it owes both.
+
+**Gate 1:**
+- Local `dev` was **34 commits behind** `origin/dev` (`61a8d1c4` vs `ad13d835`), so all mission state was read from origin: the newest record lives on `mission/world-iter368-record` (open PR #522, stacked on human-parked PR #521) and the charter/log/ledger/Next were read from that branch. Gate-1 base `ad13d835345efc2b78308817cc940f73a987165d@2026-11-09T00:51:20Z`.
+- Skill drift: per-file `cmp` of `SKILL.md` and the 13 `resources/*.md` files at the resolved symlink target against the freshly fetched driver clone's `origin/dev` (`252680e1`): **0 of 14 drifted**; the negative control fired (the same cmp detects a difference when fed one). Rules were read from the resolved target.
+- Dev CI: `commits/ad13d835/check-runs` → 3, all success; workflow `CI` on dev reads success at `ad13d835`.
+- Open PRs authored by this account: #522 (iter 368 record), #521 (iter 367 record), #515 (row 256 sprint) — all accounted parks, none an orphan. Died-mid-flight traces: no new worktree or branch from the PAUSED fires (they never started); `.wt-world-iter306-r0` remains the known historical residue; orphan 361 remains credited by 362.
+
+**Gate 2:** as the pick section above. `mission_decisions.sh --check` (run against the newest branch's charter): valid, **100 rows, 5 OPEN on this branch** (D-WORLD-105/110/111/112/113; origin/dev's copy is 99 rows / 4 OPEN — D-113 is the 368 record's own ask, unmerged with it). Upstream predicates re-read this fire: **58/58 closed** (union of the 25 distinct `ailang#N` references in the current charter and the 33 prior predicates; controls: known-closed 885 read closed; the open-issue enumeration control returned 3 live issues, proving "all closed" is a measurement). Evidence: `verification/world-iter369/upstream-predicates.{sh,json}`.
+
+**Routing / lanes (this fire was degraded end to end):**
+- Controller: `pi:ollama/glm-5.3:cloud` — the Anthropic rungs probed quota-limited (rc 1) and the codex bucket is over ration, so the driver walked the fallback chain; the four previous fires PAUSED when this rung hit its runtime bucket, and this fire is the first since iteration 368 to run at all.
+- Resolved role lanes (driver env): designer `pi:ollama/glm-5.3:cloud`, planner `pi:ollama/kimi-k3:cloud`, executor `pi:ollama/deepseek-v4.1-flash:cloud`, evaluator `pi:openrouter/minimax/minimax-m3` (`MISSION_ROUTING_NOTE` verbatim carries every handoff).
+- **Designer / planner / executor: not spawned.** There is no pick, so the routing table has nothing to send them (precedent 257–264, 317, 319–368). No spawn was attempted, so none failed. The operator's standing request for Agent-tool roles is honoured through the evaluator, below.
+
+**Independent evaluator (record): REQUIRED — and run.** Generator ≠ judge held: the record's author is this `pi:ollama/glm-5.3:cloud` controller; the judge is `pi:openrouter/minimax/minimax-m3`, a different model on a different provider. It runs through `scripts/mission_pi_run.sh` (driver checkout copy) in a fresh, fenced, read-only-scope context against an isolated `git archive` copy of the record commit, with the PI EVALUATOR SESSION HANDSHAKE preamble (CLAUDE.md read → unattended-stage classification → `session_protocol_ack` → judge work). Verdict and findings: see the **Record judge** section below and `verification/world-iter369/evaluator-report.md`.
+
+**Routing evidence:** base=`ad13d835345efc2b78308817cc940f73a987165d@2026-11-09T00:56:12Z` (Gate 4 `mission-base.sh record gate4`, origin/dev re-confirmed unchanged from Gate 1's read).
+- Controller: `pi:ollama/glm-5.3:cloud` (tok: not reported by the harness).
+- Designer, planner, executor: unused (no pick; lanes resolved as above).
+- Evaluator (record judge): `pi:openrouter/minimax/minimax-m3` — tokens and metered cost in the Record judge section and the iteration chain.
+- Quorum: none owed (bookkeeping-only pick).
+- Metered ledger: the judge call is the only metered spend; ceiling checked before the call.
+
+**Ruled out:**
+- Any product or release work without authority (rule (d)); skipping row 256; merging or repairing the parked 367/368 chain; a fourth judge call on 367 (D-113 default forbids it).
+- Treating the four PAUSED fires as died iterations: they exited before any controller ran, leaving no orphan traces.
+- Treating `transcript=2` as new exposure: steady adjudicated value; post-fire scans clean.
+- Re-running row 256's suites (D-111 default A forbids full reruns); any credential action (D-112 default).
+- Idle fingerprint: NOT recorded — this fire degraded (controller fallback rung; all role lanes handed off), and the idle-record rule bars recording a degraded fire.
+
+**Retro:**
+1. The controller lane was dark for ~16 hours (four fires PAUSED on the glm-5.3 runtime bucket) while five human asks sat in the ledger; nothing about that is actionable inside the loop, but the pattern — one usable rung, its bucket refilling daily — is now the fleet's pacing constraint on World's already-human-parked frontier. Surfaced in the report; no skill/process edit owed by World.
+2. Local `dev` fell 34 behind while the record chain lives on stacked unmerged PRs. This is the documented blocked-PR chain shape (fleet iteration 39's rule): each fire must re-derive ground truth from the newest open record PR. Worked as designed this fire; noting it because the chain will keep growing until D-113 is answered.
+3. No new friction in gates 0–4 this fire: every predicate, control and assertion fired as prescribed (the first such fire in a while — worth saying because the recent records were built from recurring instrument frictions).
+
+**Next:** unchanged — row 256 under D-WORLD-111/112, the 367/368 chain under D-113, release rows 150/151 on attended steps. The first fire after Monday 2026-11-09 07:00 local owes the weekly external-issue sweep and the bookkeeping-thread rotation. #449 should read 45 at the next Gate 0 (this report is the 45th comment; the record chain posts none while parked), with `transcript=2` unless the driver posts a new notice. The upstream predicate union count is 58 as of this charter vintage.

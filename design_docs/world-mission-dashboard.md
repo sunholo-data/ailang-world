@@ -1,31 +1,25 @@
-# World mission dashboard — iteration 368 (2026-11-08)
+# World mission dashboard — iteration 369 (2026-11-09)
 
-- **ADMIN368**: PARKED/unmerged draft PR522 stacked on521; independent MiniMax PASS100 round3, parent narrow gates rc0; no merge/product acceptance.
-- **PRODUCT256**: PARKED needs-human-review, historical MiniMax FAIL85, LOCAL_CRITERION UNMET, draft PR515.
-- **ADMIN367**: separately human-PARKED/unmerged PR521 despite PASS97/97/95; missing successfully executed final after-input-rehash proof remains unmet.
-- **D113 OPEN**: A recommended attended evidence/hook repair then fresh review; B abandon367/retain canonical366. No option selected; default keeps367 and stacked records unmerged.
-- **Prior OPEN defaults**: D105=C (233 parked/fail closed); D110=A (255 as built); D111=A; D112=no autonomous credential changes.
-- **D111 exact two inherited failures**: TestCheckSourceUnderPinnedInterpreter; TestTransitionsVerbRefusesImportBearingSourceUnderPinnedInterpreter. Additional failures block.
-- **D112 independent**: sanitization neither resolves incident nor undoes exposure. Publish-counter/net6 attribution unestablished; no recurrence finding.
-- **Route**:250 →255 →256 →257 →201 →243 conditional; no skip256. Release150/151 regain priority only when routable.
-- **Inherited waits**: attended A1/188 N2d/N4a; no real enrollment, release operation or product validation here. Last landed366 is controller-reported.
-- **Controller-reported**: Gate0 armed, correct gh account, CLEAN billing, zero449 directives, inbox null, devCI3/3 GREEN; no executor network verification.
-- **Receipts**:0 fresh A1/N2d/N4a subjects,4 historical N2c controls,33 closed upstream predicates; none clears parks. Inherited self-notice watermarks1/2 degraded.
-- **Provenance**: original UNPARSED observations intact; separate corrected receipt gives D108/109 attended, D111/112 never-resolved.
-- **Actual roles**: all4 Agent supervisors completed prescribed providers: designer/planner/executor codex:gpt-6.1-sol; independent evaluator pi:openrouter/minimax/minimax-m3.
-- **Attributed routing**: designer opus quota failure→Codex; preferred evaluator sonnet quota failure→pi:openrouter/minimax/minimax-m3; no verdict inferred.
-- **Designer quota correction**:128330=probe11039+cumulative117291; initial103321 included, resume delta13970. Original wrong231651 retained; designer-usage-accounting.json governs.
-- **Planner quota**:90482=probe10800+actual79682 from native events, no literal --json footer; planner-usage-accounting.json governs.
-- **Executor completed**:102438 quota tok; generators321250 quota. Evaluator12119952 cache-inclusive provider tok; controller/Agent-supervisor usage not reported.
-- **Separate cache-inclusive totals**: designer1484746; planner783474; executor1386790. No invented pending-role total.
-- **Record preservation**:99 prior ledger rows exact +1 OPEN113; Queue-through-EOF exact; exact365 pair archived once,367/366 pairs retained. Initial plan/state passes:null immutable.
-- **Logs/index**:20→21 live, no rotation; log archive unchanged. Confined fleet index-only; prior354 numbered+1 attended, orphan361 and notes preserved.
-- **Evidence**: four small executor receipts; input hashes separate from output BEFORE hashes. One cumulative .snap/M1 of all9 outputs, manifest excludes itself; parent owns reconstruction/commits.
-- **Boundary**: no tests/source checks, Git writes, subagents/model calls, network/messages, credential/environment-value reads, source/test/harness/policy/shared-skill changes.
-- **Retro**: corrected authority0/20 harness; actual last3 product landings360/359/340 movednone;0 routableUNMET. No metered quorum under ADMIN exception.
-- **Progress**: 1.0: clauses1–7 MET (inherited assessment); goal unmoved.
-- **Next**: attended D113 A evidence/hook repair+fresh review or B abandon367/retain366; default keeps367+stack unmerged. Final-head CI/delivery separate; no autonomous next pick.
-- **Final independent review**: R3 PASS100; R1/R2 actual PASS100 withheld for unsupported claims/gaps. Full6056 filesystem exact; R2 executed6573/20/31 checks.
-- **Review flags**:7 unauthorized round2 local helpers excluded; original archive-prefix prose typo and R1 missingEOFnewline preserved/disclosed; no fourth call.
-- **Metered**:$0.99931212 including probe+3 reviews (<$5). Original R2 estimate0.25 exceeded, revised0.50/actual0.45718326 retained.
-- **Current evidence**: final factual annotations supersede earlier pending dashboard lines; original M1/plan/role artifacts remain immutable.
+- **Where we are**: World 1.0 clauses 1–7 all MET (ratified). The remaining work is the release
+  path and the D-WORLD-108 finish route — every open row is human-parked, so the loop records
+  rule (d) ADMIN block reports and waits.
+- **Row 256** (`w-daemon-startup-under-load`, route head): implemented but PARKED
+  needs-human-review — draft PR #515 OPEN, independent MiniMax FAIL 85, LOCAL_CRITERION UNMET.
+  Waits on D-WORLD-111 (validation contract, default A) and D-WORLD-112 (credential incident).
+- **ADMIN367/368 records**: PARKED/unmerged (PRs #521/#522) behind D-WORLD-113 — A: attended
+  evidence/hook repair then fresh review; B: abandon 367, retain canonical 366. Iteration 369's
+  record (PR #523) stacks on the same chain and stays unmerged with it.
+- **Other OPEN defaults**: D-WORLD-105 = C (row 233 parked, fail closed); D-WORLD-110 = A
+  (row 255 as built); D-WORLD-111 = A; D-WORLD-112 = no autonomous credential change.
+- **Release rows**: 150 waits on the attended A1 publish window; 151 waits on row 188's
+  N2d/N4a (re-measured 0 commits since 2026-11-01). Not loop-routable.
+- **Route** (attended, D-WORLD-108): 250 LANDED → 255 LANDED → **256 PARKED** → 257 → 201 → 243;
+  no autonomous skip. Rows 150/151 regain priority only when routable.
+- **This fire**: first live controller after four PAUSED lane fires (2026-11-08); every role on
+  a degraded pi lane. Controller `pi:ollama/glm-5.3:cloud`; record judge
+  `pi:openrouter/minimax/minimax-m3` (generator ≠ judge). Upstream predicates 58/58 closed.
+- **Health**: dev CI 3/3 green at `ad13d835`; skill drift 0/14 (control fired); kill switch
+  armed; billing CLEAN; 0 directives from Mark on #449 (44 comments) and #366 (35).
+- **Next**: the first fire after Monday 2026-11-09 07:00 local owes the weekly external-issue
+  sweep and the bookkeeping-thread rotation; #449 should read 45 comments at its Gate 0.
+- **Full record**: charter STATUS + `design_docs/world-mission-log.md` entry 369.
