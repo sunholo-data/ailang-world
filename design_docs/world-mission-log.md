@@ -1656,10 +1656,27 @@ lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (pro
 - Idle fingerprint: NOT recorded. This fire degraded (controller fallback, plus planner and executor handoffs), and the IDLE RECORD rule bars recording a degraded fire. That pattern is now ticketed (retro 1).
 
 **Retro:**
-1. **The idle fingerprint has not engaged in nine consecutive human-gated fires.** The IDLE RECORD rule (shared gate-5) refuses to record when a fire degraded. Every live World fire in this stretch has degraded, so iterations 362–370 each paid for a full record, judge and CI on a pick that only a human can unblock. Instances: log 366, log 369 and this fire. This is a harness defect, outside World's authority (Gate-2 admissibility). It is filed as fleet ticket `skill:idle-record-barred-on-degraded-no-pick-fire` (`inbox_1794214519507_101f1b6e`, blocking none) and recorded as queue row 259. World does not edit the shared skill.
+1. **The idle fingerprint has not engaged in eight consecutive human-gated fires (363–370).** The IDLE RECORD rule (shared gate-5) refuses to record when a fire degraded. Every live World fire in this stretch has degraded, so iterations 363–370 each paid for a full record, judge and CI on a pick that only a human can unblock (362 was a product build, row 256, parked afterwards). Instances: log 366, log 369 and this fire. This is a harness defect, outside World's authority (Gate-2 admissibility). It is filed as fleet ticket `skill:idle-record-barred-on-degraded-no-pick-fire` (`inbox_1794214519507_101f1b6e`, blocking none) and recorded as queue row 259. World does not edit the shared skill.
 2. **Harness share (2b):** 0 of the last 20 index rows are tagged `[HARNESS]`; 8 are `[ADMIN]` and the rest are untagged or PRODUCT. Row 259 is an escalation, not loop-built harness work.
 3. **Drift alarm (2c):** the last three landings (360, 359, 340) moved no UNMET clause, but no routable UNMET-clause row exists, because every clause is MET. So there is no DRIFT line. The loop's remaining frontier is human-gated, and the report says so in one line.
 
 **Progress**: 1.0: clauses 1–7 MET; goal unmoved.
 
 **Next:** unchanged. Row 256 waits on D-WORLD-111/112 and the 367–370 chain on D-WORLD-113. Release rows 150/151 wait on attended steps. The next Gate 0 reads directives on **#524** (new, 1 comment plus this report) and on **#449** (predecessor, closed, 47 comments), per the rotation-week catch. `transcript=2` holds unless the driver posts a new notice. The upstream predicate union stays at 58.
+
+**Record judge (independent evaluator, on record commit `fdf06336`):** **PASS 96/100, zero blocking** (`sonnet` via the Agent tool, fresh foreground context, read-only, isolated `git archive` copy; 38,250 subagent tokens, 5 tool calls, 67 s). Scores: charter integrity 25/25, archive move 10/10, log/index/dashboard 15/15, facts 33/35, compliance 13/15. It re-derived these itself:
+- the charter diff is exactly the four allowed edits; the ledger is valid at 100 rows with 5 OPEN;
+- the 367 stamp appears byte-identical once in the archive (control 366);
+- #524 is OPEN, #449 is CLOSED with 47 comments and a last comment pointing to #524, and the state files read 524/449;
+- 0 Mark comments; `ad13d835` has 3/3 checks green;
+- predicates 58/58, matching the receipt;
+- D-WORLD-77/80 RESOLVED, N2d/N4a = 0, and the ticket is open.
+
+Its non-blocking notes:
+- `check_no_personal_email.sh` cannot run in a `.git`-less archive copy, but passes in the checkout;
+- the "nine consecutive" streak was not independently verified;
+- the codex rc 75 reasons come from `MISSION_ROUTING_NOTE` and were not re-probed.
+
+Report: `verification/world-iter370/evaluator-report.md`.
+
+**Controller correction after the judge (count only):** the streak note above prompted a check of the index. Iteration **362** was a PRODUCT build (row 256 implemented, then parked FAIL 85), not a no-pick record, so the streak is **363–370 = eight** fires, not 362–370 = nine. Retro 1 and queue row 259 are corrected in place. The fleet ticket's already-filed evidence text still says "362–370 … 9". This entry is the correction of record, and the defect claim is unchanged. The judge was resumed by SendMessage (same context, 1 tool call, 18.8 s; cumulative subagent tokens 44,502 as reported by the harness) and returned **CORRECTION CONFIRMED, score unchanged 96/100, no blocking finding**. It confirmed rows 363–370 are ADMIN/no-pick and 362 is PRODUCT (log heading at line 1146), that the diff touches only those two sentences plus the appended paragraphs, and that the banked report `cmp`s identical to its own. Its caveat: the token and duration figures are harness metering it cannot see from inside.
