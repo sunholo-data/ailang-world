@@ -1,0 +1,250 @@
+{
+  "sprint_id": "w-exec-cache-seed-at-bind",
+  "design_doc": "design_docs/planned/w-exec-cache-seed-at-bind.md",
+  "design_revision": "r3 (D-257-1 = A)",
+  "sprint_plan": "design_docs/planned/w-exec-cache-seed-at-bind-sprint-plan.md",
+  "base_commit": "99fc663df6377fa1e767b5fcda6653e52dd79164",
+  "queue_row": 257,
+  "iteration": 372,
+  "executor_lane": "claude-haiku-5-5",
+  "estimate_days": 1.25,
+  "estimate_loc": {
+    "production": 390,
+    "test": 915
+  },
+  "not_touched": [
+    "host/daemon/session_self.go",
+    "cmd/ailang-worldd/episode.go",
+    "cmd/ailang-worldd/episode_preset.go",
+    "host/daemon/daemon.go",
+    "host/broker/exec_probe.go",
+    "host/broker/exec_startup.go",
+    "docs/QUICKSTART.md",
+    "tools/launchd/*",
+    "**/*.ail"
+  ],
+  "overlap": {
+    "pr": 515,
+    "file": "host/daemon/workspace.go",
+    "their_hunks": [
+      "@@ -217,7",
+      "@@ -266,11 +266,21"
+    ],
+    "our_hunk": ":490-509 (execHandler)",
+    "conflict": "none expected"
+  },
+  "milestones": [
+    {
+      "id": "M1a",
+      "design_milestone": "M1",
+      "title": "Pure seed core: marker bytes/validity, execSeedNext, state names, detail and staging-name helpers",
+      "plan_section": "design_docs/planned/w-exec-cache-seed-at-bind-sprint-plan.md §2.1–§2.4, §3 M1a",
+      "estimate_loc": {
+        "production": 70,
+        "test": 90
+      },
+      "files": [
+        "host/broker/exec_seed.go",
+        "host/broker/exec_seed_test.go"
+      ],
+      "tests": [
+        "TestSeedNextIsPure (S7)",
+        "TestSeedMarkerValidIsPure (S12)"
+      ],
+      "acceptance": [
+        "gofmt -l host/broker/exec_seed.go host/broker/exec_seed_test.go | (! grep .)",
+        "go vet ./host/broker/",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/broker/ -run '^(TestSeedNextIsPure|TestSeedMarkerValidIsPure)$' -count=1 -v"
+      ],
+      "mutants": [
+        "MUT-SWAP",
+        "MUT-NO-CAP",
+        "MUT-MARKER-PREFIX",
+        "MUT-NO-SIZECAP"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M1b",
+      "design_milestone": "M1",
+      "title": "Seed state machine on its own clock, prepareCache rewrite, Log, context root, edited TX rows",
+      "plan_section": "design_docs/planned/w-exec-cache-seed-at-bind-sprint-plan.md §2.5–§2.8, §3 M1b",
+      "estimate_loc": {
+        "production": 210,
+        "test": 150
+      },
+      "files": [
+        "host/broker/exec_seed.go",
+        "host/broker/exec_seed_test.go",
+        "host/broker/handlers_exec.go",
+        "host/broker/failure_test.go",
+        "host/broker/handlers_exec_test.go",
+        "host/store/context_roots_test.go"
+      ],
+      "tests": [
+        "TestSeedAtBindFirstCallSpawnsNoCopy (S1)",
+        "TestSeedAtBindFailureReachesTheCall (S2)",
+        "TestSeedAttemptsAreCapped (S3)",
+        "TestExecFailureClassesReachTheRecord (edited)",
+        "TestProductionContextRoots (edited)",
+        "TestExecHandlerOwnsNoProcessLifecycle (edited)"
+      ],
+      "acceptance": [
+        "gofmt -l host/broker/exec_seed.go host/broker/exec_seed_test.go host/broker/handlers_exec.go host/broker/failure_test.go host/broker/handlers_exec_test.go host/store/context_roots_test.go | (! grep .)",
+        "go vet ./host/broker/ ./host/store/",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/broker/ -run '^(TestSeedAtBindFirstCallSpawnsNoCopy|TestSeedAtBindFailureReachesTheCall|TestSeedAttemptsAreCapped|TestSeedNextIsPure|TestSeedMarkerValidIsPure|TestExecFailureClassesReachTheRecord|TestExecHandlerOwnsNoProcessLifecycle|TestExecHandlerProjectRootAndCaches|TestFailureLineBoundsAndSanitises)$' -count=1 -v",
+        "go test ./host/store/ -run '^TestProductionContextRoots$' -count=1",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test -race ./host/broker/ -run '^TestSeed' -count=1"
+      ],
+      "mutants": [
+        "MUT-START-NOOP",
+        "MUT-SKIP-CHECK",
+        "MUT-NO-CAP"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M1c",
+      "design_milestone": "M1",
+      "title": "Budget, join, partial-copy and seed-marker tests",
+      "plan_section": "design_docs/planned/w-exec-cache-seed-at-bind-sprint-plan.md §3 M1c",
+      "estimate_loc": {
+        "production": 0,
+        "test": 170
+      },
+      "files": [
+        "host/broker/exec_seed_test.go"
+      ],
+      "tests": [
+        "TestSeedPartialCopyIsNeverAccepted (S4)",
+        "TestSeedOutlivesTheCallThatWaits (S5)",
+        "TestSeedHasItsOwnBound (S6)",
+        "TestSeedHoldingTheMarkerIsRefused (S11)"
+      ],
+      "acceptance": [
+        "gofmt -l host/broker/exec_seed_test.go | (! grep .)",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/broker/ -run '^(TestSeedPartialCopyIsNeverAccepted|TestSeedOutlivesTheCallThatWaits|TestSeedHasItsOwnBound|TestSeedHoldingTheMarkerIsRefused)$' -count=1 -v",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test -race ./host/broker/ -run '^TestSeed' -count=1"
+      ],
+      "mutants": [
+        "MUT-DIRECT-DST",
+        "MUT-CALLER-CTX",
+        "MUT-BUDGET",
+        "MUT-NO-STEP1"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M1d",
+      "design_milestone": "M1",
+      "title": "Restart, legacy, crash-window and surviving-old-copy tests; full broker gate",
+      "plan_section": "design_docs/planned/w-exec-cache-seed-at-bind-sprint-plan.md §3 M1d",
+      "estimate_loc": {
+        "production": 0,
+        "test": 280
+      },
+      "files": [
+        "host/broker/exec_seed_test.go"
+      ],
+      "tests": [
+        "TestStartSeedReusesOnlyAVerifiedCache (S8)",
+        "TestLegacyPartialCacheIsRemovedAndReseeded (S9)",
+        "TestSeedCrashWindowsAreNeverTrusted (S10)",
+        "TestSeedRestartIgnoresASurvivingOldCopy (S13)"
+      ],
+      "acceptance": [
+        "gofmt -l host/broker/exec_seed_test.go | (! grep .)",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/broker/ -run '^(TestStartSeedReusesOnlyAVerifiedCache|TestLegacyPartialCacheIsRemovedAndReseeded|TestSeedCrashWindowsAreNeverTrusted|TestSeedRestartIgnoresASurvivingOldCopy)$' -count=1 -v",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test -race ./host/broker/ -run '^TestSeed|^TestStartSeed|^TestLegacyPartialCache' -count=1",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/broker/ -run 'Seed|LegacyPartialCache|TestExecFailureClassesReachTheRecord' -count=1",
+        "go test ./host/store/ -run '^TestProductionContextRoots$' -count=1",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/broker/ -count=1 -timeout 900s"
+      ],
+      "mutants": [
+        "MUT-ALWAYS-COPY",
+        "MUT-MARKER-PREFIX",
+        "MUT-LSTAT-READY",
+        "MUT-PROMOTE",
+        "MUT-REMOVE-OK",
+        "MUT-FIXED-STAGING",
+        "MUT-NO-CLEANUP",
+        "MUT-UNBOUNDED"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M2a",
+      "design_milestone": "M2",
+      "title": "Daemon: StartSeed at bind, boundExecHandler/execCacheStatus, exec_cache on the episode report",
+      "plan_section": "design_docs/planned/w-exec-cache-seed-at-bind-sprint-plan.md §3 M2a",
+      "estimate_loc": {
+        "production": 90,
+        "test": 190
+      },
+      "files": [
+        "host/daemon/workspace.go",
+        "host/daemon/exec_seed.go",
+        "host/daemon/episode_report.go",
+        "host/daemon/exec_seed_test.go"
+      ],
+      "tests": [
+        "TestEpisodeReportShowsBindSeedFailure (D1)",
+        "TestBindSeedsAFreshEpisode (D3)",
+        "TestEpisodeReportRacesFirstDispatch (D4, -race)"
+      ],
+      "acceptance": [
+        "gofmt -l host/daemon/workspace.go host/daemon/exec_seed.go host/daemon/episode_report.go host/daemon/exec_seed_test.go | (! grep .)",
+        "go vet ./host/daemon/",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/daemon/ -run '^(TestEpisodeReportShowsBindSeedFailure|TestBindSeedsAFreshEpisode|TestEpisodeReportRacesFirstDispatch)$' -count=1 -v",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test -race ./host/daemon/ -run 'ReportRacesFirstDispatch' -count=1",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test -race ./host/daemon/ -run '^(TestEpisodeReportShowsBindSeedFailure|TestBindSeedsAFreshEpisode)$' -count=1",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/daemon/ -count=1 -timeout 900s"
+      ],
+      "mutants": [
+        "MUT-NO-REPORT",
+        "MUT-NO-STEP0",
+        "MUT-UNLOCKED",
+        "MUT-NO-BIND",
+        "MUT-START-NOOP"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M2b",
+      "design_milestone": "M2",
+      "title": "CLI: one exec cache line per entry in episode report",
+      "plan_section": "design_docs/planned/w-exec-cache-seed-at-bind-sprint-plan.md §3 M2b",
+      "estimate_loc": {
+        "production": 20,
+        "test": 35
+      },
+      "files": [
+        "cmd/ailang-worldd/episode_report.go",
+        "cmd/ailang-worldd/episode_report_test.go"
+      ],
+      "tests": [
+        "TestEpisodeReportPrintsExecCache (C1)"
+      ],
+      "acceptance": [
+        "gofmt -l cmd/ailang-worldd/episode_report.go cmd/ailang-worldd/episode_report_test.go | (! grep .)",
+        "go vet ./cmd/ailang-worldd/",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./cmd/ailang-worldd/ -run '^(TestEpisodeReportPrintsExecCache|TestEpisodeReportTablePrintsEveryClass|TestEpisodeReportTablePrintsTheReadsLine)$' -count=1 -v",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./host/daemon/ ./cmd/ailang-worldd/ -run 'ExecCache|BindSeed|ReportRacesFirstDispatch' -count=1",
+        "AILANG_BIN=$HOME/.pinned-ailang/ailang go test -race ./host/daemon/ -run 'ReportRacesFirstDispatch' -count=1"
+      ],
+      "mutants": [
+        "MUT-NO-LINE"
+      ],
+      "status": "planned"
+    }
+  ],
+  "controller_final": [
+    "go build ./... && go vet ./host/broker/ ./host/daemon/ ./host/store/ ./cmd/ailang-worldd/",
+    "go test ./host/store/ -run '^TestProductionContextRoots$' -count=1",
+    "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh",
+    "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh",
+    "git status --short"
+  ],
+  "acceptance_criteria_ref": "design_docs/planned/w-exec-cache-seed-at-bind-sprint-plan.md §8 (16 criteria)",
+  "mutation_table_ref": "design_docs/planned/w-exec-cache-seed-at-bind-sprint-plan.md §4 (22 mutants)"
+}
