@@ -1,0 +1,50 @@
+World iteration 370 — Gate 0-2 readings (controller claude:claude-opus-5-5, fire world-1794214143-88534, attempt 1)
+Read 2026-11-09 08:49-09:05Z. Commands are the ones run; outputs are summarised only where noted.
+
+GATE 0
+kill switch: ~/.ailang/state/mission-world.disabled absent -> armed
+gh: sunholo-voight-kampff (active)
+billing tripwire: ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN empty -> CLEAN
+directives: mission_directives.sh --issue 449 --watermark-file ~/.ailang/state/mission-449-last-seen
+  -> watermark ABSENT (read every allowlisted comment); 0 directives from [MarkEdmondson1234] of 46 comments; rc 0
+  rotation-week catch: #449 is now the predecessor; it held 0 allowlisted comments. Nothing to --mark.
+self-notices: mission_gate0_self_notices.sh --issue 449 --prev-issue 366 --control auto
+  -> 0 crash notices since 2026-10-27T09:03:42Z on #449,#366; control 107:4 ok; watermarks 1/2 (449 absent)
+  -> transcript=2: fire world-1793825318-10110 (2026-11-04T22:00:52Z), fire world-1793839743-21731 (2026-11-05T01:43:10Z)
+     (the same two historical notices iterations 348/349/366/369 recorded; no new one)
+#449 comment 46 = a driver PAUSED notice at 2026-11-09T04:50:49Z (after iteration 369 predicted 45); explained, not a directive.
+inbox: global unread list dominated by controlplane eval-suite and PAUSED-no-capacity notices; nothing github-untrusted:,
+  no mission-fleet harness-resolved reply, no human directive addressed to World.
+
+WEEKLY EXTERNAL-ISSUE SWEEP (first fire after Monday 2026-11-09 07:00 local; rig time 09:49 CET)
+enumeration: gh issue list --repo sunholo-data/ailang-world --state open --limit 200 --json ... -> 1 ; plain list | wc -l -> 1 (agree)
+per-issue #N\b counts (charter / log / status archive / dashboard, read from mission/world-iter369-record):
+  #449  charter=3  log=120  archive=28  dash=2   (the bookkeeping issue itself)
+controls: known-tracked #517 -> charter=1 archive=1 (positive fired); a fresh never-used literal -> 0/0/0/0 (negative fired)
+verdict: 0 orphans of 1 enumerated issue. No triage-lite row owed.
+
+THREAD ROTATION (Gate 5 step 4, run before the report)
+boundary: Monday 2026-11-09 07:00 CET; #449 created 2026-11-02T08:01:35Z (before) -> rotate
+new issue: #524 "Ailang World mission bookkeeping — week of 2026-11-09" (5-line snapshot body)
+weekly report: ailang-motoko/tools/mission-weekly-report.py --mission world (first --mission-capable copy) -> posted on #524
+old issue: "-> continues in #524" posted on #449 (comments 46 -> 47 asserted), then closed (state CLOSED asserted)
+state: ~/.ailang/state/mission-world-gh-issue = 524, -prev = 449
+
+GATE 1
+local dev was 34 behind origin/dev (61a8d1c4 -> ad13d835); fast-forwarded (main checkout clean apart from known untracked residue)
+base: mission-base.sh record gate1 -> ad13d835345efc2b78308817cc940f73a987165d 2026-11-09T08:50:30Z
+skill drift: 14/14 files (SKILL.md + 13 resources) cmp-identical to ailang origin/dev at the resolved symlink target
+dev CI: commits/ad13d835/check-runs -> checks=3, all success (ailang-code verify gate, go host build + test gate, go race gate)
+open PRs by this account: #523 (iter369 record, stacked), #522 (368), #521 (367), #515 (row 256 draft, CONFLICTING) -> all accounted parks
+newest record: mission/world-iter369-record (log head 369) -> this record stacks on it
+
+GATE 2
+died-mid-flight traces: every worktree touched since 2026-11-07 belongs to iterations 361-369 (records, evaluators, baselines);
+  world-iter369-record worktree clean; no worktree, branch or PR from an iteration after 369. 0 orphans.
+ledger: scripts/mission_decisions.sh --check (369 branch charter) -> valid, 100 rows; OPEN = D-WORLD-105, 110, 111, 112, 113
+clause map: clauses 1-7 MET (ratified; clause 4 via D-WORLD-77, clause 5 via D-WORLD-80, re-derived by iteration 369's judge) -> no UNMET clause
+queue head row 256: PARKED needs-human-review (draft PR #515 OPEN, CONFLICTING, untouched since 2026-11-07T06:31Z) behind D-WORLD-111/112
+rows 257/201/243: sequenced behind 256 (D-WORLD-108 attended order), no autonomous skip
+release rows: git log origin/dev --since=2026-11-01 --oneline | grep -ciE "N2d|N4a" -> 0 (control: "iteration" -> 109 of 246 commits)
+upstream predicates: see upstream-predicates.txt (re-run this fire)
+pick: NONE -> rule (d) (D-WORLD-46) block record

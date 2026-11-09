@@ -736,3 +736,5 @@ Clause map: 1 MET · 2 MET · 3 MET · 4 UNMET (152 → 153 → 93) · 5 UNMET (
 
 ## STATUS 2026-11-07 — ITERATION 366: ADMIN record only; row 256 PARKED needs-human-review, independent MiniMax FAIL 85, LOCAL_CRITERION UNMET, draft PR #515. D-WORLD-105/110/111/112 remain OPEN; D111 and D112 are independent human gates. Independent record review and PR/merge CI/delivery pending. Evidence: verification/world-iter366/; full log entry 366.
 
+## STATUS 2026-11-08 — ITERATION 367: ADMIN record PARKED unmerged needs-human-review; three independent model PASS verdicts do not discharge missing executed G6 after-rehash proof. No fourth judge call or ADMIN LANDED. Row256 remains PARKED, historical FAIL85, LOCAL_CRITERION UNMET; PR515 untouched. Canonical99-row ledger and four OPEN105/110/111/112 unchanged. Proposed attended request ADMIN367 in verification/world-iter367/controller-park.json; full log367.
+
