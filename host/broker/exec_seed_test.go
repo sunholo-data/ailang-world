@@ -2,6 +2,7 @@ package broker
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
@@ -271,5 +272,144 @@ func TestSeedAttemptsAreCapped(t *testing.T) {
 	}
 	if got := seedState(t, f.h); got.State != ExecSeedGaveUp || got.Attempts != 3 {
 		t.Fatalf("seed state = %+v, want gave-up with 3 attempts", got)
+	}
+}
+
+// S4: a partial copy is never accepted, and a crash window's staging is swept.
+func TestSeedPartialCopyIsNeverAccepted(t *testing.T) {
+	seed := makeSeed(t)
+	f2 := filepath.Join(seed, "ab", "locked")
+	if err := os.WriteFile(f2, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(f2, 0o000); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(f2, 0o644) })
+	f := seedFixture(t, seed)
+	f.h.StartSeed()
+	waitSeedIdle(t, f.h)
+	if got := seedState(t, f.h); got.State != ExecSeedFailed || !strings.HasPrefix(got.Failure, "seed-cache: GOCACHE: the copy exited ") {
+		t.Fatalf("seed state = %+v, want failed with a copy exit", got)
+	}
+	if _, err := os.Lstat(filepath.Join(f.cache, "GOCACHE")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("Lstat(published GOCACHE) = %v, want ENOENT", err)
+	}
+	if left := stagingLeft(t, f); len(left) != 0 {
+		t.Fatalf("staging left after the failed copy: %v", left)
+	}
+	// A crash window from a dead incarnation: a staging dir with a partial copy.
+	old := filepath.Join(filepath.Dir(f.cache), seedStagingName("proj", "GOCACHE", "dead-1", 1))
+	if err := os.MkdirAll(filepath.Join(old, "copy"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(old, "copy", "partial"), []byte("half"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(f2, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	f.mustRun(t, "test", "a")
+	if _, err := os.Lstat(old); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("the dead staging dir survived: %v", err)
+	}
+	if !seedCacheVerified(filepath.Join(f.cache, "GOCACHE"), "GOCACHE") {
+		t.Fatal("GOCACHE is not verified after the second attempt")
+	}
+	_ = filepath.Walk(filepath.Join(f.cache, "GOCACHE"), func(p string, _ os.FileInfo, err error) error {
+		if err == nil && filepath.Base(p) == "partial" {
+			t.Errorf("partial copy reached the cache: %s", p)
+		}
+		return nil
+	})
+	if left := stagingLeft(t, f); len(left) != 0 {
+		t.Fatalf("staging left after the second attempt: %v", left)
+	}
+}
+
+// slowCall runs Execute "test a" with a 100 ms context, the caller waiting on a slow copy.
+func slowCall(t *testing.T, f *execFixture) error {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	data, _ := json.Marshal(map[string]any{"command": "test", "args": []string{"a"}})
+	_, err := f.h.Execute(ctx, EffectRequest{Effect: EffectWorkspaceExec, Scope: WorkspaceScope, Cost: 1}, data)
+	return err
+}
+
+// S5: a copy outlives the call that waits for it; its context is not the call's.
+func TestSeedOutlivesTheCallThatWaits(t *testing.T) {
+	t.Run("call", func(t *testing.T) {
+		f := seedFixture(t, makeSeed(t))
+		f.h.seedCommand = slowSeedCommand
+		var hf *HandlerFailure
+		err := slowCall(t, f)
+		if !errors.As(err, &hf) {
+			t.Fatalf("err = %v, want *HandlerFailure", err)
+		}
+		if l := hf.Line(); !strings.HasPrefix(l, "seed-cache: GOCACHE: still copying since call (") || !strings.HasSuffix(l, "); retry") {
+			t.Fatalf("line = %q", l)
+		}
+		waitSeedIdle(t, f.h)
+		if got := seedState(t, f.h); got.State != ExecSeedReady || got.Attempts != 1 {
+			t.Fatalf("seed state = %+v, want ready with 1 attempt", got)
+		}
+		n := f.h.Spawns()
+		f.mustRun(t, "test", "a")
+		if f.h.Spawns() != n+1 {
+			t.Fatalf("the call spawned %d processes, want 1 (srt only)", f.h.Spawns()-n)
+		}
+	})
+	t.Run("bind", func(t *testing.T) {
+		f := seedFixture(t, makeSeed(t))
+		f.h.seedCommand = slowSeedCommand
+		f.h.StartSeed()
+		var hf *HandlerFailure
+		err := slowCall(t, f)
+		if !errors.As(err, &hf) {
+			t.Fatalf("err = %v, want *HandlerFailure", err)
+		}
+		if l := hf.Line(); !strings.HasPrefix(l, "seed-cache: GOCACHE: still copying since bind (") {
+			t.Fatalf("line = %q", l)
+		}
+		waitSeedIdle(t, f.h)
+		if got := seedState(t, f.h); got.State != ExecSeedReady {
+			t.Fatalf("seed state = %+v, want ready", got)
+		}
+	})
+}
+
+// S6: the copy has its own bound, not the call's.
+func TestSeedHasItsOwnBound(t *testing.T) {
+	f := seedFixture(t, makeSeed(t))
+	f.h.seedBudget = time.Millisecond
+	f.h.seedCommand = slowSeedCommand
+	f.h.StartSeed()
+	waitSeedIdle(t, f.h)
+	want := "seed-cache: GOCACHE: timed out after 1ms (attempt 1 of 3)"
+	if got := seedState(t, f.h); got.State != ExecSeedFailed || got.Failure != want {
+		t.Fatalf("seed state = %+v, want failed with %q", got, want)
+	}
+}
+
+// S11: a seed that carries World's marker is refused before any copy runs.
+func TestSeedHoldingTheMarkerIsRefused(t *testing.T) {
+	seed := makeSeed(t)
+	if err := os.WriteFile(filepath.Join(seed, seedMarkerName), seedMarkerBytes("GOCACHE"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	f := seedFixture(t, seed)
+	n := f.h.Spawns()
+	f.h.StartSeed()
+	waitSeedIdle(t, f.h)
+	want := "seed-cache: GOCACHE: the seed holds World's marker; remove it from the seed (attempt 1 of 3)"
+	if got := seedState(t, f.h); got.Failure != want {
+		t.Fatalf("Failure = %q, want %q", got.Failure, want)
+	}
+	if _, err := os.Lstat(filepath.Join(f.cache, "GOCACHE")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("Lstat(GOCACHE) = %v, want ENOENT", err)
+	}
+	if f.h.Spawns() != n {
+		t.Fatalf("a marked seed spawned %d processes, want 0", f.h.Spawns()-n)
 	}
 }
