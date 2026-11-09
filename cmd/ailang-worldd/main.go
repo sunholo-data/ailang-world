@@ -263,7 +263,13 @@ serve flags:
                        must be outside --workspace-root; restart to apply changes
                        /surface/index.json also carries "open": live and recently
                        ended episodes from this daemon's sessions and starts,
-                       reconciled every 15 s; its status is never a silent zero
+                       reconciled every 15 s; its status is never a silent zero.
+                       /surface shows every repo on one timeline, grouped in
+                       config order, with ids qualified by repo id
+                       (world:commit:<sha>, world:brane:row-220,
+                       world:episode:<ep>); the page re-reads
+                       /surface/model.json every 15 s while visible and each
+                       repo's line says when its local branch was last checked
   --proof-key-file <file>
                        a file holding exactly 32 bytes: the MAC key the
                        workbench grade validator authenticates stored proof

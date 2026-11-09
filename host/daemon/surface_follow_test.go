@@ -16,6 +16,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/surface"
 	"github.com/sunholo-data/ailang-world/host/surfacefollow"
+	"github.com/sunholo-data/ailang-world/host/surfacepage"
 )
 
 type followGit struct {
@@ -175,38 +176,60 @@ func TestSurfaceFollowRoutes(t *testing.T) {
 	}
 }
 
-func TestSurfaceFollowFeedsV1ConsumersForOneRepo(t *testing.T) {
+// TestSurfaceFollowServesGroupedModel: in follow mode every surface route
+// serves the repo-qualified v2 documents (row 220 M4), for one repo or
+// several; before any graph is accepted the model is a structured 503.
+func TestSurfaceFollowServesGroupedModel(t *testing.T) {
 	for _, n := range []int{1, 2} {
 		t.Run(fmt.Sprint(n), func(t *testing.T) {
 			cfg, _ := followFixture(t, n)
 			d := newFollowDaemon(t, cfg)
 			w := followRequest(d, "/surface/model.json")
-			if w.Code != 200 || !strings.Contains(w.Body.String(), "the follow index is building") {
+			var refusal surfaceReason
+			if w.Code != 503 || json.Unmarshal(w.Body.Bytes(), &refusal) != nil || refusal.Schema != surfacepage.FollowModelSchema ||
+				!refusal.Refused || len(refusal.Repos) != n || refusal.Repos[0].State != "building" || !strings.Contains(refusal.Reason, "repo0: building") {
 				t.Fatalf("%d %s", w.Code, w.Body)
 			}
 			startFollowTest(t, d, &followGit{})
 			waitFollow(t, func() bool { return len(d.follow.publisher.Snapshot().Envelope.Repos) == n })
 			w = followRequest(d, "/surface/model.json")
-			if n == 1 {
-				if w.Code != 200 || !strings.Contains(w.Body.String(), strings.Repeat("3", 40)) {
-					t.Fatalf("%d %s", w.Code, w.Body)
-				}
-				_, ix, empty, err := d.readSurfaceIndex()
-				if err != nil || empty != "" || ix.Source.Head != strings.Repeat("3", 40) {
-					t.Fatalf("%s %v", empty, err)
-				}
-			} else if w.Code != 503 || !strings.Contains(w.Body.String(), groupedFollowReason) {
+			var m surfacepage.FollowModel
+			if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &m) != nil || m.Schema != surfacepage.FollowModelSchema || len(m.Repos) != n ||
+				m.Generation != d.follow.publisher.Snapshot().Envelope.Generation {
 				t.Fatalf("%d %s", w.Code, w.Body)
 			}
-			for _, path := range []string{"/surface", "/surface/static", "/surface/stack.json?brane=row-220&at=" + strings.Repeat("2", 40)} {
-				want := 200
-				if n == 2 {
-					want = 503
+			// The fake git gives every repo the same merge: PR 7, row 220, one hash.
+			step := strings.Repeat("2", 40)
+			seen := map[string]bool{}
+			for _, l := range m.Lanes {
+				for _, s := range l.States {
+					seen[s.ID] = true
 				}
-				w := followRequest(d, path)
-				if w.Code != want {
-					t.Fatalf("%s: %d %s", path, w.Code, w.Body)
+			}
+			for i := 0; i < n; i++ {
+				id := fmt.Sprintf("repo%d:commit:%s", i, step)
+				if !seen[id] {
+					t.Fatalf("missing %s in %s", id, w.Body)
 				}
+			}
+			stack := "/surface/stack.json?brane=repo0%3Abrane%3Arow-220&at=repo0%3Acommit%3A" + step
+			for _, c := range []struct {
+				path string
+				want int
+			}{{"/surface", 200}, {"/surface/static", 200}, {stack, 200}, {"/surface?brane=repo0%3Abrane%3Arow-220&at=repo0%3Acommit%3A" + step, 200},
+				{"/surface/static?brane=repo0%3Abrane%3Arow-220&at=repo0%3Acommit%3A" + step, 200}} {
+				if w := followRequest(d, c.path); w.Code != c.want {
+					t.Fatalf("%s: %d %s", c.path, w.Code, w.Body)
+				}
+			}
+			// A legacy (unqualified) deep link resolves only when one repo holds it.
+			legacy := "/surface/stack.json?brane=row-220&at=" + step
+			w = followRequest(d, legacy)
+			if n == 1 && (w.Code != 200 || !strings.Contains(w.Body.String(), `"id":"repo0:commit:`+step)) {
+				t.Fatalf("unique legacy link: %d %s", w.Code, w.Body)
+			}
+			if n == 2 && (w.Code != 404 || !strings.Contains(w.Body.String(), "repo0:row-220@2222222, repo1:row-220@2222222")) {
+				t.Fatalf("ambiguous legacy link: %d %s", w.Code, w.Body)
 			}
 		})
 	}

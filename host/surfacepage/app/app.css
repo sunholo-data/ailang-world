@@ -287,3 +287,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--you); outli
 a.brand { color: inherit; text-decoration: none; cursor: pointer; padding: 4px 6px; margin: -4px 0 -4px -6px; border-radius: var(--r); transition: background 160ms; }
 a.brand:hover { background: rgba(255,255,255,0.06); }
 a.brand:focus-visible { outline: 2px solid var(--hCtl); outline-offset: 2px; }
+
+/* ---------- After v3: row 220 M4, follow mode's running list and open glyphs ---------- */
+.now .run { font: inherit; text-align: left; padding: 0; border: 0; background: none; color: var(--text); cursor: pointer; font-size: 13px; }
+.now .run:hover { text-decoration: underline; }
+.now .run:focus-visible { outline: 2px solid var(--you); outline-offset: 2px; }

@@ -56,6 +56,8 @@ type NowEdge struct {
 	// NeedsYou is empty in S1: nothing the daemon reads records a wait on you.
 	NeedsYou []string `json:"needsYou"`
 	Today    Today    `json:"today"`
+	// Open is follow mode's Running section (row 220 M4); absent in v1.
+	Open *ModelOpen `json:"open,omitempty"`
 }
 
 // ModelService is the running build and the file currently at its stable path.
@@ -120,7 +122,9 @@ type Today struct {
 
 // ModelLane is the shared world or one brane.
 type ModelLane struct {
-	Key         string       `json:"key"`
+	Key string `json:"key"`
+	// Repo is the lane's repo in follow mode; absent in v1.
+	Repo        string       `json:"repo,omitempty"`
 	Name        string       `json:"name"`
 	Title       string       `json:"title"` // the charter slug; "" when the charter has none
 	Row         *int         `json:"row"`   // null on the shared lane
@@ -160,6 +164,10 @@ type ModelState struct {
 	// FirstRoundPass needs round 1's graders, which the index does not
 	// record; it stays absent until it does.
 	FirstRoundPass *bool `json:"firstRoundPass,omitempty"`
+	// Follow mode only (row 220 M4): an open state's lifecycle, and a
+	// landed step whose episode's session is still live.
+	Open        *ModelOpenState `json:"open,omitempty"`
+	SessionLive bool            `json:"sessionLive,omitempty"`
 }
 
 var (

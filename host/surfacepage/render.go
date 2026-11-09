@@ -44,17 +44,38 @@ type Session struct {
 }
 
 type page struct {
-	T       Timeline
-	Logo    template.HTML
-	States  int
-	PlotX   int // the plot's viewBox starts here, so its x stays the layout's
-	PlotW   int
-	LabelX  int
-	LabelW  int // the label column, sized from the lane names
+	T      Timeline
+	Logo   template.HTML
+	States int
+	// Groups are the timelines shown: one, unheaded, in legacy mode; one
+	// per configured repo in follow mode (row 220 M4).
+	Groups  []pageGroup
+	Sources []pageSource
 	Health  string
 	Count   string
 	Running []string
 	Note    string
+}
+
+// pageGroup is one laid-out timeline and, in follow mode, its repo heading.
+type pageGroup struct {
+	Heading string
+	Reason  string // a repo with no accepted graph
+	T       Timeline
+	PlotX   int // the plot's viewBox starts here, so its x stays the layout's
+	PlotW   int
+	LabelX  int
+	LabelW  int // the label column, sized from the lane names
+}
+
+// pageSource is one repo's freshness line on the now edge.
+type pageSource struct {
+	Line string
+	Warn bool
+}
+
+func groupOf(tl Timeline, heading string) pageGroup {
+	return pageGroup{Heading: heading, T: tl, PlotX: PlotX, PlotW: tl.Width - PlotX, LabelX: LabelX, LabelW: LabelWidth(tl.Lanes)}
 }
 
 // The label column is sized from the longest lane name at labelCharW (7.4 px
@@ -91,7 +112,7 @@ func LabelWidth(lanes []Lane) int {
 // RenderTimeline renders the page. It refuses a timeline past
 // surface.MaxStates, which Validate already bounds.
 func RenderTimeline(tl Timeline, now Now) ([]byte, error) {
-	p := page{T: tl, Logo: template.HTML(logoSVG), PlotX: PlotX, PlotW: tl.Width - PlotX, LabelX: LabelX, LabelW: LabelWidth(tl.Lanes), Note: now.SessionsUnavailable}
+	p := page{T: tl, Logo: template.HTML(logoSVG), Groups: []pageGroup{groupOf(tl, "")}, Note: now.SessionsUnavailable}
 	for _, l := range tl.Lanes {
 		p.States += len(l.Nodes)
 	}
@@ -160,6 +181,9 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-height: c
 .running { margin: 0; padding-left: 18px; color: var(--sub); }
 .needs { padding: 6px 8px; border-radius: 3px; background: var(--tint); }
 .reason { margin: 16px; color: var(--sub); }
+h2.repo { margin: 12px 16px 0; font-size: 13px; font-weight: 700; }
+.source { margin: 4px 0; color: var(--sub); font-size: 12.5px; }
+.source[data-warn] { color: var(--you); }
 .band { fill: var(--band); }
 .rail, .tickline { stroke: var(--line); stroke-width: 1; }
 .lane-label { fill: var(--ink); font-size: 12px; }
@@ -185,24 +209,31 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-height: c
 {{- else if not .States}}
 <p class="reason">The surface index holds no states yet.</p>
 {{- else}}
+{{- range $g := .Groups}}
+{{- if $g.Heading}}
+<h2 class="repo">{{$g.Heading}}</h2>
+{{- end}}
+{{- if $g.Reason}}
+<p class="reason">{{$g.Reason}}</p>
+{{- else}}
 <div class="frame">
-<svg class="labels" width="{{.LabelW}}" height="{{.T.Height}}" viewBox="0 0 {{.LabelW}} {{.T.Height}}" role="img" aria-label="lanes">
-<g class="bands">{{range .T.Lanes}}{{if .Band}}<rect class="band" x="0" y="{{.Top}}" width="{{$.LabelW}}" height="40"/>{{end}}{{end}}</g>
-{{- range $lane := .T.Lanes}}
+<svg class="labels" width="{{$g.LabelW}}" height="{{$g.T.Height}}" viewBox="0 0 {{$g.LabelW}} {{$g.T.Height}}" role="img" aria-label="lanes">
+<g class="bands">{{range $g.T.Lanes}}{{if .Band}}<rect class="band" x="0" y="{{.Top}}" width="{{$g.LabelW}}" height="40"/>{{end}}{{end}}</g>
+{{- range $lane := $g.T.Lanes}}
 <g class="lane" data-brane="{{$lane.Key}}" data-glyph="{{$lane.Glyph}}"><title>{{$lane.Title}}</title>
 {{- if $lane.Mark}}<polygon points="{{$lane.Mark}}" fill="{{$lane.Colour}}"/>{{else}}<circle class="ring" cx="16" cy="{{$lane.Y}}" r="6" stroke="{{$lane.Colour}}"/>{{end -}}
-<text class="lane-label" x="{{$.LabelX}}" y="{{$lane.Y}}" dy="4">{{label $lane.Title}}</text></g>
+<text class="lane-label" x="{{$g.LabelX}}" y="{{$lane.Y}}" dy="4">{{label $lane.Title}}</text></g>
 {{- end}}
 </svg>
 <div class="timeline">
-<svg class="plot" width="{{.PlotW}}" height="{{.T.Height}}" viewBox="{{.PlotX}} 0 {{.PlotW}} {{.T.Height}}" role="img" aria-label="states through time">
-<g class="bands">{{range .T.Lanes}}{{if .Band}}<rect class="band" x="{{$.PlotX}}" y="{{.Top}}" width="{{$.PlotW}}" height="40"/>{{end}}{{end}}</g>
-<g class="ticks">{{range .T.Ticks}}<line class="tickline" x1="{{.X}}" y1="20" x2="{{.X}}" y2="{{$.T.Height}}"/><text class="tick" x="{{.X}}" y="14">{{.Label}}</text>{{end}}</g>
-{{- range .T.Lanes}}
-<line class="rail" x1="{{$.PlotX}}" y1="{{.Y}}" x2="{{$.T.Width}}" y2="{{.Y}}"/>
+<svg class="plot" width="{{$g.PlotW}}" height="{{$g.T.Height}}" viewBox="{{$g.PlotX}} 0 {{$g.PlotW}} {{$g.T.Height}}" role="img" aria-label="states through time">
+<g class="bands">{{range $g.T.Lanes}}{{if .Band}}<rect class="band" x="{{$g.PlotX}}" y="{{.Top}}" width="{{$g.PlotW}}" height="40"/>{{end}}{{end}}</g>
+<g class="ticks">{{range $g.T.Ticks}}<line class="tickline" x1="{{.X}}" y1="20" x2="{{.X}}" y2="{{$g.T.Height}}"/><text class="tick" x="{{.X}}" y="14">{{.Label}}</text>{{end}}</g>
+{{- range $g.T.Lanes}}
+<line class="rail" x1="{{$g.PlotX}}" y1="{{.Y}}" x2="{{$g.T.Width}}" y2="{{.Y}}"/>
 {{- end}}
-<g class="links">{{range .T.Links}}<path class="link" data-from="{{.From}}" data-to="{{.To}}" d="{{.D}}" stroke="{{.Colour}}"/>{{end}}</g>
-{{- range $lane := .T.Lanes}}
+<g class="links">{{range $g.T.Links}}<path class="link" data-from="{{.From}}" data-to="{{.To}}" d="{{.D}}" stroke="{{.Colour}}"/>{{end}}</g>
+{{- range $lane := $g.T.Lanes}}
 <g class="nodes">
 {{- range $lane.Nodes}}
 <a class="state" data-state="{{.ID}}" data-kind="{{.Kind}}" data-brane="{{.Brane}}" href="{{.Href}}"><title>{{.Title}}</title>
@@ -215,14 +246,19 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-height: c
 </div>
 </div>
 <ul class="legend" aria-label="legend">
-{{- range .T.Lanes}}
+{{- range $g.T.Lanes}}
 <li class="legend-item"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">{{if .Legend}}<polygon points="{{.Legend}}" fill="{{.Colour}}"/>{{else}}<circle class="ring" cx="10" cy="10" r="6" stroke="{{.Colour}}"/>{{end}}</svg>{{.Title}}</li>
 {{- end}}
 </ul>
 {{- end}}
+{{- end}}
+{{- end}}
 </section>
 <section class="now" aria-label="now">
 <p class="health">{{.Health}}</p>
+{{- range .Sources}}
+<p class="source"{{if .Warn}} data-warn="true"{{end}}>{{.Line}}</p>
+{{- end}}
 {{- if .T.Built}}
 <p class="built">index built {{.T.Built}}</p>
 {{- end}}
