@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 372 | 2026-11-09 | row 257 built: the exec GOCACHE seed is copied at bind on its own clock and published atomically with a completion marker; design r3 via a controll... |
 | 366 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |
 | 365 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |
 | 364 | 2026-11-07 | ADMIN record only; row 256 remains parked [ADMIN] |
