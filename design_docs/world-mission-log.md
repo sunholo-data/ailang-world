@@ -1596,12 +1596,14 @@ lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (pro
 
 **Independent evaluator (record): REQUIRED — and run.** Generator ≠ judge held: the record's author is this `pi:ollama/glm-5.3:cloud` controller; the judge is `pi:openrouter/minimax/minimax-m3`, a different model on a different provider. It runs through `scripts/mission_pi_run.sh` (driver checkout copy) in a fresh, fenced, read-only-scope context against an isolated `git archive` copy of the record commit, with the PI EVALUATOR SESSION HANDSHAKE preamble (CLAUDE.md read → unattended-stage classification → `session_protocol_ack` → judge work). Verdict and findings: see the **Record judge** section below and `verification/world-iter369/evaluator-report.md`.
 
+**Gate 3b / delivery boundary:** the record PR is **#523** (stacked on human-parked #521/#522, base `mission/world-iter368-record`); per D-WORLD-113's default it stays unmerged with the chain, so no merge-head CI exists and Gate 3b's merge verdict is UNMET by design — exactly as for iteration 368. **PR-head CI at `522e08ee`: run 42543531543, completed `success`, 3/3 jobs terminal-success** (ailang-code verify gate, go host build + test gate, go race gate), each pinned to the pushed head SHA. The controller's first bounded poller for this run was a broken instrument — its `gh run list` carried `--arg`, a jq flag gh rejects, so every iteration errored and wrote no verdict (`[: : integer expression expected`); the verdict above comes from the same query re-run correctly by hand (1 run, `completed success`). Instrument failure recorded, not smoothed over. No merge, no product acceptance, no idle promotion.
+
 **Routing evidence:** base=`ad13d835345efc2b78308817cc940f73a987165d@2026-11-09T00:56:12Z` (Gate 4 `mission-base.sh record gate4`, origin/dev re-confirmed unchanged from Gate 1's read).
 - Controller: `pi:ollama/glm-5.3:cloud` (tok: not reported by the harness).
 - Designer, planner, executor: unused (no pick; lanes resolved as above).
 - Evaluator (record judge): `pi:openrouter/minimax/minimax-m3` — tokens and metered cost in the Record judge section and the iteration chain.
 - Quorum: none owed (bookkeeping-only pick).
-- Metered ledger: the judge call is the only metered spend; ceiling checked before the call.
+- Metered ledger: the judge call is the only metered spend; final tally **$0.0044** (provider-reported; ceiling $5 checked before the call). Iteration chain posted: `591e9be0-1a52-4523-9a53-a81255de2a51` (controller quota-lane stage, ollama bucket, tokens not reported by the harness; evaluator metered stage 65,232 in / 13,601 out).
 
 **Ruled out:**
 - Any product or release work without authority (rule (d)); skipping row 256; merging or repairing the parked 367/368 chain; a fourth judge call on 367 (D-113 default forbids it).
