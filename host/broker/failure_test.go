@@ -207,15 +207,19 @@ func TestExecFailureClassesReachTheRecord(t *testing.T) {
 		}, want: func(*execFixture) string { return "exec-cache: home: cannot be created" }},
 		{name: "seed-cache exited", opts: func(t *testing.T) execFixtureOpts {
 			return execFixtureOpts{profile: seedProfile(filepath.Join(canonicalTempDir(t), "no-such-seed"))}
-		}, want: func(*execFixture) string { return "seed-cache: GOCACHE: the copy exited 1" }},
+		}, want: func(*execFixture) string { return "seed-cache: GOCACHE: the copy exited 1 (attempt 1 of 3)" }},
 		{name: "seed-cache timed out", opts: func(t *testing.T) execFixtureOpts {
 			seed := filepath.Join(canonicalTempDir(t), "seed")
 			if err := os.MkdirAll(seed, 0o755); err != nil {
 				t.Fatal(err)
 			}
 			return execFixtureOpts{profile: seedProfile(seed)}
-		}, mutate: func(_ *testing.T, f *execFixture) Handler { return expiredCtx{f.h} },
-			want: func(*execFixture) string { return "seed-cache: GOCACHE: timed out after 1ms" }},
+		}, mutate: func(_ *testing.T, f *execFixture) Handler {
+			f.h.seedBudget = time.Millisecond
+			f.h.seedCommand = slowSeedCommand
+			return f.h
+		},
+			want: func(*execFixture) string { return "seed-cache: GOCACHE: timed out after 1ms (attempt 1 of 3)" }},
 		{name: "time-budget-spent", mutate: func(_ *testing.T, f *execFixture) Handler { return expiredCtx{f.h} },
 			want: func(*execFixture) string {
 				return `time-budget-spent: the call's time was spent before "test" could start`

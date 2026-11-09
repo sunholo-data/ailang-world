@@ -77,7 +77,12 @@ var contextRootPins = map[string]int{
 	// captures the protected baseline under protectedBaselineTimeout (4 848 ms,
 	// design V24) fed directly from this root; Git subprocesses only, no Store
 	// call.
-	"host/broker/handlers_exec.go|NewExecHandler|Background":                  1,
+	"host/broker/handlers_exec.go|NewExecHandler|Background": 1,
+	// Row 257: the exec cache seed copy runs on its own clock, started at bind
+	// inside the ctx-less BinderFor or by a call that found no copy; one
+	// attempt is bounded by execSeedBindBudget (60 s) fed directly from this
+	// root. /bin/cp only, no Store call.
+	"host/broker/exec_seed.go|runSeedAttempt|Background":                      1,
 	"host/replay/replay.go|runPinnedTransition|Background":                    1,
 	"host/store/lookup_index.go|provisionLookupIndex|Background":              1,
 	"host/store/reference_index.go|provisionReferenceIndexes|Background":      1,

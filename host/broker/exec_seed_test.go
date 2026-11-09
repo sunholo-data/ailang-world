@@ -1,6 +1,12 @@
 package broker
 
 import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -91,5 +97,179 @@ func TestSeedMarkerValidIsPure(t *testing.T) {
 	}
 	if seedMarkerValid(n, seedMarkerBytes(n)) {
 		t.Error("the size cap must reject a 65-byte marker")
+	}
+}
+
+// slowSeedCommand runs the default copy after 0.5 s, on every OS.
+func slowSeedCommand(seed, dst string) (string, []string) {
+	bin, args := defaultSeedCommand(seed, dst)
+	return "/bin/sh", append([]string{"-c", `sleep 0.5; exec "$0" "$@"`, bin}, args...)
+}
+
+// makeSeed writes <dir>/ab/entry = "seeded\n" under a fresh canonicalTempDir and returns the seed dir.
+func makeSeed(t *testing.T) string {
+	t.Helper()
+	dir := filepath.Join(canonicalTempDir(t), "seed")
+	if err := os.MkdirAll(filepath.Join(dir, "ab"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "ab", "entry"), []byte("seeded\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return dir
+}
+
+// seedFixture is newExecFixture with caches.GOCACHE.seed = seed.
+func seedFixture(t *testing.T, seed string) *execFixture {
+	t.Helper()
+	return newExecFixture(t, execFixtureOpts{profile: func(m map[string]any) {
+		m["caches"] = map[string]any{"GOCACHE": map[string]any{"seed": seed}}
+	}})
+}
+
+// waitSeedIdle waits (≤ 20 s, else t.Fatal) until h.seed.running is nil, re-checking after each close.
+func waitSeedIdle(t *testing.T, h *ExecHandler) {
+	t.Helper()
+	deadline := time.Now().Add(20 * time.Second)
+	for {
+		h.seed.mu.Lock()
+		done := h.seed.running
+		h.seed.mu.Unlock()
+		if done == nil {
+			return
+		}
+		select {
+		case <-done:
+		case <-time.After(time.Until(deadline)):
+			t.Fatal("the seed copy did not end within 20s")
+		}
+	}
+}
+
+// seedState returns the single SeedStatus entry (t.Fatal if len != 1).
+func seedState(t *testing.T, h *ExecHandler) ExecSeedStatus {
+	t.Helper()
+	st := h.SeedStatus()
+	if len(st) != 1 {
+		t.Fatalf("SeedStatus = %+v, want one entry", st)
+	}
+	return st[0]
+}
+
+// stagingLeft lists the entries of filepath.Dir(f.cache) whose name contains ".seeding-".
+func stagingLeft(t *testing.T, f *execFixture) []string {
+	t.Helper()
+	ents, err := os.ReadDir(filepath.Dir(f.cache))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out []string
+	for _, e := range ents {
+		if strings.Contains(e.Name(), ".seeding-") {
+			out = append(out, e.Name())
+		}
+	}
+	return out
+}
+
+// invokeLine runs one Workspace.Exec "test a" through a live broker session (as TestExecFailureClassesReachTheRecord does) and returns EffectFailedError.Reason ("" on success).
+func invokeLine(t *testing.T, h Handler) string {
+	t.Helper()
+	scope := WorkspaceScope
+	st := openTestStore(t)
+	s := newSession(st, "ep1", []Capability{{Effect: EffectWorkspaceExec, Scope: scope, ExpiresAt: 100, Budget: 5}},
+		Registry{EffectWorkspaceExec: h}, Live, nil)
+	payload, _ := json.Marshal(map[string]any{"command": "test", "args": []string{"a"}})
+	_, _, err := s.Invoke(boundedTestContext(t), EffectRequest{Effect: EffectWorkspaceExec, Scope: scope, Cost: 1, Now: 1}, payload)
+	var failed *EffectFailedError
+	if !errors.As(err, &failed) {
+		t.Fatalf("Invoke = %v, want *EffectFailedError", err)
+	}
+	return failed.Reason
+}
+
+// S1: a copy started at bind serves the first call without a copy in the call.
+func TestSeedAtBindFirstCallSpawnsNoCopy(t *testing.T) {
+	f := seedFixture(t, makeSeed(t))
+	var log bytes.Buffer
+	f.h.log = &log
+	f.h.StartSeed()
+	waitSeedIdle(t, f.h)
+	want := ExecSeedStatus{Project: "proj", Cache: "GOCACHE", State: ExecSeedReady, Attempts: 1, By: "bind"}
+	if got := seedState(t, f.h); got.State != want.State || got.Attempts != want.Attempts || got.By != want.By || got.Failure != "" {
+		t.Fatalf("seed state = %+v, want %+v", got, want)
+	}
+	n := f.h.Spawns()
+	f.mustRun(t, "test", "a")
+	if f.h.Spawns() != n+1 {
+		t.Fatalf("the call spawned %d processes, want 1 (srt only)", f.h.Spawns()-n)
+	}
+	if got := f.stubCalls(t); got != 1 {
+		t.Fatalf("the stub ran %d times, want 1", got)
+	}
+	data, err := os.ReadFile(filepath.Join(f.cache, "GOCACHE", "ab", "entry"))
+	if err != nil || string(data) != "seeded\n" {
+		t.Fatalf("seeded entry = %q, %v", data, err)
+	}
+	marker, err := os.ReadFile(filepath.Join(f.cache, "GOCACHE", seedMarkerName))
+	if err != nil || string(marker) != "world-exec-seed v1 GOCACHE\n" {
+		t.Fatalf("marker = %q, %v", marker, err)
+	}
+	if left := stagingLeft(t, f); len(left) != 0 {
+		t.Fatalf("staging left behind: %v", left)
+	}
+	if !strings.Contains(log.String(), `exec cache for episode "ep1" (proj): GOCACHE seeded at bind `) {
+		t.Fatalf("log = %q", log.String())
+	}
+}
+
+// S2: a failed bind copy is what the first call reports.
+func TestSeedAtBindFailureReachesTheCall(t *testing.T) {
+	f := seedFixture(t, filepath.Join(canonicalTempDir(t), "no-such-seed"))
+	var log bytes.Buffer
+	f.h.log = &log
+	f.h.StartSeed()
+	waitSeedIdle(t, f.h)
+	first := "seed-cache: GOCACHE: the copy exited 1 (attempt 1 of 3)"
+	if got := seedState(t, f.h); got.State != ExecSeedFailed || got.Attempts != 1 || got.By != "bind" || got.Failure != first {
+		t.Fatalf("seed state = %+v", got)
+	}
+	if !strings.Contains(log.String(), "seeding at bind failed: "+first) {
+		t.Fatalf("log = %q", log.String())
+	}
+	second := "seed-cache: GOCACHE: the copy exited 1 (attempt 2 of 3)"
+	if got := invokeLine(t, f.h); got != second {
+		t.Fatalf("call failure = %q, want %q", got, second)
+	}
+	if f.stubCalls(t) != 0 {
+		t.Fatal("a failed seed must not reach srt")
+	}
+}
+
+// S3: the attempt cap holds; the third refusal spawns nothing.
+func TestSeedAttemptsAreCapped(t *testing.T) {
+	f := seedFixture(t, filepath.Join(canonicalTempDir(t), "no-such-seed"))
+	f.h.StartSeed()
+	waitSeedIdle(t, f.h)
+	for k := 2; k <= 3; k++ {
+		_, err := f.call(t, "test", "a")
+		var hf *HandlerFailure
+		want := "seed-cache: GOCACHE: the copy exited 1 (attempt " + strconv.Itoa(k) + " of 3)"
+		if !errors.As(err, &hf) || hf.Line() != want {
+			t.Fatalf("call %d: err = %v, want line %q", k-1, err, want)
+		}
+	}
+	n := f.h.Spawns()
+	_, err := f.call(t, "test", "a")
+	var hf *HandlerFailure
+	want := "seed-cache: GOCACHE: the copy exited 1 (attempt 3 of 3); 3 of 3 attempts failed: fix the seed, then restart serve"
+	if !errors.As(err, &hf) || hf.Line() != want {
+		t.Fatalf("call 3: err = %v, want line %q", err, want)
+	}
+	if f.h.Spawns() != n {
+		t.Fatalf("the refused call spawned %d processes, want 0", f.h.Spawns()-n)
+	}
+	if got := seedState(t, f.h); got.State != ExecSeedGaveUp || got.Attempts != 3 {
+		t.Fatalf("seed state = %+v, want gave-up with 3 attempts", got)
 	}
 }

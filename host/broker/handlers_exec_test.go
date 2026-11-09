@@ -88,6 +88,9 @@ func TestExecHandlerOwnsNoProcessLifecycle(t *testing.T) {
 	if hits := forbidden("handlers_exec.go"); len(hits) != 0 {
 		t.Fatalf("handlers_exec.go owns process-lifecycle code (MUT-SECOND-LIFECYCLE): %v", hits)
 	}
+	if hits := forbidden("exec_seed.go"); len(hits) != 0 {
+		t.Fatalf("exec_seed.go owns process-lifecycle code: %v", hits)
+	}
 	// Instrument health: the scanner sees runBounded's own lifecycle.
 	if hits := forbidden("handlers.go"); len(hits) < 4 {
 		t.Fatalf("the scanner found only %v in handlers.go; it is blind", hits)

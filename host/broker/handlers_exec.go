@@ -16,10 +16,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -125,6 +125,7 @@ type ExecHandlerConfig struct {
 	OperatorHome string
 	// MaxOutputBytes is the per-stream hard cap; 0 = DefaultExecMaxOutputBytes.
 	MaxOutputBytes int64
+	Log            io.Writer // nil = no log; one line per finished seed attempt (row 257)
 }
 
 // ExecHandler serves Workspace.Exec for one episode × project (§4.5).
@@ -138,7 +139,12 @@ type ExecHandler struct {
 	settings       []byte // the canonical rendering
 	settingsDigest string
 	maxOutput      int64
-	seedMu         sync.Mutex
+	episode        string
+	log            io.Writer
+	seed           execSeed
+	seedBudget     time.Duration                             // execSeedBindBudget; tests set it
+	seedCommand    func(seed, dst string) (string, []string) // defaultSeedCommand; tests set it
+	incarnation    string                                    // seedIncarnation; tests set it
 	baseline       *protectedBaseline
 	// spawns counts cache seeding and srt, excluding baseline and phase Git calls.
 	// A refusal or a drifted stack leaves it unchanged (AC2.4, AC2.9).
@@ -175,6 +181,7 @@ func NewExecHandler(cfg ExecHandlerConfig) (*ExecHandler, error) {
 		readRoots = append(readRoots, r, real)
 	}
 	h := &ExecHandler{tools: cfg.Tools, profile: cfg.Profile, sandbox: cfg.Sandbox, worktree: cfg.Worktree, maxOutput: cfg.MaxOutputBytes,
+		episode: cfg.Episode, log: cfg.Log, seedBudget: execSeedBindBudget, seedCommand: defaultSeedCommand, incarnation: seedIncarnation,
 		cache:        filepath.Join(cfg.StateDir, "exec-cache", cfg.Episode, cfg.Profile.Project),
 		settingsPath: filepath.Join(cfg.StateDir, "exec", cfg.Episode+"."+cfg.Profile.Project+".srt.json")}
 	if h.maxOutput <= 0 {
@@ -523,51 +530,23 @@ func (h *ExecHandler) childEnv() []string {
 }
 
 // prepareCache makes the episode's exec cache (D-140-3 = A): World's own
-// dirs, then each caches entry, seeded on first use by a clonefile copy of
-// the operator's read-only seed (V21). The seed is never written.
+// dirs, then each non-seeded caches entry. A seeded cache is not copied under
+// the call's deadline any more (row 257): the copy runs on its own clock, and
+// awaitSeed waits for its published, marker-verified result (never existence).
 func (h *ExecHandler) prepareCache(ctx context.Context) error {
-	h.seedMu.Lock()
-	defer h.seedMu.Unlock()
 	for _, d := range []string{"home", "tmp", "pycache", "npm"} {
 		if err := os.MkdirAll(filepath.Join(h.cache, d), 0o700); err != nil {
 			return &HandlerFailure{Class: FailExecCache, Detail: d + ": cannot be created", Err: err}
 		}
 	}
 	for _, name := range sortedKeys(h.profile.Caches) {
+		if h.profile.Caches[name].Seed != "" {
+			continue
+		}
 		dst := filepath.Join(h.cache, name)
-		if _, err := os.Lstat(dst); err == nil {
-			continue
-		}
-		seed := h.profile.Caches[name].Seed
-		if seed == "" {
-			if err := os.MkdirAll(dst, 0o700); err != nil {
-				return &HandlerFailure{Class: FailExecCache, Detail: name + ": cannot be created", Err: err}
-			}
-			continue
-		}
-		args := []string{"-cR", seed, dst} // APFS clonefile
-		if hostGOOS() != "darwin" {
-			args = []string{"-a", "--reflink=auto", seed, dst}
-		}
-		h.spawns.Add(1)
-		if _, err := runBounded(ctx, handlerBounds{execTimeout: execSeedBudget(ctx)}, handlerCommand{
-			path: "/bin/cp", args: args, dir: h.cache, env: execHostEnv(),
-		}); err != nil {
-			_ = os.RemoveAll(dst)
-			return &HandlerFailure{Class: FailSeedCache, Detail: name + ": " + seedWhat(err),
-				Err: fmt.Errorf("broker: exec handler: seed cache %s from %s: %w", name, seed, err)}
+		if err := os.MkdirAll(dst, 0o700); err != nil {
+			return &HandlerFailure{Class: FailExecCache, Detail: name + ": cannot be created", Err: err}
 		}
 	}
-	return nil
-}
-
-// execSeedBudget bounds a seed copy by the call's remaining budget.
-func execSeedBudget(ctx context.Context) time.Duration {
-	if dl, ok := ctx.Deadline(); ok {
-		if r := time.Until(dl); r > 0 {
-			return r
-		}
-		return time.Millisecond
-	}
-	return handlerExecTimeout
+	return h.awaitSeed(ctx)
 }
