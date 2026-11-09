@@ -1,0 +1,3 @@
+--- FAIL: TestWorktreeSnapshotRefusesAConfiguredFilter (0.06s)
+    worktree_delta_test.go:432: control: plain git status did not run the clean filter (stat /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestWorktreeSnapshotRefusesAConfiguredFilter4050909337/002/filter-ran: no such file or directory); the arm below would prove nothing
+FAIL
