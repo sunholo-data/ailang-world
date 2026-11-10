@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -332,5 +333,57 @@ func TestApproverRevokeUnansweredPromptTimesOut(t *testing.T) {
 	}
 	if rows := approverRows(t, creds); !reflect.DeepEqual(rows, before) {
 		t.Fatalf("no timer: rows changed: %+v", rows)
+	}
+}
+
+// ---- row 201 A2 sprint 1 M0 (K8-ERRCODE): K8's read failing after a committed revoke is
+// exitFatal (a failure after the write), with the revoke already printed.
+
+// assertRevokedThenFatal runs a confirmed revoke and requires K7's line, exitFatal and want.
+func assertRevokedThenFatal(t *testing.T, db, want string) {
+	t.Helper()
+	term := &lockedTerm{in: strings.NewReader("y\n")}
+	var out, errw bytes.Buffer
+	code := runApprover([]string{"revoke", "mark-mac", "--db", db}, &out, &errw, approveEnv(term, nil, atTime(approveT0+100)))
+	if code != exitFatal {
+		t.Fatalf("code %d, want exitFatal; stderr %q", code, errw.String())
+	}
+	if out.String() != "revoked approver mark-mac\n" {
+		t.Fatalf("stdout %q, want only K7's line", out.String())
+	}
+	if !strings.Contains(errw.String(), want) || !strings.Contains(errw.String(), "fix: ailang-worldd approve --list --decided") {
+		t.Fatalf("stderr %q lacks %q and the fix", errw.String(), want)
+	}
+}
+
+// K8a: the real revoke commits, then the credentials file is moved away, so K8's read-only
+// reopen fails.
+func TestApproverRevokeListingReopenFailureIsFatal(t *testing.T) {
+	db, creds, _ := revokeRig(t)
+	orig := approverRevoke
+	t.Cleanup(func() { approverRevoke = orig })
+	approverRevoke = func(c *store.Credentials, ctx context.Context, name string, at int64) error {
+		if err := orig(c, ctx, name, at); err != nil {
+			return err
+		}
+		return os.Rename(creds, creds+".away")
+	}
+	assertRevokedThenFatal(t, db, "revoked, but cannot read the credentials store")
+	if _, err := os.Stat(creds + ".away"); err != nil {
+		t.Fatalf("the seam did not run: %v", err)
+	}
+}
+
+// K8b: K8's listing query fails after the revoke committed.
+func TestApproverRevokeListingQueryFailureIsFatal(t *testing.T) {
+	db, creds, _ := revokeRig(t)
+	orig := approverDecided
+	t.Cleanup(func() { approverDecided = orig })
+	approverDecided = func(*store.Credentials, context.Context, string, int) ([]store.MintRequestRow, error) {
+		return nil, errors.New("disk on fire")
+	}
+	assertRevokedThenFatal(t, db, "revoked, but cannot list what it approved: disk on fire")
+	if rows := approverRows(t, creds); len(rows) != 1 || rows[0].RevokedAt != approveT0+100 {
+		t.Fatalf("rows %+v, want mark-mac revoked at %d", rows, approveT0+100)
 	}
 }

@@ -5,8 +5,10 @@ package sshsign
 // ssh-keygen and no key: the program is a temp shell script.
 
 import (
+	"errors"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -59,5 +61,19 @@ func TestSignHandsTheSignerAScrubbedEnvironment(t *testing.T) {
 		if !found {
 			t.Errorf("the signer's environment lacks %s", want)
 		}
+	}
+}
+
+// SG1 (row 201 A2 sprint 1 M0): a signer that prints something and then fails is refused (G1),
+// and its output is never returned as a signature.
+func TestSignRefusesAFailedSignerEvenWithOutput(t *testing.T) {
+	bin := filepath.Join(t.TempDir(), "signer")
+	if err := os.WriteFile(bin, []byte("#!/bin/sh\ncat > /dev/null\necho partial-signature\nexit 3\n"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	out, err := Sign(t.Context(), bin, "k", []byte("msg"), io.Discard)
+	var exit *exec.ExitError
+	if out != nil || !errors.As(err, &exit) || exit.ExitCode() != 3 {
+		t.Fatalf("Sign = (%q, %v), want nil bytes and an error wrapping exit status 3", out, err)
 	}
 }
