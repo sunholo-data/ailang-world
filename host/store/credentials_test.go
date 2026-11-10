@@ -250,6 +250,9 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	}
 	_, _, errs["ResolveSession"] = c.ResolveSession(ctx, "x")
 	_, errs["ListSessions"] = c.ListSessions(ctx, "", 1)
+	errs["PutMintRequest"] = c.PutMintRequest(ctx, testMintRequestRow(1, 1000), 1000)
+	_, _, errs["MintRequest"] = c.MintRequest(ctx, "mr-0000000000000001")
+	_, errs["PendingMintRequests"] = c.PendingMintRequests(ctx, 1000, 0)
 	for name, err := range errs {
 		if !errors.Is(err, ErrNoDeadline) {
 			t.Errorf("%s(Background) = %v, want ErrNoDeadline", name, err)
