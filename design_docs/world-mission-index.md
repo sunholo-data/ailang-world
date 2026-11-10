@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 376 | 2026-11-10 | row 201 A1b sprint 2 built: `approver` enroll, list and revoke with a bounded, error-aware typed y; the plan's size gate deferred M4a/M4b; judge PASS 88 ... |
 | 375 | 2026-11-10 | row 201 A1b sprint 1 built: the approver enrolment law and credentials schema 5 (`approvers`); design r2 via a controller carve-out; judge PASS 91 ... |
 | 374 | 2026-11-10 | row 201 sprint 2 built: credentials store schema 4 with one-transaction consume, `episode start --request`, and `approve` by typed y; judge PASS 90... |
 | 373 | 2026-11-09 | row 201 sprint 1 built: the mint request's pure core and a stdlib SSHSIG verifier on real ssh-keygen fixtures; design r3 via a controller carve-out... |

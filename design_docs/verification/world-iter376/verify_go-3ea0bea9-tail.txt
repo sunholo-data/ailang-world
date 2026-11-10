@@ -1,0 +1,17 @@
+# verify_go tail, sweep 2 (r2) at 3ea0bea9
+── tracked-binary hygiene gate
+test_tracked_binary_gate: 24 passed, 0 failed
+   ✓ 0 other binary blobs among 6618 tracked files
+   ✓ all 64 required top-level evidence tests passed exactly once
+=== rc=0 (415s)
+
+# sweep 1 failures (concurrent with the judge's suite; all pass in isolation and in sweep 2)
+--- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused (61.99s)
+--- FAIL: TestPublishClaimIsDurableBeforeDispatchAndSurvivesAFreshBudget (3.30s)
+FAIL	github.com/sunholo-data/ailang-world/host/broker	480.058s
+--- FAIL: TestWorkspaceExecEpisodeSelectsItsProfile (19.17s)
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	575.488s
+--- FAIL: TestSurfaceAppFollow (30.04s)
+FAIL	github.com/sunholo-data/ailang-world/host/surfacepage	55.791s
+--- FAIL: TestLiveScriptPure (30.01s)
+FAIL	github.com/sunholo-data/ailang-world/host/workbench	35.951s
