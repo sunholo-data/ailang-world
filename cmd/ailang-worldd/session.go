@@ -54,6 +54,7 @@ func realSessionEnv() sessionEnv {
 		now:    func() int64 { return time.Now().Unix() },
 		random: func(b []byte) error { _, err := rand.Read(b); return err },
 		after:  time.After,
+		sign:   signWithSSHKeygen,
 	}
 }
 

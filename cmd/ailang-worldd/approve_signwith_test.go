@@ -10,6 +10,10 @@ import (
 	"context"
 	"errors"
 	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -148,6 +152,166 @@ func TestApproveSignWithDeadline(t *testing.T) {
 			}
 			if a.row(t).Consumed {
 				t.Fatal("the request was consumed")
+			}
+		})
+	}
+}
+
+// ---- S3 ----
+
+// fakeSSHKeygen puts an executable `ssh-keygen` running body (sh) first on PATH for the rest of the
+// test, and returns its directory. The real tool is never run by it.
+func fakeSSHKeygen(t *testing.T, body string) string {
+	t.Helper()
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "ssh-keygen"), []byte("#!/bin/sh\n"+body), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	return dir
+}
+
+// G1-G3 and the exec line, with a fake ssh-keygen first on PATH: the production signer runs
+// `ssh-keygen -Y sign -n world-approval@sunholo -f <key>` with the message on stdin and its stderr
+// passed through, and refuses a failed run (G1), over 16 KiB of output (G2), no output (G3) and a
+// signer still running when the request expires. Each is exitUsage, pending.
+func TestSignWithSSHKeygenRefusesBadOutput(t *testing.T) {
+	for _, arm := range []struct {
+		name, body string
+		now        int64
+		want       []string
+	}{
+		{"exec-line-and-no-output", "printf '%s\\n' \"$@\" > \"$(dirname \"$0\")/args\"\ncat > \"$(dirname \"$0\")/stdin\"\n", approveT0 + 1,
+			[]string{"--sign-with /keys/k: ssh-keygen -Y sign printed nothing; nothing was approved"}},
+		{"failed", "cat > /dev/null\necho 'No private key found' >&2\nexit 255\n", approveT0 + 1,
+			[]string{"No private key found\n", "--sign-with /keys/k: ssh-keygen -Y sign: exit status 255; nothing was approved"}},
+		{"over-16k", "cat > /dev/null\nhead -c 16385 /dev/zero | tr '\\000' a\n", approveT0 + 1,
+			[]string{"--sign-with /keys/k: ssh-keygen -Y sign printed over 16384 bytes; nothing was approved"}},
+		{"outlives-the-request", "cat > /dev/null\nsleep 20\n", approveT0 + 599, // 1 s left
+			[]string{"--sign-with /keys/k: ssh-keygen -Y sign: signal: killed; nothing was approved"}},
+	} {
+		t.Run(arm.name, func(t *testing.T) {
+			a, _ := signedRig(t)
+			dir := fakeSSHKeygen(t, arm.body)
+			env := approveEnv(nil, nil, atTime(arm.now))
+			env.sign = signWithSSHKeygen
+			var stdout, stderr bytes.Buffer
+			start := time.Now()
+			if code := runApprove(a.args("--sign-with", "/keys/k"), &stdout, &stderr, env); code != exitUsage {
+				t.Fatalf("rc %d, want exitUsage\nstderr %s", code, stderr.String())
+			}
+			if took := time.Since(start); took > 10*time.Second {
+				t.Fatalf("approve took %s: the signer outlived the request's deadline", took)
+			}
+			for _, want := range arm.want {
+				if !strings.Contains(stderr.String(), want) {
+					t.Fatalf("stderr %q lacks %q", stderr.String(), want)
+				}
+			}
+			if a.row(t).Consumed {
+				t.Fatal("the request was consumed")
+			}
+			if arm.name != "exec-line-and-no-output" {
+				return
+			}
+			args, err := os.ReadFile(filepath.Join(dir, "args"))
+			if want := "-Y\nsign\n-n\nworld-approval@sunholo\n-f\n/keys/k\n"; err != nil || string(args) != want {
+				t.Fatalf("ssh-keygen's arguments %q (%v), want %q", args, err, want)
+			}
+			if in, err := os.ReadFile(filepath.Join(dir, "stdin")); err != nil || !bytes.Equal(in, requestMessage(t, a)) {
+				t.Fatalf("ssh-keygen's stdin %x (%v), want the request's message", in, err)
+			}
+		})
+	}
+}
+
+// cappedBuffer holds at most its bound, however much is written, and records the overflow (G2).
+func TestCappedBufferKeepsItsBound(t *testing.T) {
+	c := &cappedBuffer{max: 4}
+	for _, w := range []string{"ab", "cdef", "g"} {
+		if n, err := c.Write([]byte(w)); n != len(w) || err != nil {
+			t.Fatalf("Write(%q) = (%d, %v), want (%d, nil)", w, n, err, len(w))
+		}
+	}
+	if c.buf.String() != "abcd" || !c.over {
+		t.Fatalf("buffer %q, over %v; want \"abcd\", true", c.buf.String(), c.over)
+	}
+}
+
+// The production env signs with signWithSSHKeygen: without it, --sign-with is the F7 internal error.
+func TestRealSessionEnvSignsWithSSHKeygen(t *testing.T) {
+	if got, want := reflect.ValueOf(realSessionEnv().sign).Pointer(), reflect.ValueOf(signWithSSHKeygen).Pointer(); got != want {
+		t.Fatalf("realSessionEnv().sign is %#x, want signWithSSHKeygen (%#x)", got, want)
+	}
+}
+
+// sshKeygen runs the real ssh-keygen with no agent (SSH_AUTH_SOCK emptied) and stdin from
+// /dev/null, under the test's temp HOME; a run over 30 s or a failure to start is t.Fatal.
+func sshKeygen(t *testing.T, args ...string) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "ssh-keygen", args...)
+	cmd.Env = append(os.Environ(), "SSH_AUTH_SOCK=")
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("ssh-keygen %v: %v\n%s", args, err, out)
+	}
+}
+
+// XS1: approve --sign-with with the production signer and the REAL ssh-keygen, for each key type:
+// a key made in t.TempDir() under a temp HOME, with no agent, signs and mints as ssh:mark-mac; its
+// .pub with the private file moved away and no agent is refused, naming ssh-keygen's failure (G1).
+// With WORLD_REQUIRE_SSH_KEYGEN=1 a missing ssh-keygen is a failure, not a skip (CI).
+func TestSignWithSSHKeygenEndToEnd(t *testing.T) {
+	if _, err := exec.LookPath("ssh-keygen"); err != nil {
+		if os.Getenv("WORLD_REQUIRE_SSH_KEYGEN") == "1" {
+			t.Fatal("WORLD_REQUIRE_SSH_KEYGEN=1 but ssh-keygen was not found")
+		}
+		t.Skip("SKIP COUNTED: ssh-keygen not found; the --sign-with end-to-end test did NOT run")
+	}
+	for _, kt := range []struct {
+		name string
+		args []string
+	}{{"ed25519", []string{"-t", "ed25519"}}, {"ecdsa-p256", []string{"-t", "ecdsa", "-b", "256"}}} {
+		t.Run(kt.name, func(t *testing.T) {
+			a := newApproveRig(t, "ep1", approveT0) // its episode run sets HOME to a temp dir
+			t.Setenv("SSH_AUTH_SOCK", "")
+			key := filepath.Join(t.TempDir(), "k")
+			sshKeygen(t, append(append([]string{"-q"}, kt.args...), "-N", "", "-C", "xs1", "-f", key)...)
+			pub, err := os.ReadFile(key + ".pub")
+			if err != nil {
+				t.Fatal(err)
+			}
+			k, err := approval.ParseAuthorizedKey(pub)
+			if err != nil {
+				t.Fatal(err)
+			}
+			seedApprover(t, a.credPath, "mark-mac", k, approveT0-100)
+			env := approveEnv(nil, nil, atTime(approveT0+1))
+			env.sign = signWithSSHKeygen
+			var stdout, stderr bytes.Buffer
+			if code := runApprove(a.args("--sign-with", key), &stdout, &stderr, env); code != exitOK {
+				t.Fatalf("approve --sign-with %s: rc %d, want exitOK\nstderr %s", key, code, stderr.String())
+			}
+			if row := a.row(t); row.ApprovedBy != "ssh:mark-mac" {
+				t.Fatalf("approved_by %q, want ssh:mark-mac", row.ApprovedBy)
+			}
+
+			b := newApproveRigIn(t, a.r, "ep2", approveT0)
+			if err := os.Rename(key, key+".moved"); err != nil {
+				t.Fatal(err)
+			}
+			stderr.Reset()
+			if code := runApprove(b.args("--sign-with", key+".pub"), &stdout, &stderr, env); code != exitUsage {
+				t.Fatalf("approve --sign-with k.pub, no private key and no agent: rc %d, want exitUsage\nstderr %s", code, stderr.String())
+			}
+			for _, want := range []string{"No private key found", "ssh-keygen -Y sign: exit status 255; nothing was approved"} {
+				if !strings.Contains(stderr.String(), want) {
+					t.Errorf("stderr lacks %q:\n%s", want, stderr.String())
+				}
+			}
+			if b.row(t).Consumed {
+				t.Fatal("the request was consumed with no key to sign it")
 			}
 		})
 	}

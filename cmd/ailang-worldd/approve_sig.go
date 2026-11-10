@@ -5,12 +5,15 @@ package main
 // approver's SSHSIG over the request's exact message, with no terminal.
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
@@ -132,4 +135,48 @@ func signForApproval(env sessionEnv, key string, row store.MintRequestRow, stder
 		return nil, fmt.Sprintf("--sign-with %s: %v; nothing was approved", key, err)
 	}
 	return armored, ""
+}
+
+// ---- S3 (sprint 4) ----
+
+var (
+	errSignatureTooLarge = fmt.Errorf("ssh-keygen -Y sign printed over %d bytes", approveMaxSignatureBytes)
+	errEmptySignature    = errors.New("ssh-keygen -Y sign printed nothing")
+)
+
+// signWithSSHKeygen is the production signer (design §2.9): `ssh-keygen -Y sign -n
+// world-approval@sunholo -f <key>` with the message on stdin, so the signature comes back on
+// stdout and nothing is written beside the key. Its stderr (a passphrase prompt goes to /dev/tty)
+// is the operator's. PATH is not a trust boundary: whatever runs, approveArmored verifies its
+// output against the enrolled key over World's own message.
+func signWithSSHKeygen(ctx context.Context, key string, msg []byte, stderr io.Writer) ([]byte, error) {
+	cmd := exec.CommandContext(ctx, "ssh-keygen", "-Y", "sign", "-n", approval.Namespace, "-f", key)
+	cmd.Stdin = bytes.NewReader(msg)
+	out := &cappedBuffer{max: approveMaxSignatureBytes}
+	cmd.Stdout, cmd.Stderr = out, stderr
+	cmd.WaitDelay = time.Second       // the deadline holds even if a child of the signer keeps a pipe open
+	if err := cmd.Run(); err != nil { // G1
+		return nil, fmt.Errorf("ssh-keygen -Y sign: %w", err)
+	}
+	if out.over { // G2
+		return nil, errSignatureTooLarge
+	}
+	if out.buf.Len() == 0 { // G3
+		return nil, errEmptySignature
+	}
+	return out.buf.Bytes(), nil
+}
+
+// cappedBuffer keeps the first max bytes written to it and records whether more came.
+type cappedBuffer struct {
+	buf  bytes.Buffer
+	max  int
+	over bool
+}
+
+func (c *cappedBuffer) Write(p []byte) (int, error) {
+	n := min(len(p), c.max-c.buf.Len())
+	c.buf.Write(p[:n])
+	c.over = c.over || n < len(p)
+	return len(p), nil
 }
