@@ -25,7 +25,8 @@ package main
 // start` (episode.go, row 189 M3), its launch-preset and resume paths, and
 // `approve` (approve.go, row 201, which consumes a stored mint request in the
 // mint's own transaction) run it too, after their own validation, so the verbs
-// cannot drift apart and no other code creates a credential.
+// cannot drift apart and no other code creates a credential. `approve --signature` runs steps
+// 4-7 without steps 2-3's terminal, and only with a verified SSHSIG approval (row 201 A1b).
 //
 // Row 189 M2 (D-189-2 A): --profile <project> binds the credential to the
 // exec profile <exec-profiles-dir>/<project>.json. The file is parsed (never
@@ -402,14 +403,19 @@ func checkBindingFits(credPath, episode string, p *broker.ExecProfile) error {
 // new and episode start. It returns the exit code.
 func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) int {
 	prefix := "ailang-worldd " + r.verb + ": "
-	// 2. The mint fence, unchanged, before any side effect.
-	term, err := env.openTerminal()
-	if err != nil {
-		fmt.Fprintf(stderr, "%srefusing: no controlling terminal (%v); "+
-			"provisioning a session credential requires one human act at a terminal. %s\n", prefix, err, sessionTTYFix)
-		return exitUsage
+	// 2. The mint fence, unchanged, before any side effect, unless a verified signature approved
+	// this request (row 201 A1b §2.8: Signed is set only by approve, from ApproveBySignature).
+	signed := r.consume != nil && r.consume.Signed != nil
+	var term io.ReadWriteCloser
+	if !signed { // V1
+		var err error
+		if term, err = env.openTerminal(); err != nil {
+			fmt.Fprintf(stderr, "%srefusing: no controlling terminal (%v); "+
+				"provisioning a session credential requires one human act at a terminal. %s\n", prefix, err, sessionTTYFix)
+			return exitUsage
+		}
+		defer func() { _ = term.Close() }()
 	}
-	defer func() { _ = term.Close() }()
 
 	// 3. y/N naming the worktree, every grant and the exec profile binding.
 	now := env.now()
@@ -442,30 +448,36 @@ func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) 
 		fmt.Fprintf(stderr, "%srequest %s expired before the prompt; make a new request with episode start --request\n", prefix, requestID)
 		return exitUsage
 	}
-	if r.presetPrompt != "" {
-		fmt.Fprint(term, r.presetPrompt)
-	}
 	if r.existingBranch {
 		action += " on existing branch " + r.branch
 	}
-	fmt.Fprintf(term, "%s and mint a session for episode %s with %d grant(s) [%s]%s, expiry +%ds? [y/N] ",
-		action, r.episode, len(grants), grantList(grants), bound, r.ttl)
-	var answer string
-	if r.answerBy != 0 {
-		remaining := time.Duration(r.answerBy-now) * time.Second
-		line, ok := readTermLineWithin(term, remaining, env.after)
-		if !ok {
-			fmt.Fprintf(stderr, "%sno answer within the request's remaining lifetime (%s); nothing was minted and request %s is still pending until %s\n",
-				prefix, remaining, requestID, time.Unix(r.answerBy, 0).UTC().Format(time.RFC3339))
+	if signed { // V2: no prompt; the request and its approver go to stdout
+		fmt.Fprint(stdout, r.presetPrompt)
+		fmt.Fprintf(stdout, "%s and mint a session for episode %s with %d grant(s) [%s]%s, expiry +%ds: approved by %s\n",
+			action, r.episode, len(grants), grantList(grants), bound, r.ttl, r.consume.Signed.ApprovedBy())
+	} else {
+		if r.presetPrompt != "" {
+			fmt.Fprint(term, r.presetPrompt)
+		}
+		fmt.Fprintf(term, "%s and mint a session for episode %s with %d grant(s) [%s]%s, expiry +%ds? [y/N] ",
+			action, r.episode, len(grants), grantList(grants), bound, r.ttl)
+		var answer string
+		if r.answerBy != 0 {
+			remaining := time.Duration(r.answerBy-now) * time.Second
+			line, ok := readTermLineWithin(term, remaining, env.after)
+			if !ok {
+				fmt.Fprintf(stderr, "%sno answer within the request's remaining lifetime (%s); nothing was minted and request %s is still pending until %s\n",
+					prefix, remaining, requestID, time.Unix(r.answerBy, 0).UTC().Format(time.RFC3339))
+				return exitUsage
+			}
+			answer = line
+		} else {
+			answer = readTermLine(term)
+		}
+		if !isYes(answer) {
+			fmt.Fprintf(stderr, "%saborted (not confirmed). fix: run it again and type y at the prompt\n", prefix)
 			return exitUsage
 		}
-		answer = line
-	} else {
-		answer = readTermLine(term)
-	}
-	if !isYes(answer) {
-		fmt.Fprintf(stderr, "%saborted (not confirmed). fix: run it again and type y at the prompt\n", prefix)
-		return exitUsage
 	}
 
 	// 4. The credentials writer lock, before the worktree exists.

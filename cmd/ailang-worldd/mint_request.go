@@ -220,7 +220,7 @@ var mintRequestFieldMap = map[string]string{
 	"startPoint":         "fixed: \"\" (set only by episode_preset.go)",
 	"existingBranch":     "fixed: false (set only by episode_preset.go)",
 	"presetPrompt":       "excluded: display only; approve sets renderRequest(request)",
-	"consume":            "excluded: set by approve from the stored row (id, digest, challenge, env.now); authority.MintForRequest derives approved_by",
+	"consume":            "excluded: set by approve from the stored row (id, digest, challenge, expires_at, env.now) and, with --signature, the verified approval; authority.MintForRequest derives approved_by",
 	"answerBy":           "excluded: set by approve to the stored row's expires_at",
 }
 

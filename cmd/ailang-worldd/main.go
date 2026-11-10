@@ -122,6 +122,7 @@ Usage:
                     [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
                     [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:7644 (or service.json's address)] [--request]
   ailang-worldd approve <request-id> [--db <path>] [--credentials-db <path>]
+  ailang-worldd approve <request-id> --signature <file> [--db <path>] [--credentials-db <path>]
   ailang-worldd approve --list [--db <path>] [--credentials-db <path>]
   ailang-worldd approver enroll --name <name> --format ssh --pubkey <file> [--db <path>] [--credentials-db <path>]
   ailang-worldd approver list [--db <path>] [--credentials-db <path>]
