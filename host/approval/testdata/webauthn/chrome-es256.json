@@ -1,0 +1,10 @@
+{
+  "source": "row 201 A2, iteration 379: Chrome headless, CDP virtual authenticator (a test key, D-WORLD-109); see SOURCE.txt",
+  "chrome": "Chrome/157.0.8103.50",
+  "origin": "http://localhost:56547",
+  "rp_id": "localhost",
+  "challenge_hex": "29181d224d982f659d1bd4703238d3f8489e26968ffe2a22bd786fa3bf15fef5",
+  "registration": {"authenticatorAttachment":"platform","clientExtensionResults":{},"id":"18ZYwHpS0jBgdaH6F89nTjl0LuAaxzs-k2kc0eJYNDI","rawId":"18ZYwHpS0jBgdaH6F89nTjl0LuAaxzs-k2kc0eJYNDI","response":{"attestationObject":"o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YVikSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NFAAAAAQECAwQFBgcIAQIDBAUGBwgAINfGWMB6UtIwYHWh-hfPZ045dC7gGsc7PpNpHNHiWDQypQECAyYgASFYIM1s_xRHouyhiYBh_0krF24rmScb5nMISw64W9OWNHjtIlggrJhbdhYWyyY2wdvW-VJduL4pGlGHLeOMCGZvq3aZ_hA","authenticatorData":"SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NFAAAAAQECAwQFBgcIAQIDBAUGBwgAINfGWMB6UtIwYHWh-hfPZ045dC7gGsc7PpNpHNHiWDQypQECAyYgASFYIM1s_xRHouyhiYBh_0krF24rmScb5nMISw64W9OWNHjtIlggrJhbdhYWyyY2wdvW-VJduL4pGlGHLeOMCGZvq3aZ_hA","clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiS1JnZElrMllMMldkRzlSd01qalQtRWllSnBhUF9pb2l2WGh2bzc4Vl92VSIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTY1NDciLCJjcm9zc09yaWdpbiI6ZmFsc2V9","publicKey":"MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEzWz_FEei7KGJgGH_SSsXbiuZJxvmcwhLDrhb05Y0eO2smFt2FhbLJjbB29b5Ul24vikaUYct44wIZm-rdpn-EA","publicKeyAlgorithm":-7,"transports":["internal"]},"type":"public-key"},
+  "assertion": {"authenticatorAttachment":"platform","clientExtensionResults":{},"id":"18ZYwHpS0jBgdaH6F89nTjl0LuAaxzs-k2kc0eJYNDI","rawId":"18ZYwHpS0jBgdaH6F89nTjl0LuAaxzs-k2kc0eJYNDI","response":{"authenticatorData":"SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAg","clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiS1JnZElrMllMMldkRzlSd01qalQtRWllSnBhUF9pb2l2WGh2bzc4Vl92VSIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTY1NDciLCJjcm9zc09yaWdpbiI6ZmFsc2V9","signature":"MEYCIQCd2FJZsQPiF1HAHoE5TQu6hukSvK0XtddumKSgfXh9NwIhALyLnjuwVR1iBPOGSm0I6h2l_e4nYIBr4vShU-2imih6"},"type":"public-key"},
+  "assertion2": {"authenticatorData":"SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAw"}
+}

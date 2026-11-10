@@ -375,6 +375,10 @@ func approverEnrolPrecheck(ctx context.Context, ro *store.Credentials, a approva
 // a failure; production never reassigns it.
 var approverRevoke = (*store.Credentials).RevokeApprover
 
+// approverDecided is K8's listing read, a test seam (row 201 A2 sprint 1 M0, K8b): a test
+// replaces it to inject a failure; production never reassigns it.
+var approverDecided = (*store.Credentials).DecidedMintRequests
+
 // runApproverRevoke is `approver revoke <name>` (design §2.10 K1-K7).
 func runApproverRevoke(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	const prefix = "ailang-worldd approver revoke: "
@@ -448,7 +452,7 @@ func runApproverRevoke(args []string, stdout, stderr io.Writer, env sessionEnv) 
 		fmt.Fprintf(stderr, "%srevoked, but cannot read the credentials store %s to list what it approved: %v; fix: ailang-worldd approve --list --decided\n", prefix, credPath, err)
 		return exitFatal
 	}
-	rows, err := ro.DecidedMintRequests(list, row.Format+":"+name, 0)
+	rows, err := approverDecided(ro, list, row.Format+":"+name, 0)
 	_ = ro.Close()
 	if err != nil {
 		fmt.Fprintf(stderr, "%srevoked, but cannot list what it approved: %v; fix: ailang-worldd approve --list --decided\n", prefix, err)

@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	// FormatSSH is the only approver format A1b enrols.
+	// FormatSSH is an SSH key approver (A1b).
 	FormatSSH = "ssh"
-	// FormatWebAuthn is named so it can be refused with a message naming row 201 A2.
+	// FormatWebAuthn is a passkey approver (row 201 A2): it enrols only through NewPasskeyApprover.
 	FormatWebAuthn = "webauthn"
 	// MaxKeyFileBytes caps a --pubkey file (one authorized_keys line).
 	MaxKeyFileBytes = 8 << 10
@@ -27,16 +27,17 @@ var ApproverNamePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,47}$`)
 // Approver is one enrolled approver as the pure law sees it.
 type Approver struct {
 	Name       string
-	Format     string       // FormatSSH
-	Key        SSHPublicKey // Type + wire Blob
+	Format     string       // FormatSSH or FormatWebAuthn
+	Key        SSHPublicKey // Type + wire Blob (ssh approvers)
 	EnrolledAt int64
-	LastUsedAt int64 // 0: never used
-	RevokedAt  int64 // 0: active
+	LastUsedAt int64    // 0: never used
+	RevokedAt  int64    // 0: active
+	Passkey    *Passkey // webauthn approvers only (row 201 A2); nil for ssh
 }
 
 var (
 	ErrApproverName        = errors.New("approval: approver name must match ^[a-z0-9][a-z0-9._-]{0,47}$")
-	ErrFormatNotYet        = errors.New("approval: webauthn approvers arrive with row 201 A2; A1b enrols ssh keys only")
+	ErrUseRegistration     = errors.New("approval: webauthn approvers enrol from a browser registration (approver enroll --format webauthn --origin … --registration …)")
 	ErrApproverFormat      = errors.New("approval: approver format must be ssh")
 	ErrApproverKeyFile     = errors.New("approval: the public key file must hold exactly one key line of at most 8 KiB")
 	ErrPrivateKeyFile      = errors.New("approval: that is a PRIVATE key file; pass the .pub file (its contents were not shown or kept)")
@@ -50,8 +51,8 @@ func NewApprover(name, format string, keyFile []byte, now int64) (Approver, erro
 	if !ApproverNamePattern.MatchString(name) { // E1
 		return Approver{}, ErrApproverName
 	}
-	if format == FormatWebAuthn { // E2 (before E3, so webauthn names A2)
-		return Approver{}, ErrFormatNotYet
+	if format == FormatWebAuthn { // E2 (before E3, so webauthn names its own path)
+		return Approver{}, ErrUseRegistration
 	}
 	if format != FormatSSH { // E3
 		return Approver{}, ErrApproverFormat

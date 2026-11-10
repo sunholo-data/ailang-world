@@ -1,0 +1,10 @@
+{
+  "source": "row 201 A2, iteration 379: Chrome headless, CDP virtual authenticator (a test key, D-WORLD-109); see SOURCE.txt",
+  "chrome": "Chrome/157.0.8103.50",
+  "origin": "http://localhost:56629",
+  "rp_id": "localhost",
+  "challenge_hex": "29181d224d982f659d1bd4703238d3f8489e26968ffe2a22bd786fa3bf15fef5",
+  "registration": {"authenticatorAttachment":"platform","clientExtensionResults":{},"id":"15HgLiYRkyGZ2RT27yosO_nqoohHe4OogLJlNUK-bbY","rawId":"15HgLiYRkyGZ2RT27yosO_nqoohHe4OogLJlNUK-bbY","response":{"attestationObject":"o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViBSZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NFAAAAAQECAwQFBgcIAQIDBAUGBwgAINeR4C4mEZMhmdkU9u8qLDv56qKIR3uDqICyZTVCvm22pAEBAycgBiFYICbpoZHRqpAlkXWdFG6utclYPxkX5JYG3RT0ECxxD2ro","authenticatorData":"SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2NFAAAAAQECAwQFBgcIAQIDBAUGBwgAINeR4C4mEZMhmdkU9u8qLDv56qKIR3uDqICyZTVCvm22pAEBAycgBiFYICbpoZHRqpAlkXWdFG6utclYPxkX5JYG3RT0ECxxD2ro","clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoiS1JnZElrMllMMldkRzlSd01qalQtRWllSnBhUF9pb2l2WGh2bzc4Vl92VSIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTY2MjkiLCJjcm9zc09yaWdpbiI6ZmFsc2V9","publicKey":"MCowBQYDK2VwAyEAJumhkdGqkCWRdZ0Ubq61yVg_GRfklgbdFPQQLHEPaug","publicKeyAlgorithm":-8,"transports":["internal"]},"type":"public-key"},
+  "assertion": {"authenticatorAttachment":"platform","clientExtensionResults":{},"id":"15HgLiYRkyGZ2RT27yosO_nqoohHe4OogLJlNUK-bbY","rawId":"15HgLiYRkyGZ2RT27yosO_nqoohHe4OogLJlNUK-bbY","response":{"authenticatorData":"SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAg","clientDataJSON":"eyJ0eXBlIjoid2ViYXV0aG4uZ2V0IiwiY2hhbGxlbmdlIjoiS1JnZElrMllMMldkRzlSd01qalQtRWllSnBhUF9pb2l2WGh2bzc4Vl92VSIsIm9yaWdpbiI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTY2MjkiLCJjcm9zc09yaWdpbiI6ZmFsc2V9","signature":"ltfy2YVJXOPy9P3aKQ9qroe4jxGQg-6Q0lbl98_F5ARiAiNckkJpgZ6rLSzNtM7fbTasGLYOcO1DdMjhdbZ4Aw"},"type":"public-key"},
+  "assertion2": {"authenticatorData":"SZYN5YgOjGh0NBcPZHZgW4_krrmihjLHmVzzuoMdl2MFAAAAAw"}
+}

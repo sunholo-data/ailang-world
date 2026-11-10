@@ -227,7 +227,7 @@ func TestApproverEnrollRefusals(t *testing.T) {
 				}
 				return enrollArgs(db, "mark-mac", p)
 			}},
-		{name: "webauthn", setup: std, want: []string{"row 201 A2"}, checkRows: true,
+		{name: "webauthn", setup: std, want: []string{"--registration"}, checkRows: true,
 			args: func(t *testing.T, db string) []string {
 				return []string{"enroll", "--name", "mark-mac", "--format", "webauthn", "--pubkey", ed, "--db", db}
 			}},
