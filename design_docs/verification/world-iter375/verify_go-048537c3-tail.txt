@@ -1,0 +1,8 @@
+test_tracked_binary_gate: 24 passed, 0 failed
+   ✓ 3 pinned font(s) validated, 1017220 bytes (host/surfacepage/fonts/)
+   ✓ 0 other binary blobs among 6605 tracked files
+── World mission-input gate (decision ledger)
+decision ledger valid: 100 rows
+   World decision-ledger validated; centralized runtime currency is NOT certified here.
+   ✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6
+   ✓ all 64 required top-level evidence tests passed exactly once
