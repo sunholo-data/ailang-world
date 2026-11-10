@@ -12,7 +12,7 @@ var everyVerb = [][]string{
 	{"log", "get"}, {"log", "range"}, {"log", "tail"}, {"registry", "get"}, {"commit"},
 	{"tools", "list"}, {"call"}, {"why"}, {"provenance"}, {"setup"}, {"doctor"}, {"hosts", "init"},
 	{"session"}, {"session", "new"}, {"session", "list"}, {"session", "revoke"}, {"session", "mint"},
-	{"approve"}, {"approver"}, {"approver", "list"}, {"approver", "enroll"},
+	{"approve"}, {"approver"}, {"approver", "list"}, {"approver", "enroll"}, {"approver", "revoke"},
 }
 
 // AC5.7: `<verb> --help` and `help <verb>` exit 0 with that verb's help on

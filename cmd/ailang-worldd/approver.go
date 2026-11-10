@@ -154,6 +154,8 @@ func runApprover(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		return runApproverList(args[1:], stdout, stderr)
 	case "enroll": // M3e
 		return runApproverEnroll(args[1:], stdout, stderr, env)
+	case "revoke": // M3g
+		return runApproverRevoke(args[1:], stdout, stderr, env)
 	case "--help", "-help", "-h", "help": // D3
 		fmt.Fprint(stdout, approverHelp)
 		return exitOK
@@ -363,4 +365,75 @@ func approverEnrolPrecheck(ctx context.Context, ro *store.Credentials, a approva
 		return fmt.Sprintf("key %s is already enrolled as approver %q (a key is never enrolled twice, even after revoke)", a.Key.Fingerprint(), holder.Name)
 	}
 	return ""
+}
+
+// ---- M3g ----
+
+// approverRevoke is the revoke write, a test seam (plan A-D4): CA8 replaces it to inject a race or
+// a failure; production never reassigns it.
+var approverRevoke = (*store.Credentials).RevokeApprover
+
+// runApproverRevoke is `approver revoke <name>` (design §2.10 K1-K7).
+func runApproverRevoke(args []string, stdout, stderr io.Writer, env sessionEnv) int {
+	const prefix = "ailang-worldd approver revoke: "
+	db, creds, positional, code, done := approverFlags("revoke", args, stdout, stderr, nil)
+	if done {
+		return code
+	}
+	if len(positional) != 1 { // K1
+		fmt.Fprint(stderr, approverHelp)
+		return exitUsage
+	}
+	name := positional[0]
+	credPath, refusal := approverStores(db, creds)
+	if refusal != "" {
+		return approverRefuse(stderr, prefix, "%s", refusal)
+	}
+
+	// The read-only lookup, closed before the prompt (K2, K3).
+	pre, cancelPre := context.WithTimeout(context.Background(), approveReadBudget)
+	ro, err := store.OpenCredentialsReadOnly(credPath)
+	if err != nil {
+		cancelPre()
+		return approverRefuse(stderr, prefix, "cannot read the credentials store %s: %v", credPath, err)
+	}
+	row, ok, err := ro.Approver(pre, name)
+	_ = ro.Close()
+	cancelPre()
+	if err != nil { // below schema 5 names the serve restart
+		return approverRefuse(stderr, prefix, "%v", err)
+	}
+	if !ok { // K2
+		return approverRefuse(stderr, prefix, "no approver named %q in %s; fix: ailang-worldd approver list shows them", name, credPath)
+	}
+	if err := approval.CheckRevoke(approval.Approver{EnrolledAt: row.EnrolledAt, RevokedAt: row.RevokedAt}, env.now()); err != nil { // K3
+		return approverRefuse(stderr, prefix, "approver %q cannot be revoked: %v", name, err)
+	}
+
+	// The fence (K4a, K4, K5a, K5).
+	prompt := fmt.Sprintf("Revoke approver %s (%s)? It will never approve again, and its name and key can never be enrolled again. [y/N] ",
+		name, approverKeyLabel(row.PublicKey))
+	if code := confirmApproverAct(env, stderr, prefix, prompt, "nothing was revoked"); code != exitOK {
+		return code
+	}
+
+	// The write (K5b, K6, K7).
+	ctx, cancel := context.WithTimeout(context.Background(), approveReadBudget)
+	defer cancel()
+	st, err := openCredentialsForSession(ctx, db, credPath)
+	if err != nil { // K5b
+		fmt.Fprintf(stderr, "%scannot open the credentials store for writing: %v\n", prefix, err)
+		return exitFatal
+	}
+	defer func() { _ = st.Close() }()
+	err = approverRevoke(st, ctx, name, env.now())
+	switch {
+	case errors.Is(err, store.ErrApproverRevoked), errors.Is(err, store.ErrApproverUnknown): // K6
+		return approverRefuse(stderr, prefix, "%v (another revoke ran first); nothing was revoked", err)
+	case err != nil:
+		fmt.Fprintf(stderr, "%scannot revoke approver %q: %v\n", prefix, name, err)
+		return exitFatal
+	}
+	fmt.Fprintf(stdout, "revoked approver %s\n", name) // K7
+	return exitOK
 }

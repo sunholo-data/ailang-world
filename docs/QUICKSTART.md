@@ -1781,3 +1781,17 @@ ailang-worldd approve mr-<the 16 hex it printed> --db /tmp/se-world/world.db
 ```
 
 `approve` refuses, before any terminal opens, a request that is unknown, already used, expired, whose stored bytes do not match their digest, or whose world has changed since it was made (the refusal names the first field that differs). A `y` not typed before the request expires mints nothing.
+
+## 15. Enrol an approver *(attended — pending first verbatim run)*
+
+An approver is a name and one SSH public key, kept in the credentials store. `ailang-worldd approver enroll` reads the `.pub` file once, shows its SHA256 fingerprint, and stores it only after a `y` typed at the terminal within 2 minutes; `approver revoke` marks it revoked the same way, and keeps the row. Approving a mint request with the key's signature (`approve --signature`) arrives in a later sprint; until then an enrolled key approves nothing. This guide uses the §0 scratch store `/tmp/se-world/world.db`, with its daemon serving (`serve` upgrades the credentials store to schema 5), and a scratch key made for it: never a key from `~/.ssh` and never a real store.
+
+```bash
+ssh-keygen -t ed25519 -N '' -f /tmp/se-world/demo-key < /dev/null
+ssh-keygen -l -f /tmp/se-world/demo-key.pub
+ailang-worldd approver enroll --name demo --format ssh --pubkey /tmp/se-world/demo-key.pub --db /tmp/se-world/world.db
+ailang-worldd approver list --db /tmp/se-world/world.db
+ailang-worldd approver revoke demo --db /tmp/se-world/world.db
+```
+
+Compare the fingerprint `ssh-keygen -l` prints with the one the y/N shows before you type `y`. `enroll` refuses, before any terminal opens, a private key file (without showing it), a key type other than ssh-ed25519 or ecdsa-sha2-nistp256, a name or a key already enrolled (revoked ones included), and a credentials store below schema 5. A revoked name and key can never be enrolled again.
