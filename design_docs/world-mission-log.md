@@ -1612,3 +1612,99 @@ lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (pro
 - The planner caught a design premise that three quorum rounds and the designer missed, because only it ran the repo's own gates: the NUL byte against the tracked-binary gate. Directives for any design that checks in fixtures should name `verify_go.sh`'s binary gate explicitly.
 
 **Next:** row 201 sprint 2 (M4–M6 of `w-world-approvals-by-key-a0a1.md`: store schema 4, `episode start --request`, `approve` by typed `y`), carrying the judge's four test-gap notes. Then A1b, then row 243.
+
+## 374 — 2026-11-10 — row 201 sprint 2 built: credentials store schema 4 with one-transaction consume, `episode start --request`, and `approve` by typed y; judge PASS 90 [PRODUCT]
+
+**Pick:** row 201 `w-world-approvals-by-key` sprint 2 (M4–M6 of `w-world-approvals-by-key-a0a1.md` r3), the route iteration 373 named under the attended **D-WORLD-109 = A**. Built and judged against fakes, temp stores and test keys only. No real key, store, mint or publish.
+- Re-measured at pick:
+  - No open PR from this account.
+  - No `mint_requests`, `approve` verb or `--request` flag on `origin/dev` `ab4ae3aa`.
+  - Release rows not routable. Row 150 A1: the one subject since 2026-11-07 matching `row ?150|A1` is `63766f2f`, row 201's own "A1a" design commit, a false positive. Row 151 N2d/N4a: 0 since 2026-10-01; control N2c: 1.
+- Design quorum artifacts exist (`mc_quorum_gate2` rc 0: r1 `…T21-08-17Z`, r2 `…T21-20-35Z`; r3 was the controller carve-out recorded at 373). The design says M4–M6 are "built from this same doc without re-design", so no designer ran.
+- Ledger valid (100 rows); OPEN: D-WORLD-105 only.
+- **Progress:** 1.0 clauses 1–7 MET; goal unmoved. Clause 5 (the human surface) was already MET. This is the first behaviour change on the no-terminal path: a mint can now be requested without a terminal and approved later by id.
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
+- Directives: 0 allowlisted on #524 (6 comments; the issue-scoped watermark is absent, so all were read) and 0 on #449 since the mission-scoped watermark (2026-10-27T09:03:42Z, 47 comments).
+- Self-notices: `mission_gate0_self_notices.sh` rc 2 (instrument failure, not a verdict): neither `mission-524-last-seen` nor `mission-449-last-seen` exists. Same cause as 372 and 373.
+- Skill drift: none. All 14 files (SKILL.md plus 13 resources) match the driver clone's `origin/dev`, and so does the pin copy.
+- Dev at `ab4ae3aa` (fast-forwarded from `693f704e`), CI success, `checks=3`.
+
+**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus` (29 min). Ten milestones: M3b, M4a–c, M5a–b, M6a–d. About 2,550 lines against the design's ~1,600; the extra is M3b plus the tests the design implies but does not name (ST4b, ST8, BM1, AU1). 83 mutants. Baseline green at `ab4ae3aa`. Committed `1edd723a`.
+- Design premises the planner found false or incomplete, each routed around minimally:
+  - F1: the exit codes are `exitUsage=1` and `exitFatal=2` (`main.go:71-75`). The design said "exit 2" for refusals. Refusals before the store lock now return 1; failures at the write return 2.
+  - F2: `GLOB 'mr-[0-9a-f]*'` accepts `mr-0zzzzzzzzzzzzzzz`. The DDL is kept verbatim, and `PutMintRequest` enforces `^mr-[0-9a-f]{16}$`.
+  - F3: closes sprint-1 risk R5. `RequestConsume.Check` runs `MintMatches` inside the transaction, after the one `Clock()` read.
+  - F4: CL15 equality fails on ordinary inputs (the flags are kept as typed, and the darwin temp dir sits behind a `/var` symlink). CL15 uses canonical inputs; the new BM1 covers relative ones.
+  - F5–F8 are smaller: two more field-map entries; approve is the fifth caller of `provisionEpisode`, not the third; `approve` needs its own help text; v4 makes a v3 store refuse until serve restarts, as at v3.
+- The design's line numbers were exact: the five files hash identically to the design's V1 prefixes.
+- Incident: while probing, the planner ran a bare `ssh-keygen`, which prompted to create `~/.ssh/id_ed25519`, got EOF and aborted. The controller checked: `~/.ssh` has no new file, and the directory's mtime is still Sep 9. Every later directive forbade a bare `ssh-keygen`.
+
+**Executor:** resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`; spawned as Agent `haiku` (the 318–373 precedent).
+- Five runs: M3b+M4a (5 min), M4b+M4c (7), M5a+M5b (13), M6a+M6b (10), M6c+M6d (31). No git writes. Each run wrote per-milestone snapshots outside the repo (`~/.ailang/state/world-iter374/snap/<M>/`).
+- For every run, the controller backed up the final tree and rebuilt each milestone from its snapshot. It ran build + vet + gofmt + the milestone's tests at each boundary (`commit_ms.sh`) and committed: M3b `55a7cc25`, M4a `62148065`, M4b `3cae9428`, M4c `75f38336`, M5a `5e48bb28`, M5b `5e613e5d`, M6a `87e7540a`, M6b `4ad9248a`, M6c `1d2a3d17`, M6d `86aa2f9c`. The final tree was sha256-identical to the executor's after every run.
+- Executor deviations (all adjudicated by the judge, see below):
+  - ST7 gains a small-store arm, because the plan's ST7 let two pending-filter mutants survive.
+  - `insertSessionRow`'s error is returned unwrapped (it already carries the prefix).
+  - CL14's positive control asserts the line is present, not the exact list.
+  - CL3 inlines the v3 DDL.
+  - The approve rig draws its randomness from `realSessionEnv().random` (`seqRandom` collides on the primary key).
+  - AU1's grant sets `ExpiresAt: 1610`.
+  - CL12(c) uses an unknown id.
+  - CL10(a) changes the profile via `env`, because the profile parser refuses `"x"`.
+  - CL16 has 13 arms.
+  - QUICKSTART §14 is 12 lines.
+
+**Controller gates** at `86aa2f9c` (AILANG_BIN v0.41.0):
+- `verify_ail.sh` rc 0.
+- `VERIFY_GO_LEGS=plain verify_go.sh` rc 0: 3 pinned fonts, 0 other binary blobs among 6,587 tracked files, 64 evidence tests.
+- `go test -race` on store, approval, authority and cmd: rc 0, 0 `DATA RACE`.
+- Instrument note: my first M4c boundary run reddened `TestDaemonStartReportsMissingTemplates` ("AILANG_BIN is unset … never skips"), because I had not exported the pin in that shell. With it exported: `ok`.
+
+**Judge:** sonnet via the Agent tool (generator ≠ judge: executor haiku, planner opus), on an isolated detached worktree at `86aa2f9c`. **PASS 90/100, zero blocking.**
+- Mutants: 58 applied; 56 counted, all killed. Spread across M4a–M6c, with each milestone's headline test killed by its own milestone's mutant.
+- One survivor, CR-TOOMANY. One judge-authored mutant turned out equivalent and was not counted.
+- Security properties confirmed:
+  - One transaction, with a guarded UPDATE that must change exactly one row.
+  - The clock is read once after `BeginTx` and feeds Check, SET and WHERE.
+  - Replay is refused by `consumed_at IS NULL` plus the digest.
+  - Decode and Admit run before any terminal opens.
+  - The request is re-derived from the world and compared byte for byte.
+  - Existing callers keep `answerBy == 0`.
+- All nine executor deviations accepted. F1–F8 applied consistently.
+- Non-blocking notes, logged, not filed (D-WORLD-109):
+  - `createMintRequest`'s `ErrTooManyPendingRequests` → `exitUsage` branch is pinned by no CLI test. **Controller reproduced:** mutant `false && errors.Is(…)` → `go test ./cmd/ailang-worldd/ -run 'Request|Approve|EpisodeStart'` = `ok`. The store-level cap is tested.
+  - QUICKSTART §14 is short and unverified until Mark's first run.
+  - CL14's weaker positive control (the FM-* mutants still die).
+- Carried into A1b's directive.
+
+**Gate 3b:** PR #535, head `86aa2f9c`.
+- `pull_request` run `42748199074`: 3/3 success (ailang-code verify gate, go host build + test gate, go race gate).
+- Merged by merge commit **`ca8a4c17`** (`--match-head-commit`).
+- Push run `42750082535` on the merge `ca8a4c17`: 3/3 success.
+- Row 201 sprint 2 LANDED; row 201 stays open (A1b, A2–A4).
+
+**Routing evidence:**
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (the design covers M4–M6; quorum done at 373).
+- Planner: `opus` via Agent (426,444 tok).
+- Executor: `claude:claude-haiku-5-5` via Agent haiku (131,590 + 109,383 + 155,339 + 178,683 + 156,258 tok).
+- Evaluator: `sonnet` via Agent (98,492 tok).
+- The driver noted codex unusable at preflight (probe rc 75, quota unreadable).
+- Metered spend: $0.00. Details in `verification/world-iter374/routing.md`.
+
+**Progress**: 1.0: clauses 1–7 MET; goal unmoved.
+
+**Ruled out:**
+- A designer run: the r3 doc covers M4–M6, and its quorum is on record.
+- One executor run for the whole sprint: about 2,550 lines, so five runs of two milestones each.
+- Treating the first `host/daemon` red as a regression: it was the instrument (unset AILANG_BIN), and the suite is green with the pin.
+- Fixing the CR-TOOMANY gap in this sprint: a non-blocking note under D-WORLD-109, logged.
+- Bounding the existing callers' y/N: out of scope, design R7.
+
+**Retro:**
+- The plan's mutation table missed CR-TOOMANY, an exit-code branch the diff introduced in `createMintRequest`. Its ST7 also let two pending-filter mutants survive, which the executor caught. Both are rule 3n: a mutation set derived from what the milestone fixes misses what it ships. Planner directives for A1b should ask for one mutant per new production `if`/`return` branch in the diff, enumerated from the diff itself.
+- My own instrument: a long-lived helper script that runs package tests must export `AILANG_BIN` itself. A shell that lacked it produced a false red that looked like a sprint regression. Fixed in `commit_ms.sh` mid-iteration.
+
+**Next:** row 201 A1b: approver enrol/list/revoke, `approve --signature` / `--sign-with`, the `approvers` table at schema 5, and `approved_by=ssh:<name>`. It needs a design r0 (a child of the parent design's A1), carrying this judge's CR-TOOMANY gap and the retro's mutant-enumeration ask. Then row 243.

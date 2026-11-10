@@ -1,0 +1,5 @@
+   ✓ 3 pinned font(s) validated, 1017220 bytes (host/surfacepage/fonts/)
+   ✓ 0 other binary blobs among 6587 tracked files
+   ✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6
+   ✓ all 64 required top-level evidence tests passed exactly once
+✓ go gate PASSED (plain): build clean; legs run pass with pinned AILANG_BIN (AILANG v0.41.0
