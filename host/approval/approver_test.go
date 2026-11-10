@@ -258,7 +258,7 @@ func TestApproverNamePatternBoundaries(t *testing.T) {
 			t.Errorf("%q refused, want accepted", ok)
 		}
 	}
-	for _, bad := range []string{strings.Repeat("a", 49), "", ".a", "_a", "-a", "A", "a/b", "a:b", "a b", "ä", "a\n"} {
+	for _, bad := range []string{strings.Repeat("a", 49), "", ".a", "_a", "-a", "A", "a/b", "a:b", "a b", "ä", "a\n", "aB", "mark-Mac", "a.B_c", "m" + strings.Repeat("Z", 47)} {
 		if ApproverNamePattern.MatchString(bad) {
 			t.Errorf("%q accepted, want refused", bad)
 		}
@@ -381,4 +381,48 @@ func TestEnrolmentPromptShowsEveryPersistedField(t *testing.T) {
 			t.Errorf("%s is %q but perturbing it changes the prompt", p, enrolmentPromptFields[p])
 		}
 	}
+}
+
+// KB1: KeyFromBlob returns a stored blob's key type and a copy of the blob, with
+// ParseAuthorizedKey's refusals (sprint-2 plan D3).
+func TestKeyFromBlob(t *testing.T) {
+	for _, c := range []struct{ file, typ string }{{"ed25519.pub", "ssh-ed25519"}, {"p256.pub", "ecdsa-sha2-nistp256"}} {
+		want := fixtureKey(t, c.file)
+		in := bytes.Clone(want.Blob)
+		k, err := KeyFromBlob(in)
+		if err != nil || k.Type != c.typ || !bytes.Equal(k.Blob, want.Blob) {
+			t.Fatalf("%s: (%+v, %v), want type %s and the same blob", c.file, k, err, c.typ)
+		}
+		in[0] ^= 0xff
+		if !bytes.Equal(k.Blob, want.Blob) {
+			t.Fatalf("%s: editing the caller's blob changed the returned key (not a copy)", c.file)
+		}
+	}
+	sk, err := base64.StdEncoding.DecodeString(strings.Fields(string(skRetype(t)))[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, c := range map[string]struct {
+		blob []byte
+		want error
+	}{
+		"sk":        {sk, ErrKeyType},
+		"rsa":       {mustBlob(t, approverFixtureBytes(t, "rsa3072.pub")), ErrKeyType},
+		"truncated": {[]byte{0, 0, 0, 1}, ErrTruncated},
+		"empty":     {nil, ErrTruncated},
+	} {
+		if k, err := KeyFromBlob(c.blob); !errors.Is(err, c.want) || !reflect.DeepEqual(k, SSHPublicKey{}) {
+			t.Errorf("%s: (%+v, %v), want the zero key and %v", name, k, err, c.want)
+		}
+	}
+}
+
+// mustBlob is the base64-decoded second field of an authorized_keys line.
+func mustBlob(t *testing.T, line []byte) []byte {
+	t.Helper()
+	b, err := base64.StdEncoding.DecodeString(strings.Fields(string(line))[1])
+	if err != nil {
+		t.Fatal(err)
+	}
+	return b
 }

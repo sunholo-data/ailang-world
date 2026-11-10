@@ -18,6 +18,9 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/episode_resume.go|runEpisodeResume|Background": 1, // row 217 M3: resume preflight (8 s)
 	"cmd/ailang-worldd/mint_request.go|createMintRequest|Background":  1, // row 201 M5: --request's store open and insert (3 s)
 	"cmd/ailang-worldd/approve.go|runApprove|Background":              1, // row 201 M6: approve's read-only request lookup or --list (3 s)
+	"cmd/ailang-worldd/approver.go|runApproverList|Background":        1, // row 201 A1b M3: read-only ListApprovers (3 s)
+	"cmd/ailang-worldd/approver.go|runApproverEnroll|Background":      2, // row 201 A1b M3: the read-only pre-check (3 s), then the write after y (3 s)
+	"cmd/ailang-worldd/approver.go|runApproverRevoke|Background":      2, // row 201 A1b M3: the read-only lookup (3 s), then the write after y (3 s)
 	"cmd/ailang-worldd/episode_launch.go|launchEpisode|Background":    3, // row 217 M2: HTTP preflight (8 s), agent (wall cap + margin), append (3 s)
 
 	"cmd/ailang-worldd/cli.go|get|Background":                                1,

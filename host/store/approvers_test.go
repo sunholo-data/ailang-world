@@ -345,6 +345,16 @@ func TestApproverLookups(t *testing.T) {
 		t.Fatalf("ApproverByKey(key-a + NUL): ok %v err %v; want false, nil", ok, err)
 	}
 
+	// LK-NAMEPREFIX (sprint-1 judge): a lookup by name matches the whole name, never a prefix.
+	if err := c.EnrolApprover(ctx, testApprover("mark-mac", 1200)); err != nil {
+		t.Fatal(err)
+	}
+	for _, prefix := range []string{"m", "mark", "mark-ma"} {
+		if row, ok, err := c.Approver(ctx, prefix); err != nil || ok {
+			t.Fatalf("Approver(%q), a prefix of mark-mac: %+v ok %v err %v; want false, nil", prefix, row, ok, err)
+		}
+	}
+
 	// A version 4 store refuses both lookups with the approvers refusal.
 	v4 := filepath.Join(t.TempDir(), CredentialsFileName)
 	makeV4Credentials(t, v4, nil)
