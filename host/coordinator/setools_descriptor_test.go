@@ -203,10 +203,10 @@ func TestSeToolsDescriptorCompaction(t *testing.T) {
 
 func TestSeToolsDescriptorSourceEquality(t *testing.T) {
 	// Raw byte hashes independently banked from the same reviewed parent; no git or external binary required in CI.
-	// Moved since, each by its own row: read.ail by rows 190/228 (ranges/cap);
+	// Moved since, each by its own row: read.ail by rows 190/228 (ranges/cap) and PR #545 (asNumber);
 	// delete.ail is row 191a's new module.
 	hashes := map[string]string{
-		"packages/se-tools/se_tools/read.ail":            "ab4111d34d1abed52264be06ee1cdcec1cf7b65193d206924bc98f8a6c42aba0",
+		"packages/se-tools/se_tools/read.ail":            "92dd55361b50608693e92532cfbade413cd28bdc1e9089d2cef3d350ea6c3d24",
 		"packages/se-tools/se_tools/delete.ail":          "084d90f35b3184af04d77893309d8453b2360dc1eb070947cb5b4d1fda47c834",
 		"packages/se-tools/se_tools/write.ail":           "2d90757c61274f6f172551f179b254178f3ccfcedd21ee7955ab2e47d364deda",
 		"packages/se-tools/se_tools/edit.ail":            "2d12856ab07f987c1d26c82b9320503e830817f27b625e7a80320b22ae32f286",
