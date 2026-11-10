@@ -1,6 +1,12 @@
 # w-world-approvals-by-key-a1b: enrolled SSH approvers, and approving a mint request by signature
 
-- **Status**: Planned. Designed in iteration 375, **r0**. Queue row 201, `w-world-approvals-by-key`.
+- **Status**: Planned. Designed in iteration 375, **r1**. Queue row 201, `w-world-approvals-by-key`.
+  **[r1]** r0 (commit `446e5d93`) was BLOCKED 3 of 3 at quorum round 1. None of the three
+  disputed the direction. r1 applies each reviewer's fix, and the changed text is marked
+  **[r1]**:
+  - the enrolment and revocation y/N are bounded at 120 s (§2.10a);
+  - `--sign-with` refuses a request with no lifetime left before calling the signer (§2.7);
+  - the challenge column and the consume's transaction mode are verified (V35–V37).
   **Sprint boundary: sprint 1 builds M1–M3 (enrolment). Sprint 2 builds M4–M6 (approving by key),
   from this same doc without re-design (§0, §8).**
   This doc covers the **A1b half of parent milestone A1**. Parent:
@@ -23,8 +29,8 @@
   - The approver recorded as `approved_by = ssh:<name>`, shown by `approve --list --decided`.
   It changes no `/v1` route and no `.ail` code.
 - **Designer lane**: `claude:claude-opus-5-5`.
-- **Estimated**: 6 milestones in two sprints, about 3,750 lines in all (§8). **Sprint 1 = M1–M3**,
-  about 1,900 lines: the pure enrolment law, store schema 5, and the `approver` verbs.
+- **Estimated**: 6 milestones in two sprints, about 3,900 lines in all (§8). **Sprint 1 = M1–M3**,
+  about 2,050 lines (**[r1]**: +150 for the bounded prompts; this is at the §8 fallback threshold): the pure enrolment law, store schema 5, and the `approver` verbs.
   **Sprint 2 = M4–M6**, about 1,850 lines: the pure signature law and the store consume, the
   `approve` signature paths, and `--sign-with` with its real-tool tests and CI step. Measured
   calibration: A0/A1a's two sprints overran their estimates by 1.6× and 2.2× (V24). §8 therefore
@@ -140,6 +146,22 @@ reasoning: enrolment is the root of trust and gets its own review.
    - `MintSessionForRequest` (`:243`) runs a guarded `UPDATE … WHERE request_id = ? AND digest = ?
      AND consumed_at IS NULL AND created_at <= ? AND expires_at > ?` (`:265`). **That WHERE does not
      bind the challenge column.** `classifyConsume` is at `:287`.
+   - **[r1]** **`challenge` is already a stored column** (V35): `credentials_schema.sql:48`
+     `challenge TEXT NOT NULL CHECK (length(challenge) = 64)` and the upgrade's embedded DDL
+     `mint_requests.go:24`. It is `MintRequestRow.Challenge` (`:76`), inserted at `:131-132` and
+     scanned at `:207`/`:217`. Binding it in the consume (C6) needs **no schema-5 column
+     change**.
+   - **[r1]** **The consume's transaction is deferred, and the clock is read before its first
+     statement** (V36, V37). `MintSessionForRequest` opens `c.db.BeginTx(ctx, nil)` (`:256`).
+     `database/sql`'s default options give SQLite's deferred `BEGIN`, which takes no lock until
+     the first statement. `at := rc.Clock()` (`:261`) runs before any statement in that
+     transaction. The store sets no `journal_mode`, so SQLite's default `delete` (a rollback
+     journal) applies. `credentials_migrate.go:11` says so, and `:206-210` refuses any
+     non-rollback mode. **So a second connection can commit a write from inside a test's `Clock`
+     hook, before the guarded `UPDATE` runs.** A throwaway probe on this machine measured exactly
+     that: the second connection's commit returned `<nil>`, and the first transaction's guarded
+     `UPDATE` then changed 0 rows (V37). CS3 and CR6 build the revoke race this way, through the
+     existing `Clock` seam (`mint_requests_test.go:584`, `Clock: func() int64 { return 1010 }`).
 7. **The mint core** (`host/authority/mint.go`, V8):
    - `RequestMint{Request approval.MintRequest; RequestCreatedAt int64; Consume
      store.RequestConsume}` (`:60-64`) and `MintForRequest` (`:70`).
@@ -468,7 +490,10 @@ var (
 **C8 is the revocation check that cannot go stale.** `approve` verifies the signature on a
 read-only handle with no lock (§2.7). The mint takes the writer lock later, inside
 `provisionEpisode`. A `revoke` that commits in that window turns C8's update into zero rows, so
-the mint is refused. This mirrors a0a1's in-transaction expiry clock.
+the mint is refused. This mirrors a0a1's in-transaction expiry clock. **[r1]** The window between
+`BeginTx` and the guarded `UPDATE` is real: the transaction is deferred and `Clock()` runs before
+its first statement, so it holds no SQLite lock there. A revoke committed in that window is seen
+by C8 (V36, V37), and CS3/CR6 commit one through the `Clock` hook.
 
 **The store's law over `approved_by`** (C3, C4, C8): every `ssh:<name>` written to
 `mint_requests.approved_by` is written in the same transaction as a one-row update of an active
@@ -526,8 +551,14 @@ approve --list [--decided] [--db <path>] [--credentials-db <path>]
    opens no terminal, writes no store row, and the request stays pending (F6).
 3. **`--sign-with <key>`**:
    - **F7** `env.sign == nil` → `exitFatal`, an internal error, like `random`.
-   - Otherwise it calls `env.sign(ctx, key, msg, stderr)`. `ctx` is a new root bounded by the
-     request's remaining lifetime, `expires_at - env.now()` (§2.9). **F8** a signing error →
+   - **[r1] F7a** It computes `rem := row.ExpiresAt - env.now()`. If `rem <= 0`, it refuses
+     with exit 1 **before invoking `env.sign`**, using the standard request-expired message
+     (`approveAdmission`'s `RefuseExpired` text, `approve.go:76`: "request <id> expired at <RFC
+     3339>; fix: make a new request with episode start --request"). Admission ran on an earlier
+     clock reading, so the request can expire in between. A non-positive duration is never passed
+     to `context.WithTimeout`.
+   - Otherwise it calls `env.sign(ctx, key, msg, stderr)`. `ctx` is a new root with timeout `rem`
+     seconds, the request's remaining lifetime (§2.9). **F8** a signing error →
      refused, exit 1, naming `ssh-keygen`'s failure. The returned bytes enter step 4 as if read
      from a file. **World never reads the private key.** Only `ssh-keygen` does.
 4. **`--signature <file>`**:
@@ -624,7 +655,8 @@ Measured on this machine, with temp keys only (V17–V21):
   can only refuse or produce something that fails to verify. A binary that can reach the
   operator's agent could already sign anything (R6).
 - **The context root** is a new `context.Background()` root in `approve.go` (`signForApproval`),
-  with timeout `expires_at - now` seconds, added to `TestProductionContextRoots`.
+  with timeout `rem` seconds. **[r1]** It is created only after F7a has shown `rem > 0`, so it is
+  never created with a non-positive duration. It is added to `TestProductionContextRoots`.
 
 ### 2.10 The `approver` verbs (sprint 1)
 
@@ -650,11 +682,16 @@ Each subcommand takes `--db` (default `~/.ailang/world/world.db`) and `--credent
   - **N8** the key is enrolled, revoked or not → exit 1, naming the holder.
   
   So the operator is never asked `y` for something that will be refused.
-- **The fence:**
+- **The fence**, **[r1]** run through `confirmApproverAct` (§2.10a), with prompt
+  `RenderEnrolment(a)` + `Enrol approver <name>? [y/N] `:
+  - **N9a [r1]** `env.after == nil` → `exitFatal`, an internal error. This is checked before the
+    terminal opens, as `approve.go:120` does.
   - **N9** `env.openTerminal()` fails → `sessionTTYFix`, exit 1.
-  - It prints `RenderEnrolment(a)` and `Enrol approver <name>? [y/N] `.
-  - **N10** a non-`y` answer → aborted, exit 1.
-  - The read is unbounded, like `session new`'s (R7 of a0a1, R5 here).
+  - **N10a [r1]** no answer within the **120 s** confirmation budget → exit 1, `no answer within
+    2m0s; nothing was enrolled`.
+  - **N10** EOF, a read failure, or any answer other than `y` → aborted, exit 1.
+  - **[r1]** In every case the terminal is closed, nothing is written to the store, and no writer
+    lock is held while it waits.
 - **The write:**
   - **N11** `openCredentialsForSession` under a new 3 s root fails → exit 2, with the existing
     writer-busy text.
@@ -673,9 +710,16 @@ Each subcommand takes `--db` (default `~/.ailang/world/world.db`) and `--credent
 - **K1** not exactly one positional argument → exit 1.
 - **K2** read-only lookup: unknown → exit 1. **K3** `CheckRevoke` fails (already revoked, or the
   clock is behind) → exit 1.
-- **K4** the fence: no terminal → exit 1. It prints `Revoke approver <name> (<type> <fp>)? It will
-  never approve again, and its name and key can never be enrolled again. [y/N] `. **K5** a non-`y`
-  answer → aborted, exit 1.
+- **The fence**, **[r1]** through the same `confirmApproverAct` (§2.10a), with prompt `Revoke
+  approver <name> (<type> <fp>)? It will never approve again, and its name and key can never be
+  enrolled again. [y/N] `:
+  - **K4a [r1]** `env.after == nil` → `exitFatal`, an internal error, before the terminal opens.
+  - **K4** no terminal → exit 1.
+  - **K5a [r1]** no answer within **120 s** → exit 1, `no answer within 2m0s; nothing was
+    revoked`.
+  - **K5** EOF, a read failure, or a non-`y` answer → aborted, exit 1.
+  - **[r1]** The terminal is closed, nothing is written, and no writer lock is held while it
+    waits.
 - **K6** `RevokeApprover` returns `ErrApproverRevoked` or `ErrApproverUnknown` (a race) → exit 1;
   any other error → exit 2.
 - **K7** It prints `revoked approver <name>`.
@@ -683,6 +727,79 @@ Each subcommand takes `--db` (default `~/.ailang/world/world.db`) and `--credent
   `approved_by` is `ssh:<name>`, with the credential id prefix and the line `session revoke --db …
   <credential_id-hash>`. **K9** if there are none it prints `no session was approved by it`. It
   revokes no session itself (Q4).
+
+#### 2.10a [r1] The enrolment and revocation y/N are bounded
+
+**Rule (the reviewer's text, adopted verbatim):** "Enrolment and revocation each have a fixed
+120-second confirmation budget, starting when the prompt is displayed. Reuse the existing bounded
+terminal-read machinery and injected timer seam. Timeout, EOF, read failure, or any answer other
+than y refuses with exitUsage, closes the terminal, and performs no store write. No writer lock is
+held while awaiting confirmation."
+
+**The existing machinery, measured (V38).**
+- `sessionEnv.after` (`session.go:36-37`) is `time.After` in production (`:53`).
+- `readTermLineWithin(r, d, after)` (`session.go:482-495`) runs `readTermLine` in a goroutine that
+  sends to a buffered channel of size 1. It `select`s that channel against `after(d)` and returns
+  `("", false)` on timeout.
+- `approve` reaches it through `provisionEpisode`: `remaining := time.Duration(r.answerBy-now) *
+  time.Second` and `readTermLineWithin(term, remaining, env.after)` (`session_new.go:454-456`).
+  It refuses `!ok` with `exitUsage` (`:457-461`).
+- `runApprove` refuses a nil `env.after` with `exitFatal` before any terminal opens
+  (`approve.go:120-123`).
+- `readTermLine` (`session.go:477-480`) returns `""` on EOF or a read error, because it discards
+  `ReadString`'s error. `isYes("")` is false, so EOF and read failures already refuse as "not
+  confirmed".
+
+**The new helper** (`cmd/ailang-worldd/approver.go`). One function serves both verbs, so the
+bound cannot be applied to one and forgotten in the other:
+
+```go
+// approverConfirmBudget is the fixed y/N budget of approver enroll and revoke, counted from the
+// moment the prompt is written (row 201 A1b [r1]).
+const approverConfirmBudget = 120 * time.Second
+
+// confirmApproverAct shows prompt at /dev/tty and returns exitOK only on a y typed within
+// approverConfirmBudget. Every other outcome returns its refusal code having written nothing.
+// It is called with no store handle open, so no writer lock is held while it waits.
+func confirmApproverAct(env sessionEnv, stderr io.Writer, prefix, prompt, nothing string) int {
+	if env.after == nil {                                        // N9a / K4a
+		fmt.Fprintf(stderr, "%sinternal error: no prompt timer (sessionEnv.after)\n", prefix)
+		return exitFatal
+	}
+	term, err := env.openTerminal()
+	if err != nil {                                              // N9 / K4
+		fmt.Fprintf(stderr, "%srefusing: no controlling terminal (%v). %s\n", prefix, err, sessionTTYFix)
+		return exitUsage
+	}
+	defer func() { _ = term.Close() }()                          // closed on every return
+	fmt.Fprint(term, prompt)                                     // the budget starts here
+	line, ok := readTermLineWithin(term, approverConfirmBudget, env.after)
+	if !ok {                                                     // N10a / K5a
+		fmt.Fprintf(stderr, "%sno answer within %s; %s\n", prefix, approverConfirmBudget, nothing)
+		return exitUsage
+	}
+	if !isYes(line) {                                            // N10 / K5 (also EOF and read failure: line == "")
+		fmt.Fprintf(stderr, "%saborted (not confirmed); %s. fix: run it again and type y at the prompt\n", prefix, nothing)
+		return exitUsage
+	}
+	return exitOK
+}
+```
+
+- **Order in `runApproverEnroll` and `runApproverRevoke`.** The read-only pre-check handle
+  (N6–N8, K2) is **closed before** `confirmApproverAct` runs. `openCredentialsForSession`, which
+  takes the writer lock, runs only **after** it returns `exitOK`. So nothing holds the credentials
+  writer lock or a SQLite transaction while a person reads the prompt. Both are pinned by CA9 and
+  CA10, which open the store writable from the test **while the prompt is waiting**.
+- **The one-shot constraint carries over.** `readTermLineWithin`'s doc comment (`session.go:484-485`)
+  says a timed-out read leaves its goroutine blocked until the process exits. `approver enroll`
+  and `approver revoke` are one-shot CLI entry points that return to `main`, which exits, exactly
+  like `approve`. Tests close the reader pipe in `t.Cleanup`, as CL13 does
+  (`approve_test.go:857-858`).
+- **Why 120 s, and why fixed.** There is no request expiry to bound these prompts by, unlike
+  `approve`'s y/N (a0a1 §2.6a). The budget is long enough to compare a fingerprint with
+  `ssh-keygen -l`, and short enough that an unattended prompt does not wait for a passer-by. It
+  is a constant, not a flag (Q7).
 
 **Why revoke is fenced.** Revoking only ever *removes* authority, and parent R3 makes it typed all
 the same. The cost is that an emergency revoke needs the daemon's terminal. That is accepted (R3)
@@ -724,6 +841,7 @@ store's C4 law (`format:name`) already covers `webauthn:` without a change. **A3
 | Threat | What A1b does | Pinned by |
 |---|---|---|
 | **An agent enrols a key** | Enrolment is only `approver enroll`, behind `env.openTerminal()` and `isYes` (N9, N10). Agents have no controlling terminal (parent §1). `EnrolApprover` has one production caller, after `isYes` | CA3, CA4 |
+| **[r1] An enrol or revoke prompt left waiting** (a passer-by types `y` later, or a lock is held while it waits) | A fixed 120 s budget from the moment the prompt is written (§2.10a). Timeout, EOF, a read failure or a non-`y` answer refuses with `exitUsage`, closes the terminal and writes nothing. The writer lock is taken only after `y` | CA9, CA10 |
 | **The pubkey file is swapped between the operator's look and the enrol** | Read once (N4). The y/N shows the fingerprint of **those** bytes, and those bytes are stored. The prompt tells the operator to compare with `ssh-keygen -l`/`ssh-add -l` | AP5, CA2 |
 | **A private key passed as `--pubkey`** | `ErrPrivateKeyFile` (E5). The contents are never echoed or kept | AP1, CA5 |
 | **Terminal injection through the prompt** | The name grammar is `[a-z0-9._-]`. No key comment is stored or shown. The fingerprint is base64 | AP1, AP5 |
@@ -746,7 +864,9 @@ store's C4 law (`format:name`) already covers `webauthn:` without a change. **A3
 
 1. **No key is enrolled without a typed `y`.** `EnrolApprover` has exactly one production caller,
    `runApproverEnroll`. It runs after `env.openTerminal()` succeeded and `isYes` returned true
-   (N9, N10). CA3's spy and CA4's `n` arm fail if either is bypassed.
+   (N9, N10). CA3's spy and CA4's `n` arm fail if either is bypassed. **[r1]** That `y` must
+   arrive within 120 s of the prompt (N10a). Until then no writer lock is held, and after a
+   timeout nothing is written (CA9).
 2. **The terminal is skipped only with a verified approval for this exact request.**
    - `provisionEpisode` skips the terminal iff `r.consume.Signed != nil` (V1).
    - `approve` sets `Signed` only from `ApproveBySignature`. That function returns a non-nil
@@ -772,8 +892,8 @@ store's C4 law (`format:name`) already covers `webauthn:` without a change. **A3
 **Rules the planner must carry (iteration 374 and 373 retros):**
 - **One mutant per new production branch.** The mutation table below has one row per new
   production `if`, `return` or `switch` arm in this design's own code sketches. Those are
-  E1–E7, R1–R2, P1–P6, B1–B6, C1–C12, A1–A5, F1–F16, G1–G3, V1–V2, N1–N14, L1–L3, K1–K9, D1–D3,
-  M1, and the `EnrolApprover`/`RevokeApprover` validation branches. It does not stop at mutants
+  E1–E7, R1–R2, P1–P6, B1–B6, C1–C12, A1–A5, F1–F16 **[r1] + F7a**, G1–G3, V1–V2, N1–N14
+  **[r1] + N9a, N10a**, L1–L3, K1–K9 **[r1] + K4a, K5a**, D1–D3, M1, and the `EnrolApprover`/`RevokeApprover` validation branches. It does not stop at mutants
   for the headline properties. The planner copies this list into the sprint plan. The evaluator
   applies each mutant and records which assertion fires (S6, "load-bearing criteria require
   mutations"). A branch the planner adds that is not listed here gets its own row in the plan.
@@ -840,11 +960,13 @@ regenerated, so SG1's pins do not move.
 | CA1 | `TestApproverDispatchAndHelp` | no subcommand → `exitUsage` + help (D1); `frob` → `exitUsage` (D2); `--help` → `exitOK` (D3); the global `--addr` → `exitUsage` (M1) | each branch deleted |
 | CA2 | `TestApproverEnrollStoresWhatItShowed` | `y` → one row whose blob equals the file's parsed blob; the prompt (captured from the spy terminal) contains that blob's fingerprint and the R6 paragraph; stdout matches N14; the file is rewritten **after** the prompt is printed, and the stored blob is still the first one | reading the file twice (once to show, once to store) |
 | CA3 | `TestApproverEnrollWithoutATerminalEnrolsNothing` | `noTerminalEnv` → `sessionTTYFix`, `exitUsage`, 0 rows (N9) | the fence bypassed |
-| CA4 | `TestApproverEnrollDeclinedEnrolsNothing` | `n`, empty answer and EOF → `exitUsage`, 0 rows (N10) | `isYes` skipped |
+| CA4 | `TestApproverEnrollDeclinedEnrolsNothing` | `n`, an empty answer, EOF (a closed pipe) and a read failure (a reader returning an error) → `exitUsage`, 0 rows, the terminal closed (N10) **[r1]** | `isYes` skipped; **[r1]** the `defer term.Close()` dropped (a close-recording terminal sees no close) |
 | CA5 | `TestApproverEnrollRefusals` | flag misuse (N1), an empty `--name`/`--pubkey` (N2), a missing world store (N3), a FIFO or 8 KiB+1 `--pubkey` (N4), a private key file (N5: stderr lacks the file's bytes), `--format webauthn` (N5 via E2: stderr names A2), a v4 store (N6: names the restart), a taken name (N7), an enrolled key (N8: names the holder). Each → `exitUsage`, **no terminal opened** (spy), 0 rows | each pre-check deleted (the arm then reaches the spy terminal) |
 | CA6 | `TestApproverEnrollRaceAndFailure` | an `EnrolApprover` seam returning `ErrApproverNameTaken` → `exitUsage` (N12); returning a plain error → `exitFatal` (N13); the writer lock held by another handle → `exitFatal` with the busy text (N11) | N12 mapped to `exitFatal`; N11's error swallowed |
 | CA7 | `TestApproverList` | v4 → refused naming the restart (L1); empty → `no approvers` (L2); one active and one revoked → both lines with fingerprint, `never`/time, `active`/`revoked <time>` (L3); opens no terminal and holds no writer lock | the state column always `active` |
-| CA8 | `TestApproverRevoke` | `y` → `revoked_at` set, `exitOK`, K7's line; unknown (K2), already revoked (K3), no terminal (K4), `n` (K5) → `exitUsage` and unchanged; arity (K1); `RevokeApprover` returning `ErrApproverRevoked` → `exitUsage`, a plain error → `exitFatal` (K6) | each branch deleted; revoke without the fence |
+| CA8 | `TestApproverRevoke` | `y` → `revoked_at` set, `exitOK`, K7's line; unknown (K2), already revoked (K3), no terminal (K4), `n`/EOF/a read failure (K5) → `exitUsage`, unchanged and **[r1]** the terminal closed; arity (K1); `RevokeApprover` returning `ErrApproverRevoked` → `exitUsage`, a plain error → `exitFatal` (K6) | each branch deleted; revoke without the fence |
+| CA9 [r1] | `TestApproverEnrollUnansweredPromptTimesOut` | a close-recording terminal whose reader is an `io.Pipe` that stays open and never answers (closed in `t.Cleanup`, as CL13 does); `after` records its duration and returns a channel **the test fires**. While the prompt waits (the test polls the terminal's output for `[y/N]`), the test opens the store with `store.OpenCredentials` and it **succeeds** (no writer lock held), then closes it and fires the timer. `runApproverEnroll` returns within a 5 s guard with `exitUsage`; stderr says `no answer within 2m0s; nothing was enrolled`; the recorded duration is exactly `120s`; the terminal was closed; the approvers rows are **unchanged** (0). Arm 2: `env.after == nil` → `exitFatal`, no terminal opened (N9a) | **enrol's read made unbounded** (plain `readTermLine`: the 5 s guard fires); **the `!ok` branch deleted** (it reads as `""` and says `aborted`, not `no answer within`); a budget other than 120 s (the recorded duration differs); `openCredentialsForSession` moved before the prompt (the test's `OpenCredentials` gets `WriterAlreadyActive`); N9a deleted (a nil-func panic, not `exitFatal`) |
+| CA10 [r1] | `TestApproverRevokeUnansweredPromptTimesOut` | the same rig for `approver revoke <name>` on an enrolled, active approver: bounded return, `exitUsage`, `no answer within 2m0s; nothing was revoked`, 120 s recorded, the terminal closed, the store opened writable during the wait, and the row's `revoked_at` **still NULL** (all six fields unchanged). Arm 2: `env.after == nil` → `exitFatal` (K4a) | **revoke's read made unbounded** (the guard fires); K5a's `!ok` branch deleted (the message differs); revoke bypassing `confirmApproverAct` with its own unbounded read (the guard fires); K4a deleted |
 | edited | `TestEveryVerbHasHelp` (`help_test.go:14`, `:44`) | `{"approver"}`, `{"approver","enroll"}`, `{"approver","list"}`, `{"approver","revoke"}`; usage contains `approver enroll`, `approver list`, `approver revoke` | — |
 | edited | `TestHelpIsNeverBlockedByTheRegistryKeyGuard` (`keyguard_test.go:32`) | `approver --help` is answered with the key set (`keyguard.go` `ownVerbHelp` gains `case "approver"`) | — |
 | edited | `TestProductionContextRoots` | +3 entries, 5 roots in all: `approver.go\|runApproverEnroll\|Background: 2` (pre-check, write), `approver.go\|runApproverList\|Background: 1`, `approver.go\|runApproverRevoke\|Background: 2` | — |
@@ -870,7 +992,7 @@ regenerated, so SG1's pins do not move.
 |---|---|---|---|
 | CS1 | `TestMintSessionForRequestNeedsTheChallenge` | an empty or 63-hex `Challenge` → `ErrIncompleteConsume` (C1); an approver missing `Name`, `Format` or `PublicKey` → `ErrIncompleteConsume` (C2) | the challenge clause dropped; C2 deleted |
 | CS2 | `TestApprovedByMatchesTheApprover` | `Approver == nil` with `ssh:x` → `ErrInconsistentApproval` (C3); an approver `x` with `ApprovedBy "ssh:y"` or `"tty"` → `ErrInconsistentApproval` (C4); a v4 store with an approver → `Older{Need 5}` (C5). Each leaves 0 session rows and the request pending | C3, C4, C5 deleted |
-| CS3 | `TestSignedConsumeChecksTheApproverInTheTransaction` | approver active → ok: the request is `approved_by = ssh:x`, the approver's `last_used_at == at`, 1 session row. **The clock seam revokes `x` (raw SQL on a second connection) just before `Clock()` returns** → `ErrApproverRevoked` (C10), request pending, 0 session rows, `last_used_at` unchanged; unknown name → `ErrApproverUnknown` (C9); another key or format → `ErrApproverKeyChanged` (C11); `enrolled_at > at` → `ErrApproverClockBehind` (C12) | the approver `UPDATE` deleted (C8: the revoked arm mints); `RowsAffected` unchecked; the update placed after the session insert and not rolled back; the classify arms swapped |
+| CS3 | `TestSignedConsumeChecksTheApproverInTheTransaction` | approver active → ok: the request is `approved_by = ssh:x`, the approver's `last_used_at == at`, 1 session row. **The clock seam revokes `x` (raw SQL on a second connection) just before `Clock()` returns**. **[r1]** This is possible because the transaction is deferred and holds no lock until its first statement, which comes after `Clock()`. It is the existing `Clock` seam (`mint_requests_test.go:584`), measured in V36 and V37 → `ErrApproverRevoked` (C10), request pending, 0 session rows, `last_used_at` unchanged; unknown name → `ErrApproverUnknown` (C9); another key or format → `ErrApproverKeyChanged` (C11); `enrolled_at > at` → `ErrApproverClockBehind` (C12) | the approver `UPDATE` deleted (C8: the revoked arm mints); `RowsAffected` unchecked; the update placed after the session insert and not rolled back; the classify arms swapped |
 | CS4 | `TestTypedConsumeTouchesNoApprover` | `Approver == nil`, `ApprovedBy "tty"` → ok on a v5 store **with** an approver row, whose `last_used_at` stays NULL | the approver update run unconditionally |
 | CS5 | `TestConsumeBindsTheChallenge` | the row's challenge rewritten by raw SQL after the consume is built → `ErrRequestChallengeChanged` (C6, C7), 0 session rows | `AND challenge = ?` dropped (it mints); C7's case deleted (it classifies as the generic "changed 0 rows") |
 | CS6 | `TestDecidedMintRequests` | consumed rows only, newest `consumed_at` first, cap 64, `approved_by` and `credential_id` returned; works on v4 | the `consumed_at IS NOT NULL` filter dropped |
@@ -897,10 +1019,10 @@ signature is made over `SignedMessage(row digest, row challenge, row expires_at)
 | CR3 | `TestApproveTypedPathUnchanged` | with no signature flag every a0a1 CL test stays green **unedited**, and this arm checks `approved_by = tty` with an approver enrolled | `Signed` set on the typed path |
 | CR4 | `TestApproveBySignatureRefusalsBeforeAnyEffect` | each → `exitUsage`, no terminal, no network (the `stubDaemon` counts 0 requests), request pending, 0 session rows: a FIFO and 16 KiB+1 file (F9); unreadable (F10); garbage (F11); a v4 store (F12: names the restart); an unenrolled key (F13: names the fingerprint and `approver list`); a revoked approver (F14: "revoked at"); a signature over another request's message (F14: bad signature); consumed and expired requests → admission's existing refusals, before the signature is read | each branch deleted; the lookup moved after the network call (the stub counts 1) |
 | CR5 | `TestApproveBySignatureRefusesTheWrongNamespace` | a test-signer signature under `git` → `exitUsage`, stderr names the namespace | — (P6 at the CLI) |
-| CR6 | `TestApproveRevokeRaceIsRefusedAtTheWrite` | the `now` seam revokes the approver (raw SQL) on its call inside the consume → `exitFatal` (a failure at the write), stderr `approver is revoked`; the worktree this run created is removed (the existing step 7); request pending | C8 bypassed at the CLI |
+| CR6 | `TestApproveRevokeRaceIsRefusedAtTheWrite` | the `now` seam revokes the approver (raw SQL on a separate `sql.Open` connection; the store's own handle has `SetMaxOpenConns(1)`) on its call inside the consume. **[r1]** That is the in-transaction `Clock()` reading, before any statement of the deferred transaction (V36, V37) → `exitFatal` (a failure at the write), stderr `approver is revoked`; the worktree this run created is removed (the existing step 7); request pending | C8 bypassed at the CLI |
 | CR7 | `TestApproveDecidedList` | after one typed and one signed approve: `--list --decided` prints both with `approved_by` `tty` and `ssh:<name>`, newest first (F16); an empty store → `no decided mint requests` (F15) | F15/F16 swapped; pending rows included |
 | CR8 | `TestApproveSignWithFakeSigner` | the `sign` seam: `nil` → `exitFatal` internal (F7); returns an error → `exitUsage`, stderr names it (F8); returns **another enrolled approver's valid signature over a different message** → refused (F14), nothing minted; returns the right signature → mints as `ssh:<name>`, and the seam received exactly `SignedMessage(...)` with `approval.Namespace` passed through to it | F7/F8 deleted; the seam's output trusted without verification |
-| CR9 | `TestApproveSignWithDeadline` | the seam records `ctx.Deadline()`; with `now = expires_at - 37` the deadline is 37 s ahead | the bound taken from `RequestLifetime` |
+| CR9 | `TestApproveSignWithDeadline` | the seam records `ctx.Deadline()`; with `now = expires_at - 37` the deadline is 37 s ahead. **[r1] Arm 2 (F7a):** `now` returns `expires_at - 1` for admission and `expires_at` for the `rem` reading (the existing `clockSeq` helper) → `exitUsage`, stderr has the standard `request <id> expired at …; fix: make a new request with episode start --request`, the `sign` seam is **never called**, and the request is still pending. Arm 3: `rem` = 1 → the seam is called once with a deadline 1 s ahead | the bound taken from `RequestLifetime`; **[r1] F7a deleted** (the seam is called with an already-expired context, so arm 2's "never called" fires); `rem < 0` for `rem <= 0` (arm 2 calls the seam at `rem == 0`) |
 | CR10 | `TestApproveWriteMessage` | writes exactly the 90 bytes of `SignedMessage` (F6), `exitOK`, prints the `ssh-keygen -Y sign -n world-approval@sunholo` line and the `--signature` next step, no terminal, request pending; an existing file → `exitUsage`, its contents unchanged (F5); a consumed request → admission refuses and no file is written | `O_EXCL` dropped; writing before admission |
 | CR11 | `TestApproveChallengeHex` | the row's challenge rewritten by raw SQL to 64 non-hex characters → `exitUsage` (F4) | F4 deleted (a zero challenge flows on) |
 | CR12 | `TestApproverRevokeListsWhatItApproved` | after a signed approve, `approver revoke` prints the request id, the credential prefix and a `session revoke` line (K8); for an approver that approved nothing, `no session was approved by it` (K9); no session is revoked | K8 filtering by the wrong `approved_by` |
@@ -984,14 +1106,17 @@ not compile test files (MEMORY: go-build-is-not-a-compile-fence), so `go vet` or
 - `go build ./... && go test ./...`;
 - `go test ./host/daemon/ -run '^TestDaemonDependencyAllowlist$' -count=1`.
 
-**Sprint 1 = M1–M3, "enrolment", about 1,900 lines.**
+**Sprint 1 = M1–M3, "enrolment", about 2,050 lines.** **[r1]** The bounded prompts added about
+150 lines, so this estimate now sits at the fallback threshold below. The planner applies the cut
+if its own per-file estimate is over 2,000.
 - **M1: `CR-TOOMANY` and the pure enrolment law.** About 120 production lines and 400 test lines,
   plus fixtures. CT1, AP0–AP5, RC4, and `approvaltest` with TS1/TS3.
   `go test ./cmd/ailang-worldd/ -run '^TestEpisodeStartRequestRefusesWhenSixteenArePending$' -count=1`;
   `go test ./host/approval/... -run 'Approver|Enrolment|CheckRevoke|TestSigner|ApprovalTest|Imports' -count=1`
 - **M2: store schema 5.** About 230 + 420 lines. AS1–AS6, RC2, and the edited credentials tests.
   `go test ./host/store/ -run 'Credentials|Approver|OlderCredentials|MintRequest|TestProductionContextRoots' -count=1`
-- **M3: `approver enroll|list|revoke`.** About 270 + 460 lines. CA1–CA8, help, keyguard and roots.
+- **M3: `approver enroll|list|revoke`.** About 300 + 580 lines (**[r1]** +30 for `confirmApproverAct`,
+  +120 for CA9/CA10). CA1–CA10, help, keyguard and roots.
   `go test ./cmd/ailang-worldd/ -run '^(TestApprover|TestEveryVerbHasHelp|TestHelpIsNeverBlocked)' -count=1`
 - **Sprint 1 fallback cut:** if the sprint plan's own estimate exceeds 2,000 lines, M3 moves to the
   head of sprint 2, and sprint 2's M6 becomes a third sprint.
@@ -1033,8 +1158,13 @@ loop's own judgement uses only M1–M6's tests.
 - **R3** Both sprints raise or use the schema, so sprint 1 alone already costs the one restart.
 - **R4** Revocation is typed (parent R3). An emergency revoke needs the daemon's terminal. A key
   that cannot sign without its owner (Q5) narrows the window this matters in.
-- **R5** The enrolment and revocation y/N reads are unbounded, like `session new`'s (a0a1 R7).
-  There is no request expiry to bound them by.
+- **R5 [r1]** The enrolment and revocation y/N are **bounded**: a fixed 120 s from the moment the
+  prompt is written (§2.10a, CA9, CA10). Timeout, EOF, a read failure or any answer other than
+  `y` refuses with `exitUsage`, closes the terminal and writes nothing. No writer lock is held
+  while waiting. The residual that remains is a0a1's: a timed-out read leaves its goroutine
+  blocked until the one-shot process exits (`session.go:484-485`). a0a1's R7 is unchanged and
+  is about the **other** verbs only (`session new`, `session mint`, `episode start`, presets and
+  resume), whose y/N stay unbounded.
 - **R6** **SSHSIG proves possession of a private key, not the presence of a human.** It is not
   prevented, only stated at enrolment (§2.2) and in the help for `--sign-with`. `--sign-with
   <x>.pub` signs with the private file `x` beside it when no agent holds the key (V18), so naming a
@@ -1061,6 +1191,8 @@ loop's own judgement uses only M1–M6's tests.
   (Secretive on the Secure Enclave, or `ssh-add -c`), not an unencrypted file.** This is the only
   mitigation of R6 until `sk-*` or WebAuthn (A2).
 - **Q6** Two sprints, enrolment first (§0), with the §8 fallback cuts. **Default: yes.**
+- **Q7 [r1]** The enrol and revoke y/N budget is a fixed 120 s constant, not a flag.
+  **Default: yes** (§2.10a). It is a constant so that a script cannot widen it.
 
 ## 11. What this is NOT doing
 
@@ -1116,6 +1248,10 @@ with a positive control in the same command.
 | V32 | Probes cleaned up; no git writes | `rm -rf "$T"`; `ls -d /tmp/world-iter375-designer*`; `pgrep -fl "ssh-agent -a /tmp/world-iter375" \|\| echo …`; `git status --short` | `No such file or directory`; `no probe agent running`; only this doc listed |
 | V33 | The designer's shell has no controlling terminal | `( : < /dev/tty ) 2>&1 && echo openable \|\| echo "not openable"` | `/dev/tty: Device not configured`, `tty: not openable` |
 | V34 | The authority tests that pass `ApprovedBy: "tty"` | `grep -n "ApprovedBy\|tty" host/authority/mint_request_test.go \| head -8` | `:56 return store.RequestConsume{ID: row.RequestID, Digest: row.Digest, ApprovedBy: "tty", Clock: …}`; `:78 … got.ApprovedBy != "tty" …` |
+| V35 [r1] | `challenge` is a stored column, inserted and scanned (quorum r1, oc-glm-5-3) | `sed -n 44,56p host/store/credentials_schema.sql`; `grep -n "challenge\|Challenge" host/store/mint_requests.go` | schema `:44-56`, in full (whitespace collapsed): `CREATE TABLE IF NOT EXISTS mint_requests ( request_id TEXT PRIMARY KEY CHECK (length(request_id) = 19 AND request_id GLOB 'mr-[0-9a-f]*'), request BLOB NOT NULL, digest TEXT NOT NULL CHECK (length(digest) = 64), challenge TEXT NOT NULL CHECK (length(challenge) = 64), episode_id TEXT NOT NULL CHECK (episode_id <> ''), created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL CHECK (expires_at > created_at), consumed_at INTEGER, approved_by TEXT CHECK (approved_by IS NULL OR approved_by <> ''), credential_id TEXT, CHECK ((consumed_at IS NULL) = (approved_by IS NULL) AND (consumed_at IS NULL) = (credential_id IS NULL)) );` — `:48` is the `challenge` line; `mint_requests.go:24     challenge     TEXT NOT NULL CHECK (length(challenge) = 64),` (the upgrade's embedded DDL); `:76 Challenge    string // 64 lowercase hex`; `:104 if !isLowerHex64(row.Challenge) {`; `:131 … INSERT INTO mint_requests (request_id, request, digest, challenge, episode_id, created_at, expires_at) …`, `:132 … row.Challenge …`; `:207 const mintRequestColumns = \`request_id, request, digest, challenge, …\``; `:217 … &row.Challenge …`. No schema-5 column change is needed |
+| V36 [r1] | The consume's transaction is deferred, the clock is read before any statement, the store uses a rollback journal; the existing `Clock` test seam | `sed -n 250,262p host/store/mint_requests.go`; `grep -rn "journal_mode\|_pragma\|busy_timeout" --include="*.go" host/store \| grep -v _test`; `sed -n 8,13p host/store/credentials_migrate.go`; `sed -n 200,212p` same file; `sed -n 286,296p host/store/credentials.go`; `grep -n "Clock: func() int64" host/store/mint_requests_test.go` | `:256 tx, err := c.db.BeginTx(ctx, nil)` (nil options = SQLite deferred `BEGIN`); `:260 defer … tx.Rollback()`; `:261 at := rc.Clock()`, then `:262 if err := rc.Check(at); …` and only later the `UPDATE` at `:265`; no production `journal_mode` pragma anywhere in `host/store` (only `writer_lock.go:204` adds `busy_timeout`), so SQLite's default applies; `credentials_migrate.go:11 // journal_mode=delete, and the move refuses any other mode`; `:206 PRAGMA …journal_mode`, `:209-210` refuse anything but `delete`/`truncate`/`persist` ("needs a rollback journal"); `credentials.go:291 db.SetMaxOpenConns(1)` (a test's second connection must be a separate `sql.Open`); `mint_requests_test.go:584 Clock: func() int64 { return 1010 },`. **Agrees with the controller's measurement.** One nuance: the store relies on SQLite's default (`delete`) rather than setting it, and the migration check accepts any rollback-journal mode |
+| V37 [r1] | A second connection can commit inside the deferred transaction's `Clock` window, and the guarded `UPDATE` then sees it (empirical) | throwaway module in `P=$(mktemp -d /tmp/w375-r1-probe.XXXXXX)` (the repo's `go.mod` renamed `module probe`, plus `go.sum`), `GOFLAGS=-mod=mod GOPROXY=off go run . $P`: conn A (`SetMaxOpenConns(1)`) creates `approvers(name, revoked_at)` with row `x`, prints `PRAGMA journal_mode`, `BeginTx(ctx, nil)`; conn B (a separate `sql.Open`) runs `UPDATE approvers SET revoked_at = 5 WHERE name = 'x'`; then tx A runs `UPDATE … WHERE name = 'x' AND revoked_at IS NULL` and prints `RowsAffected`; `rm -rf $P` | `journal_mode: delete`; `second connection revoke inside the Clock window: <nil>`; `guarded UPDATE rows affected: 0`; then `no matches found: /tmp/w375-r1-probe*` (deleted) |
+| V38 [r1] | The bounded-read machinery `approve` uses (for §2.10a) | `sed -n 474,495p cmd/ailang-worldd/session.go`; `grep -n "readTermLineWithin\|env.after\|answerBy" cmd/ailang-worldd/*.go \| grep -v _test`; `sed -n 853,880p cmd/ailang-worldd/approve_test.go`; `grep -n "type promptTerm" -A8 cmd/ailang-worldd/session_new_test.go` | `session.go:36-37` the `after` field and its comment ("the timer that bounds approve's y/N"), `:53 after: time.After`; `:477-480 func readTermLine … line, _ := bufio.NewReader(r).ReadString('\n'); return strings.TrimSpace(line)` (EOF and read errors give `""`); `:484-485` the one-shot comment; `:486 func readTermLineWithin(r io.Reader, d time.Duration, after func(time.Duration) <-chan time.Time) (string, bool)` with `select { case line := <-ch: … case <-after(d): return "", false }`; `approve.go:120 if env.after == nil {`; `:212 req.answerBy = row.ExpiresAt`; `session_new.go:454-456 if r.answerBy != 0 { remaining := …; line, ok := readTermLineWithin(term, remaining, env.after)`; CL13: `pr, pw := io.Pipe()`, `t.Cleanup(func() { _ = pw.Close() })`, `env.after = func(d time.Duration) <-chan time.Time { waited = d; c := make(chan time.Time); close(c); return c }`, a 5 s guard; `promptTerm.Close() error { return nil }` (records nothing, so CA9/CA10 need a close-recording terminal) |
 
 ## 13. Quorum verification log
 
