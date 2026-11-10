@@ -274,6 +274,8 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	errs["EnrolApprover"] = c.EnrolApprover(ctx, ApproverRow{Name: "x", Format: "ssh", PublicKey: []byte("k"), EnrolledAt: 1000})
 	_, _, errs["Approver"] = c.Approver(ctx, "x")
 	_, _, errs["ApproverByKey"] = c.ApproverByKey(ctx, []byte("k"))
+	_, errs["ListApprovers"] = c.ListApprovers(ctx)
+	errs["RevokeApprover"] = c.RevokeApprover(ctx, "x", 1000)
 	for name, err := range errs {
 		if !errors.Is(err, ErrNoDeadline) {
 			t.Errorf("%s(Background) = %v, want ErrNoDeadline", name, err)
@@ -283,6 +285,9 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	defer cancel()
 	if err := c.MintSession(bounded, row); err != nil {
 		t.Fatalf("control: bounded mint: %v", err)
+	}
+	if _, err := c.ListApprovers(bounded); err != nil {
+		t.Fatalf("control: bounded ListApprovers: %v", err)
 	}
 }
 

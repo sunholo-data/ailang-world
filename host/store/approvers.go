@@ -156,3 +156,81 @@ func (c *Credentials) approverWhere(ctx context.Context, where string, arg any) 
 	}
 	return row, true, nil
 }
+
+// ---- M2c ----
+
+// ListApprovers lists every approver, revoked ones included, ordered by name, at most 256.
+func (c *Credentials) ListApprovers(ctx context.Context) ([]ApproverRow, error) {
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
+	if c.version < approversSchemaVersion {
+		return nil, c.olderForApprovers()
+	}
+	rows, err := c.db.QueryContext(ctx, `SELECT `+approverColumns+` FROM approvers ORDER BY name LIMIT ?`, maxListedApprovers)
+	if err != nil {
+		return nil, fmt.Errorf("store: list approvers: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []ApproverRow
+	for rows.Next() {
+		r, err := scanApprover(rows.Scan)
+		if err != nil {
+			return nil, fmt.Errorf("store: list approvers: %w", err)
+		}
+		out = append(out, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("store: list approvers: %w", err)
+	}
+	return out, nil
+}
+
+// RevokeApprover marks the active approver name revoked at now. The row is kept. It refuses an
+// unknown name, a row already revoked, and a clock behind the enrolment, each with its own error.
+func (c *Credentials) RevokeApprover(ctx context.Context, name string, now int64) error {
+	if err := requireDeadline(ctx); err != nil {
+		return err
+	}
+	if c.version < approversSchemaVersion {
+		return c.olderForApprovers()
+	}
+	tx, err := c.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("store: revoke approver: begin: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	res, err := tx.ExecContext(ctx, `UPDATE approvers SET revoked_at = ? WHERE name = ? AND revoked_at IS NULL AND enrolled_at <= ?`, now, name, now)
+	if err != nil {
+		return fmt.Errorf("store: revoke approver: %w", err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("store: revoke approver: %w", err)
+	}
+	if n != 1 {
+		return classifyRevoke(ctx, tx, name, now)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("store: revoke approver: commit: %w", err)
+	}
+	return nil
+}
+
+// classifyRevoke names why a revoke changed no row, reading the row in the same transaction.
+// The order matches approval.CheckRevoke: revoked before clock-behind.
+func classifyRevoke(ctx context.Context, tx *sql.Tx, name string, now int64) error {
+	row, err := scanApprover(tx.QueryRowContext(ctx, `SELECT `+approverColumns+` FROM approvers WHERE name = ?`, name).Scan)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return fmt.Errorf("%w: %q", ErrApproverUnknown, name)
+	case err != nil:
+		return fmt.Errorf("store: revoke approver: %w", err)
+	case row.RevokedAt != 0:
+		return fmt.Errorf("%w: %q at %d", ErrApproverRevoked, name, row.RevokedAt)
+	case row.EnrolledAt > now:
+		return fmt.Errorf("%w: %q enrolled at %d, now %d", ErrApproverClockBehind, name, row.EnrolledAt, now)
+	default:
+		return fmt.Errorf("store: revoke approver %q: changed no row", name)
+	}
+}

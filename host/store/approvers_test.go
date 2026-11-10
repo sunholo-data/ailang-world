@@ -450,3 +450,143 @@ func TestApproverRowMatchesTheTable(t *testing.T) {
 		}
 	}
 }
+
+// AS3b: ListApprovers lists every row, revoked included, by name, and caps at 256.
+func TestListApprovers(t *testing.T) {
+	ctx := testCtx(t)
+
+	v4 := filepath.Join(t.TempDir(), CredentialsFileName)
+	makeV4Credentials(t, v4, nil)
+	c4, err := OpenCredentials(v4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = c4.Close() }()
+	if _, err := c4.ListApprovers(ctx); !isOlderApprovers(err) {
+		t.Fatalf("v4 ListApprovers: err %v, want the approvers refusal", err)
+	}
+
+	c := openTestCredentials(t)
+	if rows, err := c.ListApprovers(ctx); err != nil || len(rows) != 0 {
+		t.Fatalf("fresh ListApprovers: %d rows, err %v; want 0, nil", len(rows), err)
+	}
+	for i, name := range []string{"b", "a", "c"} {
+		if err := c.EnrolApprover(ctx, testApprover(name, int64(1000+i))); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := c.db.Exec(`UPDATE approvers SET revoked_at = 1200 WHERE name = 'b'`); err != nil {
+		t.Fatal(err)
+	}
+	rows, err := c.ListApprovers(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, r := range rows {
+		names = append(names, r.Name)
+	}
+	if !reflect.DeepEqual(names, []string{"a", "b", "c"}) {
+		t.Fatalf("ListApprovers names %v, want [a b c] (ordered by name, revoked listed)", names)
+	}
+	if rows[1].RevokedAt != 1200 {
+		t.Fatalf("revoked row b: RevokedAt %d, want 1200", rows[1].RevokedAt)
+	}
+
+	// The cap: 257 rows, 256 returned, the first and last by name.
+	big := openTestCredentials(t)
+	tx, err := big.db.Begin()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < maxListedApprovers+1; i++ {
+		if _, err := tx.Exec(`INSERT INTO approvers (name, format, public_key, enrolled_at) VALUES (?, 'ssh', ?, 1000)`,
+			fmt.Sprintf("n%03d", i), []byte(fmt.Sprintf("key-n%03d", i))); err != nil {
+			_ = tx.Rollback()
+			t.Fatal(err)
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	capped, err := big.ListApprovers(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(capped) != 256 || capped[0].Name != "n000" || capped[255].Name != "n255" {
+		t.Fatalf("capped ListApprovers: len %d first %q last %q; want 256, n000, n255",
+			len(capped), capped[0].Name, capped[len(capped)-1].Name)
+	}
+}
+
+// AS4: RevokeApprover refuses an unknown name, a revoked row and a clock behind the enrolment,
+// each typed, changing nothing; a good revoke keeps the row.
+func TestRevokeApprover(t *testing.T) {
+	ctx := testCtx(t)
+	c := openTestCredentials(t)
+	for _, name := range []string{"x", "y"} {
+		if err := c.EnrolApprover(ctx, testApprover(name, 1000)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	row0, ok, err := c.Approver(ctx, "x")
+	if err != nil || !ok {
+		t.Fatalf("Approver(x): ok %v err %v", ok, err)
+	}
+
+	// 1. Clock behind the enrolment: refused, unchanged.
+	if err := c.RevokeApprover(ctx, "x", 999); !errors.Is(err, ErrApproverClockBehind) {
+		t.Fatalf("revoke at 999: err %v, want ErrApproverClockBehind", err)
+	}
+	if got, _, _ := c.Approver(ctx, "x"); !reflect.DeepEqual(got, row0) {
+		t.Fatalf("after the clock refusal: %+v, want %+v", got, row0)
+	}
+
+	// 2. A good revoke: the row is kept, marked, and y is untouched.
+	if err := c.RevokeApprover(ctx, "x", 1000); err != nil {
+		t.Fatalf("revoke at 1000: %v", err)
+	}
+	gx, _, _ := c.Approver(ctx, "x")
+	if gx.RevokedAt != 1000 || gx.LastUsedAt != 0 {
+		t.Fatalf("after the revoke: RevokedAt %d LastUsedAt %d; want 1000, 0", gx.RevokedAt, gx.LastUsedAt)
+	}
+	if got := approverCount(t, c); got != 2 {
+		t.Fatalf("after the revoke: %d rows, want 2 (the row is kept)", got)
+	}
+	if gy, _, _ := c.Approver(ctx, "y"); gy.RevokedAt != 0 {
+		t.Fatalf("y revoked as a side effect: RevokedAt %d", gy.RevokedAt)
+	}
+
+	// 3. Already revoked: refused, the first revoke time kept.
+	if err := c.RevokeApprover(ctx, "x", 1001); !errors.Is(err, ErrApproverRevoked) {
+		t.Fatalf("second revoke: err %v, want ErrApproverRevoked", err)
+	}
+	if gx, _, _ = c.Approver(ctx, "x"); gx.RevokedAt != 1000 {
+		t.Fatalf("RevokedAt after the refused second revoke = %d, want 1000", gx.RevokedAt)
+	}
+
+	// 4. Revoked and behind: the revoked check wins (the order of approval.CheckRevoke).
+	if err := c.RevokeApprover(ctx, "x", 999); !errors.Is(err, ErrApproverRevoked) {
+		t.Fatalf("revoked and behind: err %v, want ErrApproverRevoked", err)
+	}
+
+	// 5. Unknown name: typed, nothing changed.
+	if err := c.RevokeApprover(ctx, "nope", 1001); !errors.Is(err, ErrApproverUnknown) {
+		t.Fatalf("unknown: err %v, want ErrApproverUnknown", err)
+	}
+	if got := approverCount(t, c); got != 2 {
+		t.Fatalf("after the unknown refusal: %d rows, want 2", got)
+	}
+
+	// 6. A version 4 store refuses with the approvers refusal.
+	v4 := filepath.Join(t.TempDir(), CredentialsFileName)
+	makeV4Credentials(t, v4, nil)
+	c4, err := OpenCredentials(v4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = c4.Close() }()
+	if err := c4.RevokeApprover(ctx, "x", 1000); !isOlderApprovers(err) {
+		t.Fatalf("v4 revoke: err %v, want the approvers refusal", err)
+	}
+}
