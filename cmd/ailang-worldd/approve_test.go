@@ -385,3 +385,94 @@ func TestEpisodeStartRequestRefusesAnOlderStore(t *testing.T) {
 		t.Errorf("mint_requests tables %d (%v), want 0", n, err)
 	}
 }
+
+// approveEnv is approve's env: openTerminal returns term (and records into *opened when non-nil),
+// now is clock, after is time.After.
+func approveEnv(term io.ReadWriteCloser, opened *bool, clock func() int64) sessionEnv {
+	return sessionEnv{
+		openTerminal: func() (io.ReadWriteCloser, error) {
+			if opened != nil {
+				*opened = true
+			}
+			return term, nil
+		},
+		now:   clock,
+		after: time.After,
+	}
+}
+
+// CL17: the unbounded callers (session new, episode start) never reach after: their y/N has no
+// deadline (the plan's answerBy == 0 rule).
+func TestExistingCallersReadUnbounded(t *testing.T) {
+	after := func(time.Duration) <-chan time.Time {
+		t.Error("after called on an unbounded caller")
+		return nil
+	}
+	t.Run("session-new", func(t *testing.T) {
+		f := newEpisodeFixture(t)
+		env := sessionEnv{
+			openTerminal: func() (io.ReadWriteCloser, error) { return &fakeTerm{r: strings.NewReader("y\n")}, nil },
+			now:          func() int64 { return 1000 },
+			after:        after,
+		}
+		var stdout, stderr bytes.Buffer
+		if code := runSessionNew(f.args("ep1", "--grant", "Workspace.Read=worktree:1"), &stdout, &stderr, env); code != exitOK {
+			t.Fatalf("session new rc %d\nstderr %s", code, stderr.String())
+		}
+		if n := len(f.rows(t)); n != 1 {
+			t.Errorf("%d session rows, want 1", n)
+		}
+	})
+	t.Run("episode-start", func(t *testing.T) {
+		r := newEpisodeRun(t)
+		p := writeTestProfile(t, r.profiles, "proj", "")
+		stubDaemon(t, matchingHealth(t, r.f, r.profiles, p), nil)
+		env := sessionEnv{
+			openTerminal: func() (io.ReadWriteCloser, error) { return &fakeTerm{r: strings.NewReader("y\n")}, nil },
+			now:          func() int64 { return 1000 },
+			after:        after,
+		}
+		var stdout, stderr bytes.Buffer
+		if code := runEpisodeStart(r.args("ep2", "--profile", "proj"), &stdout, &stderr, env); code != exitOK {
+			t.Fatalf("episode start rc %d\nstderr %s", code, stderr.String())
+		}
+	})
+}
+
+// CL18: readTermLineWithin returns the line when it arrives first, and gives up when the timer
+// fires first, without waiting on the blocked reader.
+func TestReadTermLineWithin(t *testing.T) {
+	t.Run("line-first", func(t *testing.T) {
+		never := func(time.Duration) <-chan time.Time { return make(chan time.Time) }
+		line, ok := readTermLineWithin(strings.NewReader("y\n"), time.Second, never)
+		if !ok || line != "y" {
+			t.Fatalf("(%q, %v), want (\"y\", true)", line, ok)
+		}
+	})
+	t.Run("timer-first", func(t *testing.T) {
+		pr, pw := io.Pipe()
+		t.Cleanup(func() { _ = pw.Close() })
+		fired := func(time.Duration) <-chan time.Time {
+			c := make(chan time.Time)
+			close(c)
+			return c
+		}
+		type result struct {
+			line string
+			ok   bool
+		}
+		done := make(chan result, 1)
+		go func() {
+			line, ok := readTermLineWithin(pr, time.Second, fired)
+			done <- result{line, ok}
+		}()
+		select {
+		case got := <-done:
+			if got.ok || got.line != "" {
+				t.Fatalf("(%q, %v), want (\"\", false)", got.line, got.ok)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatal("readTermLineWithin did not return on the timer")
+		}
+	})
+}

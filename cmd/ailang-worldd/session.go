@@ -33,6 +33,8 @@ type sessionEnv struct {
 	// random fills b with cryptographically random bytes (crypto/rand in production). A request
 	// path that finds it nil refuses rather than fall back (row 201 §2.2).
 	random func(b []byte) error
+	// after is time.After in production: the timer that bounds approve's y/N (row 201 §2.6a).
+	after func(time.Duration) <-chan time.Time
 }
 
 // sessionTTYFix ends every terminal refusal of the attended session verbs. It
@@ -48,6 +50,7 @@ func realSessionEnv() sessionEnv {
 		},
 		now:    func() int64 { return time.Now().Unix() },
 		random: func(b []byte) error { _, err := rand.Read(b); return err },
+		after:  time.After,
 	}
 }
 
@@ -474,6 +477,21 @@ func parseGrant(spec string) (broker.Capability, error) {
 func readTermLine(r io.Reader) string {
 	line, _ := bufio.NewReader(r).ReadString('\n')
 	return strings.TrimSpace(line)
+}
+
+// readTermLineWithin is readTermLine bounded by d: the read runs in a goroutine that sends to a
+// buffered channel of size 1, and the first of the line and after(d) wins; ok is false on timeout.
+// It is only safe for one-shot CLI entrypoints that exit the process on return: a timed-out read
+// leaves its goroutine blocked on the terminal until the process exits (row 201 §2.6a [r3]).
+func readTermLineWithin(r io.Reader, d time.Duration, after func(time.Duration) <-chan time.Time) (string, bool) {
+	ch := make(chan string, 1)
+	go func() { ch <- readTermLine(r) }()
+	select {
+	case line := <-ch:
+		return line, true
+	case <-after(d):
+		return "", false
+	}
 }
 
 // isYes reports whether a confirmation answer is affirmative (y/yes).

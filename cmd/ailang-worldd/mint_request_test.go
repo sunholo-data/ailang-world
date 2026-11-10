@@ -81,7 +81,7 @@ func fieldMapProblems(m map[string]string) []string {
 		}
 	}
 	// Non-vacuity: the counts this sprint's design fixes.
-	if len(fields) < 29 {
+	if len(fields) < 31 {
 		problems = append(problems, "vacuous: too few mint fields")
 	}
 	if len(capFields) != 4 {

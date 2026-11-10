@@ -220,6 +220,8 @@ var mintRequestFieldMap = map[string]string{
 	"startPoint":         "fixed: \"\" (set only by episode_preset.go)",
 	"existingBranch":     "fixed: false (set only by episode_preset.go)",
 	"presetPrompt":       "excluded: display only; approve sets renderRequest(request)",
+	"consume":            "excluded: set by approve from the stored row (id, digest, approved_by tty, env.now)",
+	"answerBy":           "excluded: set by approve to the stored row's expires_at",
 }
 
 // requestOnlyLeaves are the MintRequest leaves no mintOptions/mintRequest field maps to: approve
