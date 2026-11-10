@@ -73,7 +73,7 @@ func ensureCredentialsStore(path string, errLog io.Writer) error {
 		return err
 	}
 	if upgraded {
-		fmt.Fprintf(errLog, "ailang-worldd: upgraded the credentials store %s to schema %d (exec profile binding; every existing credential unchanged and unbound)\n",
+		fmt.Fprintf(errLog, "ailang-worldd: upgraded the credentials store %s to schema %d (every existing credential unchanged)\n",
 			path, store.CredentialsSchemaVersion)
 	}
 	return nil
