@@ -203,6 +203,13 @@ func TestApproveBySignatureRefusalsBeforeAnyEffect(t *testing.T) {
 				t.Fatal(err)
 			}
 		}, sig: good, want: "approval: the clock is behind the approver's enrolment time"},
+		{name: "format-not-ssh", setup: func(t *testing.T, a approveRig) { // SIG-FORMAT (sprint 4 T1): the law reads the row's format
+			raw := rawCredentials(t, a.credPath)
+			defer func() { _ = raw.Close() }()
+			if _, err := raw.Exec(`UPDATE approvers SET format = 'webauthn' WHERE name = 'mark-mac'`); err != nil {
+				t.Fatal(err)
+			}
+		}, sig: good, want: "approval: approver format must be ssh"},
 		{name: "git-namespace", sig: func(t *testing.T, a approveRig) string {
 			return writeSignature(t, sigSigner.Sign("git", requestMessage(t, a)))
 		}, want: "approval: sshsig: wrong namespace"},
@@ -408,5 +415,24 @@ func TestApproveFlagRules(t *testing.T) {
 				t.Fatalf("a credentials store was touched (err %v)", err)
 			}
 		})
+	}
+}
+
+// ---- T1 (sprint 4) ----
+
+// SIG-NOW (sprint 4 T1, the sprint-3 judge's gap): the signature law judges the approver at
+// approve's own clock reading, not at the request's creation: an approver enrolled after the
+// request was made and before the approve approves it.
+func TestApproveBySignatureJudgesTheApproverAtNow(t *testing.T) {
+	a := newApproveRig(t, "ep1", approveT0)
+	seedApprover(t, a.credPath, "mark-mac", sigSigner.PublicKey(), approveT0+5)
+	sig := writeSignature(t, sigSigner.Sign(approval.Namespace, requestMessage(t, a)))
+	var opened bool
+	var stdout, stderr bytes.Buffer
+	if code := runApprove(a.args("--signature", sig), &stdout, &stderr, approveEnv(nil, &opened, atTime(approveT0+10))); code != exitOK || opened {
+		t.Fatalf("rc %d, terminal opened %v; want exitOK with no terminal for an approver enrolled at +5 and an approve at +10\nstderr %s", code, opened, stderr.String())
+	}
+	if row := a.row(t); !row.Consumed || row.ApprovedBy != "ssh:mark-mac" {
+		t.Fatalf("request consumed %v by %q, want ssh:mark-mac", row.Consumed, row.ApprovedBy)
 	}
 }
