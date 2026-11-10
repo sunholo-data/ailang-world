@@ -1,2 +1,3 @@
 host/approval/testdata/sshsig/* -text
 host/approval/testdata/approvers/* -text
+host/approval/testdata/webauthn/* -text

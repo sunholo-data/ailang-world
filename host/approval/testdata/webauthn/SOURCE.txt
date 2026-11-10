@@ -1,0 +1,20 @@
+Row 201 A2 recorded WebAuthn fixtures (design_docs/planned/w-world-approvals-by-key-a2.md §2.15).
+
+Recorded in iteration 379 by the designer's probe (probe.mjs, sha256
+01a17c0d7bab9333dee53452159fa67a18b7acf80965aac163cfb6132f8f37cf): Google Chrome
+Chrome/157.0.8103.50 headless with a temporary profile, driven over the DevTools protocol, with a
+CDP virtual authenticator (WebAuthn.addVirtualAuthenticator: ctap2 2.1, internal transport,
+resident key, user verification, isUserVerified). A virtual authenticator is a TEST key: no real
+authenticator, passkey or credentials store was used (D-WORLD-109). Origin http://localhost:<port>,
+rpId localhost, attestation "none", user verification required, and the challenge of both the
+create and the get is the existing fixture message hash 29181d22...fef5 (request_test.go).
+
+Each chrome-<alg>.json holds the recording's public values: the Chrome version, origin, rp_id,
+challenge_hex, the registration and the first assertion exactly as PublicKeyCredential.toJSON()
+returned them, and the second assertion's authenticatorData (the probe kept only that part).
+Normalised from the probe outputs by the sprint-1 planner (TestPasskeyFixturesAreTheGeneratedBytes
+pins the bytes):
+  es256.json  sha256 c0370982dbca416a7677b4fa1ff2cd64e9e533cefc608d3dcab42a1000d6caf6
+  eddsa.json  sha256 1544721fc45dd65a553a5baab8a43fcd4df0375b0b8c2c897a199d2526f6f719
+
+Regeneration lands in sprint 3 (M7, the committed DevTools driver); see generate.sh.
