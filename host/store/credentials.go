@@ -38,8 +38,8 @@ var credentialsSchemaSQL string
 // credentialsSchemaVersion is the credentials store's own user_version,
 // independent of the world store's currentSchemaVersion. Version 2 added
 // profile bindings; version 3 adds immutable attended episode start history;
-// version 4 adds mint requests (row 201).
-const credentialsSchemaVersion = 4
+// version 4 adds mint requests (row 201); version 5 adds approvers (row 201 A1b).
+const credentialsSchemaVersion = 5
 
 // CredentialsSchemaVersion exports credentialsSchemaVersion: serve compares a
 // store's version with it to decide whether to upgrade.
@@ -70,7 +70,9 @@ const credentialsTable = "session_credentials"
 // credentialsTables is the exact, sorted application table set of a credentials store at version.
 func credentialsTables(version int) []string {
 	switch {
-	case version >= 4:
+	case version >= 5:
+		return []string{approversTable, "episode_starts", mintRequestsTable, credentialsTable}
+	case version == 4:
 		return []string{"episode_starts", mintRequestsTable, credentialsTable}
 	case version == 3:
 		return []string{"episode_starts", credentialsTable}
@@ -352,6 +354,9 @@ func upgradeCredentials(display string, db *sql.DB, version int) error {
 	}
 	if version < 4 {
 		statements = append(statements, mintRequestsSQL)
+	}
+	if version < 5 {
+		statements = append(statements, approversSQL)
 	}
 	for _, stmt := range statements {
 		if _, err := tx.Exec(stmt); err != nil {

@@ -50,10 +50,27 @@ var canonicalMintRequestsDDL = `CREATE TABLE mint_requests (
     CHECK ((consumed_at IS NULL) = (approved_by IS NULL) AND (consumed_at IS NULL) = (credential_id IS NULL))
 )`
 
+// canonicalApproversDDL is the current (version 5, row 201 A1b) approvers table, review-visible
+// like canonicalMintRequestsDDL.
+var canonicalApproversDDL = `CREATE TABLE approvers (
+    name         TEXT PRIMARY KEY CHECK (length(name) BETWEEN 1 AND 48),
+    format       TEXT NOT NULL CHECK (format <> ''),
+    public_key   BLOB NOT NULL UNIQUE CHECK (length(public_key) > 0),
+    enrolled_at  INTEGER NOT NULL CHECK (enrolled_at > 0),
+    last_used_at INTEGER CHECK (last_used_at IS NULL OR last_used_at >= enrolled_at),
+    revoked_at   INTEGER CHECK (revoked_at IS NULL OR revoked_at >= enrolled_at)
+)`
+
 func TestCredentialsSchemaMatchesCanonicalDDL(t *testing.T) {
 	c := openTestCredentials(t)
 	ddl := tableDDL(t, c.db)
-	requireExactTableNames(t, "fresh credentials store", ddl, []string{"episode_starts", "mint_requests", "session_credentials"})
+	requireExactTableNames(t, "fresh credentials store", ddl, []string{"approvers", "episode_starts", "mint_requests", "session_credentials"})
+	if got, want := normalizeDDL(ddl["approvers"]), normalizeDDL(canonicalApproversDDL); got != want {
+		t.Fatalf("approvers DDL:\n got: %s\nwant: %s", got, want)
+	}
+	if got, want := normalizeDDL(approversSQL), normalizeDDL(canonicalApproversDDL); got != want {
+		t.Fatalf("approversSQL differs from the canonical approvers DDL:\n got: %s\nwant: %s", got, want)
+	}
 	if got, want := normalizeDDL(ddl["session_credentials"]), normalizeDDL(canonicalCredentialsDDL); got != want {
 		t.Fatalf("credentials DDL:\n got: %s\nwant: %s", got, want)
 	}
@@ -291,6 +308,38 @@ func TestCredentialsV4WithoutMintRequestsIsRefused(t *testing.T) {
 		var se *CredentialsSchemaError
 		if !errors.As(err, &se) {
 			t.Fatalf("%s open of a version 4 store without mint_requests: err %v, want *CredentialsSchemaError", name, err)
+		}
+	}
+	if after, _ := schemaState(t, db); !reflect.DeepEqual(after, before) {
+		t.Fatalf("refused opens changed the tables: %v -> %v", before, after)
+	}
+}
+
+// AS7: a version 5 store without its approvers table is refused by both opens, and the refusal
+// changes nothing (the twin of TestCredentialsV4WithoutMintRequestsIsRefused).
+func TestCredentialsV5WithoutApproversIsRefused(t *testing.T) {
+	path := filepath.Join(t.TempDir(), CredentialsFileName)
+	c, err := OpenCredentials(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = c.Close()
+	db := rawDB(t, path)
+	if _, err := db.Exec(`DROP TABLE approvers`); err != nil {
+		t.Fatal(err)
+	}
+	before, _ := schemaState(t, db)
+	for name, open := range map[string]func(string) (*Credentials, error){
+		"writable":  OpenCredentials,
+		"read-only": OpenCredentialsReadOnly,
+	} {
+		c, err := open(path)
+		if c != nil {
+			_ = c.Close()
+		}
+		var se *CredentialsSchemaError
+		if !errors.As(err, &se) {
+			t.Fatalf("%s open of a version 5 store without approvers: err %v, want *CredentialsSchemaError", name, err)
 		}
 	}
 	if after, _ := schemaState(t, db); !reflect.DeepEqual(after, before) {
