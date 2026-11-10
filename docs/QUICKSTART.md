@@ -1784,14 +1784,23 @@ ailang-worldd approve mr-<the 16 hex it printed> --db /tmp/se-world/world.db
 
 ## 15. Enrol an approver *(attended — pending first verbatim run)*
 
-An approver is a name and one SSH public key, kept in the credentials store. `ailang-worldd approver enroll` reads the `.pub` file once, shows its SHA256 fingerprint, and stores it only after a `y` typed at the terminal within 2 minutes; `approver revoke` marks it revoked the same way, and keeps the row. Approving a mint request with the key's signature (`approve --signature`) arrives in a later sprint; until then an enrolled key approves nothing. This guide uses the §0 scratch store `/tmp/se-world/world.db`, with its daemon serving (`serve` upgrades the credentials store to schema 5), and a scratch key made for it: never a key from `~/.ssh` and never a real store.
+An approver is a name and one SSH public key, kept in the credentials store. `ailang-worldd approver enroll` reads the `.pub` file once, shows its SHA256 fingerprint, and stores it only after a `y` typed at the terminal within 2 minutes; `approver revoke` marks it revoked the same way, and keeps the row. An enrolled key approves a mint request with its signature, with no terminal (below). This guide uses the §0 scratch store `/tmp/se-world/world.db`, with its daemon serving (`serve` upgrades the credentials store to schema 5), and a scratch key made for it: never a key from `~/.ssh` and never a real store.
 
 ```bash
 ssh-keygen -t ed25519 -N '' -f /tmp/se-world/demo-key < /dev/null
 ssh-keygen -l -f /tmp/se-world/demo-key.pub
 ailang-worldd approver enroll --name demo --format ssh --pubkey /tmp/se-world/demo-key.pub --db /tmp/se-world/world.db
 ailang-worldd approver list --db /tmp/se-world/world.db
+```
+
+To approve a §14 request with that key instead of a `y`: write the request's 90-byte message, sign it out of band with `ssh-keygen` in World's namespace, and pass the signature. `approve --signature` opens no terminal; it checks the signature against the enrolled, unrevoked key before any network call, re-checks the approver inside the mint's own transaction, and records `approved_by=ssh:demo`. `--write-message` prints these same two commands with the request's own paths.
+
+```bash
+ailang-worldd episode start sig-demo --repo "$PWD" --db /tmp/se-world/world.db --request
+ailang-worldd approve mr-<the 16 hex it printed> --write-message /tmp/se-world/req.msg --db /tmp/se-world/world.db
+ssh-keygen -Y sign -n world-approval@sunholo -f /tmp/se-world/demo-key < /tmp/se-world/req.msg > /tmp/se-world/req.msg.sig
+ailang-worldd approve mr-<the same id> --signature /tmp/se-world/req.msg.sig --db /tmp/se-world/world.db
 ailang-worldd approver revoke demo --db /tmp/se-world/world.db
 ```
 
-Compare the fingerprint `ssh-keygen -l` prints with the one the y/N shows before you type `y`. `enroll` refuses, before any terminal opens, a private key file (without showing it), a key type other than ssh-ed25519 or ecdsa-sha2-nistp256, a name or a key already enrolled (revoked ones included), and a credentials store below schema 5. A revoked name and key can never be enrolled again.
+Compare the fingerprint `ssh-keygen -l` prints with the one the y/N shows before you type `y`. `enroll` refuses, before any terminal opens, a private key file (without showing it), a key type other than ssh-ed25519 or ecdsa-sha2-nistp256, a name or a key already enrolled (revoked ones included), and a credentials store below schema 5. A revoked name and key can never be enrolled again, and a revoked key approves nothing: `approve --signature` refuses it, and a revoke that lands while an approve is minting refuses that mint. `approve --signature` also refuses a file over 16 KiB or not a regular file, a signature in another namespace or over another request's message, and a key that is not enrolled.

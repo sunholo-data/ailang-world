@@ -9,6 +9,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -59,4 +61,37 @@ func approveSignature(ctx context.Context, credPath, path string, row store.Mint
 		return nil, fmt.Sprintf("the signature does not approve request %s: %v", row.RequestID, err)
 	}
 	return signed, ""
+}
+
+// ---- M5c ----
+
+// writeApprovalMessage is approve --write-message (design §2.7 F5, F6): it writes the admitted
+// request's 90-byte approval message to a NEW file (O_EXCL, mode 0644: the message is not secret)
+// and prints the out-of-band signing line and the next step. It opens no terminal and writes no
+// store row, so the request stays pending. It returns the refusal text, or "".
+func writeApprovalMessage(stdout io.Writer, path string, row store.MintRequestRow, mr approval.MintRequest) string {
+	stored, _ := hex.DecodeString(row.Digest)       // admission has shown it is 32 bytes
+	challenge, _ := hex.DecodeString(row.Challenge) // F4 has shown it is 32 bytes
+	msg, err := approval.SignedMessage([32]byte(stored), [32]byte(challenge), row.ExpiresAt)
+	if err != nil {
+		return fmt.Sprintf("request %s: %v", row.RequestID, err)
+	}
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	if err != nil { // F5: an existing file is never overwritten
+		return fmt.Sprintf("--write-message: %v; nothing was written", err)
+	}
+	_, err = f.Write(msg)
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	if err != nil {
+		_ = os.Remove(path)
+		return fmt.Sprintf("--write-message: %v; nothing was written", err)
+	}
+	fmt.Fprintf(stdout, "wrote request %s's %d-byte approval message to %s\n", row.RequestID, len(msg), path)
+	fmt.Fprintf(stdout, "sign it with an enrolled key (the request expires at %s):\n  ssh-keygen -Y sign -n %s -f <your key> < %s > %s.sig\n",
+		approverTime(row.ExpiresAt), approval.Namespace, shellQuote(path), shellQuote(path))
+	fmt.Fprintf(stdout, "then approve it:\n  ailang-worldd approve %s --signature %s.sig --db %s --credentials-db %s\n",
+		row.RequestID, shellQuote(path), shellQuote(mr.WorldDB), shellQuote(mr.CredentialsDB))
+	return ""
 }

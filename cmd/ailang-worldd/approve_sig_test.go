@@ -303,3 +303,110 @@ func TestApproveRevokeRaceIsRefusedAtTheWrite(t *testing.T) {
 		t.Errorf("approver rows %+v, want mark-mac revoked and never used", rows)
 	}
 }
+
+// ---- M5c ----
+
+// CR10 (M5c): --write-message writes exactly the request's 90-byte message to a new file and the
+// two next steps, opens no terminal, calls no daemon and leaves the request pending (F6); signing
+// that file approves the request. An existing file is refused and kept (F5); a used request is
+// refused by admission and nothing is written.
+func TestApproveWriteMessage(t *testing.T) {
+	t.Run("writes-then-signs", func(t *testing.T) {
+		a, _ := signedRig(t)
+		calls := 0
+		inner := fetchDaemonHealth
+		t.Cleanup(func() { fetchDaemonHealth = inner })
+		fetchDaemonHealth = func(addr string) (daemon.HealthResponse, error) { calls++; return inner(addr) }
+		path := filepath.Join(t.TempDir(), "request.msg")
+		var opened bool
+		var stdout, stderr bytes.Buffer
+		if code := runApprove(a.args("--write-message", path), &stdout, &stderr, approveEnv(nil, &opened, atTime(approveT0+1))); code != exitOK {
+			t.Fatalf("rc %d, want exitOK\nstderr %s", code, stderr.String())
+		}
+		got, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := requestMessage(t, a); !bytes.Equal(got, want) || len(got) != 90 {
+			t.Fatalf("the file holds %x, want the 90-byte message %x", got, want)
+		}
+		row := a.row(t)
+		mr, err := approval.Decode(row.Request)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := "wrote request " + a.id + "'s 90-byte approval message to " + path + "\n" +
+			"sign it with an enrolled key (the request expires at 2027-01-15T08:10:00Z):\n" +
+			"  ssh-keygen -Y sign -n world-approval@sunholo -f <your key> < " + path + " > " + path + ".sig\n" +
+			"then approve it:\n" +
+			"  ailang-worldd approve " + a.id + " --signature " + path + ".sig --db " + shellQuote(mr.WorldDB) + " --credentials-db " + shellQuote(mr.CredentialsDB) + "\n"
+		if stdout.String() != want {
+			t.Fatalf("stdout:\n%s\nwant:\n%s", stdout.String(), want)
+		}
+		if opened || calls != 0 || row.Consumed || len(a.sessionRows(t)) != 0 {
+			t.Fatalf("terminal opened %v, daemon calls %d, consumed %v; want none, 0, pending", opened, calls, row.Consumed)
+		}
+		sig := writeSignature(t, sigSigner.Sign(approval.Namespace, got))
+		stdout.Reset()
+		stderr.Reset()
+		if code := runApprove(a.args("--signature", sig), &stdout, &stderr, approveEnv(nil, &opened, atTime(approveT0+2))); code != exitOK {
+			t.Fatalf("approve --signature over the written message: rc %d\nstderr %s", code, stderr.String())
+		}
+		if row := a.row(t); row.ApprovedBy != "ssh:mark-mac" {
+			t.Fatalf("approved_by %q, want ssh:mark-mac", row.ApprovedBy)
+		}
+	})
+	t.Run("existing-file", func(t *testing.T) {
+		a, _ := signedRig(t)
+		path := filepath.Join(t.TempDir(), "request.msg")
+		if err := os.WriteFile(path, []byte("keep\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		var stdout, stderr bytes.Buffer
+		if code := runApprove(a.args("--write-message", path), &stdout, &stderr, approveEnv(nil, nil, atTime(approveT0+1))); code != exitUsage {
+			t.Fatalf("rc %d, want exitUsage\nstderr %s", code, stderr.String())
+		}
+		if want := "ailang-worldd approve: --write-message: open " + path + ": file exists; nothing was written\n"; stderr.String() != want {
+			t.Fatalf("stderr %q, want %q", stderr.String(), want)
+		}
+		if got, _ := os.ReadFile(path); string(got) != "keep\n" {
+			t.Fatalf("the existing file now holds %q", got)
+		}
+	})
+	t.Run("used-request", func(t *testing.T) {
+		a, _ := signedRig(t)
+		var stdout, stderr bytes.Buffer
+		if code := runApprove(a.args(), &stdout, &stderr, approveEnv(&promptTerm{in: strings.NewReader("y\n")}, nil, atTime(approveT0+1))); code != exitOK {
+			t.Fatalf("typed approve: rc %d\nstderr %s", code, stderr.String())
+		}
+		path := filepath.Join(t.TempDir(), "request.msg")
+		stderr.Reset()
+		if code := runApprove(a.args("--write-message", path), &stdout, &stderr, approveEnv(nil, nil, atTime(approveT0+2))); code != exitUsage || !strings.Contains(stderr.String(), "was already used") {
+			t.Fatalf("rc %d, stderr %q; want exitUsage and the admission refusal", code, stderr.String())
+		}
+		if _, err := os.Lstat(path); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("a message was written for a used request (err %v)", err)
+		}
+	})
+}
+
+// CR1 (M5c): --signature with --write-message (F1), and --list with either (F2), print the help and
+// exit exitUsage before any store is read.
+func TestApproveFlagRules(t *testing.T) {
+	db := dbPathOf(t)
+	for name, args := range map[string][]string{
+		"signature-and-write-message": {firstRequestID, "--signature", "s", "--write-message", "m", "--db", db},
+		"list-and-signature":          {"--list", "--signature", "s", "--db", db},
+		"list-and-write-message":      {"--list", "--write-message", "m", "--db", db},
+	} {
+		t.Run(name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			if code := runApprove(args, &stdout, &stderr, approveEnv(nil, nil, atTime(approveT0))); code != exitUsage || stderr.String() != approveHelp {
+				t.Fatalf("rc %d, stderr %q; want exitUsage and exactly the help", code, stderr.String())
+			}
+			if _, err := os.Lstat(filepath.Join(filepath.Dir(db), "credentials.db")); !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("a credentials store was touched (err %v)", err)
+			}
+		})
+	}
+}

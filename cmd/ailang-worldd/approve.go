@@ -23,6 +23,7 @@ import (
 
 const approveHelp = `usage: ailang-worldd approve <request-id> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --signature <file> [--db <path>] [--credentials-db <path>]
+       ailang-worldd approve <request-id> --write-message <file> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve --list [--db <path>] [--credentials-db <path>]
 
 ATTENDED, or SIGNED. Mints the session a stored mint request describes (row
@@ -49,6 +50,9 @@ approve <request-id> (mr- and 16 hex):
   checked before any network call, the approver is re-checked in the mint's own
   transaction, and the request records approved_by=ssh:<name>. A signature
   proves that something holding the key signed, not that you were there.
+--write-message <file> writes that message (90 bytes) to a NEW file and prints
+  the ssh-keygen -Y sign line and the --signature step. It opens no terminal
+  and writes no store row: the request stays pending.
 --list prints the pending requests, read-only. A request expires 10 minutes
 after it is made; at most 16 are pending per credentials store.
 
@@ -108,6 +112,7 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	credsDB := fs.String("credentials-db", "", credentialsDBUsage)
 	list := fs.Bool("list", false, "print the pending requests, read-only")
 	sigPath := fs.String("signature", "", "approve with an enrolled approver's SSHSIG over the request (no terminal)")
+	msgPath := fs.String("write-message", "", "write the request's approval message to this new file, to sign elsewhere")
 	positional, err := parseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, approveHelp)
@@ -121,7 +126,11 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
-	if *list && *sigPath != "" { // F2: --list is read-only
+	if *sigPath != "" && *msgPath != "" { // F1: one of --signature and --write-message
+		fmt.Fprint(stderr, approveHelp)
+		return exitUsage
+	}
+	if *list && (*sigPath != "" || *msgPath != "") { // F2: --list is read-only
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
@@ -181,6 +190,12 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	challenge, err := hex.DecodeString(row.Challenge)
 	if err != nil || len(challenge) != 32 { // F4: the consume binds the row's challenge (row 201 A1b §2.7)
 		return refuse("request %s's stored challenge is not 64 hex; refusing; fix: make a new request with episode start --request", row.RequestID)
+	}
+	if *msgPath != "" { // F5, F6: the message to sign elsewhere, and nothing else
+		if refusal := writeApprovalMessage(stdout, *msgPath, row, mr); refusal != "" {
+			return refuse("%s", refusal)
+		}
+		return exitOK
 	}
 	var signed *approval.SignedApproval
 	if *sigPath != "" { // the signature, judged before any network call (design §2.7 F9-F14)
