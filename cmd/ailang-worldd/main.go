@@ -120,7 +120,7 @@ Usage:
                     [--task <file>] [--agent claude|codex] [--model <m>] [--ttl N]
                     [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
                     [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
-                    [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:7644 (or service.json's address)]
+                    [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:7644 (or service.json's address)] [--request]
   ailang-worldd [--addr <url>] episode report <episode> [--json | --markdown] [--follow] [--interval 2s] [--addr <url>]
   ailang-worldd episode finish <episode> --preset <name> [--presets-dir D] [--title TEXT]
                         [--allow-failing CHECK]... [--include-unattributed] [--dry-run]

@@ -4,7 +4,12 @@ package main
 // request `episode start --request` stores and `approve` mints from.
 
 import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
 	"fmt"
+	"io"
 	"path/filepath"
 	"strings"
 	"time"
@@ -89,6 +94,62 @@ func mcpAfterToken(mcpFile, addr string) func(token string) error {
 		return nil
 	}
 	return func(token string) error { return writeMCPConfig(mcpFile, addr, token) }
+}
+
+// createMintRequest is `episode start --request` steps 3-5 (design §2.5): it stores the request
+// and prints it. It opens no terminal and mints nothing.
+func createMintRequest(r *mintRequest, build daemon.BuildIdentity, addr, agent, model, task, mcpFile string, stdout, stderr io.Writer, env sessionEnv) int {
+	if env.random == nil {
+		fmt.Fprintln(stderr, "ailang-worldd episode start: internal error: no randomness source (sessionEnv.random)")
+		return exitFatal
+	}
+	mr, err := buildMintRequest(r, build, addr, agent, model, task, mcpFile)
+	if err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd episode start: %v\n", err)
+		return exitUsage
+	}
+	var idb [8]byte
+	var ch [32]byte
+	if err := env.random(idb[:]); err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd episode start: randomness: %v\n", err)
+		return exitFatal
+	}
+	if err := env.random(ch[:]); err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd episode start: randomness: %v\n", err)
+		return exitFatal
+	}
+	id := "mr-" + hex.EncodeToString(idb[:])
+	canon, err := approval.Canonical(mr)
+	if err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd episode start: %v\n", err)
+		return exitFatal
+	}
+	sum := sha256.Sum256(canon)
+	now := env.now()
+	row := store.MintRequestRow{RequestID: id, Request: canon, Digest: hex.EncodeToString(sum[:]),
+		Challenge: hex.EncodeToString(ch[:]), EpisodeID: mr.Episode, CreatedAt: now,
+		ExpiresAt: now + int64(approval.RequestLifetime/time.Second)}
+	ctx, cancel := context.WithTimeout(context.Background(), approveReadBudget)
+	defer cancel()
+	st, err := openCredentialsForSession(ctx, r.db, r.credPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd episode start: %v\n", err)
+		return exitFatal
+	}
+	defer st.Close()
+	if err := st.PutMintRequest(ctx, row, now); err != nil {
+		var older *store.OlderCredentialsStoreError
+		if errors.As(err, &older) || errors.Is(err, store.ErrTooManyPendingRequests) {
+			fmt.Fprintf(stderr, "ailang-worldd episode start: %v\n", err)
+			return exitUsage
+		}
+		fmt.Fprintf(stderr, "ailang-worldd episode start: %v\n", err)
+		return exitFatal
+	}
+	fmt.Fprint(stdout, renderRequest(id, mr, row.Digest, row.ExpiresAt, now))
+	fmt.Fprintf(stdout, "next: ailang-worldd approve %s --db %s --credentials-db %s\n", id, mr.WorldDB, mr.CredentialsDB)
+	fmt.Fprintf(stdout, "nothing is minted until a person approves it at a terminal; it expires in %s\n", approval.RequestLifetime)
+	return exitOK
 }
 
 // renderRequest is the request block --request prints and approve shows above its y/N.

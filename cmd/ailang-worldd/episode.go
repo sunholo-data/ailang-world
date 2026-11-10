@@ -68,7 +68,7 @@ usage: ailang-worldd episode start <episode> --repo <dir> [--branch <name>] [--p
            [--task <file>] [--agent claude|codex] [--model <m>] [--ttl 3600]
            [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
            [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
-           [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:7644 (or service.json's address)]
+           [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:7644 (or service.json's address)] [--request]
        ailang-worldd [--addr <url>] episode report <episode> [--json] [--follow] [--interval 2s]
            (a client verb: see 'ailang-worldd episode report --help')
 
@@ -114,6 +114,10 @@ printed; it lives only in the .session file and the .mcp.json (delete the
   --exec-profiles-dir <dir>
                         where --profile looks (default ~/.ailang-world-exec/profiles)
   --addr host:port      the serving daemon (default 127.0.0.1:7644 or service.json's address; loopback only)
+  --request             store a mint request instead of minting: no terminal, no worktree,
+                        no token. It prints the request id; 'ailang-worldd approve <id>' mints
+                        it after a y/N. It expires in 10 minutes. Not with --launch, --headless,
+                        --resume or a launch preset.
 `
 
 // defaultEpisodeAddr is the home service fallback; service.json's address takes precedence.
@@ -204,6 +208,7 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	fs.String("hosts-dir", defaultHostsDir(), "hosts init output directory")
 	launch := fs.Bool("launch", false, "launch after the attended mint")
 	headless := fs.Bool("headless", false, "headless launch; requires --launch")
+	request := fs.Bool("request", false, "store a mint request instead of minting (no terminal; approve it with ailang-worldd approve <id>)")
 	var grantSpecs multiFlag
 	fs.Var(&grantSpecs, "grant", "EFFECT=SCOPE:BUDGET, repeatable")
 	budget := fs.Int64("budget", 50, "budget of each preset grant")
@@ -231,6 +236,19 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 
 	resumeSet := false
 	fs.Visit(func(f *flag.Flag) { resumeSet = resumeSet || f.Name == "resume" })
+	if *request {
+		why := "a request carries no launch callbacks or start records (row 201 §2.5)"
+		switch {
+		case resumeSet:
+			return fail("--request cannot be combined with --resume: %s; fix: drop --request", why)
+		case *launch:
+			return fail("--request cannot be combined with --launch: %s; fix: drop --launch, then run the launch line approve prints", why)
+		case *headless:
+			return fail("--request cannot be combined with --headless: %s; fix: drop --headless", why)
+		case *preset != "" && *preset != "se-tools":
+			return fail("--request cannot be combined with a launch preset (--preset %s): %s; fix: use --grant or --preset se-tools", *preset, why)
+		}
+	}
 	if resumeSet {
 		return runEpisodeResume(fs, positional, *resume, *preset, *presetsDir, *profilesDir, stdout, stderr, env)
 	}
@@ -334,6 +352,9 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	}
 	if err := checkDaemon(health, req, hostPort, self); err != nil {
 		return fail("refusing: %v", err)
+	}
+	if *request {
+		return createMintRequest(req, health.Build, hostPort, *agent, *model, taskPath, mcpFile, stdout, stderr, env)
 	}
 	if mcpFile != "" {
 		req.afterToken = func(token string) error { return writeMCPConfig(mcpFile, hostPort, token) }

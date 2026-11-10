@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/rand"
 	"errors"
 	"flag"
 	"fmt"
@@ -29,6 +30,9 @@ type sessionEnv struct {
 	openTerminal func() (io.ReadWriteCloser, error)
 	// now returns the current Unix time (seconds). Injectable for determinism.
 	now func() int64
+	// random fills b with cryptographically random bytes (crypto/rand in production). A request
+	// path that finds it nil refuses rather than fall back (row 201 §2.2).
+	random func(b []byte) error
 }
 
 // sessionTTYFix ends every terminal refusal of the attended session verbs. It
@@ -42,7 +46,8 @@ func realSessionEnv() sessionEnv {
 		openTerminal: func() (io.ReadWriteCloser, error) {
 			return os.OpenFile("/dev/tty", os.O_RDWR, 0)
 		},
-		now: func() int64 { return time.Now().Unix() },
+		now:    func() int64 { return time.Now().Unix() },
+		random: func(b []byte) error { _, err := rand.Read(b); return err },
 	}
 }
 
