@@ -14,6 +14,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/broker"
 )
 
 // ---- M3a ----
@@ -284,5 +286,62 @@ func TestReadCappedRefusesGrowth(t *testing.T) {
 	}
 	if _, err := readCapped(strings.NewReader(strings.Repeat("x", 11)), 10); err == nil || err.Error() != "grew past the 10-byte bound while being read" {
 		t.Errorf("11 bytes at max 10: %v, want the growth refusal", err)
+	}
+}
+
+// CA1 (sprint-2 plan §3 M3c): the verb's help, dispatch and the --addr refusal.
+func TestApproverDispatchAndHelp(t *testing.T) {
+	t.Setenv(broker.RegistryCredentialVariable, "")
+	var out, errw bytes.Buffer
+	if code := runApprover(nil, &out, &errw, sessionEnv{}); code != exitUsage {
+		t.Fatalf("no args: code %d, want %d", code, exitUsage)
+	}
+	if errw.String() != approverHelp {
+		t.Errorf("no args: stderr is not approverHelp:\n%s", errw.String())
+	}
+	if out.Len() != 0 {
+		t.Errorf("no args: stdout %q, want empty", out.String())
+	}
+
+	out.Reset()
+	errw.Reset()
+	if code := runApprover([]string{"frob"}, &out, &errw, sessionEnv{}); code != exitUsage {
+		t.Fatalf("frob: code %d, want %d", code, exitUsage)
+	}
+	if want := "ailang-worldd approver: unknown subcommand \"frob\"\n\n" + approverHelp; errw.String() != want {
+		t.Errorf("frob: stderr %q, want %q", errw.String(), want)
+	}
+
+	for _, arg := range []string{"--help", "-h", "-help", "help"} {
+		out.Reset()
+		errw.Reset()
+		if code := runApprover([]string{arg}, &out, &errw, sessionEnv{}); code != exitOK {
+			t.Fatalf("%s: code %d, want %d", arg, code, exitOK)
+		}
+		if out.String() != approverHelp {
+			t.Errorf("%s: stdout is not approverHelp", arg)
+		}
+		if errw.Len() != 0 {
+			t.Errorf("%s: stderr %q, want empty", arg, errw.String())
+		}
+	}
+
+	out.Reset()
+	errw.Reset()
+	if code := run([]string{"--addr", "http://127.0.0.1:1", "approver", "list"}, &out, &errw); code != exitUsage {
+		t.Fatalf("--addr: code %d, want %d", code, exitUsage)
+	}
+	const wantAddr = "ailang-worldd: --addr is a client flag and is not valid for 'approver'; approvers live in the credentials store beside --db, not on a running daemon\n"
+	if errw.String() != wantAddr {
+		t.Errorf("--addr: stderr %q, want %q", errw.String(), wantAddr)
+	}
+
+	out.Reset()
+	errw.Reset()
+	if code := run([]string{"approver", "--help"}, &out, &errw); code != exitOK {
+		t.Fatalf("approver --help: code %d, want %d", code, exitOK)
+	}
+	if out.String() != approverHelp {
+		t.Errorf("approver --help: stdout is not approverHelp")
 	}
 }

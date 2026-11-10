@@ -6,6 +6,8 @@ package main
 
 import (
 	"bufio"
+	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -105,4 +107,92 @@ func readCapped(r io.Reader, max int64) ([]byte, error) {
 		return nil, fmt.Errorf("grew past the %d-byte bound while being read", max)
 	}
 	return b, nil
+}
+
+// ---- M3c ----
+
+const approverHelp = `usage: ailang-worldd approver enroll --name <name> --format ssh --pubkey <file> [--db <path>] [--credentials-db <path>]
+       ailang-worldd approver list [--db <path>] [--credentials-db <path>]
+       ailang-worldd approver revoke <name> [--db <path>] [--credentials-db <path>]
+
+ATTENDED (enroll, revoke). An approver is a name and one SSH public key, kept in
+the credentials store (row 201). Approving a mint request with its signature
+arrives with 'approve --signature' (row 201 A1b, a later sprint); until then an
+enrolled key approves nothing. enroll and revoke each ask y at /dev/tty and
+wait at most 2m0s for it; an agent cannot run them.
+
+enroll   reads --pubkey once (one ssh-ed25519 or ecdsa-sha2-nistp256 key line,
+         at most 8 KiB; a private key file is refused and never shown), shows
+         the key's SHA256 fingerprint, and stores it after y. A name and a key
+         are each enrolled at most once, ever, revoked ones included.
+list     prints every approver, read-only: name, format, key type,
+         fingerprint, enrolled, last used, and active or revoked.
+revoke   marks the approver revoked after y. The row is kept: it never
+         approves again, and its name and key can never be enrolled again.
+
+  --name <name>             1-48 of a-z 0-9 . _ - (the first a letter or digit);
+                            its approvals record approved_by=ssh:<name>
+  --format ssh              the only format until row 201 A2 (webauthn)
+  --pubkey <file>           the .pub file (compare: ssh-keygen -l -f <file>)
+  --db <path>               the world store (default ~/.ailang/world/world.db)
+  --credentials-db <path>   default credentials.db beside --db
+The global --addr is refused: approvers live in the credentials store.
+`
+
+// runApprover dispatches `approver enroll|list|revoke` (design §2.10: D1-D3).
+func runApprover(args []string, stdout, stderr io.Writer, env sessionEnv) int {
+	if len(args) == 0 { // D1
+		fmt.Fprint(stderr, approverHelp)
+		return exitUsage
+	}
+	switch args[0] {
+	case "--help", "-help", "-h", "help": // D3
+		fmt.Fprint(stdout, approverHelp)
+		return exitOK
+	default: // D2
+		fmt.Fprintf(stderr, "ailang-worldd approver: unknown subcommand %q\n\n%s", args[0], approverHelp)
+		return exitUsage
+	}
+}
+
+// approverFlags parses one subcommand's flags (--db, --credentials-db, and the extra ones extra
+// declares). done is true when it already answered: help (exitOK) or misuse (exitUsage).
+func approverFlags(name string, args []string, stdout, stderr io.Writer, extra func(*flag.FlagSet)) (db, creds string, positional []string, code int, done bool) {
+	fs := flag.NewFlagSet("ailang-worldd approver "+name, flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	fs.Usage = func() {}
+	dbFlag := fs.String("db", defaultWorldPaths().db, "the world store (default ~/.ailang/world/world.db)")
+	credsFlag := fs.String("credentials-db", "", credentialsDBUsage)
+	if extra != nil {
+		extra(fs)
+	}
+	positional, err := parseInterleaved(fs, args)
+	if errors.Is(err, flag.ErrHelp) {
+		fmt.Fprint(stdout, approverHelp)
+		return "", "", nil, exitOK, true
+	}
+	if err != nil {
+		fmt.Fprint(stderr, approverHelp)
+		return "", "", nil, exitUsage, true
+	}
+	return *dbFlag, *credsFlag, positional, 0, false
+}
+
+// approverRefuse prints prefix and the message to stderr and returns exitUsage.
+func approverRefuse(stderr io.Writer, prefix, format string, a ...any) int {
+	fmt.Fprintf(stderr, "%s"+format+"\n", append([]any{prefix}, a...)...)
+	return exitUsage
+}
+
+// approverStores resolves the credentials store a subcommand acts on, refusing a missing world
+// store (N3): "" and the refusal text, or the path and "".
+func approverStores(db, creds string) (string, string) {
+	if err := requireExistingStore(db); err != nil {
+		return "", err.Error()
+	}
+	path, err := credentialsFor(db, creds)
+	if err != nil {
+		return "", err.Error()
+	}
+	return path, ""
 }
