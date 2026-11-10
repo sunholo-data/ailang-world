@@ -1708,3 +1708,125 @@ lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (pro
 - My own instrument: a long-lived helper script that runs package tests must export `AILANG_BIN` itself. A shell that lacked it produced a false red that looked like a sprint regression. Fixed in `commit_ms.sh` mid-iteration.
 
 **Next:** row 201 A1b: approver enrol/list/revoke, `approve --signature` / `--sign-with`, the `approvers` table at schema 5, and `approved_by=ssh:<name>`. It needs a design r0 (a child of the parent design's A1), carrying this judge's CR-TOOMANY gap and the retro's mutant-enumeration ask. Then row 243.
+
+## 375 — 2026-11-10 — row 201 A1b sprint 1 built: the approver enrolment law and credentials schema 5 (`approvers`); design r2 via a controller carve-out; judge PASS 91 [PRODUCT]
+
+**Pick:** row 201 `w-world-approvals-by-key`, A1b. This is the route iteration 374 named under the attended **D-WORLD-109 = A**. It is built and judged against fakes, temp stores and test keys only: no real key, store, mint or publish.
+- **Re-measured at pick:**
+  - No open PR from this account.
+  - No `approvers` table, `approver` verb, `--signature` or `--sign-with` on `origin/dev` `3a96cf75`.
+  - Release rows are not routable. Row 150 A1: the only subjects since 2026-11-07 matching `row ?150|A1` are row 201's own A1a design commit `63766f2f` and its merge `dba0e8b2`. Row 151 N2d/N4a: 8 subject hits since 2026-10-01, all record commits and design docs that mention them, none a landing. Control N2c: 4.
+- **Ledger:** valid (100 rows). OPEN: D-WORLD-105 only.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET, so no routable UNMET-clause row exists.
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
+- Directives: 0 allowlisted on #524 (7 comments; the issue-scoped watermark is absent, so all were read). 0 on #449 since the mission-scoped watermark (2026-10-27T09:03:42Z, 47 comments).
+- Self-notices: `mission_gate0_self_notices.sh` rc 2, an instrument failure and not a verdict. Neither `mission-524-last-seen` nor `mission-449-last-seen` exists, the same cause as 372–374. A direct read found 0 `FAILED to complete` comments on #524 or #449.
+- Mission inbox: 0 unread.
+- Skill drift: none. All 14 files match the driver clone's `origin/dev`.
+- Dev at `3a96cf75`: CI success, `checks=3`.
+
+**Design** (`w-world-approvals-by-key-a1b.md`, a child of the attended parent, a sibling of the built a0a1 doc). Resolver `recipe claude:claude-opus-5-5 declared:provider-pin`; spawned as Agent `opus` (precedent).
+- **r0** (18 min, 1,122 lines, 34 Verification Log rows): two sprints, enrolment first.
+  - Premises it found false: refusals exit `exitUsage = 1`; `ssh-keygen -Y sign -f x.pub` signs from the private file beside it with no agent; the consume does not bind `challenge`; `provisionEpisode` has no no-terminal path; no "decision list" exists in code.
+  - It confirmed CR-TOOMANY (the mutant survives).
+- **Quorum r1 BLOCKED 3/3** ($0.376; author Anthropic benched; seats gpt6-1-sol, gemini-4-argon, oc-glm-5-3).
+  - gpt: the enrol/revoke y/N were unbounded.
+  - gemini: `rem <= 0` reached `context.WithTimeout`.
+  - glm: the `challenge` column and the consume's transaction mode were unevidenced.
+  - The controller measured glm's premises first (rule 3f). Both are true: `credentials_schema.sql:48`, and a deferred `BeginTx` at `mint_requests.go:256` before `Clock()` at `:261`.
+- **r1** (3.4 min, the designer resumed by `SendMessage`): applied all three. Bounded 120 s y/N via `sessionEnv.after`; F7a refuses `rem <= 0` before signing; V35–V38 added, with an empirical race probe.
+- **Quorum r2 BLOCKED 2/3** ($0.361; gemini PASS).
+  - gpt: the confirmation reader drops `ReadString`'s error, so `y`+EOF confirms. The controller measured it (V39): `line="y" err=EOF`. So r1's "EOF already refuses" was false.
+  - glm: `Lstat`-then-read on `--signature`/`--pubkey` (a substituted FIFO blocks with no bound); K8's context root unpinned; no `DecidedMintRequests` tiebreak.
+  - Per round: r1 = prompt bound + expiry arithmetic + unevidenced column; r2 = reader error path + file-open TOCTOU.
+- **r2, controller narrow-refinement carve-out** (ratified; precedent 372, 373). Both rejects carried a concrete `proposed_fix` and neither disputed the direction. The fixes were applied verbatim:
+  - an error-aware reader for the new verbs;
+  - open-then-fstat with `io.LimitReader`;
+  - K8's own 3 s root;
+  - `ORDER BY consumed_at DESC, request_id DESC`.
+  - One named adaptation: glm cited CR7 for the signature FIFO arm, but in this doc that arm is CR4.
+  - R8 logs the pre-existing reader property of the existing verbs (not fixed; it changes attended behaviour).
+
+**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus` (35 min). Committed `83bbc24b`.
+- The design's §8 fallback cut fired: about 2,750 lines for M1–M3 against the 2,000 cap. **Sprint 1 = M1a–c + M2a–c (~1,541 lines).** M3 (`approver enroll|list|revoke`) moves to the head of sprint 2. Its decisions and 46 mutants are kept in the plan's Appendix A.
+- 74 mutants, one per new branch.
+- The planner compiled and smoke-tested the production code in a throwaway copy before planning.
+- Baseline: all gates green except the local `-race` leg, which hit package timeouts in `host/broker`, `host/daemon` and `host/verifygate` under load average about 12.8 on 16 cores. CI's race job was green on the same code.
+- Design premises found false:
+  - **P1:** a plain `os.Open` on a FIFO blocks before any fstat. Open with `O_NONBLOCK` (precedent `episode_launch_interactive.go:252`). This affects the r2 F9/N4 text, which the controller applied verbatim from the reviewer, so sprint 2 must carry it.
+  - **P2:** §2.10a's code sketch still names `readTermLineWithin`, contradicting its own [r2] contract.
+  - **P4:** AS6 as written would not catch a dropped `Feature`, so the full error text is pinned at all four sites.
+  - **P6:** TS3's control is made an external package.
+
+**Executor:** resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`; spawned as Agent `haiku`.
+- Three runs: M1a+M1b (3 min), M1c+M2a (11), M2b+M2c (3). No git writes.
+- `generate.sh` ran once, in a temp HOME. Fixtures are NUL-free and SHA-pinned.
+- The controller rebuilt each sub-milestone from its snapshot and committed it: M1a `bbfb6eba`, M1b `eef98c1b`, M1c `7b023888`, M2a `cd91a67b`, M2b `a28175ba`, M2c `048537c3`. Each run's final tree was sha256-identical to the executor's.
+- Deviations, all accepted by the judge:
+  - M2a trimmed `approvers.go`'s imports until M2b needed them.
+  - The `approverCount`/`testApprover` helpers were placed in M2a.
+  - A test helper `isOlderApprovers` was added.
+  - CT1's task file is named `task.md`.
+- Run 2 lost its full `host/daemon` result (backgrounded past its own poll) and said so. It also ran one read-only `ls ~/.ssh` and reported it. `~/.ssh` mtime is still Sep 9.
+
+**Controller gates** at `048537c3` (AILANG_BIN v0.41.0): all rc 0.
+- `verify_ail.sh`.
+- `VERIFY_GO_LEGS=plain verify_go.sh`: 0 other binary blobs among 6,605 tracked files, 64 evidence tests.
+- `go build ./... && go vet ./...`.
+- Context roots and the dependency allowlist.
+- `-race` on store, approval and authority.
+
+**Judge:** sonnet via the Agent tool, on its own worktree at `048537c3` (generator ≠ judge). **PASS 91/100, zero blocking.**
+- Sub-scores: correctness 28/30, tests 26/30, security 20/20, standards 9/10, scope 8/10.
+- Mutants: 100 run (the plan's set plus 25 of its own), each against the test the plan names. 87 were killed. Of the 13 survivors:
+  - 5 equivalent or unreachable;
+  - 1 message-only;
+  - 1 propagation-only;
+  - 1 the judge's own harness artefact;
+  - 2 real: **PAT-UPPER2** (an uppercase letter after the first character of a name is accepted, `approver.go:25`) and **LK-NAMEPREFIX** (no prefix test on lookup by name, `approvers.go:135`).
+- Non-vacuity: the headline tests of M1b, M2a, M2b and M2c each fail with that milestone's change stubbed. CT1 kills CR-TOOMANY.
+- Security properties confirmed:
+  - revoke marks the row, never deletes it;
+  - no name or key is reused;
+  - a private key file is refused without echoing its bytes;
+  - rsa, p384 and `sk-*` keys are refused;
+  - the prompt is reflectively complete;
+  - stores upgrade v1/v3/v4 → v5;
+  - no new unpinned root.
+- The judge saw one `host/broker` failure, `TestExecProbeNet6ForeignDialIsRetriedNotRefused`, in `go test ./...`. The package is untouched; it is the first recorded instance, logged per D-WORLD-109.
+- **Controller reproduced** PAT-UPPER2 surviving, and RV-DELETE and CR-TOOMANY killed by their named tests. A first CR-TOOMANY attempt whose sed matched nothing printed `ok`; the empty-diff assertion caught it.
+- Non-blocking notes, logged and not filed (D-WORLD-109): PAT-UPPER2, LK-NAMEPREFIX, and that the store does not re-check the name pattern (the pure law runs first). Carried into sprint 2's directive.
+
+**Gate 3b:** PR #537, head `048537c3`.
+- `pull_request` run `42770224305`: 3/3 success (ailang-code verify gate, go host build + test gate, go race gate).
+- Merged by merge commit **`b7d2e629`** (`--match-head-commit`; the auto-close keyword scan read 0, control 1).
+- Push run `42772211406` on the merge `b7d2e629`: 3/3 success.
+- Row 201 A1b sprint 1 LANDED. Row 201 stays open: A1b sprint 2 (M3 verbs, then M4–M5 approving by key), then M6 as its own sprint, then A2–A4.
+
+**Routing evidence:** base=b7d2e629d6ac6665434ddd0bd7a70fc817e929d8@2026-11-10T07:00:09Z.
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: `claude:claude-opus-5-5` via Agent opus (r0 259,187 tok; r1 resume 298,123 tok as reported); r2 by controller carve-out.
+- Quorum: gpt6-1-sol / gemini-4-argon / oc-glm-5-3 ($0.737 metered over two rounds).
+- Planner: `opus` via Agent (350,528 tok).
+- Executor: `claude:claude-haiku-5-5` via Agent haiku (104,801 + 109,031 + 87,422 tok).
+- Evaluator: `sonnet` via Agent (71,477 tok).
+- The driver noted codex unusable at preflight (probe rc 75, quota unreadable).
+- Metered total: $0.74. Details in `verification/world-iter375/routing.md`.
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Clause 5 (the human surface) was already MET. This sprint lays the store and law for approving a mint by an enrolled key, so World no longer needs a terminal to approve one.
+
+**Ruled out:**
+- A third quorum round: the carve-out applied, and both remaining rejects carried verbatim fixes.
+- Building M1–M3 in one sprint: the planner's estimate (~2,750 lines) tripped the design's own fallback cut.
+- Fixing `readTermLine` for the existing verbs: it changes attended behaviour, so it is logged as design R8.
+- Treating the planner's local `-race` red as a regression: it was load timeouts in untouched packages, and CI's race job and the controller's scoped `-race` were green.
+- Closing PAT-UPPER2/LK-NAMEPREFIX in this sprint: non-blocking, logged under D-WORLD-109.
+
+**Retro:**
+- Third consecutive child design (372, 373, 375) where the quorum blocked twice and the controller carve-out finished it. Each time, round 2's objections landed on code paths the round-1 fix introduced (here, the reader under the new bound). The designer directive should ask, at r0, for a failure-path walk of every new read/wait (EOF, partial bytes, read error, a file swapped between check and use), not only for a bound.
+- An inference from reading code is not a measurement: r1's "EOF already refuses" came from reading that `readTermLine` discards its error, and a four-line probe (V39) refuted it. Designer directives should require a probe for any claim about runtime behaviour.
+- The reviewer's verbatim F9 fix (`os.Open` then fstat) blocks on a FIFO before the fstat (planner P1). Verbatim application is the carve-out's rule, so the correction rides into sprint 2's directive rather than the design text. That is a known limit of the carve-out, worth stating where the next planner will read it.
+
+**Next:** row 201 A1b sprint 2. It starts with M3 (`approver enroll|list|revoke`, typed y bounded at 120 s, the error-aware reader), built from the same doc and plan Appendix A without re-design. It carries planner P1 (`O_NONBLOCK` open, then fstat), P2, and the judge's PAT-UPPER2/LK-NAMEPREFIX gaps. Then M4–M5, then M6, then row 243.
