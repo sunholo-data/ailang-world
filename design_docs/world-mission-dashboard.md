@@ -1,31 +1,32 @@
-# World mission dashboard — iteration 376 (2026-11-10)
+# World mission dashboard — iteration 377 (2026-11-10)
 
-- **Landed this fire:** row 201 A1b sprint 2 (`w-world-approvals-by-key`), PR #539, merge `290084ad`. CI 3/3 on the PR head and on the merge. Judge sonnet PASS 88, zero blocking.
-- **What it does:** an operator can now enrol, list and revoke an SSH approver key. Approving a mint by that key is sprint 3.
-  - `ailang-worldd approver enroll --name <n> --format ssh --pubkey <file>` asks for a typed `y`, bounded at 120 s.
-    - The reader is error-aware: `y`+EOF, a read error, a partial line or a timeout all refuse.
-    - No writer lock is held while it waits.
-    - The key file is read capped, opened `O_NONBLOCK` and then fstat'd, so a FIFO is refused rather than blocking.
-  - `approver list` is read-only. `approver revoke <name>` asks for a typed `y` and marks the row; it never deletes it.
-  - Sprint 1's PAT-UPPER2 and LK-NAMEPREFIX test gaps are closed.
-  - QUICKSTART §15 is written for Mark's attended exit run and is not run by the loop.
-- **Scope cut:** the plan's own size gate measured 1,896 > 1,683, so the pure signature law (M4a/M4b, code final) moved to Appendix B.
-- **Next loop work:** row 201 A1b sprint 3, from the sprint-2 plan's Appendix B with no re-design.
-  - First M4a/M4b.
-  - Then the consume binding and authority, together with M5's `approve --signature`, `--write-message` and `--list --decided`, and the revoke session listing. These must land together (planner P6).
-  - Carry over: the judge's untested `--credentials-db` and default `--db` (F-CREDS, AS-CREDFOR, F-DB).
-  - Then M6 (`--sign-with`, the CI step), then row 243. Fakes and test keys only (D-WORLD-109 = A).
+- **Landed this fire:** row 201 A1b sprint 3 (`w-world-approvals-by-key`), PR #541, merge `f0ce26f7`. CI 3/3 on the PR head and on the merge. Judge sonnet PASS 92, zero blocking.
+- **What it does:** an operator can now approve a mint request with an enrolled SSH key instead of a typed `y` at the daemon's terminal.
+  - `ailang-worldd approve <id> --write-message <file>` writes the exact message to sign. The file is created O_EXCL, and no store row is written.
+  - Sign it out of band with `ssh-keygen -Y sign`, then run `approve <id> --signature <file>`.
+  - The approval is accepted only if the enrolled, unrevoked key signed this request's digest, challenge and expiry. The store re-checks the approver inside the consume transaction, so a key revoked mid-approval is refused.
+  - `approved_by=ssh:<name>` is derived by the authority and cannot be set by a caller. The typed `y` path is unchanged.
+  - The approver verbs and `approve --list` honour `--credentials-db` and the default `--db`. This closes the iteration-376 judge gaps.
+  - QUICKSTART §15 is reworded for Mark's attended exit run. The loop does not run it.
+- **How it ran:** the opus planner shipped compiled unified diffs, and the haiku executor applied 11 sub-milestones with `patch`. The numstat matched the plan at every step: 1,910 against the 2,000 cap, and 1,314 against 1,404 at the size gate.
+- **Next loop work:** row 201 A1b sprint 4, from the sprint-3 plan's Appendix C.
+  - `DecidedMintRequests` and `approve --list --decided`.
+  - The revoke session listing K8/K9.
+  - Carry over the judge's test gaps: SIG-NOW (a key enrolled between request and approval) and SIG-FORMAT. A4-EXP's named test also needs pairing.
+  - Then `--sign-with`/M6 (the CI step), then row 243. Fakes and test keys only (D-WORLD-109 = A).
 - **Row 256:** taken by an attended session; the loop does not pick it.
 - **OPEN decisions:** D-WORLD-105 only (default C: row 233 parked, fail closed).
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 (attended A1) and 151 (row 188 N2d/N4a) are not routable.
 - **Routing this fire:** all roles ran through the Agent tool.
-  - Controller: opus. Planner: opus.
-  - Executor: haiku, four runs.
-  - Judge: sonnet.
-  - No designer and no quorum (the doc is reviewed). Metered $0.00.
+  - Controller: opus. Planner: opus, 50 min.
+  - Executor: haiku, three runs plus one resume, 8 min in total.
+  - Judge: sonnet, on its own worktree.
+  - No designer and no quorum. Metered $0.00.
   - Codex was unusable at preflight (probe rc 75).
 - **Instrument notes:**
-  - Export `AILANG_BIN=~/.pinned-ailang/ailang` in any shell that runs `host/daemon` or `cmd/ailang-worldd` tests.
-  - Do not run the controller's full `verify_go` sweep at the same time as the judge's suite. Under that contention, five untouched-package tests failed (30 s and 60 s timeouts, plus one broker counter). All passed alone and on a quiet re-run.
+  - Measure numstat only after a commit. `git diff --numstat` cannot see untracked files.
+  - Run the controller's full sweep BEFORE the judge, never concurrently.
+  - `verify_go`'s two `DATA RACE` lines are its known-positive control.
+  - Export `AILANG_BIN=~/.pinned-ailang/ailang` for `host/daemon` and `cmd/ailang-worldd` tests.
   - The Gate-0 self-notice script returns rc 2 until a directive is marked on #524.
 - **Bookkeeping thread:** #524 (rotates Monday 2026-11-16 07:00).
