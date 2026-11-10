@@ -99,6 +99,16 @@ func TestNewPasskeyApproverRefusals(t *testing.T) {
 		{"R14-no-UV", func(in *RegistrationInput) {
 			in.Response = file(c.RegCDJ, attObj("none", cbMap{}, withFlags(ad, 0, 0x04)))
 		}, ErrUserVerification},
+		// UV is required in every backup state, not only Chrome's BE=0 (judge, iteration 379).
+		{"R13-no-UP-backup-eligible", func(in *RegistrationInput) {
+			in.Response = file(c.RegCDJ, attObj("none", cbMap{}, withFlags(ad, 0x08|0x10, 0x01)))
+		}, ErrUserPresence},
+		{"R14-no-UV-backup-eligible", func(in *RegistrationInput) {
+			in.Response = file(c.RegCDJ, attObj("none", cbMap{}, withFlags(ad, 0x08, 0x04)))
+		}, ErrUserVerification},
+		{"R14-no-UV-backed-up", func(in *RegistrationInput) {
+			in.Response = file(c.RegCDJ, attObj("none", cbMap{}, withFlags(ad, 0x08|0x10, 0x04)))
+		}, ErrUserVerification},
 		{"R15-raw-id", func(in *RegistrationInput) { in.Response = regFile(c.RegRawID[1:], c.RegCDJ, c.AttObj) }, ErrCredentialIDMismatch},
 	}
 	for _, a := range arms {
