@@ -652,3 +652,141 @@ func TestVerifyApprovalBindsTheRequest(t *testing.T) {
 		t.Errorf("git namespace: got %v, want ErrNamespace", err)
 	}
 }
+
+// withSigStringTrailingByte appends one 0x00 INSIDE the signature string, after the inner blob
+// (parseSSHSIGBlob's sr.end(), sshsig.go:248).
+func withSigStringTrailingByte(t *testing.T, a []byte) []byte {
+	t.Helper()
+	p := splitSig(t, a)
+	p.signature = append(bytes.Clone(p.signature), 0)
+	return p.armored()
+}
+
+// withMpintPairTrailingByte appends one 0x00 after the s mpint INSIDE a p256 signature blob
+// (VerifySSHSIG's sr.end(), sshsig.go:298).
+func withMpintPairTrailingByte(t *testing.T, a []byte) []byte {
+	t.Helper()
+	p := splitSig(t, a)
+	f := readStringsTest(t, p.signature, 2)
+	p.signature = packStrings(f[0], append(bytes.Clone(f[1]), 0))
+	return p.armored()
+}
+
+// withNonZeroPadBits sets the lowest bit of the last base64 character before the '=' padding:
+// StdEncoding still decodes it to the same bytes, Strict() refuses it. t.Fatal when s has no
+// padding or the character did not change.
+func withNonZeroPadBits(t *testing.T, s string) string {
+	t.Helper()
+	const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+	body := strings.TrimRight(s, "=")
+	if len(body) == len(s) {
+		t.Fatal("no padding: no slack bits")
+	}
+	i := len(body) - 1
+	idx := strings.IndexByte(alphabet, body[i])
+	if idx < 0 {
+		t.Fatalf("withNonZeroPadBits: %q is not a base64 character", body[i])
+	}
+	c := alphabet[idx|1]
+	if c == body[i] {
+		t.Fatal("withNonZeroPadBits: the slack bit is already set")
+	}
+	return body[:i] + string(c) + s[len(body):]
+}
+
+// armorBody returns the base64 lines of an armored SSHSIG, joined, with the armor lines removed.
+func armorBody(t *testing.T, armored []byte) string {
+	t.Helper()
+	lines := strings.Split(strings.TrimSuffix(string(armored), "\n"), "\n")
+	if len(lines) < 3 {
+		t.Fatal("armorBody: not an SSHSIG armor")
+	}
+	return strings.Join(lines[1:len(lines)-1], "")
+}
+
+// armorNonStrict armors blob like armorTest but with withNonZeroPadBits applied to the base64.
+func armorNonStrict(t *testing.T, blob []byte) []byte {
+	t.Helper()
+	full := armorTest(blob)
+	lines := strings.Split(strings.TrimSuffix(string(full), "\n"), "\n")
+	enc := withNonZeroPadBits(t, armorBody(t, full))
+	var out strings.Builder
+	out.WriteString(lines[0] + "\n")
+	for len(enc) > 0 {
+		n := min(70, len(enc))
+		out.WriteString(enc[:n] + "\n")
+		enc = enc[n:]
+	}
+	out.WriteString(lines[len(lines)-1] + "\n")
+	return []byte(out.String())
+}
+
+// TestSSHSIGStrictnessArms kills the strictness and parse-level mutants of SSHSIG (row 201 sprint 2
+// M3b, SG8). Every arm is a fixture or a real transform of one.
+func TestSSHSIGStrictnessArms(t *testing.T) {
+	msg := fixtureMessage(t)
+	ed := fixtureBytes(t, "ed25519.sig")
+	p := fixtureBytes(t, "p256.sig")
+	edK := fixtureKey(t, "ed25519.pub")
+	pK := fixtureKey(t, "p256.pub")
+
+	// sig-string-trailing
+	if s, err := ParseSSHSIG(withSigStringTrailingByte(t, ed)); s != nil || !errors.Is(err, ErrTrailing) {
+		t.Errorf("sig-string-trailing: signature %v, err %v; want nil and ErrTrailing", s != nil, err)
+	}
+
+	// mpint-pair-trailing: the outer parse passes; VerifySSHSIG refuses the trailing byte.
+	s, err := ParseSSHSIG(withMpintPairTrailingByte(t, p))
+	if err != nil {
+		t.Fatalf("mpint-pair-trailing: ParseSSHSIG: %v (the trailing byte is inside the signature blob)", err)
+	}
+	if err := VerifySSHSIG(s, Namespace, msg, pK); !errors.Is(err, ErrBadSignature) || !strings.Contains(err.Error(), "trailing bytes") {
+		t.Errorf("mpint-pair-trailing: got %v, want ErrBadSignature with reason %q", err, "trailing bytes")
+	}
+
+	// nonstrict-sig: the control decodes the mutated body to the same bytes, so only Strict refuses it.
+	blob := unarmorTest(t, p)
+	nonStrict := armorNonStrict(t, blob)
+	if got, err := base64.StdEncoding.DecodeString(armorBody(t, nonStrict)); err != nil || !bytes.Equal(got, blob) {
+		t.Fatalf("nonstrict-sig control: non-strict decode err %v, equal %v; want the same bytes", err, bytes.Equal(got, blob))
+	}
+	if s, err := ParseSSHSIG(nonStrict); s != nil || !errors.Is(err, ErrBase64) {
+		t.Errorf("nonstrict-sig: signature %v, err %v; want nil and ErrBase64", s != nil, err)
+	}
+
+	// nonstrict-pub: the unmutated three-field line is the control.
+	f := strings.Fields(string(fixtureBytes(t, "p256.pub")))
+	if len(f) < 3 {
+		t.Fatalf("p256.pub has %d fields, want 3", len(f))
+	}
+	if _, err := ParseAuthorizedKey([]byte(f[0] + " " + f[1] + " " + f[2])); err != nil {
+		t.Fatalf("nonstrict-pub control: unmutated key line: %v", err)
+	}
+	if _, err := ParseAuthorizedKey([]byte(f[0] + " " + withNonZeroPadBits(t, f[1]) + " " + f[2])); !errors.Is(err, ErrBase64) {
+		t.Errorf("nonstrict-pub: err %v, want ErrBase64", err)
+	}
+
+	// parse-sha1: refused by the parse itself, never by VerifySSHSIG.
+	if s, err := ParseSSHSIG(withHashAlg(t, ed, "sha1")); s != nil || !errors.Is(err, ErrHashAlg) {
+		t.Errorf("parse-sha1: signature %v, err %v; want nil and ErrHashAlg", s != nil, err)
+	}
+
+	// verify-sha1: the parse accepts the signature; signedData refuses the hash.
+	vs, err := ParseSSHSIG(ed)
+	if err != nil {
+		t.Fatalf("verify-sha1: ParseSSHSIG: %v", err)
+	}
+	vs.HashAlg = "sha1"
+	if err := VerifySSHSIG(vs, Namespace, msg, edK); !errors.Is(err, ErrHashAlg) {
+		t.Errorf("verify-sha1: got %v, want ErrHashAlg", err)
+	}
+
+	// relabel-sha256: the signature covers SHA-512, so a relabel must not verify.
+	rs, err := ParseSSHSIG(withHashAlg(t, ed, "sha256"))
+	if err != nil || rs.HashAlg != "sha256" {
+		t.Fatalf("relabel-sha256: ParseSSHSIG err %v, hash %v; want sha256 accepted", err, rs)
+	}
+	if err := VerifySSHSIG(rs, Namespace, msg, edK); !errors.Is(err, ErrBadSignature) {
+		t.Errorf("relabel-sha256: got %v, want ErrBadSignature", err)
+	}
+}

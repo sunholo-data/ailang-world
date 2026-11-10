@@ -82,10 +82,11 @@ func crossCheckSSHKeygen(t *testing.T, keyArgs []string, wantType string) {
 	good, goodRC := runSSHKeygen(t, msg, "-Y", "sign", "-n", Namespace, "-f", key)
 	gitSig, gitRC := runSSHKeygen(t, msg, "-Y", "sign", "-n", "git", "-f", key)
 	otherSig, otherRC := runSSHKeygen(t, msg, "-Y", "sign", "-n", Namespace, "-f", other)
+	good256, rc256 := runSSHKeygen(t, msg, "-Y", "sign", "-n", Namespace, "-O", "hashalg=sha256", "-f", key)
 	for name, sig := range map[string]struct {
 		out []byte
 		rc  int
-	}{"good": {good, goodRC}, "git": {gitSig, gitRC}, "other": {otherSig, otherRC}} {
+	}{"good": {good, goodRC}, "git": {gitSig, gitRC}, "other": {otherSig, otherRC}, "good-sha256": {good256, rc256}} {
 		if sig.rc != 0 {
 			t.Fatalf("ssh-keygen -Y sign (%s): rc %d, want 0", name, sig.rc)
 		}
@@ -99,6 +100,14 @@ func crossCheckSSHKeygen(t *testing.T, keyArgs []string, wantType string) {
 		if s.PublicKey.Type != wantType {
 			t.Fatalf("ssh-keygen -Y sign (%s): key type %q, want %q", name, s.PublicKey.Type, wantType)
 		}
+	}
+	// The default signature is SHA-512 and the -O hashalg=sha256 one is SHA-256: the two arms below
+	// are the only ones with a real SHA-256 signature.
+	if s, err := ParseSSHSIG(good); err != nil || s.HashAlg != "sha512" {
+		t.Fatalf("ssh-keygen default signature: err %v; want hash sha512", err)
+	}
+	if s, err := ParseSSHSIG(good256); err != nil || s.HashAlg != "sha256" {
+		t.Fatalf("ssh-keygen -O hashalg=sha256 signature: err %v; want hash sha256", err)
 	}
 
 	// 3. Build the allowed-signers file for the key and parse the public key with the production parser.
@@ -135,6 +144,9 @@ func crossCheckSSHKeygen(t *testing.T, keyArgs []string, wantType string) {
 		{"git-namespace", gitSig, msg, false},
 		{"another-key", otherSig, msg, false},
 		{"flipped-signature", withLastSigByteFlipped(t, good), msg, false},
+		{"good-sha256", good256, msg, true},
+		{"tampered-message-sha256", good256, flipByte(msg, 0), false},
+		{"flipped-signature-sha256", withLastSigByteFlipped(t, good256), msg, false},
 	}
 	for _, arm := range arms {
 		sigPath := filepath.Join(dir, arm.name+".sig")
