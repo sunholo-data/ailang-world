@@ -9,9 +9,11 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -20,6 +22,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
@@ -481,6 +484,16 @@ func TestReadTermLineWithin(t *testing.T) {
 	})
 }
 
+// rawCredentials opens the credentials store at path read-write, for tests that edit a stored row.
+func rawCredentials(t *testing.T, path string) *sql.DB {
+	t.Helper()
+	raw, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return raw
+}
+
 // atTime is a clock that always reads v.
 func atTime(v int64) func() int64 { return func() int64 { return v } }
 
@@ -661,4 +674,264 @@ func TestApproveRefusesBadIDsAndMisuse(t *testing.T) {
 			}
 		}
 	})
+}
+
+// CL9: an expired request is refused before any terminal opens, and a y that lands after the
+// expiry (the in-transaction clock reading) mints nothing and removes the worktree the run made.
+func TestApproveRefusesExpired(t *testing.T) {
+	exp := approveT0 + 600
+	t.Run("before-the-terminal", func(t *testing.T) {
+		a := newApproveRig(t, "ep1", approveT0)
+		var opened bool
+		term := &promptTerm{in: strings.NewReader("y\n")}
+		var stdout, stderr bytes.Buffer
+		code := runApprove(a.args(), &stdout, &stderr, approveEnv(term, &opened, atTime(exp)))
+		if code != exitUsage || !strings.Contains(stderr.String(), "expired at") || opened {
+			t.Fatalf("rc %d, opened %v, want exitUsage, \"expired at\", not opened\nstderr %s", code, opened, stderr.String())
+		}
+	})
+	t.Run("in-the-transaction", func(t *testing.T) {
+		a := newApproveRig(t, "ep1", approveT0)
+		term := &promptTerm{in: strings.NewReader("y\n")}
+		var stdout, stderr bytes.Buffer
+		code := runApprove(a.args(), &stdout, &stderr, approveEnv(term, nil, clockSeq(2, approveT0+1, approveT0+601)))
+		if code != exitFatal || !strings.Contains(stderr.String(), "expired before it was consumed") {
+			t.Fatalf("rc %d, want exitFatal and \"expired before it was consumed\"\nstderr %s", code, stderr.String())
+		}
+		if a.row(t).Consumed {
+			t.Error("an expired request was consumed")
+		}
+		if n := len(a.sessionRows(t)); n != 0 {
+			t.Errorf("%d session rows, want 0", n)
+		}
+		if _, err := os.Lstat(a.worktree()); !errors.Is(err, os.ErrNotExist) {
+			t.Errorf("the worktree exists (err %v)", err)
+		}
+		if !strings.Contains(stderr.String(), "removed the worktree") {
+			t.Errorf("stderr lacks 'removed the worktree': %s", stderr.String())
+		}
+	})
+}
+
+// CL10: a world that changed since the request was made is refused before any terminal opens,
+// and the request stays pending. Each arm is a fresh rig.
+func TestApproveRefusesAStaleWorld(t *testing.T) {
+	refusedStale := func(t *testing.T, a approveRig, want string) {
+		t.Helper()
+		var opened bool
+		term := &promptTerm{in: strings.NewReader("y\n")}
+		var stdout, stderr bytes.Buffer
+		code := runApprove(a.args(), &stdout, &stderr, approveEnv(term, &opened, atTime(approveT0+1)))
+		if code != exitUsage || !strings.Contains(stderr.String(), want) {
+			t.Fatalf("rc %d, want exitUsage and %q\nstderr %s", code, want, stderr.String())
+		}
+		if opened {
+			t.Error("the terminal opened for a stale request")
+		}
+		if a.row(t).Consumed {
+			t.Error("the stale request was consumed")
+		}
+		if n := len(a.sessionRows(t)); n != 0 {
+			t.Errorf("%d session rows, want 0", n)
+		}
+	}
+	t.Run("profile-digest", func(t *testing.T) {
+		r := newEpisodeRun(t)
+		a := newApproveRigIn(t, r, "ep1", approveT0)
+		p2 := writeTestProfile(t, r.profiles, "proj", `, "env": {"APPROVE_TEST": "1"}`)
+		stubDaemon(t, matchingHealth(t, r.f, r.profiles, p2), nil)
+		refusedStale(t, a, "profile.digest")
+	})
+	t.Run("daemon-build", func(t *testing.T) {
+		r := newEpisodeRun(t)
+		a := newApproveRigIn(t, r, "ep1", approveT0)
+		otherBuild := daemon.BuildIdentity{VCSRevision: strings.Repeat("f", 40)}
+		h := matchingHealth(t, r.f, r.profiles, a.profile)
+		h.Build = otherBuild
+		stubDaemon(t, h, nil)
+		episodeSelfBuild = func() daemon.BuildIdentity { return otherBuild }
+		refusedStale(t, a, "daemon.vcs_revision")
+	})
+	t.Run("session-file-exists", func(t *testing.T) {
+		a := newApproveRig(t, "ep1", approveT0)
+		if err := os.MkdirAll(a.r.sessions, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(a.r.sessions, "ep1.session"), []byte("x"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		refusedStale(t, a, "already exists")
+	})
+	t.Run("mcp-config-exists", func(t *testing.T) {
+		a := newApproveRig(t, "ep1", approveT0)
+		if err := os.MkdirAll(a.r.sessions, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(a.r.sessions, "ep1.mcp.json"), []byte("{}"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		refusedStale(t, a, "already exists")
+	})
+	t.Run("worktree-exists", func(t *testing.T) {
+		a := newApproveRig(t, "ep1", approveT0)
+		if out, err := exec.Command("git", "-C", a.r.f.repo, "worktree", "add", "--detach", a.worktree()).CombinedOutput(); err != nil {
+			t.Fatalf("git worktree add: %v\n%s", err, out)
+		}
+		refusedStale(t, a, "reuse")
+	})
+}
+
+// CL11: a request whose stored bytes no longer match their digest is refused before any terminal
+// opens. Re-digested, the same edited bytes mint exactly what they say: the grant the session
+// row carries is the one the request holds.
+func TestApproveRefusesATamperedRow(t *testing.T) {
+	tamper := func(t *testing.T, a approveRig, redigest bool) []byte {
+		t.Helper()
+		row := a.row(t)
+		if !bytes.Contains(row.Request, []byte(`"budget":50`)) {
+			t.Fatalf("the request lacks \"budget\":50: %s", row.Request)
+		}
+		edited := bytes.Replace(row.Request, []byte(`"budget":50`), []byte(`"budget":999`), 1)
+		digest := row.Digest
+		if redigest {
+			sum := sha256.Sum256(edited)
+			digest = hex.EncodeToString(sum[:])
+		}
+		raw := rawCredentials(t, a.credPath)
+		defer func() { _ = raw.Close() }()
+		if _, err := raw.Exec(`UPDATE mint_requests SET request = ?, digest = ? WHERE request_id = ?`, edited, digest, a.id); err != nil {
+			t.Fatal(err)
+		}
+		return edited
+	}
+	t.Run("digest-kept", func(t *testing.T) {
+		a := newApproveRig(t, "ep1", approveT0)
+		tamper(t, a, false)
+		var opened bool
+		term := &promptTerm{in: strings.NewReader("y\n")}
+		var stdout, stderr bytes.Buffer
+		code := runApprove(a.args(), &stdout, &stderr, approveEnv(term, &opened, atTime(approveT0+1)))
+		if code != exitUsage || !strings.Contains(stderr.String(), "do not match its digest") || opened {
+			t.Fatalf("rc %d, opened %v, want exitUsage, \"do not match its digest\", not opened\nstderr %s", code, opened, stderr.String())
+		}
+	})
+	t.Run("redigested", func(t *testing.T) {
+		a := newApproveRig(t, "ep1", approveT0)
+		tamper(t, a, true)
+		term := &promptTerm{in: strings.NewReader("y\n")}
+		var stdout, stderr bytes.Buffer
+		if code := runApprove(a.args(), &stdout, &stderr, approveEnv(term, nil, atTime(approveT0+1))); code != exitOK {
+			t.Fatalf("rc %d\nstderr %s", code, stderr.String())
+		}
+		if !strings.Contains(term.out.String(), "Workspace.Read=worktree:999") {
+			t.Errorf("the prompt lacks the edited grant:\n%s", term.out.String())
+		}
+		rows := a.sessionRows(t)
+		if len(rows) != 1 {
+			t.Fatalf("%d session rows, want 1", len(rows))
+		}
+		var grants []broker.Capability
+		if err := json.Unmarshal([]byte(rows[0].GrantsJSON), &grants); err != nil {
+			t.Fatal(err)
+		}
+		found := false
+		for _, g := range grants {
+			if g.Effect == broker.EffectWorkspaceRead && g.Budget == 999 {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("grants %s lack Workspace.Read with budget 999", rows[0].GrantsJSON)
+		}
+	})
+}
+
+// CL13: an unanswered y/N gives up when the request expires: the wait is exactly the remaining
+// lifetime, and nothing is consumed or minted. Arm 2: a request expired before the prompt is
+// refused before the prompt is written.
+func TestApproveUnansweredPromptTimesOut(t *testing.T) {
+	exp := approveT0 + 600
+	t.Run("no-answer", func(t *testing.T) {
+		a := newApproveRig(t, "ep1", approveT0)
+		pr, pw := io.Pipe()
+		t.Cleanup(func() { _ = pw.Close() })
+		term := &promptTerm{in: pr}
+		var waited time.Duration
+		env := approveEnv(term, nil, atTime(exp-37))
+		env.after = func(d time.Duration) <-chan time.Time {
+			waited = d
+			c := make(chan time.Time)
+			close(c)
+			return c
+		}
+		var stdout, stderr bytes.Buffer
+		var code int
+		done := make(chan struct{})
+		go func() {
+			code = runApprove(a.args(), &stdout, &stderr, env)
+			close(done)
+		}()
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			t.Fatal("runApprove did not return on the timer")
+		}
+		if code != exitUsage || !strings.Contains(stderr.String(), "no answer within the request's remaining lifetime (37s)") ||
+			!strings.Contains(stderr.String(), "still pending") {
+			t.Fatalf("rc %d, want exitUsage, the 37s refusal and 'still pending'\nstderr %s", code, stderr.String())
+		}
+		if waited != 37*time.Second {
+			t.Errorf("waited %v, want exactly 37s", waited)
+		}
+		if a.row(t).Consumed {
+			t.Error("an unanswered request was consumed")
+		}
+		if _, err := os.Lstat(a.worktree()); !errors.Is(err, os.ErrNotExist) {
+			t.Errorf("the worktree exists (err %v)", err)
+		}
+		if n := len(a.sessionRows(t)); n != 0 {
+			t.Errorf("%d session rows, want 0", n)
+		}
+	})
+	t.Run("expired-before-the-prompt", func(t *testing.T) {
+		a := newApproveRig(t, "ep1", approveT0)
+		term := &promptTerm{in: strings.NewReader("y\n")}
+		var stdout, stderr bytes.Buffer
+		code := runApprove(a.args(), &stdout, &stderr, approveEnv(term, nil, clockSeq(1, exp-1, exp)))
+		if code != exitUsage || !strings.Contains(stderr.String(), "expired before the prompt") {
+			t.Fatalf("rc %d, want exitUsage and \"expired before the prompt\"\nstderr %s", code, stderr.String())
+		}
+		if term.out.Len() != 0 {
+			t.Errorf("the prompt was written:\n%s", term.out.String())
+		}
+	})
+}
+
+// CL19: expiry during worktree preparation is refused: the worktree exists only after worktree.Add,
+// so only a reading taken after preparation sees the expiry.
+func TestApproveRefusesExpiryDuringWorktreePreparation(t *testing.T) {
+	a := newApproveRig(t, "ep1", approveT0)
+	wt := a.worktree()
+	exp := approveT0 + 600
+	clock := func() int64 {
+		if _, err := os.Stat(wt); err == nil {
+			return exp
+		}
+		return approveT0 + 1
+	}
+	term := &promptTerm{in: strings.NewReader("y\n")}
+	var stdout, stderr bytes.Buffer
+	code := runApprove(a.args(), &stdout, &stderr, approveEnv(term, nil, clock))
+	if code != exitFatal || !strings.Contains(stderr.String(), "expired before it was consumed") {
+		t.Fatalf("rc %d, want exitFatal and \"expired before it was consumed\"\nstderr %s", code, stderr.String())
+	}
+	if a.row(t).Consumed {
+		t.Error("the request was consumed")
+	}
+	if n := len(a.sessionRows(t)); n != 0 {
+		t.Errorf("%d session rows, want 0", n)
+	}
+	if _, err := os.Lstat(wt); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("the worktree still exists (err %v)", err)
+	}
 }
