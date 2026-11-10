@@ -122,7 +122,7 @@ const approverHelp = `usage: ailang-worldd approver enroll --name <name> --forma
 ATTENDED (enroll, revoke). An approver is a name and one SSH public key, kept in
 the credentials store (row 201). An enrolled, unrevoked key approves a mint
 request with its signature: 'ailang-worldd approve <request-id> --signature
-<file>'. enroll and revoke each ask y at /dev/tty and wait at most 2m0s for it;
+<file>' or '--sign-with <key>'. enroll and revoke each ask y at /dev/tty and wait at most 2m0s for it;
 an agent cannot run them.
 
 enroll   reads --pubkey once (one ssh-ed25519 or ecdsa-sha2-nistp256 key line,
@@ -133,6 +133,8 @@ list     prints every approver, read-only: name, format, key type,
          fingerprint, enrolled, last used, and active or revoked.
 revoke   marks the approver revoked after y. The row is kept: it never
          approves again, and its name and key can never be enrolled again.
+         It then lists the sessions the approver approved (at most 64, newest
+         first), each with its 'session revoke' line. It revokes none of them.
 
   --name <name>             1-48 of a-z 0-9 . _ - (the first a letter or digit);
                             its approvals record approved_by=ssh:<name>
@@ -417,16 +419,17 @@ func runApproverRevoke(args []string, stdout, stderr io.Writer, env sessionEnv) 
 		return code
 	}
 
-	// The write (K5b, K6, K7).
+	// The write (K5b, K6, K7). Its root and its writer end before K8 reads.
 	ctx, cancel := context.WithTimeout(context.Background(), approveReadBudget)
-	defer cancel()
 	st, err := openCredentialsForSession(ctx, db, credPath)
 	if err != nil { // K5b
+		cancel()
 		fmt.Fprintf(stderr, "%scannot open the credentials store for writing: %v\n", prefix, err)
 		return exitFatal
 	}
-	defer func() { _ = st.Close() }()
 	err = approverRevoke(st, ctx, name, env.now())
+	_ = st.Close()
+	cancel()
 	switch {
 	case errors.Is(err, store.ErrApproverRevoked), errors.Is(err, store.ErrApproverUnknown): // K6
 		return approverRefuse(stderr, prefix, "%v (another revoke ran first); nothing was revoked", err)
@@ -435,5 +438,30 @@ func runApproverRevoke(args []string, stdout, stderr io.Writer, env sessionEnv) 
 		return exitFatal
 	}
 	fmt.Fprintf(stdout, "revoked approver %s\n", name) // K7
+
+	// K8, K9 (design §2.10 [r2]): what it approved, under its own read-only root. Q4: it revokes
+	// no session; the operator decides.
+	list, cancelList := context.WithTimeout(context.Background(), approveReadBudget)
+	defer cancelList()
+	ro, err = store.OpenCredentialsReadOnly(credPath)
+	if err != nil {
+		fmt.Fprintf(stderr, "%srevoked, but cannot read the credentials store %s to list what it approved: %v; fix: ailang-worldd approve --list --decided\n", prefix, credPath, err)
+		return exitFatal
+	}
+	rows, err := ro.DecidedMintRequests(list, row.Format+":"+name, 0)
+	_ = ro.Close()
+	if err != nil {
+		fmt.Fprintf(stderr, "%srevoked, but cannot list what it approved: %v; fix: ailang-worldd approve --list --decided\n", prefix, err)
+		return exitFatal
+	}
+	if len(rows) == 0 { // K9
+		fmt.Fprintln(stdout, "no session was approved by it")
+		return exitOK
+	}
+	fmt.Fprintf(stdout, "it approved %d session(s), newest first; each stays valid until it expires or is revoked:\n", len(rows)) // K8
+	for _, r := range rows {
+		fmt.Fprintf(stdout, "  %s  episode %s  at %s  credential %s\n    ailang-worldd session revoke --db %s --credentials-db %s %s\n",
+			r.RequestID, r.EpisodeID, approverTime(r.ConsumedAt), credentialPrefix(r.CredentialID), shellQuote(db), shellQuote(credPath), r.CredentialID)
+	}
 	return exitOK
 }

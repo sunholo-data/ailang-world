@@ -11,8 +11,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
+	"github.com/sunholo-data/ailang-world/host/sshsign"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
@@ -31,9 +33,16 @@ func approveSignature(ctx context.Context, credPath, path string, row store.Mint
 	if err != nil { // F10
 		return nil, fmt.Sprintf("--signature: %v", err)
 	}
+	return approveArmored(ctx, credPath, "--signature "+path, armored, row, now)
+}
+
+// approveArmored judges an armored signature from source (--signature's file or --sign-with's
+// signer): parsed (F11), its key looked up among the enrolled approvers (F12, F13), and judged by
+// the signature law against the stored row (F14).
+func approveArmored(ctx context.Context, credPath, source string, armored []byte, row store.MintRequestRow, now int64) (*approval.SignedApproval, string) {
 	sig, err := approval.ParseSSHSIG(armored)
 	if err != nil { // F11
-		return nil, fmt.Sprintf("--signature %s is not an SSH signature: %v", path, err)
+		return nil, fmt.Sprintf("%s is not an SSH signature: %v", source, err)
 	}
 	ro, err := store.OpenCredentialsReadOnly(credPath)
 	if err != nil {
@@ -70,9 +79,7 @@ func approveSignature(ctx context.Context, credPath, path string, row store.Mint
 // and prints the out-of-band signing line and the next step. It opens no terminal and writes no
 // store row, so the request stays pending. It returns the refusal text, or "".
 func writeApprovalMessage(stdout io.Writer, path string, row store.MintRequestRow, mr approval.MintRequest) string {
-	stored, _ := hex.DecodeString(row.Digest)       // admission has shown it is 32 bytes
-	challenge, _ := hex.DecodeString(row.Challenge) // F4 has shown it is 32 bytes
-	msg, err := approval.SignedMessage([32]byte(stored), [32]byte(challenge), row.ExpiresAt)
+	msg, err := approvalMessage(row)
 	if err != nil {
 		return fmt.Sprintf("request %s: %v", row.RequestID, err)
 	}
@@ -94,4 +101,46 @@ func writeApprovalMessage(stdout io.Writer, path string, row store.MintRequestRo
 	fmt.Fprintf(stdout, "then approve it:\n  ailang-worldd approve %s --signature %s.sig --db %s --credentials-db %s\n",
 		row.RequestID, shellQuote(path), shellQuote(mr.WorldDB), shellQuote(mr.CredentialsDB))
 	return ""
+}
+
+// approvalMessage is the admitted row's 90-byte approval message (design §2.3).
+func approvalMessage(row store.MintRequestRow) ([]byte, error) {
+	stored, _ := hex.DecodeString(row.Digest)       // admission has shown it is 32 bytes
+	challenge, _ := hex.DecodeString(row.Challenge) // F4 has shown it is 32 bytes
+	return approval.SignedMessage([32]byte(stored), [32]byte(challenge), row.ExpiresAt)
+}
+
+// ---- S1 (sprint 4) ----
+
+// signForApproval is approve --sign-with's signing (design §2.7 step 3, §2.9): the admitted row's
+// message, signed by env.sign under a new root bounded by the request's remaining lifetime. A
+// request that expired since admission is refused before the signer runs (F7a), so the root is
+// never made with a non-positive duration; a signer error is refused (F8). It returns the armored
+// signature or the refusal text. The caller has checked env.sign (F7).
+func signForApproval(env sessionEnv, key string, row store.MintRequestRow, stderr io.Writer) ([]byte, string) {
+	rem := row.ExpiresAt - env.now()
+	if rem <= 0 { // F7a
+		return nil, expiredRefusal(row)
+	}
+	msg, err := approvalMessage(row)
+	if err != nil {
+		return nil, fmt.Sprintf("request %s: %v", row.RequestID, err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(rem)*time.Second)
+	defer cancel()
+	armored, err := env.sign(ctx, key, msg, stderr)
+	if err != nil { // F8
+		return nil, fmt.Sprintf("--sign-with %s: %v; nothing was approved", key, err)
+	}
+	return armored, ""
+}
+
+// ---- S3 (sprint 4) ----
+
+// signWithSSHKeygen is the production signer (design §2.9): ssh-keygen from PATH through
+// host/sshsign's driven, environment-scrubbed site (AC10). PATH is not a trust boundary:
+// whatever runs, approveArmored verifies its output against the enrolled key over World's own
+// message.
+func signWithSSHKeygen(ctx context.Context, key string, msg []byte, stderr io.Writer) ([]byte, error) {
+	return sshsign.Sign(ctx, "ssh-keygen", key, msg, stderr)
 }

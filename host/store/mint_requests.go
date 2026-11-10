@@ -199,6 +199,46 @@ func (c *Credentials) PendingMintRequests(ctx context.Context, now int64, limit 
 	return out, nil
 }
 
+// MaxDecidedMintRequests caps one DecidedMintRequests listing (row 201 A1b design §2.4 [r2]).
+const MaxDecidedMintRequests = 64
+
+// DecidedMintRequests lists the consumed requests, newest consumed_at first and request_id
+// descending among equal times (design §2.4 [r2]), at most MaxDecidedMintRequests (limit <= 0
+// or above it means the cap). A non-empty approvedBy keeps only the rows it approved
+// (approver revoke's K8). It reads every store with mint requests, schema 4 included.
+func (c *Credentials) DecidedMintRequests(ctx context.Context, approvedBy string, limit int) ([]MintRequestRow, error) {
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
+	if c.version < mintRequestsSchemaVersion {
+		return nil, &OlderCredentialsStoreError{Path: c.display, Version: c.version, Need: mintRequestsSchemaVersion, Feature: "mint requests"}
+	}
+	if limit <= 0 || limit > MaxDecidedMintRequests {
+		limit = MaxDecidedMintRequests
+	}
+	q, args := `SELECT `+mintRequestColumns+` FROM mint_requests WHERE consumed_at IS NOT NULL`, []any{}
+	if approvedBy != "" {
+		q, args = q+` AND approved_by = ?`, append(args, approvedBy)
+	}
+	rows, err := c.db.QueryContext(ctx, q+` ORDER BY consumed_at DESC, request_id DESC LIMIT ?`, append(args, limit)...)
+	if err != nil {
+		return nil, fmt.Errorf("store: list decided mint requests: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []MintRequestRow
+	for rows.Next() {
+		row, err := scanMintRequest(rows.Scan)
+		if err != nil {
+			return nil, fmt.Errorf("store: list decided mint requests: %w", err)
+		}
+		out = append(out, row)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("store: list decided mint requests: %w", err)
+	}
+	return out, nil
+}
+
 // isLowerHex64 reports whether s is exactly 64 lowercase hexadecimal characters.
 func isLowerHex64(s string) bool {
 	if len(s) != 64 {

@@ -39,8 +39,8 @@ func TestApproverRevoke(t *testing.T) {
 		if code != exitOK {
 			t.Fatalf("code %d, want exitOK; stderr %q", code, errw.String())
 		}
-		if out.String() != "revoked approver mark-mac\n" {
-			t.Fatalf("stdout %q, want %q", out.String(), "revoked approver mark-mac\n")
+		if want := "revoked approver mark-mac\nno session was approved by it\n"; out.String() != want { // K7, K9 (sprint 4 D3)
+			t.Fatalf("stdout %q, want %q", out.String(), want)
 		}
 		wantPrompt := "Revoke approver mark-mac (ssh-ed25519 " + edFingerprint + ")? It will never approve again, and its name and key can never be enrolled again. [y/N] "
 		if term.Output() != wantPrompt {

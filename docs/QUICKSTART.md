@@ -1793,13 +1793,16 @@ ailang-worldd approver enroll --name demo --format ssh --pubkey /tmp/se-world/de
 ailang-worldd approver list --db /tmp/se-world/world.db
 ```
 
-To approve a §14 request with that key instead of a `y`: write the request's 90-byte message, sign it out of band with `ssh-keygen` in World's namespace, and pass the signature. `approve --signature` opens no terminal; it checks the signature against the enrolled, unrevoked key before any network call, re-checks the approver inside the mint's own transaction, and records `approved_by=ssh:demo`. `--write-message` prints these same two commands with the request's own paths.
+To approve a §14 request with that key instead of a `y`, either let `approve --sign-with` run `ssh-keygen -Y sign` on the key for you, or write the request's 90-byte message, sign it out of band with `ssh-keygen` in World's namespace, and pass the signature. `approve --signature` opens no terminal; it checks the signature against the enrolled, unrevoked key before any network call, re-checks the approver inside the mint's own transaction, and records `approved_by=ssh:demo`. `--write-message` prints these same two commands with the request's own paths. `approve --sign-with` checks `ssh-keygen`'s output the same way; World never reads the private key, and the signer waits at most until the request expires. `approve --list --decided` shows who approved each used request, and `approver revoke` lists the sessions the approver approved, each with its `session revoke` line; it revokes none of them.
 
 ```bash
 ailang-worldd episode start sig-demo --repo "$PWD" --db /tmp/se-world/world.db --request
 ailang-worldd approve mr-<the 16 hex it printed> --write-message /tmp/se-world/req.msg --db /tmp/se-world/world.db
 ssh-keygen -Y sign -n world-approval@sunholo -f /tmp/se-world/demo-key < /tmp/se-world/req.msg > /tmp/se-world/req.msg.sig
 ailang-worldd approve mr-<the same id> --signature /tmp/se-world/req.msg.sig --db /tmp/se-world/world.db
+ailang-worldd episode start sig-demo-2 --repo "$PWD" --db /tmp/se-world/world.db --request
+ailang-worldd approve mr-<the 16 hex it printed> --sign-with /tmp/se-world/demo-key --db /tmp/se-world/world.db
+ailang-worldd approve --list --decided --db /tmp/se-world/world.db
 ailang-worldd approver revoke demo --db /tmp/se-world/world.db
 ```
 

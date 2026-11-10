@@ -35,6 +35,9 @@ type sessionEnv struct {
 	random func(b []byte) error
 	// after is time.After in production: the timer that bounds approve's y/N (row 201 §2.6a).
 	after func(time.Duration) <-chan time.Time
+	// sign is approve --sign-with's signer, signWithSSHKeygen in production (row 201 A1b §2.9):
+	// the armored SSHSIG of msg by key. World never reads the private key; ssh-keygen does.
+	sign func(ctx context.Context, key string, msg []byte, stderr io.Writer) ([]byte, error)
 }
 
 // sessionTTYFix ends every terminal refusal of the attended session verbs. It
@@ -51,6 +54,7 @@ func realSessionEnv() sessionEnv {
 		now:    func() int64 { return time.Now().Unix() },
 		random: func(b []byte) error { _, err := rand.Read(b); return err },
 		after:  time.After,
+		sign:   signWithSSHKeygen,
 	}
 }
 

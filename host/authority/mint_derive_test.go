@@ -182,6 +182,13 @@ func TestMintForRequestRefusesAnUnboundApproval(t *testing.T) {
 		}
 	}
 	is := func(target error) func(error) bool { return func(err error) bool { return errors.Is(err, target) } }
+	t.Run("bound-control", func(t *testing.T) { // A4-EXP (sprint 4 T1): the unperturbed approval binds, so each arm below is refused for its own field
+		st, mr, row := au1Store(t)
+		au1Enrol(t, st)
+		if err := au1Mint(t, st, au1SignedMint(t, mr, row)); err != nil {
+			t.Fatalf("the bound approval: %v, want it minted", err)
+		}
+	})
 	for _, a := range []struct {
 		name   string
 		mutate func(t *testing.T, rm *RequestMint, row store.MintRequestRow)
