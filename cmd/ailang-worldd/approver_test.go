@@ -8,8 +8,10 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -216,5 +218,71 @@ func TestConfirmApproverAct(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// ---- M3b ----
+
+// FC1: readRegularFileCapped reads a regular file of at most max bytes once, and refuses
+// anything else by the open descriptor, without blocking on a FIFO.
+func TestReadRegularFileCapped(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name string, n int) string {
+		p := filepath.Join(dir, name)
+		if err := os.WriteFile(p, bytes.Repeat([]byte("k"), n), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	if b, err := readRegularFileCapped(write("at-max", 8192), 8192); err != nil || len(b) != 8192 {
+		t.Errorf("an 8192-byte file at max 8192: %d bytes, %v; want all of it", len(b), err)
+	}
+	if b, err := readRegularFileCapped(write("small", 3), 8192); err != nil || string(b) != "kkk" {
+		t.Errorf("a 3-byte file: %q, %v", b, err)
+	}
+	over := write("over", 8193)
+	if _, err := readRegularFileCapped(over, 8192); err == nil || err.Error() != over+" is 8193 bytes, over the 8192-byte bound" {
+		t.Errorf("an 8193-byte file: %v, want the fstat size refusal", err)
+	}
+	if _, err := readRegularFileCapped(filepath.Join(dir, "missing"), 8192); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("a missing file: %v, want os.ErrNotExist", err)
+	}
+	sub := filepath.Join(dir, "sub")
+	if err := os.Mkdir(sub, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := readRegularFileCapped(sub, 8192); err == nil || err.Error() != sub+" is not a regular file" {
+		t.Errorf("a directory: %v, want the not-regular refusal", err)
+	}
+	fifo := filepath.Join(dir, "fifo")
+	if err := syscall.Mkfifo(fifo, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// A mutant that blocks in open(2) is released when the test ends: a writer that opens the
+	// FIFO non-blocking succeeds only while a reader is waiting.
+	t.Cleanup(func() {
+		if w, err := os.OpenFile(fifo, os.O_WRONLY|syscall.O_NONBLOCK, 0); err == nil {
+			_ = w.Close()
+		}
+	})
+	done := make(chan error, 1)
+	go func() { _, err := readRegularFileCapped(fifo, 8192); done <- err }()
+	select {
+	case err := <-done:
+		if err == nil || err.Error() != fifo+" is not a regular file" {
+			t.Errorf("a FIFO: %v, want the not-regular refusal", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("a FIFO: readRegularFileCapped blocked for 5 s")
+	}
+}
+
+// FC2: readCapped refuses a stream that is longer than max (the file grew after its fstat).
+func TestReadCappedRefusesGrowth(t *testing.T) {
+	if b, err := readCapped(strings.NewReader(strings.Repeat("x", 10)), 10); err != nil || len(b) != 10 {
+		t.Errorf("10 bytes at max 10: %d bytes, %v", len(b), err)
+	}
+	if _, err := readCapped(strings.NewReader(strings.Repeat("x", 11)), 10); err == nil || err.Error() != "grew past the 10-byte bound while being read" {
+		t.Errorf("11 bytes at max 10: %v, want the growth refusal", err)
 	}
 }

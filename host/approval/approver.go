@@ -99,3 +99,15 @@ func RenderEnrolment(a Approver) string {
 	return fmt.Sprintf("approver  %s\nformat    %s\nkey       %s %s\nrecords   approved_by=%s:%s\n\n%s",
 		a.Name, a.Format, a.Key.Type, a.Key.Fingerprint(), a.Format, a.Name, EnrolmentWarning)
 }
+
+// ---- sprint 2, M3b ----
+
+// KeyFromBlob is the key a stored SSH wire blob holds, with ParseAuthorizedKey's refusals and no
+// line: `approver list` and `approver revoke` show its type (sprint-2 plan D3).
+func KeyFromBlob(blob []byte) (SSHPublicKey, error) {
+	km, err := parseKeyBlob(blob)
+	if err != nil {
+		return SSHPublicKey{}, err
+	}
+	return SSHPublicKey{Type: km.typ, Blob: bytes.Clone(blob)}, nil
+}

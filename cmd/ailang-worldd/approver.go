@@ -8,7 +8,9 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -66,4 +68,41 @@ func readTermLineErrWithin(r io.Reader, d time.Duration, after func(time.Duratio
 	case <-after(d):
 		return "", nil, false
 	}
+}
+
+// ---- M3b ----
+
+// readRegularFileCapped reads path once: it opens non-blocking (so a FIFO cannot stall the
+// open, plan P1), checks the open DESCRIPTOR (a regular file of at most max bytes), and reads
+// through readCapped. Sprint 3's approve --signature reuses it.
+func readRegularFileCapped(path string, max int64) ([]byte, error) {
+	f, err := os.OpenFile(path, os.O_RDONLY|syscall.O_NONBLOCK, 0)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = f.Close() }()
+	info, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() {
+		return nil, fmt.Errorf("%s is not a regular file", path)
+	}
+	if info.Size() > max {
+		return nil, fmt.Errorf("%s is %d bytes, over the %d-byte bound", path, info.Size(), max)
+	}
+	return readCapped(f, max)
+}
+
+// readCapped reads r to its end and refuses more than max bytes (a file that grew after its
+// fstat).
+func readCapped(r io.Reader, max int64) ([]byte, error) {
+	b, err := io.ReadAll(io.LimitReader(r, max+1))
+	if err != nil {
+		return nil, err
+	}
+	if int64(len(b)) > max {
+		return nil, fmt.Errorf("grew past the %d-byte bound while being read", max)
+	}
+	return b, nil
 }
