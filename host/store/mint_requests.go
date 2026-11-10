@@ -305,6 +305,11 @@ func (c *Credentials) MintSessionForRequest(ctx context.Context, session Session
 	if n != 1 {
 		return classifyConsume(ctx, tx, rc, at, n)
 	}
+	if rc.Approver != nil { // C8: the approver's row, in this transaction, or nothing is consumed
+		if err := useApprover(ctx, tx, *rc.Approver, at); err != nil {
+			return err
+		}
+	}
 	if err := insertSessionRow(ctx, tx, session); err != nil {
 		return err
 	}

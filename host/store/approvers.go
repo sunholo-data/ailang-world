@@ -7,6 +7,7 @@ package store
 // by the CLI first; the checks here are the store's own backstop.
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
@@ -232,5 +233,46 @@ func classifyRevoke(ctx context.Context, tx *sql.Tx, name string, now int64) err
 		return fmt.Errorf("%w: %q enrolled at %d, now %d", ErrApproverClockBehind, name, row.EnrolledAt, now)
 	default:
 		return fmt.Errorf("store: revoke approver %q: changed no row", name)
+	}
+}
+
+// ---- M4d (sprint 3) ----
+
+// useApprover is the consume's approver binding (row 201 A1b §2.5 C8): inside the consume's
+// transaction, at its clock reading, it marks the approver used only while its row is active,
+// holds this exact format and key, and was enrolled by at. Otherwise classifyApproverUse names
+// why (C9-C12), and the caller's rollback undoes the request update.
+func useApprover(ctx context.Context, tx *sql.Tx, a ApproverUse, at int64) error {
+	res, err := tx.ExecContext(ctx, `UPDATE approvers SET last_used_at = ? WHERE name = ? AND format = ? AND public_key = ? AND revoked_at IS NULL AND enrolled_at <= ?`,
+		at, a.Name, a.Format, a.PublicKey, at)
+	if err != nil {
+		return fmt.Errorf("store: use approver: %w", err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("store: use approver: %w", err)
+	}
+	if n != 1 {
+		return classifyApproverUse(ctx, tx, a, at)
+	}
+	return nil
+}
+
+// classifyApproverUse names why useApprover changed no row, reading the row in the same transaction.
+func classifyApproverUse(ctx context.Context, tx *sql.Tx, a ApproverUse, at int64) error {
+	row, err := scanApprover(tx.QueryRowContext(ctx, `SELECT `+approverColumns+` FROM approvers WHERE name = ?`, a.Name).Scan)
+	switch {
+	case errors.Is(err, sql.ErrNoRows): // C9
+		return fmt.Errorf("%w: %q", ErrApproverUnknown, a.Name)
+	case err != nil:
+		return fmt.Errorf("store: use approver: %w", err)
+	case row.RevokedAt != 0: // C10
+		return fmt.Errorf("%w: %q at %d", ErrApproverRevoked, a.Name, row.RevokedAt)
+	case row.Format != a.Format || !bytes.Equal(row.PublicKey, a.PublicKey): // C11
+		return fmt.Errorf("%w: %q", ErrApproverKeyChanged, a.Name)
+	case row.EnrolledAt > at: // C12
+		return fmt.Errorf("%w: %q enrolled at %d, now %d", ErrApproverClockBehind, a.Name, row.EnrolledAt, at)
+	default:
+		return fmt.Errorf("store: use approver %q: changed no row", a.Name)
 	}
 }

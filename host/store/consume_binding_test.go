@@ -239,3 +239,88 @@ func TestRequestConsumeCompleteness(t *testing.T) {
 		})
 	}
 }
+
+// ---- M4d2 ----
+
+// CS3 (M4d2): a signed consume marks its approver used at the in-transaction reading (C8). It is
+// refused, the request pending, no session and last_used_at unchanged, when the approver is
+// revoked by a commit made after BeginTx (from inside the Clock hook: the transaction is deferred,
+// so it holds no lock until its first statement, design V36/V37), unknown (C9), revoked (C10),
+// holding another key or format (C11), or enrolled after the reading (C12).
+func TestSignedConsumeChecksTheApproverInTheTransaction(t *testing.T) {
+	t.Run("active", func(t *testing.T) {
+		c, _ := credentialsAt(t)
+		r := putTestRequest(t, c)
+		var clocks, checks int
+		if err := c.MintSessionForRequest(testCtx(t), consumeSession(1), signedConsume(r, 1010, &clocks, &checks)); err != nil {
+			t.Fatal(err)
+		}
+		got, ok, err := c.MintRequest(testCtx(t), r.RequestID)
+		if err != nil || !ok || !got.Consumed || got.ApprovedBy != "ssh:x" {
+			t.Fatalf("request after the signed consume: %+v ok %v err %v, want consumed by ssh:x", got, ok, err)
+		}
+		if x := approverX(t, c); x.LastUsedAt != 1010 {
+			t.Fatalf("x's last_used_at %d, want 1010 (the in-transaction reading)", x.LastUsedAt)
+		}
+		if rows, err := c.ListSessions(testCtx(t), "", MaxListSessions); err != nil || len(rows) != 1 {
+			t.Fatalf("%d session rows (err %v), want 1", len(rows), err)
+		}
+	})
+	for _, a := range []struct {
+		name  string
+		setup func(t *testing.T, c *Credentials, path string, rc *RequestConsume)
+		want  error
+	}{
+		{"revoked-in-the-window", func(t *testing.T, c *Credentials, path string, rc *RequestConsume) {
+			rc.Clock = func() int64 {
+				if _, err := rawDB(t, path).Exec(`UPDATE approvers SET revoked_at = 1005 WHERE name = 'x'`); err != nil {
+					t.Errorf("revoke on a second connection: %v", err)
+				}
+				return 1010
+			}
+		}, ErrApproverRevoked},
+		{"unknown", func(t *testing.T, c *Credentials, path string, rc *RequestConsume) {
+			rc.Approver.Name, rc.ApprovedBy = "y", "ssh:y"
+		}, ErrApproverUnknown},
+		{"other-key", func(t *testing.T, c *Credentials, path string, rc *RequestConsume) {
+			rc.Approver.PublicKey = []byte("key-y")
+		}, ErrApproverKeyChanged},
+		{"other-format", func(t *testing.T, c *Credentials, path string, rc *RequestConsume) {
+			rc.Approver.Format, rc.ApprovedBy = "webauthn", "webauthn:x"
+		}, ErrApproverKeyChanged},
+		{"enrolled-after-the-reading", func(t *testing.T, c *Credentials, path string, rc *RequestConsume) {
+			if _, err := rawDB(t, path).Exec(`UPDATE approvers SET enrolled_at = 1500 WHERE name = 'x'`); err != nil {
+				t.Fatal(err)
+			}
+		}, ErrApproverClockBehind},
+	} {
+		t.Run(a.name, func(t *testing.T) {
+			c, path := credentialsAt(t)
+			r := putTestRequest(t, c)
+			var clocks, checks int
+			rc := signedConsume(r, 1010, &clocks, &checks)
+			a.setup(t, c, path, &rc)
+			if err := c.MintSessionForRequest(testCtx(t), consumeSession(1), rc); !errors.Is(err, a.want) {
+				t.Fatalf("err %v, want %v", err, a.want)
+			}
+			assertPendingNoSession(t, c, r)
+			if x := approverX(t, c); x.LastUsedAt != 0 {
+				t.Fatalf("x's last_used_at %d after a refusal, want 0", x.LastUsedAt)
+			}
+		})
+	}
+}
+
+// CS4 (M4d2): a typed consume (no approver, approved_by tty) mints on a schema-5 store that holds an
+// approver, and touches no approver row.
+func TestTypedConsumeTouchesNoApprover(t *testing.T) {
+	c, _ := credentialsAt(t)
+	r := putTestRequest(t, c)
+	var clocks, checks int
+	if err := c.MintSessionForRequest(testCtx(t), consumeSession(1), okConsume(r, 1010, &clocks, &checks)); err != nil {
+		t.Fatal(err)
+	}
+	if x := approverX(t, c); x.LastUsedAt != 0 {
+		t.Fatalf("x's last_used_at %d after a typed consume, want 0", x.LastUsedAt)
+	}
+}
