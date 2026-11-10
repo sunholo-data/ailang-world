@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 379 | 2026-11-10 | row 201 A2 sprint 1 built: the pure WebAuthn verification law (CBOR, COSE, authData, clientData, origin, registration law, 128-bit enrolment cod... |
 | 378 | 2026-11-10 | row 201 A1b sprint 4 built: the decided list, the revoke listing, and `approve --sign-with` with its real-tool tests, the signer moved to a scrubbe... |
 | 377 | 2026-11-10 | row 201 A1b sprint 3 built: the signature law, the consume bound to the challenge with the approver re-checked in the transaction, and `approve --s... |
 | 376 | 2026-11-10 | row 201 A1b sprint 2 built: `approver` enroll, list and revoke with a bounded, error-aware typed y; the plan's size gate deferred M4a/M4b; judge PA... |

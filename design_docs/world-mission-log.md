@@ -2174,3 +2174,86 @@ The A1b design is fully built. A terminal `y` is no longer the only way to appro
 **Next:** row 201's NEXT moves to **A2–A4**, starting with A2 (WebAuthn/passkeys). A2 needs a new child design from the rotation designer, then a quorum. The route line lists row 243 after row 201, and the queue governs.
 - Carry the judge's K8-ERRCODE and NB2 test gaps into the next row-201 sprint.
 - Mark's attended A1b exit run (QUICKSTART §15 with `--sign-with` and `--list --decided`) stays attended.
+
+## 379 — 2026-11-10 — row 201 A2 sprint 1 built: the pure WebAuthn verification law (CBOR, COSE, authData, clientData, origin, registration law, 128-bit enrolment code), from a new child design passed by quorum r2 and the carve-out; judge PASS 93 [PRODUCT]
+
+**Pick:** row 201 `w-world-approvals-by-key`, parent milestone A2 (WebAuthn/passkeys), the route iteration 378 named. D-WORLD-109 = A applies: test keys, temp stores and Chrome's virtual authenticator only.
+- **Re-measured at pick** (`origin/dev` `98374909`):
+  - No open PR from this account; no `iter379` worktree; the index has no WebAuthn/passkey entry.
+  - No child design for A2 existed (`design_docs/planned/` held only the a0a1 and a1b children).
+  - `mc_quorum_gate2 w-world-approvals-by-key-a2` rc 1 (no artifact), so the quorum was owed.
+- **Ledger:** valid (100 rows). OPEN: D-WORLD-105 only.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows are not routable:
+  - Row 150's attended A1: 0 subjects since 2026-11-07 matching `row ?150|A1\b` (control `A1b`: 20).
+  - Row 151's row-188 N2d/N4a: 0 since 2026-10-01 (control N2c: 1).
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
+- Directives: 0 allowlisted on #524, out of 11 comments. The issue-scoped watermark is absent, so all comments were read.
+- Self-notices: rc 2, an instrument failure and not a verdict; no `-last-seen` file exists for 524 or 449 (same as 371–378).
+- The `mission-world` inbox has 0 unread.
+- Skill drift: none. SKILL.md and all 13 resource files at the resolved symlink target match the driver clone's `origin/dev`.
+- Dev at `98374909`: `checks=3`, all success. Local dev equal to origin.
+- PR #545 (`fix/json-int-accessors`, se-tools `asNumber`) merged after record 378, outside the loop; it does not touch row 201's files.
+
+**Design** (`w-world-approvals-by-key-a2.md`, a child of the attended parent). Resolver `recipe claude:claude-opus-5-5 declared:provider-pin`; spawned as Agent `opus` (precedent). Rotation file reads `claude:claude-opus-5-5`; the resolver's answer was followed.
+- **r0** (22.6 min, 1,328 lines): three sprints. Challenge = SHA-256 of A0's 90-byte message (`approval.MessageHash`, already pinned); rpID = the origin's host, only `localhost` or `*.ts.net`; ES256 and EdDSA only; credentials schema 6 `webauthn_credentials`; the browser result reaches the CLI as a file, so A2 adds no write route; one static `/surface/passkey` page. The designer drove a headless Chrome 157 virtual authenticator (test key) and verified both algorithms with the standard library. It measured K8-ERRCODE wider than reported (`approver.go:449` and `:455`).
+- **Quorum r1 BLOCKED 3/3** ($0.4386; author Anthropic benched; seats oc-kimi-k3, gpt6-1-sol, gemini-4-argon; absent none). The controller measured each premise first (rule 3f); all three real:
+  - gpt: the 40-bit enrolment code derives only from the registration file (doc lines 511–521), so a read-then-substitute attacker can grind a collision; "guess blind" was false.
+  - gemini: the `blob:` save under `surfaceCSP` was UNVERIFIED with a fallback (line 833).
+  - kimi: no Verification Log row read the parent's or the ledger's ruling text; the 16-byte credential-ID floor was UNVERIFIED.
+- **r1** (4.8 min, designer resumed by SendMessage): a 128-bit public fingerprint (26 base32 characters, read-then-substitute attacker modelled, CW5 rewritten); V31 measured the `blob:` download in Chrome under the exact CSP (completed, byte-equal, zero violations, with a violation-detecting control); V32–V34 quote the parent, the ledger and L3 §4 (the 16-byte floor is an authenticator rule; floor dropped to 1–1023).
+- **Quorum r2 BLOCKED 2/3** ($0.5997; gemini PASS). Both premises measured real:
+  - kimi: explicit default ports were accepted and stored, but `location.origin` elides them. Measured V36: Chrome 157 and Node's WHATWG URL both serialise `https://x.ts.net:443/` → `https://x.ts.net` (control `:7644` kept).
+  - gpt: only WebAuthn's `timeout` hint bounded the browser wait; no AbortController.
+  - Per round: r1 = enrolment code + CSP save + authority/floor; r2 = origin default port + ceremony abort. Different surfaces each round, no SPLIT signal.
+- **r2, controller narrow-refinement carve-out** (ratified; precedents 372, 373, 375): both fixes applied verbatim (default-port rule + OR1 arms; the AbortController paragraph + XB2). One named adaptation: V36 measures Chrome's URL serializer via `new URL(...).origin`, not `location.origin` on a served `:443` page (needs TLS on 443).
+- Fable/designer diet: one doc, r0 + one protocol-mandated revision. Held.
+
+**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus`, 58 min, 445,890 tok. Committed `3eaf2910`.
+- **Sprint 1 = M0, M1, M2, M3a = 1,958 lines** (cap 2,000). The design's §9 fallback cut fired on both clauses: the fixtures are the iteration-379 Chrome recording with `generate.sh` stubbed until M7, and the assertion half (M3b: `ApproveByAssertion`, `PasskeyUse`, `approvaltest.Passkey`, PA1–PA4, RC1, TP1, XW1/XW2) moves to the head of sprint 2 (Appendix C).
+- Mutants: 197 on the planner's final tree, 184 killed, 13 named equivalents; base controls MUT-K8A/K8B/SG1 survive at base (confirms V3/V4).
+- Round trip: the patches extracted from the plan file, applied to a fresh export of `03d78b6a`, reproduce the mutant tree byte for byte.
+- **Premises found false or incomplete:** P2 the probe kept only `assertion2`'s authData; P3 PE5's rename turns `approver_enroll_test.go:230` red in sprint 1 (edited in M3a); P4 AD1 cannot import `approvaltest` (cycle), so it edits Chrome's bytes; P5 1,958 vs the design's ~1,800; P7 a failed `json.Decoder` keeps returning `More()` true (a draft hung; every token error is now refused and pinned).
+- A new load-sensitive test was noted: `TestMissionConfigDefaultFlowIntegration/invalid_ledger` (10 s fixture deadline, 7.3 s alone).
+
+**Executor:** env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`. Two runs (M0+M1, M2+M3a; 1.7 and 0.7 min). No hand edits, no git writes. The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`: M0 `897e6ce0` → 75, M1 `720824bc` → 905, M2 `86cedeae` → 1,510, M3a `ca2605d7` → 1,958. Every value equals the plan's, and the final `cmd`/`host` tree is `diff -r`-identical to the planner's round-trip tree.
+
+**Controller gates:** plan §6 as one bash script at `ca2605d7`, BEFORE the judge: **rc 0.** `verify_ail.sh` (16 identities, 40 named tests, 503 se-tools tests); gofmt; build + vet; the compile fence; touched packages; `-race` on `host/approval/...`, `host/sshsign` and the cmd revoke/enrol tests (0 DATA RACE); the 16 named repo-wide inventories with `-v` (16 PASS, 0 SKIP/FAIL); `VERIFY_GO_LEGS=plain verify_go.sh` (62 ok, 0 FAIL). Details in `verification/world-iter379/controller-gates.md`.
+
+**Judge:** sonnet via the Agent tool, on its own worktree at `ca2605d7` (generator ≠ judge). **Round 1: PASS 91/100, zero blocking** (correctness 28, tests 26, security 18, standards 9, scope 10).
+- 77 mutants: 44 from plan §4 (all killed) and its own anchored to the diff; must-die control killed, must-live survived. Per-milestone non-vacuity held for M0, M1, M2 and M3a.
+- **Survivor UV-OR-BE** (`if !ad.UV && !ad.BE`, `passkey.go:96`): the only no-UV arm cleared UV on Chrome's BE=0 flags. **The controller reproduced it** (mutant rc 0), then pinned UV and UP in every backup state with test-only commit `5a4b1224` (three arms) and proved the arms kill `!UV && !BE`, `!UV && !BS` and `!UP && !BE`, production restored byte-identical. UV-required is D-WORLD-89 R2, so this was closed now rather than carried.
+- **Round 2** (judge resumed by SendMessage, at `5a4b1224`): confirmed, six UV/UP variants killed, **PASS 93/100**.
+- Non-blocking, carried to sprint 2: `Passkey.Key`/`CredentialID` aliasing not pinned (copies today); `SOURCE.txt` names `es256.json`/`eddsa.json` while the files are `chrome-*.json`; `RegistrationInput.Challenge` zero/`Now` unchecked (caller's job). No Ed25519 point check (design-optional).
+
+**Gate 3b:** PR #546, head `5a4b1224`.
+- `pull_request` run 42917909921 attempt 1: `go host build + test gate` **FAIL** on `TestSeedRestartIgnoresASurvivingOldCopy/survivor` (`host/broker/exec_seed_test.go:656`, "the old staging dir survived the restart"). The sprint does not touch `host/broker` (`git diff --quiet 98374909 HEAD -- host/broker`, control: 18 approval files changed). It passed **10/10** locally at the sprint head, and it has 0 mentions in the charter, log and archive: **instance 1** of a CI flake, logged here and not filed as a row (D-WORLD-109 (2)). The job was re-run once (attempt 2): 3/3 success.
+- The auto-close keyword scan of the PR body read 0 (control 1).
+- Merged by merge commit **`d5d90e49`** (`--match-head-commit`). Push checks on the merge: 3/3 success.
+
+**Routing evidence:** base=98374909268b9eab35382c5bf1779a3784edbf5b@2026-11-10T20:50:02Z.
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: `claude:claude-opus-5-5` via Agent `opus` (320,153 + 365,888 tok); r2 by controller carve-out.
+- Quorum: r1 $0.4386 (108,047 in / 7,393 out), r2 $0.5997 (124,095 in / 14,972 out); absent_reviewers [] both rounds.
+- Planner: `opus` via Agent (445,890 tok).
+- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (39,424 + 37,756 tok).
+- Evaluator: `sonnet` via Agent (102,582 + 106,877 tok).
+- The driver noted codex unusable at preflight (probe rc 75); no role needed it.
+- Metered total: $1.04 (quorum only). Details in `verification/world-iter379/routing.md`.
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. World can now verify a passkey registration with the standard library alone: a Chrome passkey's registration is parsed (bounded CBOR, COSE ES256/EdDSA), bound to the challenge, origin and rpID, required to carry user presence and user verification, and turned into an approver with a 128-bit enrolment code the operator will compare at the terminal. Nothing is reachable from a store, CLI or route yet; that is sprints 2 and 3.
+
+**Ruled out:**
+- **Forwarding the quorum's objections unmeasured:** each of the five was measured first; all were real.
+- **Treating the 40-bit code as adequate because comparison is constant-time:** constant time does not stop an offline second-preimage search over a public input.
+- **Carrying UV-OR-BE forward as a non-blocking note:** UV-required is a ruled property, and the pin cost one test-only commit plus a judge resume.
+- **Attributing the CI red to the sprint:** untouched package, 10/10 locally, first instance; a re-run of the same job went green.
+- **Accepting the judge's 906/1,511 numstat as a plan mismatch:** it counted `.gitattributes`; the plan's unit (`-- cmd host`) reads 905/1,510.
+
+**Retro:**
+- **Two quorum rounds of real objections on a fresh security design is the norm, not an outlier** (373, 375 and now 379 all went r0 → r1 → carve-out r2). The designer directive could pre-empt the recurring classes: secrecy claims about values derived from attacker-readable inputs, and browser/CSP premises left UNVERIFIED when a probe harness is already running.
+- **The judge's best finding was a flag-state coverage gap** — a refusal tested in one combination of independent bits. Next planner directive: for every boolean-flag refusal, an arm with each other flag set.
+- **A judge's numstat can differ by unit, not by error.** State the numstat path filter in the evaluator directive.
+
+**Next:** row 201 A2 **sprint 2**: M3b (the assertion law, plan Appendix C) at its head, then M4 (credentials schema 6, `webauthn_credentials`) and M5 (the consume counter and authority), from the A2 doc without re-design. The planner must apply §9's sprint-2 fallback early (it grows by about 450 lines). Carry the judge's aliasing pins, the `SOURCE.txt` names and the zero-challenge check. Then A2 sprint 3 (M6 CLI, M7 ceremony page + QUICKSTART §16; Mark's real-passkey exit run is attended, §10), then A3–A4, then row 243.

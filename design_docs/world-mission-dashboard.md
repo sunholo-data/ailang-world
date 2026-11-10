@@ -1,33 +1,26 @@
-# World mission dashboard — iteration 378 (2026-11-10)
+# World mission dashboard — iteration 379 (2026-11-10)
 
-- **Landed this fire:** row 201 A1b sprint 4 (`w-world-approvals-by-key`), PR #543, merge `9429e798`. CI 3/3 on the PR head and on the merge. Judge sonnet PASS 93, zero blocking.
-- **What it does:** approval by key now works end to end from the CLI.
-  - `ailang-worldd approve <id> --sign-with <key>` signs World's exact message with `ssh-keygen -Y sign` (agent, file or `sk` key). The output is capped at 16 KiB and verified against the enrolled key, and the request's remaining lifetime is the deadline.
-  - `approve --list --decided` shows consumed requests with the approver.
-  - `approver revoke` lists the sessions the key approved (K8/K9). It still revokes no session.
-  - The judge's sprint-3 test gaps SIG-NOW, SIG-FORMAT and A4-EXP are now pinned.
-  - The real-tool tests run in CI on Linux.
-- **Caught by the sweep:** S3 launched `ssh-keygen` with the full environment and no AC10 census driver, so the registry credential could reach the child.
-  - S4 moved the exec to `host/sshsign` with `childenv.Scrubbed`.
-  - Dropping the scrub is now killed by the census and by a unit test.
-- **A1b is code-complete.** Mark's attended exit run (QUICKSTART §15: enrol, `--sign-with`, `--list --decided`, revoke) is still pending, and the loop does not run it.
-- **Next loop work:** row 201 A2 (WebAuthn/passkeys). It needs a new child design from the rotation designer, then a quorum and a plan.
-  - Carry over the judge's K8-ERRCODE gap (revoke's listing-failure exit code is unpinned) and the `host/sshsign` G1 unit test.
-  - Then A3–A4, then row 243. Fakes and test keys only (D-WORLD-109 = A).
+- **Landed this fire:** row 201 A2 sprint 1 (`w-world-approvals-by-key`), PR #546, merge `d5d90e49`. CI 3/3 on the PR head (after one re-run) and on the merge. Judge sonnet PASS 93, zero blocking.
+- **What it does:** World can verify a passkey (WebAuthn) registration with the Go standard library alone, in the pure `host/approval` package.
+  - Bounded CBOR subset; COSE ES256 and EdDSA keys; authenticator data with user presence and user verification required; clientDataJSON; the ceremony origin (`localhost` or `*.ts.net` only; IP literals and default ports refused).
+  - `NewPasskeyApprover` (the registration law) and a 128-bit public enrolment code the operator will compare at the terminal.
+  - Fixtures are Chrome 157's virtual authenticator (test keys), SHA-pinned.
+  - The A1b judge's K8-ERRCODE and sshsign G1 gaps are pinned.
+- **New design:** `w-world-approvals-by-key-a2.md` r2, three sprints. Quorum r1 blocked 3/3, r2 blocked 2/3 (gemini PASS); every objection measured real first; r2 applied the reviewers' verbatim fixes (controller carve-out). Metered $1.04.
+- **Not reachable yet:** no store, CLI or route uses it. That is sprints 2 and 3.
+- **Next loop work:** row 201 A2 sprint 2 — the assertion law (M3b, cut from sprint 1), then credentials schema 6 and the consume binding (M4–M5). Then sprint 3 (CLI, ceremony page, QUICKSTART §16), then A3–A4, then row 243.
+  - Carry: aliasing pins, `SOURCE.txt` file names, zero-challenge check.
+- **Attended, pending Mark:** A1b exit run (QUICKSTART §15, his SSH key); A2's real-passkey exit run (design §10) after sprint 3.
 - **Row 256:** taken by an attended session; the loop does not pick it.
 - **OPEN decisions:** D-WORLD-105 only (default C: row 233 parked, fail closed).
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 (attended A1) and 151 (row 188 N2d/N4a) are not routable.
 - **Routing this fire:** all roles ran through the Agent tool.
-  - Controller: opus.
-  - Planner: opus, 38 min, plus a 13.5 min S4 revision by resume.
-  - Executor: haiku, five runs.
-  - Judge: sonnet, on its own worktree.
-  - No designer and no quorum. Metered $0.00. Codex was unusable at preflight (probe rc 75).
+  - Controller: opus. Designer: opus (r0 + one resume). Planner: opus, 58 min. Executor: haiku, two runs. Judge: sonnet, own worktree, two rounds.
+  - Codex was unusable at preflight (probe rc 75); no role needed it.
 - **Instrument notes:**
-  - A planner's gate list scoped to the touched packages misses the repo-wide inventories (the AC10 exec census, import allowlist, context roots). The controller's full sweep before the judge caught it. Ask planners to run them.
-  - Patches cut from intermediate stages can drop a late test. Compare the round-tripped tree against the mutation tree.
-  - Never send a gate's only output copy through `tail`; use `tee` to a file.
-  - `TestWorktreeSnapshotRefusesAConfiguredFilter` red once again under sweep load. It passes 5/5 alone.
-  - Export `AILANG_BIN=~/.pinned-ailang/ailang` for the `cmd/ailang-worldd` and `host/daemon` tests.
+  - CI flake instance 1: `TestSeedRestartIgnoresASurvivingOldCopy` (`host/broker`), red once on PR #546, 10/10 locally, green on re-run. A row only at instance 3.
+  - New load-sensitive test: `TestMissionConfigDefaultFlowIntegration/invalid_ledger` (10 s fixture deadline).
+  - Boolean-flag refusals need an arm per other-flag state (the judge's UV-OR-BE survivor).
+  - Export `AILANG_BIN=~/.pinned-ailang/ailang` for the Go tests.
   - The self-notice script returns rc 2 until a directive is marked on #524.
 - **Bookkeeping thread:** #524 (rotates Monday 2026-11-16 07:00).
