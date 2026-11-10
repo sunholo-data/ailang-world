@@ -57,6 +57,9 @@ var (
 	// ErrRequestChallengeChanged: the row's challenge is not the one the approval was made for
 	// (row 201 A1b §2.5 C6, C7).
 	ErrRequestChallengeChanged = errors.New("store: the mint request's challenge is not the one signed")
+	// ErrInconsistentApproval: approved_by is "tty" exactly when no approver is bound, and
+	// "<format>:<name>" of the bound approver otherwise (row 201 A1b §2.5 C3, C4).
+	ErrInconsistentApproval = errors.New("store: approved_by does not match the approver the consume binds")
 )
 
 // OlderCredentialsStoreError refuses an operation on a store below the version its Feature needs:
@@ -241,8 +244,16 @@ func scanMintRequest(scan func(...any) error) (MintRequestRow, error) {
 type RequestConsume struct {
 	ID, Digest, ApprovedBy string
 	Challenge              string
+	Approver               *ApproverUse // nil: the typed y; else the approver whose signature approved (§2.5 C8)
 	Clock                  func() int64
 	Check                  func(consumedAt int64) error
+}
+
+// ApproverUse is the approver a signature consume binds: the consume marks that approver's active
+// row used, with this exact format and key, in its own transaction, or refuses.
+type ApproverUse struct {
+	Name, Format string
+	PublicKey    []byte
 }
 
 // MintSessionForRequest consumes request rc and inserts session in one transaction: the request
@@ -255,11 +266,23 @@ func (c *Credentials) MintSessionForRequest(ctx context.Context, session Session
 	if rc.ID == "" || rc.Digest == "" || !isLowerHex64(rc.Challenge) || rc.ApprovedBy == "" || rc.Clock == nil || rc.Check == nil { // C1
 		return ErrIncompleteConsume
 	}
+	if a := rc.Approver; a != nil && (a.Name == "" || a.Format == "" || len(a.PublicKey) == 0) { // C2
+		return ErrIncompleteConsume
+	}
+	if rc.Approver == nil && rc.ApprovedBy != "tty" { // C3
+		return ErrInconsistentApproval
+	}
+	if rc.Approver != nil && rc.ApprovedBy != rc.Approver.Format+":"+rc.Approver.Name { // C4
+		return ErrInconsistentApproval
+	}
 	if session.CredentialID == "" || session.EpisodeID == "" {
 		return fmt.Errorf("store: mint session: empty credential_id or episode_id")
 	}
 	if c.version < mintRequestsSchemaVersion {
 		return &OlderCredentialsStoreError{Path: c.display, Version: c.version, Need: mintRequestsSchemaVersion, Feature: "mint requests"}
+	}
+	if rc.Approver != nil && c.version < approversSchemaVersion { // C5
+		return c.olderForApprovers()
 	}
 	tx, err := c.db.BeginTx(ctx, nil)
 	if err != nil {

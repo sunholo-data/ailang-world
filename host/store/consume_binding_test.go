@@ -6,6 +6,8 @@ package store
 
 import (
 	"errors"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -79,6 +81,159 @@ func TestConsumeBindsTheChallenge(t *testing.T) {
 			a.mutate(&rc)
 			if err := c.MintSessionForRequest(testCtx(t), consumeSession(1), rc); !errors.Is(err, a.want) {
 				t.Fatalf("err %v, want %v", err, a.want)
+			}
+			assertPendingNoSession(t, c, r)
+		})
+	}
+}
+
+// ---- M4d1 ----
+
+// credentialsAt is a fresh schema-5 credentials store, its path, and approver x
+// (testApprover("x", 900): format ssh, key "key-x") enrolled in it.
+func credentialsAt(t *testing.T) (*Credentials, string) {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), CredentialsFileName)
+	c, err := OpenCredentials(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = c.Close() })
+	if err := c.EnrolApprover(testCtx(t), testApprover("x", 900)); err != nil {
+		t.Fatal(err)
+	}
+	return c, path
+}
+
+// signedConsume is okConsume(r, at, ...) for a signature approval by x: Approver x, approved_by ssh:x.
+func signedConsume(r MintRequestRow, at int64, clocks, checks *int) RequestConsume {
+	rc := okConsume(r, at, clocks, checks)
+	rc.Approver = &ApproverUse{Name: "x", Format: "ssh", PublicKey: []byte("key-x")}
+	rc.ApprovedBy = "ssh:x"
+	return rc
+}
+
+// approverX is approver x's row in c.
+func approverX(t *testing.T, c *Credentials) ApproverRow {
+	t.Helper()
+	row, ok, err := c.Approver(testCtx(t), "x")
+	if err != nil || !ok {
+		t.Fatalf("approver x: ok %v err %v", ok, err)
+	}
+	return row
+}
+
+// CS2 (M4d1): approved_by is tty exactly when no approver is bound (C3) and <format>:<name> of the
+// bound approver otherwise (C4); an approver needs schema 5 (C5). Each refusal comes before the
+// clock is read and leaves the request pending and no session.
+func TestApprovedByMatchesTheApprover(t *testing.T) {
+	for _, a := range []struct {
+		name   string
+		mutate func(*RequestConsume)
+	}{
+		{"no-approver-ssh", func(rc *RequestConsume) { rc.Approver = nil }},
+		{"approver-tty", func(rc *RequestConsume) { rc.ApprovedBy = "tty" }},
+		{"approver-other-name", func(rc *RequestConsume) { rc.ApprovedBy = "ssh:y" }},
+		{"approver-other-format", func(rc *RequestConsume) { rc.ApprovedBy = "webauthn:x" }},
+		{"approver-format-not-ssh", func(rc *RequestConsume) { rc.Approver.Format = "webauthn" }},
+	} {
+		t.Run(a.name, func(t *testing.T) {
+			c, _ := credentialsAt(t)
+			r := putTestRequest(t, c)
+			var clocks, checks int
+			rc := signedConsume(r, 1010, &clocks, &checks)
+			a.mutate(&rc)
+			if err := c.MintSessionForRequest(testCtx(t), consumeSession(1), rc); !errors.Is(err, ErrInconsistentApproval) {
+				t.Fatalf("err %v, want ErrInconsistentApproval", err)
+			}
+			if clocks != 0 {
+				t.Fatalf("Clock read %d times, want 0", clocks)
+			}
+			assertPendingNoSession(t, c, r)
+			if got := approverX(t, c); got.LastUsedAt != 0 {
+				t.Fatalf("x's last_used_at %d after a refusal, want 0", got.LastUsedAt)
+			}
+		})
+	}
+	t.Run("v4-store", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), CredentialsFileName)
+		makeV4Credentials(t, path, nil)
+		c, err := OpenCredentials(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = c.Close() }()
+		r := putTestRequest(t, c)
+		var clocks, checks int
+		err = c.MintSessionForRequest(testCtx(t), consumeSession(1), signedConsume(r, 1010, &clocks, &checks))
+		var older *OlderCredentialsStoreError
+		if !errors.As(err, &older) || older.Need != 5 || older.Feature != "approvers" {
+			t.Fatalf("err %v, want *OlderCredentialsStoreError{Need: 5, Feature: approvers}", err)
+		}
+		if clocks != 0 {
+			t.Fatalf("Clock read %d times on a schema-4 store, want 0", clocks)
+		}
+		assertPendingNoSession(t, c, r)
+	})
+}
+
+// requestConsumeFields is the disposition of every RequestConsume field and of its element type
+// ApproverUse's fields (RC3). "required" fields are zeroed one at a time below.
+var requestConsumeFields = map[string]string{
+	"RequestConsume.ID":         "required",
+	"RequestConsume.Digest":     "required",
+	"RequestConsume.Challenge":  "required (C1)",
+	"RequestConsume.ApprovedBy": "derived and checked: tty with no approver, <format>:<name> with one (C3, C4; TestApprovedByMatchesTheApprover)",
+	"RequestConsume.Approver":   "optional: nil is the typed y; set, it is bound by C2, C5 and C8",
+	"RequestConsume.Clock":      "required",
+	"RequestConsume.Check":      "required",
+	"ApproverUse.Name":          "required (C2)",
+	"ApproverUse.Format":        "required (C2)",
+	"ApproverUse.PublicKey":     "required (C2)",
+}
+
+// RC3 (M4d1): every RequestConsume and ApproverUse field has a disposition, and zeroing each
+// required one in an otherwise valid signed consume is ErrIncompleteConsume, before the clock.
+func TestRequestConsumeCompleteness(t *testing.T) {
+	n := 0
+	for _, typ := range []reflect.Type{reflect.TypeOf(RequestConsume{}), reflect.TypeOf(ApproverUse{})} {
+		for i := 0; i < typ.NumField(); i++ {
+			if key := typ.Name() + "." + typ.Field(i).Name; requestConsumeFields[key] == "" {
+				t.Errorf("%s has no disposition in requestConsumeFields", key)
+			}
+		}
+		n += typ.NumField()
+	}
+	if n != len(requestConsumeFields) {
+		t.Fatalf("RequestConsume and ApproverUse have %d fields, requestConsumeFields %d", n, len(requestConsumeFields))
+	}
+	zero := map[string]func(*RequestConsume){
+		"RequestConsume.ID":        func(rc *RequestConsume) { rc.ID = "" },
+		"RequestConsume.Digest":    func(rc *RequestConsume) { rc.Digest = "" },
+		"RequestConsume.Challenge": func(rc *RequestConsume) { rc.Challenge = "" },
+		"RequestConsume.Clock":     func(rc *RequestConsume) { rc.Clock = nil },
+		"RequestConsume.Check":     func(rc *RequestConsume) { rc.Check = nil },
+		"ApproverUse.Name":         func(rc *RequestConsume) { rc.Approver.Name, rc.ApprovedBy = "", "ssh:" },
+		"ApproverUse.Format":       func(rc *RequestConsume) { rc.Approver.Format, rc.ApprovedBy = "", ":x" },
+		"ApproverUse.PublicKey":    func(rc *RequestConsume) { rc.Approver.PublicKey = nil },
+	}
+	for key, d := range requestConsumeFields {
+		if _, ok := zero[key]; strings.HasPrefix(d, "required") != ok {
+			t.Errorf("%s: disposition %q, zeroing arm present %v", key, d, ok)
+		}
+	}
+	for key, z := range zero {
+		t.Run(key, func(t *testing.T) {
+			c, _ := credentialsAt(t)
+			r := putTestRequest(t, c)
+			var clocks, checks int
+			rc := signedConsume(r, 1010, &clocks, &checks)
+			z(&rc)
+			if err := c.MintSessionForRequest(testCtx(t), consumeSession(1), rc); !errors.Is(err, ErrIncompleteConsume) {
+				t.Fatalf("err %v, want ErrIncompleteConsume", err)
+			}
+			if clocks != 0 {
+				t.Fatalf("Clock read %d times, want 0", clocks)
 			}
 			assertPendingNoSession(t, c, r)
 		})
