@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -56,11 +57,49 @@ func MintResumed(ctx context.Context, st *store.Credentials, episodeID string, b
 }
 
 // RequestMint is what a mint from a stored request needs beyond mintRecorded's arguments
-// (row 201 §2.6): the decoded request, its row's created_at, and the consume.
+// (row 201 §2.6): the decoded request, its row's created_at, challenge and expires_at, the
+// verified signature approval if there is one, and the consume.
 type RequestMint struct {
 	Request          approval.MintRequest
 	RequestCreatedAt int64
-	Consume          store.RequestConsume // ID, Digest, ApprovedBy, Clock; MintForRequest sets Check
+	Challenge        [32]byte                 // the stored row's challenge (row 201 A1b §2.6)
+	ExpiresAt        int64                    // the stored row's expires_at: what a signature approval signed
+	Signed           *approval.SignedApproval // nil: the typed y; else the verified signature approval
+	Consume          store.RequestConsume     // ID, Digest, Clock; MintForRequest sets Challenge, ApprovedBy, Approver and Check
+}
+
+var (
+	// ErrApprovedBySetByCaller: approved_by is derived from how the request was approved, never
+	// named by the caller (row 201 A1b §2.6 A1).
+	ErrApprovedBySetByCaller = errors.New("authority: approved_by is derived by the mint, never set by the caller")
+	// ErrBadConsumeDigest: the consume's digest is not 64 hex (A2).
+	ErrBadConsumeDigest = errors.New("authority: the consume's digest is not 64 hex")
+)
+
+// requestConsume is what the store binds for rm (row 201 A1b §2.6): the caller's consume, with the
+// challenge from rm and approved_by (and, for a signature, the approver) derived here from rm.Signed,
+// the same field that decides whether the terminal was skipped.
+func requestConsume(rm *RequestMint) (store.RequestConsume, error) {
+	consume := rm.Consume
+	if consume.ApprovedBy != "" || consume.Approver != nil { // A1
+		return store.RequestConsume{}, ErrApprovedBySetByCaller
+	}
+	digest, err := hex.DecodeString(consume.Digest)
+	if err != nil || len(digest) != 32 { // A2
+		return store.RequestConsume{}, ErrBadConsumeDigest
+	}
+	consume.Challenge = hex.EncodeToString(rm.Challenge[:])
+	if rm.Signed == nil { // A5: the typed y
+		consume.ApprovedBy = "tty"
+		return consume, nil
+	}
+	if err := rm.Signed.Binds([32]byte(digest), rm.Challenge, rm.ExpiresAt); err != nil { // A4
+		return store.RequestConsume{}, err
+	}
+	name, format, key, _ := rm.Signed.Use() // A3: Binds has shown it is verified
+	consume.ApprovedBy = rm.Signed.ApprovedBy()
+	consume.Approver = &store.ApproverUse{Name: name, Format: format, PublicKey: key}
+	return consume, nil
 }
 
 // MintForRequest mints exactly the session the request describes and consumes the request in the
@@ -112,7 +151,10 @@ func mintRecorded(ctx context.Context, st *store.Credentials, episodeID string, 
 	}
 	switch {
 	case rm != nil:
-		consume := rm.Consume
+		var consume store.RequestConsume
+		if consume, err = requestConsume(rm); err != nil {
+			return "", "", store.SessionRow{}, err
+		}
 		consume.Check = func(consumedAt int64) error {
 			return approval.MintMatches(rm.Request, approval.MintFacts{
 				CredentialID: row.CredentialID, EpisodeID: row.EpisodeID, GrantsJSON: row.GrantsJSON,

@@ -347,12 +347,13 @@ func TestPutMintRequestRefusesABadRow(t *testing.T) {
 	}
 }
 
-// okConsume returns a RequestConsume for row with ApprovedBy "tty", a Clock returning at and
-// counting calls into *clocks, and a Check returning nil and counting into *checks.
+// okConsume returns a RequestConsume for row with its challenge, ApprovedBy "tty", a Clock
+// returning at and counting calls into *clocks, and a Check returning nil and counting into *checks.
 func okConsume(row MintRequestRow, at int64, clocks, checks *int) RequestConsume {
 	return RequestConsume{
 		ID:         row.RequestID,
 		Digest:     row.Digest,
+		Challenge:  row.Challenge,
 		ApprovedBy: "tty",
 		Clock:      func() int64 { *clocks++; return at },
 		Check:      func(int64) error { *checks++; return nil },
@@ -580,7 +581,7 @@ func TestConcurrentApprovalsMintOnce(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 			defer cancel()
 			rc := RequestConsume{
-				ID: r.RequestID, Digest: r.Digest, ApprovedBy: "tty",
+				ID: r.RequestID, Digest: r.Digest, Challenge: r.Challenge, ApprovedBy: "tty",
 				Clock: func() int64 { return 1010 },
 				Check: func(int64) error { return nil },
 			}
