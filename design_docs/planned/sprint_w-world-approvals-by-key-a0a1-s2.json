@@ -1,0 +1,541 @@
+{
+  "sprint_id": "w-world-approvals-by-key-a0a1-s2",
+  "design_doc": "design_docs/planned/w-world-approvals-by-key-a0a1.md",
+  "design_revision": "r3 (quorum r1/r2 BLOCKED 2/3, r3 controller carve-out); sprint 2 = design M4-M6, preceded by M3b (sprint-1 judge test gaps)",
+  "sprint_plan": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md",
+  "previous_sprint": {
+    "plan": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint-plan.md",
+    "json": "design_docs/planned/sprint_w-world-approvals-by-key-a0a1.json",
+    "landed_merge": "dba0e8b2"
+  },
+  "base_commit": "ab4ae3aa36083558943c63f92c30628c65ad7f4d",
+  "queue_row": 201,
+  "iteration": 374,
+  "sprint_number": 2,
+  "next_sprint": "A1b (approver enroll|list|revoke, approvers table at schema 5, approve --signature/--sign-with); not planned here",
+  "executor_lane": "claude-haiku-5-5",
+  "estimate_days": 2.25,
+  "estimate_loc": {
+    "production": 795,
+    "test": 1710,
+    "sql_and_help": 30,
+    "docs": 45
+  },
+  "constraints": [
+    "D-WORLD-109: fakes, temp stores and test keys only; stores under t.TempDir(); daemon via stubDaemon; fake terminals; keys only from ssh-keygen in t.TempDir() with SSH_AUTH_SOCK= emptied; never a bare ssh-keygen (it prompts to write ~/.ssh/id_ed25519)",
+    "No hand-typed signature bytes; no new file under host/approval/testdata (fixtureSHA256, SOURCE.txt and scripts/tracked_binary_gate.sh untouched)",
+    "provisionEpisode stays the only fence-and-mint path; episode start --request opens no terminal and calls no authority.*",
+    "Existing callers unchanged: answerBy == 0 and consume == nil for session new/mint, episode start, presets, resume; their tests not edited",
+    "No t.Parallel() in new tests (TestNoParallelWriteForkPackagesOutsideVerifygate)",
+    "Every test row names its mutant; 83 mutants in plan §4",
+    "Bisectable: each milestone ends with go build ./... AND go vet <pkg> (go build does not compile _test.go) and its own tests green",
+    "Exactly two new production context roots: mint_request.go|createMintRequest and approve.go|runApprove",
+    "Standard library plus this module only; TestDaemonDependencyAllowlist stays green",
+    "Skip guard on every -v run of cmd/ailang-worldd: matchingHealth t.Skipf's on a platform with no tool pin"
+  ],
+  "baseline": {
+    "git_status": "clean at ab4ae3aa",
+    "go_build": "rc 0",
+    "go_vet_store_cmd_authority_approval": "rc 0",
+    "compile_fence_go_test_run_none": "no failure",
+    "host_approval": "ok 0.399s; XC1 with WORLD_REQUIRE_SSH_KEYGEN=1 PASS (parent + 2 subtests)",
+    "host_store_credentials_subset": "ok 0.432s; -race ^TestCredentials ok 2.666s",
+    "host_authority": "ok 1.044s",
+    "TestDaemonDependencyAllowlist": "ok 0.709s",
+    "TestProductionContextRoots": "PASS",
+    "cmd_typed_y_subset": "32 PASS, 0 SKIP, 0 FAIL",
+    "verify_ail_sh": "rc 0: 16 required identities, 40 named tests, 503 se-tools named tests (AILANG v0.41.0)",
+    "verify_go_sh_plain": "rc 0: tracked-binary gate 24/24 self-test, 3 pinned fonts, 0 other binary blobs among 6578 tracked files; 64 evidence tests; go test ./... 36 packages ok, 0 FAIL",
+    "open_prs": "none"
+  },
+  "design_premises_found_false": [
+    {
+      "id": "F1",
+      "claim": "CL2/CL7/CL12/§2.6a exit codes (refusal = 2, unknown id = 1)",
+      "finding": "main.go:71-75 exitUsage=1, exitFatal=2; decline returns exitUsage (session_new.go:438-440); CL17 forbids changing it",
+      "resolution": "D4: pre-lock refusals exitUsage, write-time failures exitFatal; CL12 distinguishes grammar vs unknown by message"
+    },
+    {
+      "id": "F2",
+      "claim": "mint_requests CHECK enforces ^mr-[0-9a-f]{16}$",
+      "finding": "GLOB 'mr-[0-9a-f]*' matches one hex char then anything: scratch sqlite3 accepted 'mr-0zzzzzzzzzzzzzzz'",
+      "resolution": "DDL kept verbatim; PutMintRequest enforces store.MintRequestIDPattern; ST8 uses the weak CHECK as instrument control"
+    },
+    {
+      "id": "F3",
+      "claim": "MintForRequest runs MintMatches before the write with created_at <= the in-transaction consume reading (sprint-1 R5)",
+      "finding": "the reading exists only inside MintSessionForRequest after BeginTx",
+      "resolution": "D2: RequestConsume.Check callback run inside the tx after the single Clock() and before the guarded UPDATE"
+    },
+    {
+      "id": "F4",
+      "claim": "CL15: episode start's and approve's mintRequest equal on every non-func field",
+      "finding": "prepareMint keeps flags as typed (session_new.go:245) while the request stores canonical/absolute paths; defaulted --credentials-db is \"\"; t.TempDir is under the /var symlink on darwin; verb differs",
+      "resolution": "CL15 uses canonical absolute inputs and zeroes verb; BM1 pins normalisation of relative inputs"
+    },
+    {
+      "id": "F5",
+      "claim": "§2.1a maps every mintRequest field",
+      "finding": "this sprint adds consume and answerBy; CL14 requires them mapped",
+      "resolution": "two excluded: entries added in M6a"
+    },
+    {
+      "id": "F6",
+      "claim": "approve is provisionEpisode's third caller",
+      "finding": "four callers at HEAD (session_new.go:606, episode.go:343, episode_preset.go:301, episode_resume.go:210)",
+      "resolution": "the :24-26 comment lists all five"
+    },
+    {
+      "id": "F7",
+      "claim": "adding approve to everyVerb is a help_test edit",
+      "finding": "keyguard_test.go:17 also iterates everyVerb and compares helpOnly output byte for byte",
+      "resolution": "D10: approveHelp registered in ownHelpVerbs and ownVerbHelp"
+    },
+    {
+      "id": "F8",
+      "claim": "(unstated) the bump affects only mint requests",
+      "finding": "session_new.go:372, episode_preset.go:235 and credentials.go:412 compare with the current version, so a v3 store refuses bound/preset/resume mints until serve restarts (same as the v3 bump)",
+      "resolution": "kept (precedent); risk R2"
+    }
+  ],
+  "ci_change": "none: M3b's SHA-256 arms ride the existing XC1 CI step (subtest names unchanged)",
+  "not_touched": [
+    "host/approval/*.go (production)",
+    "host/approval/testdata/**",
+    ".gitattributes",
+    ".github/workflows/ci.yml",
+    "host/broker/**",
+    "host/daemon/daemon.go",
+    "cmd/world-publish/**",
+    "packages/**",
+    "scripts/**",
+    "tools/launchd/*",
+    "**/*.ail",
+    "~/.ailang/state/**"
+  ],
+  "milestones": [
+    {
+      "id": "M3b",
+      "design_milestone": "sprint-1 judge gaps (iteration 373 record)",
+      "title": "Close the sprint-1 judge's test gaps: SHA-256 hash path via XC1 (-O hashalg=sha256, keys in t.TempDir), SG8 strictness arms (signature-string and mpint-pair trailing bytes, Strict() base64 on sig and pub) and parse-level ErrHashAlg",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md §1.2a, §3 M3b",
+      "estimate_loc": {
+        "production": 0,
+        "test": 120
+      },
+      "files": [
+        "host/approval/sshsig_test.go",
+        "host/approval/sshsig_crosscheck_test.go"
+      ],
+      "tests": [
+        "TestSSHSIGStrictnessArms (SG8)",
+        "TestSSHSIGCrossCheckWithSSHKeygen (XC1, +3 SHA-256 arms per key type)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l host/approval)\"",
+        "go build ./... && go vet ./host/approval/",
+        "go test ./host/approval/ -run '^TestSSHSIGStrictnessArms$' -count=1 -v",
+        "WORLD_REQUIRE_SSH_KEYGEN=1 go test ./host/approval/ -run '^TestSSHSIGCrossCheckWithSSHKeygen$' -count=1 -v  # parent + ed25519 + ecdsa-p256 PASS",
+        "go test ./host/approval/ -count=1 && go test -race ./host/approval/ -count=1",
+        "test -z \"$(git status --short host/approval/testdata .gitattributes .github)\""
+      ],
+      "mutants": [
+        "MUT-SG-SIGTRAIL",
+        "MUT-SG-MPINTTRAIL",
+        "MUT-SG-STRICT",
+        "MUT-AK-STRICT",
+        "MUT-SG-HASHALG",
+        "MUT-SD-DEFAULT",
+        "MUT-SD-SHA256",
+        "MUT-SG-SHA512ONLY"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M4a",
+      "design_milestone": "M4",
+      "title": "Credentials schema 4: mint_requests DDL, version 4, credentialsTables table-set check, upgradeCredentials reaching 4, generic daemon upgrade log line",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md §2.1-§2.3, §3 M4a",
+      "estimate_loc": {
+        "production": 45,
+        "test": 110
+      },
+      "files": [
+        "host/store/credentials_schema.sql",
+        "host/store/credentials.go",
+        "host/store/mint_requests.go",
+        "host/daemon/credentials.go",
+        "host/store/credentials_test.go",
+        "host/store/mint_requests_test.go"
+      ],
+      "tests": [
+        "TestCredentialsSchemaMatchesCanonicalDDL (ST1, edited)",
+        "TestCredentialsUpgradeToV4 (ST2)",
+        "TestCredentialsV4WithoutMintRequestsIsRefused (ST2b)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l host/store host/daemon)\"",
+        "go build ./... && go vet ./host/store/ ./host/daemon/",
+        "go test ./host/store/ -run '^(TestCredentialsSchemaMatchesCanonicalDDL|TestCredentialsUpgradeToV4|TestCredentialsV4WithoutMintRequestsIsRefused)$' -count=1 -v",
+        "go test ./host/store/ -run 'Credentials|TestEpisodeStarts|TestMigrateCredentials|TestPreSplitStoreOpenModes|TestDroppedCredentialsTableIsRefused' -count=1",
+        "go test ./host/daemon/ -run 'Credentials|Split|Binding' -count=1"
+      ],
+      "mutants": [
+        "MUT-ST-UPG-NOMR",
+        "MUT-ST-CLIUPG",
+        "MUT-ST-TABLESET",
+        "MUT-ST-DDL-SCHEMA",
+        "MUT-ST-DDL-CONST"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M4b",
+      "design_milestone": "M4",
+      "title": "PutMintRequest (id grammar, row checks, one-day prune, 16-pending cap), MintRequest, PendingMintRequests, OlderCredentialsStoreError",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md §2.3, §3 M4b",
+      "estimate_loc": {
+        "production": 130,
+        "test": 150
+      },
+      "files": [
+        "host/store/mint_requests.go",
+        "host/store/mint_requests_test.go",
+        "host/store/credentials_test.go"
+      ],
+      "tests": [
+        "TestPutMintRequestNeedsVersion4 (ST3)",
+        "TestPutMintRequestCapsAndPrunes (ST7)",
+        "TestPutMintRequestRefusesABadRow (ST8)",
+        "TestCredentialsMethodsRequireADeadline (edited)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l host/store)\"",
+        "go build ./... && go vet ./host/store/",
+        "go test ./host/store/ -run '^(TestPutMintRequestNeedsVersion4|TestPutMintRequestCapsAndPrunes|TestPutMintRequestRefusesABadRow|TestCredentialsMethodsRequireADeadline)$' -count=1 -v",
+        "go test ./host/store/ -run 'Credentials|MintRequest|TestEpisodeStarts|TestMigrateCredentials' -count=1"
+      ],
+      "mutants": [
+        "MUT-ST-OLDER",
+        "MUT-ST-OLDER-GET",
+        "MUT-ST-OLDER-LIST",
+        "MUT-ST-CAP",
+        "MUT-ST-CAPGE",
+        "MUT-ST-CAPLIVE",
+        "MUT-ST-PRUNE",
+        "MUT-ST-PRUNEEQ",
+        "MUT-ST-PRUNECONS",
+        "MUT-ST-ID",
+        "MUT-ST-PENDFILTER",
+        "MUT-ST-PENDEXP",
+        "MUT-ST-DEADLINE"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M4c",
+      "design_milestone": "M4",
+      "title": "MintSessionForRequest: one Clock() after BeginTx, Check callback before the guarded UPDATE (F3/R5), RowsAffected==1 then insertSessionRow, typed classification; ST6 -race",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md §2.3, §3 M4c",
+      "estimate_loc": {
+        "production": 95,
+        "test": 190
+      },
+      "files": [
+        "host/store/mint_requests.go",
+        "host/store/credentials.go",
+        "host/store/mint_requests_test.go",
+        "host/store/credentials_test.go"
+      ],
+      "tests": [
+        "TestMintSessionForRequestConsumesOnce (ST4)",
+        "TestMintSessionForRequestRollsBackOnFailure (ST4b)",
+        "TestMintSessionForRequestRefusals (ST5)",
+        "TestConcurrentApprovalsMintOnce (ST6, -race)",
+        "TestCredentialsMethodsRequireADeadline (edited)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l host/store)\"",
+        "go build ./... && go vet ./host/store/",
+        "go test ./host/store/ -run '^(TestMintSessionForRequestConsumesOnce|TestMintSessionForRequestRollsBackOnFailure|TestMintSessionForRequestRefusals|TestConcurrentApprovalsMintOnce|TestCredentialsMethodsRequireADeadline)$' -count=1 -v",
+        "go test -race ./host/store/ -run '^TestConcurrentApprovalsMintOnce$' -count=5",
+        "go test ./host/store/ -count=1"
+      ],
+      "mutants": [
+        "MUT-ST-ROWS",
+        "MUT-ST-NOTX",
+        "MUT-ST-CLOCK2",
+        "MUT-ST-CLOCKPRE",
+        "MUT-ST-NOCHECK",
+        "MUT-ST-CHECKNIL",
+        "MUT-ST-CLOCKNIL",
+        "MUT-ST-EXPGE",
+        "MUT-ST-CREATEDLE",
+        "MUT-ST-DIGESTW",
+        "MUT-ST-CONSUMEDW",
+        "MUT-ST-CLASSIFY",
+        "MUT-ST-OLDER-CONSUME"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M5a",
+      "design_milestone": "M5",
+      "title": "mint_request.go: buildMintRequest, fromRequest, mintRequestFieldMap (incl. broker.Capability elements), requestOnlyLeaves, mcpAfterToken, renderRequest",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md §2.7, §3 M5a",
+      "estimate_loc": {
+        "production": 150,
+        "test": 190
+      },
+      "files": [
+        "cmd/ailang-worldd/mint_request.go",
+        "cmd/ailang-worldd/mint_request_test.go"
+      ],
+      "tests": [
+        "TestMintRequestFieldMapIsComplete (CL14)",
+        "TestApproveRebuildsTheSameMintRequest (CL15)",
+        "TestBuildMintRequestPathsAndRefusals (BM1)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l cmd/ailang-worldd)\"",
+        "go build ./... && go vet ./cmd/ailang-worldd/",
+        "go test ./cmd/ailang-worldd/ -run '^(TestMintRequestFieldMapIsComplete|TestApproveRebuildsTheSameMintRequest|TestBuildMintRequestPathsAndRefusals)$' -count=1 -v  # + skip guard: ... -v 2>&1 | grep -E '^\\s*--- SKIP' && exit 1 || true",
+        "go test ./host/daemon/ -run '^TestDaemonDependencyAllowlist$' -count=1"
+      ],
+      "mutants": [
+        "MUT-CL14-DROP",
+        "MUT-CL14-NEWFIELD",
+        "MUT-CL14-CAPFIELD",
+        "MUT-CL14-REQLEAF",
+        "MUT-FR-PROFILESDIR",
+        "MUT-FR-CREDSDB",
+        "MUT-FR-OUTDIRCREATE",
+        "MUT-BM-REPOABS",
+        "MUT-BM-WSABS",
+        "MUT-BM-EXPIRES"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M5b",
+      "design_milestone": "M5",
+      "title": "episode start --request: sessionEnv.random, createMintRequest (context root), --request flag/refusals/branch/help",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md §2.5, §2.7, §2.8, §3 M5b",
+      "estimate_loc": {
+        "production": 110,
+        "test": 170
+      },
+      "files": [
+        "cmd/ailang-worldd/session.go",
+        "cmd/ailang-worldd/mint_request.go",
+        "cmd/ailang-worldd/episode.go",
+        "cmd/ailang-worldd/main.go",
+        "cmd/ailang-worldd/approve_test.go",
+        "host/store/context_roots_test.go"
+      ],
+      "tests": [
+        "TestEpisodeStartRequestStoresAndOpensNoTerminal (CL1)",
+        "TestEpisodeStartRequestRefusesWithoutRandomness (CL1b)",
+        "TestEpisodeStartRequestRefusesUnsupportedModes (CL2)",
+        "TestEpisodeStartRequestRefusesAnOlderStore (CL3)",
+        "TestProductionContextRoots (edited: +createMintRequest)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l cmd/ailang-worldd host/store)\"",
+        "go build ./... && go vet ./cmd/ailang-worldd/ ./host/store/",
+        "go test ./cmd/ailang-worldd/ -run '^(TestEpisodeStartRequest)' -count=1 -v  # + skip guard: ... -v 2>&1 | grep -E '^\\s*--- SKIP' && exit 1 || true",
+        "go test ./host/store/ -run '^TestProductionContextRoots$' -count=1",
+        "go test ./cmd/ailang-worldd/ -run '^(TestEpisodeStart|TestSessionNew|TestSessionMint_|TestStartLaunch|TestEpisodeResume|TestMintRequestFieldMap|TestApproveRebuilds|TestBuildMintRequest)' -count=1"
+      ],
+      "mutants": [
+        "MUT-CR-PROVISION",
+        "MUT-CR-LAUNCH",
+        "MUT-CR-HEADLESS",
+        "MUT-CR-RESUME",
+        "MUT-CR-PRESET",
+        "MUT-CR-RANDOMNIL",
+        "MUT-CR-EXPIRY",
+        "MUT-CR-CHALLENGE"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M6a",
+      "design_milestone": "M6",
+      "title": "Bounded y/N (sessionEnv.after, readTermLineWithin, answerBy), mintRequest.consume branch, authority.RequestMint/MintForRequest with MintMatches in the transaction, field-map entries",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md §2.4-§2.6, §3 M6a",
+      "estimate_loc": {
+        "production": 95,
+        "test": 170
+      },
+      "files": [
+        "cmd/ailang-worldd/session.go",
+        "cmd/ailang-worldd/session_new.go",
+        "cmd/ailang-worldd/mint_request.go",
+        "host/authority/mint.go",
+        "host/authority/mint_request_test.go",
+        "cmd/ailang-worldd/approve_test.go",
+        "cmd/ailang-worldd/mint_request_test.go"
+      ],
+      "tests": [
+        "TestMintForRequestChecksTheRowInsideTheTransaction (AU1)",
+        "TestExistingCallersReadUnbounded (CL17)",
+        "TestReadTermLineWithin (CL18)",
+        "TestMintRequestFieldMapIsComplete (CL14, bound >= 31)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l cmd/ailang-worldd host/authority)\"",
+        "go build ./... && go vet ./cmd/ailang-worldd/ ./host/authority/",
+        "go test ./host/authority/ -count=1 -v -run '^TestMintForRequestChecksTheRowInsideTheTransaction$'",
+        "go test ./host/authority/ -count=1",
+        "go test ./cmd/ailang-worldd/ -run '^(TestExistingCallersReadUnbounded|TestReadTermLineWithin|TestMintRequestFieldMapIsComplete)$' -count=1 -v  # + skip guard: ... -v 2>&1 | grep -E '^\\s*--- SKIP' && exit 1 || true",
+        "go test ./cmd/ailang-worldd/ -run '^(TestSessionMint_|TestSessionNew|TestEpisodeStart|TestStartLaunch|TestEpisodeResume|TestSessionMintGrantsExpireWithTheSession)' -count=1"
+      ],
+      "mutants": [
+        "MUT-PE-BOUNDALL",
+        "MUT-RTW-READONLY",
+        "MUT-AU-NOCHECK",
+        "MUT-AU-PRECONSUME",
+        "MUT-FM-CONSUME"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M6b",
+      "design_milestone": "M6",
+      "title": "approve verb: approve.go (runApprove context root, admission, same-store, re-derivation, provisionEpisode), --list, main.go case/usage/ownHelpVerbs, keyguard ownVerbHelp, help test edits",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md §2.9, §3 M6b",
+      "estimate_loc": {
+        "production": 170,
+        "test": 190
+      },
+      "files": [
+        "cmd/ailang-worldd/approve.go",
+        "cmd/ailang-worldd/main.go",
+        "cmd/ailang-worldd/keyguard.go",
+        "cmd/ailang-worldd/help_test.go",
+        "host/store/context_roots_test.go",
+        "cmd/ailang-worldd/approve_test.go"
+      ],
+      "tests": [
+        "TestApproveListShowsPending (CL4)",
+        "TestApproveWithoutATerminalMintsNothing (CL6)",
+        "TestApproveDeclinedLeavesTheRequestPending (CL7)",
+        "TestApproveRefusesReplay (CL8)",
+        "TestApproveRefusesBadIDsAndMisuse (CL12)",
+        "TestEveryVerbHasHelp (edited)",
+        "TestProductionContextRoots (edited: +runApprove)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l cmd/ailang-worldd host/store)\"",
+        "go build ./... && go vet ./cmd/ailang-worldd/ ./host/store/",
+        "go test ./cmd/ailang-worldd/ -run '^(TestApproveListShowsPending|TestApproveWithoutATerminalMintsNothing|TestApproveDeclinedLeavesTheRequestPending|TestApproveRefusesReplay|TestApproveRefusesBadIDsAndMisuse|TestEveryVerbHasHelp|TestHelpIsNeverBlockedByTheRegistryKeyGuard)$' -count=1 -v  # + skip guard: ... -v 2>&1 | grep -E '^\\s*--- SKIP' && exit 1 || true",
+        "go test ./host/store/ -run '^TestProductionContextRoots$' -count=1",
+        "go test ./host/daemon/ -run '^TestDaemonDependencyAllowlist$' -count=1"
+      ],
+      "mutants": [
+        "MUT-AP-ADMIT",
+        "MUT-AP-SAMESTORE",
+        "MUT-AP-ADDR",
+        "MUT-AP-GRAMMAR",
+        "MUT-AP-AFTERNIL",
+        "MUT-PE-NOCONSUMEBRANCH"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M6c",
+      "design_milestone": "M6",
+      "title": "Tests only: expiry before the prompt and at the write, stale world, tampered row, unanswered prompt, expiry during worktree preparation",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md §3 M6c",
+      "estimate_loc": {
+        "production": 0,
+        "test": 230
+      },
+      "files": [
+        "cmd/ailang-worldd/approve_test.go"
+      ],
+      "tests": [
+        "TestApproveRefusesExpired (CL9)",
+        "TestApproveRefusesAStaleWorld (CL10)",
+        "TestApproveRefusesATamperedRow (CL11)",
+        "TestApproveUnansweredPromptTimesOut (CL13)",
+        "TestApproveRefusesExpiryDuringWorktreePreparation (CL19)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l cmd/ailang-worldd)\"",
+        "go build ./... && go vet ./cmd/ailang-worldd/",
+        "go test ./cmd/ailang-worldd/ -run '^(TestApproveRefusesExpired|TestApproveRefusesAStaleWorld|TestApproveRefusesATamperedRow|TestApproveUnansweredPromptTimesOut|TestApproveRefusesExpiryDuringWorktreePreparation)$' -count=1 -v  # + skip guard: ... -v 2>&1 | grep -E '^\\s*--- SKIP' && exit 1 || true",
+        "go test -race ./cmd/ailang-worldd/ -run '^(TestApproveUnansweredPromptTimesOut|TestReadTermLineWithin)$' -count=1"
+      ],
+      "mutants": [
+        "MUT-AP-ADMITEXP",
+        "MUT-AP-CLOCKREUSE",
+        "MUT-AP-CLOCKEARLY",
+        "MUT-AP-NODERIVE",
+        "MUT-AP-MCPEXISTS",
+        "MUT-AP-DIGEST",
+        "MUT-PE-PLAINREAD",
+        "MUT-PE-BOUNDFROMLIFETIME",
+        "MUT-PE-PROMPTCHECK"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M6d",
+      "design_milestone": "M6",
+      "title": "CL5 full effect check (MintMatches on the stored row + requireApproveEffects), CL16 checker non-vacuity, QUICKSTART §14 (attended, pending first verbatim run)",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md §3 M6d",
+      "estimate_loc": {
+        "production": 0,
+        "test": 190,
+        "docs": 45
+      },
+      "files": [
+        "cmd/ailang-worldd/approve_test.go",
+        "docs/QUICKSTART.md"
+      ],
+      "tests": [
+        "TestApproveMintsExactlyTheRequest (CL5)",
+        "TestApproveEffectsCheckCatchesEachMismatch (CL16)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l cmd/ailang-worldd)\"",
+        "go build ./... && go vet ./cmd/ailang-worldd/",
+        "go test ./cmd/ailang-worldd/ -run '^(TestApproveMintsExactlyTheRequest|TestApproveEffectsCheckCatchesEachMismatch)$' -count=1 -v  # + skip guard: ... -v 2>&1 | grep -E '^\\s*--- SKIP' && exit 1 || true",
+        "go test ./cmd/ailang-worldd/ -run '^(TestEpisodeStartRequest|TestApprove|TestMintRequestFieldMap|TestBuildMintRequest|TestExistingCallersReadUnbounded|TestReadTermLineWithin|TestEveryVerbHasHelp|TestHelpIsNeverBlockedByTheRegistryKeyGuard)' -count=1 -v  # + skip guard: ... -v 2>&1 | grep -E '^\\s*--- SKIP' && exit 1 || true",
+        "go test ./host/broker/ ./host/daemon/ -run 'Quickstart|QUICKSTART|Guide' -count=1",
+        "test \"$(tail -c 1 docs/QUICKSTART.md | xxd -p)\" = \"0a\""
+      ],
+      "mutants": [
+        "MUT-AP-GRANTSDEFAULT",
+        "MUT-AP-LAUNCHMODEL",
+        "MUT-AP-TASK",
+        "MUT-EFF-SKIP-BRANCH",
+        "MUT-EFF-SKIP-MODE",
+        "MUT-EFF-SKIP-APPROVEDBY"
+      ],
+      "status": "planned"
+    }
+  ],
+  "controller_final": [
+    "AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_ail.sh",
+    "test -z \"$(gofmt -l host/approval host/store host/authority host/daemon cmd/ailang-worldd)\"",
+    "go build ./... && go vet ./host/approval/ ./host/store/ ./host/authority/ ./host/daemon/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "go test ./host/approval/ -count=1 && go test -race ./host/approval/ -count=1",
+    "WORLD_REQUIRE_SSH_KEYGEN=1 go test ./host/approval/ -run '^TestSSHSIGCrossCheckWithSSHKeygen$' -count=1 -v",
+    "go test ./host/store/ ./host/authority/ -count=1",
+    "go test -race ./host/store/ -run '^(TestConcurrentApprovalsMintOnce|TestMintSessionForRequest|TestPutMintRequest|TestCredentials)' -count=1",
+    "go test ./host/store/ -run '^TestProductionContextRoots$' -count=1",
+    "go test ./host/daemon/ -run '^TestDaemonDependencyAllowlist$' -count=1",
+    "go test ./host/verifygate/ -run '^TestNoParallelWriteForkPackagesOutsideVerifygate$' -count=1",
+    "go test ./cmd/ailang-worldd/ -count=1 -v -run '^(TestEpisodeStartRequest|TestApprove|TestMintRequestFieldMap|TestBuildMintRequest|TestExistingCallersReadUnbounded|TestReadTermLineWithin|TestEveryVerbHasHelp|TestHelpIsNeverBlockedByTheRegistryKeyGuard|TestSessionMint_|TestSessionNew|TestEpisodeStart|TestStartLaunch|TestEpisodeResume|TestSessionMintGrantsExpireWithTheSession)' 2>&1 | tee /tmp/cl.log | tail -3",
+    "bash -c '! grep -E \"^\\s*--- (SKIP|FAIL)\" /tmp/cl.log'",
+    "after commit: VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh  # go test ./... + scripts/tracked_binary_gate.sh with --allow-font pins; reads HEAD",
+    "git status --short"
+  ],
+  "mutation_count": 83,
+  "acceptance_criteria_ref": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md §8 (16 criteria)",
+  "mutation_table_ref": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md §4 (83 mutants)"
+}

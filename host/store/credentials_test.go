@@ -33,12 +33,35 @@ var canonicalCredentialsDDL = `CREATE TABLE session_credentials (
     profile_digest TEXT CHECK ((profile_digest IS NULL) = (project IS NULL) AND (profile_digest IS NULL OR profile_digest <> ''))
 )`
 
+// canonicalMintRequestsDDL is the current (version 4, row 201) mint_requests table, review-visible
+// like canonicalCredentialsDDL: TestCredentialsSchemaMatchesCanonicalDDL and TestCredentialsUpgradeToV4
+// compare the schema file and the upgrade constant against it.
+var canonicalMintRequestsDDL = `CREATE TABLE mint_requests (
+    request_id    TEXT PRIMARY KEY CHECK (length(request_id) = 19 AND request_id GLOB 'mr-[0-9a-f]*'),
+    request       BLOB NOT NULL,
+    digest        TEXT NOT NULL CHECK (length(digest) = 64),
+    challenge     TEXT NOT NULL CHECK (length(challenge) = 64),
+    episode_id    TEXT NOT NULL CHECK (episode_id <> ''),
+    created_at    INTEGER NOT NULL,
+    expires_at    INTEGER NOT NULL CHECK (expires_at > created_at),
+    consumed_at   INTEGER,
+    approved_by   TEXT CHECK (approved_by IS NULL OR approved_by <> ''),
+    credential_id TEXT,
+    CHECK ((consumed_at IS NULL) = (approved_by IS NULL) AND (consumed_at IS NULL) = (credential_id IS NULL))
+)`
+
 func TestCredentialsSchemaMatchesCanonicalDDL(t *testing.T) {
 	c := openTestCredentials(t)
 	ddl := tableDDL(t, c.db)
-	requireExactTableNames(t, "fresh credentials store", ddl, []string{"episode_starts", "session_credentials"})
+	requireExactTableNames(t, "fresh credentials store", ddl, []string{"episode_starts", "mint_requests", "session_credentials"})
 	if got, want := normalizeDDL(ddl["session_credentials"]), normalizeDDL(canonicalCredentialsDDL); got != want {
 		t.Fatalf("credentials DDL:\n got: %s\nwant: %s", got, want)
+	}
+	if got, want := normalizeDDL(ddl["mint_requests"]), normalizeDDL(canonicalMintRequestsDDL); got != want {
+		t.Fatalf("mint_requests DDL:\n got: %s\nwant: %s", got, want)
+	}
+	if got, want := normalizeDDL(mintRequestsSQL), normalizeDDL(canonicalMintRequestsDDL); got != want {
+		t.Fatalf("mintRequestsSQL differs from the canonical mint_requests DDL:\n got: %s\nwant: %s", got, want)
 	}
 	if got := normalizeDDL(ddl["episode_starts"]); got != normalizeDDL(`CREATE TABLE episode_starts (
     episode TEXT PRIMARY KEY CHECK (episode <> ''),
@@ -227,6 +250,10 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	}
 	_, _, errs["ResolveSession"] = c.ResolveSession(ctx, "x")
 	_, errs["ListSessions"] = c.ListSessions(ctx, "", 1)
+	errs["PutMintRequest"] = c.PutMintRequest(ctx, testMintRequestRow(1, 1000), 1000)
+	_, _, errs["MintRequest"] = c.MintRequest(ctx, "mr-0000000000000001")
+	_, errs["PendingMintRequests"] = c.PendingMintRequests(ctx, 1000, 0)
+	errs["MintSessionForRequest"] = c.MintSessionForRequest(ctx, row, okConsume(testMintRequestRow(1, 1000), 1010, new(int), new(int)))
 	for name, err := range errs {
 		if !errors.Is(err, ErrNoDeadline) {
 			t.Errorf("%s(Background) = %v, want ErrNoDeadline", name, err)
@@ -236,5 +263,37 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	defer cancel()
 	if err := c.MintSession(bounded, row); err != nil {
 		t.Fatalf("control: bounded mint: %v", err)
+	}
+}
+
+// TestCredentialsV4WithoutMintRequestsIsRefused (ST2b): a version 4 store whose mint_requests table
+// was dropped is refused by both opens, and the refusal changes no table.
+func TestCredentialsV4WithoutMintRequestsIsRefused(t *testing.T) {
+	path := filepath.Join(t.TempDir(), CredentialsFileName)
+	c, err := OpenCredentials(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = c.Close()
+	db := rawDB(t, path)
+	if _, err := db.Exec(`DROP TABLE mint_requests`); err != nil {
+		t.Fatal(err)
+	}
+	before, _ := schemaState(t, db)
+	for name, open := range map[string]func(string) (*Credentials, error){
+		"writable":  OpenCredentials,
+		"read-only": OpenCredentialsReadOnly,
+	} {
+		c, err := open(path)
+		if c != nil {
+			_ = c.Close()
+		}
+		var se *CredentialsSchemaError
+		if !errors.As(err, &se) {
+			t.Fatalf("%s open of a version 4 store without mint_requests: err %v, want *CredentialsSchemaError", name, err)
+		}
+	}
+	if after, _ := schemaState(t, db); !reflect.DeepEqual(after, before) {
+		t.Fatalf("refused opens changed the tables: %v -> %v", before, after)
 	}
 }

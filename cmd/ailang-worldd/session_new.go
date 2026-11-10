@@ -22,8 +22,10 @@ package main
 //  7. on a mint failure, remove the worktree THIS run created.
 //
 // Steps 2-7 are provisionEpisode, the ONE fence-and-mint path: `episode
-// start` (episode.go, row 189 M3) runs it too, after its own validation, so
-// the two verbs cannot drift apart and no other code creates a credential.
+// start` (episode.go, row 189 M3), its launch-preset and resume paths, and
+// `approve` (approve.go, row 201, which consumes a stored mint request in the
+// mint's own transaction) run it too, after their own validation, so the verbs
+// cannot drift apart and no other code creates a credential.
 //
 // Row 189 M2 (D-189-2 A): --profile <project> binds the credential to the
 // exec profile <exec-profiles-dir>/<project>.json. The file is parsed (never
@@ -221,6 +223,11 @@ type mintRequest struct {
 	startPoint     string
 	existingBranch bool
 	presetPrompt   string
+	// consume is set only by approve (row 201): the stored request this mint consumes, in the
+	// mint's own transaction.
+	consume *authority.RequestMint
+	// answerBy bounds the y/N to this Unix time; 0 (every caller but approve) is unbounded.
+	answerBy int64
 }
 
 // prepareMint is step 1: it validates every input of a provisioning before
@@ -427,6 +434,14 @@ func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) 
 		binding = authority.ProfileBinding{Project: r.prof.Project, Digest: r.prof.Digest}
 		bound = fmt.Sprintf(", bound to exec profile %s %s (%s)", r.prof.Project, r.prof.Digest, r.profFile)
 	}
+	requestID := ""
+	if r.consume != nil {
+		requestID = r.consume.Consume.ID
+	}
+	if r.answerBy != 0 && r.answerBy-now <= 0 {
+		fmt.Fprintf(stderr, "%srequest %s expired before the prompt; make a new request with episode start --request\n", prefix, requestID)
+		return exitUsage
+	}
 	if r.presetPrompt != "" {
 		fmt.Fprint(term, r.presetPrompt)
 	}
@@ -435,7 +450,20 @@ func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) 
 	}
 	fmt.Fprintf(term, "%s and mint a session for episode %s with %d grant(s) [%s]%s, expiry +%ds? [y/N] ",
 		action, r.episode, len(grants), grantList(grants), bound, r.ttl)
-	if !isYes(readTermLine(term)) {
+	var answer string
+	if r.answerBy != 0 {
+		remaining := time.Duration(r.answerBy-now) * time.Second
+		line, ok := readTermLineWithin(term, remaining, env.after)
+		if !ok {
+			fmt.Fprintf(stderr, "%sno answer within the request's remaining lifetime (%s); nothing was minted and request %s is still pending until %s\n",
+				prefix, remaining, requestID, time.Unix(r.answerBy, 0).UTC().Format(time.RFC3339))
+			return exitUsage
+		}
+		answer = line
+	} else {
+		answer = readTermLine(term)
+	}
+	if !isYes(answer) {
 		fmt.Fprintf(stderr, "%saborted (not confirmed). fix: run it again and type y at the prompt\n", prefix)
 		return exitUsage
 	}
@@ -475,7 +503,9 @@ func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) 
 	mintCtx, cancelMint := context.WithTimeout(ctx, 3*time.Second)
 	var rawToken, credentialID string
 	var row store.SessionRow
-	if r.resume != nil {
+	if r.consume != nil {
+		rawToken, credentialID, row, err = authority.MintForRequest(mintCtx, st, r.episode, binding, grants, r.ttl, now, out, *r.consume)
+	} else if r.resume != nil {
 		rawToken, credentialID, row, err = authority.MintResumed(mintCtx, st, r.episode, binding, grants, r.ttl, now, out, *r.resume)
 	} else if r.start != nil {
 		rawToken, credentialID, row, err = authority.MintStarted(mintCtx, st, r.episode, binding, grants, r.ttl, now, out, r.start)

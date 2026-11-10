@@ -74,6 +74,8 @@ func ownVerbHelp(rest []string) (string, bool) {
 		return toolsHelp, true
 	case "call":
 		return callHelp, true
+	case "approve":
+		return approveHelp, true
 	case "why":
 		return whyHelp, true
 	case "provenance":

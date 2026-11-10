@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -46,15 +47,31 @@ func MintBound(ctx context.Context, st *store.Credentials, episodeID string, bin
 
 // MintStarted keeps the credential and its attended start in one transaction.
 func MintStarted(ctx context.Context, st *store.Credentials, episodeID string, binding ProfileBinding, grants []broker.Capability, ttl, now int64, out io.Writer, start *store.EpisodeStart) (rawToken, credentialID string, row store.SessionRow, err error) {
-	return mintRecorded(ctx, st, episodeID, binding, grants, ttl, now, out, start, nil)
+	return mintRecorded(ctx, st, episodeID, binding, grants, ttl, now, out, start, nil, nil)
 }
 
 // MintResumed keeps the credential and its resume entry in one transaction.
 func MintResumed(ctx context.Context, st *store.Credentials, episodeID string, binding ProfileBinding, grants []broker.Capability, ttl, now int64, out io.Writer, resume store.EpisodeResume) (rawToken, credentialID string, row store.SessionRow, err error) {
-	return mintRecorded(ctx, st, episodeID, binding, grants, ttl, now, out, nil, &resume)
+	return mintRecorded(ctx, st, episodeID, binding, grants, ttl, now, out, nil, &resume, nil)
 }
 
-func mintRecorded(ctx context.Context, st *store.Credentials, episodeID string, binding ProfileBinding, grants []broker.Capability, ttl, now int64, out io.Writer, start *store.EpisodeStart, resume *store.EpisodeResume) (rawToken, credentialID string, row store.SessionRow, err error) {
+// RequestMint is what a mint from a stored request needs beyond mintRecorded's arguments
+// (row 201 §2.6): the decoded request, its row's created_at, and the consume.
+type RequestMint struct {
+	Request          approval.MintRequest
+	RequestCreatedAt int64
+	Consume          store.RequestConsume // ID, Digest, ApprovedBy, Clock; MintForRequest sets Check
+}
+
+// MintForRequest mints exactly the session the request describes and consumes the request in the
+// same transaction. approval.MintMatches checks all seven columns of the row it built inside that
+// transaction, with the in-transaction clock reading as created_at's upper bound, before the row
+// is written.
+func MintForRequest(ctx context.Context, st *store.Credentials, episodeID string, binding ProfileBinding, grants []broker.Capability, ttl, now int64, out io.Writer, rm RequestMint) (rawToken, credentialID string, row store.SessionRow, err error) {
+	return mintRecorded(ctx, st, episodeID, binding, grants, ttl, now, out, nil, nil, &rm)
+}
+
+func mintRecorded(ctx context.Context, st *store.Credentials, episodeID string, binding ProfileBinding, grants []broker.Capability, ttl, now int64, out io.Writer, start *store.EpisodeStart, resume *store.EpisodeResume, rm *RequestMint) (rawToken, credentialID string, row store.SessionRow, err error) {
 	if (binding.Project == "") != (binding.Digest == "") {
 		return "", "", store.SessionRow{}, fmt.Errorf("authority: mint: a profile binding needs both the project and its digest")
 	}
@@ -93,9 +110,21 @@ func mintRecorded(ctx context.Context, st *store.Credentials, episodeID string, 
 		Project:       binding.Project,
 		ProfileDigest: binding.Digest,
 	}
-	if resume != nil {
+	switch {
+	case rm != nil:
+		consume := rm.Consume
+		consume.Check = func(consumedAt int64) error {
+			return approval.MintMatches(rm.Request, approval.MintFacts{
+				CredentialID: row.CredentialID, EpisodeID: row.EpisodeID, GrantsJSON: row.GrantsJSON,
+				ExpiresAt: row.ExpiresAt, CreatedAt: row.CreatedAt, Project: row.Project,
+				ProfileDigest: row.ProfileDigest, TokenHash: hashHexToken(rawToken),
+				RequestCreatedAt: rm.RequestCreatedAt, ConsumedAt: consumedAt,
+			})
+		}
+		err = st.MintSessionForRequest(ctx, row, consume)
+	case resume != nil:
 		err = st.MintSessionWithResume(ctx, row, *resume)
-	} else {
+	default:
 		err = st.MintSessionWithStart(ctx, row, start)
 	}
 	if err != nil {

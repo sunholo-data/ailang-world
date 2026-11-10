@@ -37,3 +37,20 @@ CREATE TABLE IF NOT EXISTS episode_starts (
     episode TEXT PRIMARY KEY CHECK (episode <> ''),
     start_json TEXT NOT NULL
 );
+
+-- Mint requests (version 4, row 201 A0). A request is inert until approved; approving consumes
+-- it in the same transaction that inserts its session row. Consumed rows stay as the audit of
+-- who approved which session; unconsumed rows are pruned a day after they expire.
+CREATE TABLE IF NOT EXISTS mint_requests (
+    request_id    TEXT PRIMARY KEY CHECK (length(request_id) = 19 AND request_id GLOB 'mr-[0-9a-f]*'),
+    request       BLOB NOT NULL,
+    digest        TEXT NOT NULL CHECK (length(digest) = 64),
+    challenge     TEXT NOT NULL CHECK (length(challenge) = 64),
+    episode_id    TEXT NOT NULL CHECK (episode_id <> ''),
+    created_at    INTEGER NOT NULL,
+    expires_at    INTEGER NOT NULL CHECK (expires_at > created_at),
+    consumed_at   INTEGER,
+    approved_by   TEXT CHECK (approved_by IS NULL OR approved_by <> ''),
+    credential_id TEXT,
+    CHECK ((consumed_at IS NULL) = (approved_by IS NULL) AND (consumed_at IS NULL) = (credential_id IS NULL))
+);

@@ -27,6 +27,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"slices"
 )
 
 // credentialsSchemaSQL is the credentials store's whole schema.
@@ -36,8 +37,9 @@ var credentialsSchemaSQL string
 
 // credentialsSchemaVersion is the credentials store's own user_version,
 // independent of the world store's currentSchemaVersion. Version 2 added
-// profile bindings; version 3 adds immutable attended episode start history.
-const credentialsSchemaVersion = 3
+// profile bindings; version 3 adds immutable attended episode start history;
+// version 4 adds mint requests (row 201).
+const credentialsSchemaVersion = 4
 
 // CredentialsSchemaVersion exports credentialsSchemaVersion: serve compares a
 // store's version with it to decide whether to upgrade.
@@ -64,6 +66,18 @@ const CredentialsFileName = "credentials.db"
 
 // credentialsTable is the one application table a credentials store holds.
 const credentialsTable = "session_credentials"
+
+// credentialsTables is the exact, sorted application table set of a credentials store at version.
+func credentialsTables(version int) []string {
+	switch {
+	case version >= 4:
+		return []string{"episode_starts", mintRequestsTable, credentialsTable}
+	case version == 3:
+		return []string{"episode_starts", credentialsTable}
+	default:
+		return []string{credentialsTable}
+	}
+}
 
 // SessionRow is the persisted credential->(episode, grants, expiry) mapping row for
 // session_credentials (w-session-authority D2). GrantsJSON is an OPAQUE JSON
@@ -301,10 +315,10 @@ func (c *Credentials) enforceSchema(mode credOpenMode) error {
 		}
 		c.version = credentialsSchemaVersion
 		return initCredentialsSchema(display, db)
-	case known && ((version < 3 && len(tables) == 1 && tables[0] == credentialsTable) || (version == 3 && len(tables) == 2 && tables[0] == "episode_starts" && tables[1] == credentialsTable)):
+	case known && slices.Equal(tables, credentialsTables(version)):
 		c.version = version
 		if version < credentialsSchemaVersion && mode == credOpenUpgrade {
-			if err := upgradeCredentialsV3(display, db, version); err != nil {
+			if err := upgradeCredentials(display, db, version); err != nil {
 				return err
 			}
 			c.version, c.upgradedFrom = credentialsSchemaVersion, version
@@ -321,17 +335,23 @@ func (c *Credentials) enforceSchema(mode credOpenMode) error {
 	}
 }
 
-// upgradeCredentialsV3 adds start history and, when upgrading version 1,
-// the binding columns, in one transaction. Existing credentials are unchanged.
-func upgradeCredentialsV3(display string, db *sql.DB, version int) error {
+// upgradeCredentials adds what each version after `version` added, in one
+// transaction. Existing credentials are unchanged.
+func upgradeCredentials(display string, db *sql.DB, version int) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return fmt.Errorf("store: upgrade credentials %q: begin: %w", display, err)
 	}
 	defer func() { _ = tx.Rollback() }()
-	statements := []string{episodeStartsSQL}
-	if version == 1 {
-		statements = append(append([]string{}, credentialsUpgradeV2...), statements...)
+	var statements []string
+	if version < 2 {
+		statements = append(statements, credentialsUpgradeV2...)
+	}
+	if version < 3 {
+		statements = append(statements, episodeStartsSQL)
+	}
+	if version < 4 {
+		statements = append(statements, mintRequestsSQL)
 	}
 	for _, stmt := range statements {
 		if _, err := tx.Exec(stmt); err != nil {
@@ -423,18 +443,8 @@ func (c *Credentials) mintSession(ctx context.Context, row SessionRow, start *Ep
 		}
 		resume.CredentialID = row.CredentialID
 	}
-	// An unbound row names only the five original columns, so the same
-	// statement works on a version-1 store; the binding columns stay NULL.
-	stmt := `INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at)
-		 VALUES (?, ?, ?, ?, ?);`
-	args := []any{row.CredentialID, row.EpisodeID, row.GrantsJSON, row.ExpiresAt, row.CreatedAt}
-	if row.Bound() {
-		stmt = `INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at, project, profile_digest)
-		 VALUES (?, ?, ?, ?, ?, ?, ?);`
-		args = append(args, row.Project, row.ProfileDigest)
-	}
-	if _, err := tx.ExecContext(ctx, stmt, args...); err != nil {
-		return fmt.Errorf("store: mint session: %w", err)
+	if err := insertSessionRow(ctx, tx, row); err != nil {
+		return err
 	}
 	if start != nil {
 		if start.Episode != row.EpisodeID || start.Schema != "world/episode-start/v1" {
@@ -455,6 +465,24 @@ func (c *Credentials) mintSession(ctx context.Context, row SessionRow, start *Ep
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("store: mint session: commit: %w", err)
+	}
+	return nil
+}
+
+// insertSessionRow writes one session_credentials row inside tx. An unbound row names only the
+// five original columns, so the same statement works on a version-1 store; the binding columns
+// stay NULL. mintSession and MintSessionForRequest both insert through here.
+func insertSessionRow(ctx context.Context, tx *sql.Tx, row SessionRow) error {
+	stmt := `INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at)
+		 VALUES (?, ?, ?, ?, ?);`
+	args := []any{row.CredentialID, row.EpisodeID, row.GrantsJSON, row.ExpiresAt, row.CreatedAt}
+	if row.Bound() {
+		stmt = `INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at, project, profile_digest)
+		 VALUES (?, ?, ?, ?, ?, ?, ?);`
+		args = append(args, row.Project, row.ProfileDigest)
+	}
+	if _, err := tx.ExecContext(ctx, stmt, args...); err != nil {
+		return fmt.Errorf("store: mint session: %w", err)
 	}
 	return nil
 }
