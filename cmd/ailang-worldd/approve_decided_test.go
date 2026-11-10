@@ -54,3 +54,44 @@ func TestApproveDecidedList(t *testing.T) {
 		}
 	})
 }
+
+// ---- D3 ----
+
+// CR12: approver revoke lists the sessions the approver approved, each with a session revoke line
+// that works, and revokes none of them (K8, Q4); an approver that approved nothing says so (K9).
+func TestApproverRevokeListsWhatItApproved(t *testing.T) {
+	a, b, _ := decidedRig(t)
+	seedApprover(t, a.credPath, "idle", otherSigner.PublicKey(), approveT0-100)
+	br := b.row(t)
+	revoke := func(name string) string {
+		t.Helper()
+		var stdout, stderr bytes.Buffer
+		args := []string{"revoke", name, "--db", a.r.f.db, "--credentials-db", a.credPath}
+		if code := runApprover(args, &stdout, &stderr, approveEnv(&lockedTerm{in: strings.NewReader("y\n")}, nil, atTime(approveT0+10))); code != exitOK {
+			t.Fatalf("revoke %s: rc %d\nstderr %s", name, code, stderr.String())
+		}
+		return stdout.String()
+	}
+	line := "ailang-worldd session revoke --db " + shellQuote(a.r.f.db) + " --credentials-db " + shellQuote(a.credPath) + " " + br.CredentialID
+	want := "revoked approver mark-mac\n" +
+		"it approved 1 session(s), newest first; each stays valid until it expires or is revoked:\n" +
+		"  " + b.id + "  episode ep2  at 2027-01-15T08:00:02Z  credential " + br.CredentialID[:16] + "\n" +
+		"    " + line + "\n"
+	if got := revoke("mark-mac"); got != want {
+		t.Fatalf("stdout\n%s\nwant\n%s", got, want)
+	}
+	if got, want := revoke("idle"), "revoked approver idle\nno session was approved by it\n"; got != want {
+		t.Fatalf("stdout %q, want %q", got, want)
+	}
+	if n := len(a.sessionRows(t)); n != 2 {
+		t.Fatalf("%d session rows after the revokes, want 2: approver revoke revokes no session", n)
+	}
+	var stdout, stderr bytes.Buffer
+	if code := runSessionRevoke(strings.Fields(line)[3:], &stdout, &stderr); code != exitOK {
+		t.Fatalf("the printed line %q: rc %d\nstderr %s", line, code, stderr.String())
+	}
+	rows := a.sessionRows(t)
+	if len(rows) != 1 || rows[0].CredentialID == br.CredentialID {
+		t.Fatalf("session rows after the printed line: %+v, want only a's", rows)
+	}
+}
