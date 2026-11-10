@@ -1,0 +1,436 @@
+{
+  "sprint_id": "w-world-approvals-by-key-a1b-s1",
+  "design_doc": "design_docs/planned/w-world-approvals-by-key-a1b.md",
+  "design_revision": "r2 (commit 5e2bf772; quorum r1 BLOCKED 3/3, r2 BLOCKED 2/3, r2 controller narrow-refinement carve-out)",
+  "sprint_plan": "design_docs/planned/w-world-approvals-by-key-a1b-sprint1-plan.md",
+  "previous_sprint": {
+    "plan": "design_docs/planned/w-world-approvals-by-key-a0a1-sprint2-plan.md",
+    "json": "design_docs/planned/sprint_w-world-approvals-by-key-a0a1-s2.json",
+    "landed_merge": "ca8a4c17"
+  },
+  "base_commit": "5e2bf7723971c872dec83707aeb1321acfedb709",
+  "code_base_commit": "3a96cf75 (no code change since; 5e2bf772 adds only the design doc)",
+  "queue_row": 201,
+  "iteration": 375,
+  "sprint_number": 1,
+  "fallback_cut": {
+    "fired": true,
+    "rule": "design §8: if the sprint plan's own estimate for M1-M3 exceeds 2,000 lines, M3 moves to the head of sprint 2 and sprint 2's M6 becomes a third sprint",
+    "planner_estimate_m1_m3_loc": 2750,
+    "this_sprint": "M1 + M2 only (M1a, M1b, M1c, M2a, M2b, M2c)",
+    "moved_to_sprint_2": "M3 (approver enroll|list|revoke) - see plan Appendix A for its decisions, sub-milestones M3a-M3d (~1,210 LOC) and 46 mutants",
+    "third_sprint": "design M6 (--sign-with with the real tool, CI step, QUICKSTART §15)"
+  },
+  "next_sprint": "sprint 2 = M3 (head) + M4 + M5 of the design; sprint 3 = M6",
+  "executor_lane": "as routed by the controller (iteration 374: claude-haiku-5-5); two sub-milestones per run: (M1a,M1b), (M1c,M2a), (M2b,M2c)",
+  "estimate_days": 1.25,
+  "estimate_loc": {
+    "production": 439,
+    "test": 1076,
+    "fixture_and_attributes": 26,
+    "total": 1541,
+    "measure": "insertions + deletions (git diff --numstat), the design V24 measure"
+  },
+  "constraints": [
+    "D-WORLD-109: fakes, temp stores and test keys only; stores under t.TempDir(); keys from checked-in .pub fixtures, approvaltest.NewSigner(seed), or generate.sh run once",
+    "ssh-keygen only inside host/approval/testdata/approvers/generate.sh: mktemp -d, HOME=tmp, SSH_AUTH_SOCK unset, -N '', -f \"$tmp/...\", < /dev/null; never a bare ssh-keygen; never ~/.ssh",
+    "No committed binary: new fixtures are NUL-free text; .gitattributes host/approval/testdata/approvers/* -text",
+    "host/approval stays standard-library only (TestApprovalImportsOnlyTheStandardLibrary); host/store never imports host/approval",
+    "approvaltest is test support: no non-test file may import it (TS3)",
+    "No behaviour change for existing callers; mint-request OlderCredentialsStoreError text byte-identical",
+    "No t.Parallel() in new tests",
+    "One mutant per new production branch: 74 (plan §4)",
+    "Exit codes asserted by constant (exitUsage/exitFatal)",
+    "Bisectable: each sub-milestone ends with go build ./... AND go vet <pkg> (go build does not compile _test.go)",
+    "No new production context root this sprint (TestProductionContextRoots unedited)",
+    "Executor makes no git writes; snapshots each sub-milestone cumulatively to ~/.ailang/state/world-iter375/snap/<M>/"
+  ],
+  "baseline": {
+    "env": "export AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0, commit 24ee108); go1.26.6 darwin/arm64",
+    "git_status": "clean at 5e2bf772",
+    "verify_ail_sh": "rc 0, 52 s: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass",
+    "verify_go_sh_plain_leg": "completed, every package ok, 0 FAIL (cmd/ailang-worldd 229 s, host/daemon 377 s, host/broker 344 s, host/store 23.6 s); tracked-binary gate 24/24 self-test, 3 pinned fonts, 0 other binary blobs among 6593 tracked files; 64 evidence tests exactly once",
+    "go_test_all": "= verify_go.sh plain leg (go test ./... -count=1): all ok",
+    "verify_go_sh_race_leg": "RED at base from load, not code: VERIFY_GO_LEGS=race rc 1 (511 s): race control fires as designed; 57 packages ok incl. cmd/ailang-worldd 338 s, host/store 87 s, host/approval 3.9 s; -timeout 8m package timeouts in host/broker, host/daemon, host/verifygate. Re-run of those three alone rc 1 (482 s): broker ok 460 s, daemon timeout, verifygate TestMissionConfigDefaultFlowIntegration 'context deadline exceeded'. Load avg 12.8 on 16 cores. Same code green on CI go-race-verify (run 42753484556). Controller: timeout-only reds in those three packages = baseline; VERIFY_GO_LEGS=plain must be rc 0; CI race job is the race verdict",
+    "go_build_and_vet_all": "rc 0, 2 s",
+    "compile_fence_go_test_run_none": "rc 0, 10 s",
+    "TestProductionContextRoots": "rc 0 (ok 0.249s)",
+    "TestDaemonDependencyAllowlist": "rc 0 (ok 0.364s)"
+  },
+  "design_premises_found_false": [
+    {
+      "id": "P1",
+      "claim": "F9/N4: open the file, fstat the descriptor, refuse a FIFO; the open and read run under the 3 s root",
+      "finding": "os.Open of a FIFO blocks in open(2) before any fstat (probe: 'os.Open: BLOCKED >2s in open'; with O_NONBLOCK: 'opened; regular=false mode=prw-r--r--'); a context does not bound os.Open/Read; the design's 'Lstat instead of f.Stat' mutant is not killed by a FIFO arm without a concurrent swap",
+      "resolution": "M3/sprint 2 only (Appendix A A-D1, A-D8): os.OpenFile(path, O_RDONLY|syscall.O_NONBLOCK) as episode_launch_interactive.go:252 does; mutants 'O_NONBLOCK dropped' and 'IsRegular dropped' replace it"
+    },
+    {
+      "id": "P2",
+      "claim": "§2.10a code sketch: confirmApproverAct uses readTermLineWithin; 'EOF and read failure: line == \"\"'",
+      "finding": "contradicts the same section's [r2] reader contract and V39 (ReadString returns partial bytes with the error; readTermLine trims and drops it)",
+      "resolution": "M3/sprint 2 (Appendix A A-D2): readTermLineErrWithin returns the raw line and error; confirm only on ok && err == nil && HasSuffix(line, \"\\n\") && isYes(line)"
+    },
+    {
+      "id": "P3",
+      "claim": "§6 M2: credentials_binding_test.go:106 is edited",
+      "finding": "it already compares with the symbolic credentialsSchemaVersion; scratch bump: green unedited; only credentials_test.go:56 and mint_requests_test.go:132 red",
+      "resolution": "not edited"
+    },
+    {
+      "id": "P4",
+      "claim": "AS6: 'Need 4 -> the exact pre-A1b text' (one comparison)",
+      "finding": "existing pins use Contains(\"need schema 4\"), which a site dropping Feature still satisfies",
+      "resolution": "AS6 compares the full text at all four sites (MUT-OLD-PUT/GET/LIST/CONSUME)"
+    },
+    {
+      "id": "P5",
+      "claim": "§8: sprint 1 (M1-M3) about 2,050 lines",
+      "finding": "planner per-file estimate ~2,750",
+      "resolution": "§8 fallback cut fired: M3 to sprint 2"
+    },
+    {
+      "id": "P6",
+      "claim": "TS3 control: at least one _test.go imports approvaltest",
+      "finding": "with M3 cut, no CLI test imports it in sprint 1",
+      "resolution": "signer_test.go is the external package approvaltest_test, which imports it"
+    },
+    {
+      "id": "P7",
+      "claim": "§2.10a: confirmation succeeds when 'the answer is y'",
+      "finding": "isYes accepts y and yes (session.go)",
+      "resolution": "named, not changed (M3 keeps isYes like every attended verb)"
+    }
+  ],
+  "ci_change": "none",
+  "not_touched": [
+    "cmd/ailang-worldd/* except approve_test.go (CT1)",
+    "host/store/context_roots_test.go",
+    "host/authority/**",
+    "host/daemon/**",
+    "host/approval/{sshsig,admit,request}.go",
+    "host/approval/testdata/sshsig/**",
+    ".github/workflows/ci.yml",
+    "docs/QUICKSTART.md",
+    "**/*.ail",
+    "packages/**",
+    "scripts/**",
+    "tools/launchd/*",
+    "~/.ssh",
+    "~/.ailang/state/mission-v1*"
+  ],
+  "milestones": [
+    {
+      "id": "M1a",
+      "design_milestone": "M1 (CR-TOOMANY carried from iteration 374) + approvaltest (moved to sprint 1 by the design)",
+      "title": "CT1 for the untested CR-TOOMANY branch; approvaltest.Signer (fixed-seed Ed25519 SSHSIG signer, test support) with TS1 and TS3",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a1b-sprint1-plan.md §3 M1a",
+      "estimate_loc": {
+        "production": 75,
+        "test": 150
+      },
+      "files": [
+        "cmd/ailang-worldd/approve_test.go",
+        "host/approval/approvaltest/signer.go",
+        "host/approval/approvaltest/signer_test.go"
+      ],
+      "tests": [
+        "TestEpisodeStartRequestRefusesWhenSixteenArePending (CT1)",
+        "TestTestSignerVerifies (TS1)",
+        "TestApprovalTestIsTestOnly (TS3, import guard + 2 instrument controls)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l host/approval cmd/ailang-worldd)\"",
+        "go build ./... && go vet ./host/approval/... ./cmd/ailang-worldd/",
+        "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+        "go test ./cmd/ailang-worldd/ -run '^TestEpisodeStartRequestRefusesWhenSixteenArePending$' -count=1 -v",
+        "go test ./host/approval/approvaltest/ -run '^(TestTestSignerVerifies|TestApprovalTestIsTestOnly)$' -count=1 -v",
+        "go test ./host/approval/... -count=1",
+        "go test ./cmd/ailang-worldd/ -run '^(TestEpisodeStartRequest|TestApprove)' -count=1"
+      ],
+      "mutants": [
+        "MUT-CT-TOOMANY"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M1b",
+      "design_milestone": "M1 (pure enrolment law)",
+      "title": "host/approval/approver.go: NewApprover (E1-E7), CheckRevoke (R1-R2), ApproverNamePattern; generated rsa3072/p384 refusal fixtures; AP0-AP4",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a1b-sprint1-plan.md §3 M1b",
+      "estimate_loc": {
+        "production": 80,
+        "test": 230,
+        "fixture": 26
+      },
+      "files": [
+        "host/approval/approver.go",
+        "host/approval/approver_test.go",
+        "host/approval/testdata/approvers/generate.sh (0755)",
+        "host/approval/testdata/approvers/rsa3072.pub",
+        "host/approval/testdata/approvers/p384.pub",
+        "host/approval/testdata/approvers/SOURCE.txt",
+        ".gitattributes"
+      ],
+      "tests": [
+        "TestApproverFixturesAreTheGeneratedBytes (AP0)",
+        "TestNewApproverRefusals (AP1)",
+        "TestNewApproverAcceptsTheRealFixtures (AP2)",
+        "TestCheckRevoke (AP3)",
+        "TestApproverNamePatternBoundaries (AP4)",
+        "TestApprovalImportsOnlyTheStandardLibrary (existing, stays green)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l host/approval)\"",
+        "go build ./... && go vet ./host/approval/...",
+        "bash -c 'for f in host/approval/testdata/approvers/*; do tr -d \"\\000\" < \"$f\" | cmp -s - \"$f\" || { echo \"NUL in $f\"; exit 1; }; done'",
+        "test -x host/approval/testdata/approvers/generate.sh",
+        "grep -qx 'host/approval/testdata/approvers/\\* -text' .gitattributes",
+        "go test ./host/approval/ -run '^(TestApproverFixturesAreTheGeneratedBytes|TestNewApproverRefusals|TestNewApproverAcceptsTheRealFixtures|TestCheckRevoke|TestApproverNamePatternBoundaries|TestApprovalImportsOnlyTheStandardLibrary)$' -count=1 -v",
+        "go test ./host/approval/... -count=1",
+        "test -z \"$(git status --short host/approval/testdata/sshsig)\""
+      ],
+      "mutants": [
+        "MUT-E1",
+        "MUT-E2",
+        "MUT-E2-ORDER",
+        "MUT-E3",
+        "MUT-E4",
+        "MUT-E4-EMPTY",
+        "MUT-E4-GE",
+        "MUT-E5",
+        "MUT-E5-TRIM",
+        "MUT-E6",
+        "MUT-E7",
+        "MUT-NA-NAME",
+        "MUT-NA-NOW",
+        "MUT-NA-NL",
+        "MUT-PAT-48",
+        "MUT-PAT-FIRST",
+        "MUT-PAT-ANCHOR",
+        "MUT-R1",
+        "MUT-R2",
+        "MUT-R2-LE",
+        "MUT-R-ORDER"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M1c",
+      "design_milestone": "M1 (enrolment prompt body)",
+      "title": "EnrolmentWarning + RenderEnrolment (no branches); AP5 golden; RC4 reflective completeness over Approver and its element type SSHPublicKey",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a1b-sprint1-plan.md §3 M1c",
+      "estimate_loc": {
+        "production": 15,
+        "test": 125
+      },
+      "files": [
+        "host/approval/approver.go",
+        "host/approval/approver_test.go"
+      ],
+      "tests": [
+        "TestRenderEnrolmentGolden (AP5)",
+        "TestEnrolmentPromptShowsEveryPersistedField (RC4)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l host/approval)\"",
+        "go build ./... && go vet ./host/approval/...",
+        "go test ./host/approval/ -run '^(TestRenderEnrolmentGolden|TestEnrolmentPromptShowsEveryPersistedField)$' -count=1 -v",
+        "go test ./host/approval/... -count=1 && go test -race ./host/approval/... -count=1"
+      ],
+      "mutants": [
+        "MUT-RE-FP",
+        "MUT-RE-R6",
+        "MUT-RE-REC",
+        "MUT-RE-TYPE",
+        "MUT-RC4-FIELD",
+        "MUT-RC4-KEYFIELD"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M2a",
+      "design_milestone": "M2 (store schema 5)",
+      "title": "credentials schema 5: approvers table (schema file + approversSQL), credentialsTables(5)/(4), upgrade step; OlderCredentialsStoreError{Need, Feature} with byte-identical mint-request text; AS1 edit, AS5, AS6, AS7",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a1b-sprint1-plan.md §3 M2a",
+      "estimate_loc": {
+        "production": 89,
+        "test": 209
+      },
+      "files": [
+        "host/store/credentials_schema.sql",
+        "host/store/credentials.go",
+        "host/store/mint_requests.go",
+        "host/store/approvers.go (M2a block)",
+        "host/store/credentials_test.go",
+        "host/store/mint_requests_test.go (:132 only)",
+        "host/store/approvers_test.go"
+      ],
+      "tests": [
+        "TestCredentialsSchemaMatchesCanonicalDDL (AS1, edited)",
+        "TestCredentialsUpgradeToV4 (one-line edit)",
+        "TestCredentialsUpgradeToV5 (AS5)",
+        "TestOlderCredentialsStoreErrorText (AS6)",
+        "TestCredentialsV5WithoutApproversIsRefused (AS7, planner-added)",
+        "TestCredentialsV4WithoutMintRequestsIsRefused (existing, unedited)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l host/store)\"",
+        "go build ./... && go vet ./host/store/",
+        "go test ./host/store/ -run '^(TestCredentialsSchemaMatchesCanonicalDDL|TestCredentialsUpgradeToV4|TestCredentialsUpgradeToV5|TestOlderCredentialsStoreErrorText|TestCredentialsV5WithoutApproversIsRefused|TestCredentialsV4WithoutMintRequestsIsRefused)$' -count=1 -v",
+        "go test ./host/store/ -count=1",
+        "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+        "go test ./cmd/ailang-worldd/ -run '^(TestEpisodeStartRequest|TestApprove|TestSessionMint_|TestSessionNew)' -count=1",
+        "go test ./host/daemon/ -run 'Credentials|Split|Binding' -count=1 && go test ./host/authority/ -count=1"
+      ],
+      "mutants": [
+        "MUT-DDL-SCHEMA",
+        "MUT-DDL-CONST",
+        "MUT-UPG-NOV5",
+        "MUT-UPG-CLI",
+        "MUT-CT-V4CASE",
+        "MUT-TABLESET5",
+        "MUT-OLD-FMT",
+        "MUT-OLD-PUT",
+        "MUT-OLD-GET",
+        "MUT-OLD-LIST",
+        "MUT-OLD-CONSUME"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M2b",
+      "design_milestone": "M2 (enrol and look up)",
+      "title": "EnrolApprover (deadline, v5, six validation branches, name/key pre-checks in one tx), Approver, ApproverByKey (shared approverWhere); AS2, AS3, RC2; deadline test +3",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a1b-sprint1-plan.md §3 M2b",
+      "estimate_loc": {
+        "production": 110,
+        "test": 229
+      },
+      "files": [
+        "host/store/approvers.go (M2b block)",
+        "host/store/approvers_test.go",
+        "host/store/credentials_test.go"
+      ],
+      "tests": [
+        "TestEnrolApproverRefusals (AS2)",
+        "TestApproverLookups (AS3)",
+        "TestApproverRowMatchesTheTable (RC2)",
+        "TestCredentialsMethodsRequireADeadline (edited)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l host/store)\"",
+        "go build ./... && go vet ./host/store/",
+        "go test ./host/store/ -run '^(TestEnrolApproverRefusals|TestApproverLookups|TestApproverRowMatchesTheTable|TestCredentialsMethodsRequireADeadline)$' -count=1 -v",
+        "go test ./host/store/ -count=1"
+      ],
+      "mutants": [
+        "MUT-EN-DL",
+        "MUT-EN-OLD",
+        "MUT-EN-NAME",
+        "MUT-EN-FORMAT",
+        "MUT-EN-KEY",
+        "MUT-EN-ENROLLED",
+        "MUT-EN-ENROLLED-LT",
+        "MUT-EN-LASTUSED",
+        "MUT-EN-REVOKED",
+        "MUT-EN-NAMETAKEN",
+        "MUT-EN-KEYENROLLED",
+        "MUT-EN-HOLDER",
+        "MUT-LK-DL",
+        "MUT-LK-OLD",
+        "MUT-LK-NOROWS",
+        "MUT-LK-PREFIX",
+        "MUT-SC-SWAP",
+        "MUT-SC-DROPCOL",
+        "MUT-RC2-FIELD"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M2c",
+      "design_milestone": "M2 (list and revoke)",
+      "title": "ListApprovers (ordered by name, cap 256, revoked included), RevokeApprover (guarded UPDATE, mark never delete) + classifyRevoke (unknown / revoked / clock-behind); AS3b, AS4; deadline test +2",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a1b-sprint1-plan.md §3 M2c",
+      "estimate_loc": {
+        "production": 70,
+        "test": 133
+      },
+      "files": [
+        "host/store/approvers.go (M2c block)",
+        "host/store/approvers_test.go",
+        "host/store/credentials_test.go"
+      ],
+      "tests": [
+        "TestListApprovers (AS3b, planner-split)",
+        "TestRevokeApprover (AS4)",
+        "TestCredentialsMethodsRequireADeadline (edited)"
+      ],
+      "acceptance": [
+        "test -z \"$(gofmt -l host/store)\"",
+        "go build ./... && go vet ./host/store/",
+        "go test ./host/store/ -run '^(TestListApprovers|TestRevokeApprover|TestCredentialsMethodsRequireADeadline)$' -count=1 -v",
+        "go test ./host/store/ -count=1 && go test -race ./host/store/ -run '^(TestEnrolApprover|TestApprover|TestListApprovers|TestRevokeApprover|TestCredentials)' -count=1",
+        "then the sprint gates (sprint_gates)"
+      ],
+      "mutants": [
+        "MUT-LS-DL",
+        "MUT-LS-OLD",
+        "MUT-LS-ORDER",
+        "MUT-LS-LIMIT",
+        "MUT-LS-ACTIVEONLY",
+        "MUT-RV-DL",
+        "MUT-RV-OLD",
+        "MUT-RV-REVOKED",
+        "MUT-RV-ENROLLED",
+        "MUT-RV-NAME",
+        "MUT-RV-N1",
+        "MUT-RV-DELETE",
+        "MUT-CL-NOROWS",
+        "MUT-CL-REVOKED",
+        "MUT-CL-BEHIND",
+        "MUT-CL-ORDER"
+      ],
+      "status": "planned"
+    }
+  ],
+  "mutation_count": 74,
+  "mutation_table_ref": "design_docs/planned/w-world-approvals-by-key-a1b-sprint1-plan.md §4 (74 mutants; propagation-only error returns listed separately, not counted)",
+  "acceptance_criteria_ref": "design_docs/planned/w-world-approvals-by-key-a1b-sprint1-plan.md §9 (11 criteria)",
+  "executor_directives": {
+    "git_writes": "none (no add/commit/stash/checkout/reset/restore/rebase/push/worktree); read-only git status/diff allowed",
+    "snapshot": "after each sub-milestone, copy every file created or modified since the base (cumulative), repo-relative paths and modes preserved (cp -p), to ~/.ailang/state/world-iter375/snap/<M>/ with MANIFEST.sha256; the plan and JSON are excluded; the controller rebuilds one commit per sub-milestone",
+    "generate_sh": "run bash host/approval/testdata/approvers/generate.sh exactly once in M1b, then pin AP0",
+    "stop_conditions": "a red earlier test, a --- SKIP in a -v cmd/ailang-worldd run, a file outside plan §5, an ssh-keygen prompt, any ~/.ssh reference"
+  },
+  "sprint_gates": [
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang   # same shell as every gate below",
+    "./scripts/verify_ail.sh",
+    "test -z \"$(gofmt -l host/approval host/store cmd/ailang-worldd)\"",
+    "go build ./... && go vet ./...",
+    "go test -run '^$' ./...",
+    "go test ./... -count=1",
+    "go test ./host/store/ -run '^TestProductionContextRoots$' -count=1",
+    "go test ./host/daemon/ -run '^TestDaemonDependencyAllowlist$' -count=1",
+    "go test ./host/approval/... -count=1 && go test -race ./host/approval/... ./host/store/ -count=1",
+    "WORLD_REQUIRE_SSH_KEYGEN=1 go test ./host/approval/ -run '^TestSSHSIGCrossCheckWithSSHKeygen$' -count=1 -v",
+    "go test ./cmd/ailang-worldd/ -count=1 -v -run '^(TestEpisodeStartRequest|TestApprove|TestSessionMint_|TestSessionNew|TestEveryVerbHasHelp|TestHelpIsNeverBlockedByTheRegistryKeyGuard)' 2>&1 | tee /tmp/w375-cl.log | tail -3",
+    "if grep -E '^\\s*--- (SKIP|FAIL)' /tmp/w375-cl.log; then exit 1; fi",
+    "after commit: ./scripts/verify_go.sh   # includes scripts/tracked_binary_gate.sh (reads committed blobs); see plan §6 note on the local race leg",
+    "git status --short   # only plan §5 files"
+  ],
+  "deferred_m3": {
+    "plan_ref": "design_docs/planned/w-world-approvals-by-key-a1b-sprint1-plan.md Appendix A",
+    "sub_milestones": {
+      "M3a": 340,
+      "M3b": 260,
+      "M3c": 240,
+      "M3d": 370
+    },
+    "mutant_count": 46,
+    "context_roots_to_add": [
+      "cmd/ailang-worldd/approver.go|runApproverEnroll|Background: 2",
+      "cmd/ailang-worldd/approver.go|runApproverList|Background: 1",
+      "cmd/ailang-worldd/approver.go|runApproverRevoke|Background: 2 (3 with sprint 2's K8)"
+    ]
+  }
+}
