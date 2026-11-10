@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -345,3 +346,278 @@ func TestPutMintRequestRefusesABadRow(t *testing.T) {
 		t.Fatalf("the weak CHECK refused the bad id (control broken): %v", err)
 	}
 }
+
+// okConsume returns a RequestConsume for row with ApprovedBy "tty", a Clock returning at and
+// counting calls into *clocks, and a Check returning nil and counting into *checks.
+func okConsume(row MintRequestRow, at int64, clocks, checks *int) RequestConsume {
+	return RequestConsume{
+		ID:         row.RequestID,
+		Digest:     row.Digest,
+		ApprovedBy: "tty",
+		Clock:      func() int64 { *clocks++; return at },
+		Check:      func(int64) error { *checks++; return nil },
+	}
+}
+
+// consumeSession is the session row a consume of request tests mints: credential k, episode "ep".
+func consumeSession(k int) SessionRow {
+	return SessionRow{CredentialID: fmt.Sprintf("%064x", k), EpisodeID: "ep", GrantsJSON: "[]", ExpiresAt: 2000, CreatedAt: 1010}
+}
+
+// errSentinel is a Check failure the consume must surface and roll back on.
+var errSentinel = errors.New("sentinel check refusal")
+
+// TestMintSessionForRequestConsumesOnce (ST4): a pending request is consumed once, in the same
+// transaction as its session row; the Clock is read once and the Check sees that reading.
+func TestMintSessionForRequestConsumesOnce(t *testing.T) {
+	c := openTestCredentials(t)
+	ctx := testCtx(t)
+	r := testMintRequestRow(1, 1000)
+	if err := c.PutMintRequest(ctx, r, 1000); err != nil {
+		t.Fatal(err)
+	}
+	session := consumeSession(1)
+	var clocks, checks int
+	rc := okConsume(r, 1010, &clocks, &checks)
+	var seen int64
+	inner := rc.Check
+	rc.Check = func(at int64) error { seen = at; return inner(at) }
+	if err := c.MintSessionForRequest(ctx, session, rc); err != nil {
+		t.Fatalf("consume: %v", err)
+	}
+	got, ok, err := c.MintRequest(ctx, r.RequestID)
+	if err != nil || !ok {
+		t.Fatalf("MintRequest after consume: ok %v, err %v", ok, err)
+	}
+	if !got.Consumed || got.ConsumedAt != 1010 || got.ApprovedBy != "tty" || got.CredentialID != session.CredentialID {
+		t.Fatalf("consumed row = %+v; want consumed at 1010 by tty as %s", got, session.CredentialID)
+	}
+	if found, ok, err := c.ResolveSession(ctx, session.CredentialID); err != nil || !ok || !reflect.DeepEqual(found, session) {
+		t.Fatalf("ResolveSession: found %+v ok %v err %v; want %+v", found, ok, err, session)
+	}
+	if clocks != 1 || checks != 1 || seen != 1010 {
+		t.Fatalf("clock calls %d, check calls %d, check saw %d; want 1, 1, 1010", clocks, checks, seen)
+	}
+	var again int
+	rc2 := okConsume(r, 1010, &clocks, &again)
+	if err := c.MintSessionForRequest(ctx, consumeSession(2), rc2); !errors.Is(err, ErrRequestConsumed) {
+		t.Fatalf("second consume: err %v, want ErrRequestConsumed", err)
+	}
+	if rows, err := c.ListSessions(ctx, "ep", 10); err != nil || len(rows) != 1 {
+		t.Fatalf("sessions after two consumes: %d rows, err %v; want 1", len(rows), err)
+	}
+}
+
+// TestMintSessionForRequestRollsBackOnFailure (ST4b): a failed session insert or a refusing Check
+// leaves the request pending.
+func TestMintSessionForRequestRollsBackOnFailure(t *testing.T) {
+	ctx := testCtx(t)
+	t.Run("insert fails", func(t *testing.T) {
+		c := openTestCredentials(t)
+		r := testMintRequestRow(1, 1000)
+		if err := c.PutMintRequest(ctx, r, 1000); err != nil {
+			t.Fatal(err)
+		}
+		session := consumeSession(1)
+		if err := c.MintSession(ctx, session); err != nil {
+			t.Fatal(err)
+		}
+		var clocks, checks int
+		if err := c.MintSessionForRequest(ctx, session, okConsume(r, 1010, &clocks, &checks)); err == nil {
+			t.Fatal("a session row with a taken id was inserted")
+		}
+		if got, _, _ := c.MintRequest(ctx, r.RequestID); got.Consumed {
+			t.Fatal("a failed insert left the request consumed")
+		}
+	})
+	t.Run("check refuses", func(t *testing.T) {
+		c := openTestCredentials(t)
+		r := testMintRequestRow(1, 1000)
+		if err := c.PutMintRequest(ctx, r, 1000); err != nil {
+			t.Fatal(err)
+		}
+		session := consumeSession(2)
+		var clocks, checks int
+		rc := okConsume(r, 1010, &clocks, &checks)
+		rc.Check = func(int64) error { return errSentinel }
+		if err := c.MintSessionForRequest(ctx, session, rc); !errors.Is(err, errSentinel) {
+			t.Fatalf("err %v, want the Check's sentinel", err)
+		}
+		if got, _, _ := c.MintRequest(ctx, r.RequestID); got.Consumed {
+			t.Fatal("a refusing Check left the request consumed")
+		}
+		if _, ok, _ := c.ResolveSession(ctx, session.CredentialID); ok {
+			t.Fatal("a refusing Check left a session row")
+		}
+	})
+}
+
+// TestMintSessionForRequestRefusals (ST5): each refusal leaves zero session rows and the request
+// pending; the expiry and created boundaries are exact.
+func TestMintSessionForRequestRefusals(t *testing.T) {
+	type arm struct {
+		name   string
+		at     int64
+		mutate func(*RequestConsume)
+		ctx    func() context.Context
+		want   error
+		ok     bool
+	}
+	pastCtx := func() context.Context {
+		ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(-time.Second))
+		t.Cleanup(cancel)
+		return ctx
+	}
+	arms := []arm{
+		{name: "at-expiry", at: 1600, want: ErrRequestExpired},
+		{name: "expiry-minus-1", at: 1599, ok: true},
+		{name: "at-created", at: 1000, ok: true},
+		{name: "clock-behind", at: 999, want: ErrRequestClockBehind},
+		{name: "other-digest", at: 1010, mutate: func(rc *RequestConsume) { rc.Digest = strings.Repeat("ef", 32) }, want: ErrRequestDigestChanged},
+		{name: "unknown", at: 1010, mutate: func(rc *RequestConsume) { rc.ID = "mr-ffffffffffffffff" }, want: ErrRequestUnknown},
+		{name: "nil-clock", at: 1010, mutate: func(rc *RequestConsume) { rc.Clock = nil }, want: ErrIncompleteConsume},
+		{name: "nil-check", at: 1010, mutate: func(rc *RequestConsume) { rc.Check = nil }, want: ErrIncompleteConsume},
+		{name: "expired-ctx", at: 1010, ctx: pastCtx},
+	}
+	for _, a := range arms {
+		t.Run(a.name, func(t *testing.T) {
+			c := openTestCredentials(t)
+			ctx := testCtx(t)
+			r := testMintRequestRow(1, 1000)
+			if err := c.PutMintRequest(ctx, r, 1000); err != nil {
+				t.Fatal(err)
+			}
+			var clocks, checks int
+			rc := okConsume(r, a.at, &clocks, &checks)
+			if a.mutate != nil {
+				a.mutate(&rc)
+			}
+			callCtx := ctx
+			if a.ctx != nil {
+				callCtx = a.ctx()
+			}
+			err := c.MintSessionForRequest(callCtx, consumeSession(1), rc)
+			switch {
+			case a.ok && err != nil:
+				t.Fatalf("consume: %v, want nil", err)
+			case !a.ok && err == nil:
+				t.Fatal("consume succeeded, want a refusal")
+			case a.want != nil && !errors.Is(err, a.want):
+				t.Fatalf("err %v, want %v", err, a.want)
+			}
+			if a.name == "nil-check" && clocks != 0 {
+				t.Fatalf("Clock read %d times before a nil Check refusal, want 0", clocks)
+			}
+			if a.name == "expired-ctx" && clocks != 0 {
+				t.Fatalf("Clock read %d times on an expired context, want 0 (read after BeginTx)", clocks)
+			}
+			if a.ok {
+				return
+			}
+			if rows, err := c.ListSessions(ctx, "ep", 10); err != nil || len(rows) != 0 {
+				t.Fatalf("refusal left %d session rows, err %v", len(rows), err)
+			}
+			if got, _, _ := c.MintRequest(ctx, r.RequestID); got.Consumed {
+				t.Fatal("refusal consumed the request")
+			}
+		})
+	}
+	t.Run("v3-store", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), CredentialsFileName)
+		makeV3Credentials(t, path, nil)
+		c, err := OpenCredentials(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = c.Close() }()
+		var clocks, checks int
+		err = c.MintSessionForRequest(testCtx(t), consumeSession(1), okConsume(testMintRequestRow(1, 1000), 1010, &clocks, &checks))
+		var older *OlderCredentialsStoreError
+		if !errors.As(err, &older) {
+			t.Fatalf("v3 consume: err %v, want *OlderCredentialsStoreError", err)
+		}
+		if clocks != 0 {
+			t.Fatalf("Clock read %d times on a version-3 store, want 0", clocks)
+		}
+	})
+}
+
+// TestConcurrentApprovalsMintOnce (ST6, run under -race): eight racers consume one request; exactly
+// one wins, the rest are locked out or see the request consumed, and one session row exists.
+func TestConcurrentApprovalsMintOnce(t *testing.T) {
+	path := filepath.Join(t.TempDir(), CredentialsFileName)
+	seed, err := OpenCredentials(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := testMintRequestRow(1, 1000)
+	if err := seed.PutMintRequest(testCtx(t), r, 1000); err != nil {
+		t.Fatal(err)
+	}
+	if err := seed.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	const racers = 8
+	start := make(chan struct{})
+	results := make([]error, racers)
+	var wg sync.WaitGroup
+	for i := 0; i < racers; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			<-start
+			c, err := OpenCredentials(path)
+			if err != nil {
+				if IsWriterAlreadyActive(err) {
+					results[i] = errLocked
+					return
+				}
+				results[i] = err
+				return
+			}
+			defer func() { _ = c.Close() }()
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+			rc := RequestConsume{
+				ID: r.RequestID, Digest: r.Digest, ApprovedBy: "tty",
+				Clock: func() int64 { return 1010 },
+				Check: func(int64) error { return nil },
+			}
+			results[i] = c.MintSessionForRequest(ctx, consumeSession(100+i), rc)
+		}(i)
+	}
+	close(start)
+	wg.Wait()
+
+	winners := 0
+	for i, err := range results {
+		switch {
+		case err == nil:
+			winners++
+		case err == errLocked, errors.Is(err, ErrRequestConsumed):
+		default:
+			t.Fatalf("racer %d: unexpected result %v", i, err)
+		}
+	}
+	if winners != 1 {
+		t.Fatalf("%d racers consumed the request, want exactly 1", winners)
+	}
+	check, err := OpenCredentialsReadOnly(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = check.Close() }()
+	ctx := testCtx(t)
+	rows, err := check.ListSessions(ctx, "ep", 10)
+	if err != nil || len(rows) != 1 {
+		t.Fatalf("sessions: %d rows, err %v; want 1", len(rows), err)
+	}
+	got, ok, err := check.MintRequest(ctx, r.RequestID)
+	if err != nil || !ok || !got.Consumed || got.CredentialID != rows[0].CredentialID {
+		t.Fatalf("request after the race: %+v ok %v err %v; want consumed by the one session %s", got, ok, err, rows[0].CredentialID)
+	}
+}
+
+// errLocked marks a racer that could not open the store because another held its writer lock.
+var errLocked = errors.New("racer: store locked by another writer")

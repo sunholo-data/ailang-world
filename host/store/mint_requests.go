@@ -224,3 +224,89 @@ func scanMintRequest(scan func(...any) error) (MintRequestRow, error) {
 	row.CredentialID = credentials.String
 	return row, nil
 }
+
+// ---- M4c ----
+
+// RequestConsume is what MintSessionForRequest consumes. Clock is read exactly once, inside the
+// transaction, after BeginTx (design §2.4 [r3]); that reading is consumed_at and the expiry
+// bound. Check runs with that reading before the guarded UPDATE; an error rolls everything back
+// (plan §1.3 D2: authority.MintForRequest puts approval.MintMatches here).
+type RequestConsume struct {
+	ID, Digest, ApprovedBy string
+	Clock                  func() int64
+	Check                  func(consumedAt int64) error
+}
+
+// MintSessionForRequest consumes request rc and inserts session in one transaction: the request
+// is marked consumed (consumed_at, approved_by, credential_id) only if it is still pending, and
+// the session row lands with it or not at all.
+func (c *Credentials) MintSessionForRequest(ctx context.Context, session SessionRow, rc RequestConsume) error {
+	if err := requireDeadline(ctx); err != nil {
+		return err
+	}
+	if rc.ID == "" || rc.Digest == "" || rc.ApprovedBy == "" || rc.Clock == nil || rc.Check == nil {
+		return ErrIncompleteConsume
+	}
+	if session.CredentialID == "" || session.EpisodeID == "" {
+		return fmt.Errorf("store: mint session: empty credential_id or episode_id")
+	}
+	if c.version < mintRequestsSchemaVersion {
+		return &OlderCredentialsStoreError{Path: c.display, Version: c.version}
+	}
+	tx, err := c.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("store: consume mint request: begin: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	at := rc.Clock()
+	if err := rc.Check(at); err != nil {
+		return err
+	}
+	res, err := tx.ExecContext(ctx, `UPDATE mint_requests SET consumed_at = ?, approved_by = ?, credential_id = ? WHERE request_id = ? AND digest = ? AND consumed_at IS NULL AND created_at <= ? AND expires_at > ?`,
+		at, rc.ApprovedBy, session.CredentialID, rc.ID, rc.Digest, at, at)
+	if err != nil {
+		return fmt.Errorf("store: consume mint request: %w", err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("store: consume mint request: rows: %w", err)
+	}
+	if n != 1 {
+		return classifyConsume(ctx, tx, rc, at, n)
+	}
+	if err := insertSessionRow(ctx, tx, session); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("store: consume mint request: commit: %w", err)
+	}
+	return nil
+}
+
+// classifyConsume names why the guarded UPDATE changed no row, reading the request inside tx.
+func classifyConsume(ctx context.Context, tx *sql.Tx, rc RequestConsume, at int64, changed int64) error {
+	var (
+		digest           string
+		createdAt, expAt int64
+		consumed         bool
+	)
+	err := tx.QueryRowContext(ctx, `SELECT digest, created_at, expires_at, consumed_at IS NOT NULL FROM mint_requests WHERE request_id = ?`, rc.ID).
+		Scan(&digest, &createdAt, &expAt, &consumed)
+	if errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("%w: %s", ErrRequestUnknown, rc.ID)
+	}
+	if err != nil {
+		return fmt.Errorf("store: consume mint request: classify: %w", err)
+	}
+	switch {
+	case consumed:
+		return fmt.Errorf("%w: %s", ErrRequestConsumed, rc.ID)
+	case at < createdAt:
+		return fmt.Errorf("%w: %s", ErrRequestClockBehind, rc.ID)
+	case at >= expAt:
+		return fmt.Errorf("%w: %s", ErrRequestExpired, rc.ID)
+	case digest != rc.Digest:
+		return fmt.Errorf("%w: %s", ErrRequestDigestChanged, rc.ID)
+	}
+	return fmt.Errorf("store: mint request %s: the guarded update changed %d rows", rc.ID, changed)
+}

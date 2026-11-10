@@ -443,18 +443,8 @@ func (c *Credentials) mintSession(ctx context.Context, row SessionRow, start *Ep
 		}
 		resume.CredentialID = row.CredentialID
 	}
-	// An unbound row names only the five original columns, so the same
-	// statement works on a version-1 store; the binding columns stay NULL.
-	stmt := `INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at)
-		 VALUES (?, ?, ?, ?, ?);`
-	args := []any{row.CredentialID, row.EpisodeID, row.GrantsJSON, row.ExpiresAt, row.CreatedAt}
-	if row.Bound() {
-		stmt = `INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at, project, profile_digest)
-		 VALUES (?, ?, ?, ?, ?, ?, ?);`
-		args = append(args, row.Project, row.ProfileDigest)
-	}
-	if _, err := tx.ExecContext(ctx, stmt, args...); err != nil {
-		return fmt.Errorf("store: mint session: %w", err)
+	if err := insertSessionRow(ctx, tx, row); err != nil {
+		return err
 	}
 	if start != nil {
 		if start.Episode != row.EpisodeID || start.Schema != "world/episode-start/v1" {
@@ -475,6 +465,24 @@ func (c *Credentials) mintSession(ctx context.Context, row SessionRow, start *Ep
 	}
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("store: mint session: commit: %w", err)
+	}
+	return nil
+}
+
+// insertSessionRow writes one session_credentials row inside tx. An unbound row names only the
+// five original columns, so the same statement works on a version-1 store; the binding columns
+// stay NULL. mintSession and MintSessionForRequest both insert through here.
+func insertSessionRow(ctx context.Context, tx *sql.Tx, row SessionRow) error {
+	stmt := `INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at)
+		 VALUES (?, ?, ?, ?, ?);`
+	args := []any{row.CredentialID, row.EpisodeID, row.GrantsJSON, row.ExpiresAt, row.CreatedAt}
+	if row.Bound() {
+		stmt = `INSERT INTO session_credentials (credential_id, episode_id, grants_json, expires_at, created_at, project, profile_digest)
+		 VALUES (?, ?, ?, ?, ?, ?, ?);`
+		args = append(args, row.Project, row.ProfileDigest)
+	}
+	if _, err := tx.ExecContext(ctx, stmt, args...); err != nil {
+		return fmt.Errorf("store: mint session: %w", err)
 	}
 	return nil
 }
