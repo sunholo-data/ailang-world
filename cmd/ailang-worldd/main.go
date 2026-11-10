@@ -121,6 +121,8 @@ Usage:
                     [--preset se-tools] [--grant EFFECT=SCOPE:BUDGET]... [--budget 50]
                     [--db <path>] [--credentials-db <path>] [--workspace-root <dir>]
                     [--sessions-dir <dir>] [--exec-profiles-dir <dir>] [--addr 127.0.0.1:7644 (or service.json's address)] [--request]
+  ailang-worldd approve <request-id> [--db <path>] [--credentials-db <path>]
+  ailang-worldd approve --list [--db <path>] [--credentials-db <path>]
   ailang-worldd [--addr <url>] episode report <episode> [--json | --markdown] [--follow] [--interval 2s] [--addr <url>]
   ailang-worldd episode finish <episode> --preset <name> [--presets-dir D] [--title TEXT]
                         [--allow-failing CHECK]... [--include-unattributed] [--dry-run]
@@ -437,6 +439,15 @@ func run(args []string, stdout, stderr io.Writer) int {
 		}
 		return runSession(rest[1:], stdout, stderr)
 
+	case "approve":
+		// Row 201: the daemon's address is part of the mint request, so --addr is refused, as for session.
+		if addrGiven {
+			fmt.Fprintln(stderr, "ailang-worldd: --addr is a client flag and is not valid for 'approve'; "+
+				"the daemon's address is part of the mint request")
+			return exitUsage
+		}
+		return runApprove(rest[1:], stdout, stderr, realSessionEnv())
+
 	// Row 189 M3: one attended act starts an episode on a serving daemon.
 	// Row 198: `episode report` is a client verb like why, so it takes the
 	// global --addr; `episode start` keeps its own --addr only.
@@ -650,7 +661,7 @@ func serveResult(err error, stderr io.Writer) int {
 var ownHelpVerbs = map[string]bool{
 	"version": true, "service": true,
 	"tools": true, "call": true, "why": true, "provenance": true,
-	"setup": true, "doctor": true, "session": true, "episode": true,
+	"setup": true, "doctor": true, "session": true, "approve": true, "episode": true,
 	"profile": true, "surface-index": true, "hosts": true, "whoami": true,
 }
 

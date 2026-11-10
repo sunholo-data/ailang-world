@@ -91,7 +91,11 @@ func newApproveRigIn(t *testing.T, r episodeRun, ep string, createdAt int64, ext
 	var opened bool
 	var stdout, stderr bytes.Buffer
 	args := r.args(ep, append([]string{"--profile", "proj", "--task", task, "--model", "claude-opus-5-5", "--request"}, extra...)...)
-	if code := runEpisodeStart(args, &stdout, &stderr, requestEnv(&opened, createdAt)); code != exitOK || opened {
+	// requestEnv's seqRandom restarts at 1 on every call, so a second request in one store would
+	// draw the first one's id and collide on its primary key; the rig takes the production source.
+	env := requestEnv(&opened, createdAt)
+	env.random = realSessionEnv().random
+	if code := runEpisodeStart(args, &stdout, &stderr, env); code != exitOK || opened {
 		t.Fatalf("episode start --request: rc %d, terminal opened %v\nstdout %s\nstderr %s", code, opened, stdout.String(), stderr.String())
 	}
 	credPath, err := credentialsFor(r.f.db, "")
@@ -473,6 +477,188 @@ func TestReadTermLineWithin(t *testing.T) {
 			}
 		case <-time.After(5 * time.Second):
 			t.Fatal("readTermLineWithin did not return on the timer")
+		}
+	})
+}
+
+// atTime is a clock that always reads v.
+func atTime(v int64) func() int64 { return func() int64 { return v } }
+
+// CL4: --list shows the pending requests only: not the expired one, not the consumed one.
+func TestApproveListShowsPending(t *testing.T) {
+	r := newEpisodeRun(t)
+	a := newApproveRigIn(t, r, "ep1", approveT0-700)
+	b := newApproveRigIn(t, r, "ep2", approveT0)
+	c := newApproveRigIn(t, r, "ep3", approveT0)
+	var stdout, stderr bytes.Buffer
+	term := &promptTerm{in: strings.NewReader("y\n")}
+	if code := runApprove(c.args(), &stdout, &stderr, approveEnv(term, nil, atTime(approveT0+1))); code != exitOK {
+		t.Fatalf("approve C: rc %d\nstderr %s", code, stderr.String())
+	}
+	listArgs := []string{"--list", "--db", r.f.db, "--credentials-db", c.credPath}
+	var listOut, listErr bytes.Buffer
+	if code := runApprove(listArgs, &listOut, &listErr, approveEnv(nil, nil, atTime(approveT0+2))); code != exitOK {
+		t.Fatalf("--list: rc %d\nstderr %s", code, listErr.String())
+	}
+	out := listOut.String()
+	if !strings.Contains(out, b.id) {
+		t.Errorf("--list lacks pending %s:\n%s", b.id, out)
+	}
+	if strings.Contains(out, a.id) {
+		t.Errorf("--list shows the expired %s:\n%s", a.id, out)
+	}
+	if strings.Contains(out, c.id) {
+		t.Errorf("--list shows the consumed %s:\n%s", c.id, out)
+	}
+	bRow := b.row(t)
+	if !strings.Contains(out, "episode ep2") || !strings.Contains(out, bRow.Digest[:16]) {
+		t.Errorf("B's line lacks its episode or digest:\n%s", out)
+	}
+	listOut.Reset()
+	if code := runApprove(listArgs, &listOut, &listErr, approveEnv(nil, nil, atTime(approveT0+1000))); code != exitOK {
+		t.Fatalf("--list at +1000: rc %d", code)
+	}
+	if got := strings.TrimSpace(listOut.String()); got != "no pending mint requests" {
+		t.Errorf("--list with nothing pending printed %q", got)
+	}
+}
+
+// CL6: without a terminal, approve mints nothing and the request stays pending.
+func TestApproveWithoutATerminalMintsNothing(t *testing.T) {
+	a := newApproveRig(t, "ep1", approveT0)
+	env := noTerminalEnv(approveT0 + 1)
+	env.after = time.After
+	var stdout, stderr bytes.Buffer
+	if code := runApprove(a.args(), &stdout, &stderr, env); code != exitUsage {
+		t.Fatalf("rc %d, want exitUsage\nstderr %s", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), sessionTTYFix) {
+		t.Errorf("stderr lacks the tty fix:\n%s", stderr.String())
+	}
+	if a.row(t).Consumed {
+		t.Error("the request was consumed without a terminal")
+	}
+	if _, err := os.Lstat(a.worktree()); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("the worktree exists (err %v)", err)
+	}
+	if n := len(a.sessionRows(t)); n != 0 {
+		t.Errorf("%d session rows, want 0", n)
+	}
+}
+
+// CL7: a declined y/N leaves the request pending, and the prompt shows the whole request.
+func TestApproveDeclinedLeavesTheRequestPending(t *testing.T) {
+	a := newApproveRig(t, "ep1", approveT0)
+	term := &promptTerm{in: strings.NewReader("n\n")}
+	var stdout, stderr bytes.Buffer
+	if code := runApprove(a.args(), &stdout, &stderr, approveEnv(term, nil, atTime(approveT0+1))); code != exitUsage {
+		t.Fatalf("rc %d, want exitUsage\nstderr %s", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "aborted (not confirmed)") {
+		t.Errorf("stderr lacks 'aborted (not confirmed)': %s", stderr.String())
+	}
+	if a.row(t).Consumed {
+		t.Error("a declined request was consumed")
+	}
+	if _, err := os.Lstat(a.worktree()); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("the worktree exists (err %v)", err)
+	}
+	if n := len(a.sessionRows(t)); n != 0 {
+		t.Errorf("%d session rows, want 0", n)
+	}
+	if !strings.Contains(term.out.String(), "mint request "+a.id) {
+		t.Errorf("the prompt lacks the request block:\n%s", term.out.String())
+	}
+}
+
+// CL8: a used request is refused before any terminal opens, and mints once.
+func TestApproveRefusesReplay(t *testing.T) {
+	a := newApproveRig(t, "ep1", approveT0)
+	var stdout, stderr bytes.Buffer
+	term := &promptTerm{in: strings.NewReader("y\n")}
+	if code := runApprove(a.args(), &stdout, &stderr, approveEnv(term, nil, atTime(approveT0+1))); code != exitOK {
+		t.Fatalf("first approve: rc %d\nstderr %s", code, stderr.String())
+	}
+	if row := a.row(t); !row.Consumed || row.ApprovedBy != "tty" {
+		t.Fatalf("after the mint: consumed %v by %q", row.Consumed, row.ApprovedBy)
+	}
+	var opened bool
+	stdout.Reset()
+	stderr.Reset()
+	if code := runApprove(a.args(), &stdout, &stderr, approveEnv(nil, &opened, atTime(approveT0+2))); code != exitUsage {
+		t.Fatalf("second approve: rc %d, want exitUsage\nstderr %s", code, stderr.String())
+	}
+	for _, want := range []string{"already used", "by tty"} {
+		if !strings.Contains(stderr.String(), want) {
+			t.Errorf("stderr lacks %q: %s", want, stderr.String())
+		}
+	}
+	if opened {
+		t.Error("a terminal opened for a used request")
+	}
+	if n := len(a.sessionRows(t)); n != 1 {
+		t.Errorf("%d session rows, want 1", n)
+	}
+}
+
+// CL12: approve refuses bad ids and misuse before any terminal; --help is approveHelp.
+func TestApproveRefusesBadIDsAndMisuse(t *testing.T) {
+	a := newApproveRig(t, "ep1", approveT0)
+	run1 := func(args []string, env sessionEnv) (int, string) {
+		var stdout, stderr bytes.Buffer
+		code := runApprove(args, &stdout, &stderr, env)
+		return code, stderr.String()
+	}
+	t.Run("grammar", func(t *testing.T) {
+		code, msg := run1(append([]string{"mr-XYZ"}, a.args()[1:]...), approveEnv(nil, nil, atTime(approveT0+1)))
+		if code != exitUsage || !strings.Contains(msg, "is not a mint request id") {
+			t.Errorf("rc %d, stderr %q", code, msg)
+		}
+	})
+	t.Run("unknown", func(t *testing.T) {
+		code, msg := run1(append([]string{"mr-0000000000000000"}, a.args()[1:]...), approveEnv(nil, nil, atTime(approveT0+1)))
+		if code != exitUsage || !strings.Contains(msg, "no mint request") {
+			t.Errorf("rc %d, stderr %q", code, msg)
+		}
+	})
+	t.Run("addr", func(t *testing.T) {
+		var stdout, stderr bytes.Buffer
+		code := run([]string{"--addr", "127.0.0.1:1", "approve", "mr-0000000000000000",
+			"--db", a.r.f.db, "--credentials-db", a.credPath}, &stdout, &stderr)
+		if code != exitUsage || !strings.Contains(stderr.String(), "not valid for 'approve'") {
+			t.Errorf("rc %d, stderr %q", code, stderr.String())
+		}
+	})
+	t.Run("no-after", func(t *testing.T) {
+		var opened bool
+		env := approveEnv(nil, &opened, atTime(approveT0+1))
+		env.after = nil
+		code, msg := run1(a.args(), env)
+		if code != exitFatal || !strings.Contains(msg, "no prompt timer") || opened {
+			t.Errorf("rc %d, opened %v, stderr %q", code, opened, msg)
+		}
+	})
+	t.Run("other-store", func(t *testing.T) {
+		dir2 := t.TempDir()
+		world2 := filepath.Join(dir2, "world.db")
+		s, err := store.Open(world2)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = s.Close()
+		var opened bool
+		args := []string{a.id, "--db", world2, "--credentials-db", a.credPath}
+		code, msg := run1(args, approveEnv(nil, &opened, atTime(approveT0+1)))
+		if code != exitUsage || !strings.Contains(msg, "was made for") || opened {
+			t.Errorf("rc %d, opened %v, stderr %q", code, opened, msg)
+		}
+	})
+	t.Run("help", func(t *testing.T) {
+		for _, argv := range [][]string{{"approve", "--help"}, {"help", "approve"}} {
+			var stdout, stderr bytes.Buffer
+			if code := run(argv, &stdout, &stderr); code != exitOK || stdout.String() != approveHelp {
+				t.Errorf("%q: rc %d, stdout is not approveHelp (stderr %q)", argv, code, stderr.String())
+			}
 		}
 	})
 }
