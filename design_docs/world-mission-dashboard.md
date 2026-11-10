@@ -1,31 +1,31 @@
-# World mission dashboard — iteration 375 (2026-11-10)
+# World mission dashboard — iteration 376 (2026-11-10)
 
-- **Landed this fire:** row 201 A1b sprint 1 (`w-world-approvals-by-key`), PR #537, merge `b7d2e629`. CI 3/3 on the PR head and on the merge. Judge sonnet PASS 91, zero blocking.
-- **What it does:** the store and law for enrolled SSH approvers. Nothing an operator runs yet.
-  - Pure `host/approval/approver.go` holds `NewApprover`, `CheckRevoke` and `RenderEnrolment`. It refuses rsa, p384, `sk-*` and private-key files without echoing their bytes.
-  - Credentials store schema 5 adds the `approvers` table: enrol, look up, list, and revoke by mark. A row is never deleted, and no name or key is reused.
-  - `approvaltest.Signer` is a test-only SSHSIG signer.
-  - CT1 closes iteration 374's CR-TOOMANY gap.
-- **Design:** new child doc `w-world-approvals-by-key-a1b.md`, r2. Quorum r1 BLOCKED 3/3 and r2 BLOCKED 2/3 (gemini PASS). The controller carve-out applied the reviewers' fixes verbatim. Metered $0.74.
-- **Operator note:** schema 5 means a running older daemon refuses the store until `serve` restarts on the new build, as at v3 and v4.
-- **Next loop work:** row 201 A1b sprint 2.
-  - It starts with M3, `approver enroll|list|revoke`, typed `y` bounded at 120 s, from plan Appendix A.
-  - Then M4–M5, approving by signature.
-  - M6, `--sign-with`, is its own sprint.
-  - Carry over: planner P1 (open with `O_NONBLOCK`, then fstat) and the judge's PAT-UPPER2 and LK-NAMEPREFIX test gaps.
-  - Then row 243. Fakes and test keys only (D-WORLD-109 = A). Mark's real-key exit run stays attended.
+- **Landed this fire:** row 201 A1b sprint 2 (`w-world-approvals-by-key`), PR #539, merge `290084ad`. CI 3/3 on the PR head and on the merge. Judge sonnet PASS 88, zero blocking.
+- **What it does:** an operator can now enrol, list and revoke an SSH approver key. Approving a mint by that key is sprint 3.
+  - `ailang-worldd approver enroll --name <n> --format ssh --pubkey <file>` asks for a typed `y`, bounded at 120 s.
+    - The reader is error-aware: `y`+EOF, a read error, a partial line or a timeout all refuse.
+    - No writer lock is held while it waits.
+    - The key file is read capped, opened `O_NONBLOCK` and then fstat'd, so a FIFO is refused rather than blocking.
+  - `approver list` is read-only. `approver revoke <name>` asks for a typed `y` and marks the row; it never deletes it.
+  - Sprint 1's PAT-UPPER2 and LK-NAMEPREFIX test gaps are closed.
+  - QUICKSTART §15 is written for Mark's attended exit run and is not run by the loop.
+- **Scope cut:** the plan's own size gate measured 1,896 > 1,683, so the pure signature law (M4a/M4b, code final) moved to Appendix B.
+- **Next loop work:** row 201 A1b sprint 3, from the sprint-2 plan's Appendix B with no re-design.
+  - First M4a/M4b.
+  - Then the consume binding and authority, together with M5's `approve --signature`, `--write-message` and `--list --decided`, and the revoke session listing. These must land together (planner P6).
+  - Carry over: the judge's untested `--credentials-db` and default `--db` (F-CREDS, AS-CREDFOR, F-DB).
+  - Then M6 (`--sign-with`, the CI step), then row 243. Fakes and test keys only (D-WORLD-109 = A).
 - **Row 256:** taken by an attended session; the loop does not pick it.
 - **OPEN decisions:** D-WORLD-105 only (default C: row 233 parked, fail closed).
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 (attended A1) and 151 (row 188 N2d/N4a) are not routable.
 - **Routing this fire:** all roles ran through the Agent tool.
-  - Controller: opus.
-  - Designer: opus (r0, plus an r1 resume).
-  - Planner: opus.
-  - Executor: haiku, three runs.
+  - Controller: opus. Planner: opus.
+  - Executor: haiku, four runs.
   - Judge: sonnet.
+  - No designer and no quorum (the doc is reviewed). Metered $0.00.
   - Codex was unusable at preflight (probe rc 75).
 - **Instrument notes:**
   - Export `AILANG_BIN=~/.pinned-ailang/ailang` in any shell that runs `host/daemon` or `cmd/ailang-worldd` tests.
-  - The local `-race` leg times out under heavy rig load (load average about 12 on 16 cores). CI's race job is the reference.
+  - Do not run the controller's full `verify_go` sweep at the same time as the judge's suite. Under that contention, five untouched-package tests failed (30 s and 60 s timeouts, plus one broker counter). All passed alone and on a quiet re-run.
   - The Gate-0 self-notice script returns rc 2 until a directive is marked on #524.
 - **Bookkeeping thread:** #524 (rotates Monday 2026-11-16 07:00).
