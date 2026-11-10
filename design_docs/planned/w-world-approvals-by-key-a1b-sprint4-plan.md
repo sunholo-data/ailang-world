@@ -694,6 +694,17 @@ arms), `TestMintForRequestRefusesAnUnboundApproval` (+1 subtest), `TestApproverR
 
 ---
 
+### 7.1 Controller correction after Run 4 (iteration 378)
+
+The S3 patch in Appendix P omits one test the planner compiled and mutation-tested in its scratch tree:
+`TestCappedBufferKeepsItsBound` (13 lines in `cmd/ailang-worldd/approve_signwith_test.go`), the §4 killer of
+MUT-CAP-WRITE. The executor found it (the §3 `-run` regex matched nothing for that name and still exited 0).
+The controller compared all 17 sprint files with the planner's tree `~/.ailang/state/world-iter378/work/`:
+16 were byte-identical and this file differed only by that function. It was copied from the planner's tree,
+not rewritten. MUT-CAP-WRITE (`c.buf.Write(p[:n])` → `c.buf.Write(p)`) was re-run by the controller against
+that single test: `--- FAIL` (killed), then the source was restored byte-identical. Appendix P is left as
+generated; **the expected numstat after S3 is therefore 909, not 896.**
+
 ## 8. Risks
 
 - **R1 — Size.** Measured 896 against a 2,000 cap; the committed part 359. The per-step expected numstat
