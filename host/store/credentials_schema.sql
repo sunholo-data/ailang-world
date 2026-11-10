@@ -54,3 +54,17 @@ CREATE TABLE IF NOT EXISTS mint_requests (
     credential_id TEXT,
     CHECK ((consumed_at IS NULL) = (approved_by IS NULL) AND (consumed_at IS NULL) = (credential_id IS NULL))
 );
+
+-- Approvers (version 5, row 201 A1b). A key enrolled at the daemon's terminal (a typed y, parent
+-- R3) may approve a mint request by signature. Revoking MARKS the row and never deletes it, so a
+-- name in mint_requests.approved_by ('ssh:<name>') names one key forever, and neither a name nor
+-- a key is ever enrolled twice. format is checked in code (host/approval), not here, so A2 can add
+-- 'webauthn' (and sign_count by ADD COLUMN) without rebuilding the table.
+CREATE TABLE IF NOT EXISTS approvers (
+    name         TEXT PRIMARY KEY CHECK (length(name) BETWEEN 1 AND 48),
+    format       TEXT NOT NULL CHECK (format <> ''),
+    public_key   BLOB NOT NULL UNIQUE CHECK (length(public_key) > 0),
+    enrolled_at  INTEGER NOT NULL CHECK (enrolled_at > 0),
+    last_used_at INTEGER CHECK (last_used_at IS NULL OR last_used_at >= enrolled_at),
+    revoked_at   INTEGER CHECK (revoked_at IS NULL OR revoked_at >= enrolled_at)
+);

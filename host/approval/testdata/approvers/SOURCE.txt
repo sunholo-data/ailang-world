@@ -1,0 +1,4 @@
+OpenSSH_10.3p1, LibreSSL 3.3.6
+2026-11-10T05:57:08Z
+3072 SHA256:H4txI+aWTFTiT3fJX686l+hheh4mH46gyt2Upynfraw world-approver-fixture-rsa3072 (RSA)
+384 SHA256:EibwFazf+R7JxcEPv3tyfPyMZz0CfYfRWgMV3AkNE0M world-approver-fixture-p384 (ECDSA)

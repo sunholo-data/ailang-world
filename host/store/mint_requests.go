@@ -56,16 +56,19 @@ var (
 	ErrIncompleteConsume      = errors.New("store: a mint request consume needs an id, a digest, approved_by, a clock and a check")
 )
 
-// OlderCredentialsStoreError refuses a mint-request operation on a store below version 4.
+// OlderCredentialsStoreError refuses an operation on a store below the version its Feature needs:
+// mint requests need 4, approvers need 5 (row 201 A1b §2.1).
 type OlderCredentialsStoreError struct {
 	Path    string
-	Version int
+	Version int    // the store's version
+	Need    int    // the first version with Feature
+	Feature string // "mint requests" or "approvers"
 }
 
 func (e *OlderCredentialsStoreError) Error() string {
-	return fmt.Sprintf("store: credentials store %q is schema %d; mint requests need schema %d: "+
+	return fmt.Sprintf("store: credentials store %q is schema %d; %s need schema %d: "+
 		"restart `ailang-worldd serve` with this build once (it upgrades the store at startup), then run this again",
-		e.Path, e.Version, mintRequestsSchemaVersion)
+		e.Path, e.Version, e.Feature, e.Need)
 }
 
 // MintRequestRow is one mint_requests row.
@@ -90,7 +93,7 @@ func (c *Credentials) PutMintRequest(ctx context.Context, row MintRequestRow, no
 		return err
 	}
 	if c.version < mintRequestsSchemaVersion {
-		return &OlderCredentialsStoreError{Path: c.display, Version: c.version}
+		return &OlderCredentialsStoreError{Path: c.display, Version: c.version, Need: mintRequestsSchemaVersion, Feature: "mint requests"}
 	}
 	if !MintRequestIDPattern.MatchString(row.RequestID) {
 		return fmt.Errorf("%w: request id %q", ErrBadMintRequest, row.RequestID)
@@ -144,7 +147,7 @@ func (c *Credentials) MintRequest(ctx context.Context, id string) (MintRequestRo
 		return MintRequestRow{}, false, err
 	}
 	if c.version < mintRequestsSchemaVersion {
-		return MintRequestRow{}, false, &OlderCredentialsStoreError{Path: c.display, Version: c.version}
+		return MintRequestRow{}, false, &OlderCredentialsStoreError{Path: c.display, Version: c.version, Need: mintRequestsSchemaVersion, Feature: "mint requests"}
 	}
 	row, err := scanMintRequest(c.db.QueryRowContext(ctx,
 		`SELECT `+mintRequestColumns+` FROM mint_requests WHERE request_id = ?`, id).Scan)
@@ -164,7 +167,7 @@ func (c *Credentials) PendingMintRequests(ctx context.Context, now int64, limit 
 		return nil, err
 	}
 	if c.version < mintRequestsSchemaVersion {
-		return nil, &OlderCredentialsStoreError{Path: c.display, Version: c.version}
+		return nil, &OlderCredentialsStoreError{Path: c.display, Version: c.version, Need: mintRequestsSchemaVersion, Feature: "mint requests"}
 	}
 	if limit <= 0 || limit > MaxPendingMintRequests {
 		limit = MaxPendingMintRequests
@@ -251,7 +254,7 @@ func (c *Credentials) MintSessionForRequest(ctx context.Context, session Session
 		return fmt.Errorf("store: mint session: empty credential_id or episode_id")
 	}
 	if c.version < mintRequestsSchemaVersion {
-		return &OlderCredentialsStoreError{Path: c.display, Version: c.version}
+		return &OlderCredentialsStoreError{Path: c.display, Version: c.version, Need: mintRequestsSchemaVersion, Feature: "mint requests"}
 	}
 	tx, err := c.db.BeginTx(ctx, nil)
 	if err != nil {

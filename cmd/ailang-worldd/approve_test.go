@@ -1158,3 +1158,57 @@ func TestApproveEffectsCheckCatchesEachMismatch(t *testing.T) {
 		}
 	}
 }
+
+// CT1: the sixteenth pending request is the last one held; a seventeenth is refused with the
+// usage exit and the store's text, and it writes nothing (design §4, R4).
+func TestEpisodeStartRequestRefusesWhenSixteenArePending(t *testing.T) {
+	r := newEpisodeRun(t)
+	p := writeTestProfile(t, r.profiles, "proj", "")
+	stubDaemon(t, matchingHealth(t, r.f, r.profiles, p), nil)
+	task := filepath.Join(t.TempDir(), "task.md")
+	if err := os.WriteFile(task, []byte("do the thing\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	credPath, err := credentialsFor(r.f.db, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	st, err := store.OpenCredentials(credPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	for i := 1; i <= store.MaxPendingMintRequests; i++ {
+		row := store.MintRequestRow{RequestID: fmt.Sprintf("mr-%016x", 0xf00+i), Request: []byte(fmt.Sprintf(`{"n":%d}`, i)),
+			Digest: strings.Repeat("ab", 32), Challenge: strings.Repeat("cd", 32), EpisodeID: "seed",
+			CreatedAt: approveT0, ExpiresAt: approveT0 + 600}
+		if err := st.PutMintRequest(ctx, row, approveT0); err != nil {
+			t.Fatalf("seed %d: %v", i, err)
+		}
+	}
+	if err := st.Close(); err != nil {
+		t.Fatal(err)
+	}
+	var opened bool
+	var stdout, stderr bytes.Buffer
+	args := r.args("ep1", "--profile", "proj", "--task", task, "--model", "claude-opus-5-5", "--request")
+	if code := runEpisodeStart(args, &stdout, &stderr, requestEnv(&opened, approveT0)); code != exitUsage {
+		t.Fatalf("rc %d, want exitUsage\nstderr %s", code, stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "16 mint requests are already pending") {
+		t.Errorf("stderr lacks the pending refusal: %s", stderr.String())
+	}
+	if opened {
+		t.Fatal("a terminal was opened")
+	}
+	rows := pendingRows(t, r.f.db, approveT0)
+	if len(rows) != store.MaxPendingMintRequests {
+		t.Fatalf("%d pending requests, want %d", len(rows), store.MaxPendingMintRequests)
+	}
+	for _, row := range rows {
+		if row.RequestID == firstRequestID {
+			t.Fatalf("the refused request was stored: %s", row.RequestID)
+		}
+	}
+}

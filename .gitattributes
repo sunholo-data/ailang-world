@@ -1,1 +1,2 @@
 host/approval/testdata/sshsig/* -text
+host/approval/testdata/approvers/* -text
