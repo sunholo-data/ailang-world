@@ -2184,6 +2184,9 @@ The only edited existing tests: `TestEveryVerbHasHelp` (help_test.go), `TestProd
   ```
   ≤ **1,683** → run Run 5 (M4 adds exactly 317). Over → do not run it; M4a/M4b move to Appendix B
   unchanged (their code and tests in §2.5/§2.8 are final), and the sprint closes after M3g.
+  **Result (controller, iteration 376, after M3g `cad109f9`): 1,896 — over 1,683, so Run 5 did NOT
+  run.** M4a/M4b move to Appendix B unchanged (their §2.5/§2.8 code and tests stay final) and sprint 2
+  closes at M3g. M3 came in at 1,896 against the 1,637 estimate (+16%; sprint 1 was +11%).
 - **Snapshot after every sub-milestone, cumulatively.** After each sub-milestone's acceptance
   passes, copy **every** file created or modified since the base (not only this sub-milestone's) to
   `~/.ailang/state/world-iter376/snap/<M>/`, repo-relative paths and modes preserved, plus a manifest:
