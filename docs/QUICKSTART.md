@@ -1769,3 +1769,15 @@ Promotion is not part of this section. After the capture, the controller copies 
 verified PNGs and `capture-manifest.json`, unmodified, into `website/static/img/v1/`,
 commits them and runs `./scripts/tracked_binary_gate.sh`. An unattended run never does
 this. The images appear in the website only after that promotion.
+
+## 14. Mint by request *(attended — pending first verbatim run)*
+
+`episode start <episode> ... --request` stores a mint request in the credentials store and returns. It needs no terminal and mints nothing: no worktree, no session file, no token. `ailang-worldd approve <request-id>` shows the whole request and needs a `y` typed at the terminal before it mints. A request expires 10 minutes after it is made, and at most 16 may be pending per credentials store. This guide runs it against the §0 scratch store `/tmp/se-world/world.db`, with its daemon serving, never a real store.
+
+```bash
+ailang-worldd episode start req-demo --repo "$PWD" --db /tmp/se-world/world.db --request
+ailang-worldd approve --list --db /tmp/se-world/world.db
+ailang-worldd approve mr-<the 16 hex it printed> --db /tmp/se-world/world.db
+```
+
+`approve` refuses, before any terminal opens, a request that is unknown, already used, expired, whose stored bytes do not match their digest, or whose world has changed since it was made (the refusal names the first field that differs). A `y` not typed before the request expires mints nothing.

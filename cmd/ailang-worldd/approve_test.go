@@ -11,6 +11,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -933,5 +934,227 @@ func TestApproveRefusesExpiryDuringWorktreePreparation(t *testing.T) {
 	}
 	if _, err := os.Lstat(wt); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("the worktree still exists (err %v)", err)
+	}
+}
+
+// approveFacts is everything an approve did outside the session row (CL5, CL16).
+type approveFacts struct {
+	WorktreeDir         string // mr.Worktree if it exists, else ""
+	WorktreeIsGit       bool   // isGitWorktree(WorktreeDir)
+	Branch              string // git branch --show-current in WorktreeDir
+	SessionFile         string // mr.SessionFile if it exists, else ""
+	SessionMode         os.FileMode
+	TokenHash           string // hex(sha256(the session file's bytes))
+	MCPFile             string // mr.MCPConfig if it exists, else ""
+	MCPAddr, MCPToken   string // from the MCP config's world server URL and Authorization header
+	Launch              string // approve's stdout
+	ApprovedBy          string // the request row
+	RowCredentialID     string // the request row
+	SessionCredentialID string // the one session row
+}
+
+// collectApproveFacts reads what approve left on disk and in the two stores (CL5).
+func collectApproveFacts(t *testing.T, a approveRig, mr approval.MintRequest, stdout string) approveFacts {
+	t.Helper()
+	f := approveFacts{Launch: stdout}
+	if _, err := os.Stat(mr.Worktree); err == nil {
+		f.WorktreeDir = mr.Worktree
+		f.WorktreeIsGit = isGitWorktree(f.WorktreeDir)
+		out, err := exec.Command("git", "-C", f.WorktreeDir, "branch", "--show-current").Output()
+		if err != nil {
+			t.Fatal(err)
+		}
+		f.Branch = strings.TrimSpace(string(out))
+	}
+	if info, err := os.Stat(mr.SessionFile); err == nil {
+		f.SessionFile = mr.SessionFile
+		f.SessionMode = info.Mode().Perm()
+		b, err := os.ReadFile(mr.SessionFile)
+		if err != nil {
+			t.Fatal(err)
+		}
+		sum := sha256.Sum256(b)
+		f.TokenHash = hex.EncodeToString(sum[:])
+	}
+	if mr.MCPConfig != "" {
+		if _, err := os.Stat(mr.MCPConfig); err == nil {
+			f.MCPFile = mr.MCPConfig
+			b, err := os.ReadFile(mr.MCPConfig)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var cfg struct {
+				MCPServers map[string]struct {
+					URL     string            `json:"url"`
+					Headers map[string]string `json:"headers"`
+				} `json:"mcpServers"`
+			}
+			if err := json.Unmarshal(b, &cfg); err != nil {
+				t.Fatal(err)
+			}
+			srv := cfg.MCPServers[worldMCPServer]
+			f.MCPAddr = strings.TrimSuffix(strings.TrimPrefix(srv.URL, "http://"), "/mcp/")
+			f.MCPToken = strings.TrimPrefix(srv.Headers["Authorization"], "Bearer ")
+		}
+	}
+	row := a.row(t)
+	f.ApprovedBy = row.ApprovedBy
+	f.RowCredentialID = row.CredentialID
+	if rows := a.sessionRows(t); len(rows) == 1 {
+		f.SessionCredentialID = rows[0].CredentialID
+	}
+	return f
+}
+
+// approveEffectProblems returns one entry per mismatch, each starting with its name (CL16).
+func approveEffectProblems(mr approval.MintRequest, f approveFacts) []string {
+	var out []string
+	add := func(name, format string, a ...any) { out = append(out, name+": "+fmt.Sprintf(format, a...)) }
+	if f.WorktreeDir != mr.Worktree {
+		add("worktree", "the worktree is %q, the request needs %q", f.WorktreeDir, mr.Worktree)
+	}
+	if !f.WorktreeIsGit {
+		add("worktree-git", "%q is not a git worktree", f.WorktreeDir)
+	}
+	if f.Branch != mr.Branch {
+		add("branch", "the branch is %q, the request needs %q", f.Branch, mr.Branch)
+	}
+	if f.SessionFile != mr.SessionFile {
+		add("session_file", "the session file is %q, the request needs %q", f.SessionFile, mr.SessionFile)
+	}
+	if f.SessionMode != 0o600 {
+		add("session_mode", "the session file is %v, want 0600", f.SessionMode)
+	}
+	if f.TokenHash != f.SessionCredentialID {
+		add("token_hash", "the session file's hash is not the session credential")
+	}
+	if mr.Agent == "codex" {
+		if f.MCPFile != "" {
+			add("mcp_for_codex", "a codex launch wrote an MCP config %q", f.MCPFile)
+		}
+	} else if f.MCPFile != mr.MCPConfig || f.MCPAddr != mr.Daemon.Addr || sha256Hex([]byte(f.MCPToken)) != f.SessionCredentialID {
+		add("mcp", "the MCP config is %q at %q (token hash mismatch), the request needs %q at %q", f.MCPFile, f.MCPAddr, mr.MCPConfig, mr.Daemon.Addr)
+	}
+	if mr.Agent == "codex" {
+		if !strings.Contains(f.Launch, " codex exec ") {
+			add("agent", "the launch line is not a codex exec")
+		}
+	} else if !strings.Contains(f.Launch, "  claude --tools") {
+		add("agent", "the launch line is not a claude --tools launch")
+	}
+	if mr.Model != "" {
+		want := "--model " + shellQuote(mr.Model)
+		if mr.Agent == "codex" {
+			want = "-m " + shellQuote(mr.Model)
+		}
+		if !strings.Contains(f.Launch, want) {
+			add("model", "the launch line lacks %q", want)
+		}
+	}
+	if mr.Task != "" && !strings.Contains(f.Launch, "task: "+mr.Task) {
+		add("task", "the launch line lacks %q", "task: "+mr.Task)
+	}
+	if f.ApprovedBy != "tty" {
+		add("approved_by", "approved by %q, want tty", f.ApprovedBy)
+	}
+	if f.RowCredentialID != f.SessionCredentialID {
+		add("credential_id", "the request row's credential %q is not the session row's %q", f.RowCredentialID, f.SessionCredentialID)
+	}
+	return out
+}
+
+// CL5: a `y` mints exactly the stored request: the session row matches it, and every other effect
+// (the worktree, the session file, the MCP config, the launch line) is what the request says.
+func TestApproveMintsExactlyTheRequest(t *testing.T) {
+	a := newApproveRig(t, "ep1", approveT0)
+	term := &promptTerm{in: strings.NewReader("y\n")}
+	var stdout, stderr bytes.Buffer
+	if code := runApprove(a.args(), &stdout, &stderr, approveEnv(term, nil, atTime(approveT0+1))); code != exitOK {
+		t.Fatalf("rc %d\nstderr %s", code, stderr.String())
+	}
+	row := a.row(t)
+	mr, err := approval.Decode(row.Request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rows := a.sessionRows(t)
+	if len(rows) != 1 {
+		t.Fatalf("%d session rows, want 1", len(rows))
+	}
+	sess := rows[0]
+	sessionBytes, err := os.ReadFile(mr.SessionFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sum := sha256.Sum256(sessionBytes)
+	facts := approval.MintFacts{CredentialID: sess.CredentialID, EpisodeID: sess.EpisodeID, GrantsJSON: sess.GrantsJSON,
+		ExpiresAt: sess.ExpiresAt, CreatedAt: sess.CreatedAt, Project: sess.Project, ProfileDigest: sess.ProfileDigest,
+		TokenHash: hex.EncodeToString(sum[:]), RequestCreatedAt: approveT0, ConsumedAt: row.ConsumedAt}
+	if err := approval.MintMatches(mr, facts); err != nil {
+		t.Errorf("the minted row is not the request: %v", err)
+	}
+	if probs := approveEffectProblems(mr, collectApproveFacts(t, a, mr, stdout.String())); len(probs) != 0 {
+		t.Errorf("the effects differ from the request:\n%s", strings.Join(probs, "\n"))
+	}
+}
+
+// CL16: approveEffectProblems passes a clean pair and names each fact that differs (pure).
+func TestApproveEffectsCheckCatchesEachMismatch(t *testing.T) {
+	const tok = "tok"
+	credID := sha256Hex([]byte(tok))
+	claude := approval.MintRequest{Episode: "ep1", Worktree: "/ws/ep1", Branch: "ailang/ep1", SessionFile: "/s/ep1.session",
+		MCPConfig: "/s/ep1.mcp.json", Agent: "claude", Model: "claude-opus-5-5", Task: "/t/task.md",
+		Daemon: approval.DaemonRef{Addr: "127.0.0.1:7777"}}
+	cleanClaude := approveFacts{WorktreeDir: "/ws/ep1", WorktreeIsGit: true, Branch: "ailang/ep1", SessionFile: "/s/ep1.session",
+		SessionMode: 0o600, TokenHash: credID, MCPFile: "/s/ep1.mcp.json", MCPAddr: "127.0.0.1:7777", MCPToken: tok,
+		Launch: "  claude --tools '' --model claude-opus-5-5\ntask: /t/task.md\n", ApprovedBy: "tty",
+		RowCredentialID: credID, SessionCredentialID: credID}
+	if probs := approveEffectProblems(claude, cleanClaude); len(probs) != 0 {
+		t.Fatalf("a clean claude pair has problems: %v", probs)
+	}
+	codex := approval.MintRequest{Episode: "ep1", Worktree: "/ws/ep1", Branch: "ailang/ep1", SessionFile: "/s/ep1.session",
+		Agent: "codex", Model: "gpt-5", Task: "/t/task.md", Daemon: approval.DaemonRef{Addr: "127.0.0.1:7777"}}
+	cleanCodex := approveFacts{WorktreeDir: "/ws/ep1", WorktreeIsGit: true, Branch: "ailang/ep1", SessionFile: "/s/ep1.session",
+		SessionMode: 0o600, TokenHash: credID, Launch: "  WORLD_SESSION=\"$(cat /s/ep1.session)\" codex exec --ignore-user-config -m gpt-5\ntask: /t/task.md\n",
+		ApprovedBy: "tty", RowCredentialID: credID, SessionCredentialID: credID}
+	if probs := approveEffectProblems(codex, cleanCodex); len(probs) != 0 {
+		t.Fatalf("a clean codex pair has problems: %v", probs)
+	}
+	type arm struct {
+		name   string
+		mr     approval.MintRequest
+		mutate func(*approveFacts)
+	}
+	arms := []arm{
+		{"worktree", claude, func(f *approveFacts) { f.WorktreeDir = "/elsewhere" }},
+		{"worktree-git", claude, func(f *approveFacts) { f.WorktreeIsGit = false }},
+		{"branch", claude, func(f *approveFacts) { f.Branch = "other" }},
+		{"session_file", claude, func(f *approveFacts) { f.SessionFile = "/s/other.session" }},
+		{"session_mode", claude, func(f *approveFacts) { f.SessionMode = 0o644 }},
+		{"token_hash", claude, func(f *approveFacts) { f.TokenHash = "x" }},
+		{"mcp", claude, func(f *approveFacts) { f.MCPAddr = "127.0.0.1:1" }},
+		{"mcp_for_codex", codex, func(f *approveFacts) { f.MCPFile = "/s/ep1.mcp.json" }},
+		{"agent", claude, func(f *approveFacts) { f.Launch = "  claude --model claude-opus-5-5\ntask: /t/task.md\n" }},
+		{"model", claude, func(f *approveFacts) { f.Launch = "  claude --tools ''\ntask: /t/task.md\n" }},
+		{"task", claude, func(f *approveFacts) { f.Launch = "  claude --tools '' --model claude-opus-5-5\n" }},
+		{"approved_by", claude, func(f *approveFacts) { f.ApprovedBy = "ssh:x" }},
+		{"credential_id", claude, func(f *approveFacts) { f.RowCredentialID = "other" }},
+	}
+	for _, ar := range arms {
+		f := cleanClaude
+		if ar.mr.Agent == "codex" {
+			f = cleanCodex
+		}
+		ar.mutate(&f)
+		probs := approveEffectProblems(ar.mr, f)
+		named := false
+		for _, p := range probs {
+			if strings.HasPrefix(p, ar.name+":") {
+				named = true
+			}
+		}
+		if !named {
+			t.Errorf("arm %s: problems %v do not name it", ar.name, probs)
+		}
 	}
 }
