@@ -32,6 +32,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/pkgproj"
 	"github.com/sunholo-data/ailang-world/host/replay"
+	"github.com/sunholo-data/ailang-world/host/sshsign"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/toolprobe"
 	"github.com/sunholo-data/ailang-world/host/worktree"
@@ -1223,6 +1224,9 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 		"host/toolprobe/toolprobe.go": {driveToolprobeOutput},
 		"host/checkrun/checkrun.go":   {driveCheckrun},
 		"host/agentrun/agentrun.go":   {driveAgentrun},
+		// Row 201 A1b sprint 4: `approve --sign-with` runs ssh-keygen -Y sign through
+		// host/sshsign's one site.
+		"host/sshsign/sshsign.go": {driveSSHSign},
 	}
 	if len(drivers) != len(files) {
 		t.Fatalf("AC10(a): %d files carry subprocess sites %v but %d have drivers; "+
@@ -1375,6 +1379,16 @@ func driveToolprobeOutput(t *testing.T, probe string) {
 	if _, err := toolprobe.Output(boundedTestContext(t), probe, t.TempDir(),
 		"env", "GOROOT", "GOMODCACHE", "GOVERSION"); err != nil {
 		t.Fatalf("toolprobe.Output via the probe: %v", err)
+	}
+}
+
+// driveSSHSign launches approve --sign-with's signer with the probe standing in for
+// ssh-keygen. The probe prints a version banner, which Sign returns as the "signature" (the CLI
+// would then refuse it as not an SSHSIG); the launch and its environment are the measurement.
+func driveSSHSign(t *testing.T, probe string) {
+	t.Helper()
+	if _, err := sshsign.Sign(boundedTestContext(t), probe, filepath.Join(t.TempDir(), "k"), []byte("message"), io.Discard); err != nil {
+		t.Fatalf("sshsign.Sign via the probe: %v", err)
 	}
 }
 

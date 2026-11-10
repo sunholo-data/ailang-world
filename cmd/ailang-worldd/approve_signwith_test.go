@@ -225,19 +225,6 @@ func TestSignWithSSHKeygenRefusesBadOutput(t *testing.T) {
 	}
 }
 
-// cappedBuffer holds at most its bound, however much is written, and records the overflow (G2).
-func TestCappedBufferKeepsItsBound(t *testing.T) {
-	c := &cappedBuffer{max: 4}
-	for _, w := range []string{"ab", "cdef", "g"} {
-		if n, err := c.Write([]byte(w)); n != len(w) || err != nil {
-			t.Fatalf("Write(%q) = (%d, %v), want (%d, nil)", w, n, err, len(w))
-		}
-	}
-	if c.buf.String() != "abcd" || !c.over {
-		t.Fatalf("buffer %q, over %v; want \"abcd\", true", c.buf.String(), c.over)
-	}
-}
-
 // The production env signs with signWithSSHKeygen: without it, --sign-with is the F7 internal error.
 func TestRealSessionEnvSignsWithSSHKeygen(t *testing.T) {
 	if got, want := reflect.ValueOf(realSessionEnv().sign).Pointer(), reflect.ValueOf(signWithSSHKeygen).Pointer(); got != want {
