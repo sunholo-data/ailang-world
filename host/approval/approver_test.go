@@ -147,8 +147,8 @@ func TestNewApproverRefusals(t *testing.T) {
 		{name: "name-49", call: ssh(strings.Repeat("a", 49), good), want: ErrApproverName},
 		{name: "name-escape", call: ssh("x\x1b[2J", good), want: ErrApproverName},
 		{name: "name-newline", call: ssh("mark\n", good), want: ErrApproverName},
-		{name: "webauthn", call: func() (Approver, error) { return NewApprover("mark", "webauthn", good, now) }, want: ErrFormatNotYet},
-		{name: "webauthn-empty-key", call: func() (Approver, error) { return NewApprover("mark", "webauthn", nil, now) }, want: ErrFormatNotYet},
+		{name: "webauthn", call: func() (Approver, error) { return NewApprover("mark", "webauthn", good, now) }, want: ErrUseRegistration},
+		{name: "webauthn-empty-key", call: func() (Approver, error) { return NewApprover("mark", "webauthn", nil, now) }, want: ErrUseRegistration},
 		{name: "format-gpg", call: func() (Approver, error) { return NewApprover("mark", "gpg", good, now) }, want: ErrApproverFormat},
 		{name: "format-empty", call: func() (Approver, error) { return NewApprover("mark", "", good, now) }, want: ErrApproverFormat},
 		{name: "format-SSH", call: func() (Approver, error) { return NewApprover("mark", "SSH", good, now) }, want: ErrApproverFormat},
@@ -302,24 +302,39 @@ func TestRenderEnrolmentGolden(t *testing.T) {
 }
 
 // enrolmentPromptFields is the disposition of every Approver field (and every field of its
-// element type SSHPublicKey): shown on the enrolment y/N, or excluded with the reason.
+// element types SSHPublicKey and, row 201 A2, Passkey and COSEKey): shown on the enrolment y/N
+// (RenderEnrolment for ssh, RenderPasskeyEnrolment for Passkey.*), or excluded with the reason.
 var enrolmentPromptFields = map[string]string{
-	"Name":       "shown",
-	"Format":     "shown",
-	"Key.Type":   "shown",
-	"Key.Blob":   "shown as its SHA256 fingerprint",
-	"EnrolledAt": "excluded: a timestamp the store sets",
-	"LastUsedAt": "excluded: a timestamp the store sets",
-	"RevokedAt":  "excluded: a timestamp the store sets",
+	"Name":                   "shown",
+	"Format":                 "shown",
+	"Key.Type":               "shown",
+	"Key.Blob":               "shown as its SHA256 fingerprint",
+	"EnrolledAt":             "excluded: a timestamp the store sets",
+	"LastUsedAt":             "excluded: a timestamp the store sets",
+	"RevokedAt":              "excluded: a timestamp the store sets",
+	"Passkey.RPID":           "shown",
+	"Passkey.Origin":         "shown",
+	"Passkey.CredentialID":   "shown as the first 16 hex of its SHA-256",
+	"Passkey.Key.Alg":        "shown as ES256 or EdDSA",
+	"Passkey.Key.X":          "excluded: bound by the typed enrolment code, a fingerprint of the registration that carries it",
+	"Passkey.Key.Y":          "excluded: bound by the typed enrolment code, a fingerprint of the registration that carries it",
+	"Passkey.AAGUID":         "shown in hex",
+	"Passkey.BackupEligible": "shown as synced passkey, backup-eligible or device-bound",
+	"Passkey.BackupState":    "shown as synced passkey, backup-eligible or device-bound",
+	"Passkey.SignCount":      "shown",
 }
 
-// approverFieldPaths lists the dotted path of every leaf field of typ, walking struct fields.
+// approverFieldPaths lists the dotted path of every leaf field of typ, walking struct fields and
+// pointers to structs.
 func approverFieldPaths(typ reflect.Type, prefix string) []string {
 	var out []string
 	for i := 0; i < typ.NumField(); i++ {
 		f := typ.Field(i)
-		if f.Type.Kind() == reflect.Struct {
-			out = append(out, approverFieldPaths(f.Type, prefix+f.Name+".")...)
+		if ft := f.Type; ft.Kind() == reflect.Struct || (ft.Kind() == reflect.Pointer && ft.Elem().Kind() == reflect.Struct) {
+			if ft.Kind() == reflect.Pointer {
+				ft = ft.Elem()
+			}
+			out = append(out, approverFieldPaths(ft, prefix+f.Name+".")...)
 			continue
 		}
 		out = append(out, prefix+f.Name)
@@ -331,6 +346,9 @@ func approverFieldPaths(typ reflect.Type, prefix string) []string {
 func fieldByPath(a *Approver, path string) reflect.Value {
 	v := reflect.ValueOf(a).Elem()
 	for _, seg := range strings.Split(path, ".") {
+		if v.Kind() == reflect.Pointer {
+			v = v.Elem()
+		}
 		v = v.FieldByName(seg)
 	}
 	return v
@@ -356,9 +374,17 @@ func TestEnrolmentPromptShowsEveryPersistedField(t *testing.T) {
 	base.LastUsedAt = 1500
 	base.RevokedAt = 1700
 	baseText := RenderEnrolment(base)
+	pkBase := passkeyWithFlags(t, 0x08) // backup-eligible, so BackupState's flip shows
+	pkText := RenderPasskeyEnrolment(pkBase)
 	for _, p := range paths {
-		b := base
+		b, render, text := base, RenderEnrolment, baseText
 		b.Key.Blob = append([]byte(nil), base.Key.Blob...)
+		if strings.HasPrefix(p, "Passkey.") {
+			pk := *pkBase.Passkey
+			pk.CredentialID, pk.Key.X, pk.Key.Y = bytes.Clone(pk.CredentialID), bytes.Clone(pk.Key.X), bytes.Clone(pk.Key.Y)
+			b, render, text = pkBase, RenderPasskeyEnrolment, pkText
+			b.Passkey = &pk
+		}
 		fv := fieldByPath(&b, p)
 		switch fv.Kind() {
 		case reflect.String:
@@ -369,10 +395,16 @@ func TestEnrolmentPromptShowsEveryPersistedField(t *testing.T) {
 			fv.SetBytes(nb)
 		case reflect.Int64:
 			fv.SetInt(fv.Int() + 7)
+		case reflect.Uint32:
+			fv.SetUint(fv.Uint() + 7)
+		case reflect.Bool:
+			fv.SetBool(!fv.Bool())
+		case reflect.Array:
+			fv.Index(0).SetUint(fv.Index(0).Uint() ^ 0xff)
 		default:
 			t.Fatalf("field %s has unhandled kind %s", p, fv.Kind())
 		}
-		changed := RenderEnrolment(b) != baseText
+		changed := render(b) != text
 		shown := strings.HasPrefix(enrolmentPromptFields[p], "shown")
 		if shown && !changed {
 			t.Errorf("%s is %q but perturbing it does not change the prompt", p, enrolmentPromptFields[p])
