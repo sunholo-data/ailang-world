@@ -7,7 +7,10 @@ package store
 // by the CLI first; the checks here are the store's own backstop.
 
 import (
+	"context"
+	"database/sql"
 	"errors"
+	"fmt"
 )
 
 // ---- M2a ----
@@ -49,3 +52,107 @@ var (
 
 // maxListedApprovers caps ListApprovers.
 const maxListedApprovers = 256
+
+// ---- M2b ----
+
+// olderForApprovers is the refusal of every approver method below version 5.
+func (c *Credentials) olderForApprovers() error {
+	return &OlderCredentialsStoreError{Path: c.display, Version: c.version, Need: approversSchemaVersion, Feature: "approvers"}
+}
+
+const approverColumns = `name, format, public_key, enrolled_at, last_used_at, revoked_at`
+
+func scanApprover(scan func(...any) error) (ApproverRow, error) {
+	var r ApproverRow
+	var lastUsed, revoked sql.NullInt64
+	if err := scan(&r.Name, &r.Format, &r.PublicKey, &r.EnrolledAt, &lastUsed, &revoked); err != nil {
+		return ApproverRow{}, err
+	}
+	r.LastUsedAt, r.RevokedAt = lastUsed.Int64, revoked.Int64
+	return r, nil
+}
+
+// EnrolApprover stores one new, active approver. It refuses a name or a key that any row holds,
+// revoked rows included; the UNIQUE constraints are the backstop and their error text is never
+// parsed.
+func (c *Credentials) EnrolApprover(ctx context.Context, row ApproverRow) error {
+	if err := requireDeadline(ctx); err != nil {
+		return err
+	}
+	if c.version < approversSchemaVersion {
+		return c.olderForApprovers()
+	}
+	if row.Name == "" {
+		return fmt.Errorf("%w: empty name", ErrBadApprover)
+	}
+	if row.Format != "ssh" {
+		return fmt.Errorf("%w: format %q is not ssh", ErrBadApprover, row.Format)
+	}
+	if len(row.PublicKey) == 0 {
+		return fmt.Errorf("%w: empty public key", ErrBadApprover)
+	}
+	if row.EnrolledAt <= 0 {
+		return fmt.Errorf("%w: enrolled_at %d is not positive", ErrBadApprover, row.EnrolledAt)
+	}
+	if row.LastUsedAt != 0 {
+		return fmt.Errorf("%w: a new approver has never been used", ErrBadApprover)
+	}
+	if row.RevokedAt != 0 {
+		return fmt.Errorf("%w: a new approver is not revoked", ErrBadApprover)
+	}
+	tx, err := c.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("store: enrol approver: begin: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	var n int
+	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM approvers WHERE name = ?`, row.Name).Scan(&n); err != nil {
+		return fmt.Errorf("store: enrol approver: %w", err)
+	}
+	if n != 0 {
+		return fmt.Errorf("%w: %q", ErrApproverNameTaken, row.Name)
+	}
+	var holder string
+	err = tx.QueryRowContext(ctx, `SELECT name FROM approvers WHERE public_key = ?`, row.PublicKey).Scan(&holder)
+	if err == nil {
+		return fmt.Errorf("%w: it is approver %q's key", ErrApproverKeyEnrolled, holder)
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("store: enrol approver: %w", err)
+	}
+	if _, err := tx.ExecContext(ctx, `INSERT INTO approvers (name, format, public_key, enrolled_at) VALUES (?, ?, ?, ?)`,
+		row.Name, row.Format, row.PublicKey, row.EnrolledAt); err != nil {
+		return fmt.Errorf("store: enrol approver: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("store: enrol approver: commit: %w", err)
+	}
+	return nil
+}
+
+// Approver reads one approver by name. ok is false when no such row exists.
+func (c *Credentials) Approver(ctx context.Context, name string) (ApproverRow, bool, error) {
+	return c.approverWhere(ctx, `name = ?`, name)
+}
+
+// ApproverByKey reads the approver whose public_key is blob, byte for byte. ok is false when none.
+func (c *Credentials) ApproverByKey(ctx context.Context, blob []byte) (ApproverRow, bool, error) {
+	return c.approverWhere(ctx, `public_key = ?`, blob)
+}
+
+func (c *Credentials) approverWhere(ctx context.Context, where string, arg any) (ApproverRow, bool, error) {
+	if err := requireDeadline(ctx); err != nil {
+		return ApproverRow{}, false, err
+	}
+	if c.version < approversSchemaVersion {
+		return ApproverRow{}, false, c.olderForApprovers()
+	}
+	row, err := scanApprover(c.db.QueryRowContext(ctx, `SELECT `+approverColumns+` FROM approvers WHERE `+where, arg).Scan)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ApproverRow{}, false, nil
+	}
+	if err != nil {
+		return ApproverRow{}, false, fmt.Errorf("store: read approver: %w", err)
+	}
+	return row, true, nil
+}

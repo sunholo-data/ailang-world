@@ -1,10 +1,12 @@
 package store
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -206,5 +208,245 @@ func TestOlderCredentialsStoreErrorText(t *testing.T) {
 		"`ailang-worldd serve` with this build once (it upgrades the store at startup), then run this again"
 	if got != approversWant {
 		t.Fatalf("approvers refusal text:\n got: %s\nwant: %s", got, approversWant)
+	}
+}
+
+// AS2: every EnrolApprover refusal returns its typed error and writes nothing.
+func TestEnrolApproverRefusals(t *testing.T) {
+	ctx := testCtx(t)
+
+	// v4: the refusal names approvers, schema 5, and the restart; the approvers table is not created.
+	v4 := filepath.Join(t.TempDir(), CredentialsFileName)
+	makeV4Credentials(t, v4, nil)
+	c4, err := OpenCredentials(v4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = c4.EnrolApprover(ctx, testApprover("mark-mac", 1000))
+	var older *OlderCredentialsStoreError
+	if !errors.As(err, &older) {
+		t.Fatalf("v4 enrol: err %v, want *OlderCredentialsStoreError", err)
+	}
+	if older.Version != 4 || older.Need != 5 || older.Feature != "approvers" {
+		t.Fatalf("v4 enrol: Version %d Need %d Feature %q; want 4, 5, approvers", older.Version, older.Need, older.Feature)
+	}
+	if !strings.Contains(err.Error(), "approvers need schema 5") || !strings.Contains(err.Error(), "restart `ailang-worldd serve`") {
+		t.Fatalf("v4 enrol text: %s", err.Error())
+	}
+	_ = c4.Close()
+	if got := userVersion(t, v4); got != 4 {
+		t.Fatalf("user_version after the refused enrol = %d, want 4", got)
+	}
+	var tables int
+	if err := rawDB(t, v4).QueryRow(`SELECT count(*) FROM sqlite_master WHERE name = 'approvers'`).Scan(&tables); err != nil {
+		t.Fatal(err)
+	}
+	if tables != 0 {
+		t.Fatalf("a refused enrol created the approvers table (%d objects named approvers)", tables)
+	}
+
+	// Bad rows on a fresh (version 5) store: each refusal is ErrBadApprover and writes nothing.
+	c := openTestCredentials(t)
+	bad := []struct {
+		name string
+		row  ApproverRow
+	}{
+		{"empty name", ApproverRow{Name: "", Format: "ssh", PublicKey: []byte("key-"), EnrolledAt: 1000}},
+		{"format gpg", ApproverRow{Name: "bad", Format: "gpg", PublicKey: []byte("key-bad"), EnrolledAt: 1000}},
+		{"nil key", ApproverRow{Name: "bad", Format: "ssh", PublicKey: nil, EnrolledAt: 1000}},
+		{"enrolled 0", ApproverRow{Name: "bad", Format: "ssh", PublicKey: []byte("key-bad"), EnrolledAt: 0}},
+		{"enrolled -1", ApproverRow{Name: "bad", Format: "ssh", PublicKey: []byte("key-bad"), EnrolledAt: -1}},
+		{"last used set", ApproverRow{Name: "bad", Format: "ssh", PublicKey: []byte("key-bad"), EnrolledAt: 1000, LastUsedAt: 1500}},
+		{"revoked set", ApproverRow{Name: "bad", Format: "ssh", PublicKey: []byte("key-bad"), EnrolledAt: 1000, RevokedAt: 1500}},
+	}
+	for _, tc := range bad {
+		before := approverCount(t, c)
+		if err := c.EnrolApprover(ctx, tc.row); !errors.Is(err, ErrBadApprover) {
+			t.Fatalf("%s: err %v, want ErrBadApprover", tc.name, err)
+		}
+		if after := approverCount(t, c); after != before {
+			t.Fatalf("%s: rows %d -> %d, want no write", tc.name, before, after)
+		}
+	}
+
+	// Good: one row.
+	if err := c.EnrolApprover(ctx, testApprover("mark-mac", 1000)); err != nil {
+		t.Fatalf("good enrol: %v", err)
+	}
+	if got := approverCount(t, c); got != 1 {
+		t.Fatalf("after the good enrol: %d rows, want 1", got)
+	}
+
+	// Name taken, and key enrolled: typed, one row still.
+	nameTaken := ApproverRow{Name: "mark-mac", Format: "ssh", PublicKey: []byte("key-other"), EnrolledAt: 1100}
+	keyTaken := ApproverRow{Name: "other", Format: "ssh", PublicKey: []byte("key-mark-mac"), EnrolledAt: 1100}
+	checkRefusals := func(when string) {
+		t.Helper()
+		if err := c.EnrolApprover(ctx, nameTaken); !errors.Is(err, ErrApproverNameTaken) {
+			t.Fatalf("%s: name taken: err %v, want ErrApproverNameTaken", when, err)
+		}
+		err := c.EnrolApprover(ctx, keyTaken)
+		if !errors.Is(err, ErrApproverKeyEnrolled) {
+			t.Fatalf("%s: key enrolled: err %v, want ErrApproverKeyEnrolled", when, err)
+		}
+		if !strings.Contains(err.Error(), `"mark-mac"`) {
+			t.Fatalf("%s: key enrolled text %q does not name the holder", when, err.Error())
+		}
+		if got := approverCount(t, c); got != 1 {
+			t.Fatalf("%s: %d rows after the refusals, want 1", when, got)
+		}
+	}
+	checkRefusals("active")
+
+	// After a revoke the same two refusals still hold: names and keys are never reused.
+	if _, err := c.db.Exec(`UPDATE approvers SET revoked_at = 1200 WHERE name = 'mark-mac'`); err != nil {
+		t.Fatal(err)
+	}
+	checkRefusals("revoked")
+
+	// Control: a new name and key enrol.
+	if err := c.EnrolApprover(ctx, testApprover("third", 1300)); err != nil {
+		t.Fatalf("control enrol: %v", err)
+	}
+	if got := approverCount(t, c); got != 2 {
+		t.Fatalf("after the control enrol: %d rows, want 2", got)
+	}
+}
+
+// AS3: the two lookups return the enrolled row exactly, and miss without an error.
+func TestApproverLookups(t *testing.T) {
+	ctx := testCtx(t)
+	c := openTestCredentials(t)
+	if err := c.EnrolApprover(ctx, testApprover("a", 1000)); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.EnrolApprover(ctx, testApprover("b", 1100)); err != nil {
+		t.Fatal(err)
+	}
+
+	row, ok, err := c.Approver(ctx, "a")
+	if err != nil || !ok {
+		t.Fatalf("Approver(a): ok %v err %v", ok, err)
+	}
+	if want := (ApproverRow{Name: "a", Format: "ssh", PublicKey: []byte("key-a"), EnrolledAt: 1000}); !reflect.DeepEqual(row, want) {
+		t.Fatalf("Approver(a) = %+v, want %+v", row, want)
+	}
+	byKey, ok, err := c.ApproverByKey(ctx, []byte("key-b"))
+	if err != nil || !ok || byKey.Name != "b" || byKey.EnrolledAt != 1100 {
+		t.Fatalf("ApproverByKey(key-b) = %+v ok %v err %v; want approver b", byKey, ok, err)
+	}
+	if row, ok, err := c.Approver(ctx, "zzz"); err != nil || ok || !reflect.DeepEqual(row, ApproverRow{}) {
+		t.Fatalf("Approver(zzz) = %+v ok %v err %v; want zero, false, nil", row, ok, err)
+	}
+	if _, ok, err := c.ApproverByKey(ctx, []byte("key-")); err != nil || ok {
+		t.Fatalf("ApproverByKey(prefix of both keys): ok %v err %v; want false, nil", ok, err)
+	}
+	if _, ok, err := c.ApproverByKey(ctx, []byte("key-a\x00")); err != nil || ok {
+		t.Fatalf("ApproverByKey(key-a + NUL): ok %v err %v; want false, nil", ok, err)
+	}
+
+	// A version 4 store refuses both lookups with the approvers refusal.
+	v4 := filepath.Join(t.TempDir(), CredentialsFileName)
+	makeV4Credentials(t, v4, nil)
+	c4, err := OpenCredentials(v4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = c4.Close() }()
+	if _, _, err := c4.Approver(ctx, "a"); !isOlderApprovers(err) {
+		t.Fatalf("v4 Approver: err %v, want the approvers refusal", err)
+	}
+	if _, _, err := c4.ApproverByKey(ctx, []byte("key-a")); !isOlderApprovers(err) {
+		t.Fatalf("v4 ApproverByKey: err %v, want the approvers refusal", err)
+	}
+}
+
+// isOlderApprovers reports whether err is the approvers refusal (Need 5).
+func isOlderApprovers(err error) bool {
+	var oe *OlderCredentialsStoreError
+	return errors.As(err, &oe) && oe.Need == 5 && oe.Feature == "approvers"
+}
+
+// approverRowColumns maps every ApproverRow field to its approvers column.
+var approverRowColumns = map[string]string{
+	"Name": "name", "Format": "format", "PublicKey": "public_key",
+	"EnrolledAt": "enrolled_at", "LastUsedAt": "last_used_at", "RevokedAt": "revoked_at",
+}
+
+// RC2: the struct, the table and the scanned rows agree field for field (a swapped or dropped
+// column is caught by value, not only by name).
+func TestApproverRowMatchesTheTable(t *testing.T) {
+	ctx := testCtx(t)
+	c := openTestCredentials(t)
+
+	// (1) The struct's field names are the map's keys.
+	typ := reflect.TypeOf(ApproverRow{})
+	var fields []string
+	for i := 0; i < typ.NumField(); i++ {
+		fields = append(fields, typ.Field(i).Name)
+	}
+	var keys []string
+	for k := range approverRowColumns {
+		keys = append(keys, k)
+	}
+	sort.Strings(fields)
+	sort.Strings(keys)
+	if !reflect.DeepEqual(fields, keys) {
+		t.Fatalf("ApproverRow fields %v, map keys %v", fields, keys)
+	}
+
+	// (2) The table's column names are the map's values.
+	rows, err := c.db.Query(`PRAGMA table_info(approvers)`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cols []string
+	for rows.Next() {
+		var cid, notnull, pk int
+		var name, ctype string
+		var dflt sql.NullString
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err != nil {
+			t.Fatal(err)
+		}
+		cols = append(cols, name)
+	}
+	_ = rows.Close()
+	var want []string
+	for _, v := range approverRowColumns {
+		want = append(want, v)
+	}
+	sort.Strings(cols)
+	sort.Strings(want)
+	if !reflect.DeepEqual(cols, want) {
+		t.Fatalf("approvers columns %v, want %v", cols, want)
+	}
+
+	// (3) Every field of a fully populated row reads back, field by field.
+	if err := c.EnrolApprover(ctx, ApproverRow{Name: "rc2", Format: "ssh", PublicKey: []byte("rc2-key"), EnrolledAt: 1000}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.db.Exec(`UPDATE approvers SET last_used_at = 1500, revoked_at = 1700 WHERE name = 'rc2'`); err != nil {
+		t.Fatal(err)
+	}
+	wantRow := ApproverRow{Name: "rc2", Format: "ssh", PublicKey: []byte("rc2-key"), EnrolledAt: 1000, LastUsedAt: 1500, RevokedAt: 1700}
+	byName, ok, err := c.Approver(ctx, "rc2")
+	if err != nil || !ok {
+		t.Fatalf("Approver(rc2): ok %v err %v", ok, err)
+	}
+	byKey, ok, err := c.ApproverByKey(ctx, []byte("rc2-key"))
+	if err != nil || !ok {
+		t.Fatalf("ApproverByKey(rc2-key): ok %v err %v", ok, err)
+	}
+	for _, got := range []ApproverRow{byName, byKey} {
+		gv, wv := reflect.ValueOf(got), reflect.ValueOf(wantRow)
+		for i := 0; i < typ.NumField(); i++ {
+			name := typ.Field(i).Name
+			if gv.Field(i).IsZero() {
+				t.Fatalf("field %s reads as zero", name)
+			}
+			if !reflect.DeepEqual(gv.Field(i).Interface(), wv.Field(i).Interface()) {
+				t.Fatalf("field %s = %v, want %v", name, gv.Field(i).Interface(), wv.Field(i).Interface())
+			}
+		}
 	}
 }

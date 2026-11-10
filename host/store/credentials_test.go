@@ -271,6 +271,9 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	_, _, errs["MintRequest"] = c.MintRequest(ctx, "mr-0000000000000001")
 	_, errs["PendingMintRequests"] = c.PendingMintRequests(ctx, 1000, 0)
 	errs["MintSessionForRequest"] = c.MintSessionForRequest(ctx, row, okConsume(testMintRequestRow(1, 1000), 1010, new(int), new(int)))
+	errs["EnrolApprover"] = c.EnrolApprover(ctx, ApproverRow{Name: "x", Format: "ssh", PublicKey: []byte("k"), EnrolledAt: 1000})
+	_, _, errs["Approver"] = c.Approver(ctx, "x")
+	_, _, errs["ApproverByKey"] = c.ApproverByKey(ctx, []byte("k"))
 	for name, err := range errs {
 		if !errors.Is(err, ErrNoDeadline) {
 			t.Errorf("%s(Background) = %v, want ErrNoDeadline", name, err)
