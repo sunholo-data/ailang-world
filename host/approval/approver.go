@@ -1,0 +1,86 @@
+package approval
+
+// Row 201 A1b (design_docs/planned/w-world-approvals-by-key-a1b.md §2.2): the pure enrolment
+// law. An approver is a name and one SSH public key, enrolled at the daemon's terminal (a typed
+// y); its signature may later approve a mint request (sprint 2). No I/O here (coding standard S2).
+
+import (
+	"bytes"
+	"errors"
+	"regexp"
+)
+
+const (
+	// FormatSSH is the only approver format A1b enrols.
+	FormatSSH = "ssh"
+	// FormatWebAuthn is named so it can be refused with a message naming row 201 A2.
+	FormatWebAuthn = "webauthn"
+	// MaxKeyFileBytes caps a --pubkey file (one authorized_keys line).
+	MaxKeyFileBytes = 8 << 10
+)
+
+// ApproverNamePattern is an approver's name: lowercase, digits, '.', '_' and '-', 1 to 48
+// characters, starting with a letter or digit. It is printed on prompts and stored as ssh:<name>.
+var ApproverNamePattern = regexp.MustCompile(`^[a-z0-9][a-z0-9._-]{0,47}$`)
+
+// Approver is one enrolled approver as the pure law sees it.
+type Approver struct {
+	Name       string
+	Format     string       // FormatSSH
+	Key        SSHPublicKey // Type + wire Blob
+	EnrolledAt int64
+	LastUsedAt int64 // 0: never used
+	RevokedAt  int64 // 0: active
+}
+
+var (
+	ErrApproverName        = errors.New("approval: approver name must match ^[a-z0-9][a-z0-9._-]{0,47}$")
+	ErrFormatNotYet        = errors.New("approval: webauthn approvers arrive with row 201 A2; A1b enrols ssh keys only")
+	ErrApproverFormat      = errors.New("approval: approver format must be ssh")
+	ErrApproverKeyFile     = errors.New("approval: the public key file must hold exactly one key line of at most 8 KiB")
+	ErrPrivateKeyFile      = errors.New("approval: that is a PRIVATE key file; pass the .pub file (its contents were not shown or kept)")
+	ErrApproverRevoked     = errors.New("approval: the approver is revoked")
+	ErrApproverClockBehind = errors.New("approval: the clock is behind the approver's enrolment time")
+)
+
+// NewApprover is the enrolment law: it parses one public key line into an Approver, or refuses.
+// The checks run in a fixed order (E1-E7); the first that fails is returned.
+func NewApprover(name, format string, keyFile []byte, now int64) (Approver, error) {
+	if !ApproverNamePattern.MatchString(name) { // E1
+		return Approver{}, ErrApproverName
+	}
+	if format == FormatWebAuthn { // E2 (before E3, so webauthn names A2)
+		return Approver{}, ErrFormatNotYet
+	}
+	if format != FormatSSH { // E3
+		return Approver{}, ErrApproverFormat
+	}
+	if len(keyFile) == 0 || len(keyFile) > MaxKeyFileBytes { // E4
+		return Approver{}, ErrApproverKeyFile
+	}
+	if bytes.HasPrefix(bytes.TrimLeft(keyFile, " \t\r\n"), []byte("-----BEGIN")) { // E5: never echoed
+		return Approver{}, ErrPrivateKeyFile
+	}
+	line := bytes.TrimSuffix(keyFile, []byte("\n"))
+	if bytes.ContainsAny(line, "\n") { // E6
+		return Approver{}, ErrApproverKeyFile
+	}
+	key, err := ParseAuthorizedKey(line)
+	if err != nil { // E7: ErrKeyType (sk-*, rsa, p384), ErrAuthorizedKey, ErrBase64
+		return Approver{}, err
+	}
+	return Approver{Name: name, Format: FormatSSH, Key: key, EnrolledAt: now}, nil
+}
+
+// CheckRevoke is the revocation law, run before the y/N (the store re-checks it in SQL).
+func CheckRevoke(a Approver, now int64) error {
+	if a.RevokedAt != 0 { // R1
+		return ErrApproverRevoked
+	}
+	if now < a.EnrolledAt { // R2
+		return ErrApproverClockBehind
+	}
+	return nil
+}
+
+// ---- M1c ----
