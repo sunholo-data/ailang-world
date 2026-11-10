@@ -1936,3 +1936,116 @@ lanes degraded: ; `designer`: **anthropic** lane `claude-opus-5-5` unusable (pro
 - The planner's pre-registered size gate worked as designed: the sprint stopped at a clean boundary, with no judgement call needed.
 
 **Next:** row 201 A1b sprint 3, from the sprint-2 plan's Appendix B with no re-design. Start with M4a/M4b (their code and tests are final in §2.5/§2.8). Then the consume binding and authority together with M5's `approve --signature`/`--write-message`/`--list --decided` (P6: they cannot land apart), plus the revoke session listing (K8/K9). Carry the judge's F-CREDS/AS-CREDFOR/F-DB test gap. M6 (`--sign-with`, the CI step) follows, then row 243.
+
+## 377 — 2026-11-10 — row 201 A1b sprint 3 built: the signature law, the consume bound to the challenge with the approver re-checked in the transaction, and `approve --signature`/`--write-message`; judge PASS 92 [PRODUCT]
+
+**Pick:** row 201 `w-world-approvals-by-key`, A1b sprint 3, the route iteration 376 named: the sprint-2 plan's Appendix B, with no re-design. D-WORLD-109 = A applies: fakes, temp stores and test keys only, with no real key, store, mint or publish.
+- **Re-measured at pick** (`origin/dev` `545fdaae`):
+  - No open PR from this account.
+  - No `--signature`, `--sign-with` or `--write-message` in `cmd/ailang-worldd/*.go` outside tests.
+  - No sprint-3 worktree.
+  - `mc_quorum_gate2 w-world-approvals-by-key-a1b` rc 0, with 2 artifacts, so no pick-time quorum was owed.
+- **Ledger:** valid (100 rows). OPEN: D-WORLD-105 only.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows are not routable:
+  - Row 150's attended A1: 0 subjects since 2026-11-07 matching `row ?150|A1\b` (control `A1b`: 14 of 101).
+  - Row 151's row-188 N2d/N4a: 0 since 2026-10-01 (control N2c: 1).
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
+- Directives: 0 allowlisted on #524. All 9 comments were read, because the issue-scoped watermark is absent.
+- Self-notices: rc 2, an instrument failure and not a verdict. Neither `mission-524-last-seen` nor `-449-last-seen` exists, the same as 371–376.
+- The `mission-world` inbox has 0 unread.
+- Skill drift: none. All 14 files at the resolved symlink target match the driver clone's `origin/dev`, and World has no CWD-relative copy.
+- Dev at `545fdaae`: CI success, `checks=3`.
+
+**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`. Planner was Agent `opus`: 50.1 min, 526,305 tok. Committed `527148e1`.
+- **Form:** each sub-milestone is a compiled unified diff in Appendix P, applied with `patch -p1 --dry-run` and then `patch -p1`, so the executor transcribes no code. This answers iteration 376's retro, where prose tests let the gap sit in unlisted flags. The planner pulled the patches back out of the plan file and applied them to a fresh export: 53 of 53 checks rc 0.
+- **The cut:**
+  - Committed part: M4a, M4b, G1, M4c1 (atomic), M4c2, M4d1, M4d2, M4e = 1,314 lines, measured from the patches.
+  - Gated tail: M5a, M5b, M5c (+596), run only if the numstat after M4e is ≤ 1,404.
+  - Appendix C (sprint 4+): `--list --decided`/`DecidedMintRequests`, K8/K9 (revoke listing), `--sign-with` and M6.
+- **Mutants:** 102 planned, all 102 run in scratch and killed; 8 named equivalents are not counted.
+- **Premises found false at HEAD:**
+  - **P2:** Appendix B's estimate was low.
+  - **P3:** design §2.7 asks for both "lookup on the same read-only handle" and "admission before the signature". Both cannot hold, because the handle closes at `approve.go:153`, before admission at `:163`. The plan admits first, then opens a second read-only handle under the same 3 s root, adding no new context root.
+  - **P4:** the revoked text carries no time.
+  - **P5:** only `mint_request_test.go:56` passes `ApprovedBy: "tty"`.
+  - **P7:** approve's `--credentials-db` mutant was already killed; the real approve gap was the default `--db` (A-DB).
+  - **P8:** A1 ignored a caller-set `Approver`, so it was extended.
+  - **P9:** the challenge column checks only length 64, so a non-hex value could be stored; F4 is therefore needed.
+- **Baseline at `545fdaae`:** build, vet, the compile fence, the four package suites, roots and allowlist all rc 0.
+
+**Executor:** env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku` (the 372–376 precedent). Three spawns and one resume, with no git writes.
+- **Run 1, M4a (0.6 min):** stopped correctly on a numstat mismatch. **That was the controller's directive defect:** `git diff --numstat` cannot see untracked files. The executor proved this with `--no-index` (94 + 127 = 221). From then on the controller measured after each commit.
+- **Resume, M4b + G1 + M4c1 (1.7 min).** **Run 3, M4c2–M4e (3.7 min).** **Run 4, M5a–M5c (1.7 min).**
+- Every dry-run applied with no fuzz and no `.orig`/`.rej`. Every acceptance command was rc 0, and no `-v` run showed a SKIP.
+- The controller rebuilt each sub-milestone from its cumulative snapshot with `commit_ms.sh` (gofmt, build, vet and tests are refused on red), one commit each: M4a `9cab8e47`, M4b `0b4bba8b`, G1 `87d25cbc`, M4c1 `dc5eb975`, M4c2 `811c393d`, M4d1 `47efb869`, M4d2 `fc37e051`, M4e `b010e8b1`, M5a `bb5d5c3b`, M5b `1db437c1`, M5c `9f014e0d`.
+- **The numstat after every commit equals the plan's §7 value exactly:** 221 / 323 / 511 / 602 / 815 / 993 / 1,125 / **1,314 (size gate ≤ 1,404: PASS)** / 1,577 / 1,752 / **1,910**.
+
+**Controller gates** at `9f014e0d`, sequenced BEFORE the judge per iteration 376's lesson (`verification/world-iter377/controller-gates.md`). All rc 0:
+- `verify_ail.sh`;
+- gofmt;
+- build+vet;
+- the `_test` compile fence;
+- the touched packages;
+- roots (unedited) and allowlist;
+- `-race` on the touched host packages, plus the new CLI tests ×3;
+- a no-SKIP `-v` run;
+- `VERIFY_GO_LEGS=plain verify_go.sh` (full `go test ./...`, 502 s);
+- clean status.
+
+The two `DATA RACE` warnings inside `verify_go` are its race-detector known-positive control (exit 66 expected), not a finding. The single, unconcurrent sweep gave no false reds this time.
+
+**Judge:** sonnet via the Agent tool, on its own worktree at `9f014e0d` (generator ≠ judge). **PASS 92/100, zero blocking.**
+- **Sub-scores:** correctness 28/30, tests 26/30, security 19/20, standards 9/10, scope 10/10.
+- **Mutants:** about 79 run. 9 were derived from the diff rather than §4: P6-DIGEST, APPROVEDBY-SEP, A4-CHAL, A4-EXP, SIG-FORMAT, SIG-NOW, MSG-ORDER, TTY-AUTHORITY and C8-AT. 77 were killed and 2 survived.
+- **Judge's own instrument trap:** its first pass "killed everything" because macOS has no `timeout`, so nothing had run. Its control mutant passed and exposed this, and it re-ran everything. Three mutants did not compile and two were mis-anchored onto sprint 2's SQL; all five were rewritten and killed.
+- **Survivors (non-exploitable test gaps):**
+  - **SIG-NOW:** `approve_sig.go:53` `Now: now` → `row.CreatedAt` would wrongly refuse a key enrolled between request creation and approval.
+  - **SIG-FORMAT:** `Format: enrolled.Format` → `FormatSSH`; the store's C11 still refuses a non-ssh row.
+  - **A4-EXP** is loosely paired: the package suite kills it, but its one named test does not.
+- **Security properties confirmed:**
+  - A signature cannot approve another request: digest, challenge and expiry are bound in P6, in `Binds`, in authority A4 and in the store's `challenge = ?`.
+  - A revoked, replaced or unknown key cannot approve: P4 runs before the crypto, C8–C12 re-check inside the transaction, and the revoke race refuses with the request still pending.
+  - Nothing writes on a refusal.
+  - `--write-message` is O_EXCL and writes no row.
+  - `approved_by` cannot be forged: authority derives it, and A1 refuses a caller-set value.
+  - The typed `y` path is unchanged.
+  - G1 closes F-CREDS, AS-CREDFOR, F-DB and A-DB.
+- **Controller reproduced** SIG-NOW: it survives `TestApprove*`, while its control (`ExpiresAt` → `row.CreatedAt` on the same line) is killed. Logged and not filed (D-WORLD-109), and carried to sprint 4.
+
+**Gate 3b:** PR #541, head `9f014e0d`.
+- `pull_request` run 42832736755: 3/3 success (ailang-code verify gate, go host build + test gate, go race gate).
+- The auto-close keyword scan read 0 (control 1).
+- Merged by merge commit **`f0ce26f7`** (`--match-head-commit`).
+- Push checks on the merge `f0ce26f7`: 3/3 success (all three jobs, the same set).
+- Row 201 A1b sprint 3 LANDED. Row 201 stays open: sprint 4 is Appendix C (`--list --decided`, K8/K9), then `--sign-with`/M6, then A2–A4.
+
+**Routing evidence:** base=545fdaaecf6f23dd58072675964754ad716049f9@2026-11-10T12:49:45Z.
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (no re-design). Quorum: not run (the doc is reviewed).
+- Planner: `opus` via Agent (526,305 tok).
+- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (34,027 + 46,598 + 144,994 + 46,724 tok).
+- Evaluator: `sonnet` via Agent (89,520 tok).
+- The driver noted codex unusable at preflight (probe rc 75, quota unreadable).
+- Metered total: $0.00. Details in `verification/world-iter377/routing.md`.
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. This sprint makes approval by key real end to end against test keys. An operator can write the exact message (`approve --write-message`), sign it out of band with `ssh-keygen -Y sign`, and approve with `approve --signature`. The store records `approved_by=ssh:<name>` only if the enrolled, unrevoked key signed this request's digest, challenge and expiry. A terminal is no longer the only way to approve a mint. Mark's attended exit run (QUICKSTART §15) is still pending.
+
+**Ruled out:**
+- Treating Run 1's numstat stop as an executor fault: the directive measured untracked files with a tool that cannot see them.
+- Treating `verify_go`'s `DATA RACE` lines as a finding: they are the known-positive race control.
+- Closing SIG-NOW/SIG-FORMAT in this sprint: production is correct and the gaps are non-exploitable, so they go to sprint 4.
+- Running Appendix C items: they are outside the plan's committed scope, and the size is spent (1,910 of 2,000).
+
+**Retro:**
+- **Patches beat prose for a small executor.** The planner compiled the code, shipped it as unified diffs, and pre-registered the numstat after every step. Execution then took 8 minutes of executor time across 11 sub-milestones with zero deviations, and every step was mechanically checkable. The cost moved to the planner (50 min), which is the right place for it.
+- **My directive defect:** I told the executor to check numstat on an uncommitted tree. Measure numstat only after commit, or include untracked files explicitly.
+- **Sequencing the sweep before the judge worked:** one sweep, no false reds (iteration 376 needed two).
+- The judge's `timeout`-less harness reading "all killed" was caught by its own control mutant. Every mutation harness needs a control that must survive or must die, run first.
+
+**Next:** row 201 A1b sprint 4, from the sprint-3 plan's Appendix C with no re-design.
+- `DecidedMintRequests` and `approve --list --decided`.
+- The revoke session listing K8/K9 (`runApproverRevoke|Background: 3`).
+- Carry the judge's SIG-NOW and SIG-FORMAT test gaps, and pair A4-EXP's named test.
+- Then `--sign-with`/M6 (the CI step) as their own sprint, then row 243.

@@ -1,0 +1,8 @@
+── race-detector known-positive control
+go version go1.26.6 darwin/arm64
+==================
+WARNING: DATA RACE
+Read at 0x00c00019c048 by goroutine 8:
+
+Previous write at 0x00c00019c048 by goroutine 9:
+

@@ -1,0 +1,27 @@
+HEAD 9f014e0db944fbf335b5d5d11b8afa4f73064d5d
+AILANG v0.41.0
+=== verify_ail
+=== rc=0 (67s)
+=== gofmt
+=== rc=0 (0s)
+=== build_vet
+=== rc=0 (4s)
+=== compile_fence
+=== rc=0 (3s)
+=== touched
+=== rc=0 (164s)
+=== roots
+=== rc=0 (1s)
+=== allowlist
+=== rc=0 (2s)
+=== race_pkgs
+=== rc=0 (34s)
+=== race_cmd
+=== rc=0 (20s)
+=== noskip
+=== rc=0 (6s)
+=== verify_go_plain
+=== rc=0 (502s)
+=== status
+=== rc=0 (1s)
+ALL GATES DONE for 9f014e0d
