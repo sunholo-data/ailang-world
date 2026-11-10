@@ -1,8 +1,10 @@
 package approval
 
 import (
+	"bytes"
 	"errors"
-
+	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -122,6 +124,88 @@ func TestSignedApprovalBinds(t *testing.T) {
 		var be *BindingError
 		if !errors.As(a.err, &be) || be.Field != a.field {
 			t.Errorf("Binds with %s changed = %v, want a *BindingError naming %s", a.field, a.err, a.field)
+		}
+	}
+}
+
+// ---- M4b ----
+
+// SA3: the accessors fail closed on an unverified value, and Use hands out copies of the key.
+func TestSignedApprovalAccessorsFailClosed(t *testing.T) {
+	var nilApproval *SignedApproval
+	for name, u := range map[string]*SignedApproval{"zero": {}, "nil": nilApproval} {
+		if got := u.ApprovedBy(); got != "" {
+			t.Errorf("%s.ApprovedBy() = %q, want \"\"", name, got)
+		}
+		if n, f, k, ok := u.Use(); ok || n != "" || f != "" || k != nil {
+			t.Errorf("%s.Use() = (%q, %q, %x, %v), want zero values and false", name, n, f, k, ok)
+		}
+	}
+	in := sigInput(t)
+	s, err := ApproveBySignature(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := s.ApprovedBy(); got != "ssh:mark-mac" {
+		t.Errorf("ApprovedBy() = %q, want ssh:mark-mac", got)
+	}
+	want := bytes.Clone(in.Approver.Key.Blob)
+	n, f, k, ok := s.Use()
+	if !ok || n != "mark-mac" || f != FormatSSH || !bytes.Equal(k, want) {
+		t.Fatalf("Use() = (%q, %q, %x, %v), want (mark-mac, ssh, the ed25519 blob, true)", n, f, k, ok)
+	}
+	k[0] ^= 0xff                    // the caller's copy
+	in.Approver.Key.Blob[1] ^= 0xff // the input ApproveBySignature read
+	if _, _, k2, _ := s.Use(); !bytes.Equal(k2, want) {
+		t.Fatalf("Use() after editing a returned key and the input key = %x, want %x (copies)", k2, want)
+	}
+}
+
+// signedApprovalFields is the disposition of every SignedApproval field: what reads it.
+var signedApprovalFields = map[string]string{
+	"ok":        "B1/B5/B6: an unverified value binds nothing and has no approver",
+	"digest":    "B2: Binds",
+	"challenge": "B3: Binds",
+	"expiry":    "B4: Binds",
+	"name":      "ApprovedBy and Use",
+	"format":    "ApprovedBy and Use",
+	"key":       "Use",
+}
+
+// RC1: every SignedApproval field has a disposition, and changing any one of them in a verified
+// value changes what Binds, ApprovedBy or Use report.
+func TestSignedApprovalFieldsAreAllBound(t *testing.T) {
+	typ := reflect.TypeOf(SignedApproval{})
+	for i := 0; i < typ.NumField(); i++ {
+		if _, ok := signedApprovalFields[typ.Field(i).Name]; !ok {
+			t.Errorf("SignedApproval.%s has no disposition in signedApprovalFields", typ.Field(i).Name)
+		}
+	}
+	if typ.NumField() != len(signedApprovalFields) {
+		t.Fatalf("SignedApproval has %d fields, signedApprovalFields %d", typ.NumField(), len(signedApprovalFields))
+	}
+	perturb := map[string]func(*SignedApproval){
+		"ok":        func(s *SignedApproval) { s.ok = false },
+		"digest":    func(s *SignedApproval) { s.digest[0] ^= 1 },
+		"challenge": func(s *SignedApproval) { s.challenge[0] ^= 1 },
+		"expiry":    func(s *SignedApproval) { s.expiry++ },
+		"name":      func(s *SignedApproval) { s.name += "x" },
+		"format":    func(s *SignedApproval) { s.format += "x" },
+		"key":       func(s *SignedApproval) { s.key = bytes.Clone(s.key); s.key[0] ^= 0xff },
+	}
+	if len(perturb) != len(signedApprovalFields) {
+		t.Fatalf("%d perturbations for %d fields", len(perturb), len(signedApprovalFields))
+	}
+	observe := func(s *SignedApproval) string {
+		n, f, k, ok := s.Use()
+		return fmt.Sprintf("%v|%s|%s|%s|%x|%v", s.Binds(fixtureDigest(t), fixtureChallenge(), fixtureExpiry), s.ApprovedBy(), n, f, k, ok)
+	}
+	base := observe(verifiedApproval(t))
+	for field, p := range perturb {
+		s := verifiedApproval(t)
+		p(s)
+		if observe(s) == base {
+			t.Errorf("changing %s changed nothing Binds, ApprovedBy or Use report", field)
 		}
 	}
 }

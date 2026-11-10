@@ -92,3 +92,21 @@ func (s *SignedApproval) Binds(digest, challenge [32]byte, expiry int64) error {
 	}
 	return nil
 }
+
+// ---- M4b ----
+
+// ApprovedBy is the approved_by value, format ":" name ("ssh:mark-mac"); "" unless verified.
+func (s *SignedApproval) ApprovedBy() string {
+	if s == nil || !s.ok { // B5
+		return ""
+	}
+	return s.format + ":" + s.name
+}
+
+// Use is what the consume binds in SQL: the approver's name, format and key (a copy).
+func (s *SignedApproval) Use() (name, format string, key []byte, ok bool) {
+	if s == nil || !s.ok { // B6
+		return "", "", nil, false
+	}
+	return s.name, s.format, bytes.Clone(s.key), true
+}
