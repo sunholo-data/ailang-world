@@ -2049,3 +2049,128 @@ The two `DATA RACE` warnings inside `verify_go` are its race-detector known-posi
 - The revoke session listing K8/K9 (`runApproverRevoke|Background: 3`).
 - Carry the judge's SIG-NOW and SIG-FORMAT test gaps, and pair A4-EXP's named test.
 - Then `--sign-with`/M6 (the CI step) as their own sprint, then row 243.
+
+## 378 — 2026-11-10 — row 201 A1b sprint 4 built: the decided list, the revoke listing, and `approve --sign-with` with its real-tool tests, the signer moved to a scrubbed `host/sshsign` after the sweep caught an AC10 red; judge PASS 93 [PRODUCT]
+
+**Pick:** row 201 `w-world-approvals-by-key`, A1b sprint 4, the route iteration 377 named: the sprint-3 plan's Appendix C, with no re-design. D-WORLD-109 = A applies: fakes, temp stores and test keys only.
+- **Re-measured at pick** (`origin/dev` `1fce6999`):
+  - No open PR from this account.
+  - No `DecidedMintRequests` or `--decided` anywhere in `cmd/`/`host/` Go source. The only `"decided"` hits were broker status strings.
+  - No sprint-4 worktree.
+  - `mc_quorum_gate2 w-world-approvals-by-key-a1b` rc 0, so no pick-time quorum was owed.
+- **Ledger:** valid (100 rows). OPEN: D-WORLD-105 only.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows are not routable:
+  - Row 150's attended A1: 0 subjects since 2026-11-07 matching `row ?150|A1\b` (control `A1b`: 16).
+  - Row 151's row-188 N2d/N4a: 0 since 2026-10-01 (control N2c: 1).
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
+- Directives: 0 allowlisted on #524, out of 10 comments. The watermark is absent, so all comments were read.
+- Self-notices: rc 2, an instrument failure and not a verdict. No `-last-seen` file exists for 524 or 449, the same as 371–377. A hand read of #524 found no `FAILED to complete` notice.
+- The `mission-world` inbox has 0 unread.
+- Skill drift: none. SKILL.md and all 13 resource files at the resolved symlink target match the driver clone's `origin/dev`.
+- Dev at `1fce6999`: `checks=3`, all success. Local dev was 15 behind and was fast-forwarded (only untracked dirs in the tree).
+
+**Plan:** Agent `opus` (`fail-closed:env-pin`), 38 min, 397,156 tok. Committed `d3a3ffca`. Same form as iteration 377: every sub-milestone is a compiled unified diff in Appendix P, with an expected numstat measured after each commit.
+- **Committed part:** T1 (the sprint-3 judge gaps SIG-NOW, SIG-FORMAT and A4-EXP, tests only), D1 (`DecidedMintRequests`), D2 (`approve --list --decided`), D3 (K8/K9) = 359 lines.
+- **Gated tail:** S1–S3, the `--sign-with` seam, fake-signer tests and the production signer with XS1/XS2, the CI step and QUICKSTART. The gate was ≤ 1,463 after D3; it measured 359.
+- **Mutants:** 68 run in scratch; 66 killed, 2 named equivalents.
+- **Premises found false at HEAD:**
+  - **P2:** `DecidedMintRequests(ctx, limit)` cannot serve K8, so it became `(ctx, approvedBy, limit)`.
+  - **P4:** the signer's root pin moved to `approve_sig.go`.
+  - **P6:** the CI step timeout went from 3 to 8 min.
+  - **P8:** `TestApproverRevoke/yes` gains the K9 line.
+  - **Item 4:** the revoke SQL's `revoked_at IS NULL` was already killed at base by `TestRevokeApprover`.
+
+**Executor:** env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`. Five runs: T1+D1, D2+D3, S1+S2, S3, S4. No hand edits. The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`:
+- T1 `f267e1b8` → 33
+- D1 `387e3b07` → 181
+- D2 `1bfe8c88` → 278
+- D3 `e9d70925` → 359 (size gate PASS)
+- S1 `969626c4` → 461
+- S2 `4b5f9761` → 615
+- S3 `784c9413` → 909
+- S4 `5e85f8bb` → **1,014**
+
+Every value equals the plan's value, except S3's (896), for the correction below.
+- **Executor finding, adjudicated by measurement (rule 3h):**
+  - **The gap:** §3 names `TestCappedBufferKeepsItsBound`, but the S3 patch did not contain it. Its `-run` regex matched nothing and still exited 0.
+  - **The check:** the controller compared all 17 sprint files with the planner's scratch tree. 16 were byte-identical; the 17th differed only by that 13-line function.
+  - **The fix:** the function was copied from the planner's tree, not rewritten. MUT-CAP-WRITE was re-run against it (killed), and the source was restored byte-identical. Recorded as plan §7.1 (`3a6135c2`).
+- **Run-5 slip:** the executor disclosed running `git add -N -n`, a dry run. The controller checked the index: `git diff --cached` was empty.
+
+**Controller gates:** plan §6 in one bash shell, run BEFORE the judge.
+- **Sweep 1 at `784c9413`: rc 1.** Two reds, both in `host/broker`:
+  - **(a) A REAL regression from S3: `TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential`.** It found 13 exec sites but only 12 drivers. The new `exec.CommandContext("ssh-keygen", …)` sat in `package main` with the full inherited environment, so the registry credential reached the child, and no census driver could import it. The planner's §6 list ran only the touched packages, and this census enumerates exec sites across the whole repo.
+  - **(b) `TestWorktreeSnapshotRefusesAConfiguredFilter`:** the known load-sensitive control arm (earlier instances at iterations 300, 334 and a row-257 sprint). It passed 5/5 alone, and the sprint touches neither package.
+- **Fix:** the planner was resumed by SendMessage (13.5 min, 452,035 tok) and compiled **S4** (`7a61cff0` plan, `5e85f8bb` code):
+  - A new `host/sshsign.Sign` is the single exec site, with `cmd.Env = childenv.Scrubbed(os.Environ())`. The 16 KiB cap, `WaitDelay` and the G1–G3 texts are unchanged.
+  - `signWithSSHKeygen` became a one-line call.
+  - The census gained `driveSSHSign`.
+  - **Mutant MUT-ENV-SCRUB:** dropping the scrub fails the census ("the child observed AILANG_REGISTRY_API_KEY") and the new unit test `TestSignHandsTheSignerAScrubbedEnvironment`.
+  - S4's own mutants: 18 run, 17 killed, 1 named equivalent.
+- **Sweep 2 at `5e85f8bb`: rc 0.** This covers:
+  - `verify_ail.sh`, gofmt, build+vet and the compile fence;
+  - the touched packages, `-race`, and the real-tool leg (PASS ×4, no SKIP);
+  - the no-SKIP `-v` run;
+  - `VERIFY_GO_LEGS=plain verify_go.sh` (114 ok lines, 0 FAIL; `host/broker` 344 s).
+
+  The `DATA RACE` lines are the race control.
+- **Unattributed single red:** the first `commit_ms.sh S1` run had `cmd/ailang-worldd` FAIL at 175.6 s. Its log was lost to a `tail`. On the byte-identical tree the package was ok at 112.6 s, and it was ok in every later run. Details are in `verification/world-iter378/controller-gates.md`.
+
+**Judge:** sonnet via the Agent tool, on its own worktree at `5e85f8bb` (generator ≠ judge). **PASS 93/100, zero blocking.**
+- **Sub-scores:** correctness 28, tests 28, security 19, standards 9, scope 9.
+- **Controls:** the must-die control was killed and the must-live control survived.
+- **Mutants:** about 50 were killed by their named tests, covering `DecidedMintRequests`, `--decided`, `--sign-with` F1/F2/F7/F7a/F8, `host/sshsign` (G1–G3, cap, argv, stdin, `WaitDelay`, scrub), and K8/K9. 3 did not compile and were not counted.
+- **Survivor K8-ERRCODE:** in `approver.go:449`, revoke's K8 read-only reopen failure returns `exitFatal`; changing it to `exitOK` survives `TestApprover*`. The **controller reproduced it** and restored the file clean. It is non-exploitable: the revoke has already committed, and only the follow-up listing's exit code is unpinned. Carried forward.
+- **Other non-blocking findings:**
+  - NB2: `host/sshsign` has no unit test for G1 (a failed run); only the cmd test covers it.
+  - NB3: PATH is not narrowed. This is documented, and the output is verified against the enrolled key.
+  - NB4: QUICKSTART §15's new lines were not executed; they are attended.
+- **Security properties confirmed:**
+  - The registry credential is absent from the signer while `SSH_AUTH_SOCK`/`HOME`/`PATH` pass through.
+  - argv is fixed, there is no shell, and the message goes on stdin.
+  - Output is capped and verified.
+  - The deadline equals the remaining lifetime, and an expired request is refused before the signer runs.
+  - Revoke's write root closes before K8 lists, and it revokes no session.
+  - D-WORLD-109 holds: no `~/.ssh`, `/dev/tty` or `~/.ailang/world`.
+
+**Gate 3b:** PR #543, head `5e85f8bb`.
+- `pull_request` run 42880342619: 3/3 success.
+- The CI job log shows the real-tool leg PASS on Linux: `TestSSHSIGCrossCheckWithSSHKeygen` ×2, `TestTestSignerAgreesWithSSHKeygen`, and `TestSignWithSSHKeygenEndToEnd` ×2.
+- The auto-close keyword scan read 0 (control 1).
+- Merged by merge commit **`9429e798`** (`--match-head-commit`).
+- Push checks on the merge `9429e798`: 3/3 success (all three jobs, the same set).
+- Row 201 A1b is **code-complete**. What remains of A1b is Mark's attended exit run (QUICKSTART §15).
+
+**Routing evidence:** base=1fce6999ebf875299254a1d77003e9e3351a3347@2026-11-10T16:50:36Z.
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned. Quorum: not run (the doc is reviewed).
+- Planner: `opus` via Agent (397,156 + 452,035 tok).
+- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (38,466 + 41,522 + 42,852 + 47,709 + 45,582 tok).
+- Evaluator: `sonnet` via Agent (79,233 tok).
+- The driver noted codex unusable at preflight (probe rc 75); no role needed it.
+- Metered total: $0.00. Details in `verification/world-iter378/routing.md`.
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Approval by key is now usable without leaving the CLI:
+- `approve <id> --sign-with <key>` signs World's exact message with `ssh-keygen` (agent, file or `sk` key), verifies the result against the enrolled key, and approves.
+- `approve --list --decided` shows what was approved and by whom.
+- `approver revoke` lists the sessions the key approved, so the operator can revoke them.
+
+The A1b design is fully built. A terminal `y` is no longer the only way to approve a mint, and nothing here needs a real key until Mark's attended exit run.
+
+**Ruled out:**
+- **Treating the AC10 census red as environmental:** it named the new site, and the mechanism (unscrubbed env, undriven site) was read in the code.
+- **Fixing the AC10 red by adding the cmd file to the driver map:** `package main` cannot be imported, and a driver-less entry would be a vacuous pass.
+- **Attributing `TestWorktreeSnapshotRefusesAConfiguredFilter` to the sprint:** it passed 5/5 alone, its packages are untouched, and it has prior instances.
+- **Dismissing K8-ERRCODE on the judge's label alone:** it was reproduced first.
+- **Treating the executor's missing-test report as executor error:** it was correct, and the planner's own tree proved it.
+
+**Retro:**
+- **A planner's gate list scoped to the touched packages misses repo-wide inventories.** This repo has several: the AC10 exec-site census, the import allowlist, context roots, and the verifygate subprocess sink. The controller's full sweep caught it, so the sweep-before-judge order earned its keep. Next directive: ask the planner to run every repo-wide inventory test, found by grepping for tests that walk `cmd/` or `host/`, whenever the sprint adds an exec site, a package, an import or a context root.
+- **A patch cut from stages can drift from the tree the mutants ran on.** The planner added a test after generating its patches. Next directive: regenerate the patches last, and `cmp` the round-tripped tree against the mutation tree, not only against the stages.
+- **Never pipe a gate's only copy of its output through `tail`.** The S1 red's log is gone. `commit_ms.sh` callers now `tee` to a file.
+
+**Next:** row 201's NEXT moves to **A2–A4**, starting with A2 (WebAuthn/passkeys). A2 needs a new child design from the rotation designer, then a quorum. The route line lists row 243 after row 201, and the queue governs.
+- Carry the judge's K8-ERRCODE and NB2 test gaps into the next row-201 sprint.
+- Mark's attended A1b exit run (QUICKSTART §15 with `--sign-with` and `--list --decided`) stays attended.
