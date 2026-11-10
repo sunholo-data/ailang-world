@@ -53,7 +53,10 @@ var (
 	ErrRequestClockBehind     = errors.New("store: the clock is behind the mint request's creation time")
 	ErrRequestDigestChanged   = errors.New("store: the mint request's digest is not the one approved")
 	ErrBadMintRequest         = errors.New("store: invalid mint request row")
-	ErrIncompleteConsume      = errors.New("store: a mint request consume needs an id, a digest, approved_by, a clock and a check")
+	ErrIncompleteConsume      = errors.New("store: a mint request consume needs an id, a digest, a challenge, approved_by, a clock and a check")
+	// ErrRequestChallengeChanged: the row's challenge is not the one the approval was made for
+	// (row 201 A1b §2.5 C6, C7).
+	ErrRequestChallengeChanged = errors.New("store: the mint request's challenge is not the one signed")
 )
 
 // OlderCredentialsStoreError refuses an operation on a store below the version its Feature needs:
@@ -233,9 +236,11 @@ func scanMintRequest(scan func(...any) error) (MintRequestRow, error) {
 // RequestConsume is what MintSessionForRequest consumes. Clock is read exactly once, inside the
 // transaction, after BeginTx (design §2.4 [r3]); that reading is consumed_at and the expiry
 // bound. Check runs with that reading before the guarded UPDATE; an error rolls everything back
-// (plan §1.3 D2: authority.MintForRequest puts approval.MintMatches here).
+// (plan §1.3 D2: authority.MintForRequest puts approval.MintMatches here). Challenge is the row's
+// challenge (64 lowercase hex), bound in the guarded UPDATE (row 201 A1b §2.5 C1, C6).
 type RequestConsume struct {
 	ID, Digest, ApprovedBy string
+	Challenge              string
 	Clock                  func() int64
 	Check                  func(consumedAt int64) error
 }
@@ -247,7 +252,7 @@ func (c *Credentials) MintSessionForRequest(ctx context.Context, session Session
 	if err := requireDeadline(ctx); err != nil {
 		return err
 	}
-	if rc.ID == "" || rc.Digest == "" || rc.ApprovedBy == "" || rc.Clock == nil || rc.Check == nil {
+	if rc.ID == "" || rc.Digest == "" || !isLowerHex64(rc.Challenge) || rc.ApprovedBy == "" || rc.Clock == nil || rc.Check == nil { // C1
 		return ErrIncompleteConsume
 	}
 	if session.CredentialID == "" || session.EpisodeID == "" {
@@ -265,8 +270,8 @@ func (c *Credentials) MintSessionForRequest(ctx context.Context, session Session
 	if err := rc.Check(at); err != nil {
 		return err
 	}
-	res, err := tx.ExecContext(ctx, `UPDATE mint_requests SET consumed_at = ?, approved_by = ?, credential_id = ? WHERE request_id = ? AND digest = ? AND consumed_at IS NULL AND created_at <= ? AND expires_at > ?`,
-		at, rc.ApprovedBy, session.CredentialID, rc.ID, rc.Digest, at, at)
+	res, err := tx.ExecContext(ctx, `UPDATE mint_requests SET consumed_at = ?, approved_by = ?, credential_id = ? WHERE request_id = ? AND digest = ? AND challenge = ? AND consumed_at IS NULL AND created_at <= ? AND expires_at > ?`,
+		at, rc.ApprovedBy, session.CredentialID, rc.ID, rc.Digest, rc.Challenge, at, at) // C6
 	if err != nil {
 		return fmt.Errorf("store: consume mint request: %w", err)
 	}
@@ -289,12 +294,12 @@ func (c *Credentials) MintSessionForRequest(ctx context.Context, session Session
 // classifyConsume names why the guarded UPDATE changed no row, reading the request inside tx.
 func classifyConsume(ctx context.Context, tx *sql.Tx, rc RequestConsume, at int64, changed int64) error {
 	var (
-		digest           string
-		createdAt, expAt int64
-		consumed         bool
+		digest, challenge string
+		createdAt, expAt  int64
+		consumed          bool
 	)
-	err := tx.QueryRowContext(ctx, `SELECT digest, created_at, expires_at, consumed_at IS NOT NULL FROM mint_requests WHERE request_id = ?`, rc.ID).
-		Scan(&digest, &createdAt, &expAt, &consumed)
+	err := tx.QueryRowContext(ctx, `SELECT digest, challenge, created_at, expires_at, consumed_at IS NOT NULL FROM mint_requests WHERE request_id = ?`, rc.ID).
+		Scan(&digest, &challenge, &createdAt, &expAt, &consumed)
 	if errors.Is(err, sql.ErrNoRows) {
 		return fmt.Errorf("%w: %s", ErrRequestUnknown, rc.ID)
 	}
@@ -310,6 +315,8 @@ func classifyConsume(ctx context.Context, tx *sql.Tx, rc RequestConsume, at int6
 		return fmt.Errorf("%w: %s", ErrRequestExpired, rc.ID)
 	case digest != rc.Digest:
 		return fmt.Errorf("%w: %s", ErrRequestDigestChanged, rc.ID)
+	case challenge != rc.Challenge: // C7
+		return fmt.Errorf("%w: %s", ErrRequestChallengeChanged, rc.ID)
 	}
 	return fmt.Errorf("store: mint request %s: the guarded update changed %d rows", rc.ID, changed)
 }

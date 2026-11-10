@@ -43,6 +43,10 @@ func au1Request(t *testing.T, st *store.Credentials) (approval.MintRequest, stor
 	return mr, row
 }
 
+// au1Challenge is au1Request's row challenge, strings.Repeat("ab", 32), as bytes.
+var au1Challenge = [32]byte{0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab,
+	0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab, 0xab}
+
 // au1Grants is the grant list provisionEpisode builds: ExpiresAt is now + ttl.
 func au1Grants(budget, expiresAt int64) []broker.Capability {
 	return []broker.Capability{{Effect: "Workspace.Read", Scope: "worktree", Budget: budget, ExpiresAt: expiresAt}}
@@ -53,7 +57,7 @@ func au1Grants(budget, expiresAt int64) []broker.Capability {
 func TestMintForRequestChecksTheRowInsideTheTransaction(t *testing.T) {
 	good := ProfileBinding{Project: "proj", Digest: "sha256:" + strings.Repeat("c", 64)}
 	consumeAt := func(st *store.Credentials, mr approval.MintRequest, row store.MintRequestRow, at int64) store.RequestConsume {
-		return store.RequestConsume{ID: row.RequestID, Digest: row.Digest, ApprovedBy: "tty", Clock: func() int64 { return at }}
+		return store.RequestConsume{ID: row.RequestID, Digest: row.Digest, Clock: func() int64 { return at }}
 	}
 	t.Run("good", func(t *testing.T) {
 		st, err := store.OpenCredentials(filepath.Join(t.TempDir(), store.CredentialsFileName))
@@ -64,7 +68,7 @@ func TestMintForRequestChecksTheRowInsideTheTransaction(t *testing.T) {
 		mr, row := au1Request(t, st)
 		ctx := boundedTestContext(t)
 		raw, credID, sess, err := MintForRequest(ctx, st, "ep", good, au1Grants(5, 1610), 600, 1010, nil,
-			RequestMint{Request: mr, RequestCreatedAt: 1000, Consume: consumeAt(st, mr, row, 1020)})
+			RequestMint{Request: mr, RequestCreatedAt: 1000, Challenge: au1Challenge, Consume: consumeAt(st, mr, row, 1020)})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -106,7 +110,7 @@ func TestMintForRequestChecksTheRowInsideTheTransaction(t *testing.T) {
 			mr, row := au1Request(t, st)
 			ctx := boundedTestContext(t)
 			_, _, _, err = MintForRequest(ctx, st, m.episode, m.binding, m.grants, m.ttl, m.now, nil,
-				RequestMint{Request: mr, RequestCreatedAt: 1000, Consume: consumeAt(st, mr, row, m.clockAt)})
+				RequestMint{Request: mr, RequestCreatedAt: 1000, Challenge: au1Challenge, Consume: consumeAt(st, mr, row, m.clockAt)})
 			var mm *approval.MintMismatchError
 			if !errors.As(err, &mm) || mm.Column != m.column {
 				t.Fatalf("err %v, want a MintMismatchError on %s", err, m.column)
@@ -129,7 +133,7 @@ func TestMintForRequestChecksTheRowInsideTheTransaction(t *testing.T) {
 		defer func() { _ = st.Close() }()
 		mr, row := au1Request(t, st)
 		_, _, _, err = MintForRequest(boundedTestContext(t), st, "ep", good, au1Grants(5, 1610), 600, 1010, nil,
-			RequestMint{Request: mr, RequestCreatedAt: 1000, Consume: consumeAt(st, mr, row, 1600)})
+			RequestMint{Request: mr, RequestCreatedAt: 1000, Challenge: au1Challenge, Consume: consumeAt(st, mr, row, 1600)})
 		if !errors.Is(err, store.ErrRequestExpired) {
 			t.Fatalf("err %v, want ErrRequestExpired", err)
 		}

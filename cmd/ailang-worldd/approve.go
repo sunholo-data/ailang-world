@@ -164,6 +164,10 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	if refusal != "" {
 		return refuse("%s", refusal)
 	}
+	challenge, err := hex.DecodeString(row.Challenge)
+	if err != nil || len(challenge) != 32 { // F4: the consume binds the row's challenge (row 201 A1b §2.7)
+		return refuse("request %s's stored challenge is not 64 hex; refusing; fix: make a new request with episode start --request", row.RequestID)
+	}
 
 	// 2. The same store: the request was made for this world store and credentials file.
 	w, werr := store.CanonicalPath(*db)
@@ -210,8 +214,8 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	req.presetPrompt = renderRequest(row.RequestID, mr, row.Digest, row.ExpiresAt, now)
 	req.afterToken = mcpAfterToken(mr.MCPConfig, mr.Daemon.Addr)
 	req.answerBy = row.ExpiresAt
-	req.consume = &authority.RequestMint{Request: mr, RequestCreatedAt: row.CreatedAt, Consume: store.RequestConsume{
-		ID: row.RequestID, Digest: row.Digest, ApprovedBy: "tty", Clock: env.now}}
+	req.consume = &authority.RequestMint{Request: mr, RequestCreatedAt: row.CreatedAt, Challenge: [32]byte(challenge),
+		Consume: store.RequestConsume{ID: row.RequestID, Digest: row.Digest, Clock: env.now}}
 	if code := provisionEpisode(req, stdout, stderr, env); code != exitOK {
 		return code
 	}
