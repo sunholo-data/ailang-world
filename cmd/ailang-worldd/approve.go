@@ -23,12 +23,14 @@ import (
 
 const approveHelp = `usage: ailang-worldd approve <request-id> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --signature <file> [--db <path>] [--credentials-db <path>]
+       ailang-worldd approve <request-id> --sign-with <key> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --write-message <file> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve --list [--decided] [--db <path>] [--credentials-db <path>]
 
 ATTENDED, or SIGNED. Mints the session a stored mint request describes (row
-201), after a y/N typed at /dev/tty, or, with --signature, after an enrolled
-approver's SSH signature over the request verifies, with no terminal.
+201), after a y/N typed at /dev/tty, or, with --signature or --sign-with,
+after an enrolled approver's SSH signature over the request verifies, with no
+terminal.
 'ailang-worldd episode start <episode> ... --request' makes the request without
 a terminal; nothing is minted until approve.
 
@@ -50,6 +52,12 @@ approve <request-id> (mr- and 16 hex):
   checked before any network call, the approver is re-checked in the mint's own
   transaction, and the request records approved_by=ssh:<name>. A signature
   proves that something holding the key signed, not that you were there.
+--sign-with <key> signs that message by running ssh-keygen -Y sign -f <key>
+  (a private key file, or a .pub whose key ssh-agent holds; ssh-keygen may ask
+  for a passphrase itself) and checks the signature as --signature does. It
+  waits at most until the request expires. World never reads the private key.
+  A .pub path does not prove the agent signed: ssh-keygen uses the private
+  file beside it when there is one.
 --write-message <file> writes that message (90 bytes) to a NEW file and prints
   the ssh-keygen -Y sign line and the --signature step. It opens no terminal
   and writes no store row: the request stays pending.
@@ -89,13 +97,18 @@ func approveAdmission(row store.MintRequestRow, now int64) (approval.MintRequest
 		return approval.MintRequest{}, fmt.Sprintf("the clock is behind request %s's creation time (%s); refusing",
 			row.RequestID, time.Unix(row.CreatedAt, 0).UTC().Format(time.RFC3339))
 	case approval.RefuseExpired:
-		return approval.MintRequest{}, fmt.Sprintf("request %s expired at %s; fix: make a new request with episode start --request",
-			row.RequestID, time.Unix(row.ExpiresAt, 0).UTC().Format(time.RFC3339))
+		return approval.MintRequest{}, expiredRefusal(row)
 	case approval.RefuseDigestMismatch:
 		return approval.MintRequest{}, digestRefusal
 	default:
 		return approval.MintRequest{}, fmt.Sprintf("request %s: unexpected admission verdict %s", row.RequestID, verdict)
 	}
+}
+
+// expiredRefusal is the refusal of a request that expired before it was approved.
+func expiredRefusal(row store.MintRequestRow) string {
+	return fmt.Sprintf("request %s expired at %s; fix: make a new request with episode start --request",
+		row.RequestID, time.Unix(row.ExpiresAt, 0).UTC().Format(time.RFC3339))
 }
 
 // runApprove is `ailang-worldd approve <request-id>` and `approve --list` (row 201 §2.6). Every
@@ -117,6 +130,7 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	decided := fs.Bool("decided", false, "with --list: print the used requests and who approved them")
 	sigPath := fs.String("signature", "", "approve with an enrolled approver's SSHSIG over the request (no terminal)")
 	msgPath := fs.String("write-message", "", "write the request's approval message to this new file, to sign elsewhere")
+	signWith := fs.String("sign-with", "", "approve by signing the request with ssh-keygen -Y sign -f <key> (no terminal)")
 	positional, err := parseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, approveHelp)
@@ -130,11 +144,17 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
-	if *sigPath != "" && *msgPath != "" { // F1: one of --signature and --write-message
+	modes := 0
+	for _, v := range []string{*sigPath, *signWith, *msgPath} {
+		if v != "" {
+			modes++
+		}
+	}
+	if modes > 1 { // F1: at most one of --signature, --sign-with and --write-message
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
-	if *list && (*sigPath != "" || *msgPath != "") { // F2: --list is read-only
+	if *list && modes != 0 { // F2: --list is read-only
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
@@ -150,6 +170,10 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		}
 		if env.after == nil {
 			fmt.Fprintf(stderr, "%sinternal error: no prompt timer (sessionEnv.after)\n", prefix)
+			return exitFatal
+		}
+		if *signWith != "" && env.sign == nil { // F7
+			fmt.Fprintf(stderr, "%sinternal error: no signer (sessionEnv.sign)\n", prefix)
 			return exitFatal
 		}
 	}
@@ -212,6 +236,15 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	if *sigPath != "" { // the signature, judged before any network call (design §2.7 F9-F14)
 		var refusal string
 		if signed, refusal = approveSignature(ctx, credPath, *sigPath, row, now); refusal != "" {
+			return refuse("%s", refusal)
+		}
+	}
+	if *signWith != "" { // the signer's output, judged as --signature's (design §2.7 step 3, F7a, F8)
+		armored, refusal := signForApproval(env, *signWith, row, stderr)
+		if refusal != "" {
+			return refuse("%s", refusal)
+		}
+		if signed, refusal = approveArmored(ctx, credPath, "ssh-keygen's output for --sign-with "+*signWith, armored, row, now); refusal != "" {
 			return refuse("%s", refusal)
 		}
 	}

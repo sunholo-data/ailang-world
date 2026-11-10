@@ -122,7 +122,7 @@ const approverHelp = `usage: ailang-worldd approver enroll --name <name> --forma
 ATTENDED (enroll, revoke). An approver is a name and one SSH public key, kept in
 the credentials store (row 201). An enrolled, unrevoked key approves a mint
 request with its signature: 'ailang-worldd approve <request-id> --signature
-<file>'. enroll and revoke each ask y at /dev/tty and wait at most 2m0s for it;
+<file>' or '--sign-with <key>'. enroll and revoke each ask y at /dev/tty and wait at most 2m0s for it;
 an agent cannot run them.
 
 enroll   reads --pubkey once (one ssh-ed25519 or ecdsa-sha2-nistp256 key line,
