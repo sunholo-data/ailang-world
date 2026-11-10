@@ -264,3 +264,121 @@ func TestApproverNamePatternBoundaries(t *testing.T) {
 		}
 	}
 }
+
+// AP5: RenderEnrolment equals a literal golden (spelled out here, not built from EnrolmentWarning),
+// so an edit to the constant or the layout reds this test.
+func TestRenderEnrolmentGolden(t *testing.T) {
+	a, err := NewApprover("mark-mac", "ssh", fixtureBytes(t, "ed25519.pub"), 1800000000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "approver  mark-mac\n" +
+		"format    ssh\n" +
+		"key       ssh-ed25519 SHA256:pHMYJm+CndqyZGrzMHQQBH0tNeNGj1U9sy0JrVsYdSQ\n" +
+		"records   approved_by=ssh:mark-mac\n" +
+		"\n" +
+		"This key will approve mint requests with no terminal. A signature proves that something holding\n" +
+		"the private key signed. It does not prove that you were there. Enrol only a key that cannot sign\n" +
+		"without you: one behind a passphrase, in an agent that asks before each use (`ssh-add -c`), or in\n" +
+		"a Secure Enclave or hardware holder (for example Secretive). Compare the fingerprint above with\n" +
+		"`ssh-keygen -l -f <your key>.pub` or `ssh-add -l` before you type y.\n"
+	got := RenderEnrolment(a)
+	if got != want {
+		gotLines, wantLines := strings.Split(got, "\n"), strings.Split(want, "\n")
+		for i := 0; i < len(gotLines) || i < len(wantLines); i++ {
+			var g, w string
+			if i < len(gotLines) {
+				g = gotLines[i]
+			}
+			if i < len(wantLines) {
+				w = wantLines[i]
+			}
+			if g != w {
+				t.Fatalf("RenderEnrolment line %d:\n  want %q\n  got  %q", i+1, w, g)
+			}
+		}
+		t.Fatalf("RenderEnrolment differs from the golden (line count or trailing bytes)")
+	}
+}
+
+// enrolmentPromptFields is the disposition of every Approver field (and every field of its
+// element type SSHPublicKey): shown on the enrolment y/N, or excluded with the reason.
+var enrolmentPromptFields = map[string]string{
+	"Name":       "shown",
+	"Format":     "shown",
+	"Key.Type":   "shown",
+	"Key.Blob":   "shown as its SHA256 fingerprint",
+	"EnrolledAt": "excluded: a timestamp the store sets",
+	"LastUsedAt": "excluded: a timestamp the store sets",
+	"RevokedAt":  "excluded: a timestamp the store sets",
+}
+
+// approverFieldPaths lists the dotted path of every leaf field of typ, walking struct fields.
+func approverFieldPaths(typ reflect.Type, prefix string) []string {
+	var out []string
+	for i := 0; i < typ.NumField(); i++ {
+		f := typ.Field(i)
+		if f.Type.Kind() == reflect.Struct {
+			out = append(out, approverFieldPaths(f.Type, prefix+f.Name+".")...)
+			continue
+		}
+		out = append(out, prefix+f.Name)
+	}
+	return out
+}
+
+// fieldByPath returns the settable field of a at the dotted path.
+func fieldByPath(a *Approver, path string) reflect.Value {
+	v := reflect.ValueOf(a).Elem()
+	for _, seg := range strings.Split(path, ".") {
+		v = v.FieldByName(seg)
+	}
+	return v
+}
+
+// RC4: every persisted field of Approver is either shown on the enrolment prompt or excluded with
+// its reason. A new field in Approver or SSHPublicKey reds the path count; a shown field must
+// change the text when perturbed, an excluded one must not.
+func TestEnrolmentPromptShowsEveryPersistedField(t *testing.T) {
+	paths := approverFieldPaths(reflect.TypeOf(Approver{}), "")
+	if len(paths) != len(enrolmentPromptFields) {
+		t.Fatalf("Approver has %d leaf fields %v; the disposition map has %d", len(paths), paths, len(enrolmentPromptFields))
+	}
+	for _, p := range paths {
+		if _, ok := enrolmentPromptFields[p]; !ok {
+			t.Fatalf("field %s has no disposition in enrolmentPromptFields", p)
+		}
+	}
+	base, err := NewApprover("mark-mac", "ssh", fixtureBytes(t, "ed25519.pub"), 1000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	base.LastUsedAt = 1500
+	base.RevokedAt = 1700
+	baseText := RenderEnrolment(base)
+	for _, p := range paths {
+		b := base
+		b.Key.Blob = append([]byte(nil), base.Key.Blob...)
+		fv := fieldByPath(&b, p)
+		switch fv.Kind() {
+		case reflect.String:
+			fv.SetString(fv.String() + "x")
+		case reflect.Slice:
+			nb := append([]byte(nil), fv.Bytes()...)
+			nb[0] ^= 0xff
+			fv.SetBytes(nb)
+		case reflect.Int64:
+			fv.SetInt(fv.Int() + 7)
+		default:
+			t.Fatalf("field %s has unhandled kind %s", p, fv.Kind())
+		}
+		changed := RenderEnrolment(b) != baseText
+		shown := strings.HasPrefix(enrolmentPromptFields[p], "shown")
+		if shown && !changed {
+			t.Errorf("%s is %q but perturbing it does not change the prompt", p, enrolmentPromptFields[p])
+		}
+		if !shown && changed {
+			t.Errorf("%s is %q but perturbing it changes the prompt", p, enrolmentPromptFields[p])
+		}
+	}
+}

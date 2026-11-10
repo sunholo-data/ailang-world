@@ -7,6 +7,7 @@ package approval
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"regexp"
 )
 
@@ -84,3 +85,17 @@ func CheckRevoke(a Approver, now int64) error {
 }
 
 // ---- M1c ----
+
+// EnrolmentWarning is the R6 text every enrolment y/N shows, verbatim (design §2.2).
+const EnrolmentWarning = "This key will approve mint requests with no terminal. A signature proves that something holding\n" +
+	"the private key signed. It does not prove that you were there. Enrol only a key that cannot sign\n" +
+	"without you: one behind a passphrase, in an agent that asks before each use (`ssh-add -c`), or in\n" +
+	"a Secure Enclave or hardware holder (for example Secretive). Compare the fingerprint above with\n" +
+	"`ssh-keygen -l -f <your key>.pub` or `ssh-add -l` before you type y.\n"
+
+// RenderEnrolment is the body of the enrolment y/N: what will be stored, and what it proves. It
+// has no branches (AP5 pins it; RC4 checks it shows every persisted field).
+func RenderEnrolment(a Approver) string {
+	return fmt.Sprintf("approver  %s\nformat    %s\nkey       %s %s\nrecords   approved_by=%s:%s\n\n%s",
+		a.Name, a.Format, a.Key.Type, a.Key.Fingerprint(), a.Format, a.Name, EnrolmentWarning)
+}
