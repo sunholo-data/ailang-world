@@ -57,12 +57,15 @@ func MintResumed(ctx context.Context, st *store.Credentials, episodeID string, b
 }
 
 // RequestMint is what a mint from a stored request needs beyond mintRecorded's arguments
-// (row 201 §2.6): the decoded request, its row's created_at and challenge, and the consume.
+// (row 201 §2.6): the decoded request, its row's created_at, challenge and expires_at, the
+// verified signature approval if there is one, and the consume.
 type RequestMint struct {
 	Request          approval.MintRequest
 	RequestCreatedAt int64
-	Challenge        [32]byte             // the stored row's challenge (row 201 A1b §2.6)
-	Consume          store.RequestConsume // ID, Digest, Clock; MintForRequest sets Challenge, ApprovedBy and Check
+	Challenge        [32]byte                 // the stored row's challenge (row 201 A1b §2.6)
+	ExpiresAt        int64                    // the stored row's expires_at: what a signature approval signed
+	Signed           *approval.SignedApproval // nil: the typed y; else the verified signature approval
+	Consume          store.RequestConsume     // ID, Digest, Clock; MintForRequest sets Challenge, ApprovedBy, Approver and Check
 }
 
 var (
@@ -74,10 +77,11 @@ var (
 )
 
 // requestConsume is what the store binds for rm (row 201 A1b §2.6): the caller's consume, with the
-// challenge from rm and approved_by derived here.
+// challenge from rm and approved_by (and, for a signature, the approver) derived here from rm.Signed,
+// the same field that decides whether the terminal was skipped.
 func requestConsume(rm *RequestMint) (store.RequestConsume, error) {
 	consume := rm.Consume
-	if consume.ApprovedBy != "" { // A1
+	if consume.ApprovedBy != "" || consume.Approver != nil { // A1
 		return store.RequestConsume{}, ErrApprovedBySetByCaller
 	}
 	digest, err := hex.DecodeString(consume.Digest)
@@ -85,7 +89,16 @@ func requestConsume(rm *RequestMint) (store.RequestConsume, error) {
 		return store.RequestConsume{}, ErrBadConsumeDigest
 	}
 	consume.Challenge = hex.EncodeToString(rm.Challenge[:])
-	consume.ApprovedBy = "tty" // A5: the typed y
+	if rm.Signed == nil { // A5: the typed y
+		consume.ApprovedBy = "tty"
+		return consume, nil
+	}
+	if err := rm.Signed.Binds([32]byte(digest), rm.Challenge, rm.ExpiresAt); err != nil { // A4
+		return store.RequestConsume{}, err
+	}
+	name, format, key, _ := rm.Signed.Use() // A3: Binds has shown it is verified
+	consume.ApprovedBy = rm.Signed.ApprovedBy()
+	consume.Approver = &store.ApproverUse{Name: name, Format: format, PublicKey: key}
 	return consume, nil
 }
 
