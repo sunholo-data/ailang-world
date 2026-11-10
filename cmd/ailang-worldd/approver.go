@@ -6,6 +6,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -14,6 +15,9 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/approval"
+	"github.com/sunholo-data/ailang-world/host/store"
 )
 
 // ---- M3a ----
@@ -146,6 +150,8 @@ func runApprover(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		return exitUsage
 	}
 	switch args[0] {
+	case "list": // M3d
+		return runApproverList(args[1:], stdout, stderr)
 	case "--help", "-help", "-h", "help": // D3
 		fmt.Fprint(stdout, approverHelp)
 		return exitOK
@@ -196,3 +202,63 @@ func approverStores(db, creds string) (string, string) {
 	}
 	return path, ""
 }
+
+// ---- M3d ----
+
+// runApproverList is `approver list` (design §2.10 L1-L3): read-only, no terminal, no lock.
+func runApproverList(args []string, stdout, stderr io.Writer) int {
+	const prefix = "ailang-worldd approver list: "
+	db, creds, positional, code, done := approverFlags("list", args, stdout, stderr, nil)
+	if done {
+		return code
+	}
+	if len(positional) != 0 {
+		fmt.Fprint(stderr, approverHelp)
+		return exitUsage
+	}
+	credPath, refusal := approverStores(db, creds)
+	if refusal != "" {
+		return approverRefuse(stderr, prefix, "%s", refusal)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), approveReadBudget)
+	defer cancel()
+	ro, err := store.OpenCredentialsReadOnly(credPath)
+	if err != nil {
+		return approverRefuse(stderr, prefix, "cannot read the credentials store %s: %v", credPath, err)
+	}
+	rows, err := ro.ListApprovers(ctx)
+	_ = ro.Close()
+	if err != nil { // L1: below schema 5 names the serve restart
+		return approverRefuse(stderr, prefix, "%v", err)
+	}
+	if len(rows) == 0 { // L2
+		fmt.Fprintln(stdout, "no approvers")
+		return exitOK
+	}
+	for _, r := range rows { // L3
+		used := "never"
+		if r.LastUsedAt != 0 {
+			used = approverTime(r.LastUsedAt)
+		}
+		state := "active"
+		if r.RevokedAt != 0 {
+			state = "revoked " + approverTime(r.RevokedAt)
+		}
+		fmt.Fprintf(stdout, "%s  %s  %s  enrolled %s  last used %s  %s\n",
+			r.Name, r.Format, approverKeyLabel(r.PublicKey), approverTime(r.EnrolledAt), used, state)
+	}
+	return exitOK
+}
+
+// approverKeyLabel is "<key type> <SHA256 fingerprint>" of a stored key blob; a blob the parser
+// refuses (only a hand-edited row) shows as "invalid-key".
+func approverKeyLabel(blob []byte) string {
+	keyType := "invalid-key"
+	if k, err := approval.KeyFromBlob(blob); err == nil {
+		keyType = k.Type
+	}
+	return keyType + " " + approval.SSHPublicKey{Blob: blob}.Fingerprint()
+}
+
+// approverTime is a Unix time in RFC 3339, UTC.
+func approverTime(v int64) string { return time.Unix(v, 0).UTC().Format(time.RFC3339) }

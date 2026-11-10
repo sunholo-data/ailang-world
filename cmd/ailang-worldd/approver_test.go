@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/broker"
 )
 
@@ -343,5 +344,110 @@ func TestApproverDispatchAndHelp(t *testing.T) {
 	}
 	if out.String() != approverHelp {
 		t.Errorf("approver --help: stdout is not approverHelp")
+	}
+}
+
+// CA7 (sprint-2 plan §3 M3d): `approver list` is read-only and prints every row, empty, v4 and misuse
+// arms included.
+func TestApproverList(t *testing.T) {
+	t.Setenv(broker.RegistryCredentialVariable, "")
+
+	// populated: an active row, a revoked row, and a row whose stored blob the parser refuses.
+	db, creds := approverStore(t)
+	seedApprover(t, creds, "a", fixtureKeyOf(t, "ed25519.pub"), approveT0)
+	seedApprover(t, creds, "b", fixtureKeyOf(t, "p256.pub"), approveT0)
+	revokeSeeded(t, creds, "b", approveT0+200)
+	raw := rawCredentials(t, creds)
+	if _, err := raw.Exec(`UPDATE approvers SET last_used_at = 1800000300 WHERE name = 'a'`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := raw.Exec(`INSERT INTO approvers (name, format, public_key, enrolled_at) VALUES ('c', 'ssh', x'00000001', 1800000000)`); err != nil {
+		t.Fatal(err)
+	}
+	_ = raw.Close()
+
+	var out, errw bytes.Buffer
+	if code := runApprover([]string{"list", "--db", db}, &out, &errw, sessionEnv{}); code != exitOK {
+		t.Fatalf("populated: code %d, want %d; stderr %q", code, exitOK, errw.String())
+	}
+	want := "a  ssh  ssh-ed25519 " + edFingerprint + "  enrolled 2027-01-15T08:00:00Z  last used 2027-01-15T08:05:00Z  active\n" +
+		"b  ssh  ecdsa-sha2-nistp256 " + p256Fingerprint + "  enrolled 2027-01-15T08:00:00Z  last used never  revoked 2027-01-15T08:03:20Z\n" +
+		"c  ssh  invalid-key " + approval.SSHPublicKey{Blob: []byte{0, 0, 0, 1}}.Fingerprint() + "  enrolled 2027-01-15T08:00:00Z  last used never  active\n"
+	if out.String() != want {
+		t.Errorf("populated stdout:\n%q\nwant:\n%q", out.String(), want)
+	}
+
+	// empty (L2)
+	dbEmpty, _ := approverStore(t)
+	out.Reset()
+	errw.Reset()
+	if code := runApprover([]string{"list", "--db", dbEmpty}, &out, &errw, sessionEnv{}); code != exitOK {
+		t.Fatalf("empty: code %d, want %d", code, exitOK)
+	}
+	if out.String() != "no approvers\n" {
+		t.Errorf("empty stdout %q, want %q", out.String(), "no approvers\n")
+	}
+
+	// v4 store (L1)
+	dbV4, _ := approverStoreV4(t)
+	out.Reset()
+	errw.Reset()
+	if code := runApprover([]string{"list", "--db", dbV4}, &out, &errw, sessionEnv{}); code != exitUsage {
+		t.Fatalf("v4: code %d, want %d", code, exitUsage)
+	}
+	if !strings.HasPrefix(errw.String(), "ailang-worldd approver list: ") ||
+		!strings.Contains(errw.String(), "approvers need schema 5") ||
+		!strings.Contains(errw.String(), "restart `ailang-worldd serve` ") {
+		t.Errorf("v4 stderr %q lacks the list prefix, the schema 5 need or the serve restart", errw.String())
+	}
+
+	// help
+	out.Reset()
+	errw.Reset()
+	if code := runApprover([]string{"list", "--help"}, &out, &errw, sessionEnv{}); code != exitOK {
+		t.Fatalf("list --help: code %d, want %d", code, exitOK)
+	}
+	if out.String() != approverHelp {
+		t.Errorf("list --help: stdout is not approverHelp")
+	}
+
+	// misuse: an unknown flag and a stray positional
+	out.Reset()
+	errw.Reset()
+	if code := runApprover([]string{"list", "--bogus", "--db", db}, &out, &errw, sessionEnv{}); code != exitUsage {
+		t.Fatalf("--bogus: code %d, want %d", code, exitUsage)
+	}
+	if !strings.Contains(errw.String(), "usage: ailang-worldd approver") {
+		t.Errorf("--bogus stderr %q lacks the usage line", errw.String())
+	}
+	out.Reset()
+	errw.Reset()
+	if code := runApprover([]string{"list", "extra", "--db", db}, &out, &errw, sessionEnv{}); code != exitUsage {
+		t.Fatalf("positional: code %d, want %d", code, exitUsage)
+	}
+	if !strings.Contains(errw.String(), "usage: ailang-worldd approver") {
+		t.Errorf("positional stderr %q lacks the usage line", errw.String())
+	}
+
+	// missing world store
+	out.Reset()
+	errw.Reset()
+	absent := filepath.Join(t.TempDir(), "absent.db")
+	if code := runApprover([]string{"list", "--db", absent}, &out, &errw, sessionEnv{}); code != exitUsage {
+		t.Fatalf("absent world store: code %d, want %d", code, exitUsage)
+	}
+	if !strings.Contains(errw.String(), "does not exist; refusing to create one") {
+		t.Errorf("absent world store stderr %q", errw.String())
+	}
+
+	// missing credentials store
+	out.Reset()
+	errw.Reset()
+	dbNoCreds := dbPathOf(t)
+	if code := runApprover([]string{"list", "--db", dbNoCreds}, &out, &errw, sessionEnv{}); code != exitUsage {
+		t.Fatalf("no credentials store: code %d, want %d", code, exitUsage)
+	}
+	if !strings.Contains(errw.String(), "cannot read the credentials store") {
+		t.Errorf("no credentials store stderr %q", errw.String())
 	}
 }
