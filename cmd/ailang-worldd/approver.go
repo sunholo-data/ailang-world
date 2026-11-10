@@ -152,6 +152,8 @@ func runApprover(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	switch args[0] {
 	case "list": // M3d
 		return runApproverList(args[1:], stdout, stderr)
+	case "enroll": // M3e
+		return runApproverEnroll(args[1:], stdout, stderr, env)
 	case "--help", "-help", "-h", "help": // D3
 		fmt.Fprint(stdout, approverHelp)
 		return exitOK
@@ -262,3 +264,103 @@ func approverKeyLabel(blob []byte) string {
 
 // approverTime is a Unix time in RFC 3339, UTC.
 func approverTime(v int64) string { return time.Unix(v, 0).UTC().Format(time.RFC3339) }
+
+// ---- M3e ----
+
+// approverEnrol is the enrol write, a test seam (plan A-D4): CA6 replaces it to inject a race or a
+// failure; production never reassigns it.
+var approverEnrol = (*store.Credentials).EnrolApprover
+
+// runApproverEnroll is `approver enroll` (design §2.10 N1-N14, plan A-D6 order).
+func runApproverEnroll(args []string, stdout, stderr io.Writer, env sessionEnv) int {
+	const prefix = "ailang-worldd approver enroll: "
+	var name, format, pubkey *string
+	db, creds, positional, code, done := approverFlags("enroll", args, stdout, stderr, func(fs *flag.FlagSet) {
+		name = fs.String("name", "", "the approver's name")
+		format = fs.String("format", "", "ssh")
+		pubkey = fs.String("pubkey", "", "the public key file (.pub)")
+	})
+	if done {
+		return code
+	}
+	if len(positional) != 0 { // N1
+		fmt.Fprint(stderr, approverHelp)
+		return exitUsage
+	}
+	if *name == "" || *pubkey == "" { // N2
+		return approverRefuse(stderr, prefix, "--name and --pubkey are required")
+	}
+	credPath, refusal := approverStores(db, creds) // N3
+	if refusal != "" {
+		return approverRefuse(stderr, prefix, "%s", refusal)
+	}
+	keyFile, err := readRegularFileCapped(*pubkey, approval.MaxKeyFileBytes) // N4: read once
+	if err != nil {
+		return approverRefuse(stderr, prefix, "--pubkey: %v", err)
+	}
+	a, err := approval.NewApprover(*name, *format, keyFile, env.now()) // N5
+	if err != nil {
+		return approverRefuse(stderr, prefix, "%v", err)
+	}
+
+	// Pre-checks on a read-only handle, closed before the prompt (N6-N8).
+	pre, cancelPre := context.WithTimeout(context.Background(), approveReadBudget)
+	ro, err := store.OpenCredentialsReadOnly(credPath)
+	if err != nil {
+		cancelPre()
+		return approverRefuse(stderr, prefix, "cannot read the credentials store %s: %v", credPath, err)
+	}
+	refusal = approverEnrolPrecheck(pre, ro, a)
+	_ = ro.Close()
+	cancelPre()
+	if refusal != "" {
+		return approverRefuse(stderr, prefix, "%s", refusal)
+	}
+
+	// The fence: y within approverConfirmBudget, no store handle open (N9a, N9, N10a, N10).
+	prompt := approval.RenderEnrolment(a) + fmt.Sprintf("Enrol approver %s? [y/N] ", a.Name)
+	if code := confirmApproverAct(env, stderr, prefix, prompt, "nothing was enrolled"); code != exitOK {
+		return code
+	}
+
+	// The write, under the credentials writer lock taken only now (N11-N13).
+	ctx, cancel := context.WithTimeout(context.Background(), approveReadBudget)
+	defer cancel()
+	st, err := openCredentialsForSession(ctx, db, credPath)
+	if err != nil { // N11
+		fmt.Fprintf(stderr, "%scannot open the credentials store for writing: %v\n", prefix, err)
+		return exitFatal
+	}
+	defer func() { _ = st.Close() }()
+	err = approverEnrol(st, ctx, store.ApproverRow{Name: a.Name, Format: a.Format, PublicKey: a.Key.Blob, EnrolledAt: a.EnrolledAt})
+	switch {
+	case errors.Is(err, store.ErrApproverNameTaken), errors.Is(err, store.ErrApproverKeyEnrolled): // N12
+		return approverRefuse(stderr, prefix, "%v (another enrol ran first); nothing was enrolled", err)
+	case err != nil: // N13
+		fmt.Fprintf(stderr, "%scannot enrol approver %q: %v\n", prefix, a.Name, err)
+		return exitFatal
+	}
+	fmt.Fprintf(stdout, "enrolled approver %s: %s %s; approvals by it record approved_by=%s:%s\n", // N14
+		a.Name, a.Key.Type, a.Key.Fingerprint(), a.Format, a.Name)
+	return exitOK
+}
+
+// approverEnrolPrecheck is enroll's read-only refusal before any terminal: "" when the store is
+// at schema 5 (N6) and neither the name (N7) nor the key (N8) is enrolled, revoked rows included.
+func approverEnrolPrecheck(ctx context.Context, ro *store.Credentials, a approval.Approver) string {
+	_, taken, err := ro.Approver(ctx, a.Name)
+	if err != nil { // N6: below schema 5 names the serve restart
+		return err.Error()
+	}
+	if taken { // N7
+		return fmt.Sprintf("an approver named %q already exists (a name is never reused, even after revoke); fix: choose another --name", a.Name)
+	}
+	holder, enrolled, err := ro.ApproverByKey(ctx, a.Key.Blob)
+	if err != nil {
+		return err.Error()
+	}
+	if enrolled { // N8
+		return fmt.Sprintf("key %s is already enrolled as approver %q (a key is never enrolled twice, even after revoke)", a.Key.Fingerprint(), holder.Name)
+	}
+	return ""
+}
