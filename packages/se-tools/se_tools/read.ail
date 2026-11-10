@@ -26,7 +26,7 @@ module se_tools/read
 -- every se_tools module; host/coordinator's se-tools test holds the copies
 -- byte-identical. argKeyAllowed is each tool's own schema.
 
-import std/json (decode, encode, jo, ja, kv, js, jint, jb, jn, get, asObject, asString, Json, JNumber)
+import std/json (decode, encode, jo, ja, kv, js, jint, jb, jn, get, asObject, asString, asNumber, Json)
 import std/string (length as strLength, startsWith, endsWith, contains)
 import std/option (Option, Some, None)
 import std/result (Result, Ok, Err)
@@ -194,13 +194,15 @@ func stringField(doc: Json, k: string) -> string =
 func optionalLine(args: Json, k: string) -> Result[Option[int], string] =
   match get(args, k) {
     None => Ok(None),
-    Some(JNumber(x)) => {
-      let n = floatToInt(x);
-      if intToFloat(n) != x then Err("argument \"${k}\" must be an integer")
-      else if lineArgOk(n) then Ok(Some(n))
-      else Err("argument \"${k}\" must be an integer >= 1 (got ${show(n)})")
-    },
-    Some(_) => Err("argument \"${k}\" must be an integer")
+    Some(v) => match asNumber(v) {
+      Some(x) => {
+        let n = floatToInt(x);
+        if intToFloat(n) != x then Err("argument \"${k}\" must be an integer")
+        else if lineArgOk(n) then Ok(Some(n))
+        else Err("argument \"${k}\" must be an integer >= 1 (got ${show(n)})")
+      },
+      None => Err("argument \"${k}\" must be an integer")
+    }
   }
 
 export func maxCharsOk(n: int) -> bool ! {}
