@@ -24,7 +24,7 @@ import (
 const approveHelp = `usage: ailang-worldd approve <request-id> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --signature <file> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --write-message <file> [--db <path>] [--credentials-db <path>]
-       ailang-worldd approve --list [--db <path>] [--credentials-db <path>]
+       ailang-worldd approve --list [--decided] [--db <path>] [--credentials-db <path>]
 
 ATTENDED, or SIGNED. Mints the session a stored mint request describes (row
 201), after a y/N typed at /dev/tty, or, with --signature, after an enrolled
@@ -55,6 +55,9 @@ approve <request-id> (mr- and 16 hex):
   and writes no store row: the request stays pending.
 --list prints the pending requests, read-only. A request expires 10 minutes
 after it is made; at most 16 are pending per credentials store.
+--list --decided prints the used requests instead, newest first (at most 64):
+  who approved each (tty, or ssh:<name>), when, and its credential's first 16
+  hex. 'ailang-worldd session revoke' takes the credential id.
 
   --db <path>               the world store the request was made for
                             (default ~/.ailang/world/world.db)
@@ -111,6 +114,7 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	db := fs.String("db", def.db, "the world store the request was made for (default ~/.ailang/world/world.db)")
 	credsDB := fs.String("credentials-db", "", credentialsDBUsage)
 	list := fs.Bool("list", false, "print the pending requests, read-only")
+	decided := fs.Bool("decided", false, "with --list: print the used requests and who approved them")
 	sigPath := fs.String("signature", "", "approve with an enrolled approver's SSHSIG over the request (no terminal)")
 	msgPath := fs.String("write-message", "", "write the request's approval message to this new file, to sign elsewhere")
 	positional, err := parseInterleaved(fs, args)
@@ -131,6 +135,10 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		return exitUsage
 	}
 	if *list && (*sigPath != "" || *msgPath != "") { // F2: --list is read-only
+		fmt.Fprint(stderr, approveHelp)
+		return exitUsage
+	}
+	if *decided && !*list { // F3: --decided is a --list
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
@@ -155,6 +163,9 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	ro, err := store.OpenCredentialsReadOnly(credPath)
 	if err != nil {
 		return refuse("cannot read the credentials store %s: %v", credPath, err)
+	}
+	if *list && *decided {
+		return approveListDecided(ctx, ro, credPath, stdout, refuse)
 	}
 	if *list {
 		rows, err := ro.PendingMintRequests(ctx, env.now(), 0)
@@ -261,3 +272,25 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		task: mr.Task, grants: toCapabilities(mr.Grants)})
 	return exitOK
 }
+
+// approveListDecided is approve --list --decided (design §2.7 F15, F16): the used requests,
+// newest first, each with who approved it, when, and its credential id's first 16 hex. It closes ro.
+func approveListDecided(ctx context.Context, ro *store.Credentials, credPath string, stdout io.Writer, refuse func(string, ...any) int) int {
+	rows, err := ro.DecidedMintRequests(ctx, "", 0)
+	_ = ro.Close()
+	if err != nil {
+		return refuse("cannot list the used requests in %s: %v", credPath, err)
+	}
+	if len(rows) == 0 { // F15
+		fmt.Fprintln(stdout, "no decided mint requests")
+		return exitOK
+	}
+	for _, r := range rows { // F16
+		fmt.Fprintf(stdout, "%s  episode %s  approved by %s  at %s  credential %s\n", r.RequestID, r.EpisodeID, r.ApprovedBy,
+			approverTime(r.ConsumedAt), credentialPrefix(r.CredentialID))
+	}
+	return exitOK
+}
+
+// credentialPrefix is a credential id's first 16 characters (all of a shorter one).
+func credentialPrefix(id string) string { return id[:min(16, len(id))] }

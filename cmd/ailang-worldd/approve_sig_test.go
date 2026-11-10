@@ -405,6 +405,8 @@ func TestApproveFlagRules(t *testing.T) {
 		"signature-and-write-message": {firstRequestID, "--signature", "s", "--write-message", "m", "--db", db},
 		"list-and-signature":          {"--list", "--signature", "s", "--db", db},
 		"list-and-write-message":      {"--list", "--write-message", "m", "--db", db},
+		// F3 (sprint 4 D2):
+		"decided-without-list": {firstRequestID, "--decided", "--db", db},
 	} {
 		t.Run(name, func(t *testing.T) {
 			var stdout, stderr bytes.Buffer

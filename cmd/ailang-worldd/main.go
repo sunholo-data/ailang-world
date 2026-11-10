@@ -124,7 +124,7 @@ Usage:
   ailang-worldd approve <request-id> [--db <path>] [--credentials-db <path>]
   ailang-worldd approve <request-id> --signature <file> [--db <path>] [--credentials-db <path>]
   ailang-worldd approve <request-id> --write-message <file> [--db <path>] [--credentials-db <path>]
-  ailang-worldd approve --list [--db <path>] [--credentials-db <path>]
+  ailang-worldd approve --list [--decided] [--db <path>] [--credentials-db <path>]
   ailang-worldd approver enroll --name <name> --format ssh --pubkey <file> [--db <path>] [--credentials-db <path>]
   ailang-worldd approver list [--db <path>] [--credentials-db <path>]
   ailang-worldd approver revoke <name> [--db <path>] [--credentials-db <path>]
