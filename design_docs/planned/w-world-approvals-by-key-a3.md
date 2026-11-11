@@ -359,7 +359,7 @@ that `/surface/model.json` still answers a foreign `Host`.
   request silently).
 - `recorded` is the verified approver of a `surface_approvals` row, or `null`: "approved, waiting
   for the minter".
-- `decided` is `DecidedMintRequests("", 20)`: the decision list (parent §2.4 step 4).
+- `decided` is `DecidedMintRequests("", 20)` (`""` = no approver filter, V30): the decision list (parent §2.4 step 4).
 - **What it does not carry:** the request bytes, the challenge, any artifact, paths. `hash16` is
   `approve --webauthn-link`'s and the CLI's (§1.11), for comparison.
 - A store below v4, absent, or unreadable → 200 with `"unavailable":"<reason>"` and empty lists, as
@@ -595,7 +595,7 @@ Built when row 188 N3 lands `desktop/` (a Tauri v2 shell loading `/surface` from
 | the judge (lookups + law) | `host/authority/judge.go` | store reads only | JG1–JG2 |
 | schema 7, `RecordSurfaceApproval`, `SurfaceApproval`, prune | `host/store/surface_approvals.go` | effect | SA1–SA4 |
 | the routes | `host/daemon/surface_approve.go` | effect (HTTP, store) | RT1–RT11 |
-| the minter | `cmd/ailang-worldd/approve_await.go`, seams `env.now`, `env.after` (no new seam) | effect | AW1–AW7, E2E1 |
+| the minter | `cmd/ailang-worldd/approve_await.go`, seams `env.now`, `env.after` (no new seam, V29) | effect | AW1–AW7, E2E1 |
 | the card page, the app's Needs you, the notification | `host/surfacepage/approve/*`, `app/app.js` | static assets | PG2, XA1–XA4 |
 
 - **Why no `.ail` (S1).** A3 is HTTP guards, a table and browser code over A1b/A2's law; none of
@@ -710,7 +710,7 @@ extended, never replaced. Keys are `approvaltest` keys or Chrome's virtual authe
 | Id | Test | Asserts | Mutants killed |
 |---|---|---|---|
 | **PG3 [r1]** | `TestApprovePageRendersEveryCanonicalField` (`host/surfacepage`) | extracts `approve.js`'s `FIELDS` literal (between `/* FIELDS */` markers, parsed as JSON) and compares it with the JSON key paths of `approval.MintRequest`, walked by reflection (`json` tags, slices as `[]`, nested structs): equal sets, and every entry has a non-empty label and a group. **Control (labelled):** the walk of the struct yields 21 top-level keys, the count the browser measured in the bytes (V24) | **a field added to `MintRequest` with no renderer**; a `FIELDS` entry deleted; a renamed tag |
-| **PG3b [r2]** | `TestApprovePageRendersEveryCanonicalField` (control arms) | PG3's tag walk also asserts it finds no `omitempty` on `MintRequest`, `Grant`, `ProfileRef`, `DaemonRef` (V28); a third golden case — a degraded (non-git) request with `reuse: false` — shows all 21 keys still present; XA2 arm (c)'s deleted-field case deletes a field V28 confirms always serializes | an `omitempty` added to any tag; a FIELDS entry made optional |
+| **PG3b [r2]** | `TestApprovePageFieldTagControls` (`host/surfacepage`) | PG3's tag walk also asserts it finds no `omitempty` on `MintRequest`, `Grant`, `ProfileRef`, `DaemonRef` (V28); a third golden case — a degraded (non-git) request with `reuse: false` — shows all 21 keys still present; XA2 arm (c)'s deleted-field case deletes a field V28 confirms always serializes | an `omitempty` added to any tag; a FIELDS entry made optional |
 | **XA5 [r2]** | `TestApproveCardNetworkDeadlines` (`cmd/ailang-worldd`, the Chrome harness) | stalled-header and stalled-body cases for both GET and POST, including a POST that records successfully but withholds its response: deadline termination, accurate unknown-outcome messaging, bounded retries (503 only, ≤3, 1 s apart), and no fallback | the AbortController removed; retry on a non-503; an unknown outcome shown as refused or minted |
 | PG2 | `TestApprovePageRoutes` (`host/daemon`) | the embedded bytes, `surfaceCSP` unchanged, 400 for a bad id; `passkey.js`/`index.html` sha256 unchanged. Labelled controls (not load-bearing): `approve.js` has no `innerHTML`, `eval(`, `document.cookie` | — |
 | XA1 | `TestApprovePageInChrome` (`cmd/ailang-worldd`) | virtual authenticator; enrol through the A2 page + CLI (XB1's helpers); `--request`; open `/surface/approve/<id>`; **[r1]** every `FIELDS` path's rendered text equals the request's value (read back by element id);  click Approve; 200 recorded; `approve --await` mints; zero CSP violations, zero console errors; the A2 page's `get` for the same request carries the same `challenge` bytes | the page using another challenge |
@@ -795,15 +795,15 @@ and the §7 inventories by name, as A2 §9 lists them, plus `go test ./host/daem
   check uses them; only RT13 moves with the SSHSIG arm.
 
 **Sprint 3 = M6–M8, "the page and the app", about 1,950 lines [r1].**
-- **M6 the card page** (≈ 380 page + 60 Go + 120 test **[r1]**: the `FIELDS` table and walker, PG3): PG2, PG3.
+- **M6 the card page** (≈ 380 page + 60 Go + 120 test **[r1]**: the `FIELDS` table and walker, PG3): PG2, PG3, **[r2]** PG3b; the card's network deadlines (§2.7 [r2]).
 - **M7 Needs you, Decided, the notification** (≈ 160 `app.js`).
-- **M8 the live browser and QUICKSTART** (≈ 220 driver + 720 tests **[r1]** (XA2 arm c) + 60 docs): XA1–XA4.
-  `WORLD_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" WORLD_REQUIRE_PASSKEY_BROWSER=1 go test ./cmd/ailang-worldd/ -run '^(TestApprovePage|TestNeedsYou|TestPasskeyPage)' -count=1 -v`
+- **M8 the live browser and QUICKSTART** (≈ 220 driver + 720 tests **[r1]** (XA2 arm c) + 60 docs): XA1–XA4, **[r2]** XA5 (≈ +250 test lines; sprint 3 ≈ 2,200).
+  `WORLD_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" WORLD_REQUIRE_PASSKEY_BROWSER=1 go test ./cmd/ailang-worldd/ -run '^(TestApprovePage|TestApproveCard|TestNeedsYou|TestPasskeyPage)' -count=1 -v`
   must print `--- PASS` for every subtest **on the controller's machine** (CI has no Chrome step,
   V13; R3).
 - **Fallback cut:** M7's notification and Decided list (XA4, half of XA3) become a fourth sprint;
   the card, Approve and the Needs-you link (XA1–XA2, XA3's list) stay. **[r1]** PG3 and XA2 arm (c)
-  are never cut: the card may not ship without every field. A3a's exit run waits for
+  are never cut: the card may not ship without every field. **[r2]** Nor are PG3b and XA5: the card may not ship without its network deadlines. A3a's exit run waits for
   the fourth sprint only for its notification step.
 
 **A3b: no sprint in this design.** It becomes a child design when `desktop/` exists (row 188 N3).
@@ -946,3 +946,4 @@ a positive control in the same or an adjacent command.
   - [x] (a) **Tauri half deferred to row 188 N3.** Confirmed by the controller on V12/V13 (no `desktop/`, no cargo, no CI step: there is no app to add a notification to) and V31 (D-WORLD-88 R1 rules the shell, not A3's sequencing). Put to Mark as D-WORLD-114.
   - [x] (b) **The CLI minter mints.** Confirmed by the controller on §1.3/§1.4/V7/V8 and V31 (no ruling fixes the mint location; the §3 invariants hold). Put to Mark as D-WORLD-114.
   - If Mark vetoes either, the affected text reverts as kimi's fix states: (a) the A3 design waits on row 188; (b) the daemon-mints mechanism returns to design.
+- **Independent audit of r2** (evaluator `sonnet` via the Agent tool, generator ≠ judge, iteration 383): **CARVE-OUT VALID, 84/100**, zero blocking. It re-ran V28–V30, read V31 against the parent §6 and D-WORLD-88 R1 (deferral sequences A3's native add-ons; it does not contradict R1), and judged kimi's objection a missing-record objection, not a direction dispute. Its consistency findings were applied in `r2` (same revision): PG3b and XA5 added to §9 sprint 3's gates, the `-run` pattern (`TestApproveCard` was unmatched) and the fallback cut; PG3b's test renamed `TestApprovePageFieldTagControls`; V29/V30 cited at their claims. D-WORLD-114 is filed in the charter ledger in the same iteration. Noted, not changed: glm's third golden case is a PG3b obligation, not a measured V-row; the D-WORLD-114 sentence is the controller's addition to kimi's text.
