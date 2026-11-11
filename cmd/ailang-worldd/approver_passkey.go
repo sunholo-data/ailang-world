@@ -59,6 +59,9 @@ func runApproverEnrollPasskey(name, origin, regPath, db, creds string, stdout, s
 	if name == "" || origin == "" || regPath == "" { // WN2
 		return approverRefuse(stderr, prefix, "--name, --origin and --registration are required with --format webauthn")
 	}
+	if !approval.ApproverNamePattern.MatchString(name) { // WN2a: before any link; the law's R1 judges it again
+		return approverRefuse(stderr, prefix, "--name %q: %v", name, approval.ErrApproverName)
+	}
 	credPath, refusal := approverStores(db, creds) // N3
 	if refusal != "" {
 		return approverRefuse(stderr, prefix, "%s", refusal)

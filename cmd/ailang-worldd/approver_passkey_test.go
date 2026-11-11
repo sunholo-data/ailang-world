@@ -121,6 +121,8 @@ func TestPasskeyEnrollFlagRules(t *testing.T) {
 			want: []string{"--name, --origin and --registration are required with --format webauthn"}},
 		{name: "WN2-registration", args: func(t *testing.T, r enrolRig) []string { return dropFlag(r.args(), "--registration") },
 			want: []string{"--name, --origin and --registration are required with --format webauthn"}},
+		{name: "WN2a-name-grammar", args: func(t *testing.T, r enrolRig) []string { return replaceFlag(r.args(), "--name", "Mark") },
+			want: []string{`--name "Mark": approval: approver name must match`}},
 		{name: "N3-no-world-store", args: func(t *testing.T, r enrolRig) []string {
 			return replaceFlag(r.args(), "--db", filepath.Join(t.TempDir(), "absent.db"))
 		}, want: []string{"does not exist; refusing to create one"}},
