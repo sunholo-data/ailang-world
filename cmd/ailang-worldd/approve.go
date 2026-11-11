@@ -25,6 +25,7 @@ const approveHelp = `usage: ailang-worldd approve <request-id> [--db <path>] [--
        ailang-worldd approve <request-id> --signature <file> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --sign-with <key> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --write-message <file> [--db <path>] [--credentials-db <path>]
+       ailang-worldd approve <request-id> --webauthn-link [--db <path>] [--credentials-db <path>]
        ailang-worldd approve --list [--decided] [--db <path>] [--credentials-db <path>]
 
 ATTENDED, or SIGNED. Mints the session a stored mint request describes (row
@@ -61,6 +62,11 @@ approve <request-id> (mr- and 16 hex):
 --write-message <file> writes that message (90 bytes) to a NEW file and prints
   the ssh-keygen -Y sign line and the --signature step. It opens no terminal
   and writes no store row: the request stays pending.
+--webauthn-link prints, for each origin of the enrolled passkeys, a link to
+  the daemon's page /surface/passkey that asks the browser's passkey (with
+  Face ID, Touch ID, a PIN or a security key) to sign the request's message
+  hash, and the --webauthn-assertion step. Check the page shows the request,
+  expiry and hash it prints. It opens no terminal and writes no store row.
 --list prints the pending requests, read-only. A request expires 10 minutes
 after it is made; at most 16 are pending per credentials store.
 --list --decided prints the used requests instead, newest first (at most 64):
@@ -131,6 +137,7 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	sigPath := fs.String("signature", "", "approve with an enrolled approver's SSHSIG over the request (no terminal)")
 	msgPath := fs.String("write-message", "", "write the request's approval message to this new file, to sign elsewhere")
 	signWith := fs.String("sign-with", "", "approve by signing the request with ssh-keygen -Y sign -f <key> (no terminal)")
+	passkeyLink := fs.Bool("webauthn-link", false, "print the ceremony page's links for the request (no terminal, no write)")
 	positional, err := parseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, approveHelp)
@@ -145,12 +152,12 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		return exitUsage
 	}
 	modes := 0
-	for _, v := range []string{*sigPath, *signWith, *msgPath} {
-		if v != "" {
+	for _, on := range []bool{*sigPath != "", *signWith != "", *msgPath != "", *passkeyLink} {
+		if on {
 			modes++
 		}
 	}
-	if modes > 1 { // F1: at most one of --signature, --sign-with and --write-message
+	if modes > 1 { // F1: at most one of --signature, --sign-with, --write-message and --webauthn-link
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
@@ -228,6 +235,12 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	}
 	if *msgPath != "" { // F5, F6: the message to sign elsewhere, and nothing else
 		if refusal := writeApprovalMessage(stdout, *msgPath, row, mr); refusal != "" {
+			return refuse("%s", refusal)
+		}
+		return exitOK
+	}
+	if *passkeyLink { // WF1: the ceremony links, and nothing else (row 201 A2 §2.13)
+		if refusal := writePasskeyLinks(ctx, credPath, stdout, row, mr); refusal != "" {
 			return refuse("%s", refusal)
 		}
 		return exitOK
