@@ -1,0 +1,630 @@
+{
+ "sprint_id": "w-world-approvals-by-key-a2-s3",
+ "design_doc": "design_docs/planned/w-world-approvals-by-key-a2.md",
+ "design_revision": "r2 (quorum r2 + controller carve-out; not reopened)",
+ "sprint_plan": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md",
+ "previous_sprint": {
+  "plan": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md",
+  "json": "design_docs/planned/sprint_w-world-approvals-by-key-a2-s2.json",
+  "landed_merge": "3e55451f",
+  "recorded": "d9cb6cbb",
+  "pr": 548,
+  "note": "A2 sprint 2 (M3b, M4, M5; 1,843 lines); its Appendix C is what this sprint inherits"
+ },
+ "base_commit": "ab4b2402116243c0e0fab9ed5cee8ec80a660a4e",
+ "queue_row": 201,
+ "iteration": 381,
+ "sprint_number": 3,
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter381-row201-a2s3",
+ "branch": "sprint/world-iter381-row201-a2s3",
+ "cut": {
+  "cap_loc": 2000,
+  "measure": "git diff --numstat <base> HEAD -- cmd host (insertions + deletions); .gitattributes and docs outside the filter (none changed)",
+  "fallback_fired": "YES: design §9 sprint-3 fallback (M7 becomes its own fourth sprint), by measurement: M6 measured 1,686 leaves 314 lines; M7 (page, embed, 2 routes, PG1, TestSurfaceAppRoutes edit, driver, XB1, XB2, generate.sh) has no safe subset that fits",
+  "committed": "M6a, M6b, M6c, M6d, M6e, M6f, M6g, M6h (= design M6 whole)",
+  "moved_to_sprint_4": "M7 whole (PG1, XB1, XB2, generate.sh, passkey page and routes) and QUICKSTART §16",
+  "total_measured_loc": 1686,
+  "margin": 314,
+  "design_estimate_m6": 1220,
+  "ratio": 1.38
+ },
+ "next_sprint": "sprint 4 = M7 (the page, PG1, XB1, XB2, generate.sh) and QUICKSTART §16, as designed (plan Appendix C); XB2 seam measured: Emulation.setVirtualTimePolicy advances the 240000 ms timer exactly in ~55 ms real time",
+ "executor_lane": "as routed by the controller; runs: (M6a, M6b), (M6c, M6d), (M6e, M6f), (M6g, M6h)",
+ "executor_form": "every sub-milestone is a unified diff in the plan Appendix P, applied with patch -p1 after a --dry-run (plan §2); the executor writes no code by hand",
+ "estimate_loc": {
+  "production": 467,
+  "test": 1219,
+  "total_cumulative": 1686,
+  "measure": "insertions + deletions (git diff --numstat -- cmd host), measured after a commit of each scratch stage"
+ },
+ "constraints": [
+  "D-WORLD-109: fakes, temp stores and test keys only (approvaltest.Passkey); no browser, Chrome, Node, ssh-keygen or real authenticator in any committed test; no ~/.ssh, ~/.ailang/world, real store, /dev/tty, mint or publish",
+  "coding standards S1-S3: host/approval pure and standard-library-only (one exported function, ParseStoredCOSEKey); effects only at the CLI boundary through sessionEnv and host/store; no new module, package, exec site, route or .ail; +1 context root (runApproverEnrollPasskey: 3)",
+  "the typed-y path unchanged: confirmApproverAct split behaviour-preserving, CA3/CA4/CA9/CA10 unedited",
+  "one mutant per new production branch, anchored to the diff, each run against its named test AND its package suite; every run appends a ledger line (plan §4)",
+  "flag/mode coverage: WN1 each pairing, WN2 each operand, WN5 each operand, F1 every pair of the five modes, CW5 code-shape arms",
+  "exit codes by constant; nothing written on a refusal (both tables; request pending, no session, no daemon call, counter unchanged)",
+  "no t.Parallel in new tests",
+  "bisectable: every stage gofmt/build/vet/fence green with its own and earlier tests",
+  "no git writes by the executor",
+  "no gate under nohup (plan §1.1)"
+ ],
+ "baseline": {
+  "env": "export AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0); go1.26.6 darwin/arm64; node v26.13.0; Google Chrome 157.0.8103.50; git archive ab4b2402 export at $HOME/.ailang/state/world-iter381/plan-scratch/base",
+  "git_status": "clean at ab4b2402",
+  "gofmt": "rc 0",
+  "build_vet_all": "rc 0 (4 s)",
+  "compile_fence": "rc 0 (21 s)",
+  "package_tests": "approval/..., store, authority, surfacepage/..., cmd/ailang-worldd, host/daemon rc 0 (280 s)",
+  "race": "approval/..., surfacepage/..., cmd passkey/approver subset rc 0 (20 s)",
+  "inventories": "every named inventory/reflective/help/quickstart test --- PASS; one pre-existing --- SKIP: TestSeToolsQuickstartPayloadsVerbatim in the ./... Quickstart sweep (excluded by name from §6)",
+  "verify_ail": "rc 0 (45 s)",
+  "verify_go_plain": "rc 1 at the base: host/verifygate TestMissionConfigDefaultFlowIntegration/invalid_ledger (10 s fixture deadline; load-sensitive, listed); also fails alone at the base under load",
+  "harness_trap": "never under nohup (sprint 2 §1.1); the machine is shared (load 38-60 from other sessions during the final verify_go): timing tests in untouched packages measure the machine",
+  "final_tree": {
+   "tree": "plan-scratch/work (mutants) = plan-scratch/stagebuild tag M6h = plan-scratch/roundtrip at M6h (committed; gates) = the round-tripped tree",
+   "gofmt_vet_all": "gofmt -l cmd host empty; go vet ./... rc 0",
+   "inventories_named_v": "30 named tests --- PASS (16 design §7 + 6 reflective + TestEveryVerbHasHelp + 7 quickstart), 0 SKIP/FAIL",
+   "packages": "approval/..., store, authority, cmd/ailang-worldd (219.1 s), host/daemon (339.9 s) ok",
+   "race": "approval/..., store, cmd passkey/approver subset rc 0",
+   "verify_go_plain": "rc 1 on untouched packages only: host/broker TestExecProtectedCheckTimeout, host/daemon TestAGUISlowReaderCutIsResumable, host/verifygate TestMissionConfigDefaultFlowIntegration; re-run alone at load 38-60: final broker PASS, daemon PASS, verifygate FAIL; base broker FAIL, daemon PASS, verifygate FAIL; 0 other binary blobs among 6705 tracked files; 64 evidence tests",
+   "verify_ail": "rc 0",
+   "whole_section6_script": "PRE_COMMIT_GATES_GREEN in 518 s",
+   "roundtrip": "Appendix P extracted from the plan with the §2 awk, applied to a fresh ab4b2402 export, accept.sh after each: cumulative numstat 38, 237, 701, 945, 1190, 1397, 1538, 1686; diff -r cmd host vs the mutant tree: identical (673 s)"
+  }
+ },
+ "design_premises_found_false": [
+  {
+   "id": "P1",
+   "claim": "sprint 2 Appendix C: Key = parse the stored canonical COSE key",
+   "finding": "no exported []byte -> COSEKey parser exists (ParseCOSEKey takes the unexported cborValue)",
+   "resolution": "M6b: host/approval.ParseStoredCOSEKey (pure, std-lib) + TestParseStoredCOSEKey"
+  },
+  {
+   "id": "P2",
+   "claim": "design §9: M6 ~1,220 lines, sprint 3 ~1,800",
+   "finding": "M6 measured 1,686",
+   "resolution": "design §9 sprint-3 fallback: M7 (and QUICKSTART §16) to sprint 4"
+  },
+  {
+   "id": "P3",
+   "claim": "design §8 sprint-3 conflict surface",
+   "finding": "also touches host/approval/cose.go (+ test) and host/store/context_roots_test.go",
+   "resolution": "listed in plan §1.4 P3 and §5"
+  },
+  {
+   "id": "P4",
+   "claim": "design §6: approver_enroll_test.go:230-232 edited",
+   "finding": "stays green unedited (WN1 prints the help, which names --registration)",
+   "resolution": "unedited; CW1 pins WN1 own text"
+  },
+  {
+   "id": "P5",
+   "claim": "first mutant pass",
+   "finding": "17 drafts did not compile",
+   "resolution": "rewritten and re-run; ledger keeps every run"
+  },
+  {
+   "id": "P6",
+   "claim": "first CW4 draft",
+   "finding": "an abandoned read goroutine called t.Errorf after the test ended (1 run in ~6)",
+   "resolution": "the unanswered prompt read closes the timer itself, then blocks on t.Context(); -count=40 and 15 fresh runs green"
+  },
+  {
+   "id": "P7",
+   "claim": "design §2.13 WF5: no approver holds the credential",
+   "finding": "a held credential with an unparsable stored key also needs a refusal",
+   "resolution": "second WF5 text; CW8 WF5-stored-key-invalid; MUT-WF5-KEY"
+  },
+  {
+   "id": "P8",
+   "claim": "directive: QUICKSTART §16 in M7",
+   "finding": "§16 walks the page ceremony",
+   "resolution": "moves with M7 to sprint 4"
+  }
+ ],
+ "judge_gaps_carried": {
+  "all-zero challenge (log/judge 380, sprint 2 S2-D11)": "measured: the registration law accepts a zero challenge (plan §1.2 C12); decided: WN5 refuses a missing, failed or all-zero env.random challenge with exitFatal before any terminal (S3-D7; CW6 WN5 arms; MUT-WN5, MUT-WN5-NIL, MUT-WN5-ERR, MUT-WN5-ZERO, MUT-WN5-CODE killed)",
+  "ApproveByAssertion with a zero Passkey.Key (judge 380)": "COSEKey.verify default arm returns ErrCOSEAlg (fails closed, C14); this sprint never builds a zero key: approveAssertion refuses a stored key ParseStoredCOSEKey rejects (WF5, MUT-WF5-KEY killed); no change",
+  "\"the design says this sprint touches no file in X\" (judge 380)": "measured, plan §1.4 P3: outside design §8 this sprint touches host/approval/cose.go (+cose_stored_test.go, P1) and host/store/context_roots_test.go (+1 root)"
+ },
+ "ci_change": "none",
+ "not_touched": [
+  "every other cmd/ailang-worldd file (approve_sig.go, session*.go, every existing _test.go but help_test.go)",
+  "every other host/approval file",
+  "host/approval/approvaltest/**",
+  "host/approval/testdata/** (generate.sh stays the sprint-1 stub until sprint 4)",
+  "every other host/store file",
+  "host/authority/**",
+  "host/daemon/**",
+  "host/surfacepage/**",
+  ".gitattributes",
+  "docs/QUICKSTART.md (§16 moves with M7)",
+  "world/*.ail",
+  "packages/**",
+  "scripts/**",
+  "tools/launchd/*",
+  "cmd/world-publish/*",
+  "any skill",
+  "~/.ssh",
+  "~/.ailang/world",
+  "~/.ailang/state/mission-v1*"
+ ],
+ "milestones": [
+  {
+   "id": "M6a",
+   "design_milestone": "M6 (§2.12a)",
+   "title": "one terminal, two bounded reads: openApproverTerminal, askApproverLine, confirmOnTerminal (behaviour-preserving)",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md §3 M6a; patch: Appendix P ````diff M6a",
+   "estimate_loc": {
+    "production": 38,
+    "test": 0,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 38,
+   "expected_numstat_when": "after the controller's commit of M6a",
+   "executor_run": 1,
+   "gated": false,
+   "files": [
+    "cmd/ailang-worldd/approver.go"
+   ],
+   "tests": [
+    "CA3, CA4, CA9, CA10, TestConfirmApproverAct (unedited oracle)"
+   ],
+   "apply": "§2 patch protocol with M=M6a",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./cmd/ailang-worldd/ -run '^(TestConfirmApproverAct|TestReadTermLineErrWithin|TestApproverEnrollDeclinedEnrolsNothing|TestApproverEnrollUnansweredPromptTimesOut|TestApproverEnrollWithoutATerminalEnrolsNothing|TestApproverRevokeUnansweredPromptTimesOut|TestApproverRevoke)$' -count=1 -v",
+    "go test ./cmd/ailang-worldd/ -count=1",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [
+    "MUT-OPEN-AFTER",
+    "MUT-OPEN-TTY",
+    "MUT-ASK-COMPLETE",
+    "MUT-ASK-ERR-EQUIV",
+    "MUT-ASK-NL-EQUIV",
+    "MUT-CONFIRM-OK",
+    "MUT-CONFIRM-COMPLETE",
+    "MUT-CONFIRM-YES",
+    "MUT-CONFIRM-BUDGET",
+    "MUT-CONFIRM-CALL"
+   ],
+   "status": "planned"
+  },
+  {
+   "id": "M6b",
+   "design_milestone": "M6 (§2.12b; §1.4 P1)",
+   "title": "L4/L5 labels in approver list and revoke; ParseStoredCOSEKey; CW9",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md §3 M6b; patch: Appendix P ````diff M6b",
+   "estimate_loc": {
+    "production": 59,
+    "test": 140,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 237,
+   "expected_numstat_when": "after the controller's commit of M6b",
+   "executor_run": 1,
+   "gated": false,
+   "files": [
+    "cmd/ailang-worldd/approver.go",
+    "cmd/ailang-worldd/approver_label_test.go",
+    "host/approval/cose.go",
+    "host/approval/cose_stored_test.go"
+   ],
+   "tests": [
+    "TestApproverListAndRevokeShowPasskeys (CW9)",
+    "TestParseStoredCOSEKey"
+   ],
+   "apply": "§2 patch protocol with M=M6b",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./host/approval/ ./cmd/ailang-worldd/ -run '^(TestParseStoredCOSEKey|TestApproverListAndRevokeShowPasskeys|TestApproverList|TestApproverRevoke)$' -count=1 -v",
+    "go test ./cmd/ailang-worldd/ -run '^(TestApprove|TestApprover|TestPasskey|TestConfirmApprover|TestReadTermLine|TestReadRegularFileCapped|TestEveryVerbHasHelp)' -count=1",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [
+    "MUT-L-FORMAT",
+    "MUT-L-FORMAT-ALL",
+    "MUT-L-ERR",
+    "MUT-L-LIST-ERR",
+    "MUT-L5",
+    "MUT-L4-ALG",
+    "MUT-L4-RPID",
+    "MUT-L4-CRED",
+    "MUT-CRED-LEN",
+    "MUT-L-LIST-USE",
+    "MUT-REVOKE-LABEL",
+    "MUT-REVOKE-LABEL-GUARD",
+    "MUT-PSK-DECODE",
+    "MUT-PSK-WRAP"
+   ],
+   "status": "planned"
+  },
+  {
+   "id": "M6c",
+   "design_milestone": "M6 (§2.12)",
+   "title": "approver enroll --format webauthn: WN1-WN11, N3, N6, N7, N9-N14; help; +1 context root; CW1, CW3",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md §3 M6c; patch: Appendix P ````diff M6c",
+   "estimate_loc": {
+    "production": 219,
+    "test": 245,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 701,
+   "expected_numstat_when": "after the controller's commit of M6c",
+   "executor_run": 2,
+   "gated": false,
+   "files": [
+    "cmd/ailang-worldd/approver.go",
+    "cmd/ailang-worldd/approver_passkey.go",
+    "cmd/ailang-worldd/approver_passkey_test.go",
+    "cmd/ailang-worldd/help_test.go",
+    "cmd/ailang-worldd/main.go",
+    "host/store/context_roots_test.go"
+   ],
+   "tests": [
+    "TestPasskeyEnrollFlagRules (CW1, CW3)",
+    "TestEveryVerbHasHelp (edited)",
+    "TestProductionContextRoots (edited)"
+   ],
+   "apply": "§2 patch protocol with M=M6c",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./cmd/ailang-worldd/ ./host/store/ -run '^(TestPasskeyEnrollFlagRules|TestApproverEnrollRefusals|TestApproverDispatchAndHelp|TestEveryVerbHasHelp|TestProductionContextRoots)$' -count=1 -v",
+    "go test ./cmd/ailang-worldd/ -count=1",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [
+    "MUT-WN1",
+    "MUT-WN1-PUBKEY",
+    "MUT-WN1-ORIGIN",
+    "MUT-WN1-REG",
+    "MUT-WN1-AND",
+    "MUT-WN1-SCOPE",
+    "MUT-WN1-PUBKEY-SCOPE",
+    "MUT-DISPATCH",
+    "MUT-WN2",
+    "MUT-WN2-NAME",
+    "MUT-WN2-ORIGIN",
+    "MUT-WN2-REG",
+    "MUT-N3",
+    "MUT-WN3",
+    "MUT-WN4",
+    "MUT-WN4-NIL",
+    "MUT-PRE1",
+    "MUT-N6",
+    "MUT-N7",
+    "MUT-PRE-NIL",
+    "MUT-WN5",
+    "MUT-WN5-NIL",
+    "MUT-WN5-ERR",
+    "MUT-WN5-ZERO",
+    "MUT-WN5-CODE",
+    "MUT-N9",
+    "MUT-WN6",
+    "MUT-WN6-BUDGET",
+    "MUT-WN6-CONST",
+    "MUT-WN7",
+    "MUT-LINK-OP",
+    "MUT-LINK-RP",
+    "MUT-LINK-NAME",
+    "MUT-LINK-CHALLENGE",
+    "MUT-WN8",
+    "MUT-WN8-CAP",
+    "MUT-WN9",
+    "MUT-WN9-CHALLENGE",
+    "MUT-WN9-NOW",
+    "MUT-WN10",
+    "MUT-WN10-PREFIX",
+    "MUT-WN10-CDJ",
+    "MUT-WN10-UPPER",
+    "MUT-WN10-DASH",
+    "MUT-WN10-SPACE",
+    "MUT-WN10-TAB",
+    "MUT-WN10-NL",
+    "MUT-WN11-CALL",
+    "MUT-WN11-REFUSAL",
+    "MUT-WN11-KEY",
+    "MUT-WN11-CRED",
+    "MUT-YN",
+    "MUT-YN-RENDER",
+    "MUT-N11",
+    "MUT-N12-NAME",
+    "MUT-N12-KEY",
+    "MUT-N12-CRED",
+    "MUT-N13",
+    "MUT-N13-CODE",
+    "MUT-ROW-KEY",
+    "MUT-ROW-AAGUID",
+    "MUT-ROW-ALG",
+    "MUT-ROW-BE",
+    "MUT-ROW-COUNT"
+   ],
+   "status": "planned"
+  },
+  {
+   "id": "M6d",
+   "design_milestone": "M6 (§2.12, §2.8)",
+   "title": "the ceremony (CW2) and the read-then-substitute refusal (CW5)",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md §3 M6d; patch: Appendix P ````diff M6d",
+   "estimate_loc": {
+    "production": 0,
+    "test": 244,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 945,
+   "expected_numstat_when": "after the controller's commit of M6d",
+   "executor_run": 2,
+   "gated": false,
+   "files": [
+    "cmd/ailang-worldd/approver_passkey_ceremony_test.go"
+   ],
+   "tests": [
+    "TestPasskeyEnrollEnrolsWhatTheBrowserMade (CW2)",
+    "TestPasskeyEnrollRefusesASubstituteEvenWithTheGenuineCode (CW5)"
+   ],
+   "apply": "§2 patch protocol with M=M6d",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./cmd/ailang-worldd/ -run '^(TestPasskeyEnrollEnrolsWhatTheBrowserMade|TestPasskeyEnrollRefusesASubstituteEvenWithTheGenuineCode)$' -count=1 -v",
+    "go test ./cmd/ailang-worldd/ -run '^(TestApprove|TestApprover|TestPasskey|TestConfirmApprover|TestReadTermLine|TestReadRegularFileCapped|TestEveryVerbHasHelp)' -count=1",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [],
+   "status": "planned"
+  },
+  {
+   "id": "M6e",
+   "design_milestone": "M6 (§2.12)",
+   "title": "unanswered, declined and refused ceremonies (CW4) and the race and refusals (CW6)",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md §3 M6e; patch: Appendix P ````diff M6e",
+   "estimate_loc": {
+    "production": 0,
+    "test": 245,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 1190,
+   "expected_numstat_when": "after the controller's commit of M6e",
+   "executor_run": 3,
+   "gated": false,
+   "files": [
+    "cmd/ailang-worldd/approver_passkey_refusals_test.go"
+   ],
+   "tests": [
+    "TestPasskeyEnrollDeclinedOrUnanswered (CW4)",
+    "TestPasskeyEnrollRaceAndRefusals (CW6)"
+   ],
+   "apply": "§2 patch protocol with M=M6e",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./cmd/ailang-worldd/ -run '^(TestPasskeyEnrollDeclinedOrUnanswered|TestPasskeyEnrollRaceAndRefusals)$' -count=1 -v",
+    "go test ./cmd/ailang-worldd/ -run '^(TestApprove|TestApprover|TestPasskey|TestConfirmApprover|TestReadTermLine|TestReadRegularFileCapped|TestEveryVerbHasHelp)' -count=1",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [],
+   "status": "planned"
+  },
+  {
+   "id": "M6f",
+   "design_milestone": "M6 (§2.13 link)",
+   "title": "approve --webauthn-link (WF1), F1 at four modes, help; CW7 (links)",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md §3 M6f; patch: Appendix P ````diff M6f",
+   "estimate_loc": {
+    "production": 86,
+    "test": 123,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 1397,
+   "expected_numstat_when": "after the controller's commit of M6f",
+   "executor_run": 3,
+   "gated": false,
+   "files": [
+    "cmd/ailang-worldd/approve.go",
+    "cmd/ailang-worldd/approve_passkey.go",
+    "cmd/ailang-worldd/approve_passkey_test.go",
+    "cmd/ailang-worldd/help_test.go",
+    "cmd/ailang-worldd/main.go"
+   ],
+   "tests": [
+    "TestApproveByPasskey (CW7, links)",
+    "TestEveryVerbHasHelp (edited)"
+   ],
+   "apply": "§2 patch protocol with M=M6f",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./cmd/ailang-worldd/ -run '^(TestApproveByPasskey|TestEveryVerbHasHelp|TestApproveFlagRules)$' -count=1 -v",
+    "go test ./cmd/ailang-worldd/ -run '^(TestApprove|TestApprover|TestPasskey|TestConfirmApprover|TestReadTermLine|TestReadRegularFileCapped|TestEveryVerbHasHelp)' -count=1",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [
+    "MUT-F1-LINK",
+    "MUT-WF-LINK-DISPATCH",
+    "MUT-WF-LINK-REFUSAL",
+    "MUT-LINK-V6",
+    "MUT-WF1",
+    "MUT-HASH16",
+    "MUT-LINK-GROUP",
+    "MUT-LINK-ALLOW",
+    "MUT-LINK-GET-RP",
+    "MUT-LINK-EXPIRES",
+    "MUT-LINK-REQUEST",
+    "MUT-LINK-CHALLENGE-H",
+    "MUT-HASH-EXPIRY"
+   ],
+   "status": "planned"
+  },
+  {
+   "id": "M6g",
+   "design_milestone": "M6 (§2.13 assertion)",
+   "title": "approve --webauthn-assertion (WF2-WF6), F1 at five modes, help; CW7 (the mint, replay, K8)",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md §3 M6g; patch: Appendix P ````diff M6g",
+   "estimate_loc": {
+    "production": 73,
+    "test": 84,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 1538,
+   "expected_numstat_when": "after the controller's commit of M6g",
+   "executor_run": 4,
+   "gated": false,
+   "files": [
+    "cmd/ailang-worldd/approve.go",
+    "cmd/ailang-worldd/approve_passkey.go",
+    "cmd/ailang-worldd/approve_passkey_test.go",
+    "cmd/ailang-worldd/help_test.go",
+    "cmd/ailang-worldd/main.go"
+   ],
+   "tests": [
+    "TestApproveByPasskey (CW7, complete)",
+    "TestEveryVerbHasHelp (edited)"
+   ],
+   "apply": "§2 patch protocol with M=M6g",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./cmd/ailang-worldd/ -run '^(TestApproveByPasskey|TestEveryVerbHasHelp|TestApproveFlagRules|TestApproveBySignatureMintsWithNoTerminal)$' -count=1 -v",
+    "go test ./cmd/ailang-worldd/ -run '^(TestApprove|TestApprover|TestPasskey|TestConfirmApprover|TestReadTermLine|TestReadRegularFileCapped|TestEveryVerbHasHelp)' -count=1",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [
+    "MUT-F1-ASSERT",
+    "MUT-WF-ASSERT-DISPATCH",
+    "MUT-WF-ASSERT-REFUSAL",
+    "MUT-WF2",
+    "MUT-WF2-CAP",
+    "MUT-WF3",
+    "MUT-WF4",
+    "MUT-WF5",
+    "MUT-WF5-KEY",
+    "MUT-WF6",
+    "MUT-AS-NOW",
+    "MUT-AS-CHALLENGE",
+    "MUT-AS-RESPONSE",
+    "MUT-AS-NAME",
+    "MUT-AS-FORMAT",
+    "MUT-AS-ENROLLED",
+    "MUT-AS-REVOKED",
+    "MUT-AS-RPID",
+    "MUT-AS-ORIGIN",
+    "MUT-AS-CRED-EQUIV",
+    "MUT-AS-KEY",
+    "MUT-AS-BE",
+    "MUT-AS-COUNT"
+   ],
+   "status": "planned"
+  },
+  {
+   "id": "M6h",
+   "design_milestone": "M6 (§2.13 refusals)",
+   "title": "CW8: WF2-WF6 before any effect; the F1/F2 pairs of five modes",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md §3 M6h; patch: Appendix P ````diff M6h",
+   "estimate_loc": {
+    "production": 0,
+    "test": 148,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 1686,
+   "expected_numstat_when": "after the controller's commit of M6h",
+   "executor_run": 4,
+   "gated": false,
+   "files": [
+    "cmd/ailang-worldd/approve_passkey_refusals_test.go"
+   ],
+   "tests": [
+    "TestApprovePasskeyRefusalsBeforeAnyEffect (CW8)",
+    "TestApprovePasskeyFlagRules (CW8, F1/F2)"
+   ],
+   "apply": "§2 patch protocol with M=M6h",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./cmd/ailang-worldd/ -run '^(TestApprovePasskeyRefusalsBeforeAnyEffect|TestApprovePasskeyFlagRules|TestApproveFlagRules)$' -count=1 -v",
+    "go test ./cmd/ailang-worldd/ -count=1",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [],
+   "status": "planned"
+  }
+ ],
+ "sprint_gates": {
+  "script": "plan §6 (one bash heredoc, tee to $HOME/.ailang/state/world-iter381/gates/, never under nohup)",
+  "pre_commit": [
+   "verify_ail.sh",
+   "gofmt -l cmd host empty",
+   "go build ./...",
+   "go vet ./...",
+   "go test -run '^$' ./...",
+   "go test -count=1 ./host/approval/... ./host/store/ ./host/authority/ ./cmd/ailang-worldd/ ./host/daemon/",
+   "go test -race ./host/approval/... ./host/store/ and the cmd/ailang-worldd passkey/approver tests",
+   "30 named inventory/reflective/help/quickstart tests -v, each --- PASS, no SKIP/FAIL"
+  ],
+  "after_commit": "VERIFY_GO_LEGS=plain ./scripts/verify_go.sh (re-run a red untouched package alone once; do not chase)",
+  "base_measured": "plan §1.1, §6"
+ },
+ "executor_directives": {
+  "git_writes": "none: never git add/commit/stash/checkout/reset/restore/rebase/push/worktree/apply; patch -p1 is the only writer; read-only git status/diff fine",
+  "apply": "plan §2: awk-extract ````diff <M> from the plan, patch -p1 --dry-run then patch -p1, stop on .orig/.rej; then §3 acceptance in one bash shell with AILANG_BIN exported, tee to $HOME/.ailang/state/world-iter381/exec-logs/",
+  "snapshot": "cumulative to $HOME/.ailang/state/world-iter381/snap/<M>/ with MANIFEST.sha256, excluding the two plan files (plan §7)",
+  "expected_numstat": {
+   "M6a": 38,
+   "M6b": 237,
+   "M6c": 701,
+   "M6d": 945,
+   "M6e": 1190,
+   "M6f": 1397,
+   "M6g": 1538,
+   "M6h": 1686
+  },
+  "expected_numstat_when": "after the controller's commit of each sub-milestone: git diff --numstat ab4b2402 HEAD -- cmd host",
+  "logs": "$HOME/.ailang/state/world-iter381/exec-logs/ (tee, never only through tail)",
+  "stop_conditions": "patch --dry-run failure; other numstat; a red earlier test; --- SKIP/FAIL in a -v run; a file outside plan §5; Chrome/Node/ssh-keygen/browser; ~/.ssh, ~/.ailang/world, real /dev/tty; any gate under nohup"
+ },
+ "mutation_harness": "$HOME/.ailang/state/world-iter381/plan-scratch/tools/mutate.py <tree> tools/mutants.json logs/mutant_ledger.tsv <run-label> --workers N [ids...] (outside the repo; named test AND package suite per mutant; one ledger line per run); base controls tools/base_controls.json",
+ "mutation_ledger": "$HOME/.ailang/state/world-iter381/plan-scratch/logs/mutant_ledger.tsv",
+ "mutation_count": {
+  "rows_run": 124,
+  "killed": 121,
+  "equivalents_survived": 3,
+  "base_controls": 3,
+  "nocompile_final": 0,
+  "first_pass_rewritten": "17 drafts did not compile in the first pass (16 mutants, 1 base control: 'if false' leaving ok/complete/taken/i/err/imports unused); each rewritten into a compiling form and re-run (run2-rewritten, base-controls-2); MUT-ASK-COMPLETE's first rewrite left strings unused and was rewritten again (run3-rewritten); MUT-L-FORMAT re-run in its final form; every run is a ledger line"
+ },
+ "mutation_equivalents_named": [
+  "MUT-ASK-ERR-EQUIV: equivalent: bufio.Reader.ReadString returns a non-nil error only for a line that does not end in the delimiter",
+  "MUT-ASK-NL-EQUIV: equivalent: with a nil error ReadString's line ends in the delimiter, and a timed-out read (line \"\") is refused by !ok first",
+  "MUT-AS-CRED-EQUIV: equivalent: the row was found by resp.RawID exactly, so p.CredentialID is the same bytes"
+ ],
+ "mutation_table_ref": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md §4",
+ "acceptance_criteria_ref": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md §9 (14 criteria)",
+ "deferred": {
+  "plan_ref": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md Appendix C",
+  "items": [
+   "M7 whole: host/surfacepage/passkey/{index.html,passkey.js}, its embed, GET /surface/passkey and /surface/passkey.js, PG1, the TestSurfaceAppRoutes edit, testdata/passkey_cdp.mjs, XB1, XB2, generate.sh",
+   "QUICKSTART §16 (attended - pending first verbatim run)",
+   "attended exit run (design §10): Mark (D-WORLD-109); needs sprint 4"
+  ]
+ }
+}
