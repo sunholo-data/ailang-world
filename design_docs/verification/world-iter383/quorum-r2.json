@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-world-approvals-by-key-a3.md",
+  "iso_ts": "2026-11-11T16:47:14Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.09579960000000001,
+      "tokens_in": 27524,
+      "tokens_out": 13015,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The fail-closed rule in §2.7 step 2 — \"a listed path that is missing … → refuse\" — rests on an unverified premise: that every canonical request serializes every FIELDS path. No verification row inspects `approval.MintRequest`'s json tags for `omitempty`. V23/V24's two golden requests differ only in `task`/`model`, so they cannot establish that all 21 top-level keys (and the nested `grants[]`/`profile`/`daemon` paths) are always present; if any tag is `omitempty` (plausible exactly for the booleans the FIELDS table calls out — `reuse`, `degraded`, `daemon.vcs_modified`, which can legitimately be false/zero), the card refuses every legitimate request that omits the field, bricking the surface path for degraded/non-git requests, and XA1's \"every FIELDS path's rendered text equals the request's value\" carries the same premise. PG3's reflection walk compares FIELDS to the struct's full tag set regardless of `omitempty`, so it cannot catch this. This is an unverified, load-bearing factual claim about the codebase — reject under gate 1.",
+        "catch": "Three asserted-but-unlogged premises to fix or verify: (1) the `omitempty` question above; (2) §2.6/§3's claim that `env.after` is an existing CLI seam (\"no new seam\") — no V row shows it; (3) §2.3's `DecidedMintRequests(\"\", 20)` — that an empty `approvedBy` filter means \"all approvers\" is asserted, not verified (V5 shows the signature only).",
+        "proposed_fix": "Add V28: `sed -n '/^type MintRequest struct/,/^}/p' host/approval/request.go` plus the nested `Grant`/`Profile`/`Daemon` struct definitions and `grep -n omitempty host/approval/request.go`, recording the exact tags. Then: (a) if no tag is `omitempty`, add one sentence to §2.7 — \"no `MintRequest` json tag is `omitempty` (V28), so every canonical request carries every FIELDS path; the missing-path refusal is sound\" — extend PG3's control to assert the tag walk finds no `omitempty`, and add a third golden case to V23/V24 with a degraded (non-git) request and `reuse: false`, showing all 21 keys still present; or (b) if any tag is `omitempty`, mark those FIELDS entries `optional` and amend the rule to: refuse an unlisted key present in the bytes or a value of unexpected JSON type; render a listed-but-absent optional path as \"absent\" (safety is unchanged — R9's digest equality, R11's law binding, and the minter's step-5 byte-equal re-derivation still refuse tampered bytes), and change XA2 arm (c)'s deleted-field case to delete a field V28 confirms always serializes. Add V29 pinning the `env.after` seam (`grep -n \"after\" cmd/ailang-worldd/env*.go` or equivalent) and V30 pinning `DecidedMintRequests`' empty-filter semantics, or drop the \"no new seam\" claim and the `\"\"` argument."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.27265500000000004,
+      "tokens_in": 26950,
+      "tokens_out": 12787,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc unilaterally amends an attended parent twice without any recorded amendment authority, while asserting in its header that the parent's rulings \"are not reopened.\" (1) §0 halves the parent's A3 milestone sentence — deferring the entire Tauri half (\"plus a native notification and the optional Touch ID convenience in the Tauri app\", quoted in V2 :84) to unscheduled row 188 N3 — even though V19 shows D-WORLD-88 R1 (\"Tauri v2 — Native desktop shell now\") is a *recorded attended decision*; deferring Tauri delivery brushes directly against it, yet the split is asserted as fait accompli and is not even posed as an open question (Q1 only asks about a native signer, not about the deferral). (2) §2.1 inverts parent §2.4's mechanism (\"The daemon verifies the signature … It then mints\") into a CLI-poller minter, self-labelled \"DEPARTED-FROM-PARENT,\" but the doc never demonstrates that mint-location is design text rather than an attended ruling — it quotes the parent's §3 invariants and A3 sentence but produces no ruling-boundary analysis showing the parent fixed nothing about where minting runs. Disclosure plus quorum non-objection in r0 (\"none disputed the direction\") is not the D-WORLD-style attended amendment record the mission's own ledger pattern uses for direction changes against attended parents. The justifications are measured and possibly correct, but the doc proceeds *as written* on authority it has not shown it has.",
+        "catch": "Have the author add a ruling-boundary verification: quote the parent's complete attended rulings/decision items (not just §3's four invariants) and show line-by-line that neither the A3 sentence's Tauri delivery vehicle nor §2.4's \"It then mints\" mechanism is among them. If either is a ruling — D-WORLD-88 R1 (Tauri v2, per V19) makes the Tauri deferral especially suspect — the split and the mechanism inversion need an attended amendment record (a D-WORLD row or explicit Mark/controller sign-off), not a bolded \"DEPARTED-FROM-PARENT\" note. Secondary verification gap to fix in the same pass: the measurement base `0140bd7f` is the head of unmerged PR #552 (blocked by a CI outage), and §8 treats that only as a scheduling conflict — no re-verification trigger exists if #552's tree changes at merge, which would silently stale every sha pin, line cite, and V15 \"passes at the base.\"",
+        "proposed_fix": "Add to §0, immediately after the split paragraph: '**Amendment posture.** The parent is attended; two of its texts are amended here and require controller confirmation, recorded in §15: (a) A3's Tauri half is deferred to row 188 N3, against parent :84 and D-WORLD-88 R1 (V19 :1007); justification V12/V13 (no desktop/, no cargo, no CI step). (b) The mint location moves from the daemon (parent §2.4) to the CLI minter; justification §1.3/§1.4/V7/V8; the parent's §3 invariants (:63-66) fix no mint location. r0 round 1 raised no objection to either, but non-objection is not the amendment record; the controller confirms or the affected text reverts.' Then add two rows to §14: 'V28: the parent's complete rulings inventory — grep/quote every decision item in w-world-approvals-by-key.md and D-WORLD-89's rulings list, showing mint-location and A3 delivery vehicle appear in none of them' and 'V29: base-drift trigger — before sprint 1, re-run V1, V8, V15, V18 at PR #552's merge commit; if any hash differs, re-issue this doc as r2 with updated pins before any code lands.' Also add the two amendment items as explicit checklist lines in §15 for the controller to initial, and mirror them in §10's attended-run record so Mark's exit sign-off covers the split. If the controller declines either amendment, A3a narrows: no Tauri deferral language (design waits on row 188), and the daemon-mints mechanism returns to the drawing board."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.057836000000000005,
+      "tokens_in": 27283,
+      "tokens_out": 327,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The browser approval flow violates the bounded-waits gate as specified: §2.7 bounds navigator.credentials.get, but neither the initial request-data fetch nor the approval POST has an application deadline or cancellation rule. A server or proxy that accepts the connection and never completes its response can leave the card indefinitely loading or submitting. The three retries mentioned in T12 do not bound an individual fetch.",
+        "catch": "Specify finite deadlines for browser HTTP operations, including response-body consumption. A timed-out POST has an unknown outcome—it may already have recorded the approval—so the UI must not report that nothing was recorded or silently switch approval mechanisms.",
+        "proposed_fix": "Add a browser-network deadline paragraph to §2.7: 'Each card GET and approval POST, including response-body consumption, has a 10-second AbortController deadline. Navigation cancels outstanding operations. A GET timeout displays an explicit retryable error. A POST timeout displays “approval recording outcome unknown” and offers a bounded status refresh; it does not claim rejection or minting. Only an explicit 503 Busy response triggers automatic retries, at one-second intervals, at most three retries, with each attempt independently deadline-bound. No timeout switches signing formats or falls back to another approval path.' Extend the Chrome harness with stalled-header and stalled-body cases for both GET and POST, including a POST that records successfully but withholds its response; assert deadline termination, accurate unknown-outcome messaging, bounded retries, and no fallback."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r1: the three r1 objections are answered at §2.3/§2.4 R3 (surface origin set incl. serve --surface-origin; RT13), §1.14-1.15 + V23-V26 (crypto.subtle byte-equal to Go measured), §2.7 FIELDS table + PG3 (every canonical field rendered). Controller spot-checked the answers exist at the cited lines."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The fail-closed rule in §2.7 step 2 — \"a listed path that is missing … → refuse\" — rests on an unverified premise: that every canonical request serializes every FIELDS path. No verification row inspects `approval.MintRequest`'s json tags for `omitempty`. V23/V24's two golden requests differ only in `task`/`model`, so they cannot establish that all 21 top-level keys (and the nested `grants[]`/`profile`/`daemon` paths) are always present; if any tag is `omitempty` (plausible exactly for the booleans the FIELDS table calls out — `reuse`, `degraded`, `daemon.vcs_modified`, which can legitimately be false/zero), the card refuses every legitimate request that omits the field, bricking the surface path for degraded/non-git requests, and XA1's \"every FIELDS path's rendered text equals the request's value\" carries the same premise. PG3's reflection walk compares FIELDS to the struct's full tag set regardless of `omitempty`, so it cannot catch this. This is an unverified, load-bearing factual claim about the codebase — reject under gate 1.",
+      "oc-kimi-k3: The doc unilaterally amends an attended parent twice without any recorded amendment authority, while asserting in its header that the parent's rulings \"are not reopened.\" (1) §0 halves the parent's A3 milestone sentence — deferring the entire Tauri half (\"plus a native notification and the optional Touch ID convenience in the Tauri app\", quoted in V2 :84) to unscheduled row 188 N3 — even though V19 shows D-WORLD-88 R1 (\"Tauri v2 — Native desktop shell now\") is a *recorded attended decision*; deferring Tauri delivery brushes directly against it, yet the split is asserted as fait accompli and is not even posed as an open question (Q1 only asks about a native signer, not about the deferral). (2) §2.1 inverts parent §2.4's mechanism (\"The daemon verifies the signature … It then mints\") into a CLI-poller minter, self-labelled \"DEPARTED-FROM-PARENT,\" but the doc never demonstrates that mint-location is design text rather than an attended ruling — it quotes the parent's §3 invariants and A3 sentence but produces no ruling-boundary analysis showing the parent fixed nothing about where minting runs. Disclosure plus quorum non-objection in r0 (\"none disputed the direction\") is not the D-WORLD-style attended amendment record the mission's own ledger pattern uses for direction changes against attended parents. The justifications are measured and possibly correct, but the doc proceeds *as written* on authority it has not shown it has.",
+      "gpt6-1-sol: The browser approval flow violates the bounded-waits gate as specified: §2.7 bounds navigator.credentials.get, but neither the initial request-data fetch nor the approval POST has an application deadline or cancellation rule. A server or proxy that accepts the connection and never completes its response can leave the card indefinitely loading or submitting. The three retries mentioned in T12 do not bound an individual fetch."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.4262906000000001,
+    "total_tokens_in": 81757,
+    "total_tokens_out": 26129
+  }
+}

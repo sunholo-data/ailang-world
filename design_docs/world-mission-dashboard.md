@@ -1,23 +1,15 @@
-# World mission dashboard — iteration 381 (2026-11-11)
+# World mission dashboard — iteration 383 (2026-11-11)
 
-- **Landed this fire:** row 201 A2 sprint 3 (`w-world-approvals-by-key`), PR #550, merge `0ce117c5`. CI 3/3 on the PR head after one re-run of a known `scripts/marketingcheck` flake. Judge sonnet PASS 92, zero blocking.
-- **What it does:** the operator CLI for passkey approvals.
-  - `approver enroll --format webauthn --origin <o> --registration <file>`: prints a ceremony link with a fresh random challenge (nil, failed or all-zero refused), reads the browser's 26-character enrolment code within 300 s, compares it in constant time over the whole code (one attempt), refuses a substituted registration file, then asks y/N and writes. No store handle or writer lock is held while a prompt waits.
-  - `approver list`/`revoke` label passkeys; `host/approval.ParseStoredCOSEKey` reads a stored key back.
-  - `approve <id> --webauthn-link` prints one link per origin (no terminal, no write); `approve <id> --webauthn-assertion <file>` refuses bad input before any daemon call and mints with no World prompt (`approved_by = webauthn:<name>`).
-- **The cut:** M6 measured 1,686 lines (design estimate 1,220), so the design's own §9 fallback fired. The ceremony page (M7: `/surface/passkey`, live-Chrome tests, `generate.sh`) and QUICKSTART §16 are **sprint 4**. Until then the printed links 404 and nothing can be enrolled or approved by passkey; the state fails closed.
-- **Next loop work:** row 201 A2 sprint 4 (M7 from the sprint-3 plan's Appendix C), then Mark's attended real-passkey exit run (design §10), then A3–A4, then row 243.
-- **Attended, pending Mark:** A1b exit run (QUICKSTART §15, his SSH key); A2's real-passkey exit run (design §10) after sprint 4.
-- **Row 256:** taken by an attended session; the loop does not pick it.
-- **OPEN decisions:** D-WORLD-105 only (default C: row 233 parked, fail closed).
-- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 (attended A1) and 151 (row 188 N2d/N4a) are not routable.
-- **Routing this fire:** all roles ran through the Agent tool; no designer or quorum (the A2 r2 doc covers sprint 3).
-  - Controller: opus. Planner: opus, 181 min, 8 compiled patches. Executor: haiku, four runs. Judge: sonnet, own worktree.
-  - Codex was unusable at preflight (probe rc 75); no role needed it. Metered $0.00.
-- **Instrument notes:**
-  - The rig was loaded all fire (load 12–38 from other sessions): timing tests in untouched packages went red in `verify_go.sh` (`host/broker` exec probes, `TestHostsLaunchersExecHost`) and passed alone. Re-run a red alone and compare with the base before calling it a regression.
-  - `scripts/marketingcheck` supervisor cleanup flake (row 254 → 258 class) hit a new subtest, `shell-int`, on the PR race job; green on re-run.
-  - The judge's per-run mutant ledger held (its recompiled mutant has its own line).
-  - Never start a Go gate under `nohup`. Export `AILANG_BIN=~/.pinned-ailang/ailang` for the Go tests.
-  - The self-notice script returns rc 2 until a directive is marked on #524.
+- **Landed this fire:** row 201 A2 sprint 4 (PR #552, merge `88ff1565`; judged PASS 91 at 382): the `/surface/passkey` ceremony page, live-Chrome XB1/XB2, `generate.sh`. The CI host job had failed at `apt-get install` (DNS failure resolving `azure.archive.ubuntu.com`, GitHub status operational) on attempts 2–7 this fire. Attempt 8 at 17:00Z went 3/3, and #552 merged pinned to that head. Push CI on the merge: 3/3 success (run 43065674075, 17:26Z). **A2 is code-complete.**
+- **Designed this fire:** row 201 A3, [`w-world-approvals-by-key-a3.md`](planned/w-world-approvals-by-key-a3.md) r2.
+  - **A3a**, the web surface flow, in three sprints (≈ 1,650 / 1,900 / 2,200 lines). The daemon verifies a POSTed passkey or SSH signature with the existing law and records it; the CLI minter `approve <id> --await` (no terminal) re-judges it and mints. The surface gets *Needs you*, a request card that renders every signed field, a decision list and an opt-in notification.
+  - **A3b**, Tauri notification and Touch ID: constraints only; no Tauri app exists yet (row 188 N3).
+  - Quorum blocked twice (3/3 each, $0.81). r2 applies the reviewers' own fixes under the carve-out; an independent sonnet audit found it valid (84, zero blocking).
+- **New decision for Mark:** D-WORLD-114. Keep the design's two amendments to the attended parent: (a) the Tauri half waits for row 188 N3; (b) the CLI, not the daemon, mints. Default A (keep both); the loop holds A3a code for one report cycle.
+- **Next loop work:** the A3a sprint-1 planner (V32 base-drift check first).
+- **Attended, pending Mark:** A1b exit run (QUICKSTART §15); A2 real-passkey exit run (A2 §10, QUICKSTART §16), now runnable.
+- **OPEN decisions:** D-WORLD-105 (default C), D-WORLD-114 (default A).
+- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150/151 not routable.
+- **Routing this fire:** designer opus (Agent; r0 and one r1 resume); quorum glm-5-3, kimi-k3, gpt6-1-sol with Anthropic benched; evaluator sonnet (Agent) auditing the r2 carve-out; no planner or executor (a design-only fire). Codex unusable at preflight (rc 75). Metered $0.81 (quorum).
+- **Instrument notes:** the self-notice script returns rc 2 until a directive is marked on #524. the runner apt-mirror outage lasted about 3 hours; re-running cleared it.
 - **Bookkeeping thread:** #524 (rotates Monday 2026-11-16 07:00).
