@@ -1,6 +1,6 @@
 # w-world-approvals-by-key-a3: the surface approves, the minter mints
 
-- **Status**: Planned. Designed in iteration 383, **r1**. Queue row 201, `w-world-approvals-by-key`,
+- **Status**: Planned. Designed in iteration 383, **r2** (controller narrow-refinement carve-out applying quorum round 2's verbatim fixes; see §15). Queue row 201, `w-world-approvals-by-key`,
   **[r1]** r0 (commit `8a44080c`) was **BLOCKED 3 of 3** at quorum round 1 (oc-glm-5-3, oc-kimi-k3,
   gpt6-1-sol). None disputed the direction, and the controller re-checked each objection as real.
   r1 applies all three fixes, and the changed text is marked **[r1]**:
@@ -112,6 +112,8 @@ ID convenience in the Tauri app".
   `approve.js` (§2.7); *Needs you*, the decision list and the opt-in notification in `app.js`
   (§2.8, §2.9); the live-Chrome tests XA1–XA4 on the A2 driver, extended (§6); QUICKSTART §17
   *(attended — pending first verbatim run)*.
+
+**[r2] Amendment posture.** The parent is attended; two of its texts are amended here and require controller confirmation, recorded in §15: (a) A3's Tauri half is deferred to row 188 N3, against parent :84 and D-WORLD-88 R1 (V19 :1007); justification V12/V13 (no desktop/, no cargo, no CI step). (b) The mint location moves from the daemon (parent §2.4) to the CLI minter; justification §1.3/§1.4/V7/V8; the parent's §3 invariants (:63-66) fix no mint location. r0 round 1 raised no objection to either, but non-objection is not the amendment record; the controller confirms or the affected text reverts. Both are also put to Mark as **D-WORLD-114** (default A: keep both), and mirrored in §10's attended-run record.
 
 **Out of A3a:** the Tauri app and anything native (A3b); `Human.Approve` decision packets (A4);
 a request *created* from the surface (row 243's no-terminal episode, and parent §3's "an agent may
@@ -494,7 +496,7 @@ func JudgeSSHSignature(ctx context.Context, ro *store.Credentials, row store.Min
        list, a listed path that is missing, or a value of an unexpected JSON type → **refuse**
        ("this request has a field the page cannot show (<path>); nothing to approve; approve it at
        a terminal"). So the card can never sign bytes it did not fully display. PG3 ties `FIELDS`
-       to the Go struct at build time; XA2 arm (c) exercises the runtime refusal;
+       to the Go struct at build time; XA2 arm (c) exercises the runtime refusal; **[r2]** no `MintRequest` json tag is `omitempty` (V28), so every canonical request carries every FIELDS path; the missing-path refusal is sound;
   3. **computes the challenge itself**: `msg = "world-approval/v1" ‖ 0x00 ‖ digest ‖ nonce ‖
      u64be(expires)` (90 bytes), `challenge = SHA-256(msg)` with `crypto.subtle`; it never takes a
      hash from the server. **[r1] Measured (V23):** this construction, with `TextEncoder` and
@@ -523,6 +525,8 @@ func JudgeSSHSignature(ctx context.Context, ro *store.Credentials, row store.Min
   auditable and driven by the A2 driver's id-based `pageState`. The app links to it (§2.8). This is
   how A3 reads A2 §2.14's "moving this page into the surface app": the approval ceremony moves from
   a CLI-printed fragment link to a page the surface app opens from *Needs you*, fed by the daemon.
+
+**[r2] Browser-network deadlines.** Each card GET and approval POST, including response-body consumption, has a 10-second AbortController deadline. Navigation cancels outstanding operations. A GET timeout displays an explicit retryable error. A POST timeout displays “approval recording outcome unknown” and offers a bounded status refresh; it does not claim rejection or minting. Only an explicit 503 Busy response triggers automatic retries, at one-second intervals, at most three retries, with each attempt independently deadline-bound. No timeout switches signing formats or falls back to another approval path.
 
 ### 2.8 *Needs you* and the decision list in the surface app (`app.js`)
 
@@ -706,6 +710,8 @@ extended, never replaced. Keys are `approvaltest` keys or Chrome's virtual authe
 | Id | Test | Asserts | Mutants killed |
 |---|---|---|---|
 | **PG3 [r1]** | `TestApprovePageRendersEveryCanonicalField` (`host/surfacepage`) | extracts `approve.js`'s `FIELDS` literal (between `/* FIELDS */` markers, parsed as JSON) and compares it with the JSON key paths of `approval.MintRequest`, walked by reflection (`json` tags, slices as `[]`, nested structs): equal sets, and every entry has a non-empty label and a group. **Control (labelled):** the walk of the struct yields 21 top-level keys, the count the browser measured in the bytes (V24) | **a field added to `MintRequest` with no renderer**; a `FIELDS` entry deleted; a renamed tag |
+| **PG3b [r2]** | `TestApprovePageRendersEveryCanonicalField` (control arms) | PG3's tag walk also asserts it finds no `omitempty` on `MintRequest`, `Grant`, `ProfileRef`, `DaemonRef` (V28); a third golden case — a degraded (non-git) request with `reuse: false` — shows all 21 keys still present; XA2 arm (c)'s deleted-field case deletes a field V28 confirms always serializes | an `omitempty` added to any tag; a FIELDS entry made optional |
+| **XA5 [r2]** | `TestApproveCardNetworkDeadlines` (`cmd/ailang-worldd`, the Chrome harness) | stalled-header and stalled-body cases for both GET and POST, including a POST that records successfully but withholds its response: deadline termination, accurate unknown-outcome messaging, bounded retries (503 only, ≤3, 1 s apart), and no fallback | the AbortController removed; retry on a non-503; an unknown outcome shown as refused or minted |
 | PG2 | `TestApprovePageRoutes` (`host/daemon`) | the embedded bytes, `surfaceCSP` unchanged, 400 for a bad id; `passkey.js`/`index.html` sha256 unchanged. Labelled controls (not load-bearing): `approve.js` has no `innerHTML`, `eval(`, `document.cookie` | — |
 | XA1 | `TestApprovePageInChrome` (`cmd/ailang-worldd`) | virtual authenticator; enrol through the A2 page + CLI (XB1's helpers); `--request`; open `/surface/approve/<id>`; **[r1]** every `FIELDS` path's rendered text equals the request's value (read back by element id);  click Approve; 200 recorded; `approve --await` mints; zero CSP violations, zero console errors; the A2 page's `get` for the same request carries the same `challenge` bytes | the page using another challenge |
 | **XA2** | `TestApprovePageRefusesASwappedRequest` | CDP `Fetch.enable` rewrites the card response: (a) bytes changed, digest kept → the page refuses, **no `credentials.get` call** (injected recorder); (b) bytes and digest both forged → the page signs, the POST is **422**, 0 rows; **[r1] (c)** bytes with an extra key (`"extra":"x"`), and separately with `branch` deleted, each re-hashed so the digest matches → the page refuses naming the path, **no `credentials.get` call and no message link** | **`approve.js` using a server hash** or skipping the digest check; **[r1] the walk rendering only known fields and ignoring the rest** |
@@ -831,6 +837,8 @@ On a scratch store, with his own devices and passkey (enrolled in A2's run, §10
 8. **Record** public values only: browsers, the Host seen, notification behaviour per browser, and
    any refusal text that confused.
 
+9. **[r2] Confirm or veto the two amendments** (§0 *Amendment posture*; D-WORLD-114): (a) the Tauri half deferred to row 188 N3; (b) the CLI minter mints. Mark's exit sign-off covers the split.
+
 QUICKSTART §17 is executed verbatim in that run, and its *attended — pending* tag is removed.
 
 ## 11. Residuals and risks
@@ -922,7 +930,19 @@ a positive control in the same or an adjacent command.
 | **V25 [r1]** | The Notifications API in headless Chrome, without a gesture | same run, the page reads `typeof Notification`, `Notification.permission`, `typeof Notification.requestPermission`, then races `Notification.requestPermission()` against a 2 s timer | `"notification":{"type":"function","permission":"default","requestPermission":"function","requestResult":"denied"}` |
 | **V26 [r1]** | A CDP grant makes notifications `granted`, and the constructor runs | `/tmp/w383-designer/notif/probe.mjs` (sha `53bf28f260695eaa`): Chrome `--headless=new --remote-debugging-port=0`, temp profile; a page at `http://localhost:47831`; `Runtime.evaluate` before and after `Browser.grantPermissions({permissions: ["notifications"], origin})`; then `new Notification('World needs you', {body, tag: 'mr-0123456789abcdef'})` | `before grant: default`; `grantPermissions error: none`; `after grant: granted`; `new Notification: constructed tag=mr-0123456789abcdef`. **Display not observed** (headless) |
 | **V27 [r1]** | `serve` has no surface-origin setting today | `grep -rn "ts\.net\|surface-origin\|SurfaceOrigin" --include='*.go' host/daemon cmd/ailang-worldd \| grep -v _test`; `grep -rn "func runServe" cmd/ailang-worldd/`; `grep -n "CredentialsPath: \|BindPort: " cmd/ailang-worldd/main.go`; `grep -n "func ParseCeremonyOrigin" host/approval/origin.go` | one match, `approver.go:178` (`--origin` help: "http://localhost:<port> or https://<host>.ts.net"); `main.go:508 func runServe`; `main.go:612 cfg := daemon.Config{DBPath: …, CredentialsPath: …, BindHost: host, BindPort: port, AilangBin: …`; `origin.go:23 func ParseCeremonyOrigin` |
+| **V28 [r2]** | No canonical-request json tag is `omitempty` | `grep -c omitempty host/approval/request.go`; `sed -n '/^type MintRequest struct/,/^}/p' host/approval/request.go` (and `Grant` :57, `ProfileRef` :63, `DaemonRef` :68) | `0`; the 21 tags `schema episode world_db workspace_root worktree reuse degraded repo git branch grants ttl_s profile profiles_dir credentials_db session_file mcp_config agent model task daemon`, none with options (controller, iteration 383) |
+| **V29 [r2]** | The minter's `env.after` seam already exists | `sed -n 36,37p cmd/ailang-worldd/session.go` | `// after is time.After in production: the timer that bounds approve's y/N (row 201 §2.6a).` / `after func(time.Duration) <-chan time.Time` — "no new seam" holds |
+| **V30 [r2]** | `DecidedMintRequests("", n)` means no approver filter | `sed -n 209,222p host/store/mint_requests.go` | `WHERE consumed_at IS NOT NULL`, and `if approvedBy != "" { … AND approved_by = ? }` (:219–:221) — the `""` argument lists every decided request |
+| **V31 [r2]** | The parent's complete rulings inventory fixes neither the mint location nor A3's delivery vehicle | `sed -n '/^## §6/,$p' design_docs/planned/w-world-approvals-by-key.md`; D-WORLD-89's ruling list | R1–R5 only: signature approval allowed (R1), the two formats (R2), typed enrolment/revocation (R3), typed publishing (R4), order (R5); none names where minting runs or which shell carries A3 (grep for a mint location or Tauri in §6: `0`). D-WORLD-88 R1 rules the Tauri shell itself (row 188), not A3's sequencing |
+| **V32 [r2]** | Base-drift trigger | before sprint 1, re-run V1, V8, V15, V18 at PR #552's merge commit | rule: if any hash differs, re-issue this doc as r3 with updated pins before any code lands |
 
 ## 15. Quorum verification log
 
-*(Empty: the controller fills it.)*
+- **Round 1** (r0 `8a44080c`, 2026-11-11T16:31:03Z): **BLOCKED 3 of 3**, $0.385; author `claude:claude-opus-5-5`, Anthropic benched; seated `oc-glm-5-3`, `oc-kimi-k3`, `gpt6-1-sol`; reserve `gemini-4-argon`; absent none. Objections: SSHSIG blocked by the passkey-origin R3 (glm); the `crypto.subtle` premise cited as measured but unmeasured (kimi); the card omits signed fields (sol). The controller re-read each against r0: all three real. None disputed the direction.
+- **r1** (`702ef28e`, designer resumed): the surface origin set `O` and `serve --surface-origin` (§2.3, R3, RT13, CF1, R10); V23–V26 measured; the `FIELDS` table and PG3 (§2.7).
+- **Round 2** (r1, 2026-11-11T16:47:14Z): **BLOCKED 3 of 3**, $0.426; the same seats; absent none. Every objection carries a concrete reviewer-authored `proposed_fix`, and none disputes the direction: (glm) the missing-path refusal assumes no `omitempty` — fix: V28 and branch (a); (kimi) two amendments to the attended parent lack a confirmation record — fix: the *Amendment posture* paragraph, V31/V32, the §10 mirror, and the checklist below; (sol) no deadline on the card's GET/POST — fix: the deadline paragraph and the stalled-network tests.
+- **r2** (controller narrow-refinement carve-out, iteration 383): the three fixes applied in the reviewers' own text, marked **[r2]**. glm's branch (a) applies, measured: `omitempty` count `0` (V28); its V29/V30 asks are measured rather than dropped. No designer run; no third quorum round.
+- **Controller confirmation checklist (kimi's fix):**
+  - [x] (a) **Tauri half deferred to row 188 N3.** Confirmed by the controller on V12/V13 (no `desktop/`, no cargo, no CI step: there is no app to add a notification to) and V31 (D-WORLD-88 R1 rules the shell, not A3's sequencing). Put to Mark as D-WORLD-114.
+  - [x] (b) **The CLI minter mints.** Confirmed by the controller on §1.3/§1.4/V7/V8 and V31 (no ruling fixes the mint location; the §3 invariants hold). Put to Mark as D-WORLD-114.
+  - If Mark vetoes either, the affected text reverts as kimi's fix states: (a) the A3 design waits on row 188; (b) the daemon-mints mechanism returns to design.
