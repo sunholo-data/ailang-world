@@ -100,7 +100,7 @@ func TestPasskeyFixturesAreTheGeneratedBytes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"Chrome/157.0.8103.50", "virtual authenticator", "D-WORLD-109"} {
+	for _, want := range []string{"Chrome/157.0.8103.50", "virtual authenticator", "D-WORLD-109", "chrome-es256.json  from", "chrome-eddsa.json  from"} {
 		if !strings.Contains(string(src), want) {
 			t.Errorf("SOURCE.txt does not name %q", want)
 		}

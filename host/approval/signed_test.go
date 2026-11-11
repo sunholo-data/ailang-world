@@ -163,13 +163,15 @@ func TestSignedApprovalAccessorsFailClosed(t *testing.T) {
 
 // signedApprovalFields is the disposition of every SignedApproval field: what reads it.
 var signedApprovalFields = map[string]string{
-	"ok":        "B1/B5/B6: an unverified value binds nothing and has no approver",
-	"digest":    "B2: Binds",
-	"challenge": "B3: Binds",
-	"expiry":    "B4: Binds",
-	"name":      "ApprovedBy and Use",
-	"format":    "ApprovedBy and Use",
-	"key":       "Use",
+	"ok":           "B1/B5/B6: an unverified value binds nothing and has no approver",
+	"digest":       "B2: Binds",
+	"challenge":    "B3: Binds",
+	"expiry":       "B4: Binds",
+	"name":         "ApprovedBy and Use",
+	"format":       "ApprovedBy and Use",
+	"key":          "Use",
+	"credentialID": "PasskeyUse (B7, B8): the consume binds the passkey that signed",
+	"signCount":    "PasskeyUse (B7, B8): the consume moves the counter to it",
 }
 
 // RC1: every SignedApproval field has a disposition, and changing any one of them in a verified
@@ -185,27 +187,35 @@ func TestSignedApprovalFieldsAreAllBound(t *testing.T) {
 		t.Fatalf("SignedApproval has %d fields, signedApprovalFields %d", typ.NumField(), len(signedApprovalFields))
 	}
 	perturb := map[string]func(*SignedApproval){
-		"ok":        func(s *SignedApproval) { s.ok = false },
-		"digest":    func(s *SignedApproval) { s.digest[0] ^= 1 },
-		"challenge": func(s *SignedApproval) { s.challenge[0] ^= 1 },
-		"expiry":    func(s *SignedApproval) { s.expiry++ },
-		"name":      func(s *SignedApproval) { s.name += "x" },
-		"format":    func(s *SignedApproval) { s.format += "x" },
-		"key":       func(s *SignedApproval) { s.key = bytes.Clone(s.key); s.key[0] ^= 0xff },
+		"ok":           func(s *SignedApproval) { s.ok = false },
+		"digest":       func(s *SignedApproval) { s.digest[0] ^= 1 },
+		"challenge":    func(s *SignedApproval) { s.challenge[0] ^= 1 },
+		"expiry":       func(s *SignedApproval) { s.expiry++ },
+		"name":         func(s *SignedApproval) { s.name += "x" },
+		"format":       func(s *SignedApproval) { s.format += "x" },
+		"key":          func(s *SignedApproval) { s.key = bytes.Clone(s.key); s.key[0] ^= 0xff },
+		"credentialID": func(s *SignedApproval) { s.credentialID = append(bytes.Clone(s.credentialID), 0) },
+		"signCount":    func(s *SignedApproval) { s.signCount++ },
 	}
 	if len(perturb) != len(signedApprovalFields) {
 		t.Fatalf("%d perturbations for %d fields", len(perturb), len(signedApprovalFields))
 	}
 	observe := func(s *SignedApproval) string {
 		n, f, k, ok := s.Use()
-		return fmt.Sprintf("%v|%s|%s|%s|%x|%v", s.Binds(fixtureDigest(t), fixtureChallenge(), fixtureExpiry), s.ApprovedBy(), n, f, k, ok)
+		id, count, pok := s.PasskeyUse()
+		return fmt.Sprintf("%v|%s|%s|%s|%x|%v|%x|%d|%v", s.Binds(fixtureDigest(t), fixtureChallenge(), fixtureExpiry), s.ApprovedBy(), n, f, k, ok, id, count, pok)
 	}
-	base := observe(verifiedApproval(t))
+	// Every field is perturbed in a verified ssh approval and in a verified passkey approval
+	// (row 201 A2); each must change what one of them reports.
 	for field, p := range perturb {
-		s := verifiedApproval(t)
-		p(s)
-		if observe(s) == base {
-			t.Errorf("changing %s changed nothing Binds, ApprovedBy or Use report", field)
+		changed := false
+		for _, verified := range []func(*testing.T) *SignedApproval{verifiedApproval, chromeApproval} {
+			s := verified(t)
+			p(s)
+			changed = changed || observe(s) != observe(verified(t))
+		}
+		if !changed {
+			t.Errorf("changing %s changed nothing Binds, ApprovedBy, Use or PasskeyUse report", field)
 		}
 	}
 }

@@ -13,8 +13,8 @@ Each chrome-<alg>.json holds the recording's public values: the Chrome version, 
 challenge_hex, the registration and the first assertion exactly as PublicKeyCredential.toJSON()
 returned them, and the second assertion's authenticatorData (the probe kept only that part).
 Normalised from the probe outputs by the sprint-1 planner (TestPasskeyFixturesAreTheGeneratedBytes
-pins the bytes):
-  es256.json  sha256 c0370982dbca416a7677b4fa1ff2cd64e9e533cefc608d3dcab42a1000d6caf6
-  eddsa.json  sha256 1544721fc45dd65a553a5baab8a43fcd4df0375b0b8c2c897a199d2526f6f719
+pins the bytes of the two fixtures; the probe's own output files, not committed, were):
+  chrome-es256.json  from the probe's es256.json, sha256 c0370982dbca416a7677b4fa1ff2cd64e9e533cefc608d3dcab42a1000d6caf6
+  chrome-eddsa.json  from the probe's eddsa.json, sha256 1544721fc45dd65a553a5baab8a43fcd4df0375b0b8c2c897a199d2526f6f719
 
 Regeneration lands in sprint 3 (M7, the committed DevTools driver); see generate.sh.
