@@ -154,7 +154,7 @@ func TestPasskeyEnrollFlagRules(t *testing.T) {
 		{name: "N6-v5", setup: func(t *testing.T, r enrolRig) {
 			raw := rawCredentials(t, r.creds)
 			defer func() { _ = raw.Close() }()
-			for _, stmt := range []string{`DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`} {
+			for _, stmt := range []string{`DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`} {
 				if _, err := raw.Exec(stmt); err != nil {
 					t.Fatal(err)
 				}

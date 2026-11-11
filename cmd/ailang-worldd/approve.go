@@ -27,6 +27,7 @@ const approveHelp = `usage: ailang-worldd approve <request-id> [--db <path>] [--
        ailang-worldd approve <request-id> --write-message <file> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --webauthn-link [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --webauthn-assertion <file> [--db <path>] [--credentials-db <path>]
+       ailang-worldd approve <request-id> --await [--await-for <duration>] [--db <path>] [--credentials-db <path>]
        ailang-worldd approve --list [--decided] [--db <path>] [--credentials-db <path>]
 
 ATTENDED, or SIGNED. Mints the session a stored mint request describes (row
@@ -73,6 +74,13 @@ approve <request-id> (mr- and 16 hex):
   (at most 16 KiB): the assertion is checked against the passkey enrolled for
   its credential before any network call, its sign counter must move forward,
   and the request records approved_by=webauthn:<name>.
+--await replaces step 3's y/N with an approval made on the daemon's surface
+  (the request's card, /surface/approve/<id>): it prints the card's address,
+  then waits, with no terminal, until the surface has recorded a passkey
+  assertion or SSH signature for the request. That artifact is judged again
+  here, as --webauthn-assertion and --signature judge theirs; a refused one is
+  shown and the wait goes on. It ends when the request is approved, used,
+  expired, or --await-for (at least 1s) has passed; the request stays pending.
 --list prints the pending requests, read-only. A request expires 10 minutes
 after it is made; at most 16 are pending per credentials store.
 --list --decided prints the used requests instead, newest first (at most 64):
@@ -145,6 +153,8 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	signWith := fs.String("sign-with", "", "approve by signing the request with ssh-keygen -Y sign -f <key> (no terminal)")
 	passkeyLink := fs.Bool("webauthn-link", false, "print the ceremony page's links for the request (no terminal, no write)")
 	assertion := fs.String("webauthn-assertion", "", "approve with an enrolled passkey's assertion file (no terminal)")
+	await := fs.Bool("await", false, "wait for an approval recorded by the daemon's surface, judge it, and mint (no terminal)")
+	awaitFor := fs.Duration("await-for", 0, "with --await: stop waiting after this long (default: the request's expiry)")
 	positional, err := parseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, approveHelp)
@@ -159,12 +169,12 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		return exitUsage
 	}
 	modes := 0
-	for _, on := range []bool{*sigPath != "", *signWith != "", *msgPath != "", *passkeyLink, *assertion != ""} {
+	for _, on := range []bool{*sigPath != "", *signWith != "", *msgPath != "", *passkeyLink, *assertion != "", *await} {
 		if on {
 			modes++
 		}
 	}
-	if modes > 1 { // F1: at most one of --signature, --sign-with, --write-message, --webauthn-link and --webauthn-assertion
+	if modes > 1 { // F1: at most one of --signature, --sign-with, --write-message, --webauthn-link, --webauthn-assertion and --await
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
@@ -173,6 +183,12 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		return exitUsage
 	}
 	if *decided && !*list { // F3: --decided is a --list
+		fmt.Fprint(stderr, approveHelp)
+		return exitUsage
+	}
+	awaitForSet := false
+	fs.Visit(func(f *flag.Flag) { awaitForSet = awaitForSet || f.Name == "await-for" })
+	if awaitForSet && (!*await || *awaitFor < time.Second) { // AW5: --await-for is an --await, of at least 1s
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
@@ -253,6 +269,15 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		return exitOK
 	}
 	var signed *approval.SignedApproval
+	if *await { // the minter: a surface approval, judged again (row 201 A3 §2.6)
+		if refusal := writeAwaitLinks(ctx, credPath, stdout, row, mr); refusal != "" {
+			return refuse("%s", refusal)
+		}
+		var refusal string
+		if signed, refusal = awaitSurfaceApproval(env, credPath, row, *awaitFor, stderr); refusal != "" {
+			return refuse("%s", refusal)
+		}
+	}
 	if *sigPath != "" { // the signature, judged before any network call (design §2.7 F9-F14)
 		var refusal string
 		if signed, refusal = approveSignature(ctx, credPath, *sigPath, row, now); refusal != "" {
