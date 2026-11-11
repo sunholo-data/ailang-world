@@ -1,0 +1,6 @@
+ci_job_a4_130651769760.log: bytes=38100 azure_dns_fail_lines=7 error=##[error]Process completed with exit code 100.
+ci_job_a5_130656202911.log: bytes=38105 azure_dns_fail_lines=7 error=##[error]Process completed with exit code 100.
+ci_job_a6_130660977720.log: bytes=38176 azure_dns_fail_lines=7 error=##[error]Process completed with exit code 100.
+w383_job.log: azure_dns_fail_lines=7
+w383_job_a2.log: azure_dns_fail_lines=7
+w383_job_a3.log: azure_dns_fail_lines=7
