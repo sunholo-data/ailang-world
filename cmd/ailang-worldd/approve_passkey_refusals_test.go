@@ -56,7 +56,7 @@ func TestApprovePasskeyRefusalsBeforeAnyEffect(t *testing.T) {
 		{name: "WF2-missing", path: func(t *testing.T) string { return filepath.Join(t.TempDir(), "absent.json") }, want: "--webauthn-assertion: open "},
 		{name: "WF3-not-an-assertion", file: func(*testing.T, approveRig) []byte { return []byte(`{"id":"x"}`) },
 			want: "is not a passkey assertion: " + approval.ErrPasskeyResponse.Error()},
-		{name: "WF4-v5-store", setup: sql(`DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`), file: good,
+		{name: "WF4-v5-store", setup: sql(`DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`), file: good,
 			want: "passkeys need schema 6"},
 		{name: "WF5-unknown-credential", file: func(t *testing.T, a approveRig) []byte {
 			return approvaltest.NewPasskey(approval.AlgEdDSA, 55).Assert(pkOrigin, pkRPID, requestHashOf(t, a), 2)

@@ -76,7 +76,7 @@ var canonicalPasskeysDDL = `CREATE TABLE webauthn_credentials (
 func TestCredentialsSchemaMatchesCanonicalDDL(t *testing.T) {
 	c := openTestCredentials(t)
 	ddl := tableDDL(t, c.db)
-	requireExactTableNames(t, "fresh credentials store", ddl, []string{"approvers", "episode_starts", "mint_requests", "session_credentials", "webauthn_credentials"})
+	requireExactTableNames(t, "fresh credentials store", ddl, []string{"approvers", "episode_starts", "mint_requests", "session_credentials", "surface_approvals", "webauthn_credentials"})
 	for name, got := range map[string]string{"schema file": ddl["webauthn_credentials"], "passkeysSQL": passkeysSQL} {
 		if normalizeDDL(got) != normalizeDDL(canonicalPasskeysDDL) {
 			t.Fatalf("webauthn_credentials DDL (%s):\n got: %s\nwant: %s", name, got, canonicalPasskeysDDL)
@@ -112,8 +112,8 @@ func TestCredentialsSchemaMatchesCanonicalDDL(t *testing.T) {
 		t.Fatalf("v4 world table differs from the version-1 credentials table: %s", got)
 	}
 	var version int
-	if err := c.db.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version != 6 {
-		t.Fatalf("credentials user_version = %d %v, want 6 (row 201 A2)", version, err)
+	if err := c.db.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version != 7 {
+		t.Fatalf("credentials user_version = %d %v, want 7 (row 201 A3)", version, err)
 	}
 }
 

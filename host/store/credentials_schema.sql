@@ -83,3 +83,16 @@ CREATE TABLE IF NOT EXISTS webauthn_credentials (
     backup_eligible INTEGER NOT NULL CHECK (backup_eligible IN (0, 1)),
     sign_count      INTEGER NOT NULL CHECK (sign_count BETWEEN 0 AND 4294967295)
 );
+
+-- Approvals POSTed to the surface (version 7, row 201 A3). One row per request: the artifact the
+-- daemon verified, kept for the minter, which re-judges it. Never a credential, never trusted.
+-- A consumed request's row stays as the record of which artifact approved it; a row whose request
+-- was pruned is pruned with it.
+CREATE TABLE IF NOT EXISTS surface_approvals (
+    request_id  TEXT PRIMARY KEY CHECK (length(request_id) = 19 AND request_id GLOB 'mr-[0-9a-f]*'),
+    format      TEXT NOT NULL CHECK (format IN ('webauthn', 'ssh')),
+    approver    TEXT NOT NULL CHECK (approver <> ''),
+    artifact    BLOB NOT NULL CHECK (length(artifact) BETWEEN 1 AND 16384),
+    digest      TEXT NOT NULL CHECK (length(digest) = 64),
+    received_at INTEGER NOT NULL
+);
