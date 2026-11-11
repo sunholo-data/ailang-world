@@ -29,25 +29,49 @@ const approverConfirmBudget = 120 * time.Second
 // confirmApproverAct shows prompt at /dev/tty and returns exitOK only on a y typed within
 // approverConfirmBudget, as a complete line with no read error (design §2.10a [r2]). Every other
 // outcome returns its refusal code having written nothing. It is called with no store handle
-// open, so no writer lock is held while it waits.
+// open, so no writer lock is held while it waits. Row 201 A2 (§2.12a) splits it into
+// openApproverTerminal and askApproverLine, so passkey enrolment asks twice on one terminal.
 func confirmApproverAct(env sessionEnv, stderr io.Writer, prefix, prompt, nothing string) int {
+	term, code := openApproverTerminal(env, stderr, prefix, nothing)
+	if code != exitOK {
+		return code
+	}
+	defer func() { _ = term.Close() }() // closed on every return
+	return confirmOnTerminal(term, env, stderr, prefix, prompt, nothing)
+}
+
+// openApproverTerminal opens /dev/tty for an approver act (N9a, N9 / K4a, K4): the terminal, or
+// the refusal code having opened nothing. The caller closes the terminal.
+func openApproverTerminal(env sessionEnv, stderr io.Writer, prefix, nothing string) (io.ReadWriteCloser, int) {
 	if env.after == nil { // N9a / K4a
 		fmt.Fprintf(stderr, "%sinternal error: no prompt timer (sessionEnv.after)\n", prefix)
-		return exitFatal
+		return nil, exitFatal
 	}
 	term, err := env.openTerminal()
 	if err != nil { // N9 / K4
 		fmt.Fprintf(stderr, "%srefusing: no controlling terminal (%v); %s. %s\n", prefix, err, nothing, sessionTTYFix)
-		return exitUsage
+		return nil, exitUsage
 	}
-	defer func() { _ = term.Close() }() // closed on every return
-	fmt.Fprint(term, prompt)            // the budget starts here
-	line, rerr, ok := readTermLineErrWithin(term, approverConfirmBudget, env.after)
+	return term, exitOK
+}
+
+// askApproverLine writes prompt to term and reads one line within budget, counted from the
+// prompt: ok is false when after(budget) fires first; complete is true only for a line that ends
+// in a newline and was read with no error.
+func askApproverLine(term io.ReadWriter, prompt string, budget time.Duration, after func(time.Duration) <-chan time.Time) (line string, ok, complete bool) {
+	fmt.Fprint(term, prompt) // the budget starts here
+	line, err, ok := readTermLineErrWithin(term, budget, after)
+	return line, ok, err == nil && strings.HasSuffix(line, "\n")
+}
+
+// confirmOnTerminal is the y/N on an open terminal (N10a, N10 / K5a, K5).
+func confirmOnTerminal(term io.ReadWriter, env sessionEnv, stderr io.Writer, prefix, prompt, nothing string) int {
+	line, ok, complete := askApproverLine(term, prompt, approverConfirmBudget, env.after)
 	if !ok { // N10a / K5a
 		fmt.Fprintf(stderr, "%sno answer within %s; %s\n", prefix, approverConfirmBudget, nothing)
 		return exitUsage
 	}
-	if rerr != nil || !strings.HasSuffix(line, "\n") || !isYes(line) { // N10 / K5: EOF, read error, partial line, not y
+	if !complete || !isYes(line) { // N10 / K5: EOF, read error, partial line, not y
 		fmt.Fprintf(stderr, "%saborted (not confirmed); %s. fix: run it again and type y at the prompt\n", prefix, nothing)
 		return exitUsage
 	}
