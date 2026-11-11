@@ -298,6 +298,8 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	_, _, _, errs["PasskeyByCredentialID"] = c.PasskeyByCredentialID(ctx, p.CredentialID)
 	_, _, errs["Passkey"] = c.Passkey(ctx, "x")
 	_, errs["ActivePasskeys"] = c.ActivePasskeys(ctx)
+	errs["RecordSurfaceApproval"] = c.RecordSurfaceApproval(ctx, SurfaceApprovalRow{}, 1000)
+	_, _, errs["SurfaceApproval"] = c.SurfaceApproval(ctx, "mr-0000000000000001")
 	for name, err := range errs {
 		if !errors.Is(err, ErrNoDeadline) {
 			t.Errorf("%s(Background) = %v, want ErrNoDeadline", name, err)
