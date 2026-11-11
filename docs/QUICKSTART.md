@@ -1807,3 +1807,33 @@ ailang-worldd approver revoke demo --db /tmp/se-world/world.db
 ```
 
 Compare the fingerprint `ssh-keygen -l` prints with the one the y/N shows before you type `y`. `enroll` refuses, before any terminal opens, a private key file (without showing it), a key type other than ssh-ed25519 or ecdsa-sha2-nistp256, a name or a key already enrolled (revoked ones included), and a credentials store below schema 5. A revoked name and key can never be enrolled again, and a revoked key approves nothing: `approve --signature` refuses it, and a revoke that lands while an approve is minting refuses that mint. `approve --signature` also refuses a file over 16 KiB or not a regular file, a signature in another namespace or over another request's message, and a key that is not enrolled.
+
+## 16. Approve with a passkey *(attended — pending first verbatim run)*
+
+A passkey approver is a name and one passkey, kept in the credentials store next to §15's SSH approvers. World never sees the passkey: the daemon serves a static page, `/surface/passkey`, that runs the browser's own passkey ceremony (Touch ID, Face ID, a PIN or a security key) and offers the result as a file to save; the CLI reads that file and judges it. The page makes no network request and reads no store. This guide uses the §0 scratch store `/tmp/se-world/world.db` with its daemon serving at `127.0.0.1:7644` (`serve` upgrades the credentials store to schema 6), opened in the browser as `http://localhost:7644`, the only http origin a passkey accepts; never a real store. Use a browser profile and passkey provider you are willing to enrol a test passkey from.
+
+```bash
+ailang-worldd approver enroll --name demo-mac --format webauthn --origin http://localhost:7644 \
+  --registration ~/Downloads/world-registration-demo-mac.json --db /tmp/se-world/world.db
+```
+
+`enroll` refuses first, before any link prints, a registration path that already exists, an origin other than `http://localhost:<port>` or `https://<name>.ts.net`, a name that is not lowercase letters, digits, `.`, `_` and `-`, or a name already enrolled. It then prints a link to `http://localhost:7644/surface/passkey#…` and waits at the terminal. Open the link, check the page says *Create a passkey for approver demo-mac at localhost*, press **Create passkey**, pass your device's check, and press **Save** (the browser saves `world-registration-demo-mac.json` to `~/Downloads`). The page shows a 26-character enrolment code in five groups, `XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX`. Type it at the terminal, or paste it; case, dashes and spaces do not matter. The code is a fingerprint of the file the browser saved, not a secret: it proves that the file the CLI read is the one your browser made, so a file swapped in by anything else is refused. The CLI then shows the passkey (algorithm, rp, `synced passkey` or `device-bound`) and asks `[y/N]` within 2 minutes; the code itself must arrive within 5 minutes. The page gives up a ceremony after 4 minutes and then saves nothing.
+
+```bash
+ailang-worldd approver list --db /tmp/se-world/world.db
+ailang-worldd episode start pk-demo --repo "$PWD" --db /tmp/se-world/world.db --request
+ailang-worldd approve mr-<the 16 hex it printed> --webauthn-link --db /tmp/se-world/world.db
+```
+
+`--webauthn-link` opens no terminal and writes nothing. It prints the request's id, its expiry and the first 16 hex of its message hash, then one link per origin of the enrolled passkeys. Open the link, check the page shows the same request, expiry and hash, press **Approve with passkey**, pass your device's check, and **Save** (`world-assertion-mr-<id>.json`). Then run the command `--webauthn-link` printed, which names the request's own stores:
+
+```bash
+ailang-worldd approve mr-<the same id> --webauthn-assertion ~/Downloads/world-assertion-mr-<the same id>.json \
+  --db /tmp/se-world/world.db --credentials-db /tmp/se-world/credentials.db
+ailang-worldd approve mr-<the same id> --webauthn-assertion ~/Downloads/world-assertion-mr-<the same id>.json \
+  --db /tmp/se-world/world.db --credentials-db /tmp/se-world/credentials.db
+ailang-worldd approve --list --decided --db /tmp/se-world/world.db
+ailang-worldd approver revoke demo-mac --db /tmp/se-world/world.db
+```
+
+The first `--webauthn-assertion` mints with no terminal and records `approved_by=webauthn:demo-mac`; it checks the assertion before any network call, against the enrolled, unrevoked passkey, the request's own message hash, the origin and a signature counter that must move forward. The second, the same file again, is refused as already used. `approve --list --decided` shows `webauthn:demo-mac`; `approver revoke` (a typed `y`) lists the sessions the passkey approved and revokes none of them, and from then on that passkey approves nothing. `approve --webauthn-assertion` also refuses a file over 16 KiB or not a regular file, an assertion for another request, a passkey that is not enrolled, and one made without user verification.
