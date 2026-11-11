@@ -1,26 +1,24 @@
-# World mission dashboard — iteration 379 (2026-11-10)
+# World mission dashboard — iteration 380 (2026-11-11)
 
-- **Landed this fire:** row 201 A2 sprint 1 (`w-world-approvals-by-key`), PR #546, merge `d5d90e49`. CI 3/3 on the PR head (after one re-run) and on the merge. Judge sonnet PASS 93, zero blocking.
-- **What it does:** World can verify a passkey (WebAuthn) registration with the Go standard library alone, in the pure `host/approval` package.
-  - Bounded CBOR subset; COSE ES256 and EdDSA keys; authenticator data with user presence and user verification required; clientDataJSON; the ceremony origin (`localhost` or `*.ts.net` only; IP literals and default ports refused).
-  - `NewPasskeyApprover` (the registration law) and a 128-bit public enrolment code the operator will compare at the terminal.
-  - Fixtures are Chrome 157's virtual authenticator (test keys), SHA-pinned.
-  - The A1b judge's K8-ERRCODE and sshsign G1 gaps are pinned.
-- **New design:** `w-world-approvals-by-key-a2.md` r2, three sprints. Quorum r1 blocked 3/3, r2 blocked 2/3 (gemini PASS); every objection measured real first; r2 applied the reviewers' verbatim fixes (controller carve-out). Metered $1.04.
-- **Not reachable yet:** no store, CLI or route uses it. That is sprints 2 and 3.
-- **Next loop work:** row 201 A2 sprint 2 — the assertion law (M3b, cut from sprint 1), then credentials schema 6 and the consume binding (M4–M5). Then sprint 3 (CLI, ceremony page, QUICKSTART §16), then A3–A4, then row 243.
-  - Carry: aliasing pins, `SOURCE.txt` file names, zero-challenge check.
+- **Landed this fire:** row 201 A2 sprint 2 (`w-world-approvals-by-key`), PR #548, merge `3e55451f`. CI 3/3 on the PR head (first run) and on the merge. Judge sonnet PASS 93, zero blocking.
+- **What it does:** World can verify a passkey *approval* (a WebAuthn assertion), store enrolled passkeys, and consume a mint a passkey approved.
+  - `ApproveByAssertion` in pure `host/approval` (shares `checkApprover` with the SSH law; the counter must strictly advance, both zero allowed).
+  - Credentials schema 6 (`webauthn_credentials`), `EnrolPasskey` and the lookups in `host/store`.
+  - The consume binds the credential ID and advances the counter inside the mint's transaction; every refusal rolls back.
+  - Authority derives `approved_by = webauthn:<name>` from the verified approval.
+- **Not reachable yet:** no CLI or route builds a passkey approval. That is sprint 3.
+- **Next loop work:** row 201 A2 sprint 3 — M6 the CLI (`approver enroll --format webauthn`, `approve --webauthn-link`/`--webauthn-assertion`), M7 the `/surface/passkey` ceremony page + Chrome driver + QUICKSTART §16. M7 becomes a fourth sprint if the design's fallback fires. Then A3–A4, then row 243.
 - **Attended, pending Mark:** A1b exit run (QUICKSTART §15, his SSH key); A2's real-passkey exit run (design §10) after sprint 3.
 - **Row 256:** taken by an attended session; the loop does not pick it.
 - **OPEN decisions:** D-WORLD-105 only (default C: row 233 parked, fail closed).
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 (attended A1) and 151 (row 188 N2d/N4a) are not routable.
-- **Routing this fire:** all roles ran through the Agent tool.
-  - Controller: opus. Designer: opus (r0 + one resume). Planner: opus, 58 min. Executor: haiku, two runs. Judge: sonnet, own worktree, two rounds.
-  - Codex was unusable at preflight (probe rc 75); no role needed it.
+- **Routing this fire:** all roles ran through the Agent tool; no designer or quorum (the A2 r2 doc covers sprint 2).
+  - Controller: opus. Planner: opus, 94 min, 8 compiled patches. Executor: haiku, four runs. Judge: sonnet, own worktree.
+  - Codex was unusable at preflight (probe rc 75); no role needed it. Metered $0.00.
 - **Instrument notes:**
-  - CI flake, 3 instances tonight: `TestSeedRestartIgnoresASurvivingOldCopy` (`host/broker`), red twice on record PR #547 and once on PR #546, 0/60 locally; each re-run green. Filed as row 259 (D-WORLD-109 (2)), hygiene, under rule (d).
-  - New load-sensitive test: `TestMissionConfigDefaultFlowIntegration/invalid_ledger` (10 s fixture deadline).
-  - Boolean-flag refusals need an arm per other-flag state (the judge's UV-OR-BE survivor).
+  - Never start a Go gate under `nohup`: `scripts/marketingcheck`'s `shell-hup` test reds (3/3, planner-measured).
+  - A judge's "re-ran and killed" needs a line in its mutant file; three were only in prose (the controller reproduced them).
+  - Row 259 flake (`TestSeedRestartIgnoresASurvivingOldCopy`) did not recur this fire.
   - Export `AILANG_BIN=~/.pinned-ailang/ailang` for the Go tests.
   - The self-notice script returns rc 2 until a directive is marked on #524.
 - **Bookkeeping thread:** #524 (rotates Monday 2026-11-16 07:00).

@@ -2259,3 +2259,65 @@ The A1b design is fully built. A terminal `y` is no longer the only way to appro
 - **A judge's numstat can differ by unit, not by error.** State the numstat path filter in the evaluator directive.
 
 **Next:** row 201 A2 **sprint 2**: M3b (the assertion law, plan Appendix C) at its head, then M4 (credentials schema 6, `webauthn_credentials`) and M5 (the consume counter and authority), from the A2 doc without re-design. The planner must apply §9's sprint-2 fallback early (it grows by about 450 lines). Carry the judge's aliasing pins, the `SOURCE.txt` names and the zero-challenge check. Then A2 sprint 3 (M6 CLI, M7 ceremony page + QUICKSTART §16; Mark's real-passkey exit run is attended, §10), then A3–A4, then row 243.
+
+## 380 — 2026-11-11 — row 201 A2 sprint 2 built: the WebAuthn assertion law, credentials schema 6 with the passkey store, the consume that binds the passkey and advances its counter in the mint's transaction, and authority's `webauthn:<name>`; judge PASS 93 [PRODUCT]
+
+**Pick:** row 201 `w-world-approvals-by-key`, parent milestone A2, sprint 2, the route iteration 379 named. D-WORLD-109 = A applies: test keys and temp stores only.
+- **Re-measured at pick** (`origin/dev` `3b77c294`):
+  - No open PR from this account; no `iter380` worktree; no `A2 sprint 2` commit on `origin/dev`.
+  - The A2 child design r2 has a quorum artifact (`mc_quorum_gate2 w-world-approvals-by-key-a2` rc 0), so no pick-time quorum was owed and no designer ran.
+- **Ledger:** valid (100 rows). OPEN: D-WORLD-105 only.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows are not routable:
+  - Row 150's attended A1: 0 subjects since 2026-11-07 matching `row ?150|A1\b` (control `A1b`: 20).
+  - Row 151's row-188 N2d/N4a: 0 since 2026-10-01 (control N2c: 1).
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
+- Directives: 0 allowlisted on #524, out of 12 comments. The issue-scoped watermark is absent, so all comments were read. A hand read of #524 found no `FAILED to complete` notice.
+- Self-notices: rc 2, an instrument failure and not a verdict; no `-last-seen` file exists for 524 or 449 (same as 371–379).
+- The `mission-world` inbox has 0 unread.
+- Skill drift: none. SKILL.md and all 13 resource files at the resolved symlink target match the driver clone's `origin/dev`.
+- Dev at `3b77c294` (record 379): `checks=3`, all success. Local dev equal to origin.
+
+**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus`, 93.8 min, 478,824 tok. Committed `75cb07e9`.
+- **Sprint 2 = M3b1–M3b3, M4a–M4c, M5a–M5b = 1,843 lines** (`-- cmd host`, cap 2,000). The design's §9 sprint-2 fallback was priced as a measurement and did not need to fire: M3b measured 890 (sprint 1 estimated 450), M4 648, the consume 239, and A6 + AU3 only 66, so they stay. Appendix C moves nothing to sprint 3.
+- Mutants: 139, each run against its named test and its package; 135 killed, 4 named equivalents (decoded inputs that cannot alias). Two tests strengthened after the first pass found gaps.
+- Round trip: the patches extracted from the plan file, applied to a fresh export of `3b77c294`, reproduce the mutant tree byte for byte. **The controller re-did it** (its own export and awk): `diff -rq cmd host` empty.
+- **Premises found false or incomplete:** P1 the size estimates; P2 schema 6 broke four `cmd/ailang-worldd` test fixtures that rebuild a v4 store by dropping `approvers` only (they now also drop `webauthn_credentials`; test-only, in M4a), though the design said sprint 2 touches no `cmd/` file; P3 `EnrolPasskey`'s validation is ten checks, not nine (S1–S10); P4 the `user_version 6` check compared the store with the constant itself and could never fail (now the literal 6); P5 the test authenticator's `name` parameter dropped (the recordings carry no user).
+- **Carry-forwards from 379's judge:** aliasing pinned (`TestNewPasskeyApproverDoesNotAliasItsInput`, PA4); `SOURCE.txt` names the `chrome-*.json` files and XW0 checks the names; zero challenge / `Now` measured accepted by the law and left as the caller's job (`EnrolPasskey` refuses `EnrolledAt <= 0`; sprint 3's random challenge owns the challenge).
+- A harness trap the planner found: any gate started under `nohup` reds `scripts/marketingcheck`'s `shell-hup` test (3/3). The plan forbids `nohup`.
+
+**Executor:** env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`. Four runs of two sub-milestones (1.5, 5.0, 1.3 and 1.4 min). No hand edits, no git writes, no stop condition. The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`: M3b1 `8c68004c` → 345, M3b2 `5a1c9383` → 672, M3b3 `6a2984c2` → 890, M4a `0f0319d9` → 1,027, M4b `5ca2f4dc` → 1,300, M4c `17039568` → 1,538, M5a `19039a40` → 1,777, M5b `1fe7c86d` → 1,843. Every value equals the plan's, and the final `cmd`/`host` tree is `diff -r`-identical to the planner's mutant tree.
+
+**Controller gates:** plan §6 as one bash script at `1fe7c86d`, BEFORE the judge: **rc 0.** `verify_ail.sh` (16 identities, 40 named tests, 503 se-tools tests); gofmt; build + vet; the compile fence; touched packages (6 ok); `-race` on `host/approval/...`, `host/store`, `host/authority` (0 DATA RACE); 22 named inventories and reflective tests with `-v` (22 PASS, 0 SKIP/FAIL); `VERIFY_GO_LEGS=plain verify_go.sh` (62 ok, 0 FAIL; its two DATA RACE lines are the race control). Details in `verification/world-iter380/controller-gates.md`.
+
+**Judge:** sonnet via the Agent tool, on its own worktree at `1fe7c86d` (generator ≠ judge). **Round 1: PASS 93/100, zero blocking** (correctness 28, tests 29, security 19, standards 9, scope 8).
+- 66 of its own diff-anchored mutants (every conjunct of the W7/W8/W12/W13 flag refusals, the counter law's four forms, S1–S10, the lookups, C13–C18, `usePasskey`, A6), must-die control killed, must-live control survived; 48 plan rows sampled across all 8 sub-milestones, no unexpected survivor.
+- Three of its mutants (P1, C17, A6-count) did not compile on the first run; it re-ran them compiling and reported them killed, but the re-runs are not in its `mutants.txt`. **The controller reproduced all three** with `-vet=off`: killed by `TestApproveByAssertionOrder`, `TestPasskeyConsumeChecksTheRowInTheTransaction` and `TestMintForRequestDerivesPasskeyUse`.
+- Non-vacuity: M3b1, M4b and M5a's new tests do not exist at the parent commits.
+- Non-blocking: N2, `ApproveByAssertion` does not guard a zero-valued `Passkey.Key`. The controller read `COSEKey.verify`: its default arm returns `ErrCOSEAlg`, so it fails closed. Logged, not filed (D-WORLD-109 (2)).
+
+**Gate 3b:** PR #548, head `1fe7c86d`: 3/3 success on the first run. Mergeable CLEAN. The auto-close keyword scan of the PR body read 0 (control 1). Merged by merge commit **`3e55451f`** (`--match-head-commit`). Push checks on the merge: 3/3 success (run 42952060607).
+
+**Routing evidence:** base=3b77c294000ca40c2fe77e312ae0e8ce0f71a030@2026-11-11T00:50:05Z.
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (the A2 r2 doc covers sprint 2). Quorum: not re-run (artifact present, doc unchanged).
+- Planner: `opus` via Agent (478,824 tok).
+- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (46,214 + 49,619 + 40,775 + 44,161 tok).
+- Evaluator: `sonnet` via Agent (73,582 tok).
+- The driver noted codex unusable at preflight (probe rc 75); no role needed it.
+- Metered total: $0.00. Details in `verification/world-iter380/routing.md`.
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. World can now verify a passkey *assertion* (an approval) as well as a registration, store enrolled passkeys in credentials schema 6, and consume a mint approved by a passkey: the consume re-reads the passkey row inside the mint's transaction, binds the credential ID, refuses a counter that does not strictly advance (both zero allowed), and records `approved_by = webauthn:<name>`, derived by authority from the verified approval. No CLI or route builds a passkey approval yet; that is sprint 3.
+
+**Ruled out:**
+- **Cutting AU3/A6 to sprint 3 pre-emptively** (sprint 1's plan said to apply the fallback early): measured at 66 lines with 157 lines of margin; moving them would leave the store accepting a passkey consume no caller builds.
+- **Banking the judge's "re-ran and killed" for its three compile-error mutants:** the re-runs were not on disk; the controller reproduced them instead.
+- **Treating N2 as a gap:** a zero `COSEKey` reaches `verify`'s default arm and is refused.
+
+**Retro:**
+- **The planner-ships-patches route held for an eight-patch sprint across three packages:** zero executor deviations, numstat equal at every step, and the controller's own round trip matched. Fourth consecutive sprint on this route.
+- **A judge's narrative claim about a re-run is not evidence until it is on disk.** Its `mutants.txt` recorded `COMPILEERR` for three mutants its report called killed. Next evaluator directive: every mutant re-run must append its own line to the mutant file.
+- **A design's "touches no file in X" is a claim the planner should measure:** schema 6 reached `cmd/` through test fixtures that rebuild an older schema by dropping tables.
+
+**Next:** row 201 A2 **sprint 3**: M6 (the CLI: `approver enroll --format webauthn`, `approve --webauthn-link`/`--webauthn-assertion`, list/revoke show passkeys) and M7 (the static `/surface/passkey` ceremony page, the Chrome driver and `generate.sh`, QUICKSTART §16), from the A2 doc without re-design; the design's sprint-3 fallback makes M7 its own fourth sprint if needed. Consider sprint 3 refusing an all-zero challenge in its random-challenge step. Then Mark's attended real-passkey exit run (§10), A3–A4, then row 243.
