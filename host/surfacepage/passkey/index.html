@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AILANG World passkey</title>
+<style>
+body { font: 16px/1.5 system-ui, sans-serif; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; color: #1d1d1f; }
+h1 { font-size: 1.4rem; }
+#what, #status { white-space: pre-wrap; }
+#status[data-error] { color: #b00020; font-weight: 600; }
+#code { font: 600 1.3rem ui-monospace, monospace; letter-spacing: 0.05em; width: 100%; }
+#result { font: 12px ui-monospace, monospace; width: 100%; height: 9rem; }
+button, #save { font-size: 1rem; padding: 0.4rem 1rem; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body data-state="loading">
+<h1>AILANG World passkey</h1>
+<p id="what">Reading the link…</p>
+<p><button id="go" type="button" hidden disabled></button></p>
+<p id="status"></p>
+<p id="code-box" hidden><label for="code">Enrolment code (type or paste it at the terminal; a fingerprint of the file, not a secret)</label><br><input id="code" readonly></p>
+<p id="result-box" hidden><label for="result">The file to save</label><br><textarea id="result" readonly></textarea></p>
+<p><a id="save" hidden>Save</a></p>
+<script src="/surface/passkey.js"></script>
+</body>
+</html>
