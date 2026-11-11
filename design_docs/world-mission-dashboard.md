@@ -18,7 +18,7 @@
   - Controller: opus. Designer: opus (r0 + one resume). Planner: opus, 58 min. Executor: haiku, two runs. Judge: sonnet, own worktree, two rounds.
   - Codex was unusable at preflight (probe rc 75); no role needed it.
 - **Instrument notes:**
-  - CI flake instance 1: `TestSeedRestartIgnoresASurvivingOldCopy` (`host/broker`), red once on PR #546, 10/10 locally, green on re-run. A row only at instance 3.
+  - CI flake instances 1 and 2: `TestSeedRestartIgnoresASurvivingOldCopy` (`host/broker`), red on PR #546 (host gate) and on record PR #547 (race gate), 10/10 locally, green on re-run. One more makes it a row.
   - New load-sensitive test: `TestMissionConfigDefaultFlowIntegration/invalid_ledger` (10 s fixture deadline).
   - Boolean-flag refusals need an arm per other-flag state (the judge's UV-OR-BE survivor).
   - Export `AILANG_BIN=~/.pinned-ailang/ailang` for the Go tests.

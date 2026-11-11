@@ -2229,6 +2229,7 @@ The A1b design is fully built. A terminal `y` is no longer the only way to appro
 
 **Gate 3b:** PR #546, head `5a4b1224`.
 - `pull_request` run 42917909921 attempt 1: `go host build + test gate` **FAIL** on `TestSeedRestartIgnoresASurvivingOldCopy/survivor` (`host/broker/exec_seed_test.go:656`, "the old staging dir survived the restart"). The sprint does not touch `host/broker` (`git diff --quiet 98374909 HEAD -- host/broker`, control: 18 approval files changed). It passed **10/10** locally at the sprint head, and it has 0 mentions in the charter, log and archive: **instance 1** of a CI flake, logged here and not filed as a row (D-WORLD-109 (2)). The job was re-run once (attempt 2): 3/3 success.
+- **Instance 2, same iteration:** the record PR #547 (docs only, code identical to the green merge `d5d90e49`) went red in the `go race gate` job on the same `TestSeedRestartIgnoresASurvivingOldCopy/survivor` (`host/broker` FAIL at 298 s under `-race`; the two `DATA RACE` lines in that log are the known-positive race control `w-race-gate-blindspot/racecontrol`). Two CI instances in one evening, 0 local reds in 10. One more recorded instance makes it a row (D-WORLD-109 (2)); the likely mechanism to check then is the restart's cleanup of the old staging dir racing the killed child's final write under CI load.
 - The auto-close keyword scan of the PR body read 0 (control 1).
 - Merged by merge commit **`d5d90e49`** (`--match-head-commit`). Push checks on the merge: 3/3 success.
 
