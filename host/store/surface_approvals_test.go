@@ -207,3 +207,52 @@ func TestRecordSurfaceApprovalGuards(t *testing.T) {
 		t.Fatalf("the consumed request has a recorded approval: ok %v err %v", ok, err)
 	}
 }
+
+// SA3: PutMintRequest's prune deletes the recorded approval of a request it prunes, in the same
+// transaction, and keeps a consumed request's; on a schema-6 store it prunes and puts as before.
+func TestSurfaceApprovalPrunedWithItsRequest(t *testing.T) {
+	c := openTestCredentials(t)
+	ctx := testCtx(t)
+	gone, kept := testMintRequestRow(1, 1000), testMintRequestRow(2, 1000)
+	for _, r := range []MintRequestRow{gone, kept} {
+		if err := c.PutMintRequest(ctx, r, 1000); err != nil {
+			t.Fatal(err)
+		}
+		row := testSurfaceApproval(1)
+		row.RequestID = r.RequestID
+		if err := c.RecordSurfaceApproval(ctx, row, 1010); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := c.MintSessionForRequest(ctx, consumeSession(1), okConsume(kept, 1020, new(int), new(int))); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.PutMintRequest(ctx, testMintRequestRow(3, 1600+86400), 1600+86400); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok, err := c.SurfaceApproval(ctx, gone.RequestID); err != nil || ok {
+		t.Fatalf("the pruned request's approval: ok %v err %v; want gone", ok, err)
+	}
+	if _, ok, err := c.SurfaceApproval(ctx, kept.RequestID); err != nil || !ok {
+		t.Fatalf("the consumed request's approval: ok %v err %v; want kept", ok, err)
+	}
+	if n := surfaceApprovalCount(t, c); n != 1 {
+		t.Fatalf("%d rows after the prune, want 1", n)
+	}
+
+	path := filepath.Join(t.TempDir(), CredentialsFileName)
+	makeV6Credentials(t, path, nil)
+	v6, err := OpenCredentials(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = v6.Close() }()
+	for _, r := range []MintRequestRow{gone, testMintRequestRow(3, 1600+86400)} {
+		if err := v6.PutMintRequest(ctx, r, r.CreatedAt); err != nil {
+			t.Fatalf("v6 put %s: %v", r.RequestID, err)
+		}
+	}
+	if _, ok, err := v6.MintRequest(ctx, gone.RequestID); err != nil || ok {
+		t.Fatalf("v6: the expired request was not pruned: ok %v err %v", ok, err)
+	}
+}

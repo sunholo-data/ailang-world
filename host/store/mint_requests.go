@@ -92,8 +92,9 @@ type MintRequestRow struct {
 	CredentialID string // "" unless Consumed
 }
 
-// PutMintRequest stores one new, unconsumed request. It prunes requests expired a day ago, and
-// refuses when MaxPendingMintRequests live ones are already held.
+// PutMintRequest stores one new, unconsumed request. It prunes requests expired a day ago (and,
+// from schema 7, their recorded surface approvals), and refuses when MaxPendingMintRequests live
+// ones are already held.
 func (c *Credentials) PutMintRequest(ctx context.Context, row MintRequestRow, now int64) error {
 	if err := requireDeadline(ctx); err != nil {
 		return err
@@ -129,6 +130,11 @@ func (c *Credentials) PutMintRequest(ctx context.Context, row MintRequestRow, no
 	defer func() { _ = tx.Rollback() }()
 	if _, err := tx.ExecContext(ctx, `DELETE FROM mint_requests WHERE consumed_at IS NULL AND expires_at <= ?`, now-mintRequestPruneAfter); err != nil {
 		return fmt.Errorf("store: put mint request: prune: %w", err)
+	}
+	if c.version >= surfaceApprovalsSchemaVersion { // row 201 A3: a pruned request's recorded approval goes with it
+		if _, err := tx.ExecContext(ctx, `DELETE FROM surface_approvals WHERE request_id NOT IN (SELECT request_id FROM mint_requests)`); err != nil {
+			return fmt.Errorf("store: put mint request: prune surface approvals: %w", err)
+		}
 	}
 	var live int
 	if err := tx.QueryRowContext(ctx, `SELECT count(*) FROM mint_requests WHERE consumed_at IS NULL AND expires_at > ?`, now).Scan(&live); err != nil {
