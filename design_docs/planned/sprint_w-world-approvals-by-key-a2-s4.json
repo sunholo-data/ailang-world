@@ -1,0 +1,442 @@
+{
+  "sprint_id": "w-world-approvals-by-key-a2-s4",
+  "design_doc": "design_docs/planned/w-world-approvals-by-key-a2.md",
+  "design_revision": "r2 (quorum r2 + controller carve-out; not reopened)",
+  "sprint_plan": "design_docs/planned/w-world-approvals-by-key-a2-sprint4-plan.md",
+  "previous_sprint": {
+    "plan": "design_docs/planned/w-world-approvals-by-key-a2-sprint3-plan.md",
+    "json": "design_docs/planned/sprint_w-world-approvals-by-key-a2-s3.json",
+    "landed_merge": "0ce117c5",
+    "recorded": "f89337af",
+    "pr": 550,
+    "note": "A2 sprint 3 (M6, the CLI; 1,686 lines); its Appendix C (M7 moved by the design §9 fallback) is this sprint"
+  },
+  "base_commit": "27ce163eb1ae8af55151ea6548591c15a3126835",
+  "queue_row": 201,
+  "iteration": 382,
+  "sprint_number": 4,
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter382-row201-a2s4",
+  "branch": "sprint/world-iter382-row201-a2s4",
+  "cut": {
+    "cap_loc": 2000,
+    "measure": "git diff --numstat <base> HEAD -- cmd host (insertions + deletions); docs/ and design_docs/ are outside the filter",
+    "fallback_fired": "no: M7 whole fits (1,054 measured); nothing narrowed",
+    "committed": "M7a-M7g (= design M7 whole + QUICKSTART §16 + the two optional carry-forwards)",
+    "total_measured_loc": 1054,
+    "margin": 946,
+    "design_estimate_m7": "~530 (230 page + 300 test/driver; +50 docs outside the filter)",
+    "production_loc": 206,
+    "test_driver_generator_loc": 848
+  },
+  "next_sprint": "none for A2 code: the attended exit run (design §10; QUICKSTART §16) is Mark's; A3 reuses the page",
+  "executor_lane": "as routed by the controller; runs: (M7a, M7b), (M7c, M7d), (M7e), (M7f, M7g); the executor runs no Chrome and no node",
+  "executor_form": "every sub-milestone is a unified diff in the plan Appendix P, applied with patch -p1 after a --dry-run (plan §2); no hand edits",
+  "estimate_loc": {
+    "production": 206,
+    "test": 848,
+    "total_cumulative": 1054,
+    "measure": "insertions + deletions (git diff --numstat -- cmd host), measured after a commit of each scratch stage"
+  },
+  "constraints": [
+    "D-WORLD-109: test keys, temp stores, a CDP virtual authenticator only; Chrome --headless=new, temp profile, --remote-debugging-port=0; no real profile, keychain, passkey, platform authenticator, store, /dev/tty, ~/.ssh, ~/.ailang/world, mint, publish or tailscale serve",
+    "host/approval stays pure and standard-library-only: no Go file changes; the committed fixtures are byte-unchanged",
+    "surfaceCSP and setSurfaceHeaders unchanged; no new /v1 route (TestFrozenV1RouteTableMatchesMux stays 13), module, package, production exec site or context root",
+    "the page makes no request (no fetch/XMLHttpRequest/form action), textContent only",
+    "XB1/XB2 gated: WORLD_CHROME + node on PATH, else t.Skip(\"SKIP COUNTED: ...\") unless WORLD_REQUIRE_PASSKEY_BROWSER=1, then t.Fatal",
+    "WORLD_CHROME is set on the XB leg only, never exported (it arms TestMarketingChromeSixShots)",
+    "no t.Parallel in new tests",
+    "no git writes by the executor; patch -p1 only",
+    "never under /tmp for scratch; never a gate under nohup",
+    "QUICKSTART §16 written, tagged attended — pending first verbatim run, not executed"
+  ],
+  "baseline": {
+    "env": "export AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0); go1.26.6 darwin/arm64; node v26.13.0; Google Chrome 157.0.8103.50",
+    "git_status": "clean at 27ce163e",
+    "pre_commit_script": "tools/gates.sh <base> logs/baseline base (= plan §6 minus the four new tests): PRE_COMMIT_GATES_GREEN 475 s; 26 named tests --- PASS; cmd/ailang-worldd 159.8 s, host/daemon 325.6 s",
+    "trap": "WORLD_CHROME exported arms TestMarketingChromeSixShots (red at base run 1); set it on the XB leg only",
+    "verify_go_plain": "rc 1 at the base at load 40-66 (timeouts in cmd/ailang-worldd, host/broker, host/coordinator, host/daemon, host/evidence, host/verifygate); static legs green; measures the machine",
+    "final_tree": {
+      "pre_commit": "PRE_COMMIT_GATES_GREEN (~7 min, load 7-12), 29 named tests PASS, XB x3 green (9/7/8 s)",
+      "packages": "cmd/ailang-worldd 156.5 s, host/daemon 301.9 s ok",
+      "race": "ok, no race report",
+      "verify_go_plain": "see plan §1.2 C27"
+    },
+    "subprocess_sink_gate": "TestSubprocessSinkGate ok at the base (0.6 s, run alone); added to §6 after C34"
+  },
+  "design_premises_found_false": [
+    {
+      "id": "P1",
+      "claim": "design §6/§8: XB1/XB2 and the driver in host/daemon",
+      "finding": "ceremonyLink is in package main; a host/daemon test cannot build the links with the production code",
+      "resolution": "XB1/XB2/driver in cmd/ailang-worldd, the page still served by daemon.New(...).Handler()"
+    },
+    {
+      "id": "P2",
+      "claim": "design §2.15: generate.sh re-records the committed fixtures",
+      "finding": "a re-recording cannot reproduce the bytes (fresh keys, random ES256) and page assertions carry userHandle",
+      "resolution": "generate.sh writes only into an empty directory; fixtures and XW0 unchanged; the re-pin is measured (plan §1.2 C16) and documented"
+    },
+    {
+      "id": "P3",
+      "claim": "the page offers -7 and -8",
+      "finding": "Chrome's virtual authenticator always takes ES256",
+      "resolution": "XB1 asserts ES256; -8 only is a named equivalent; generate.sh records EdDSA via an injected filter"
+    },
+    {
+      "id": "P4",
+      "claim": "sprint 3 Appendix C: the probes in /tmp may be gone",
+      "finding": "preserved outside /tmp for this sprint",
+      "resolution": "generalised into the driver; not committed"
+    },
+    {
+      "id": "P5",
+      "claim": "gated skip",
+      "finding": "holds; every go test of cmd/ailang-worldd without WORLD_CHROME now shows two counted skips and a recorder skip",
+      "resolution": "CI does not run XB; plan §6 runs them required x3"
+    }
+  ],
+  "carry_forwards_taken": {
+    "judge-381 early --name check": "M7a WN2a beside WN2, one branch + one CW1 arm (MUT-WN2A killed)",
+    "next-step line order": "M7a: CW7 pins the whole line, --db then --credentials-db, from the request's own stores"
+  },
+  "ci_change": "none",
+  "not_touched": [
+    "surfaceCSP, setSurfaceHeaders",
+    "every host/approval Go file and the committed fixtures",
+    "host/store/**, host/authority/**",
+    "every other host/daemon and host/surfacepage file",
+    "every other cmd/ailang-worldd file",
+    ".gitattributes",
+    "world/*.ail",
+    "packages/**",
+    "scripts/**",
+    "tools/launchd/*",
+    "cmd/world-publish/*",
+    "any skill",
+    "any /v1 route",
+    "~/.ssh",
+    "~/.ailang/world",
+    "~/.ailang/state/mission-v1*"
+  ],
+  "milestones": [
+    {
+      "id": "M7a",
+      "design_milestone": "carry-forward (judge 381)",
+      "title": "carry-forwards: WN2a (the early --name grammar check) and CW7 pins the next-step line",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint4-plan.md §3 M7a; patch: Appendix P ````diff M7a",
+      "expected_cumulative_numstat": 11,
+      "expected_numstat_when": "after the controller's commit of M7a",
+      "executor_run": 1,
+      "gated": false,
+      "files": [
+        "cmd/ailang-worldd/approver_passkey.go",
+        "cmd/ailang-worldd/approver_passkey_test.go",
+        "cmd/ailang-worldd/approve_passkey_test.go"
+      ],
+      "tests": [
+        "TestPasskeyEnrollFlagRules (arm WN2a-name-grammar)",
+        "TestApproveByPasskey (the next-step line)"
+      ],
+      "apply": "§2 patch protocol with M=M7a",
+      "acceptance": "plan §3 M7a (tools/accept.sh M7a)",
+      "mutants": [
+        "MUT-WN2A"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M7b",
+      "design_milestone": "M7",
+      "title": "the page (index.html, passkey.js) and its go:embed, not yet served",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint4-plan.md §3 M7b; patch: Appendix P ````diff M7b",
+      "expected_cumulative_numstat": 195,
+      "expected_numstat_when": "after the controller's commit of M7b",
+      "executor_run": 1,
+      "gated": false,
+      "files": [
+        "host/surfacepage/passkey/index.html",
+        "host/surfacepage/passkey/passkey.js",
+        "host/surfacepage/passkey.go"
+      ],
+      "tests": [
+        "host/surfacepage package",
+        "TestSurfaceAppRoutes (still 404)"
+      ],
+      "apply": "§2 patch protocol with M=M7b",
+      "acceptance": "plan §3 M7b (tools/accept.sh M7b)",
+      "mutants": [
+        "MUT-JS-TIMEOUT",
+        "MUT-JS-B64-STRICT",
+        "MUT-JS-CODE-ONE-INPUT",
+        "MUT-JS-CODE-NO-ATT",
+        "MUT-JS-CODE-LABEL",
+        "MUT-JS-CODE-TRUNC",
+        "MUT-JS-CODE-LAST",
+        "MUT-JS-CODE-GROUP",
+        "MUT-JS-REG-TYPE",
+        "MUT-JS-REG-ATT",
+        "MUT-JS-ASR-AUTHDATA",
+        "MUT-JS-ASR-SIG",
+        "MUT-JS-ASR-USERHANDLE",
+        "MUT-JS-RP-DEFAULT",
+        "MUT-JS-RPID-DEFAULT",
+        "MUT-JS-USER-ID",
+        "MUT-JS-ALG-NO-ES256",
+        "MUT-JS-ALG-NO-EDDSA",
+        "MUT-JS-UV-CREATE",
+        "MUT-JS-UV-GET",
+        "MUT-JS-ATTESTATION",
+        "MUT-JS-ALLOW-EMPTY",
+        "MUT-JS-SIGNAL-CREATE",
+        "MUT-JS-SIGNAL-GET",
+        "MUT-JS-CALL-OP",
+        "MUT-JS-BTN-PENDING",
+        "MUT-JS-EXPIRED-FLAG",
+        "MUT-JS-ABORT",
+        "MUT-JS-STATE-EXPIRED",
+        "MUT-JS-SAY-TIMEOUT",
+        "MUT-JS-CLEAR",
+        "MUT-JS-LATE",
+        "MUT-JS-RETRY-EXPIRED",
+        "MUT-JS-FAIL",
+        "MUT-JS-FAIL-STATE",
+        "MUT-JS-FAIL-SAY",
+        "MUT-JS-RETRY-FAILED",
+        "MUT-JS-CREATE-OP",
+        "MUT-JS-RESULT",
+        "MUT-JS-SAVE-NEWLINE",
+        "MUT-JS-SAVE-NAME-REG",
+        "MUT-JS-SAVE-NAME-ASR",
+        "MUT-JS-SAVE-SHOW",
+        "MUT-JS-DONE",
+        "MUT-JS-V",
+        "MUT-JS-OP",
+        "MUT-JS-ORIGIN",
+        "MUT-JS-RP",
+        "MUT-JS-WHAT-OP",
+        "MUT-JS-READY-SHOW",
+        "MUT-JS-READY-ENABLE",
+        "MUT-HTML-SCRIPT",
+        "MUT-HTML-SAVE-HIDDEN",
+        "MUT-EMBED-PAGE",
+        "MUT-EMBED-SCRIPT"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M7c",
+      "design_milestone": "M7",
+      "title": "the DevTools driver (inert until M7e; the executor never runs it)",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint4-plan.md §3 M7c; patch: Appendix P ````diff M7c",
+      "expected_cumulative_numstat": 367,
+      "expected_numstat_when": "after the controller's commit of M7c",
+      "executor_run": 2,
+      "gated": false,
+      "files": [
+        "cmd/ailang-worldd/testdata/passkey_cdp.mjs"
+      ],
+      "tests": [],
+      "apply": "§2 patch protocol with M=M7c",
+      "acceptance": "plan §3 M7c (tools/accept.sh M7c)",
+      "mutants": [],
+      "status": "planned"
+    },
+    {
+      "id": "M7d",
+      "design_milestone": "M7",
+      "title": "the Go harness of the browser tests (inert until M7e)",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint4-plan.md §3 M7d; patch: Appendix P ````diff M7d",
+      "expected_cumulative_numstat": 597,
+      "expected_numstat_when": "after the controller's commit of M7d",
+      "executor_run": 2,
+      "gated": false,
+      "files": [
+        "cmd/ailang-worldd/passkey_page_driver_test.go"
+      ],
+      "tests": [],
+      "apply": "§2 patch protocol with M=M7d",
+      "acceptance": "plan §3 M7d (tools/accept.sh M7d)",
+      "mutants": [],
+      "status": "planned"
+    },
+    {
+      "id": "M7e",
+      "design_milestone": "M7",
+      "title": "the two routes and handlers with PG1, the TestSurfaceAppRoutes edit, XB1 and XB2",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint4-plan.md §3 M7e; patch: Appendix P ````diff M7e",
+      "expected_cumulative_numstat": 924,
+      "expected_numstat_when": "after the controller's commit of M7e",
+      "executor_run": 3,
+      "gated": true,
+      "files": [
+        "host/daemon/daemon.go",
+        "host/daemon/surface_page.go",
+        "host/daemon/passkey_page_test.go",
+        "host/daemon/surface_app_test.go",
+        "cmd/ailang-worldd/passkey_page_chrome_test.go",
+        "cmd/ailang-worldd/passkey_page_abort_test.go"
+      ],
+      "tests": [
+        "TestPasskeyPageRoutes (PG1)",
+        "TestSurfaceAppRoutes",
+        "TestPasskeyPageInChrome (XB1, gated; §6 required x3)",
+        "TestPasskeyPageAbortsAPendingCeremony (XB2, gated; §6 required x3)"
+      ],
+      "apply": "§2 patch protocol with M=M7e",
+      "acceptance": "plan §3 M7e (tools/accept.sh M7e)",
+      "mutants": [
+        "MUT-ROUTE-PAGE",
+        "MUT-ROUTE-SCRIPT",
+        "MUT-ROUTE-PAGE-METHOD",
+        "MUT-ROUTE-SCRIPT-METHOD",
+        "MUT-PAGE-HEADERS",
+        "MUT-SCRIPT-HEADERS",
+        "MUT-SCRIPT-CONTENT-TYPE",
+        "MUT-PAGE-BODY",
+        "MUT-SCRIPT-BODY"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M7f",
+      "design_milestone": "M7",
+      "title": "generate.sh made real (records through the page into an empty directory) and its refusals",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint4-plan.md §3 M7f; patch: Appendix P ````diff M7f",
+      "expected_cumulative_numstat": 1054,
+      "expected_numstat_when": "after the controller's commit of M7f",
+      "executor_run": 4,
+      "gated": false,
+      "files": [
+        "cmd/ailang-worldd/passkey_fixture_record_test.go",
+        "host/approval/testdata/webauthn/generate.sh",
+        "host/approval/testdata/webauthn/SOURCE.txt"
+      ],
+      "tests": [
+        "TestPasskeyFixtureGeneratorRefuses",
+        "TestPasskeyPageRecordsTheFixtures (skips unless WORLD_PASSKEY_RECORD_DIR)"
+      ],
+      "apply": "§2 patch protocol with M=M7f",
+      "acceptance": "plan §3 M7f (tools/accept.sh M7f)",
+      "mutants": [
+        "MUT-GEN-ARGC",
+        "MUT-GEN-NOT-DIR",
+        "MUT-GEN-NOT-EMPTY",
+        "MUT-GEN-CHROME"
+      ],
+      "status": "planned"
+    },
+    {
+      "id": "M7g",
+      "design_milestone": "M7",
+      "title": "QUICKSTART §16 Approve with a passkey (attended — pending first verbatim run)",
+      "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint4-plan.md §3 M7g; patch: Appendix P ````diff M7g",
+      "expected_cumulative_numstat": 1054,
+      "expected_numstat_when": "after the controller's commit of M7g",
+      "executor_run": 4,
+      "gated": false,
+      "files": [
+        "docs/QUICKSTART.md"
+      ],
+      "tests": [
+        "the quickstart tests"
+      ],
+      "apply": "§2 patch protocol with M=M7g",
+      "acceptance": "plan §3 M7g (tools/accept.sh M7g)",
+      "mutants": [],
+      "status": "planned"
+    }
+  ],
+  "sprint_gates": {
+    "script": "plan §6 (one bash heredoc, tee to $HOME/.ailang/state/world-iter382/gates/, never under nohup; WORLD_CHROME on the XB leg only)",
+    "pre_commit": [
+      "./scripts/verify_ail.sh",
+      "gofmt -l cmd host empty",
+      "go build ./... && go vet ./...",
+      "go test -run '^$' ./...",
+      "go test -count=1 ./host/surfacepage/... ./host/approval/... ./cmd/ailang-worldd/ ./host/daemon/",
+      "-race: host/surfacepage, host/daemon PG1/surface tests, cmd passkey/approver subset",
+      "the 29 named inventory/reflective/help/quickstart tests -v, all --- PASS, no SKIP/FAIL",
+      "XB1 + XB2 with WORLD_REQUIRE_PASSKEY_BROWSER=1, three consecutive runs, 7 subtests --- PASS each, timed"
+    ],
+    "after_commit": "VERIFY_GO_LEGS=plain ./scripts/verify_go.sh (re-run a red untouched package alone once; do not chase)",
+    "base_measured": "plan §1.1, §6"
+  },
+  "executor_directives": {
+    "git_writes": "none: never git add/commit/stash/checkout/reset/restore/rebase/push/worktree/apply; patch -p1 is the only writer",
+    "browser": "never run Chrome, node, generate.sh or a test with WORLD_CHROME set; M7e expects XB1/XB2 to SKIP (counted)",
+    "apply": "plan §2: awk-extract ````diff <M> from the plan, patch -p1 --dry-run then patch -p1, stop on .orig/.rej; then §3 acceptance with WORLD_CHROME unset",
+    "snapshot": "cumulative to $HOME/.ailang/state/world-iter382/snap/<M>/ with MANIFEST.sha256, excluding the two plan files",
+    "expected_numstat": {
+      "M7a": 11,
+      "M7b": 195,
+      "M7c": 367,
+      "M7d": 597,
+      "M7e": 924,
+      "M7f": 1054,
+      "M7g": 1054
+    },
+    "expected_numstat_when": "after the controller's commit of each sub-milestone: git diff --numstat 27ce163e HEAD -- cmd host",
+    "logs": "$HOME/.ailang/state/world-iter382/exec-logs/ (tee, never only through tail)",
+    "stop_conditions": "patch --dry-run failure; other numstat; a red earlier test; --- FAIL, or a --- SKIP other than §3 names, in a -v run; a file outside plan §5; any browser/node/ssh-keygen/real tty"
+  },
+  "mutation_harness": "$HOME/.ailang/state/world-iter382/plan-scratch/tools/mutate.py <tree> tools/mutants.json logs/mutant_ledger.tsv <run> --workers 6",
+  "mutation_ledger": "$HOME/.ailang/state/world-iter382/plan-scratch/logs/mutant_ledger.tsv",
+  "mutation_count": {
+    "rows_run": 69,
+    "killed": 64,
+    "equivalents_survived": 5,
+    "as_expected": 69,
+    "ledger_lines": 251
+  },
+  "mutation_equivalents_named": [
+    "MUT-JS-ASR-USERHANDLE: the assertion law requires a present userHandle to equal the name and accepts an absent one (W-userHandle is optional in L3 §7.2); the page forwards what the authenticator returned",
+    "MUT-JS-RP-DEFAULT: an omitted rp.id defaults to the page's hostname, which the page has already required to equal f.rp (the rp check, MUT-JS-RP)",
+    "MUT-JS-RPID-DEFAULT: an omitted rpId defaults to the page's hostname, which the page has already required to equal f.rp",
+    "MUT-JS-ALG-NO-EDDSA: -8 is offered for an authenticator without ES256; Chrome's virtual authenticator takes the first, ES256, so the second entry is not observable by XB1 (generate.sh's EdDSA recording filters the list to -8 and is its check, attended)",
+    "MUT-JS-ALLOW-EMPTY: the virtual authenticator holds one discoverable credential, which an empty allow list also selects; the CLI judges the credential ID (WF5), so a wrong one is refused there"
+  ],
+  "mutation_table_ref": "design_docs/planned/w-world-approvals-by-key-a2-sprint4-plan.md §4",
+  "browser_runs": {
+    "final_code_runs": 7,
+    "green": 7,
+    "roundtrip_tree": [
+      "XB2 4.22/XB1 4.40 s",
+      "5.53/7.64",
+      "4.00/4.84",
+      "4.40/6.10"
+    ],
+    "gate_script": [
+      "3.48/3.10",
+      "3.30/3.15",
+      "3.95/4.71"
+    ],
+    "earlier_code_runs": "6/6 green at load 38-80 (XB2 4.97-18.46 s, XB1 6.43-12.52 s)",
+    "virtual_250s_real_ms": "26-98",
+    "budget_s": 120,
+    "logs": "plan-scratch/logs/xbfinal, logs/final_gates/xb_*.log"
+  },
+  "roundtrip": {
+    "result": "ROUNDTRIP_IDENTICAL_TO_MUTANT_TREE",
+    "extracted_from": "the plan file with §2 awk, cmp-equal to the generated patches",
+    "numstat_after_each": [
+      11,
+      195,
+      367,
+      597,
+      924,
+      1054,
+      1054
+    ],
+    "acceptance": "ACCEPT rc=0 for all seven (M7e and M7g after one load red each in untouched timing tests, re-run green; plan §1.2 C31, C33)",
+    "log": "plan-scratch/logs/roundtrip.log"
+  },
+  "acceptance_criteria_ref": "design_docs/planned/w-world-approvals-by-key-a2-sprint4-plan.md §9 (14 criteria)",
+  "deferred": {
+    "plan_ref": "design_docs/planned/w-world-approvals-by-key-a2-sprint4-plan.md Appendix C",
+    "items": [
+      "A2 attended exit run (design §10; QUICKSTART §16) — Mark, not the loop",
+      "re-recording the fixtures with generate.sh is a re-pin (XW0, two goldens, the envelope userHandle pin, possibly XW1)",
+      "A3 reuses the page"
+    ]
+  }
+}

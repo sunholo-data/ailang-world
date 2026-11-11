@@ -15,7 +15,8 @@ import (
 
 // TestSurfaceAppRoutes: row 188 N2b. GET /surface is the app shell (the
 // same bytes whatever the index holds), its assets are the exact embedded
-// bytes, and every other name under /surface/ is a 404.
+// bytes, and every other name under /surface/ is a 404 (row 201 A2 adds
+// /surface/passkey and /surface/passkey.js, PG1's, and no name under them).
 func TestSurfaceAppRoutes(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "operator-index.json")
 	d, err := New(boundedTestContext(t), Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost, SurfaceIndex: path})
@@ -148,7 +149,8 @@ func TestSurfaceAppRoutes(t *testing.T) {
 
 	t.Run("404", func(t *testing.T) {
 		for _, target := range []string{"/surface/", "/surface/nope", "/surface/app.jsx", "/surface/index.html", "/surface/data.js",
-			"/surface/spike-data.json", "/surface/app/app.js", "/surface/static/x", "/surface/fonts.css"} {
+			"/surface/spike-data.json", "/surface/app/app.js", "/surface/static/x", "/surface/fonts.css",
+			"/surface/passkey/", "/surface/passkey/index.html", "/surface/passkey/passkey.js", "/surface/passkey.html"} {
 			if w := request("GET", target); w.Code != 404 {
 				t.Errorf("%s = %d, want 404", target, w.Code)
 			}

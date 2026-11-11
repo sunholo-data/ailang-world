@@ -1,0 +1,46 @@
+CTL-LIVE-comment	host/surfacepage/passkey/passkey.js	"[r2] the application's own bound" -> "[r2] the app's own bound"	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	SURVIVED	SURVIVED
+CTL-DIE-timeout	host/surfacepage/passkey/passkey.js	'TIMEOUT_MS = 240000' -> 'TIMEOUT_MS = 239000'	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-ver	host/surfacepage/passkey/passkey.js	'f.v !== 1 || ' -> ''	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-op-create	host/surfacepage/passkey/passkey.js	"(f.op !== 'create' && f.op !== 'get')" -> "(f.op !== 'create')"	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-op-get	host/surfacepage/passkey/passkey.js	"(f.op !== 'create' && f.op !== 'get')" -> "(f.op !== 'get')"	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-origin	host/surfacepage/passkey/passkey.js	'f.origin !== location.origin || ' -> ''	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-rp	host/surfacepage/passkey/passkey.js	' || f.rp !== location.hostname' -> ''	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-rp-origin-swap	host/surfacepage/passkey/passkey.js	'f.rp !== location.hostname' -> 'f.rp !== location.host'	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-b64-strict	host/surfacepage/passkey/passkey.js	'/^[A-Za-z0-9_-]*$/' -> '/^[A-Za-z0-9_=+\\/-]*$/'	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-json-catch	host/surfacepage/passkey/passkey.js	"setState('refused');\n    $('what').textContent = `This is no" -> "setState('ready');\n    $('what').textContent = `This is not"	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-refuse-return1	host/surfacepage/passkey/passkey.js	'Open the whole link the terminal printed.`;\n    return;' -> 'Open the whole link the terminal printed.`;'	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-refuse-return2	host/surfacepage/passkey/passkey.js	'not at ${location.origin}.`;\n    return;' -> 'not at ${location.origin}.`;'	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-latecheck	host/surfacepage/passkey/passkey.js	'if (expired) {' -> 'if (false) {'	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-expired-set	host/surfacepage/passkey/passkey.js	'expired = true;\n' -> ''	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-abort	host/surfacepage/passkey/passkey.js	'controller.abort();' -> ''	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-signal-get	host/surfacepage/passkey/passkey.js	'timeout: TIMEOUT_MS }, signal });\n  }' -> 'timeout: TIMEOUT_MS } });\n  }'	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-btn-disable	host/surfacepage/passkey/passkey.js	"go.disabled = true;\n    setState('pending')" -> "setState('pending')"	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-clear	host/surfacepage/passkey/passkey.js	'clearTimeout(timer);' -> ''	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-nosave-after-fail	host/surfacepage/passkey/passkey.js	'if (failure !== null) {' -> 'if (false) {'	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-code-label	host/surfacepage/passkey/passkey.js	"v1\\0'" -> "v2\\0'"	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-code-order	host/surfacepage/passkey/passkey.js	'msg.set(await sha256(attestationObject), label.length + 32);' -> 'msg.set(await sha256(attestationObject), label.length + 31);'	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-blob-type	host/surfacepage/passkey/passkey.js	"{ type: 'application/json' }" -> "{ type: 'text/html' }"	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	SURVIVED	SURVIVED
+J-uv-get	host/surfacepage/passkey/passkey.js	"userVerification: 'required', timeout" -> "userVerification: 'discouraged', timeout"	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+J-allow-empty	host/surfacepage/passkey/passkey.js	"allowCredentials: f.allow.map((id) => ({ type: 'public-key'," -> ''	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	SURVIVED	SURVIVED
+J-userhandle	host/surfacepage/passkey/passkey.js	'c.response.userHandle ? b64u(c.response.userHandle) : null' -> 'null'	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	SURVIVED	SURVIVED
+R-page-route	host/daemon/daemon.go	'\tmux.HandleFunc("GET /surface/passkey", d.handleSurfacePassk' -> ''	go test -count=1 -run ^(TestPasskeyPageRoutes|TestSurfaceAppRoutes|Tes	KILLED	KILLED
+R-script-route	host/daemon/daemon.go	'\tmux.HandleFunc("GET /surface/passkey.js", d.handleSurfacePa' -> ''	go test -count=1 -run ^(TestPasskeyPageRoutes|TestSurfaceAppRoutes|Tes	KILLED	KILLED
+R-method-page	host/daemon/daemon.go	'"GET /surface/passkey"' -> '"/surface/passkey"'	go test -count=1 -run ^(TestPasskeyPageRoutes|TestSurfaceAppRoutes|Tes	KILLED	KILLED
+R-method-script	host/daemon/daemon.go	'"GET /surface/passkey.js"' -> '"/surface/passkey.js"'	go test -count=1 -run ^(TestPasskeyPageRoutes|TestSurfaceAppRoutes|Tes	KILLED	KILLED
+R-hdr-page	host/daemon/surface_page.go	'setSurfaceHeaders(w)\n\t_, _ = w.Write(surfacepage.PasskeyPage' -> '_, _ = w.Write(surfacepage.PasskeyPage)'	go test -count=1 -run ^(TestPasskeyPageRoutes|TestSurfaceAppRoutes|Tes	KILLED	KILLED
+R-ctype	host/daemon/surface_page.go	'w.Header().Set("Content-Type", "text/javascript; charset=utf' -> '_, _ = w.Write(surfacepage.PasskeyScript)'	go test -count=1 -run ^(TestPasskeyPageRoutes|TestSurfaceAppRoutes|Tes	KILLED	KILLED
+R-csp	host/daemon/surface_page.go	"style-src 'unsafe-inline'" -> "style-src 'unsafe-inline' blob:"	go test -count=1 -run ^(TestPasskeyPageRoutes|TestSurfaceAppRoutes|Tes	SURVIVED	SURVIVED
+R-subpath	host/daemon/daemon.go	'mux.HandleFunc("GET /surface/passkey.js"' -> 'mux.HandleFunc("GET /surface/passkey/"'	go test -count=1 -run ^(TestPasskeyPageRoutes|TestSurfaceAppRoutes|Tes	KILLED	KILLED
+W-wn2a	cmd/ailang-worldd/approver_passkey.go	'if !approval.ApproverNamePattern.MatchString(name) {' -> 'if false {'	go test -count=1 -run ^(TestPasskeyEnrollFlagRules|TestApproveByPasske	KILLED	KILLED
+W-wn2a-order	cmd/ailang-worldd/approver_passkey.go	'ApproverNamePattern.MatchString(name)' -> 'ApproverNamePattern.MatchString("mark")'	go test -count=1 -run ^(TestPasskeyEnrollFlagRules|TestApproveByPasske	KILLED	KILLED
+H-html-script	host/surfacepage/passkey/index.html	'<script src="/surface/passkey.js"></script>' -> ''	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+H-save-hidden	host/surfacepage/passkey/index.html	'<a id="save" hidden>' -> '<a id="save">'	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+H-go-enabled	host/surfacepage/passkey/index.html	'<button id="go" type="button" hidden disabled>' -> '<button id="go" type="button" hidden>'	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	SURVIVED	SURVIVED
+NV-routes-both-XB	host/daemon/daemon.go	'\tmux.HandleFunc("GET /surface/passkey", d.handleSurfacePassk' -> ''	go test -count=1 -run ^(TestPasskeyPageInChrome|TestPasskeyPageAbortsA	KILLED	KILLED
+NV-routes-both-PG1	host/daemon/daemon.go	'\tmux.HandleFunc("GET /surface/passkey", d.handleSurfacePassk' -> ''	go test -count=1 -run ^(TestPasskeyPageRoutes|TestSurfaceAppRoutes|Tes	KILLED	KILLED
+NV-wn2a-CW1	cmd/ailang-worldd/approver_passkey.go	'if !approval.ApproverNamePattern.MatchString(name) {' -> 'if false {'	go test -count=1 -run ^(TestPasskeyEnrollFlagRules|TestApproveByPasske	KILLED	KILLED
+G-argc	host/approval/testdata/webauthn/generate.sh	'if [ "$#" -ne 1 ]; then' -> 'if false; then'	go test -count=1 -run ^TestPasskeyFixtureGeneratorRefuses$ ./cmd/ailan	KILLED	KILLED
+G-notdir	host/approval/testdata/webauthn/generate.sh	'[ ! -d "$1" ] || ' -> ''	go test -count=1 -run ^TestPasskeyFixtureGeneratorRefuses$ ./cmd/ailan	KILLED	KILLED
+G-notempty	host/approval/testdata/webauthn/generate.sh	' || [ -n "$(ls -A "$1")" ]' -> ''	go test -count=1 -run ^TestPasskeyFixtureGeneratorRefuses$ ./cmd/ailan	KILLED	KILLED
+G-chrome	host/approval/testdata/webauthn/generate.sh	'if [ -z "${WORLD_CHROME:-}" ]; then' -> 'if false; then'	go test -count=1 -run ^TestPasskeyFixtureGeneratorRefuses$ ./cmd/ailan	KILLED	KILLED
+N-nextstep-order	cmd/ailang-worldd/approve_passkey.go	'--db %s --credentials-db %s' -> '--credentials-db %s --db %s'	go test -count=1 -run ^(TestPasskeyEnrollFlagRules|TestApproveByPasske	KILLED	KILLED

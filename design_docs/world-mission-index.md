@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 382 | 2026-11-11 | row 201 A2 sprint 4 built: the passkey ceremony page under the unchanged surfaceCSP, live-Chrome XB1/XB2 on a CDP virtual authenticator, `generate.... |
 | 381 | 2026-11-11 | row 201 A2 sprint 3 built: the passkey operator CLI (`approver enroll --format webauthn` with the enrolment-code fence, list/revoke labels, `approv... |
 | 380 | 2026-11-11 | row 201 A2 sprint 2 built: the WebAuthn assertion law, credentials schema 6 with the passkey store, the consume that binds the passkey and advances... |
 | 379 | 2026-11-10 | row 201 A2 sprint 1 built: the pure WebAuthn verification law (CBOR, COSE, authData, clientData, origin, registration law, 128-bit enrolment code),... |

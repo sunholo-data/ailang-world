@@ -135,6 +135,10 @@ func TestApproveByPasskey(t *testing.T) {
 		}
 		return l
 	}
+	req, err := approval.Decode(row.Request) // the next step names the request's own stores, --db first
+	if err != nil {
+		t.Fatal(err)
+	}
 	want := []ceremonyLink{get(pkRPID, pkOrigin, other.CredentialID(), passkeySigner.CredentialID()), get("x.ts.net", "https://x.ts.net", third.CredentialID())}
 	out := stdout.String()
 	if n := strings.Count(out, "/surface/passkey#"); n != 2 {
@@ -145,7 +149,7 @@ func TestApproveByPasskey(t *testing.T) {
 		t.Fatalf("links %+v, want %+v", got, want)
 	}
 	for _, w := range []string{"approve request " + a.id + " (expires " + approverTime(row.ExpiresAt) + ", message hash " + hex.EncodeToString(h[:8]) + ")",
-		"\n  " + pkOrigin + "/surface/passkey#", "\n  https://x.ts.net/surface/passkey#", "ailang-worldd approve " + a.id + " --webauthn-assertion <the saved file> --db "} {
+		"\n  " + pkOrigin + "/surface/passkey#", "\n  https://x.ts.net/surface/passkey#", "\n  ailang-worldd approve " + a.id + " --webauthn-assertion <the saved file> --db " + shellQuote(req.WorldDB) + " --credentials-db " + shellQuote(req.CredentialsDB) + "\n"} {
 		if !strings.Contains(out, w) {
 			t.Fatalf("stdout lacks %q:\n%s", w, out)
 		}
