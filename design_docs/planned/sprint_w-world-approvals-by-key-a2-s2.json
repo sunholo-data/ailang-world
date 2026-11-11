@@ -1,0 +1,658 @@
+{
+ "sprint_id": "w-world-approvals-by-key-a2-s2",
+ "design_doc": "design_docs/planned/w-world-approvals-by-key-a2.md",
+ "design_revision": "r2 (quorum r2 + controller carve-out; not reopened)",
+ "sprint_plan": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md",
+ "previous_sprint": {
+  "plan": "design_docs/planned/w-world-approvals-by-key-a2-sprint1-plan.md",
+  "json": "design_docs/planned/sprint_w-world-approvals-by-key-a2-s1.json",
+  "landed_merge": "d5d90e49",
+  "recorded": "a8956f3a",
+  "pr": 546,
+  "note": "A2 sprint 1 (M0-M3a, 1,958 lines); its Appendix C (M3b) is this sprint head"
+ },
+ "base_commit": "3b77c294000ca40c2fe77e312ae0e8ce0f71a030",
+ "queue_row": 201,
+ "iteration": 380,
+ "sprint_number": 2,
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter380-row201-a2s2",
+ "branch": "sprint/world-iter380-row201-a2s2",
+ "cut": {
+  "cap_loc": 2000,
+  "measure": "git diff --numstat <base> HEAD -- cmd host (insertions + deletions); .gitattributes and docs outside the filter (none changed)",
+  "fallback_fired": "no: design §9 sprint-2 fallback (AU3 + A6 to sprint 3) priced by measurement and not needed",
+  "measured_without_fallback_items": 1777,
+  "fallback_items_loc": 66,
+  "committed": "M3b1, M3b2, M3b3, M4a, M4b, M4c, M5a, M5b",
+  "total_measured_loc": 1843,
+  "margin": 157,
+  "next_cut_if_needed": "M5b, then M5a as a whole milestone (each leaves every committed state safe)"
+ },
+ "next_sprint": "sprint 3 = M6 (the CLI) and M7 (the page, live browser, QUICKSTART §16) as designed; nothing moved from sprint 2 (plan Appendix C lists what it inherits)",
+ "executor_lane": "as routed by the controller; runs: (M3b1, M3b2), (M3b3, M4a), (M4b, M4c), (M5a, M5b)",
+ "executor_form": "every sub-milestone is a unified diff in the plan Appendix P, applied with patch -p1 after a --dry-run (plan §2); the executor writes no code by hand",
+ "estimate_loc": {
+  "production": 456,
+  "test": 1217,
+  "test_support_and_testdata": 170,
+  "total_cumulative": 1843,
+  "measure": "insertions + deletions (git diff --numstat -- cmd host), measured after a commit of each scratch stage"
+ },
+ "constraints": [
+  "D-WORLD-109: fakes, temp stores and test keys only (the recorded Chrome virtual-authenticator fixtures and approvaltest.Passkey); no browser, Chrome, Node, ssh-keygen or real authenticator; no ~/.ssh, ~/.ailang/world, real store, /dev/tty, mint or publish",
+  "coding standards S1-S3: the assertion law in host/approval, standard library only, no I/O; approvaltest test-only; effects only as SQL in host/store behind requireDeadline; no new module, package, exec site, route, context root or .ail",
+  "one mutant per new production branch, anchored to the diff, each run against its named test AND its package suite (plan §4)",
+  "flag-state coverage: W11-W13 refused with every other flag state that reaches them; C13/C14 each operand; counters zero/non-zero both ways",
+  "typed errors with errors.Is/As; nothing written on a refusal (both tables counted; request pending, no session, counter and last_used_at unchanged)",
+  "no t.Parallel in new tests",
+  "bisectable: every stage gofmt/build/vet/fence green with its own and earlier tests",
+  "no git writes by the executor",
+  "no gate under nohup (plan §1.1)"
+ ],
+ "baseline": {
+  "env": "export AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0); go1.26.6 darwin/arm64; git archive 3b77c294 export at $HOME/.ailang/state/world-iter380/plan-scratch/base",
+  "git_status": "clean at 3b77c294",
+  "gofmt": "rc 0",
+  "build_vet_all": "rc 0 (6 s)",
+  "compile_fence": "rc 0 (23 s)",
+  "package_tests": "host/approval/... host/store host/authority rc 0 (12 s); cmd/ailang-worldd whole package rc 0 (114 s)",
+  "race": "go test -race host/approval/... host/store host/authority rc 0 (31 s)",
+  "inventories": "16 design §7 inventory tests + 4 reflective (RC1, RC4, RC3, RC2) --- PASS",
+  "verify_ail": "rc 0 (36 s)",
+  "verify_go_plain": "rc 1 at the base, host/broker only, twice: stray loopback GET / (TestPublisherErrorRedactsTheSecretAndKeepsTheMarker; TestNotPublishedDoesNotReAuthorizeTheConsumedApproval, TestEveryReconcileRequestWasLoopbackAndAGet) and TestWorktreeSnapshotRefusesAConfiguredFilter; all PASS alone; CI green at 3b77c294",
+  "harness_trap": "under nohup scripts/marketingcheck TestMarketingSupervisorFakeDaemonCleanup/shell-hup fails 3/3 alone (SIGHUP ignored on entry cannot be trapped); without nohup it passes (5.9 s): no gate under nohup",
+  "final_tree": {
+   "tree": "plan-scratch/work (mutants) = plan-scratch/stages tag M5b (committed; gates) = the round-tripped tree",
+   "gofmt_vet_all": "gofmt -l cmd host empty; go vet ./... rc 0",
+   "inventories_named_v": "22 named tests --- PASS (16 design §7 + RC1, RC4, RC3, RC2, RC6, RC5), 0 SKIP/FAIL",
+   "packages": "approval/..., store, authority, cmd/ailang-worldd (113.6 s), host/daemon (283.3 s) ok",
+   "race": "approval/..., store, authority rc 0",
+   "verify_go_plain": "rc 0: 0 other binary blobs among 6687 tracked files; 64 evidence tests; 62 packages ok; go gate PASSED (plain)",
+   "verify_ail": "rc 0",
+   "whole_section6_script": "rc 0 in 775 s",
+   "roundtrip": "Appendix P extracted from the plan with the §2 awk, applied to a fresh 3b77c294 export, accept.sh after each: cumulative numstat 345, 672, 890, 1027, 1300, 1538, 1777, 1843; diff -r cmd host vs the mutant tree: identical"
+  }
+ },
+ "design_premises_found_false": [
+  {
+   "id": "P1",
+   "claim": "design §9 / sprint 1 Appendix C: M3b ~450, sprint 2 ~1,600",
+   "finding": "measured M3b 890, M4 648, M5 305 = 1,843",
+   "resolution": "under the cap; the fallback priced and not fired"
+  },
+  {
+   "id": "P2",
+   "claim": "design §8: sprint 2 touches no cmd/ file",
+   "finding": "the schema bump turns four cmd/ailang-worldd v4-fixture arms red (fresh store taken back to v4 by dropping only approvers)",
+   "resolution": "M4a: the two fixture builders also DROP TABLE webauthn_credentials (test-only)"
+  },
+  {
+   "id": "P3",
+   "claim": "design §2.10: EnrolPasskey validation S1-S9",
+   "finding": "ten conditions listed",
+   "resolution": "S1-S10, one case each, one arm per operand"
+  },
+  {
+   "id": "P4",
+   "claim": "design §6 PS1: user_version 6 pinned",
+   "finding": "the existing pin compares with credentialsSchemaVersion itself (MUT-CR-VERSION survived it)",
+   "resolution": "literal 6"
+  },
+  {
+   "id": "P5",
+   "claim": "design §2.15: Register/Assert take a name",
+   "finding": "recorded responses carry no user; the name would be unused",
+   "resolution": "no name parameter; userHandle is an Edit knob"
+  },
+  {
+   "id": "P6",
+   "claim": "design §2.11: no separate webauthn-without-PasskeyUse refusal in authority",
+   "finding": "true",
+   "resolution": "kept; MUT-A6 shows C13 refuses"
+  },
+  {
+   "id": "P7",
+   "claim": "first mutant pass",
+   "finding": "MUT-CR-VERSION and MUT-CR-TABLES6 survived their named tests; 4 NOCOMPILE drafts",
+   "resolution": "PS1 literal pin; TABLES6 named against TestCredentialsUpgradeToV6; drafts rewritten; full table re-run on the final tree"
+  },
+  {
+   "id": "P8",
+   "claim": "a gate red at the base measures the repo",
+   "finding": "the nohup-run base red (marketingcheck shell-hup) measured the harness",
+   "resolution": "never under nohup (§7); re-run without"
+  }
+ ],
+ "judge_gaps_carried": {
+  "Passkey.Key/CredentialID aliasing (iteration 379 judge)": "PA4 pins SignedApproval against edits of the input approver and of PasskeyUse()s slice (MUT-SA-CRED-ALIAS, MUT-PU-CLONE killed); TestNewPasskeyApproverDoesNotAliasItsInput pins NewPasskeyApprover (its two mutants are named equivalents: the input is decoded, never retained)",
+  "SOURCE.txt names es256.json/eddsa.json (iteration 379 judge)": "SOURCE.txt now names chrome-*.json and the probe outputs; XW0 requires the names (MUT-SOURCE-NAMES killed; BC-SOURCE survives at the base)",
+  "RegistrationInput.Challenge zero / Now unchecked (iteration 379 judge)": "measured accepted by the pure law; decided the caller s job (S2-D11): EnrolPasskey S4 refuses EnrolledAt <= 0 (PS2 arms, MUT-S4/MUT-S4-LT killed); WN5 (sprint 3) owns the challenge"
+ },
+ "ci_change": "none",
+ "not_touched": [
+  "host/approval/{approver.go, passkey.go, cbor.go, cose.go, authdata.go, clientdata.go, origin.go, passkey_json.go, request.go, admit.go, sshsig*.go}",
+  "host/approval/approvaltest/signer*.go",
+  "host/store/approvers.go",
+  "every other cmd/ailang-worldd file",
+  "host/daemon/**",
+  "host/surfacepage/**",
+  ".gitattributes",
+  "docs/QUICKSTART.md",
+  "world/*.ail",
+  "packages/**",
+  "scripts/**",
+  "tools/launchd/*",
+  "cmd/world-publish/*",
+  "any skill",
+  "~/.ssh",
+  "~/.ailang/world",
+  "~/.ailang/state/mission-v1*"
+ ],
+ "milestones": [
+  {
+   "id": "M3b1",
+   "design_milestone": "M3 (PA half, sprint 1 Appendix C)",
+   "title": "the assertion law, checkApprover, PasskeyUse; PA2, PA3 (Chrome), PA4, RC1, carry-forward pins",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md §3 M3b1; patch: Appendix P ````diff M3b1",
+   "estimate_loc": {
+    "production": 157,
+    "test": 182,
+    "test_support_and_testdata": 6,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 345,
+   "expected_numstat_when": "after the controller's commit of M3b1",
+   "executor_run": 1,
+   "gated": false,
+   "files": [
+    "host/approval/signed.go",
+    "host/approval/passkey_assert.go",
+    "host/approval/passkey_assert_test.go",
+    "host/approval/signed_test.go",
+    "host/approval/testdata/webauthn/SOURCE.txt",
+    "host/approval/webauthn_fixture_test.go"
+   ],
+   "tests": [
+    "TestApproveByAssertionAcceptsChrome (PA2, XW2)",
+    "TestChromeAssertionAfterAssertion2IsRefused (PA3 last arm, XW2)",
+    "TestSignedApprovalPasskeyUse (PA4)",
+    "TestNewPasskeyApproverDoesNotAliasItsInput (carry-forward)",
+    "TestSignedApprovalFieldsAreAllBound (RC1, edited)",
+    "TestPasskeyFixturesAreTheGeneratedBytes (XW0, edited)"
+   ],
+   "apply": "§2 patch protocol with M=M3b1",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./host/authority/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./host/approval/ -run '^(TestApproveByAssertionAcceptsChrome|TestChromeAssertionAfterAssertion2IsRefused|TestSignedApprovalPasskeyUse|TestNewPasskeyApproverDoesNotAliasItsInput|TestSignedApprovalFieldsAreAllBound|TestApproveBySignatureOrder|TestSignedApprovalAccessorsFailClosed|TestPasskeyFixturesAreTheGeneratedBytes)$' -count=1 -v",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [
+    "MUT-P2",
+    "MUT-P3W",
+    "MUT-P3W-FORMAT",
+    "MUT-P3W-NIL",
+    "MUT-P3W-SCOPE",
+    "MUT-P3",
+    "MUT-P4",
+    "MUT-P5",
+    "MUT-P5-LE",
+    "MUT-SIG-CHECK",
+    "MUT-B7",
+    "MUT-B8",
+    "MUT-B-NIL",
+    "MUT-PU-CLONE",
+    "MUT-PU-COUNT",
+    "MUT-P1",
+    "MUT-ABA-CHECK",
+    "MUT-W1",
+    "MUT-W2",
+    "MUT-W3",
+    "MUT-W3-HAS",
+    "MUT-W3-OR",
+    "MUT-W4",
+    "MUT-W5",
+    "MUT-W5-CREATE",
+    "MUT-W6",
+    "MUT-W6-ERR",
+    "MUT-W6-EXPIRY",
+    "MUT-W7",
+    "MUT-W8-CROSS",
+    "MUT-W8-TOP",
+    "MUT-W9",
+    "MUT-W9-REG",
+    "MUT-W10",
+    "MUT-W11",
+    "MUT-W11-AND-UV",
+    "MUT-W11-AND-BE",
+    "MUT-W11-AND-ED",
+    "MUT-W12",
+    "MUT-W12-AND-UP",
+    "MUT-W12-AND-BE",
+    "MUT-W12-AND-BS",
+    "MUT-W12-BE-ONLY",
+    "MUT-W13",
+    "MUT-W13-ONEWAY",
+    "MUT-W13-BS",
+    "MUT-W14",
+    "MUT-W14-CDJ",
+    "MUT-W15",
+    "MUT-W15-LT",
+    "MUT-W15-BOTHZERO",
+    "MUT-W15-AND",
+    "MUT-W15-BEFORE-W14",
+    "MUT-SA-COUNT",
+    "MUT-SA-CRED-ALIAS",
+    "MUT-SA-KEY",
+    "MUT-SA-FORMAT-EQUIV",
+    "MUT-SA-KEY-ALIAS-EQUIV",
+    "MUT-SOURCE-NAMES",
+    "MUT-AD-ALIAS-EQUIV",
+    "MUT-COSE-ALIAS-EQUIV"
+   ],
+   "status": "planned"
+  },
+  {
+   "id": "M3b2",
+   "design_milestone": "M3 (test authenticator)",
+   "title": "approvaltest.Passkey; TP1, XW1",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md §3 M3b2; patch: Appendix P ````diff M3b2",
+   "estimate_loc": {
+    "production": 0,
+    "test": 163,
+    "test_support_and_testdata": 164,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 672,
+   "expected_numstat_when": "after the controller's commit of M3b2",
+   "executor_run": 1,
+   "gated": false,
+   "files": [
+    "host/approval/approvaltest/passkey.go",
+    "host/approval/passkey_testauth_test.go"
+   ],
+   "tests": [
+    "TestTestPasskeyVerifies (TP1)",
+    "TestTestPasskeyMatchesChromeLayout (XW1)"
+   ],
+   "apply": "§2 patch protocol with M=M3b2",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./host/authority/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./host/approval/... -run '^(TestTestPasskeyVerifies|TestTestPasskeyMatchesChromeLayout|TestApprovalTestIsTestOnly|TestApprovalImportsOnlyTheStandardLibrary)$' -count=1 -v",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [],
+   "status": "planned"
+  },
+  {
+   "id": "M3b3",
+   "design_milestone": "M3 (PA1, PA3)",
+   "title": "the assertion law's refusals (order, flag-state coverage) and counter law",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md §3 M3b3; patch: Appendix P ````diff M3b3",
+   "estimate_loc": {
+    "production": 0,
+    "test": 218,
+    "test_support_and_testdata": 0,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 890,
+   "expected_numstat_when": "after the controller's commit of M3b3",
+   "executor_run": 2,
+   "gated": false,
+   "files": [
+    "host/approval/passkey_law_test.go"
+   ],
+   "tests": [
+    "TestApproveByAssertionOrder (PA1)",
+    "TestSignCountLaw (PA3)"
+   ],
+   "apply": "§2 patch protocol with M=M3b3",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./host/authority/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./host/approval/ -run '^(TestApproveByAssertionOrder|TestSignCountLaw)$' -count=1 -v",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [],
+   "status": "planned"
+  },
+  {
+   "id": "M4a",
+   "design_milestone": "M4 (schema 6)",
+   "title": "webauthn_credentials, credentialsSchemaVersion 6, the upgrade; PS1, PS4; the cmd v4 fixture builders",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md §3 M4a; patch: Appendix P ````diff M4a",
+   "estimate_loc": {
+    "production": 59,
+    "test": 78,
+    "test_support_and_testdata": 0,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 1027,
+   "expected_numstat_when": "after the controller's commit of M4a",
+   "executor_run": 2,
+   "gated": false,
+   "files": [
+    "host/store/credentials_schema.sql",
+    "host/store/credentials.go",
+    "host/store/passkeys.go",
+    "host/store/credentials_test.go",
+    "host/store/approvers_test.go",
+    "host/store/mint_requests_test.go",
+    "cmd/ailang-worldd/approver_rig_test.go",
+    "cmd/ailang-worldd/approve_sig_test.go"
+   ],
+   "tests": [
+    "TestCredentialsSchemaMatchesCanonicalDDL (PS1, edited)",
+    "TestCredentialsUpgradeToV6 (PS4, renamed from ...ToV5)"
+   ],
+   "apply": "§2 patch protocol with M=M4a",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./host/authority/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./host/store/ -run '^(TestCredentialsSchemaMatchesCanonicalDDL|TestCredentialsUpgradeToV6|TestCredentialsUpgradeToV4|TestCredentialsV5WithoutApproversIsRefused|TestCredentialsV4WithoutMintRequestsIsRefused)$' -count=1 -v",
+    "go test ./cmd/ailang-worldd/ -run '^(TestApproveBySignatureRefusalsBeforeAnyEffect|TestApproverEnrollRefusals|TestApproverRevoke|TestApproverList)$' -count=1 -v",
+    "go test ./cmd/ailang-worldd/ -count=1",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [
+    "MUT-CR-UPGRADE6",
+    "MUT-CR-TABLES6",
+    "MUT-CR-TABLES5",
+    "MUT-CR-VERSION",
+    "MUT-SQL-DRIFT",
+    "MUT-PKSQL-DRIFT"
+   ],
+   "status": "planned"
+  },
+  {
+   "id": "M4b",
+   "design_milestone": "M4 (EnrolPasskey)",
+   "title": "EnrolPasskey: S1-S10, three pre-checks, both inserts; PS2, PS5",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md §3 M4b; patch: Appendix P ````diff M4b",
+   "estimate_loc": {
+    "production": 111,
+    "test": 162,
+    "test_support_and_testdata": 0,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 1300,
+   "expected_numstat_when": "after the controller's commit of M4b",
+   "executor_run": 3,
+   "gated": false,
+   "files": [
+    "host/store/passkeys.go",
+    "host/store/credentials_test.go",
+    "host/store/passkeys_test.go"
+   ],
+   "tests": [
+    "TestEnrolPasskeyRefusals (PS2)",
+    "TestEnrolApproverStillSSHOnly (PS5)",
+    "TestCredentialsMethodsRequireADeadline (+EnrolPasskey)"
+   ],
+   "apply": "§2 patch protocol with M=M4b",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./host/authority/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./host/store/ -run '^(TestEnrolPasskeyRefusals|TestEnrolApproverStillSSHOnly|TestCredentialsMethodsRequireADeadline)$' -count=1 -v",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [
+    "MUT-EP-DEADLINE",
+    "MUT-EP-OLDER",
+    "MUT-EP-CHECK",
+    "MUT-S1",
+    "MUT-S2",
+    "MUT-S3",
+    "MUT-S4",
+    "MUT-S5",
+    "MUT-S6",
+    "MUT-S7",
+    "MUT-S8",
+    "MUT-S9",
+    "MUT-S10",
+    "MUT-S3-NAME",
+    "MUT-S3-KEY",
+    "MUT-S4-LT",
+    "MUT-S5-USED",
+    "MUT-S5-REVOKED",
+    "MUT-S6-FLOOR",
+    "MUT-S6-FLOOR16",
+    "MUT-S6-CEIL",
+    "MUT-S7-ES",
+    "MUT-S7-ED",
+    "MUT-S9-RP",
+    "MUT-S9-ORIGIN",
+    "MUT-S10-NEG",
+    "MUT-S10-MAX",
+    "MUT-S10-GE",
+    "MUT-PRE-NAME",
+    "MUT-PRE-KEY",
+    "MUT-PRE-CRED",
+    "MUT-PRE-HOLDER",
+    "MUT-INS-APPROVER",
+    "MUT-INS-PASSKEY",
+    "MUT-PS5-BASE"
+   ],
+   "status": "planned"
+  },
+  {
+   "id": "M4c",
+   "design_milestone": "M4 (lookups)",
+   "title": "PasskeyByCredentialID, Passkey, ActivePasskeys; PS3, RC6",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md §3 M4c; patch: Appendix P ````diff M4c",
+   "estimate_loc": {
+    "production": 71,
+    "test": 167,
+    "test_support_and_testdata": 0,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 1538,
+   "expected_numstat_when": "after the controller's commit of M4c",
+   "executor_run": 3,
+   "gated": false,
+   "files": [
+    "host/store/passkeys.go",
+    "host/store/credentials_test.go",
+    "host/store/passkey_lookups_test.go"
+   ],
+   "tests": [
+    "TestPasskeyLookups (PS3)",
+    "TestPasskeyRowMatchesTheTable (RC6)",
+    "TestCredentialsMethodsRequireADeadline (+3 lookups)"
+   ],
+   "apply": "§2 patch protocol with M=M4c",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./host/authority/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./host/store/ -run '^(TestPasskeyLookups|TestPasskeyRowMatchesTheTable|TestCredentialsMethodsRequireADeadline)$' -count=1 -v",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [
+    "MUT-LK-DEADLINE",
+    "MUT-LK-OLDER",
+    "MUT-LK-JOIN",
+    "MUT-LK-BYID-MISS",
+    "MUT-LK-NAME-MISS",
+    "MUT-LK-ACTIVE-REVOKED",
+    "MUT-LK-ACTIVE-FORMAT",
+    "MUT-LK-ACTIVE-ORDER",
+    "MUT-LK-ACTIVE-CAP",
+    "MUT-LK-REVOKED-READ",
+    "MUT-LK-USED-READ",
+    "MUT-LK-COLUMNS",
+    "MUT-LK-WHERE-ID"
+   ],
+   "status": "planned"
+  },
+  {
+   "id": "M5a",
+   "design_milestone": "M5 (the consume)",
+   "title": "C13-C18 in MintSessionForRequest; CS7-CS9, CS3 edit, RC3",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md §3 M5a; patch: Appendix P ````diff M5a",
+   "estimate_loc": {
+    "production": 55,
+    "test": 184,
+    "test_support_and_testdata": 0,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 1777,
+   "expected_numstat_when": "after the controller's commit of M5a",
+   "executor_run": 4,
+   "gated": false,
+   "files": [
+    "host/store/mint_requests.go",
+    "host/store/passkeys.go",
+    "host/store/consume_binding_test.go",
+    "host/store/passkey_consume_test.go"
+   ],
+   "tests": [
+    "TestPasskeyConsumeCompleteness (CS7)",
+    "TestPasskeyConsumeAdvancesTheCounter (CS8)",
+    "TestPasskeyConsumeChecksTheRowInTheTransaction (CS9)",
+    "TestRequestConsumeCompleteness (RC3, edited)",
+    "TestSignedConsumeChecksTheApproverInTheTransaction (CS3 other-format, edited)",
+    "TestApprovedByMatchesTheApprover (CS2, unedited)"
+   ],
+   "apply": "§2 patch protocol with M=M5a",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./host/authority/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./host/store/ -run '^(TestPasskeyConsumeCompleteness|TestPasskeyConsumeAdvancesTheCounter|TestPasskeyConsumeChecksTheRowInTheTransaction|TestRequestConsumeCompleteness|TestSignedConsumeChecksTheApproverInTheTransaction|TestApprovedByMatchesTheApprover|TestTypedConsumeTouchesNoApprover)$' -count=1 -v",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [
+    "MUT-C13",
+    "MUT-C13-NIL",
+    "MUT-C13-ONEWAY",
+    "MUT-C14",
+    "MUT-C14-FLOOR",
+    "MUT-C14-CEIL",
+    "MUT-C14-CEIL-GE",
+    "MUT-C14-NEG",
+    "MUT-C14-MAX",
+    "MUT-C14-MAX-GE",
+    "MUT-C15",
+    "MUT-C13-BEFORE-C4",
+    "MUT-USE-PASSKEY",
+    "MUT-UP-CRED",
+    "MUT-UP-LE",
+    "MUT-UP-BOTHZERO",
+    "MUT-UP-SET",
+    "MUT-UP-ROWS",
+    "MUT-C16",
+    "MUT-C17",
+    "MUT-C18"
+   ],
+   "status": "planned"
+  },
+  {
+   "id": "M5b",
+   "design_milestone": "M5 (authority)",
+   "title": "A6; AU3",
+   "plan_section": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md §3 M5b; patch: Appendix P ````diff M5b",
+   "estimate_loc": {
+    "production": 3,
+    "test": 63,
+    "test_support_and_testdata": 0,
+    "basis": "measured (exact patch)"
+   },
+   "expected_cumulative_numstat": 1843,
+   "expected_numstat_when": "after the controller's commit of M5b",
+   "executor_run": 4,
+   "gated": false,
+   "files": [
+    "host/authority/mint.go",
+    "host/authority/mint_passkey_test.go"
+   ],
+   "tests": [
+    "TestMintForRequestDerivesPasskeyUse (AU3)"
+   ],
+   "apply": "§2 patch protocol with M=M5b",
+   "acceptance": [
+    "test -z \"$(gofmt -l cmd host)\"",
+    "go build ./... && go vet ./host/approval/... ./host/store/ ./host/authority/ ./cmd/ailang-worldd/",
+    "go test -run '^$' ./...",
+    "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+    "go test ./host/authority/ -run '^(TestMintForRequestDerivesPasskeyUse|TestMintForRequestRecordsTheSigner|TestMintForRequestRefusesAnUnboundApproval|TestRequestMintFieldsAreSourced)$' -count=1 -v",
+    "go test ./host/approval/... ./host/store/ ./host/authority/ -count=1"
+   ],
+   "mutants": [
+    "MUT-A6",
+    "MUT-A6-COUNT",
+    "MUT-A6-CRED"
+   ],
+   "status": "planned"
+  }
+ ],
+ "sprint_gates": [
+  "export AILANG_BIN=$HOME/.pinned-ailang/ailang",
+  "./scripts/verify_ail.sh",
+  "test -z \"$(gofmt -l cmd host)\"",
+  "go build ./... && go vet ./...",
+  "go test -run '^$' ./...",
+  "go test -count=1 ./host/approval/... ./host/store/ ./host/authority/ ./cmd/ailang-worldd/ ./host/daemon/",
+  "go test -race -count=1 ./host/approval/... ./host/store/ ./host/authority/",
+  "the design §7 inventories and the reflective tests by name with -v, 22 named --- PASS required (plan §6)",
+  "after the controller commits: VERIFY_GO_LEGS=plain ./scripts/verify_go.sh",
+  "git status --short: only plan §5 files"
+ ],
+ "executor_directives": {
+  "git_writes": "none: never git add/commit/stash/checkout/reset/restore/rebase/push/worktree/apply; patch -p1 is the only writer; read-only git status/diff fine",
+  "apply": "plan §2: awk-extract ````diff <M> from the plan, patch -p1 --dry-run then patch -p1, stop on .orig/.rej; then §3 acceptance in one bash shell with AILANG_BIN exported, tee to $HOME/.ailang/state/world-iter380/exec-logs/",
+  "snapshot": "cumulative to $HOME/.ailang/state/world-iter380/snap/<M>/ with MANIFEST.sha256, excluding the two plan files (plan §7)",
+  "expected_numstat": {
+   "M3b1": 345,
+   "M3b2": 672,
+   "M3b3": 890,
+   "M4a": 1027,
+   "M4b": 1300,
+   "M4c": 1538,
+   "M5a": 1777,
+   "M5b": 1843
+  },
+  "expected_numstat_when": "after the controller's commit of each sub-milestone: git diff --numstat 3b77c294 HEAD -- cmd host",
+  "logs": "$HOME/.ailang/state/world-iter380/exec-logs/ (tee, never only through tail)",
+  "stop_conditions": "patch --dry-run failure; other numstat; a red earlier test; --- SKIP/FAIL in a -v run; a file outside plan §5; Chrome/Node/ssh-keygen/browser; ~/.ssh, ~/.ailang/world, real /dev/tty; any gate under nohup"
+ },
+ "mutation_harness": "$HOME/.ailang/state/world-iter380/plan-scratch/tools/mutate.py <tree> tools/mutants.json [ids...] (outside the repo; named test AND package suite per mutant); base controls tools/base_controls.json",
+ "mutation_count": {
+  "rows_run": 139,
+  "killed": 135,
+  "equivalents_survived": 4,
+  "base_controls": 2,
+  "nocompile_final": 0,
+  "first_pass_rewritten": "first pass: 135 rows, 6 mismatches (4 NOCOMPILE drafts rewritten; MUT-CR-VERSION and MUT-CR-TABLES6 survived their named tests: PS1 pin strengthened, TABLES6 renamed to its real killer); 4 carry-forward/base rows added; final run 139/139 as expected"
+ },
+ "mutation_equivalents_named": [
+  "MUT-SA-FORMAT-EQUIV: equivalent: P3w has refused any other format",
+  "MUT-SA-KEY-ALIAS-EQUIV: equivalent: Canonical() always allocates",
+  "MUT-AD-ALIAS-EQUIV: equivalent: rest is base64-decoded from the response, never the caller's bytes",
+  "MUT-COSE-ALIAS-EQUIV: equivalent: b.b is a slice of the decoded attestationObject, never the caller's bytes"
+ ],
+ "mutation_table_ref": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md §4",
+ "acceptance_criteria_ref": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md §9 (14 criteria)",
+ "deferred": {
+  "plan_ref": "design_docs/planned/w-world-approvals-by-key-a2-sprint2-plan.md Appendix C",
+  "items": [
+   "nothing moved from sprint 2; sprint 3 = M6 (CLI: WN1-WN11, WF1-WF6, widened F1, L4-L5, CW1-CW9) and M7 (page, XB1, XB2, generator, QUICKSTART §16) as designed",
+   "S2-D11: WN5 may also refuse an all-zero env.random challenge",
+   "full assertion2 recording and generate.sh: sprint 3 M7 driver",
+   "attended exit run (design §10): Mark (D-WORLD-109)"
+  ]
+ }
+}

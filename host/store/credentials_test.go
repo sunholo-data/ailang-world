@@ -61,10 +61,27 @@ var canonicalApproversDDL = `CREATE TABLE approvers (
     revoked_at   INTEGER CHECK (revoked_at IS NULL OR revoked_at >= enrolled_at)
 )`
 
+// canonicalPasskeysDDL is the current (version 6, row 201 A2) webauthn_credentials table.
+var canonicalPasskeysDDL = `CREATE TABLE webauthn_credentials (
+    name            TEXT PRIMARY KEY CHECK (length(name) BETWEEN 1 AND 48),
+    credential_id   BLOB NOT NULL UNIQUE CHECK (length(credential_id) BETWEEN 1 AND 1023),
+    rp_id           TEXT NOT NULL CHECK (rp_id <> ''),
+    origin          TEXT NOT NULL CHECK (origin <> ''),
+    alg             INTEGER NOT NULL CHECK (alg IN (-7, -8)),
+    aaguid          BLOB NOT NULL CHECK (length(aaguid) = 16),
+    backup_eligible INTEGER NOT NULL CHECK (backup_eligible IN (0, 1)),
+    sign_count      INTEGER NOT NULL CHECK (sign_count BETWEEN 0 AND 4294967295)
+)`
+
 func TestCredentialsSchemaMatchesCanonicalDDL(t *testing.T) {
 	c := openTestCredentials(t)
 	ddl := tableDDL(t, c.db)
-	requireExactTableNames(t, "fresh credentials store", ddl, []string{"approvers", "episode_starts", "mint_requests", "session_credentials"})
+	requireExactTableNames(t, "fresh credentials store", ddl, []string{"approvers", "episode_starts", "mint_requests", "session_credentials", "webauthn_credentials"})
+	for name, got := range map[string]string{"schema file": ddl["webauthn_credentials"], "passkeysSQL": passkeysSQL} {
+		if normalizeDDL(got) != normalizeDDL(canonicalPasskeysDDL) {
+			t.Fatalf("webauthn_credentials DDL (%s):\n got: %s\nwant: %s", name, got, canonicalPasskeysDDL)
+		}
+	}
 	if got, want := normalizeDDL(ddl["approvers"]), normalizeDDL(canonicalApproversDDL); got != want {
 		t.Fatalf("approvers DDL:\n got: %s\nwant: %s", got, want)
 	}
@@ -95,8 +112,8 @@ func TestCredentialsSchemaMatchesCanonicalDDL(t *testing.T) {
 		t.Fatalf("v4 world table differs from the version-1 credentials table: %s", got)
 	}
 	var version int
-	if err := c.db.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version != credentialsSchemaVersion {
-		t.Fatalf("credentials user_version = %d %v, want %d", version, err, credentialsSchemaVersion)
+	if err := c.db.QueryRow("PRAGMA user_version").Scan(&version); err != nil || version != 6 {
+		t.Fatalf("credentials user_version = %d %v, want 6 (row 201 A2)", version, err)
 	}
 }
 
@@ -276,6 +293,11 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	_, _, errs["ApproverByKey"] = c.ApproverByKey(ctx, []byte("k"))
 	_, errs["ListApprovers"] = c.ListApprovers(ctx)
 	errs["RevokeApprover"] = c.RevokeApprover(ctx, "x", 1000)
+	a, p := testPasskey("x", 1)
+	errs["EnrolPasskey"] = c.EnrolPasskey(ctx, a, p)
+	_, _, _, errs["PasskeyByCredentialID"] = c.PasskeyByCredentialID(ctx, p.CredentialID)
+	_, _, errs["Passkey"] = c.Passkey(ctx, "x")
+	_, errs["ActivePasskeys"] = c.ActivePasskeys(ctx)
 	for name, err := range errs {
 		if !errors.Is(err, ErrNoDeadline) {
 			t.Errorf("%s(Background) = %v, want ErrNoDeadline", name, err)

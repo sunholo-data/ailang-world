@@ -12,15 +12,18 @@ import (
 )
 
 // SignedApproval is a verified signature approval. Its fields are unexported, so only
-// ApproveBySignature, in this package, can return one with ok set; the zero value binds nothing.
+// ApproveBySignature or ApproveByAssertion, in this package, can return one with ok set; the zero
+// value binds nothing.
 type SignedApproval struct {
-	ok        bool
-	digest    [32]byte
-	challenge [32]byte
-	expiry    int64
-	name      string
-	format    string
-	key       []byte
+	ok           bool
+	digest       [32]byte
+	challenge    [32]byte
+	expiry       int64
+	name         string
+	format       string
+	key          []byte
+	credentialID []byte // webauthn only (row 201 A2): the passkey that signed
+	signCount    uint32 // webauthn only: the assertion's sign counter
 }
 
 // SignatureInput is what ApproveBySignature judges.
@@ -56,17 +59,8 @@ func ApproveBySignature(in SignatureInput) (*SignedApproval, error) {
 	if v := Admit(in.Admit); v != Admitted { // P1
 		return nil, &NotAdmittedError{Verdict: v}
 	}
-	if !ApproverNamePattern.MatchString(in.Approver.Name) { // P2
-		return nil, ErrApproverName
-	}
-	if in.Approver.Format != FormatSSH { // P3
-		return nil, ErrApproverFormat
-	}
-	if in.Approver.RevokedAt != 0 { // P4
-		return nil, ErrApproverRevoked
-	}
-	if in.Admit.Now < in.Approver.EnrolledAt { // P5
-		return nil, ErrApproverClockBehind
+	if err := checkApprover(in.Admit, in.Approver, FormatSSH); err != nil { // P2-P5
+		return nil, err
 	}
 	if err := VerifyApproval(in.Signature, in.Admit.StoredDigest, in.Challenge, in.Admit.ExpiresAt, in.Approver.Key); err != nil { // P6
 		return nil, err
@@ -74,6 +68,27 @@ func ApproveBySignature(in SignatureInput) (*SignedApproval, error) {
 	return &SignedApproval{ok: true, digest: in.Admit.StoredDigest, challenge: in.Challenge,
 		expiry: in.Admit.ExpiresAt, name: in.Approver.Name, format: in.Approver.Format,
 		key: bytes.Clone(in.Approver.Key.Blob)}, nil
+}
+
+// checkApprover is P2-P5, shared by both laws (row 201 A2 §2.9): the name, the format (a webauthn
+// approver must carry its passkey, P3w), not revoked, and not enrolled after now.
+func checkApprover(admit AdmitInput, a Approver, format string) error {
+	if !ApproverNamePattern.MatchString(a.Name) { // P2
+		return ErrApproverName
+	}
+	if format == FormatWebAuthn && (a.Format != format || a.Passkey == nil) { // P3w
+		return ErrApproverNotPasskey
+	}
+	if a.Format != format { // P3
+		return ErrApproverFormat
+	}
+	if a.RevokedAt != 0 { // P4
+		return ErrApproverRevoked
+	}
+	if admit.Now < a.EnrolledAt { // P5
+		return ErrApproverClockBehind
+	}
+	return nil
 }
 
 // Binds reports whether s is a verified approval of exactly this digest, challenge and expiry.
@@ -109,4 +124,13 @@ func (s *SignedApproval) Use() (name, format string, key []byte, ok bool) {
 		return "", "", nil, false
 	}
 	return s.name, s.format, bytes.Clone(s.key), true
+}
+
+// PasskeyUse is what the consume binds for a passkey (row 201 A2 §2.9): the credential ID (a copy)
+// and the assertion's counter; ok only for a verified webauthn approval.
+func (s *SignedApproval) PasskeyUse() (credentialID []byte, signCount uint32, ok bool) {
+	if s == nil || !s.ok || s.format != FormatWebAuthn { // B7, B8
+		return nil, 0, false
+	}
+	return bytes.Clone(s.credentialID), s.signCount, true
 }

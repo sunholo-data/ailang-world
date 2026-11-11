@@ -58,8 +58,8 @@ CREATE TABLE IF NOT EXISTS mint_requests (
 -- Approvers (version 5, row 201 A1b). A key enrolled at the daemon's terminal (a typed y, parent
 -- R3) may approve a mint request by signature. Revoking MARKS the row and never deletes it, so a
 -- name in mint_requests.approved_by ('ssh:<name>') names one key forever, and neither a name nor
--- a key is ever enrolled twice. format is checked in code (host/approval), not here, so A2 can add
--- 'webauthn' (and sign_count by ADD COLUMN) without rebuilding the table.
+-- a key is ever enrolled twice. format is checked in code (host/approval), not here, so A2 adds
+-- 'webauthn' without rebuilding the table (its passkey rows are webauthn_credentials, version 6).
 CREATE TABLE IF NOT EXISTS approvers (
     name         TEXT PRIMARY KEY CHECK (length(name) BETWEEN 1 AND 48),
     format       TEXT NOT NULL CHECK (format <> ''),
@@ -67,4 +67,19 @@ CREATE TABLE IF NOT EXISTS approvers (
     enrolled_at  INTEGER NOT NULL CHECK (enrolled_at > 0),
     last_used_at INTEGER CHECK (last_used_at IS NULL OR last_used_at >= enrolled_at),
     revoked_at   INTEGER CHECK (revoked_at IS NULL OR revoked_at >= enrolled_at)
+);
+
+-- Passkeys (version 6, row 201 A2). One row per webauthn approver (approvers.name, whose format is
+-- 'webauthn' and whose public_key is the canonical COSE key). The credential ID is never enrolled
+-- twice; the counter only moves forward, inside the consume that uses it. The credentials store
+-- does not enforce foreign keys, so EnrolPasskey writes both rows in one transaction.
+CREATE TABLE IF NOT EXISTS webauthn_credentials (
+    name            TEXT PRIMARY KEY CHECK (length(name) BETWEEN 1 AND 48),
+    credential_id   BLOB NOT NULL UNIQUE CHECK (length(credential_id) BETWEEN 1 AND 1023),
+    rp_id           TEXT NOT NULL CHECK (rp_id <> ''),
+    origin          TEXT NOT NULL CHECK (origin <> ''),
+    alg             INTEGER NOT NULL CHECK (alg IN (-7, -8)),
+    aaguid          BLOB NOT NULL CHECK (length(aaguid) = 16),
+    backup_eligible INTEGER NOT NULL CHECK (backup_eligible IN (0, 1)),
+    sign_count      INTEGER NOT NULL CHECK (sign_count BETWEEN 0 AND 4294967295)
 );

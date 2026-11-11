@@ -99,6 +99,9 @@ func requestConsume(rm *RequestMint) (store.RequestConsume, error) {
 	name, format, key, _ := rm.Signed.Use() // A3: Binds has shown it is verified
 	consume.ApprovedBy = rm.Signed.ApprovedBy()
 	consume.Approver = &store.ApproverUse{Name: name, Format: format, PublicKey: key}
+	if id, count, ok := rm.Signed.PasskeyUse(); ok { // A6: a passkey binds its credential and counter
+		consume.Approver.Passkey = &store.PasskeyUse{CredentialID: id, SignCount: int64(count)}
+	}
 	return consume, nil
 }
 

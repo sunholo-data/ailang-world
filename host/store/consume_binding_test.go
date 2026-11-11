@@ -190,13 +190,16 @@ var requestConsumeFields = map[string]string{
 	"ApproverUse.Name":          "required (C2)",
 	"ApproverUse.Format":        "required (C2)",
 	"ApproverUse.PublicKey":     "required (C2)",
+	"ApproverUse.Passkey":       "optional with a meaning: set exactly for a webauthn approver (C13), bound by C14-C18",
+	"PasskeyUse.CredentialID":   "required (C14): 1 to 1023 bytes",
+	"PasskeyUse.SignCount":      "bounded (C14): 0 to 2^32-1; 0 is a counter (TestPasskeyConsumeCompleteness)",
 }
 
 // RC3 (M4d1): every RequestConsume and ApproverUse field has a disposition, and zeroing each
 // required one in an otherwise valid signed consume is ErrIncompleteConsume, before the clock.
 func TestRequestConsumeCompleteness(t *testing.T) {
 	n := 0
-	for _, typ := range []reflect.Type{reflect.TypeOf(RequestConsume{}), reflect.TypeOf(ApproverUse{})} {
+	for _, typ := range []reflect.Type{reflect.TypeOf(RequestConsume{}), reflect.TypeOf(ApproverUse{}), reflect.TypeOf(PasskeyUse{})} {
 		for i := 0; i < typ.NumField(); i++ {
 			if key := typ.Name() + "." + typ.Field(i).Name; requestConsumeFields[key] == "" {
 				t.Errorf("%s has no disposition in requestConsumeFields", key)
@@ -205,7 +208,7 @@ func TestRequestConsumeCompleteness(t *testing.T) {
 		n += typ.NumField()
 	}
 	if n != len(requestConsumeFields) {
-		t.Fatalf("RequestConsume and ApproverUse have %d fields, requestConsumeFields %d", n, len(requestConsumeFields))
+		t.Fatalf("RequestConsume, ApproverUse and PasskeyUse have %d fields, requestConsumeFields %d", n, len(requestConsumeFields))
 	}
 	zero := map[string]func(*RequestConsume){
 		"RequestConsume.ID":        func(rc *RequestConsume) { rc.ID = "" },
@@ -216,6 +219,9 @@ func TestRequestConsumeCompleteness(t *testing.T) {
 		"ApproverUse.Name":         func(rc *RequestConsume) { rc.Approver.Name, rc.ApprovedBy = "", "ssh:" },
 		"ApproverUse.Format":       func(rc *RequestConsume) { rc.Approver.Format, rc.ApprovedBy = "", ":x" },
 		"ApproverUse.PublicKey":    func(rc *RequestConsume) { rc.Approver.PublicKey = nil },
+		"PasskeyUse.CredentialID": func(rc *RequestConsume) {
+			rc.Approver.Format, rc.ApprovedBy, rc.Approver.Passkey = "webauthn", "webauthn:x", &PasskeyUse{SignCount: 2}
+		},
 	}
 	for key, d := range requestConsumeFields {
 		if _, ok := zero[key]; strings.HasPrefix(d, "required") != ok {
@@ -287,6 +293,7 @@ func TestSignedConsumeChecksTheApproverInTheTransaction(t *testing.T) {
 		}, ErrApproverKeyChanged},
 		{"other-format", func(t *testing.T, c *Credentials, path string, rc *RequestConsume) {
 			rc.Approver.Format, rc.ApprovedBy = "webauthn", "webauthn:x"
+			rc.Approver.Passkey = &PasskeyUse{CredentialID: make([]byte, 32), SignCount: 1} // past C13-C15 (row 201 A2 §2.10)
 		}, ErrApproverKeyChanged},
 		{"enrolled-after-the-reading", func(t *testing.T, c *Credentials, path string, rc *RequestConsume) {
 			if _, err := rawDB(t, path).Exec(`UPDATE approvers SET enrolled_at = 1500 WHERE name = 'x'`); err != nil {

@@ -23,6 +23,18 @@ func makeV4Credentials(t *testing.T, path string, rows []SessionRow) {
 	setPositiveFixtureVersion(t, db, 4)
 }
 
+// makeV5Credentials writes a schema-5 credentials store at path: makeV4Credentials, the approvers
+// table and user_version 5.
+func makeV5Credentials(t *testing.T, path string, rows []SessionRow) {
+	t.Helper()
+	makeV4Credentials(t, path, rows)
+	db := rawDB(t, path)
+	if _, err := db.Exec(approversSQL); err != nil {
+		t.Fatal(err)
+	}
+	setPositiveFixtureVersion(t, db, 5)
+}
+
 // approverCount counts the approvers rows of c's store.
 func approverCount(t *testing.T, c *Credentials) int {
 	t.Helper()
@@ -38,9 +50,9 @@ func testApprover(name string, at int64) ApproverRow {
 	return ApproverRow{Name: name, Format: "ssh", PublicKey: []byte("key-" + name), EnrolledAt: at}
 }
 
-// AS5: the version 1, 3 and 4 stores upgrade to 5 in one step, keeping every session row, the
-// start history and the mint request row, and gaining an empty approvers table.
-func TestCredentialsUpgradeToV5(t *testing.T) {
+// AS5, PS4: the version 1, 3, 4 and 5 stores upgrade to 6 in one step, keeping every session row,
+// the start history, the mint request row and the approver, and gaining the empty tables.
+func TestCredentialsUpgradeToV6(t *testing.T) {
 	const reqID = "mr-00000000000000aa"
 	for _, tc := range []struct {
 		name string
@@ -69,6 +81,15 @@ func TestCredentialsUpgradeToV5(t *testing.T) {
 			}
 			if _, err := db.Exec(`INSERT INTO mint_requests (request_id, request, digest, challenge, episode_id, created_at, expires_at) VALUES (?, x'7b7d', ?, ?, 'ep', 1000, 1600)`,
 				reqID, strings.Repeat("ab", 32), strings.Repeat("cd", 32)); err != nil {
+				t.Fatal(err)
+			}
+			return rows
+		}},
+		{"v5", 5, func(t *testing.T, path string) []SessionRow {
+			rows := []SessionRow{oneBoundRow()}
+			makeV5Credentials(t, path, rows)
+			if _, err := rawDB(t, path).Exec(`INSERT INTO approvers (name, format, public_key, enrolled_at, revoked_at) VALUES ('kept', 'ssh', x'6b', 900, 950);
+				INSERT INTO episode_starts (episode, start_json) VALUES ('w900', '{"episode":"w900","note":"kept"}')`); err != nil {
 				t.Fatal(err)
 			}
 			return rows
@@ -110,19 +131,31 @@ func TestCredentialsUpgradeToV5(t *testing.T) {
 			}
 			db := rawDB(t, path)
 			ddl := tableDDL(t, db)
-			requireExactTableNames(t, "upgraded credentials store", ddl, []string{"approvers", "episode_starts", "mint_requests", "session_credentials"})
+			requireExactTableNames(t, "upgraded credentials store", ddl, []string{"approvers", "episode_starts", "mint_requests", "session_credentials", "webauthn_credentials"})
 			if got, want := normalizeDDL(ddl["approvers"]), normalizeDDL(canonicalApproversDDL); got != want {
 				t.Fatalf("upgraded approvers DDL:\n got: %s\nwant: %s", got, want)
+			}
+			if got, want := normalizeDDL(ddl["webauthn_credentials"]), normalizeDDL(canonicalPasskeysDDL); got != want {
+				t.Fatalf("upgraded webauthn_credentials DDL:\n got: %s\nwant: %s", got, want)
 			}
 			ro, err := OpenCredentialsReadOnly(path)
 			if err != nil {
 				t.Fatal(err)
 			}
 			defer func() { _ = ro.Close() }()
-			if got := approverCount(t, ro); got != 0 {
+			ctx := testCtx(t)
+			if tc.v == 5 {
+				want := ApproverRow{Name: "kept", Format: "ssh", PublicKey: []byte("k"), EnrolledAt: 900, RevokedAt: 950}
+				if got, ok, err := ro.Approver(ctx, "kept"); err != nil || !ok || !reflect.DeepEqual(got, want) || approverCount(t, ro) != 1 {
+					t.Fatalf("approver after the upgrade: %+v ok %v err %v; want %+v alone", got, ok, err, want)
+				}
+			} else if got := approverCount(t, ro); got != 0 {
 				t.Fatalf("approvers after the upgrade = %d, want 0", got)
 			}
-			ctx := testCtx(t)
+			var passkeys int
+			if err := db.QueryRow(`SELECT count(*) FROM webauthn_credentials`).Scan(&passkeys); err != nil || passkeys != 0 {
+				t.Fatalf("passkeys after the upgrade = %d (%v), want 0", passkeys, err)
+			}
 			for _, r := range rows {
 				got, ok, err := ro.ResolveSession(ctx, r.CredentialID)
 				if err != nil || !ok || !reflect.DeepEqual(got, r) {

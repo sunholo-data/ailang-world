@@ -57,14 +57,14 @@ func approverStore(t *testing.T) (db, creds string) {
 	return db, creds
 }
 
-// approverStoreV4 is approverStore taken back to schema 4: the approvers table dropped and
-// user_version 4, which is exactly the version-4 table set.
+// approverStoreV4 is approverStore taken back to schema 4: the webauthn_credentials and approvers
+// tables dropped and user_version 4, which is exactly the version-4 table set.
 func approverStoreV4(t *testing.T) (db, creds string) {
 	t.Helper()
 	db, creds = approverStore(t)
 	raw := rawCredentials(t, creds)
 	defer func() { _ = raw.Close() }()
-	for _, stmt := range []string{`DROP TABLE approvers`, `PRAGMA user_version = 4`} {
+	for _, stmt := range []string{`DROP TABLE webauthn_credentials`, `DROP TABLE approvers`, `PRAGMA user_version = 4`} {
 		if _, err := raw.Exec(stmt); err != nil {
 			t.Fatal(err)
 		}
