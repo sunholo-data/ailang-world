@@ -126,6 +126,7 @@ Usage:
   ailang-worldd approve <request-id> --sign-with <key> [--db <path>] [--credentials-db <path>]
   ailang-worldd approve <request-id> --write-message <file> [--db <path>] [--credentials-db <path>]
   ailang-worldd approve <request-id> --webauthn-link [--db <path>] [--credentials-db <path>]
+  ailang-worldd approve <request-id> --webauthn-assertion <file> [--db <path>] [--credentials-db <path>]
   ailang-worldd approve --list [--decided] [--db <path>] [--credentials-db <path>]
   ailang-worldd approver enroll --name <name> --format ssh --pubkey <file> [--db <path>] [--credentials-db <path>]
   ailang-worldd approver enroll --name <name> --format webauthn --origin <origin> --registration <file> [--db <path>] [--credentials-db <path>]

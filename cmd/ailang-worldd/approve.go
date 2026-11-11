@@ -26,11 +26,13 @@ const approveHelp = `usage: ailang-worldd approve <request-id> [--db <path>] [--
        ailang-worldd approve <request-id> --sign-with <key> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --write-message <file> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --webauthn-link [--db <path>] [--credentials-db <path>]
+       ailang-worldd approve <request-id> --webauthn-assertion <file> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve --list [--decided] [--db <path>] [--credentials-db <path>]
 
 ATTENDED, or SIGNED. Mints the session a stored mint request describes (row
 201), after a y/N typed at /dev/tty, or, with --signature or --sign-with,
-after an enrolled approver's SSH signature over the request verifies, with no
+after an enrolled approver's SSH signature over the request verifies, or, with
+--webauthn-assertion, after an enrolled passkey's assertion verifies, with no
 terminal.
 'ailang-worldd episode start <episode> ... --request' makes the request without
 a terminal; nothing is minted until approve.
@@ -67,6 +69,10 @@ approve <request-id> (mr- and 16 hex):
   Face ID, Touch ID, a PIN or a security key) to sign the request's message
   hash, and the --webauthn-assertion step. Check the page shows the request,
   expiry and hash it prints. It opens no terminal and writes no store row.
+--webauthn-assertion <file> replaces step 3's y/N with the page's saved file
+  (at most 16 KiB): the assertion is checked against the passkey enrolled for
+  its credential before any network call, its sign counter must move forward,
+  and the request records approved_by=webauthn:<name>.
 --list prints the pending requests, read-only. A request expires 10 minutes
 after it is made; at most 16 are pending per credentials store.
 --list --decided prints the used requests instead, newest first (at most 64):
@@ -138,6 +144,7 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	msgPath := fs.String("write-message", "", "write the request's approval message to this new file, to sign elsewhere")
 	signWith := fs.String("sign-with", "", "approve by signing the request with ssh-keygen -Y sign -f <key> (no terminal)")
 	passkeyLink := fs.Bool("webauthn-link", false, "print the ceremony page's links for the request (no terminal, no write)")
+	assertion := fs.String("webauthn-assertion", "", "approve with an enrolled passkey's assertion file (no terminal)")
 	positional, err := parseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, approveHelp)
@@ -152,12 +159,12 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		return exitUsage
 	}
 	modes := 0
-	for _, on := range []bool{*sigPath != "", *signWith != "", *msgPath != "", *passkeyLink} {
+	for _, on := range []bool{*sigPath != "", *signWith != "", *msgPath != "", *passkeyLink, *assertion != ""} {
 		if on {
 			modes++
 		}
 	}
-	if modes > 1 { // F1: at most one of --signature, --sign-with, --write-message and --webauthn-link
+	if modes > 1 { // F1: at most one of --signature, --sign-with, --write-message, --webauthn-link and --webauthn-assertion
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
@@ -249,6 +256,12 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	if *sigPath != "" { // the signature, judged before any network call (design §2.7 F9-F14)
 		var refusal string
 		if signed, refusal = approveSignature(ctx, credPath, *sigPath, row, now); refusal != "" {
+			return refuse("%s", refusal)
+		}
+	}
+	if *assertion != "" { // the passkey's assertion, judged before any network call (design §2.13 WF2-WF6)
+		var refusal string
+		if signed, refusal = approveAssertion(ctx, credPath, *assertion, row, now); refusal != "" {
 			return refuse("%s", refusal)
 		}
 	}

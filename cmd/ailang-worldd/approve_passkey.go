@@ -1,11 +1,13 @@
 package main
 
 // Row 201 A2 sprint 3 (design_docs/planned/w-world-approvals-by-key-a2.md §2.13): `approve
-// <request-id> --webauthn-link` prints the ceremony page's links for the request. It runs after
-// admission and F4, under runApprove's 3 s read root.
+// <request-id> --webauthn-link` prints the ceremony page's links for the request, and
+// `--webauthn-assertion <file>` approves it with an enrolled passkey's assertion, with no terminal.
+// Both run after admission and F4, under runApprove's 3 s read root.
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -63,4 +65,51 @@ func requestHash(row store.MintRequestRow) ([32]byte, error) {
 	stored, _ := hex.DecodeString(row.Digest)       // admission has shown it is 32 bytes
 	challenge, _ := hex.DecodeString(row.Challenge) // F4 has shown it is 32 bytes
 	return approval.MessageHash([32]byte(stored), [32]byte(challenge), row.ExpiresAt)
+}
+
+// approveAssertion is approve --webauthn-assertion's check, before any network call (design §2.13
+// WF2-WF6): the file is read once through a descriptor check (WF2) and parsed (WF3), the passkey
+// its credential ID names is looked up on a read-only handle (WF4, WF5), and the assertion law
+// judges it against the stored row and that passkey (WF6). It returns the verified approval, or
+// the refusal text. The caller has already admitted row at now and decoded its challenge (F4).
+func approveAssertion(ctx context.Context, credPath, path string, row store.MintRequestRow, now int64) (*approval.SignedApproval, string) {
+	file, err := readRegularFileCapped(path, approval.MaxPasskeyResponseBytes)
+	if err != nil { // WF2
+		return nil, fmt.Sprintf("--webauthn-assertion: %v", err)
+	}
+	resp, err := approval.ParseAssertionResponse(file)
+	if err != nil { // WF3
+		return nil, fmt.Sprintf("--webauthn-assertion %s is not a passkey assertion: %v", path, err)
+	}
+	ro, err := store.OpenCredentialsReadOnly(credPath)
+	if err != nil {
+		return nil, fmt.Sprintf("cannot read the credentials store %s: %v", credPath, err)
+	}
+	a, p, ok, err := ro.PasskeyByCredentialID(ctx, resp.RawID)
+	_ = ro.Close()
+	if err != nil { // WF4: below schema 6 names the serve restart
+		return nil, err.Error()
+	}
+	if !ok { // WF5
+		return nil, fmt.Sprintf("the assertion's credential cred %s is not an enrolled passkey; see ailang-worldd approver list", passkeyCred(resp.RawID))
+	}
+	key, err := approval.ParseStoredCOSEKey(a.PublicKey)
+	if err != nil { // WF5: only a hand-edited row
+		return nil, fmt.Sprintf("approver %q's stored passkey key is not valid (%v); see ailang-worldd approver list", a.Name, err)
+	}
+	stored, _ := hex.DecodeString(row.Digest)       // admission has shown it is 32 bytes
+	challenge, _ := hex.DecodeString(row.Challenge) // F4 has shown it is 32 bytes
+	signed, err := approval.ApproveByAssertion(approval.AssertionInput{
+		Admit: approval.AdmitInput{Now: now, CreatedAt: row.CreatedAt, ExpiresAt: row.ExpiresAt, Consumed: row.Consumed,
+			StoredDigest: [32]byte(stored), BytesDigest: sha256.Sum256(row.Request)},
+		Challenge: [32]byte(challenge),
+		Response:  file,
+		Approver: approval.Approver{Name: a.Name, Format: a.Format, EnrolledAt: a.EnrolledAt, LastUsedAt: a.LastUsedAt, RevokedAt: a.RevokedAt,
+			Passkey: &approval.Passkey{RPID: p.RPID, Origin: p.Origin, CredentialID: p.CredentialID, Key: key,
+				BackupEligible: p.BackupEligible, SignCount: uint32(p.SignCount)}},
+	})
+	if err != nil { // WF6
+		return nil, fmt.Sprintf("the passkey assertion does not approve request %s: %v", row.RequestID, err)
+	}
+	return signed, ""
 }

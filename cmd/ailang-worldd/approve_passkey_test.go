@@ -1,19 +1,24 @@
 package main
 
-// Row 201 A2 sprint 3 M6f, M6g (design_docs/planned/w-world-approvals-by-key-a2.md §2.13, CW7):
-// approve --webauthn-link and --webauthn-assertion. Every store is under t.TempDir(); every passkey is
+// Row 201 A2 sprint 3 M6f (design_docs/planned/w-world-approvals-by-key-a2.md §2.13, CW7): approve
+// --webauthn-link and --webauthn-assertion. Every store is under t.TempDir(); every passkey is
 // approvaltest.Passkey's fixed seed (D-WORLD-109).
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/hex"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/approval/approvaltest"
+	"github.com/sunholo-data/ailang-world/host/store"
 )
 
 // passkeySigner is the enrolled passkey of the approve tests (mark-mac, stored counter 1).
@@ -38,6 +43,33 @@ func requestHashOf(t *testing.T, a approveRig) [32]byte {
 	return h
 }
 
+// writeAssertion writes an assertion file under t.TempDir() and returns its path.
+func writeAssertion(t *testing.T, file []byte) string {
+	t.Helper()
+	p := filepath.Join(t.TempDir(), "world-assertion.json")
+	if err := os.WriteFile(p, file, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+// passkeyOf reads name's passkey row.
+func passkeyOf(t *testing.T, creds, name string) store.PasskeyRow {
+	t.Helper()
+	ro, err := store.OpenCredentialsReadOnly(creds)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = ro.Close() }()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	p, ok, err := ro.Passkey(ctx, name)
+	if err != nil || !ok {
+		t.Fatalf("passkey %q: %v %v", name, ok, err)
+	}
+	return p
+}
+
 // passkeyRig is a request for ep1 at approveT0 with passkeySigner enrolled as mark-mac at
 // approveT0-100.
 func passkeyRig(t *testing.T) approveRig {
@@ -49,7 +81,10 @@ func passkeyRig(t *testing.T) approveRig {
 
 // CW7: --webauthn-link prints one get link per origin (the request, its expiry and message hash,
 // and that origin's active credentials, by name), opens no terminal and writes nothing; with no
-// passkey it refuses (WF1), and below schema 6 it names the restart.
+// passkey it refuses (WF1), and below schema 6 it names the restart. --webauthn-assertion with the
+// passkey's assertion over the link's challenge mints with no terminal: approved_by
+// webauthn:mark-mac, the counter advanced, the effects the typed y makes. The same file again is
+// refused as already used, and revoke lists the approval (K8).
 func TestApproveByPasskey(t *testing.T) {
 	t.Run("WF1-none-enrolled", func(t *testing.T) {
 		a := newApproveRig(t, "ep1", approveT0)
@@ -117,5 +152,46 @@ func TestApproveByPasskey(t *testing.T) {
 	}
 	if row := a.row(t); row.Consumed || len(a.sessionRows(t)) != 0 {
 		t.Fatal("--webauthn-link consumed the request or minted")
+	}
+
+	file := writeAssertion(t, passkeySigner.Assert(pkOrigin, pkRPID, h, 2))
+	stdout.Reset()
+	if code := runApprove(a.args("--webauthn-assertion", file), &stdout, &stderr, approveEnv(nil, &opened, atTime(approveT0+1))); code != exitOK || opened {
+		t.Fatalf("assertion: rc %d, terminal opened %v; want exitOK with no terminal\nstderr %s", code, opened, stderr.String())
+	}
+	row = a.row(t)
+	if !row.Consumed || row.ApprovedBy != "webauthn:mark-mac" {
+		t.Fatalf("request consumed %v by %q, want webauthn:mark-mac", row.Consumed, row.ApprovedBy)
+	}
+	if p := passkeyOf(t, a.credPath, "mark-mac"); p.SignCount != 2 {
+		t.Fatalf("sign count %d, want 2", p.SignCount)
+	}
+	if !strings.Contains(stdout.String(), "approved by webauthn:mark-mac\n") {
+		t.Fatalf("stdout lacks the approver:\n%s", stdout.String())
+	}
+	mr, err := approval.Decode(row.Request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var probs []string
+	for _, p := range approveEffectProblems(mr, collectApproveFacts(t, a, mr, stdout.String())) {
+		if !strings.HasPrefix(p, "approved_by:") { // the typed check wants tty; this path records webauthn:mark-mac (above)
+			probs = append(probs, p)
+		}
+	}
+	if len(probs) != 0 {
+		t.Fatalf("the effects differ from the request:\n%s", strings.Join(probs, "\n"))
+	}
+
+	stderr.Reset()
+	if code := runApprove(a.args("--webauthn-assertion", file), &stdout, &stderr, approveEnv(nil, &opened, atTime(approveT0+2))); code != exitUsage || !strings.Contains(stderr.String(), "was already used") || opened {
+		t.Fatalf("replay: rc %d, stderr %q; want exitUsage, already used", code, stderr.String())
+	}
+
+	term := &lockedTerm{in: strings.NewReader("y\n")}
+	stdout.Reset()
+	if code := runApprover([]string{"revoke", "mark-mac", "--db", a.r.f.db}, &stdout, &stderr, approveEnv(term, nil, atTime(approveT0+3))); code != exitOK ||
+		!strings.Contains(stdout.String(), "it approved 1 session(s)") || !strings.Contains(stdout.String(), "  "+a.id+"  episode ep1") {
+		t.Fatalf("revoke: rc %d, stdout %q; want the passkey's approval listed (K8)", code, stdout.String())
 	}
 }
