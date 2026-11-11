@@ -7,6 +7,8 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
@@ -256,8 +258,8 @@ func runApproverList(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return approverRefuse(stderr, prefix, "cannot read the credentials store %s: %v", credPath, err)
 	}
+	defer func() { _ = ro.Close() }()
 	rows, err := ro.ListApprovers(ctx)
-	_ = ro.Close()
 	if err != nil { // L1: below schema 5 names the serve restart
 		return approverRefuse(stderr, prefix, "%v", err)
 	}
@@ -265,7 +267,13 @@ func runApproverList(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stdout, "no approvers")
 		return exitOK
 	}
-	for _, r := range rows { // L3
+	labels := make([]string, len(rows))
+	for i, r := range rows {
+		if labels[i], err = approverLabel(ctx, ro, r); err != nil {
+			return approverRefuse(stderr, prefix, "%v", err)
+		}
+	}
+	for i, r := range rows { // L3
 		used := "never"
 		if r.LastUsedAt != 0 {
 			used = approverTime(r.LastUsedAt)
@@ -275,7 +283,7 @@ func runApproverList(args []string, stdout, stderr io.Writer) int {
 			state = "revoked " + approverTime(r.RevokedAt)
 		}
 		fmt.Fprintf(stdout, "%s  %s  %s  enrolled %s  last used %s  %s\n",
-			r.Name, r.Format, approverKeyLabel(r.PublicKey), approverTime(r.EnrolledAt), used, state)
+			r.Name, r.Format, labels[i], approverTime(r.EnrolledAt), used, state)
 	}
 	return exitOK
 }
@@ -288,6 +296,34 @@ func approverKeyLabel(blob []byte) string {
 		keyType = k.Type
 	}
 	return keyType + " " + approval.SSHPublicKey{Blob: blob}.Fingerprint()
+}
+
+// approverLabel is row's key label (row 201 A2 §2.12b): an ssh row's approverKeyLabel, or a
+// webauthn row's passkey read on ro, revoked ones included. A webauthn row exists only at schema 6,
+// so a schema-5 store is never asked for a passkey.
+func approverLabel(ctx context.Context, ro *store.Credentials, row store.ApproverRow) (string, error) {
+	if row.Format != approval.FormatWebAuthn {
+		return approverKeyLabel(row.PublicKey), nil
+	}
+	p, ok, err := ro.Passkey(ctx, row.Name)
+	if err != nil {
+		return "", err
+	}
+	if !ok { // L5: only a hand-made row
+		return "invalid-passkey", nil
+	}
+	return passkeyLabel(p.Alg, p.RPID, p.CredentialID), nil // L4
+}
+
+// passkeyLabel is "passkey <ES256|EdDSA> <rpID> cred <first 16 hex of SHA-256(credential ID)>".
+func passkeyLabel(alg int64, rpID string, credentialID []byte) string {
+	return "passkey " + approval.COSEKey{Alg: alg}.AlgName() + " " + rpID + " cred " + passkeyCred(credentialID)
+}
+
+// passkeyCred is the first 16 hex of SHA-256(credential ID), as the enrolment y/N shows it.
+func passkeyCred(credentialID []byte) string {
+	h := sha256.Sum256(credentialID)
+	return hex.EncodeToString(h[:8])
 }
 
 // approverTime is a Unix time in RFC 3339, UTC.
@@ -428,6 +464,10 @@ func runApproverRevoke(args []string, stdout, stderr io.Writer, env sessionEnv) 
 		return approverRefuse(stderr, prefix, "cannot read the credentials store %s: %v", credPath, err)
 	}
 	row, ok, err := ro.Approver(pre, name)
+	label := ""
+	if err == nil && ok {
+		label, err = approverLabel(pre, ro, row)
+	}
 	_ = ro.Close()
 	cancelPre()
 	if err != nil { // below schema 5 names the serve restart
@@ -442,7 +482,7 @@ func runApproverRevoke(args []string, stdout, stderr io.Writer, env sessionEnv) 
 
 	// The fence (K4a, K4, K5a, K5).
 	prompt := fmt.Sprintf("Revoke approver %s (%s)? It will never approve again, and its name and key can never be enrolled again. [y/N] ",
-		name, approverKeyLabel(row.PublicKey))
+		name, label)
 	if code := confirmApproverAct(env, stderr, prefix, prompt, "nothing was revoked"); code != exitOK {
 		return code
 	}
