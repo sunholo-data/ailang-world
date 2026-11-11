@@ -2321,3 +2321,69 @@ The A1b design is fully built. A terminal `y` is no longer the only way to appro
 - **A design's "touches no file in X" is a claim the planner should measure:** schema 6 reached `cmd/` through test fixtures that rebuild an older schema by dropping tables.
 
 **Next:** row 201 A2 **sprint 3**: M6 (the CLI: `approver enroll --format webauthn`, `approve --webauthn-link`/`--webauthn-assertion`, list/revoke show passkeys) and M7 (the static `/surface/passkey` ceremony page, the Chrome driver and `generate.sh`, QUICKSTART §16), from the A2 doc without re-design; the design's sprint-3 fallback makes M7 its own fourth sprint if needed. Consider sprint 3 refusing an all-zero challenge in its random-challenge step. Then Mark's attended real-passkey exit run (§10), A3–A4, then row 243.
+
+## 381 — 2026-11-11 — row 201 A2 sprint 3 built: the passkey operator CLI (`approver enroll --format webauthn` with the enrolment-code fence, list/revoke labels, `approve --webauthn-link`/`--webauthn-assertion`); the design's sprint-3 fallback fired, so the ceremony page is sprint 4; judge PASS 92 [PRODUCT]
+
+**Pick:** row 201 `w-world-approvals-by-key`, parent milestone A2, sprint 3, the route iteration 380 named. D-WORLD-109 = A applies: test keys and temp stores only.
+- **Re-measured at pick** (`origin/dev` `ab4b2402`):
+  - No open PR from this account; no `iter381` worktree; no `A2 sprint 3` commit on `origin/dev`.
+  - The A2 child design r2 has a quorum artifact (`mc_quorum_gate2 w-world-approvals-by-key-a2` rc 0), so no pick-time quorum was owed and no designer ran.
+- **Ledger:** valid (100 rows). OPEN: D-WORLD-105 only.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 not routable (unchanged since 380; no attended A1 or row-188 N2d/N4a work landed in between).
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
+- Directives: 0 allowlisted on #524, out of 13 comments. The issue-scoped watermark is absent, so all comments were read.
+- Self-notices: rc 2, an instrument failure and not a verdict; no `-last-seen` file exists for 524 or 449 (same as 371–380).
+- Inbox: no unread `mission-world` message addressed to this loop (the unread list holds other missions' controlplane fyi notes).
+- Skill drift: none. SKILL.md and all 13 resource files at the resolved symlink target match the driver clone's `origin/dev` (`de918c252`).
+- Dev at `ab4b2402` (record 380): `checks=3`, all success. Local `dev` was behind origin (record 380 merged via GitHub); state read from origin.
+- Weekly issue sweep: not owed (not the first fire after Monday's rotation).
+
+**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus`, 181 min, 536,858 tok. Committed `3cff9784`.
+- **The design's §9 sprint-3 fallback fired, on measurement.** The planner built M6 in full and measured it at **1,686 lines** (`-- cmd host`: 467 production, 1,219 test) against the design's 1,220 estimate (1.38×). 314 lines of margin cannot hold M7, whose three browser probes alone measured 202 lines before any page or Go code. M7 (`/surface/passkey` + `passkey.js`, PG1, XB1, XB2, `generate.sh`) and QUICKSTART §16 move whole to a fourth sprint, listed in the plan's Appendix C. The printed links point at `/surface/passkey`, a 404 until then.
+- Eight sub-milestones M6a–M6h. Mutants: 124 rows, 121 killed against the named test and the package, 3 named equivalents; 3 base controls; a 146-line per-run ledger (17 first drafts that did not compile were rewritten and re-run, each with its own line).
+- Round trip: the planner's eight patches, extracted from the plan file, rebuild its mutant tree byte for byte. **The controller re-did it** (its own `git archive ab4b2402` and awk): `diff -rq cmd host` empty.
+- For sprint 4: XB2's virtual-time approach measured — `Emulation.setVirtualTimePolicy` advanced the page's 240000 ms abort timer to exactly 240000 ms of page time in 53–55 ms real time, 3 of 3 runs, under the exact `surfaceCSP` (headless Chrome, temp profile, no authenticator).
+- **Premises found false or incomplete:** P1 no exported function turns a stored COSE key back into a key (added `host/approval.ParseStoredCOSEKey`, pure, with a test; outside the design's conflict surface); P2 the size estimate; P3 `host/store/context_roots_test.go` (+1 root) is also outside the conflict-surface table; P4 the enrol-refusals arm the design expected to edit stays green unedited; P6 a first CW4 draft flaked ~1 in 6 and was fixed before shipping; P7 WF5 also needs a refusal for a stored key that will not parse; P8 QUICKSTART §16 belongs with M7.
+- **Carry-forward decided:** WN5 refuses a nil, failed **or all-zero** challenge with `exitFatal` before any terminal (the registration law measured accepting a zero challenge; the caller now owns it).
+
+**Executor:** env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`. Four runs of two sub-milestones (8.6, 5.2, 2.6 and 13.6 min). No hand edits, no git writes, no stop condition; one timing exception used in run 1 (`TestDemoSeedPreflightRefusals` hit its 10 s `ailang --version` deadline under load in the whole-package run and passed alone, 38/38 subtests). The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`: M6a `67f4d9af` → 38, M6b `41f5cb9a` → 237, M6c `e7241f61` → 701, M6d `48d75b44` → 945, M6e `62f57011` → 1,190, M6f `0ba3a76d` → 1,397, M6g `f4655266` → 1,538, M6h `64a239f8` → 1,686. Every value equals the plan's, and the final `cmd`/`host` tree is `diff -rq`-identical to the planner's mutant tree.
+
+**Controller gates:** plan §6 as one bash script at `64a239f8`, BEFORE the judge.
+- Pre-commit legs green (`verify_ail.sh`, gofmt, build, vet, the compile fence, touched packages, `-race`, all 30 named inventories with `-v`, 0 SKIP/FAIL).
+- `VERIFY_GO_LEGS=plain verify_go.sh`: **rc 1 under machine load ~32** on four timing tests — `TestHostsLaunchersExecHost` (`cmd/ailang-worldd`, `codex: signal: killed`) and three `host/broker` exec-probe timeouts. **All four pass alone at the head**; `host/broker` imports no touched package; the planner measured the same class red at the base under the same load. Details in `verification/world-iter381/controller-gates.md`.
+
+**Judge:** sonnet via the Agent tool, on its own worktree at `64a239f8` (generator ≠ judge). **Round 1: PASS 92/100, zero blocking** (correctness 28, tests 26, security 19, standards 9, scope 10).
+- A 67-line mutant ledger on disk (`verification/world-iter381/judge-mutants.tsv`): 35 plan rows sampled across M6a/b/c/f/g, all killed except the two named equivalents; 23 of its own diff-anchored mutants; must-die controls killed, must-live control survived. Its one COMPILEERR mutant was rewritten and re-run **with its own ledger line** — iteration 380's retro directive held.
+- Non-vacuity per milestone: M6c/M6f/M6g's new tests do not compile or fail at the parent; deleting M6d/M6e's test files lets five mutants survive (WN10 invert and prefix, WN11, N12, the y/N gate), so those test-only milestones are what pin CW2/CW4/CW5/CW6.
+- The cut judged safe: the daemon serves only exact `/surface…` paths, so the link is a 404; enrol then refuses after 300 s and enrols nothing.
+- Non-blocking, all fail closed: the next-step line's `--db`/`--credentials-db` order is unpinned; `defer ro.Close()` in the pre-check is unobserved; `_` as an extra code separator survives (the compare still needs the genuine 26 characters); `challenge[0]==0` in place of the all-zero check survives (stricter). Logged, not filed (D-WORLD-109 (2)).
+- **The controller reproduced one kill and one survivor:** dropping WN5's all-zero check fails `TestPasskeyEnrollRaceAndRefusals/WN5`; swapping the next-step `--db` pair leaves `TestApproveByPasskey` green.
+
+**Gate 3b:** PR #550, head `64a239f8`. Attempt 1: 2/3 — the race job red on `scripts/marketingcheck` `TestMarketingSupervisorFakeDaemonCleanup/shell-int` (trap `signal: killed`, cleanup 29.93 s over its bound; run 42993721120). Known row-254 class (folded into row 258), a new subtest (`shell-int`; earlier instances were `shell-wait` and `shell-hup`); this sprint touches no `scripts/` file; its two `DATA RACE` lines are the gate's positive control. `gh run rerun --failed` → **3/3 success**. Mergeable CLEAN. The auto-close keyword scan of the PR body read 0 (control 1). Merged by merge commit **`0ce117c5`** (`--match-head-commit`). Push checks on the merge: 3/3 success (run 42997956004).
+
+**Routing evidence:** base=0ce117c56f44a413e5206143413d269e8ede3c4d@2026-11-11T09:46:27Z.
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (the A2 r2 doc covers sprint 3). Quorum: not re-run (artifact present, doc unchanged).
+- Planner: `opus` via Agent (536,858 tok).
+- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (49,537 + 45,854 + 40,458 + 50,472 tok).
+- Evaluator: `sonnet` via Agent (105,937 tok).
+- The driver noted codex unusable at preflight (probe rc 75); no role needed it.
+- Metered total: $0.00. Details in `verification/world-iter381/routing.md`.
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. World now has the operator half of passkey approvals: an operator can enrol a passkey (`approver enroll --format webauthn`, fenced by a 128-bit code compared in constant time and a typed `y`), see passkeys in `approver list`/`revoke`, print a ceremony link for a pending request, and mint from a saved assertion file with no World prompt. What is missing is the page that performs the browser ceremony; until sprint 4 the links 404, so nothing can be enrolled or approved by passkey yet.
+
+**Ruled out:**
+- **Keeping M7 in sprint 3:** M6 alone measured 1,686 of 2,000; the design's own fallback names this cut.
+- **Treating the four `verify_go` timing reds as regressions:** each passes alone at the head, three are in a package that imports nothing touched, and the base showed the same class under the same load.
+- **Treating the PR's race red as this sprint's:** it is in `scripts/marketingcheck`, untouched; the row-254 class; green on re-run.
+- **Filing the four fail-closed survivors as rows:** D-WORLD-109 (2) — logged here.
+
+**Retro:**
+- **The planner-ships-patches route held a fifth consecutive sprint:** zero executor deviations, numstat equal at every step, the controller's own round trip matched.
+- **The judge's ledger directive worked:** its one recompiled mutant has two lines on disk, and the controller could reproduce a kill and a survivor straight from the ledger rows.
+- **A design's size estimate keeps undershooting CLI work by ~1.4×** (A2 sprint 2 M3b 2.0×, sprint 3 M6 1.38×); the §9 fallback-as-measurement rule is what kept both sprints under the cap without a re-plan.
+- **The rig was loaded all fire (load 12–38 from other sessions):** the planner spent 181 min, and both the planner and the controller saw timing reds in untouched packages. A gate verdict under shared load needs the alone re-run and a base control; both were done.
+
+**Next:** row 201 A2 **sprint 4**: M7 from the sprint-3 plan's Appendix C (the static `/surface/passkey` page + `passkey.js` with the [r2] AbortController/240000 ms timer, PG1, live-Chrome XB1/XB2 on a CDP virtual authenticator, `generate.sh`, QUICKSTART §16 tagged attended-pending), from the A2 doc without re-design. Consider the judge's one-line early `--name` check (Appendix C) and pinning the next-step `--db` order. Then Mark's attended real-passkey exit run (§10), A3–A4, then row 243.

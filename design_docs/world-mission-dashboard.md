@@ -1,24 +1,23 @@
-# World mission dashboard — iteration 380 (2026-11-11)
+# World mission dashboard — iteration 381 (2026-11-11)
 
-- **Landed this fire:** row 201 A2 sprint 2 (`w-world-approvals-by-key`), PR #548, merge `3e55451f`. CI 3/3 on the PR head (first run) and on the merge. Judge sonnet PASS 93, zero blocking.
-- **What it does:** World can verify a passkey *approval* (a WebAuthn assertion), store enrolled passkeys, and consume a mint a passkey approved.
-  - `ApproveByAssertion` in pure `host/approval` (shares `checkApprover` with the SSH law; the counter must strictly advance, both zero allowed).
-  - Credentials schema 6 (`webauthn_credentials`), `EnrolPasskey` and the lookups in `host/store`.
-  - The consume binds the credential ID and advances the counter inside the mint's transaction; every refusal rolls back.
-  - Authority derives `approved_by = webauthn:<name>` from the verified approval.
-- **Not reachable yet:** no CLI or route builds a passkey approval. That is sprint 3.
-- **Next loop work:** row 201 A2 sprint 3 — M6 the CLI (`approver enroll --format webauthn`, `approve --webauthn-link`/`--webauthn-assertion`), M7 the `/surface/passkey` ceremony page + Chrome driver + QUICKSTART §16. M7 becomes a fourth sprint if the design's fallback fires. Then A3–A4, then row 243.
-- **Attended, pending Mark:** A1b exit run (QUICKSTART §15, his SSH key); A2's real-passkey exit run (design §10) after sprint 3.
+- **Landed this fire:** row 201 A2 sprint 3 (`w-world-approvals-by-key`), PR #550, merge `0ce117c5`. CI 3/3 on the PR head after one re-run of a known `scripts/marketingcheck` flake. Judge sonnet PASS 92, zero blocking.
+- **What it does:** the operator CLI for passkey approvals.
+  - `approver enroll --format webauthn --origin <o> --registration <file>`: prints a ceremony link with a fresh random challenge (nil, failed or all-zero refused), reads the browser's 26-character enrolment code within 300 s, compares it in constant time over the whole code (one attempt), refuses a substituted registration file, then asks y/N and writes. No store handle or writer lock is held while a prompt waits.
+  - `approver list`/`revoke` label passkeys; `host/approval.ParseStoredCOSEKey` reads a stored key back.
+  - `approve <id> --webauthn-link` prints one link per origin (no terminal, no write); `approve <id> --webauthn-assertion <file>` refuses bad input before any daemon call and mints with no World prompt (`approved_by = webauthn:<name>`).
+- **The cut:** M6 measured 1,686 lines (design estimate 1,220), so the design's own §9 fallback fired. The ceremony page (M7: `/surface/passkey`, live-Chrome tests, `generate.sh`) and QUICKSTART §16 are **sprint 4**. Until then the printed links 404 and nothing can be enrolled or approved by passkey; the state fails closed.
+- **Next loop work:** row 201 A2 sprint 4 (M7 from the sprint-3 plan's Appendix C), then Mark's attended real-passkey exit run (design §10), then A3–A4, then row 243.
+- **Attended, pending Mark:** A1b exit run (QUICKSTART §15, his SSH key); A2's real-passkey exit run (design §10) after sprint 4.
 - **Row 256:** taken by an attended session; the loop does not pick it.
 - **OPEN decisions:** D-WORLD-105 only (default C: row 233 parked, fail closed).
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 (attended A1) and 151 (row 188 N2d/N4a) are not routable.
-- **Routing this fire:** all roles ran through the Agent tool; no designer or quorum (the A2 r2 doc covers sprint 2).
-  - Controller: opus. Planner: opus, 94 min, 8 compiled patches. Executor: haiku, four runs. Judge: sonnet, own worktree.
+- **Routing this fire:** all roles ran through the Agent tool; no designer or quorum (the A2 r2 doc covers sprint 3).
+  - Controller: opus. Planner: opus, 181 min, 8 compiled patches. Executor: haiku, four runs. Judge: sonnet, own worktree.
   - Codex was unusable at preflight (probe rc 75); no role needed it. Metered $0.00.
 - **Instrument notes:**
-  - Never start a Go gate under `nohup`: `scripts/marketingcheck`'s `shell-hup` test reds (3/3, planner-measured).
-  - A judge's "re-ran and killed" needs a line in its mutant file; three were only in prose (the controller reproduced them).
-  - Row 259 flake (`TestSeedRestartIgnoresASurvivingOldCopy`) did not recur this fire.
-  - Export `AILANG_BIN=~/.pinned-ailang/ailang` for the Go tests.
+  - The rig was loaded all fire (load 12–38 from other sessions): timing tests in untouched packages went red in `verify_go.sh` (`host/broker` exec probes, `TestHostsLaunchersExecHost`) and passed alone. Re-run a red alone and compare with the base before calling it a regression.
+  - `scripts/marketingcheck` supervisor cleanup flake (row 254 → 258 class) hit a new subtest, `shell-int`, on the PR race job; green on re-run.
+  - The judge's per-run mutant ledger held (its recompiled mutant has its own line).
+  - Never start a Go gate under `nohup`. Export `AILANG_BIN=~/.pinned-ailang/ailang` for the Go tests.
   - The self-notice script returns rc 2 until a directive is marked on #524.
 - **Bookkeeping thread:** #524 (rotates Monday 2026-11-16 07:00).
