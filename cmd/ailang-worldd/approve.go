@@ -25,11 +25,14 @@ const approveHelp = `usage: ailang-worldd approve <request-id> [--db <path>] [--
        ailang-worldd approve <request-id> --signature <file> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --sign-with <key> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --write-message <file> [--db <path>] [--credentials-db <path>]
+       ailang-worldd approve <request-id> --webauthn-link [--db <path>] [--credentials-db <path>]
+       ailang-worldd approve <request-id> --webauthn-assertion <file> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve --list [--decided] [--db <path>] [--credentials-db <path>]
 
 ATTENDED, or SIGNED. Mints the session a stored mint request describes (row
 201), after a y/N typed at /dev/tty, or, with --signature or --sign-with,
-after an enrolled approver's SSH signature over the request verifies, with no
+after an enrolled approver's SSH signature over the request verifies, or, with
+--webauthn-assertion, after an enrolled passkey's assertion verifies, with no
 terminal.
 'ailang-worldd episode start <episode> ... --request' makes the request without
 a terminal; nothing is minted until approve.
@@ -61,6 +64,15 @@ approve <request-id> (mr- and 16 hex):
 --write-message <file> writes that message (90 bytes) to a NEW file and prints
   the ssh-keygen -Y sign line and the --signature step. It opens no terminal
   and writes no store row: the request stays pending.
+--webauthn-link prints, for each origin of the enrolled passkeys, a link to
+  the daemon's page /surface/passkey that asks the browser's passkey (with
+  Face ID, Touch ID, a PIN or a security key) to sign the request's message
+  hash, and the --webauthn-assertion step. Check the page shows the request,
+  expiry and hash it prints. It opens no terminal and writes no store row.
+--webauthn-assertion <file> replaces step 3's y/N with the page's saved file
+  (at most 16 KiB): the assertion is checked against the passkey enrolled for
+  its credential before any network call, its sign counter must move forward,
+  and the request records approved_by=webauthn:<name>.
 --list prints the pending requests, read-only. A request expires 10 minutes
 after it is made; at most 16 are pending per credentials store.
 --list --decided prints the used requests instead, newest first (at most 64):
@@ -131,6 +143,8 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	sigPath := fs.String("signature", "", "approve with an enrolled approver's SSHSIG over the request (no terminal)")
 	msgPath := fs.String("write-message", "", "write the request's approval message to this new file, to sign elsewhere")
 	signWith := fs.String("sign-with", "", "approve by signing the request with ssh-keygen -Y sign -f <key> (no terminal)")
+	passkeyLink := fs.Bool("webauthn-link", false, "print the ceremony page's links for the request (no terminal, no write)")
+	assertion := fs.String("webauthn-assertion", "", "approve with an enrolled passkey's assertion file (no terminal)")
 	positional, err := parseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, approveHelp)
@@ -145,12 +159,12 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		return exitUsage
 	}
 	modes := 0
-	for _, v := range []string{*sigPath, *signWith, *msgPath} {
-		if v != "" {
+	for _, on := range []bool{*sigPath != "", *signWith != "", *msgPath != "", *passkeyLink, *assertion != ""} {
+		if on {
 			modes++
 		}
 	}
-	if modes > 1 { // F1: at most one of --signature, --sign-with and --write-message
+	if modes > 1 { // F1: at most one of --signature, --sign-with, --write-message, --webauthn-link and --webauthn-assertion
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
@@ -232,10 +246,22 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		}
 		return exitOK
 	}
+	if *passkeyLink { // WF1: the ceremony links, and nothing else (row 201 A2 §2.13)
+		if refusal := writePasskeyLinks(ctx, credPath, stdout, row, mr); refusal != "" {
+			return refuse("%s", refusal)
+		}
+		return exitOK
+	}
 	var signed *approval.SignedApproval
 	if *sigPath != "" { // the signature, judged before any network call (design §2.7 F9-F14)
 		var refusal string
 		if signed, refusal = approveSignature(ctx, credPath, *sigPath, row, now); refusal != "" {
+			return refuse("%s", refusal)
+		}
+	}
+	if *assertion != "" { // the passkey's assertion, judged before any network call (design §2.13 WF2-WF6)
+		var refusal string
+		if signed, refusal = approveAssertion(ctx, credPath, *assertion, row, now); refusal != "" {
 			return refuse("%s", refusal)
 		}
 	}

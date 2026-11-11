@@ -23,6 +23,9 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/approver.go|runApproverEnroll|Background":      2, // row 201 A1b M3: the read-only pre-check (3 s), then the write after y (3 s)
 	"cmd/ailang-worldd/approver.go|runApproverRevoke|Background":      3, // row 201 A1b M3: the read-only lookup (3 s), the write after y (3 s); sprint 4 K8: the read-only listing (3 s)
 	"cmd/ailang-worldd/episode_launch.go|launchEpisode|Background":    3, // row 217 M2: HTTP preflight (8 s), agent (wall cap + margin), append (3 s)
+	// Row 201 A2 sprint 3: the read-only pre-check (3 s), the re-check after the enrolment code (3 s)
+	// and the write after y (3 s).
+	"cmd/ailang-worldd/approver_passkey.go|runApproverEnrollPasskey|Background": 3,
 
 	"cmd/ailang-worldd/cli.go|get|Background":                                1,
 	"cmd/ailang-worldd/cli.go|execute|Background":                            1,

@@ -7,6 +7,8 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
@@ -29,25 +31,49 @@ const approverConfirmBudget = 120 * time.Second
 // confirmApproverAct shows prompt at /dev/tty and returns exitOK only on a y typed within
 // approverConfirmBudget, as a complete line with no read error (design §2.10a [r2]). Every other
 // outcome returns its refusal code having written nothing. It is called with no store handle
-// open, so no writer lock is held while it waits.
+// open, so no writer lock is held while it waits. Row 201 A2 (§2.12a) splits it into
+// openApproverTerminal and askApproverLine, so passkey enrolment asks twice on one terminal.
 func confirmApproverAct(env sessionEnv, stderr io.Writer, prefix, prompt, nothing string) int {
+	term, code := openApproverTerminal(env, stderr, prefix, nothing)
+	if code != exitOK {
+		return code
+	}
+	defer func() { _ = term.Close() }() // closed on every return
+	return confirmOnTerminal(term, env, stderr, prefix, prompt, nothing)
+}
+
+// openApproverTerminal opens /dev/tty for an approver act (N9a, N9 / K4a, K4): the terminal, or
+// the refusal code having opened nothing. The caller closes the terminal.
+func openApproverTerminal(env sessionEnv, stderr io.Writer, prefix, nothing string) (io.ReadWriteCloser, int) {
 	if env.after == nil { // N9a / K4a
 		fmt.Fprintf(stderr, "%sinternal error: no prompt timer (sessionEnv.after)\n", prefix)
-		return exitFatal
+		return nil, exitFatal
 	}
 	term, err := env.openTerminal()
 	if err != nil { // N9 / K4
 		fmt.Fprintf(stderr, "%srefusing: no controlling terminal (%v); %s. %s\n", prefix, err, nothing, sessionTTYFix)
-		return exitUsage
+		return nil, exitUsage
 	}
-	defer func() { _ = term.Close() }() // closed on every return
-	fmt.Fprint(term, prompt)            // the budget starts here
-	line, rerr, ok := readTermLineErrWithin(term, approverConfirmBudget, env.after)
+	return term, exitOK
+}
+
+// askApproverLine writes prompt to term and reads one line within budget, counted from the
+// prompt: ok is false when after(budget) fires first; complete is true only for a line that ends
+// in a newline and was read with no error.
+func askApproverLine(term io.ReadWriter, prompt string, budget time.Duration, after func(time.Duration) <-chan time.Time) (line string, ok, complete bool) {
+	fmt.Fprint(term, prompt) // the budget starts here
+	line, err, ok := readTermLineErrWithin(term, budget, after)
+	return line, ok, err == nil && strings.HasSuffix(line, "\n")
+}
+
+// confirmOnTerminal is the y/N on an open terminal (N10a, N10 / K5a, K5).
+func confirmOnTerminal(term io.ReadWriter, env sessionEnv, stderr io.Writer, prefix, prompt, nothing string) int {
+	line, ok, complete := askApproverLine(term, prompt, approverConfirmBudget, env.after)
 	if !ok { // N10a / K5a
 		fmt.Fprintf(stderr, "%sno answer within %s; %s\n", prefix, approverConfirmBudget, nothing)
 		return exitUsage
 	}
-	if rerr != nil || !strings.HasSuffix(line, "\n") || !isYes(line) { // N10 / K5: EOF, read error, partial line, not y
+	if !complete || !isYes(line) { // N10 / K5: EOF, read error, partial line, not y
 		fmt.Fprintf(stderr, "%saborted (not confirmed); %s. fix: run it again and type y at the prompt\n", prefix, nothing)
 		return exitUsage
 	}
@@ -116,19 +142,27 @@ func readCapped(r io.Reader, max int64) ([]byte, error) {
 // ---- M3c ----
 
 const approverHelp = `usage: ailang-worldd approver enroll --name <name> --format ssh --pubkey <file> [--db <path>] [--credentials-db <path>]
+       ailang-worldd approver enroll --name <name> --format webauthn --origin <origin> --registration <file> [--db <path>] [--credentials-db <path>]
        ailang-worldd approver list [--db <path>] [--credentials-db <path>]
        ailang-worldd approver revoke <name> [--db <path>] [--credentials-db <path>]
 
-ATTENDED (enroll, revoke). An approver is a name and one SSH public key, kept in
-the credentials store (row 201). An enrolled, unrevoked key approves a mint
-request with its signature: 'ailang-worldd approve <request-id> --signature
-<file>' or '--sign-with <key>'. enroll and revoke each ask y at /dev/tty and wait at most 2m0s for it;
+ATTENDED (enroll, revoke). An approver is a name and one SSH public key or one
+passkey, kept in the credentials store (row 201). An enrolled, unrevoked key
+approves a mint request with its signature: 'ailang-worldd approve <request-id>
+--signature <file>' or '--sign-with <key>', or for a passkey '--webauthn-link'
+then '--webauthn-assertion <file>'. enroll and revoke each ask y at /dev/tty and wait at most 2m0s for it;
 an agent cannot run them.
 
 enroll   reads --pubkey once (one ssh-ed25519 or ecdsa-sha2-nistp256 key line,
          at most 8 KiB; a private key file is refused and never shown), shows
          the key's SHA256 fingerprint, and stores it after y. A name and a key
          are each enrolled at most once, ever, revoked ones included.
+enroll --format webauthn prints a link to the daemon's page /surface/passkey
+         at --origin; open it in a browser, create the passkey (Face ID,
+         Touch ID, a PIN or a security key), and save the file it offers as
+         --registration, which must not exist yet. Then type the 26-character
+         enrolment code the page shows, within 5m0s (a fingerprint of that
+         file, not a secret), check what the y/N shows, and type y.
 list     prints every approver, read-only: name, format, key type,
          fingerprint, enrolled, last used, and active or revoked.
 revoke   marks the approver revoked after y. The row is kept: it never
@@ -138,8 +172,12 @@ revoke   marks the approver revoked after y. The row is kept: it never
 
   --name <name>             1-48 of a-z 0-9 . _ - (the first a letter or digit);
                             its approvals record approved_by=ssh:<name>
-  --format ssh              the only format until row 201 A2 (webauthn)
+  --format ssh|webauthn     an SSH key (--pubkey) or a passkey (--origin, --registration);
+                            a passkey's approvals record approved_by=webauthn:<name>
   --pubkey <file>           the .pub file (compare: ssh-keygen -l -f <file>)
+  --origin <origin>         http://localhost:<port> or https://<host>.ts.net, as the
+                            daemon is reached (never an IP address); the passkey is bound to it
+  --registration <file>     where the browser saves the registration (a new file)
   --db <path>               the world store (default ~/.ailang/world/world.db)
   --credentials-db <path>   default credentials.db beside --db
 The global --addr is refused: approvers live in the credentials store.
@@ -232,8 +270,8 @@ func runApproverList(args []string, stdout, stderr io.Writer) int {
 	if err != nil {
 		return approverRefuse(stderr, prefix, "cannot read the credentials store %s: %v", credPath, err)
 	}
+	defer func() { _ = ro.Close() }()
 	rows, err := ro.ListApprovers(ctx)
-	_ = ro.Close()
 	if err != nil { // L1: below schema 5 names the serve restart
 		return approverRefuse(stderr, prefix, "%v", err)
 	}
@@ -241,7 +279,13 @@ func runApproverList(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stdout, "no approvers")
 		return exitOK
 	}
-	for _, r := range rows { // L3
+	labels := make([]string, len(rows))
+	for i, r := range rows {
+		if labels[i], err = approverLabel(ctx, ro, r); err != nil {
+			return approverRefuse(stderr, prefix, "%v", err)
+		}
+	}
+	for i, r := range rows { // L3
 		used := "never"
 		if r.LastUsedAt != 0 {
 			used = approverTime(r.LastUsedAt)
@@ -251,7 +295,7 @@ func runApproverList(args []string, stdout, stderr io.Writer) int {
 			state = "revoked " + approverTime(r.RevokedAt)
 		}
 		fmt.Fprintf(stdout, "%s  %s  %s  enrolled %s  last used %s  %s\n",
-			r.Name, r.Format, approverKeyLabel(r.PublicKey), approverTime(r.EnrolledAt), used, state)
+			r.Name, r.Format, labels[i], approverTime(r.EnrolledAt), used, state)
 	}
 	return exitOK
 }
@@ -266,6 +310,34 @@ func approverKeyLabel(blob []byte) string {
 	return keyType + " " + approval.SSHPublicKey{Blob: blob}.Fingerprint()
 }
 
+// approverLabel is row's key label (row 201 A2 §2.12b): an ssh row's approverKeyLabel, or a
+// webauthn row's passkey read on ro, revoked ones included. A webauthn row exists only at schema 6,
+// so a schema-5 store is never asked for a passkey.
+func approverLabel(ctx context.Context, ro *store.Credentials, row store.ApproverRow) (string, error) {
+	if row.Format != approval.FormatWebAuthn {
+		return approverKeyLabel(row.PublicKey), nil
+	}
+	p, ok, err := ro.Passkey(ctx, row.Name)
+	if err != nil {
+		return "", err
+	}
+	if !ok { // L5: only a hand-made row
+		return "invalid-passkey", nil
+	}
+	return passkeyLabel(p.Alg, p.RPID, p.CredentialID), nil // L4
+}
+
+// passkeyLabel is "passkey <ES256|EdDSA> <rpID> cred <first 16 hex of SHA-256(credential ID)>".
+func passkeyLabel(alg int64, rpID string, credentialID []byte) string {
+	return "passkey " + approval.COSEKey{Alg: alg}.AlgName() + " " + rpID + " cred " + passkeyCred(credentialID)
+}
+
+// passkeyCred is the first 16 hex of SHA-256(credential ID), as the enrolment y/N shows it.
+func passkeyCred(credentialID []byte) string {
+	h := sha256.Sum256(credentialID)
+	return hex.EncodeToString(h[:8])
+}
+
 // approverTime is a Unix time in RFC 3339, UTC.
 func approverTime(v int64) string { return time.Unix(v, 0).UTC().Format(time.RFC3339) }
 
@@ -278,11 +350,13 @@ var approverEnrol = (*store.Credentials).EnrolApprover
 // runApproverEnroll is `approver enroll` (design §2.10 N1-N14, plan A-D6 order).
 func runApproverEnroll(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	const prefix = "ailang-worldd approver enroll: "
-	var name, format, pubkey *string
+	var name, format, pubkey, origin, registration *string
 	db, creds, positional, code, done := approverFlags("enroll", args, stdout, stderr, func(fs *flag.FlagSet) {
 		name = fs.String("name", "", "the approver's name")
-		format = fs.String("format", "", "ssh")
+		format = fs.String("format", "", "ssh or webauthn")
 		pubkey = fs.String("pubkey", "", "the public key file (.pub)")
+		origin = fs.String("origin", "", "webauthn: the ceremony page's origin")
+		registration = fs.String("registration", "", "webauthn: the registration file the browser saves")
 	})
 	if done {
 		return code
@@ -290,6 +364,14 @@ func runApproverEnroll(args []string, stdout, stderr io.Writer, env sessionEnv) 
 	if len(positional) != 0 { // N1
 		fmt.Fprint(stderr, approverHelp)
 		return exitUsage
+	}
+	webauthn := *format == approval.FormatWebAuthn
+	if webauthn && *pubkey != "" || !webauthn && (*origin != "" || *registration != "") { // WN1 (row 201 A2 §2.12)
+		fmt.Fprintf(stderr, "%s--pubkey is for --format ssh; --origin and --registration are for --format webauthn\n\n%s", prefix, approverHelp)
+		return exitUsage
+	}
+	if webauthn {
+		return runApproverEnrollPasskey(*name, *origin, *registration, db, creds, stdout, stderr, env)
 	}
 	if *name == "" || *pubkey == "" { // N2
 		return approverRefuse(stderr, prefix, "--name and --pubkey are required")
@@ -404,6 +486,10 @@ func runApproverRevoke(args []string, stdout, stderr io.Writer, env sessionEnv) 
 		return approverRefuse(stderr, prefix, "cannot read the credentials store %s: %v", credPath, err)
 	}
 	row, ok, err := ro.Approver(pre, name)
+	label := ""
+	if err == nil && ok {
+		label, err = approverLabel(pre, ro, row)
+	}
 	_ = ro.Close()
 	cancelPre()
 	if err != nil { // below schema 5 names the serve restart
@@ -418,7 +504,7 @@ func runApproverRevoke(args []string, stdout, stderr io.Writer, env sessionEnv) 
 
 	// The fence (K4a, K4, K5a, K5).
 	prompt := fmt.Sprintf("Revoke approver %s (%s)? It will never approve again, and its name and key can never be enrolled again. [y/N] ",
-		name, approverKeyLabel(row.PublicKey))
+		name, label)
 	if code := confirmApproverAct(env, stderr, prefix, prompt, "nothing was revoked"); code != exitOK {
 		return code
 	}

@@ -85,6 +85,17 @@ func ParseCOSEKey(v cborValue) (COSEKey, error) {
 	return k, nil
 }
 
+// ParseStoredCOSEKey parses a key as approvers.public_key holds it (row 201 A2 sprint 3: approve
+// --webauthn-assertion rebuilds the enrolled passkey from its store row): exactly one COSE key,
+// judged by Q1-Q8, with nothing after it.
+func ParseStoredCOSEKey(b []byte) (COSEKey, error) {
+	v, err := decodeCBORExact(b, attestationLimits)
+	if err != nil {
+		return COSEKey{}, fmt.Errorf("%w: %w", ErrCOSEKey, err)
+	}
+	return ParseCOSEKey(v)
+}
+
 func (k COSEKey) point() []byte { return append(append([]byte{4}, k.X...), k.Y...) }
 
 // Canonical is the key's CTAP2 canonical encoding (labels 1, 3, -1, -2[, -3]): what is stored.
