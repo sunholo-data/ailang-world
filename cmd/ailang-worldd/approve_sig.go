@@ -6,14 +6,15 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
+	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/sshsign"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -37,39 +38,36 @@ func approveSignature(ctx context.Context, credPath, path string, row store.Mint
 }
 
 // approveArmored judges an armored signature from source (--signature's file or --sign-with's
-// signer): parsed (F11), its key looked up among the enrolled approvers (F12, F13), and judged by
-// the signature law against the stored row (F14).
+// signer) on a read-only handle by authority.JudgeSSHSignature (row 201 A3 §2.5: the parse F11, the
+// lookup F12, F13, the law F14), the judge the minter and the daemon share.
 func approveArmored(ctx context.Context, credPath, source string, armored []byte, row store.MintRequestRow, now int64) (*approval.SignedApproval, string) {
-	sig, err := approval.ParseSSHSIG(armored)
-	if err != nil { // F11
-		return nil, fmt.Sprintf("%s is not an SSH signature: %v", source, err)
-	}
 	ro, err := store.OpenCredentialsReadOnly(credPath)
 	if err != nil {
 		return nil, fmt.Sprintf("cannot read the credentials store %s: %v", credPath, err)
 	}
-	enrolled, ok, err := ro.ApproverByKey(ctx, sig.PublicKey.Blob)
+	signed, err := authority.JudgeSSHSignature(ctx, ro, row, armored, now)
 	_ = ro.Close()
-	if err != nil { // F12: below schema 5 names the serve restart
-		return nil, err.Error()
-	}
-	if !ok { // F13
-		return nil, fmt.Sprintf("the signature's key %s is not an enrolled approver; see ailang-worldd approver list", sig.PublicKey.Fingerprint())
-	}
-	stored, _ := hex.DecodeString(row.Digest)       // admission has shown it is 32 bytes
-	challenge, _ := hex.DecodeString(row.Challenge) // F4 has shown it is 32 bytes
-	signed, err := approval.ApproveBySignature(approval.SignatureInput{
-		Admit: approval.AdmitInput{Now: now, CreatedAt: row.CreatedAt, ExpiresAt: row.ExpiresAt, Consumed: row.Consumed,
-			StoredDigest: [32]byte(stored), BytesDigest: sha256.Sum256(row.Request)},
-		Challenge: [32]byte(challenge),
-		Signature: armored,
-		Approver: approval.Approver{Name: enrolled.Name, Format: enrolled.Format, Key: approval.SSHPublicKey{Blob: enrolled.PublicKey},
-			EnrolledAt: enrolled.EnrolledAt, LastUsedAt: enrolled.LastUsedAt, RevokedAt: enrolled.RevokedAt},
-	})
-	if err != nil { // F14
-		return nil, fmt.Sprintf("the signature does not approve request %s: %v", row.RequestID, err)
+	if err != nil {
+		return nil, sshRefusal(err, source, row)
 	}
 	return signed, ""
+}
+
+// sshRefusal is the text of a JudgeSSHSignature refusal of source's signature (F11-F14).
+func sshRefusal(err error, source string, row store.MintRequestRow) string {
+	var je *authority.JudgeError
+	if !errors.As(err, &je) {
+		return err.Error()
+	}
+	switch je.Step {
+	case authority.JudgeStepParse: // F11
+		return fmt.Sprintf("%s is not an SSH signature: %v", source, je.Err)
+	case authority.JudgeStepUnknownKey: // F13
+		return fmt.Sprintf("the signature's key %s is not an enrolled approver; see ailang-worldd approver list", je.Fingerprint)
+	case authority.JudgeStepLaw: // F14
+		return fmt.Sprintf("the signature does not approve request %s: %v", row.RequestID, je.Err)
+	}
+	return je.Err.Error() // F12: below schema 5 names the serve restart
 }
 
 // ---- M5c ----

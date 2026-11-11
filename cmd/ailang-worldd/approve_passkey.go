@@ -7,13 +7,14 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
+	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
@@ -68,48 +69,42 @@ func requestHash(row store.MintRequestRow) ([32]byte, error) {
 }
 
 // approveAssertion is approve --webauthn-assertion's check, before any network call (design §2.13
-// WF2-WF6): the file is read once through a descriptor check (WF2) and parsed (WF3), the passkey
-// its credential ID names is looked up on a read-only handle (WF4, WF5), and the assertion law
-// judges it against the stored row and that passkey (WF6). It returns the verified approval, or
-// the refusal text. The caller has already admitted row at now and decoded its challenge (F4).
+// WF2-WF6): the file is read once through a descriptor check (WF2), then judged on a read-only
+// handle by authority.JudgeAssertion (row 201 A3 §2.5: the parse WF3, the lookup WF4, WF5, the law
+// WF6), the judge the minter and the daemon share. It returns the verified approval, or the refusal
+// text. The caller has already admitted row at now and decoded its challenge (F4).
 func approveAssertion(ctx context.Context, credPath, path string, row store.MintRequestRow, now int64) (*approval.SignedApproval, string) {
 	file, err := readRegularFileCapped(path, approval.MaxPasskeyResponseBytes)
 	if err != nil { // WF2
 		return nil, fmt.Sprintf("--webauthn-assertion: %v", err)
 	}
-	resp, err := approval.ParseAssertionResponse(file)
-	if err != nil { // WF3
-		return nil, fmt.Sprintf("--webauthn-assertion %s is not a passkey assertion: %v", path, err)
-	}
 	ro, err := store.OpenCredentialsReadOnly(credPath)
 	if err != nil {
 		return nil, fmt.Sprintf("cannot read the credentials store %s: %v", credPath, err)
 	}
-	a, p, ok, err := ro.PasskeyByCredentialID(ctx, resp.RawID)
+	signed, err := authority.JudgeAssertion(ctx, ro, row, file, now)
 	_ = ro.Close()
-	if err != nil { // WF4: below schema 6 names the serve restart
-		return nil, err.Error()
-	}
-	if !ok { // WF5
-		return nil, fmt.Sprintf("the assertion's credential cred %s is not an enrolled passkey; see ailang-worldd approver list", passkeyCred(resp.RawID))
-	}
-	key, err := approval.ParseStoredCOSEKey(a.PublicKey)
-	if err != nil { // WF5: only a hand-edited row
-		return nil, fmt.Sprintf("approver %q's stored passkey key is not valid (%v); see ailang-worldd approver list", a.Name, err)
-	}
-	stored, _ := hex.DecodeString(row.Digest)       // admission has shown it is 32 bytes
-	challenge, _ := hex.DecodeString(row.Challenge) // F4 has shown it is 32 bytes
-	signed, err := approval.ApproveByAssertion(approval.AssertionInput{
-		Admit: approval.AdmitInput{Now: now, CreatedAt: row.CreatedAt, ExpiresAt: row.ExpiresAt, Consumed: row.Consumed,
-			StoredDigest: [32]byte(stored), BytesDigest: sha256.Sum256(row.Request)},
-		Challenge: [32]byte(challenge),
-		Response:  file,
-		Approver: approval.Approver{Name: a.Name, Format: a.Format, EnrolledAt: a.EnrolledAt, LastUsedAt: a.LastUsedAt, RevokedAt: a.RevokedAt,
-			Passkey: &approval.Passkey{RPID: p.RPID, Origin: p.Origin, CredentialID: p.CredentialID, Key: key,
-				BackupEligible: p.BackupEligible, SignCount: uint32(p.SignCount)}},
-	})
-	if err != nil { // WF6
-		return nil, fmt.Sprintf("the passkey assertion does not approve request %s: %v", row.RequestID, err)
+	if err != nil {
+		return nil, passkeyRefusal(err, "--webauthn-assertion "+path, row)
 	}
 	return signed, ""
+}
+
+// passkeyRefusal is the text of a JudgeAssertion refusal of source's assertion (WF3-WF6).
+func passkeyRefusal(err error, source string, row store.MintRequestRow) string {
+	var je *authority.JudgeError
+	if !errors.As(err, &je) {
+		return err.Error()
+	}
+	switch je.Step {
+	case authority.JudgeStepParse: // WF3
+		return fmt.Sprintf("%s is not a passkey assertion: %v", source, je.Err)
+	case authority.JudgeStepUnknownKey: // WF5
+		return fmt.Sprintf("the assertion's credential cred %s is not an enrolled passkey; see ailang-worldd approver list", passkeyCred(je.RawID))
+	case authority.JudgeStepStoredKey: // WF5: only a hand-edited row
+		return fmt.Sprintf("approver %q's stored passkey key is not valid (%v); see ailang-worldd approver list", je.Approver, je.Err)
+	case authority.JudgeStepLaw: // WF6
+		return fmt.Sprintf("the passkey assertion does not approve request %s: %v", row.RequestID, je.Err)
+	}
+	return je.Err.Error() // WF4: below schema 6 names the serve restart
 }
