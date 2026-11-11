@@ -1,6 +1,19 @@
 # w-world-approvals-by-key-a3: the surface approves, the minter mints
 
-- **Status**: Planned. Designed in iteration 383, **r0**. Queue row 201, `w-world-approvals-by-key`,
+- **Status**: Planned. Designed in iteration 383, **r1**. Queue row 201, `w-world-approvals-by-key`,
+  **[r1]** r0 (commit `8a44080c`) was **BLOCKED 3 of 3** at quorum round 1 (oc-glm-5-3, oc-kimi-k3,
+  gpt6-1-sol). None disputed the direction, and the controller re-checked each objection as real.
+  r1 applies all three fixes, and the changed text is marked **[r1]**:
+  - **SSHSIG is no longer blocked by the passkey-origin rule** (oc-glm-5-3). The admitted origins are
+    now a *surface origin set* (loopback, plus `serve --surface-origin`, plus enrolled passkeys'
+    origins), independent of which format is POSTed (§2.3, §2.4 R3, RT13, R10, §10 step 5);
+  - **the `crypto.subtle` premise is now measured** (oc-kimi-k3): a headless-Chrome probe at
+    `http://localhost` rebuilt the digest, the 90-byte message and `MessageHash` byte-equal to Go's
+    for two golden requests, and the Notifications API and a CDP permission grant were measured
+    (§1.14, §1.15, V23–V26; R5 corrected);
+  - **the card renders every signed field** (gpt6-1-sol), and refuses a request with a field it
+    cannot render; a Go test ties the page's field table to `approval.MintRequest`'s JSON keys
+    (§2.7, §5.2, T4, T9, PG3, XA2 arm c).
   parent milestone **A3**. Parent: [`w-world-approvals-by-key.md`](w-world-approvals-by-key.md)
   (attended; its rulings are not reopened). Built siblings, settled and not reopened:
   [`-a0a1`](w-world-approvals-by-key-a0a1.md) (A0 request object, digest, challenge, expiry,
@@ -29,18 +42,20 @@
   - **The minter**, `approve <request-id> --await`: no terminal; it waits for a recorded approval,
     **re-judges it with the same law**, then runs `approve`'s steps 2–6 unchanged. The mint stays
     in the CLI process, where it is today (§1.3).
-  - **Four routes under `/surface`** (none under `/v1`): `GET /surface/requests.json` (*needs
+  - **Five routes under `/surface`** (none under `/v1`): `GET /surface/requests.json` (*needs
     you* and the decision list), `GET /surface/requests/{id}` (the request card's data),
     `GET /surface/approve/{id}` + `GET /surface/approve.js` (the card page), and
     `POST /surface/approve/{id}` (the Approve). The new routes check `Host`; the POST also checks
-    `Origin`, `Sec-Fetch-Site` and `Content-Type`.
+    `Origin`, `Sec-Fetch-Site` and `Content-Type`, **[r1]** against one surface origin set
+    (loopback, `serve --surface-origin`, enrolled passkeys' origins) for both formats.
   - **The surface app's *Needs you*** lists the pending requests and links each to its card; a
     **decision list** shows who approved what; an opt-in **browser notification** fires on a new
     request.
   It changes no `.ail` code.
 - **Designer lane**: `claude:claude-opus-5-5`.
-- **Estimated**: A3a in **3 sprints, about 5,100 changed lines** (§9): sprint 1 ≈ 1,650, sprint 2
-  ≈ 1,700, sprint 3 ≈ 1,750. **Calibration (V20):** A2's four sprints measured 1,969, 1,843, 1,686
+- **Estimated**: A3a in **3 sprints, about 5,500 changed lines** (§9): sprint 1 ≈ 1,650, sprint 2
+  ≈ 1,900 **[r1]** (+≈ 200 for `--surface-origin` and RT13), sprint 3 ≈ 1,950 **[r1]** (+≈ 200 for
+  the every-field card, PG3 and XA2 arm c). **Calibration (V20):** A2's four sprints measured 1,969, 1,843, 1,686
   and 2,768 changed lines outside `design_docs/`; its sprint 4 was planned at 1,054 lines (2.6×).
   The estimates here are sized from those actuals, and each sprint has a pre-named fallback cut.
 - **Measurement base**: `0140bd7f` (PR #552's head: A2 sprint 4 built, judged PASS 91, not yet
@@ -56,8 +71,8 @@
   `cmd/ailang-worldd/testdata/passkey_cdp.mjs` `2a336e5e810f8ed6`.
 - **Instruments**: `go1.26.6 darwin/arm64`; Google Chrome at
   `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`, headless, temp profiles, a
-  virtual authenticator only; `node v26.13.0`. One throwaway probe lived in `/tmp/w383-designer/`
-  and is not in the repo (V17). The designer's shell has no controlling terminal (A2 V29).
+  virtual authenticator only; `node v26.13.0`. Throwaway probes lived in `/tmp/w383-designer/`
+  (`hdr/`, and **[r1]** `golden/`, `subtle/`, `notif/`) and are not in the repo (V17, V23–V26). The designer's shell has no controlling terminal (A2 V29).
 
 ---
 
@@ -196,6 +211,28 @@ law and the store are reviewed before anything can reach them.
       headers, **no POST arrived**, and the page saw `TypeError: Failed to fetch`.
     So two `localhost` ports are *same-site* but not *same-origin*: a guard must require
     `same-origin`, not `same-site`.
+14. **[r1] A page can rebuild the digest and the signed message byte-equal to Go (V23, V24).** A
+    throwaway Go program built two golden requests with `approval.Canonical`, `SignedMessage` and
+    `MessageHash`: the repo's own fixture request (its digest `0ace927e…71eb` equals
+    `fixtureDigestHex`, `request_test.go:33`, the control) and a variant with non-ASCII and
+    U+2028 in `task` and `model`. A page served at `http://localhost:47821` under exactly
+    `surfaceCSP`, in Chrome 157 headless, decoded the base64url bytes, ran
+    `crypto.subtle.digest('SHA-256', …)`, assembled the 90 bytes with `TextEncoder` and
+    `DataView.setBigUint64`, and hashed them. For **both** cases the digest, the 90-byte message
+    and the message hash were byte-equal to Go's (`isSecureContext: true`). `JSON.parse` of the
+    bytes kept Go's 21 top-level keys in order, and `model` `claude-opus<5>&x` (Go's
+    `SetEscapeHTML(false)`) and the non-ASCII strings round-tripped.
+15. **[r1] Notifications in headless Chrome (V25, V26).** At `http://localhost`: `typeof
+    Notification` is `function`, `Notification.permission` is `default`, and
+    `Notification.requestPermission()` **without a user gesture resolves `denied`**. Over CDP,
+    `Browser.grantPermissions({permissions: ["notifications"], origin})` turns it to `granted`, and
+    `new Notification("World needs you", {tag})` constructs without throwing. **Whether headless
+    Chrome displays anything is not measured.** So XA4 asserts through an injected recorder and the
+    CDP grant, and the real display is attended (§10 step 4).
+16. **[r1] `serve` has no surface-origin setting.** `runServe` (`cmd/ailang-worldd/main.go:508`)
+    builds `daemon.Config{DBPath, CredentialsPath, BindHost, BindPort, AilangBin, …}` (`:612`).
+    The only `ts.net` text in `cmd/ailang-worldd` and `host/daemon` production code is
+    `approver enroll --origin`'s help (`approver.go:178`) (V27).
 
 ## 2. Design
 
@@ -277,17 +314,32 @@ CREATE TABLE surface_approvals (
 
 ### 2.3 The read routes: *needs you*, the card's data
 
+**[r1] The surface origin set `O`** (one definition, used by the Host check and by R3; it does
+not depend on which format is POSTed):
+- **loopback**: `http://localhost:<p>` and `http://127.0.0.1:<p>`, where `<p>` is the daemon's
+  bound port (V21: it may be ephemeral, so it is the listener's port, not the flag);
+- **configured**: every `serve --surface-origin <origin>` (repeatable, new in sprint 2;
+  `daemon.Config.SurfaceOrigins`). Each must pass A2's `approval.ParseCeremonyOrigin` grammar
+  (`https://<host>.ts.net[:port]` or `http(s)://localhost[:port]`, no default port, no IP literal),
+  or `serve` refuses to start, naming the flag. This is how an operator who approves **only with
+  SSH** reaches the card over the tailnet: nothing in an SSHSIG binds an origin, so the origin set
+  cannot come from passkey enrolment alone;
+- **enrolled**: the stored origin of every active passkey (`ActivePasskeys`, read once per
+  request on the read-only handle), so a passkey's own origin works with no flag, as in r0.
+
+`O` is not derived from `tailscale status` (that would be a new production exec site, §7).
+
 **Host allowlist (all five new routes, §2.3–§2.4, §2.7).** `allowedApprovalHost(r)`: the `Host`
-header must be `localhost:<p>` or `127.0.0.1:<p>`, where `<p>` is the daemon's bound port, or the
-exact host (and port, if any) of an **active passkey's stored origin** (`ActivePasskeys`, read
-once per request on the read-only handle). Anything else → **421 Misdirected Request**, inert
-JSON `{"v":1,"error":"MisdirectedRequest",…}`. This defeats DNS rebinding (an attacker's name
-resolving to 127.0.0.1 sends its own `Host`). It is applied to **the new routes only**: the
-existing routes stay exactly as row 199 leaves them (parent §3), and RT7 pins that
-`/surface/model.json` still answers a foreign `Host`.
+header must equal the host (and port, if any) of an origin in `O`. Anything else → **421
+Misdirected Request**, inert JSON `{"v":1,"error":"MisdirectedRequest",…}`. This defeats DNS
+rebinding (an attacker's name resolving to 127.0.0.1 sends its own `Host`). It is applied to **the
+new routes only**: the existing routes stay exactly as row 199 leaves them (parent §3), and RT7 pins
+that `/surface/model.json` still answers a foreign `Host`.
 - Behind `tailscale serve`, whether the daemon sees the `*.ts.net` name or `127.0.0.1:7644` is
-  **UNVERIFIED**. Both pass: the first because the passkey enrolled at that origin, the second
-  because it is loopback. The attended run records which (§10.2).
+  **UNVERIFIED**. **[r1]** Both pass whenever the `*.ts.net` origin is in `O` (configured, or a
+  passkey enrolled there): the first by that entry, the second because it is loopback. The 421
+  for an unlisted `*.ts.net` Host names the fix, `serve --surface-origin https://<host>`. The
+  attended run records which Host arrives (§10.2).
 
 **`GET /surface/requests.json`** (application/json, `no-store`, `nosniff`):
 ```json
@@ -343,7 +395,7 @@ one value), exactly one of `webauthn` and `sshsig`:
 |---|---|---|
 | R1 | `{id}` matches `MintRequestIDPattern` | 400 `BadRequest` |
 | R2 | `Host` allowed (§2.3) | 421 `MisdirectedRequest` |
-| R3 | `Origin` present and equal to `http://localhost:<p>` or an active passkey's origin (for the loopback Host) — the origin whose host is the request's `Host` | 403 `CrossOrigin` |
+| R3 **[r1]** | `Origin` present (not `null`) and **exactly an origin in `O`** (§2.3), for **either format**. The Host may be a different member's (behind a proxy, `Host: 127.0.0.1:<p>` with `Origin: https://<host>.ts.net`); both are in `O`. Refused: an origin outside `O`, whatever the Host. The refusal names `serve --surface-origin` when the origin is a well-formed `*.ts.net` one | 403 `CrossOrigin` |
 | R4 | `Sec-Fetch-Site`, when present, is exactly `same-origin` (V17: two localhost ports are `same-site`) | 403 `CrossOrigin` |
 | R5 | `Content-Type` media type is `application/json` (a `text/plain` cross-origin POST needs no preflight; this makes every browser cross-origin POST a preflighted one, which the daemon never answers with CORS, V17) | 415 `UnsupportedMediaType` |
 | R6 | body size, JSON grammar, `v == 1`, exactly one format, `digest` 64 hex | 413 / 400 |
@@ -420,12 +472,34 @@ func JudgeSSHSignature(ctx context.Context, ro *store.Credentials, row store.Min
      `connect-src 'self'`);
   2. **binds what it shows to what it signs:** `bytes = unb64u(request)`;
      `SHA-256(bytes) == digest` or **refuse** ("the daemon's request does not match its digest;
-     nothing to approve"); parse `bytes` as JSON and **render the card from the parsed bytes**:
-     episode, agent and model, every grant as a pill (scope and budget), TTL, profile, worktree,
-     branch, session file; the expiry in local time; `hash16`;
+     nothing to approve"); parse `bytes` as JSON (`TextDecoder` with `fatal: true`) and **render
+     the card from the parsed bytes**;
+     **[r1] every signed field, by one table.** `approve.js` holds `const FIELDS = [...]`, one
+     entry per JSON key path of `approval.MintRequest`, each with a label and a group. The 21
+     top-level keys measured in the bytes (V24) and their nested keys are:
+
+     | group (shown) | key paths |
+     |---|---|
+     | **What runs** (top, large) | `episode`, `agent`, `model`, `task` (the path), `grants[].effect`, `grants[].scope`, `grants[].budget` (one pill per grant, in order), `ttl_s` (also as hours) |
+     | **Where** | `worktree`, `reuse`, `degraded`, `repo`, `branch`, `git`, `workspace_root` |
+     | **Bound to** | `profile.project`, `profile.digest`, `profiles_dir` |
+     | **Stores and files** | `world_db`, `credentials_db`, `session_file` (where the token is written), `mcp_config` |
+     | **Requesting daemon** | `daemon.addr`, `daemon.vcs_revision`, `daemon.vcs_modified`, `daemon.executable_sha256`, `daemon.go_version`, `schema` |
+
+     - Nothing is hidden behind a toggle and nothing is elided: long values wrap. Booleans that
+       change meaning (`reuse`, `degraded`, `daemon.vcs_modified`) are shown as words ("uses an
+       existing worktree", "NON-GIT, DEGRADED", "modified build"). The expiry (local time) and
+       `hash16` are shown beside them.
+     - **Fail closed:** the page walks the parsed object, and a key path that `FIELDS` does not
+       list, a listed path that is missing, or a value of an unexpected JSON type → **refuse**
+       ("this request has a field the page cannot show (<path>); nothing to approve; approve it at
+       a terminal"). So the card can never sign bytes it did not fully display. PG3 ties `FIELDS`
+       to the Go struct at build time; XA2 arm (c) exercises the runtime refusal;
   3. **computes the challenge itself**: `msg = "world-approval/v1" ‖ 0x00 ‖ digest ‖ nonce ‖
      u64be(expires)` (90 bytes), `challenge = SHA-256(msg)` with `crypto.subtle`; it never takes a
-     hash from the server;
+     hash from the server. **[r1] Measured (V23):** this construction, with `TextEncoder` and
+     `DataView.setBigUint64`, is byte-equal to Go's `SignedMessage` and `MessageHash` in Chrome 157
+     at `http://localhost`, for the repo's fixture request and a non-ASCII variant;
   4. **Approve with passkey** (a button, a user gesture): `navigator.credentials.get({publicKey:
      {challenge, rpId: location.hostname, allowCredentials: <the group whose origin ==
      location.origin>, userVerification: "required", timeout: 240000}, signal})` with A2's
@@ -474,6 +548,14 @@ func JudgeSSHSignature(ctx context.Context, ro *store.Credentials, row store.Min
 - A notification carries no authority: it is a link to the card, which shows the request from
   the daemon, and approving still needs the passkey (T9, §4).
 - Secure context: `http://localhost` and the `https://*.ts.net` origin both qualify.
+  **[r1]** Measured at `http://localhost` only (V25: `isSecureContext: true`); `*.ts.net` is HTTPS
+  and so a secure context by the platform rule, not measured here.
+- **[r1] What is measured and what is attended.** V25/V26: the API exists in Chrome 157 headless;
+  `requestPermission()` without a gesture resolves `denied` (so the page must call it only from
+  the opt-in click, which XA4 also asserts); a CDP grant makes it `granted`, and the constructor
+  succeeds. **Whether a notification is displayed, and how Safari and Firefox behave, is
+  UNVERIFIED and gated attended** (§10 step 4). XA4 judges the page's logic (when it calls the
+  constructor, with what) through an injected recorder, not the display.
 
 ### 2.10 QUICKSTART §17 "Approve from the surface" *(attended — pending first verbatim run)*
 
@@ -524,14 +606,14 @@ Built when row 188 N3 lands `desktop/` (a Tauri v2 shell loading `/surface` from
 | # | Threat | What A3 does | Pinned by |
 |---|---|---|---|
 | T1 | **A script or agent POSTs to the Approve route** (agents reach the loopback daemon, row 199) | A POST records only an artifact the law verified: a valid WebAuthn assertion or SSHSIG by an enrolled key over this request's message. The agent has no key and no enrolment path (R3). Garbage → 422, nothing written. A **hand-inserted row** still mints nothing: the minter re-judges (M3) | RT4, AW7 |
-| T2 | **CSRF / a cross-origin POST from another tailnet or localhost page** | R3 `Origin` must be the surface's own origin; R4 `Sec-Fetch-Site: same-origin` (V17: another localhost port is `same-site`); R5 JSON only, so a browser preflights, and the daemon never answers CORS (V17: no POST arrived). Even a POST that got through needs a signature that origin's page cannot make: the passkey's rpID binds it to the enrolled origin (A2 W7, W10) | RT8, XA2 |
+| T2 | **CSRF / a cross-origin POST from another tailnet or localhost page** | R3 `Origin` must be in the surface origin set `O` (loopback, `--surface-origin`, enrolled passkeys' origins; **[r1]** the same set for both formats, so SSHSIG keeps this defence without depending on a passkey); R4 `Sec-Fetch-Site: same-origin` (V17: another localhost port is `same-site`); R5 JSON only, so a browser preflights, and the daemon never answers CORS (V17: no POST arrived). Even a POST that got through needs a signature that origin's page cannot make: the passkey's rpID binds it to the enrolled origin (A2 W7, W10) | RT8, XA2 |
 | T3 | **Replay of a POST body** | The artifact is bound to this request's digest, nonce and expiry (W6/B1–B4). While pending, a replay replaces the row with the same artifact (harmless). After the consume, R8 refuses ("already used"), and the store's C6 consume is once-only. A passkey's counter (W15/C18) also refuses a stale assertion | RT9, AW2 |
-| T4 | **The request swapped between the card and the signing** (a modified card response, a tampered proxy) | The page renders the card **from the bytes it hashes**, refuses when SHA-256(bytes) ≠ digest, and computes the challenge from that digest, the nonce and the expiry itself. Bytes swapped consistently with a forged digest → the page signs the forged digest → W6 refuses at the daemon (422) and at the minter. The body's `digest` (R9) names the mismatch | XA2 (both arms), RT4 (R9) |
+| T4 | **The request swapped between the card and the signing** (a modified card response, a tampered proxy) | The page renders the card **from the bytes it hashes**, **[r1] every field of them** (§2.7's `FIELDS`; an unlisted, missing or mistyped field refuses), refuses when SHA-256(bytes) ≠ digest, and computes the challenge from that digest, the nonce and the expiry itself (**[r1]** byte-equal to Go's, measured V23). Bytes swapped consistently with a forged digest → the page signs the forged digest → W6 refuses at the daemon (422) and at the minter. The body's `digest` (R9) names the mismatch | XA2 (arms a–c), PG3, RT4 (R9) |
 | T5 | **A request changed after the card was signed** (the world moved) | Unchanged: the minter re-derives the request and requires byte equality (`approve.go:309-317`) | existing CR tests |
 | T6 | **The *needs you* list as an information leak on the open read routes** | The new routes are Host-checked (T7). The list carries summaries only (episode, agent, model, grant count, TTL, expiry, `hash16`); the card carries the request bytes (paths, grants) and passkey origins and credential IDs. Any loopback process (an agent, row 199) can read them, as it can read `/surface/model.json`'s sessions today. They carry **no token, no secret and no authority**: the nonce is not secret (it is signed over, not kept), and a credential ID is sent to every page that asks for an assertion. **Residual R1**: closed by row 199's read auth, not here (parent §3) | RT2, RT3 (no `artifact`, no token field) |
 | T7 | **DNS rebinding / a forged `Host`** | The five new routes refuse any `Host` that is not the daemon's loopback name and port or an enrolled passkey's origin host (421). Existing routes unchanged (row 199) | RT7 |
 | T8 | **Credential IDs on an open route** (tracking a passkey) | Public WebAuthn identifiers, scoped to World's rpID. Shown only for active passkeys. A2's Q4 (do not *commit* Mark's) is unaffected | RT3 |
-| T9 | **Notification spoofing** (another site, or an agent, raises a "World needs you" notification leading to a look-alike page) | A notification carries no authority. A look-alike page on another origin cannot use World's passkey (rpID). A genuine card shows the request from the daemon, derived from the hashed bytes. **Residual R4**: an operator could approve a *genuine but unwanted* request after a spoofed nudge; the card's full request is the check, as at the typed `y` | XA4 (only opted-in, one per id), XA1 |
+| T9 | **Notification spoofing** (another site, or an agent, raises a "World needs you" notification leading to a look-alike page) | A notification carries no authority. A look-alike page on another origin cannot use World's passkey (rpID). A genuine card shows the request from the daemon, derived from the hashed bytes, and **[r1] shows every signed field** (§2.7; PG3 fails if a canonical field has no renderer, and the page refuses a field it cannot render), so the check the operator makes covers everything the mint acts on. **Residual R4**: an operator could approve a *genuine but unwanted* request after a spoofed nudge; the card's full request is the check, as at the typed `y` (whose prompt also names the request, `renderRequest`, `approve.go:321`) | XA4 (only opted-in, one per id), XA1, PG3 |
 | T10 | **A cookie or session approves** | The handler reads no `Cookie` and no `Authorization`; `isProtected` unchanged | RT11 |
 | T11 | **The minter trusts the daemon's verdict** | It does not: M3 re-judges the artifact against the row it just read. The `approver` column is display only | AW7 |
 | T12 | **The daemon's writer blocks a mint, or the reverse** | Non-waiting writer, opened per POST and closed at once; busy → 503 `Retry-After: 1`, the page retries 3 times then says so | RT10 |
@@ -549,6 +631,19 @@ Built when row 188 N3 lands `desktop/` (a Tauri v2 shell loading `/surface` from
    SHA-256(`b`) = `d`, and signs `MessageHash(d, nonce, expiry)`. W6 accepts only the stored
    row's `MessageHash`, so a signature over a displayed request that differs from the stored one
    is refused.
+   **[r1]** And the operator saw **all** of `b`, not a summary:
+   - the page displays every key path of the parsed bytes through `FIELDS`, and refuses before any
+     `credentials.get` or message download if a path is unlisted, missing or of the wrong type
+     (§2.7 step 2; XA2 arm c);
+   - `FIELDS` equals the JSON key paths of `approval.MintRequest` (PG3, a Go test that reflects the
+     struct), so a field added to the canonical request without a renderer fails the build's tests
+     before any page could meet it;
+   - the browser's `SHA-256` and message construction equal Go's byte for byte (V23), so "the bytes
+     the page hashed" are the bytes the law checks.
+   **The limit, stated:** fields that are paths (`task`, `git`, `repo`, `mcp_config`, …) bind the
+   *path*, not the file's contents. That is A0's canonical form (`request.go:33-55`), unchanged by
+   A3; what the minter re-derives and compares at step 5 (`approve.go:309-317`) is the same set.
+   Residual R11.
 3. **Approving is a POST bound to a verified signature, never a cookie or a session** (parent
    §3). The POST's only write follows R11–R12. No cookie is set or read anywhere in A3 (PG2's
    control greps `Set-Cookie`/`document.cookie`).
@@ -589,7 +684,7 @@ extended, never replaced. Keys are `approvaltest` keys or Chrome's virtual authe
 | Id | Test | Asserts | Mutants killed |
 |---|---|---|---|
 | AM1–AM3 | `TestApproveModel*` (`host/surfacepage`) | summaries from bytes; a non-decoding row → `refused`; the POST body grammar (both/neither format, unknown field, trailing value, bad digest) | each grammar arm |
-| RG1 | `TestApprovalGuards` (pure) | Host, Origin, `Sec-Fetch-Site`, media type tables, incl. `same-site`, `null`, `localhost:<other port>`, upper-case hosts, `application/json; charset=utf-8` accepted, `text/plain` refused | `same-site` accepted; prefix-matching hosts |
+| RG1 | `TestApprovalGuards` (pure) | Host, Origin, `Sec-Fetch-Site`, media type tables, incl. `same-site`, `null`, `localhost:<other port>`, upper-case hosts, `application/json; charset=utf-8` accepted, `text/plain` refused | `same-site` accepted; prefix-matching hosts. **[r1]** The origin set `O`: loopback, configured and enrolled members each admitted; `Host: 127.0.0.1:<p>` with `Origin: https://x.ts.net` admitted iff `https://x.ts.net` ∈ `O`; `--surface-origin` values that fail `ParseCeremonyOrigin` (IP literal, default port, other domain) refused at config | R3 tied to passkey origins only (the r0 rule); `O` taken from `Host` alone |
 | RT1 | `TestApprovalRoutesRegistered` (`host/daemon`) | the five routes; `/v1` still 13; `TestSurfaceAppRoutes` edited (+`approve.js`, `approve/{id}`, `requests.json`, `requests/{id}`) | a route missing |
 | RT2 | `TestRequestsJSON` | pending/decided shapes and caps; `recorded`; `unavailable` on a missing store; **no `request`, `challenge`, `artifact` or token key** | leaking the artifact |
 | RT3 | `TestRequestCardJSON` | `request` decodes to exactly the stored bytes; digest/challenge/expiry are the row's; **no message-hash field**; passkey groups by origin | a precomputed hash sent |
@@ -602,17 +697,20 @@ extended, never replaced. Keys are `approvaltest` keys or Chrome's virtual authe
 | RT10 | `TestApprovePOSTWriterBusy` | a held writer → 503, `Retry-After: 1`, 0 rows; the daemon holds no writer after any response | a waiting open; a kept writer |
 | RT11 | `TestApprovePOSTNoSessionNoCookie` | a valid session Bearer and a cookie with no signature → refused (R6/R11); `isProtected` unchanged | — |
 | RT12 | `TestDaemonCredentialWriterSites` (inventory, new) | exactly two production `store.OpenCredentials` call sites in `host/daemon`: `ensureCredentialsStore` and the POST | a third writer |
+| **RT13 [r1]** | `TestApprovePOSTSSHSIGViaTailnetOriginWithNoPasskey` | a store with **one SSH approver and no passkey**; `serve` configured with `SurfaceOrigins: ["https://studio.tail0.ts.net"]`; an `approvaltest` SSHSIG POSTed with `Origin: https://studio.tail0.ts.net`, `Sec-Fetch-Site: same-origin`, JSON, under **both** `Host: studio.tail0.ts.net` and `Host: 127.0.0.1:<p>` → 200, one row `ssh:<name>`; the card GET under both Hosts → 200. **Without** the configuration → 403 `CrossOrigin` naming `--surface-origin` (and 421 for the ts.net Host), 0 rows; `Origin: https://other.tail0.ts.net` → 403 | **the r0 rule** (origins only from passkeys: the configured arm goes 403); `O` ignoring `SurfaceOrigins` |
+| CF1 **[r1]** | `TestServeSurfaceOriginFlag` (`cmd/ailang-worldd`) | `serve --surface-origin` repeatable; a bad value (`https://100.64.0.1`, `https://x.ts.net:443`, `https://example.com`) → `serve` exits `exitUsage` naming the flag, before binding | the grammar check skipped |
 | E2E1 | `TestSurfaceApproveThenAwaitMints` (`cmd/ailang-worldd`) | in process: a daemon `Handler()` on temp stores; `episode start --request`; POST a test passkey's assertion; `approve --await` mints; `requests.json` lists it under `decided` | the end-to-end seam |
 
 ### Sprint 3: the page and the app (live Chrome, gated as XB1)
 
 | Id | Test | Asserts | Mutants killed |
 |---|---|---|---|
+| **PG3 [r1]** | `TestApprovePageRendersEveryCanonicalField` (`host/surfacepage`) | extracts `approve.js`'s `FIELDS` literal (between `/* FIELDS */` markers, parsed as JSON) and compares it with the JSON key paths of `approval.MintRequest`, walked by reflection (`json` tags, slices as `[]`, nested structs): equal sets, and every entry has a non-empty label and a group. **Control (labelled):** the walk of the struct yields 21 top-level keys, the count the browser measured in the bytes (V24) | **a field added to `MintRequest` with no renderer**; a `FIELDS` entry deleted; a renamed tag |
 | PG2 | `TestApprovePageRoutes` (`host/daemon`) | the embedded bytes, `surfaceCSP` unchanged, 400 for a bad id; `passkey.js`/`index.html` sha256 unchanged. Labelled controls (not load-bearing): `approve.js` has no `innerHTML`, `eval(`, `document.cookie` | — |
-| XA1 | `TestApprovePageInChrome` (`cmd/ailang-worldd`) | virtual authenticator; enrol through the A2 page + CLI (XB1's helpers); `--request`; open `/surface/approve/<id>`; the card's grants equal the request's; click Approve; 200 recorded; `approve --await` mints; zero CSP violations, zero console errors; the A2 page's `get` for the same request carries the same `challenge` bytes | the page using another challenge |
-| **XA2** | `TestApprovePageRefusesASwappedRequest` | CDP `Fetch.enable` rewrites the card response: (a) bytes changed, digest kept → the page refuses, **no `credentials.get` call** (injected recorder); (b) bytes and digest both forged → the page signs, the POST is **422**, 0 rows | **`approve.js` using a server hash** or skipping the digest check |
+| XA1 | `TestApprovePageInChrome` (`cmd/ailang-worldd`) | virtual authenticator; enrol through the A2 page + CLI (XB1's helpers); `--request`; open `/surface/approve/<id>`; **[r1]** every `FIELDS` path's rendered text equals the request's value (read back by element id);  click Approve; 200 recorded; `approve --await` mints; zero CSP violations, zero console errors; the A2 page's `get` for the same request carries the same `challenge` bytes | the page using another challenge |
+| **XA2** | `TestApprovePageRefusesASwappedRequest` | CDP `Fetch.enable` rewrites the card response: (a) bytes changed, digest kept → the page refuses, **no `credentials.get` call** (injected recorder); (b) bytes and digest both forged → the page signs, the POST is **422**, 0 rows; **[r1] (c)** bytes with an extra key (`"extra":"x"`), and separately with `branch` deleted, each re-hashed so the digest matches → the page refuses naming the path, **no `credentials.get` call and no message link** | **`approve.js` using a server hash** or skipping the digest check; **[r1] the walk rendering only known fields and ignoring the rest** |
 | XA3 | `TestNeedsYouListsPendingRequests` | `/surface` shows "Needs you · 1", the link opens the card; after the mint, Decided shows `webauthn:<name>` | the list not wired |
-| XA4 | `TestNeedsYouNotifiesOnlyWhenAskedOnce` | with no permission: zero notifications; after `Browser.grantPermissions` + the opt-in click, a new request → exactly one notification (tag = id, body names the episode); the next refresh → none | a notification per refresh; notifying without opt-in |
+| XA4 | `TestNeedsYouNotifiesOnlyWhenAskedOnce` | with no permission: zero notifications **[r1]** and `requestPermission` never called before the opt-in click (V25: without a gesture it resolves `denied`); after `Browser.grantPermissions` (V26) + the opt-in click, a new request → exactly one notification (tag = id, body names the episode); the next refresh → none | a notification per refresh; notifying without opt-in |
 | edited | the driver | `passkey_cdp.mjs` gains commands `fetchRewrite`, `grantNotifications`, `click`, and the `notify`/`getRecorder` injections; `pageState` stays for A2 tests | — |
 
 **Must stay green, unedited:** every a0a1, A1b and A2 test (the CLI refusal texts are kept by
@@ -645,7 +743,8 @@ except the named edits (`TestSurfaceAppRoutes`, the schema pins, help and contex
 | 1 | `host/store/credentials_schema.sql`, `credentials.go`, `surface_approvals.go` (new), `mint_requests.go` (prune) + tests | schema 7 |
 | 1 | `host/authority/judge.go` (new) + test | the shared judge |
 | 1 | `cmd/ailang-worldd/approve_passkey.go`, `approve_sig.go` (wrappers), `approve.go` (F1, the mode), `approve_await.go` (new), help | the minter |
-| 2 | `host/daemon/daemon.go` (+5 `HandleFunc`), `surface_approve.go`, `surface_approve_guard.go` (new), `host/surfacepage/approve_model.go` (new) + tests | the routes |
+| 2 | `host/daemon/daemon.go` (+5 `HandleFunc`; **[r1]** `Config.SurfaceOrigins`), `surface_approve.go`, `surface_approve_guard.go` (new), `host/surfacepage/approve_model.go` (new) + tests | the routes |
+| 2 **[r1]** | `cmd/ailang-worldd/main.go` (`runServe`: `--surface-origin`, `:508`/`:612`), its help and `TestEveryVerbHasHelp` | the origin set |
 | 3 | `host/surfacepage/approve/{index.html,approve.js}`, `approve.go` (embed) (new); `host/surfacepage/app/app.js` (`nowCard`'s Needs-you block, the refresh tick, the notification) | the pages |
 | 3 | `cmd/ailang-worldd/testdata/passkey_cdp.mjs`, `passkey_page_driver_test.go` (extended), `approve_page_*_test.go` (new) | the browser tests |
 | 3 | `docs/QUICKSTART.md` | §17 |
@@ -679,23 +778,26 @@ and the §7 inventories by name, as A2 §9 lists them, plus `go test ./host/daem
 - **Fallback cut:** if the plan exceeds 2,000 lines, M3 moves to the head of sprint 2 (the table
   then has no writer and no reader outside tests, which is safe).
 
-**Sprint 2 = M4–M5, "the routes", about 1,700 lines.**
-- **M4 the read routes and the guards** (≈ 260 + 520): AM1–AM3, RG1, RT1–RT3, RT7.
-- **M5 the POST** (≈ 200 + 720): RT4–RT6, RT8–RT12, E2E1.
+**Sprint 2 = M4–M5, "the routes", about 1,900 lines [r1].**
+- **M4 the read routes, the origin set and the guards** (≈ 300 + 640 **[r1]**: +40 for `serve --surface-origin` and `Config.SurfaceOrigins`, +120 tests): AM1–AM3, RG1, RT1–RT3, RT7, CF1.
+- **M5 the POST** (≈ 200 + 760 **[r1]**, +40 for RT13): RT4–RT6, RT8–RT13, E2E1.
   `go test ./host/surfacepage/ ./host/daemon/ -run 'ApproveModel|ApprovalGuards|Approval|RequestsJSON|RequestCard|ApprovePOST|SurfaceAppRoutes|FrozenV1|DaemonCredentialWriter' -count=1`;
-  `go test ./cmd/ailang-worldd/ -run '^TestSurfaceApproveThenAwaitMints$' -count=1`.
+  `go test ./cmd/ailang-worldd/ -run '^(TestSurfaceApproveThenAwaitMints|TestServeSurfaceOriginFlag)$' -count=1`.
 - **Fallback cut:** the SSHSIG arm of the POST (R11's `sshsig`, RT6, AW6's route half) moves to
-  sprint 3; the passkey POST ships alone. The guards (R2–R5) are never cut.
+  sprint 3; the passkey POST ships alone. The guards (R2–R5) are never cut. **[r1]** The origin
+  set `O` and `--surface-origin` (CF1) stay in sprint 2 even under this cut, because the Host
+  check uses them; only RT13 moves with the SSHSIG arm.
 
-**Sprint 3 = M6–M8, "the page and the app", about 1,750 lines.**
-- **M6 the card page** (≈ 300 page + 60 Go): PG2.
+**Sprint 3 = M6–M8, "the page and the app", about 1,950 lines [r1].**
+- **M6 the card page** (≈ 380 page + 60 Go + 120 test **[r1]**: the `FIELDS` table and walker, PG3): PG2, PG3.
 - **M7 Needs you, Decided, the notification** (≈ 160 `app.js`).
-- **M8 the live browser and QUICKSTART** (≈ 220 driver + 700 tests + 60 docs): XA1–XA4.
+- **M8 the live browser and QUICKSTART** (≈ 220 driver + 720 tests **[r1]** (XA2 arm c) + 60 docs): XA1–XA4.
   `WORLD_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" WORLD_REQUIRE_PASSKEY_BROWSER=1 go test ./cmd/ailang-worldd/ -run '^(TestApprovePage|TestNeedsYou|TestPasskeyPage)' -count=1 -v`
   must print `--- PASS` for every subtest **on the controller's machine** (CI has no Chrome step,
   V13; R3).
 - **Fallback cut:** M7's notification and Decided list (XA4, half of XA3) become a fourth sprint;
-  the card, Approve and the Needs-you link (XA1–XA2, XA3's list) stay. A3a's exit run waits for
+  the card, Approve and the Needs-you link (XA1–XA2, XA3's list) stay. **[r1]** PG3 and XA2 arm (c)
+  are never cut: the card may not ship without every field. A3a's exit run waits for
   the fourth sprint only for its notification step.
 
 **A3b: no sprint in this design.** It becomes a child design when `desktop/` exists (row 188 N3).
@@ -703,17 +805,25 @@ and the §7 inventories by name, as A2 §9 lists them, plus `go test ./host/daem
 ## 10. The attended exit run (Mark; NOT run by the loop, D-WORLD-109)
 
 On a scratch store, with his own devices and passkey (enrolled in A2's run, §10 there):
-1. **Serve and expose.** `ailang-worldd serve` on the scratch store; `tailscale serve` HTTPS in
-   front of `127.0.0.1:7644` (tailnet only, never Funnel).
+1. **Serve and expose.** `ailang-worldd serve --surface-origin https://<host>.ts.net` **[r1]** on
+   the scratch store; `tailscale serve` HTTPS in front of `127.0.0.1:7644` (tailnet only, never
+   Funnel).
 2. **Record the Host.** Open `/surface` from the phone. Record which `Host` the daemon saw (the
    `*.ts.net` name or `127.0.0.1:7644`; §2.3 UNVERIFIED). Both are designed to pass.
 3. **Approve from the phone.** In a shell (or a herdr pane), `episode start … --request` then
    `approve <id> --await`. On the phone: Needs you · 1 → the card → check grants, TTL, worktree →
    Approve → Face ID. The minter mints with no World prompt. Decided shows `webauthn:<name>`.
 4. **On the Mac.** The same with Safari or Chrome and Touch ID (the platform authenticator); turn
-   on "Notify me" and see one notification for a new request.
-5. **SSHSIG from the card.** Save the message, `ssh-keygen -Y sign … `, paste; the minter mints
-   `ssh:<name>`.
+   on "Notify me" and see one notification for a new request. **[r1]** This is the only check that
+   a notification is *displayed* (V25/V26 measured the API and the grant, not the display): record
+   per browser whether it showed, and whether its click opened the card.
+5. **[r1] SSHSIG through the tailnet origin, with no passkey there.** On a second scratch store
+   with **only an SSH approver** enrolled (`approver enroll --format ssh`, typed `y`), `serve
+   --surface-origin https://<host>.ts.net` behind `tailscale serve`. From the laptop's browser at
+   `https://<host>.ts.net/surface`: Needs you → the card (check every field is shown) → Save the
+   message, `ssh-keygen -Y sign -n world-approval@sunholo -f <key> world-approval-<id>.msg`, paste
+   → 200; the minter mints `ssh:<name>`. Then restart `serve` **without** `--surface-origin` and
+   record the refusal text the page shows (it should name the flag).
 6. **Refusals.** Approve the same request again (refused: already used); let one expire (the
    minter exits naming the expiry).
 7. **A3b (only if `desktop/` exists by then).** Open the Tauri window; check the notification
@@ -733,13 +843,28 @@ QUICKSTART §17 is executed verbatim in that run, and its *attended — pending*
   real; the alternative (the daemon mints) was rejected in §2.1 with measurements.
 - **R3 Browser tests are local-only** (as A2's R8): CI has no Chrome. CI covers sprint 1–2 fully.
 - **R4 A genuine but unwanted request after a spoofed nudge** (T9). The card is the check.
-- **R5 Safari and Firefox** behaviour for `fetch` POST headers, `crypto.subtle` and
-  Notifications is UNVERIFIED (Chrome 157 measured, V17); §10.4 checks Safari.
+- **R5 Safari and Firefox** are UNVERIFIED for all of it. **[r1]** What was measured, in Chrome 157
+  headless only: the POST's `Origin`/`Sec-Fetch-Site` headers and the preflight (V17); the
+  `crypto.subtle` digest and message hash byte-equal to Go at `http://localhost` (V23, V24); the
+  Notifications API's presence, `denied` without a gesture, and the CDP grant (V25, V26). Not
+  measured anywhere: a notification's display, and any of this at a `*.ts.net` HTTPS origin.
+  §10 steps 3–5 check them on Mark's browsers.
 - **R6 Schema 7 costs one `serve` restart.**
 - **R7 Size.** A2 ran 1.0–2.6× its sprint estimates (V20). The cuts in §9 are pre-named.
 - **R8 A3b's host is not scheduled.** Row 188 N3 is "operator, then Claude"; until it lands,
   the "native" half of the parent's A3 sentence is met only by the browser (§0).
-- **R9 tailscale `Host` behaviour** UNVERIFIED (§2.3); designed to pass either way.
+- **R9 tailscale `Host` behaviour** UNVERIFIED (§2.3); designed to pass either way **[r1]** once
+  the ts.net origin is in `O`.
+- **R10 [r1] The tailnet origin needs one setting for SSH-only operators.** With no passkey
+  enrolled at the tailnet origin, the card and the SSHSIG POST through it need `serve
+  --surface-origin https://<host>.ts.net`; without it they are refused (421/403) with that fix
+  named. A configured origin widens `O` only for a name the operator typed; the CSRF defence
+  (`Sec-Fetch-Site: same-origin`, JSON only, no CORS) is unchanged. Deriving the name from
+  `tailscale status` was rejected (an exec site).
+- **R11 [r1] Paths bind paths.** The card shows every signed field, but `task`, `git`, `repo`,
+  `mcp_config` and the stores are paths: the signature binds the path, not the file's contents
+  (A0's canonical form, unchanged). The profile and the daemon binary are bound by digest
+  (`profile.digest`, `daemon.executable_sha256`), and the minter re-derives the request at step 5.
 
 ## 12. Open questions
 
@@ -791,7 +916,12 @@ a positive control in the same or an adjacent command.
 | V19 | Decision-ledger rulings | `grep -n "\| D-WORLD-88 \|\\\|\| D-WORLD-89 \|\\\|\| D-WORLD-109 \|" design_docs/world-mission.md` | `:1007` D-WORLD-88 R1 = Tauri v2 ("Native desktop shell now"); `:1008` D-WORLD-89 "all defaults", R1–R5 = YES; `:1028` D-WORLD-109 "The loop builds and judges against fakes and test keys, and never enrols a real key, mints or publishes." ANSWERED A, 2026-11-06 |
 | V20 | A2's measured sprint sizes (calibration) | `for m in d5d90e49 3e55451f 0ce117c5; do git diff --numstat $m^1 $m -- . ':!design_docs' \| awk '{a+=$1+$2} END {print a}'; done`; `git diff --numstat ab4b2402 0140bd7f -- . ':!design_docs' \| awk …`; `git log --oneline ab4b2402..0140bd7f` | `1969`, `1843`, `1686`; sprint 4 `2768`; its plan commit `d688d22d` says "7 compiled patches, 1,054 lines" |
 | V21 | The daemon's port is configurable and may be ephemeral (the Host allowlist must use the bound port) | `grep -n "BindPort\|Port \+int\|BindHost \+string" host/daemon/daemon.go` | `:164-165 DefaultBindPort = 7644`; `:228 BindHost string`; `:229-231` "BindPort is the TCP port; 0 asks the kernel for an ephemeral port, whose resolved value is announced on stdout" |
-| V22 | Probe stayed out of the repo | `git status --short` (worktree) after writing this doc | only this doc (the controller re-checks) |
+| V22 | Probes stayed out of the repo | `git status --short` (worktree) after writing this doc | r0: only this doc (`??`); **[r1]** after the r1 probes: ` M design_docs/planned/w-world-approvals-by-key-a3.md` only (the controller re-checks) |
+| **V23 [r1]** | **`crypto.subtle` rebuilds the digest, the 90-byte message and `MessageHash` byte-equal to Go** (throwaway) | Go: `/tmp/w383-designer/golden/main.go` (sha `e30df84b2284cee4`; `go.mod` `replace github.com/sunholo-data/ailang-world => <this worktree>`), `GOFLAGS=-mod=mod GOPROXY=off go run . > /tmp/w383-designer/subtle/golden.json`: two requests built field-for-field as `request_test.go:16-29`'s `fixtureRequest` (case 2 sets `task` `/ws/tâches/é\u2028x.md`, `model` `mé世`), each with `approval.Canonical`, `sha256`, a fixed nonce (`byte(i*7)`), expiry `1794415800`, `approval.SignedMessage`, `approval.MessageHash`. Browser: `/tmp/w383-designer/subtle/probe.mjs` (sha `4279894aec8fbbb2`) serves `page.js` (sha `ea9a4be914d18b4f`) at `http://localhost:47821` under exactly `surfaceCSP`; Chrome 157 `--headless=new --virtual-time-budget=8000 --dump-dom`; the page decodes base64url, `crypto.subtle.digest('SHA-256', …)`, builds the 90 bytes with `TextEncoder` + `DataView.setBigUint64(82, …)`, hashes, and POSTs the comparison back | Go: case 1 digest `0ace927ef952f541b1e454b066f6d6b1941fb5f3d710c784c22dd80a53d771eb` (= `fixtureDigestHex`, the control), message hash `d0162af4…3f57`, message 90 bytes; case 2 digest `561e2daa…6142`, hash `083750c6…f995`, 90 bytes. Browser: `"origin":"http://localhost:47821","secure":true,"subtle":"object"`; both cases `"digestEqual":true,"signedMessageEqual":true,"messageHashEqual":true`, `jsMessageHash` `d0162af4dad7ade20433c1ae3eb4667c26d69329d9b234c05802d709e9003f57` and `083750c659f92b74c68292ad8876f65785a08b152f730ce89a97256ff41df995` |
+| **V24 [r1]** | The parsed bytes' keys, and HTML-escape-free strings, survive in the browser | same run, `JSON.parse(new TextDecoder('utf-8', {fatal: true}).decode(bytes))` | both cases `"keys":"schema,episode,world_db,workspace_root,worktree,reuse,degraded,repo,git,branch,grants,ttl_s,profile,profiles_dir,credentials_db,session_file,mcp_config,agent,model,task,daemon"` (21); `"model":"claude-opus<5>&x"`; case 2 `"model":"mé世"`, `"task":"/ws/tâches/é\u2028x.md"` |
+| **V25 [r1]** | The Notifications API in headless Chrome, without a gesture | same run, the page reads `typeof Notification`, `Notification.permission`, `typeof Notification.requestPermission`, then races `Notification.requestPermission()` against a 2 s timer | `"notification":{"type":"function","permission":"default","requestPermission":"function","requestResult":"denied"}` |
+| **V26 [r1]** | A CDP grant makes notifications `granted`, and the constructor runs | `/tmp/w383-designer/notif/probe.mjs` (sha `53bf28f260695eaa`): Chrome `--headless=new --remote-debugging-port=0`, temp profile; a page at `http://localhost:47831`; `Runtime.evaluate` before and after `Browser.grantPermissions({permissions: ["notifications"], origin})`; then `new Notification('World needs you', {body, tag: 'mr-0123456789abcdef'})` | `before grant: default`; `grantPermissions error: none`; `after grant: granted`; `new Notification: constructed tag=mr-0123456789abcdef`. **Display not observed** (headless) |
+| **V27 [r1]** | `serve` has no surface-origin setting today | `grep -rn "ts\.net\|surface-origin\|SurfaceOrigin" --include='*.go' host/daemon cmd/ailang-worldd \| grep -v _test`; `grep -rn "func runServe" cmd/ailang-worldd/`; `grep -n "CredentialsPath: \|BindPort: " cmd/ailang-worldd/main.go`; `grep -n "func ParseCeremonyOrigin" host/approval/origin.go` | one match, `approver.go:178` (`--origin` help: "http://localhost:<port> or https://<host>.ts.net"); `main.go:508 func runServe`; `main.go:612 cfg := daemon.Config{DBPath: …, CredentialsPath: …, BindHost: host, BindPort: port, AilangBin: …`; `origin.go:23 func ParseCeremonyOrigin` |
 
 ## 15. Quorum verification log
 
