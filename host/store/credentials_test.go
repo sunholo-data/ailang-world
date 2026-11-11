@@ -295,6 +295,9 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	errs["RevokeApprover"] = c.RevokeApprover(ctx, "x", 1000)
 	a, p := testPasskey("x", 1)
 	errs["EnrolPasskey"] = c.EnrolPasskey(ctx, a, p)
+	_, _, _, errs["PasskeyByCredentialID"] = c.PasskeyByCredentialID(ctx, p.CredentialID)
+	_, _, errs["Passkey"] = c.Passkey(ctx, "x")
+	_, errs["ActivePasskeys"] = c.ActivePasskeys(ctx)
 	for name, err := range errs {
 		if !errors.Is(err, ErrNoDeadline) {
 			t.Errorf("%s(Background) = %v, want ErrNoDeadline", name, err)

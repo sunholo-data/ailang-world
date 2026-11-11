@@ -137,3 +137,74 @@ func (c *Credentials) EnrolPasskey(ctx context.Context, a ApproverRow, p Passkey
 	}
 	return nil
 }
+
+// ---- M4c ----
+
+// EnrolledPasskey is an approvers row with its passkey row.
+type EnrolledPasskey struct {
+	Approver ApproverRow
+	Passkey  PasskeyRow
+}
+
+const passkeyColumns = `w.name, w.credential_id, w.rp_id, w.origin, w.alg, w.aaguid, w.backup_eligible, w.sign_count`
+
+func scanPasskey(scan func(...any) error, dst ...any) (PasskeyRow, error) {
+	var p PasskeyRow
+	err := scan(append(dst, &p.Name, &p.CredentialID, &p.RPID, &p.Origin, &p.Alg, &p.AAGUID, &p.BackupEligible, &p.SignCount)...)
+	return p, err
+}
+
+// enrolledPasskeys reads approvers joined with their passkeys, where says which.
+func (c *Credentials) enrolledPasskeys(ctx context.Context, where string, args ...any) ([]EnrolledPasskey, error) {
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
+	if c.version < passkeysSchemaVersion {
+		return nil, c.olderForPasskeys()
+	}
+	rows, err := c.db.QueryContext(ctx, `SELECT a.name, a.format, a.public_key, a.enrolled_at, a.last_used_at, a.revoked_at, `+passkeyColumns+
+		` FROM approvers a JOIN webauthn_credentials w ON w.name = a.name WHERE `+where, args...)
+	if err != nil {
+		return nil, fmt.Errorf("store: read passkeys: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []EnrolledPasskey
+	for rows.Next() {
+		var e EnrolledPasskey
+		var lastUsed, revoked sql.NullInt64
+		a := &e.Approver
+		if e.Passkey, err = scanPasskey(rows.Scan, &a.Name, &a.Format, &a.PublicKey, &a.EnrolledAt, &lastUsed, &revoked); err != nil {
+			return nil, fmt.Errorf("store: read passkeys: %w", err)
+		}
+		a.LastUsedAt, a.RevokedAt = lastUsed.Int64, revoked.Int64
+		out = append(out, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("store: read passkeys: %w", err)
+	}
+	return out, nil
+}
+
+// PasskeyByCredentialID reads the approver whose passkey has credential ID id, byte for byte, and
+// that passkey. ok is false when none.
+func (c *Credentials) PasskeyByCredentialID(ctx context.Context, id []byte) (ApproverRow, PasskeyRow, bool, error) {
+	got, err := c.enrolledPasskeys(ctx, `w.credential_id = ?`, id)
+	if err != nil || len(got) == 0 {
+		return ApproverRow{}, PasskeyRow{}, false, err
+	}
+	return got[0].Approver, got[0].Passkey, true, nil
+}
+
+// Passkey reads approver name's passkey, revoked approvers included. ok is false when none.
+func (c *Credentials) Passkey(ctx context.Context, name string) (PasskeyRow, bool, error) {
+	got, err := c.enrolledPasskeys(ctx, `w.name = ?`, name)
+	if err != nil || len(got) == 0 {
+		return PasskeyRow{}, false, err
+	}
+	return got[0].Passkey, true, nil
+}
+
+// ActivePasskeys lists the active webauthn approvers with their passkeys, ordered by name, at most 64.
+func (c *Credentials) ActivePasskeys(ctx context.Context) ([]EnrolledPasskey, error) {
+	return c.enrolledPasskeys(ctx, `a.revoked_at IS NULL AND a.format = 'webauthn' ORDER BY a.name LIMIT ?`, maxActivePasskeys)
+}
