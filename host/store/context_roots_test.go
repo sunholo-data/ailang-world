@@ -26,6 +26,8 @@ var contextRootPins = map[string]int{
 	// Row 201 A2 sprint 3: the read-only pre-check (3 s), the re-check after the enrolment code (3 s)
 	// and the write after y (3 s).
 	"cmd/ailang-worldd/approver_passkey.go|runApproverEnrollPasskey|Background": 3,
+	// Row 201 A3 sprint 1 M3: each approve --await poll's read-only reads and judgement (3 s).
+	"cmd/ailang-worldd/approve_await.go|pollSurfaceApproval|Background": 1,
 
 	"cmd/ailang-worldd/cli.go|get|Background":                                1,
 	"cmd/ailang-worldd/cli.go|execute|Background":                            1,
