@@ -8,6 +8,7 @@ package store
 // are the store's own backstop for the pure law the CLI runs first.
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
@@ -207,4 +208,41 @@ func (c *Credentials) Passkey(ctx context.Context, name string) (PasskeyRow, boo
 // ActivePasskeys lists the active webauthn approvers with their passkeys, ordered by name, at most 64.
 func (c *Credentials) ActivePasskeys(ctx context.Context) ([]EnrolledPasskey, error) {
 	return c.enrolledPasskeys(ctx, `a.revoked_at IS NULL AND a.format = 'webauthn' ORDER BY a.name LIMIT ?`, maxActivePasskeys)
+}
+
+// ---- M5a ----
+
+// PasskeyUse is what a passkey consume binds: the credential that signed and its new counter.
+type PasskeyUse struct {
+	CredentialID []byte
+	SignCount    int64 // the assertion's counter, 0 .. 2^32-1
+}
+
+// usePasskey is the consume's counter binding (design §2.10): inside the consume's transaction,
+// after useApprover, it moves name's sign_count to p.SignCount only for this credential and only
+// forward (both zero: unchanged). Otherwise it names why (C16-C18), and the caller's rollback undoes
+// the request update and last_used_at.
+func usePasskey(ctx context.Context, tx *sql.Tx, name string, p PasskeyUse) error {
+	res, err := tx.ExecContext(ctx, `UPDATE webauthn_credentials SET sign_count = ? WHERE name = ? AND credential_id = ? AND (sign_count < ? OR (sign_count = 0 AND ? = 0))`,
+		p.SignCount, name, p.CredentialID, p.SignCount, p.SignCount)
+	if err != nil {
+		return fmt.Errorf("store: use passkey: %w", err)
+	}
+	if n, err := res.RowsAffected(); err != nil || n == 1 {
+		return err
+	}
+	var id []byte
+	var count int64
+	err = tx.QueryRowContext(ctx, `SELECT credential_id, sign_count FROM webauthn_credentials WHERE name = ?`, name).Scan(&id, &count)
+	switch {
+	case errors.Is(err, sql.ErrNoRows): // C16
+		return fmt.Errorf("%w: %q has no passkey", ErrApproverUnknown, name)
+	case err != nil:
+		return fmt.Errorf("store: use passkey: %w", err)
+	case !bytes.Equal(id, p.CredentialID): // C17
+		return fmt.Errorf("%w: %q", ErrPasskeyChanged, name)
+	default: // C18
+		return fmt.Errorf("%w: %q holds %d, this assertion %d; if you did not cause this, run: ailang-worldd approver revoke %s",
+			ErrSignCountRegression, name, count, p.SignCount, name)
+	}
 }

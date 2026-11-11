@@ -294,6 +294,7 @@ type RequestConsume struct {
 type ApproverUse struct {
 	Name, Format string
 	PublicKey    []byte
+	Passkey      *PasskeyUse // non-nil exactly when Format is "webauthn" (row 201 A2 C13)
 }
 
 // MintSessionForRequest consumes request rc and inserts session in one transaction: the request
@@ -324,6 +325,17 @@ func (c *Credentials) MintSessionForRequest(ctx context.Context, session Session
 	if rc.Approver != nil && c.version < approversSchemaVersion { // C5
 		return c.olderForApprovers()
 	}
+	if a := rc.Approver; a != nil && (a.Format == "webauthn") != (a.Passkey != nil) { // C13
+		return ErrIncompleteConsume
+	}
+	if a := rc.Approver; a != nil && a.Passkey != nil {
+		if p := a.Passkey; len(p.CredentialID) < 1 || len(p.CredentialID) > 1023 || p.SignCount < 0 || p.SignCount > maxSignCount { // C14
+			return ErrIncompleteConsume
+		}
+		if c.version < passkeysSchemaVersion { // C15
+			return c.olderForPasskeys()
+		}
+	}
 	tx, err := c.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("store: consume mint request: begin: %w", err)
@@ -348,6 +360,11 @@ func (c *Credentials) MintSessionForRequest(ctx context.Context, session Session
 	if rc.Approver != nil { // C8: the approver's row, in this transaction, or nothing is consumed
 		if err := useApprover(ctx, tx, *rc.Approver, at); err != nil {
 			return err
+		}
+		if p := rc.Approver.Passkey; p != nil { // C16-C18: and its counter, forward only
+			if err := usePasskey(ctx, tx, rc.Approver.Name, *p); err != nil {
+				return err
+			}
 		}
 	}
 	if err := insertSessionRow(ctx, tx, session); err != nil {
