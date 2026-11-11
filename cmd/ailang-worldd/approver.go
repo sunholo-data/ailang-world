@@ -142,19 +142,27 @@ func readCapped(r io.Reader, max int64) ([]byte, error) {
 // ---- M3c ----
 
 const approverHelp = `usage: ailang-worldd approver enroll --name <name> --format ssh --pubkey <file> [--db <path>] [--credentials-db <path>]
+       ailang-worldd approver enroll --name <name> --format webauthn --origin <origin> --registration <file> [--db <path>] [--credentials-db <path>]
        ailang-worldd approver list [--db <path>] [--credentials-db <path>]
        ailang-worldd approver revoke <name> [--db <path>] [--credentials-db <path>]
 
-ATTENDED (enroll, revoke). An approver is a name and one SSH public key, kept in
-the credentials store (row 201). An enrolled, unrevoked key approves a mint
-request with its signature: 'ailang-worldd approve <request-id> --signature
-<file>' or '--sign-with <key>'. enroll and revoke each ask y at /dev/tty and wait at most 2m0s for it;
+ATTENDED (enroll, revoke). An approver is a name and one SSH public key or one
+passkey, kept in the credentials store (row 201). An enrolled, unrevoked key
+approves a mint request with its signature: 'ailang-worldd approve <request-id>
+--signature <file>' or '--sign-with <key>', or for a passkey '--webauthn-link'
+then '--webauthn-assertion <file>'. enroll and revoke each ask y at /dev/tty and wait at most 2m0s for it;
 an agent cannot run them.
 
 enroll   reads --pubkey once (one ssh-ed25519 or ecdsa-sha2-nistp256 key line,
          at most 8 KiB; a private key file is refused and never shown), shows
          the key's SHA256 fingerprint, and stores it after y. A name and a key
          are each enrolled at most once, ever, revoked ones included.
+enroll --format webauthn prints a link to the daemon's page /surface/passkey
+         at --origin; open it in a browser, create the passkey (Face ID,
+         Touch ID, a PIN or a security key), and save the file it offers as
+         --registration, which must not exist yet. Then type the 26-character
+         enrolment code the page shows, within 5m0s (a fingerprint of that
+         file, not a secret), check what the y/N shows, and type y.
 list     prints every approver, read-only: name, format, key type,
          fingerprint, enrolled, last used, and active or revoked.
 revoke   marks the approver revoked after y. The row is kept: it never
@@ -164,8 +172,12 @@ revoke   marks the approver revoked after y. The row is kept: it never
 
   --name <name>             1-48 of a-z 0-9 . _ - (the first a letter or digit);
                             its approvals record approved_by=ssh:<name>
-  --format ssh              the only format until row 201 A2 (webauthn)
+  --format ssh|webauthn     an SSH key (--pubkey) or a passkey (--origin, --registration);
+                            a passkey's approvals record approved_by=webauthn:<name>
   --pubkey <file>           the .pub file (compare: ssh-keygen -l -f <file>)
+  --origin <origin>         http://localhost:<port> or https://<host>.ts.net, as the
+                            daemon is reached (never an IP address); the passkey is bound to it
+  --registration <file>     where the browser saves the registration (a new file)
   --db <path>               the world store (default ~/.ailang/world/world.db)
   --credentials-db <path>   default credentials.db beside --db
 The global --addr is refused: approvers live in the credentials store.
@@ -338,11 +350,13 @@ var approverEnrol = (*store.Credentials).EnrolApprover
 // runApproverEnroll is `approver enroll` (design §2.10 N1-N14, plan A-D6 order).
 func runApproverEnroll(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	const prefix = "ailang-worldd approver enroll: "
-	var name, format, pubkey *string
+	var name, format, pubkey, origin, registration *string
 	db, creds, positional, code, done := approverFlags("enroll", args, stdout, stderr, func(fs *flag.FlagSet) {
 		name = fs.String("name", "", "the approver's name")
-		format = fs.String("format", "", "ssh")
+		format = fs.String("format", "", "ssh or webauthn")
 		pubkey = fs.String("pubkey", "", "the public key file (.pub)")
+		origin = fs.String("origin", "", "webauthn: the ceremony page's origin")
+		registration = fs.String("registration", "", "webauthn: the registration file the browser saves")
 	})
 	if done {
 		return code
@@ -350,6 +364,14 @@ func runApproverEnroll(args []string, stdout, stderr io.Writer, env sessionEnv) 
 	if len(positional) != 0 { // N1
 		fmt.Fprint(stderr, approverHelp)
 		return exitUsage
+	}
+	webauthn := *format == approval.FormatWebAuthn
+	if webauthn && *pubkey != "" || !webauthn && (*origin != "" || *registration != "") { // WN1 (row 201 A2 §2.12)
+		fmt.Fprintf(stderr, "%s--pubkey is for --format ssh; --origin and --registration are for --format webauthn\n\n%s", prefix, approverHelp)
+		return exitUsage
+	}
+	if webauthn {
+		return runApproverEnrollPasskey(*name, *origin, *registration, db, creds, stdout, stderr, env)
 	}
 	if *name == "" || *pubkey == "" { // N2
 		return approverRefuse(stderr, prefix, "--name and --pubkey are required")
