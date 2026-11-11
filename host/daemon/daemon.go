@@ -1083,7 +1083,8 @@ func releaseFromVersion(version string) string {
 // pages, row 188 M2/M3) and GET /surface/surface.js (their script, M4a) are also unversioned
 // read routes outside the frozen table, as are GET /surface/follow-status.json, GET /surface/model.json and
 // GET /surface/stack.json (the app's view model, N1) and GET /surface with /surface/app.js,
-// /surface/app.css and /surface/ailang-logo.svg (the app, N2b).
+// /surface/app.css and /surface/ailang-logo.svg (the app, N2b), and GET /surface/passkey with
+// /surface/passkey.js (the passkey ceremony page, row 201 A2: static, it reads nothing).
 // The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
 // such as "world/epoch-registry/v1" contain slashes.
 func (d *Daemon) Handler() http.Handler {
@@ -1111,6 +1112,8 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/app.js", d.handleSurfaceAppScript)
 	mux.HandleFunc("GET /surface/app.css", d.handleSurfaceAppStyle)
 	mux.HandleFunc("GET /surface/ailang-logo.svg", d.handleSurfaceLogo)
+	mux.HandleFunc("GET /surface/passkey", d.handleSurfacePasskey)
+	mux.HandleFunc("GET /surface/passkey.js", d.handleSurfacePasskeyScript)
 	mux.HandleFunc("GET /surface/fonts/{name...}", d.handleSurfaceFont)
 	mux.HandleFunc("GET /surface/model.json", d.handleSurfaceModel)
 	mux.HandleFunc("GET /surface/stack.json", d.handleSurfaceStack)

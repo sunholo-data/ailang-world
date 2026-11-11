@@ -170,6 +170,20 @@ func (d *Daemon) handleSurfaceLogo(w http.ResponseWriter, _ *http.Request) {
 	writeSurfaceAsset(w, "image/svg+xml", surfacepage.AppLogo)
 }
 
+// handleSurfacePasskey is the passkey ceremony page (row 201 A2, design §2.14): embedded bytes
+// under surfaceCSP. It reads no store and no request; the page reads its own link's fragment.
+func (d *Daemon) handleSurfacePasskey(w http.ResponseWriter, _ *http.Request) {
+	setSurfaceHeaders(w)
+	_, _ = w.Write(surfacepage.PasskeyPage)
+}
+
+// handleSurfacePasskeyScript is the page's script, under the same headers.
+func (d *Daemon) handleSurfacePasskeyScript(w http.ResponseWriter, _ *http.Request) {
+	setSurfaceHeaders(w)
+	w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+	_, _ = w.Write(surfacepage.PasskeyScript)
+}
+
 func writeSurfaceAsset(w http.ResponseWriter, contentType string, body []byte) {
 	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("X-Content-Type-Options", "nosniff")
