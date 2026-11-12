@@ -1,0 +1,4 @@
+CI for 2936964e95ce2a5058d7ee0d97d8a5363701b576: total=3 completed=3 success=3
+  ailang-code verify gate: success https://github.com/sunholo-data/ailang-world/actions/runs/43170254467/job/131021570772
+  go host build + test gate: success https://github.com/sunholo-data/ailang-world/actions/runs/43170254467/job/131021570539
+  go race gate (go test -race, own job): success https://github.com/sunholo-data/ailang-world/actions/runs/43170254467/job/131021570391

@@ -2728,3 +2728,130 @@ That equals the plan at every step. The final `cmd` and `host` equal the round-t
    - plus Appendix C's SSHSIG arm (R11 `sshsig`, RT6, RT13, AW6's route half) and the J36 test (an injected `ActivePasskeys` error on the card route → 500).
    - The design's own estimate is about 2,200 lines before Appendix C, so expect its fallback cut (M7's notification and Decided move to a fourth sprint).
 2. Mark's A2 exit run (§10, QUICKSTART §16) stays attended and runnable. D-WORLD-114 stays OPEN for Mark to confirm or veto; default A is being built.
+
+## 386 — 2026-11-12 — row 201 A3a sprint 3 LANDED (PR #558, merge `70823879`): the card page and `approve.js`, *Needs you*, the live-Chrome XA1/XA2/XA3-list/XA5 tests, QUICKSTART §17, and the carried SSHSIG POST arm and J36 test; notification and Decided cut to sprint 4; judge PASS 90 [PRODUCT]
+
+**Pick:** the A3a sprint-3 planner. This was record 385's Next 1 and the charter's Next. Record 385 had landed (#557 → `82fb9afa`), so there was no carry-over PR. D-WORLD-114 is still unanswered, and its default A (build as designed) still applies.
+- **Re-measured at pick** (`origin/dev` `82fb9afa`):
+  - There is no sprint-3 plan, branch, open PR or worktree.
+  - Production Go has 0 hits for `approve.js` and 0 for a `/surface/approve/` page route. The sprint-2 SSHSIG refusal is at `host/daemon/surface_approve.go:255`. Controls: `/surface/passkey` has 11 hits and `requests.json` has 5.
+  - All three iteration-385 worktrees are clean.
+- **Quorum reader:** rc 0, the iteration-383 artifact. No quorum was owed at pick.
+- **Ledger:** valid, 101 rows. OPEN: D-WORLD-105 (default C) and D-WORLD-114 (default A, applied).
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 are not routable (unchanged).
+- **Orphans:** none. #524 has no `FAILED to complete` notice (0 of 20 comments).
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent. Dev CI 3/3 at `82fb9afa` (attempt 2).
+- Directives: 0 allowlisted on #524 (20 comments) and 0 on #449 (47). Neither watermark file exists, so every comment was read.
+- Self-notices: rc 2, `watermark channel unavailable`. This is an instrument failure, not a verdict, as in 371–385.
+- Inbox: 0 unread for `mission-world`; the control read 110 already-read messages.
+- Skill drift: none. `SKILL.md` and all 12 `resources/*.md` at the resolved symlink target match the driver clone's `origin/dev`.
+- Weekly issue sweep: not owed (#524 was opened Monday).
+
+**Carried from 385:** the record merge `82fb9afa` was red once on the race gate. `host/verifygate` hit its 8-minute `-race` bound in `TestSeToolsGateArmsAreLoadBearing/plan-bytes`, which is row 249's flake, folded into row 258. Attempt 2 (run 43146351741) went 3/3. It was posted as a follow-up on #524 and is recorded here as row 258's next instance.
+
+**Planner** (Agent `opus`, 97 min, 496,816 tok): plan `w-world-approvals-by-key-a3a-sprint3-plan.md` with 9 compiled patches in Appendix P.
+- **Size:** 1,843 lines (463 production, 1,380 test) by `git diff --numstat 82fb9afa HEAD -- cmd host`, plus 18 QUICKSTART lines.
+- **The design's first fallback step fired:** with M7's notification, the Decided list and the `N` key, the planner measured about 2,143 lines. XA4, XA3's Decided half and the `N` key move to sprint 4 (plan Appendix C). The carried SSHSIG arm fits and stays. Nothing on the design's never-cut list (PG3, PG3b, XA2 arm c, XA5) was cut.
+- **Mutants:** 88, Go and JS: 87 killed by both the named test and the package suite, and 1 named equivalent (`JS-PAGEHIDE`: the browser already aborts a page's requests on navigation). No kill depends on an inventory test. Run 1 exposed `JS-WALK-TYPE`; XA2's type arm was changed to use `reuse`, and run 2 killed it.
+- **J36 proof:** at the base, `if false` in place of the `ActivePasskeys` error check leaves 29 tests green. With M6a's `TestRequestCardPasskeyReadError`, it fails (a 200 card with `"passkeys":[]` instead of a 500). Dropping the passkey table did not reach the read, because the store's open refuses first. The test renames a column instead.
+- **Live Chrome** (157.0.8103.51, headless): every XA test, the two planner-added page tests, and the A2 tests `--- PASS`.
+- **Premises found false (plan §1.4):**
+  1. XA2 arm (b) is a 409, not a 422, because the digest check (R9) runs before the signature (R11).
+  2. The card data has no "recorded" field, so the page shows the POST's own answer.
+  3. `grantNotifications`/`notify` move with XA4, and `click` becomes `press`.
+  4. The design's Chrome `-run` pattern matches the fixture recorder, which skips by design.
+  5. The J36 table-drop injection does not reach the passkey read (above).
+  6. A store error in the SSH judge is a 500, not a 503.
+  7. The `N` key lives in `surface.js`, not `app.js`.
+  8. The `daemon.go` line numbers have moved.
+- Part of the planning (M6a, M5d, the J36 proof) was done by a forked agent, which the planner reviewed and stacked unchanged.
+
+**Controller round trip:** I ran `git archive 82fb9afa`, extracted the 9 patches from the plan file with §2's awk, and applied them. `diff -rq` against the planner's `work/` tree is empty for `cmd`, `host` and `docs`, and the appended-byte control was detected. The plan was committed (`888d415c`) before any sub-milestone commit.
+
+**Executor** (env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`, as 374–385), two runs:
+- Run A, M6a–M7a: 10.4 min, 50,422 tok.
+- Run B, M8a–M8d (incl. the live-Chrome legs): 4.8 min, 69,352 tok.
+- No hand edits, no git writes, no `nohup`, no stop condition, and no timing exception.
+
+The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`. Cumulative numstat after each commit:
+
+| Sub-milestone | Commit | Numstat |
+|---|---|---|
+| M6a | `854c0a82` | 29 |
+| M5d | `3a023498` | 280 |
+| M6b | `fea1889a` | 788 |
+| M6c | `693f01c7` | 943 |
+| M7a | `34aaa64b` | 976 |
+| M8a | `9424444d` | 1,383 |
+| M8b | `4d161376` | 1,502 |
+| M8c | `ea34fd73` | 1,788 |
+| M8d | `2936964e` | 1,843 |
+
+That equals the plan at every step (docs 18). The final committed tree equals the round-trip tree.
+
+**Gates** (controller, before the judge, not concurrent with it):
+- Plan §6 script: rc 0, `PRE_COMMIT_GATES_GREEN 470s`. It covered every inventory and new test `--- PASS` by name, the three `-race` legs, the AW leg 9/9, and the live-Chrome leg (8 top-level `--- PASS`, 0 FAIL/SKIP).
+- After commit, `VERIFY_GO_LEGS=plain verify_go.sh`: **rc 0** ("all 64 required top-level evidence tests passed exactly once") on the first run.
+
+**Judge** (evaluator `sonnet` via Agent, 24.1 min, 114,178 tok; own worktree; generator ≠ judge): **PASS 90/100, zero blocking** (correctness 28, tests 25, security 19, standards 10, scope 8).
+- Its ledger has 71 lines: 5 non-compiling edits and 1 run that executed no tests (neither credited). Every kill names its test, and none was by an inventory alone. The `innerHTML` mutant is killed only by PG2's static banned-token test (C03b), which survives when that test is excluded (C03c).
+- Its review confirmed the following:
+  - The SSHSIG arm judges on the read-only handle at `now` before any writer opens, and every refusal returns before the write.
+  - Both page routes go through `approvalRoute`.
+  - `approve.js` hashes the stored bytes itself and refuses unlisted, mistyped or missing fields. It writes only through `textContent`, retries only on 503 `Busy`, and shows an unanswered POST as "outcome unknown".
+  - The 409 deviation and the sprint-4 cut are sound.
+- **Survivors (non-blocking):**
+  - The Needs-you list's `esc()` on `agent`, the `id` href and `recorded` (A02/A03/A05) is unasserted.
+  - No Chrome test renders a hostile field value (C03/C04).
+  - The expiry display, label text and unknown-outcome styling are unasserted.
+- **A02 reproduced by the controller:**
+  - Removing `esc()` on `q.agent` leaves `TestSurfaceAppPure` green (rc 0) with `WORLD_EXEC_NODE` set.
+  - I first checked that the judge's command (which omitted that variable) still runs the test: it does, so the survivor is real.
+  - The code escapes correctly, so this is a test gap only. It carries to sprint 4.
+
+**Gate 3b:**
+- PR #558 head `2936964e`, run 43170254467 attempt 1: **3/3 success**.
+- `gh pr merge 558 --merge --match-head-commit 2936964e…` → merge **`70823879`** at 07:00:43Z. No closing keywords.
+- Push CI on the merge (run 43172124328) attempt 1: the race gate was red on `host/daemon` `TestMCPPostBudgetProductionConstants/batch`, at `mcp_budget_test.go:208` ("timed callback did not return within finite teardown").
+  - That is a 1 s wall-clock bound under `-race`, and the package took 430 s.
+  - The merge tree is byte-identical to the PR head tree (`bcc9100e`), whose race job passed. The sprint touches no MCP-budget code.
+  - This is the test's first recorded instance (0 hits in the charter, log, archive and index), so it is filed as a row-258-class CI flake.
+  - `gh run rerun --failed` → attempt 2: **3/3 success**. LANDED.
+
+**Routing evidence:** base=82fb9afa9086eed2f781bb0d4fe54d4bae3b70d7@2026-11-12T04:07:19Z.
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (A3 r2 covers A3a sprint 3).
+- Planner: `opus` via Agent (496,816 tok), `agent-tool opus fail-closed:env-pin`.
+- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (50,422 + 69,352 tok).
+- Evaluator: `sonnet` via Agent (114,178 tok), `agent-tool sonnet declared:alias-pin`.
+- The driver noted codex unusable at preflight (probe rc 75).
+- Metered total: $0.00.
+
+**Progress:** 1.0 clauses 1–7 MET; the goal is unmoved. Row 201 A3a now has its page on `dev`:
+- A pending request is listed under *Needs you* in the surface app and opens a card page.
+- The card renders every signed field and verifies the digest itself, then lets the approver sign with a passkey or an SSH key and posts it.
+- The daemon judges either signature before recording it, and `approve <id> --await` mints.
+- A swapped, extended or truncated request is refused before any `credentials.get`.
+- What remains for A3a is sprint 4 (the opt-in notification, the Decided list, the `N` key) and Mark's attended exit run.
+
+**Ruled out:**
+- **A design r3:** sprint 3 builds §2.7/§2.8/§2.10 as written. Every design-vs-HEAD drift is recorded in plan §1.4 and routed minimally.
+- **Cutting the SSHSIG arm a second time:** it fits under the cap (1,843) once M7's notification and Decided list move, which is the design's first fallback step.
+- **Treating the merge race red as a regression:** the identical tree passed the same job at the PR head, the test is a 1 s wall-clock bound in untouched code, and a re-run was used to confirm.
+- **Adding the A02 test in this fire:** the controller would be writing unreviewed code after the judge. It becomes a sprint-4 obligation.
+
+**Retro:**
+- **The "inventory kills are not behavioural" directive worked.** The judge named the killing test for every mutant and re-ran the `innerHTML` kill without the static test (C03c survived). That separated a static guard from a behavioural one with no controller re-measurement. Keep it in the evaluator directive.
+- **A judge's survivor command can drop an environment variable the plan sets.** A02's command omitted `WORLD_EXEC_NODE`. It made no difference here, because the test finds node on `PATH`, but the controller checked before banking the survivor. For the next directive: require mutant commands to copy the plan's acceptance environment verbatim.
+- **The executor obeyed `nohup`/background rules** this time, after 385's single deviation, with the line repeated in the directive's rules.
+- **Planner time:** 97 min for 1,843 lines and 88 mutants with live Chrome, against 77 min at 385 (no browser). Within the 100-minute aim.
+
+**Next:**
+1. Row 201 A3a sprint 4, from this plan's Appendix C (no re-design):
+   - the opt-in notification (XA4, design §2.9);
+   - the Decided list (XA3's other half) and the `N` key;
+   - the judge's A02/A03/A05 test gap (assert the Needs-you list escapes `agent`, the `id` href and `recorded`, e.g. by a hostile-value case in `TestSurfaceAppPure`);
+   - optionally, a Chrome case that renders a hostile field value on the card.
+2. Mark's A2 exit run (§10, QUICKSTART §16) and the A3a exit run (QUICKSTART §17, after sprint 4) stay attended. D-WORLD-114 stays OPEN for Mark to confirm or veto; default A is being built.
