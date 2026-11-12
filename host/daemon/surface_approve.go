@@ -3,15 +3,21 @@ package daemon
 // Row 201 A3 sprint 2 (design_docs/planned/w-world-approvals-by-key-a3.md §2.3, §2.4): the
 // approval routes under /surface, none under /v1. GET /surface/requests.json (Needs you and the
 // decision list) and GET /surface/requests/{id} (the card's data) read the credentials store on a
-// fresh read-only handle. Each route answers only a Host in the surface origin set O (R2); every
+// fresh read-only handle; POST /surface/approve/{id} records a passkey approval only after the
+// A2 law verified it. Each route answers only a Host in the surface origin set O (R2); every
 // existing route stays exactly as row 199 leaves it.
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
+	"fmt"
+	"io"
 	"net"
 	"net/http"
 
+	"github.com/sunholo-data/ailang-world/host/approval"
+	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/surfacepage"
 )
@@ -164,4 +170,122 @@ func (d *Daemon) handleSurfaceRequestCard(w http.ResponseWriter, r *http.Request
 		passkeys = append(passkeys, surfacepage.CardPasskey{Origin: e.Passkey.Origin, RPID: e.Passkey.RPID, CredentialID: e.Passkey.CredentialID})
 	}
 	writeApprovalJSON(w, http.StatusOK, surfacepage.RequestCard(storedRequest(row), passkeys))
+}
+
+// approvalStoreError answers a store failure of the POST: a store below the schema a step needs is
+// 503 naming the restart, a busy writer 503 Busy with Retry-After (never a wait), anything else
+// the sanitized 500.
+func (d *Daemon) approvalStoreError(w http.ResponseWriter, r *http.Request, err error) {
+	switch {
+	case isOlderStore(err):
+		writeApprovalRefusal(w, http.StatusServiceUnavailable, "Restart",
+			"the credentials store predates surface approvals: restart `ailang-worldd serve` with this build once (it upgrades the store), then approve again")
+	case store.IsWriterAlreadyActive(err):
+		w.Header().Set("Retry-After", "1")
+		writeApprovalRefusal(w, http.StatusServiceUnavailable, "Busy", "the credentials store is busy (a mint or a session verb is writing it); try again")
+	default:
+		d.approvalInternal(w, r, err)
+	}
+}
+
+// handleSurfaceApprove is POST /surface/approve/{id} (design §2.4): after R2 (approvalRoute), the
+// checks R1, R3-R12 in order on a read-only handle, each refusal writing nothing; then R13 a
+// non-waiting writer, opened for R14's RecordSurfaceApproval and closed at once. It reads no
+// Cookie and no Authorization, answers no CORS, and never mints: the minter (approve --await)
+// judges the recorded artifact again.
+func (d *Daemon) handleSurfaceApprove(w http.ResponseWriter, r *http.Request, o []string) {
+	id := r.PathValue("id")
+	if !store.MintRequestIDPattern.MatchString(id) { // R1
+		writeApprovalRefusal(w, http.StatusBadRequest, "BadRequest", "a request id is mr- and 16 lowercase hex")
+		return
+	}
+	if origin := r.Header.Get("Origin"); !allowedApprovalOrigin(origin, o) { // R3
+		writeApprovalRefusal(w, http.StatusForbidden, "CrossOrigin", crossOriginReason(origin))
+		return
+	}
+	if !sameOriginFetch(r.Header.Get("Sec-Fetch-Site")) { // R4
+		writeApprovalRefusal(w, http.StatusForbidden, "CrossOrigin", "Sec-Fetch-Site is not same-origin")
+		return
+	}
+	if !jsonMediaType(r.Header.Get("Content-Type")) { // R5
+		writeApprovalRefusal(w, http.StatusUnsupportedMediaType, "UnsupportedMediaType", "the body must be application/json")
+		return
+	}
+	raw, err := io.ReadAll(http.MaxBytesReader(w, r.Body, surfacepage.MaxApproveBodyBytes)) // R6
+	if err != nil {
+		writeApprovalRefusal(w, http.StatusRequestEntityTooLarge, "TooLarge", fmt.Sprintf("the body is over %d bytes", surfacepage.MaxApproveBodyBytes))
+		return
+	}
+	body, err := surfacepage.ParseApproveBody(raw)
+	if err != nil {
+		writeApprovalRefusal(w, http.StatusBadRequest, "BadRequest", err.Error())
+		return
+	}
+	now := d.approveNow()
+	ctx, cancel := d.readCtx(r)
+	defer cancel()
+	ro, err := store.OpenCredentialsReadOnly(d.credentialsPath)
+	if err != nil {
+		d.approvalInternal(w, r, err)
+		return
+	}
+	defer func() { _ = ro.Close() }()
+	row, ok, err := ro.MintRequest(ctx, id) // R7 (serve upgraded the store to 7 at start)
+	if err != nil {
+		d.approvalInternal(w, r, err)
+		return
+	}
+	if !ok {
+		writeApprovalRefusal(w, http.StatusNotFound, "NotFound", "no mint request "+id)
+		return
+	}
+	if reason := surfacepage.AdmissionRefusal(storedRequest(row), now); reason != "" { // R8
+		writeApprovalRefusal(w, http.StatusConflict, "Conflict", reason)
+		return
+	}
+	if body.Digest != row.Digest { // R9
+		writeApprovalRefusal(w, http.StatusConflict, "Conflict", "the request changed since the card was shown; reload it")
+		return
+	}
+	challenge, _ := hex.DecodeString(row.Challenge) // R10 (the table's CHECK holds it to 64 characters)
+	if len(challenge) != 32 {
+		writeApprovalRefusal(w, http.StatusConflict, "Conflict", "request "+id+"'s stored challenge is not 64 hex; make a new request")
+		return
+	}
+	if body.SSHSIG != nil { // R11, sprint 2's fallback cut: the SSHSIG arm is sprint 3's
+		writeApprovalRefusal(w, http.StatusUnprocessableEntity, "NotApproved",
+			"this daemon records only passkey approvals from the surface; approve an SSH signature at a terminal: ailang-worldd approve "+id+" --signature <file>")
+		return
+	}
+	signed, err := authority.JudgeAssertion(ctx, ro, row, body.WebAuthn, now) // R11: the law
+	if err != nil {
+		var je *authority.JudgeError
+		if errors.As(err, &je) && je.Step == authority.JudgeStepStore {
+			d.approvalStoreError(w, r, err)
+			return
+		}
+		writeApprovalRefusal(w, http.StatusUnprocessableEntity, "NotApproved", "the passkey's assertion does not approve request "+id+": "+err.Error())
+		return
+	}
+	digest, _ := hex.DecodeString(row.Digest)                                                  // R8 has shown it is 64 hex
+	if err := signed.Binds([32]byte(digest), [32]byte(challenge), row.ExpiresAt); err != nil { // R12
+		writeApprovalRefusal(w, http.StatusUnprocessableEntity, "NotApproved", "the verified approval is not bound to request "+id+": "+err.Error())
+		return
+	}
+	wr, err := store.OpenCredentials(d.credentialsPath) // R13: non-waiting, closed at once
+	if err != nil {
+		d.approvalStoreError(w, r, err)
+		return
+	}
+	err = wr.RecordSurfaceApproval(ctx, store.SurfaceApprovalRow{RequestID: id, Format: approval.FormatWebAuthn, Approver: signed.ApprovedBy(),
+		Artifact: body.WebAuthn, Digest: row.Digest}, d.approveNow()) // R14, at the time it is received
+	_ = wr.Close()
+	switch {
+	case isRequestRace(err):
+		writeApprovalRefusal(w, http.StatusConflict, "Conflict", "request "+id+" changed while it was approved: "+err.Error())
+	case err != nil:
+		d.approvalStoreError(w, r, err)
+	default:
+		writeApprovalJSON(w, http.StatusOK, surfacepage.Recorded(id, signed.ApprovedBy()))
+	}
 }

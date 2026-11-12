@@ -17,7 +17,7 @@ import (
 
 // approvalRoutes is every approval route Handler registers this sprint (the card page and its
 // script are sprint 3's).
-var approvalRoutes = []string{"GET /surface/requests.json", "GET /surface/requests/{id}"}
+var approvalRoutes = []string{"GET /surface/requests.json", "GET /surface/requests/{id}", "POST /surface/approve/{id}"}
 
 // RT1: exactly the approval routes are registered, under /surface, each behind approvalRoute; no
 // other method is answered on them; the card page and its script are not served yet.

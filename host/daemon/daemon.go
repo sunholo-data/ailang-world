@@ -1134,6 +1134,7 @@ func (d *Daemon) Handler() http.Handler {
 	// The approval routes (row 201 A3): Host-checked against the surface origin set; none under /v1.
 	mux.HandleFunc("GET /surface/requests.json", d.approvalRoute(d.handleSurfaceRequests))
 	mux.HandleFunc("GET /surface/requests/{id}", d.approvalRoute(d.handleSurfaceRequestCard))
+	mux.HandleFunc("POST /surface/approve/{id}", d.approvalRoute(d.handleSurfaceApprove))
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
 	// are ADDITIVE: the frozen /v1/ table above is untouched, and the routes
 	// are NOT in isProtected — the projection handler resolves the session
