@@ -1,0 +1,493 @@
+﻿2026-11-12T07:00:49.8113143Z Current runner version: '2.338.2'
+2026-11-12T07:00:49.8144832Z ##[group]Runner Image Provisioner
+2026-11-12T07:00:49.8146123Z Hosted Compute Agent
+2026-11-12T07:00:49.8146900Z Version: 20261028.624
+2026-11-12T07:00:49.8147594Z Commit: 54898b74c23fde5556c9b3c3a2290865feef0dfe
+2026-11-12T07:00:49.8148369Z Build Date: 2026-10-28T21:51:42Z
+2026-11-12T07:00:49.8149228Z Worker ID: {8394800f-f98e-4cc1-a3ca-53799f8bcc48}
+2026-11-12T07:00:49.8150034Z Region: westus2
+2026-11-12T07:00:49.8150652Z Cloud: Azure
+2026-11-12T07:00:49.8152142Z ##[endgroup]
+2026-11-12T07:00:49.8154076Z ##[group]Operating System
+2026-11-12T07:00:49.8155005Z Ubuntu
+2026-11-12T07:00:49.8155568Z 24.04.5
+2026-11-12T07:00:49.8156129Z LTS
+2026-11-12T07:00:49.8156760Z ##[endgroup]
+2026-11-12T07:00:49.8157311Z ##[group]Runner Image
+2026-11-12T07:00:49.8157870Z Image: ubuntu-24.04
+2026-11-12T07:00:49.8158606Z Version: 20261101.360.1
+2026-11-12T07:00:49.8160160Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261101.360/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-12T07:00:49.8162113Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261101.360
+2026-11-12T07:00:49.8163111Z ##[endgroup]
+2026-11-12T07:00:49.8166391Z ##[group]GITHUB_TOKEN Permissions
+2026-11-12T07:00:49.8170290Z Actions: write
+2026-11-12T07:00:49.8171260Z ArtifactMetadata: write
+2026-11-12T07:00:49.8172034Z Attestations: write
+2026-11-12T07:00:49.8172612Z Checks: write
+2026-11-12T07:00:49.8173062Z CodeQuality: write
+2026-11-12T07:00:49.8175136Z Contents: write
+2026-11-12T07:00:49.8175699Z CopilotRequests: write
+2026-11-12T07:00:49.8176242Z Deployments: write
+2026-11-12T07:00:49.8176727Z Discussions: write
+2026-11-12T07:00:49.8177185Z Drives: write
+2026-11-12T07:00:49.8177725Z Issues: write
+2026-11-12T07:00:49.8178280Z Metadata: read
+2026-11-12T07:00:49.8178774Z Models: read
+2026-11-12T07:00:49.8179268Z Packages: write
+2026-11-12T07:00:49.8179797Z Pages: write
+2026-11-12T07:00:49.8180314Z PullRequests: write
+2026-11-12T07:00:49.8180846Z RepositoryProjects: write
+2026-11-12T07:00:49.8181706Z SecurityEvents: write
+2026-11-12T07:00:49.8182245Z Statuses: write
+2026-11-12T07:00:49.8182762Z VulnerabilityAlerts: read
+2026-11-12T07:00:49.8183309Z ##[endgroup]
+2026-11-12T07:00:49.8185099Z Secret source: Actions
+2026-11-12T07:00:49.8185954Z Cache mode: write
+2026-11-12T07:00:49.8186549Z Prepare workflow directory
+2026-11-12T07:00:49.8589171Z Prepare all required actions
+2026-11-12T07:00:49.8643745Z Getting action download info
+2026-11-12T07:00:50.2161936Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-12T07:00:50.3047412Z Download action repository 'actions/setup-go@v5' (SHA:40f1582b2485089dde7abd97c1529aa768e1baff)
+2026-11-12T07:00:50.7007257Z Complete job name: go race gate (go test -race, own job)
+2026-11-12T07:00:50.7698411Z ##[group]Run actions/checkout@v4
+2026-11-12T07:00:50.7699076Z with:
+2026-11-12T07:00:50.7699448Z   repository: sunholo-data/ailang-world
+2026-11-12T07:00:50.7703092Z   token: ***
+2026-11-12T07:00:50.7703482Z   ssh-strict: true
+2026-11-12T07:00:50.7703847Z   ssh-user: git
+2026-11-12T07:00:50.7704212Z   persist-credentials: true
+2026-11-12T07:00:50.7704611Z   clean: true
+2026-11-12T07:00:50.7704974Z   sparse-checkout-cone-mode: true
+2026-11-12T07:00:50.7705395Z   fetch-depth: 1
+2026-11-12T07:00:50.7705742Z   fetch-tags: false
+2026-11-12T07:00:50.7706101Z   show-progress: true
+2026-11-12T07:00:50.7706455Z   lfs: false
+2026-11-12T07:00:50.7706789Z   submodules: false
+2026-11-12T07:00:50.7707152Z   set-safe-directory: true
+2026-11-12T07:00:50.7707562Z   allow-unsafe-pr-checkout: false
+2026-11-12T07:00:50.7708157Z env:
+2026-11-12T07:00:50.7708483Z   Z3_VER: 4.16.0
+2026-11-12T07:00:50.7708982Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-11-12T07:00:50.7709614Z   GOTOOLCHAIN: go1.26.6
+2026-11-12T07:00:50.7709982Z ##[endgroup]
+2026-11-12T07:00:51.0764054Z Syncing repository: sunholo-data/ailang-world
+2026-11-12T07:00:51.0765558Z ##[group]Getting Git version info
+2026-11-12T07:00:51.0766611Z Working directory is '/home/runner/work/ailang-world/ailang-world'
+2026-11-12T07:00:51.0767454Z [command]/usr/bin/git version
+2026-11-12T07:00:51.0901162Z git version 2.56.0
+2026-11-12T07:00:51.0921435Z ##[endgroup]
+2026-11-12T07:00:51.0934609Z Temporarily overriding HOME='/home/runner/work/_temp/4fe65c83-cd6c-4e06-a460-4630bd5177bb' before making global git config changes
+2026-11-12T07:00:51.0936456Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-12T07:00:51.0939812Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ailang-world/ailang-world
+2026-11-12T07:00:51.1006115Z Deleting the contents of '/home/runner/work/ailang-world/ailang-world'
+2026-11-12T07:00:51.1007699Z ##[group]Initializing the repository
+2026-11-12T07:00:51.1011393Z [command]/usr/bin/git init /home/runner/work/ailang-world/ailang-world
+2026-11-12T07:00:51.1120056Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-12T07:00:51.1121834Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-12T07:00:51.1123175Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-12T07:00:51.1124267Z hint: call:
+2026-11-12T07:00:51.1125084Z hint:
+2026-11-12T07:00:51.1125778Z hint: 	git config --global init.defaultBranch <name>
+2026-11-12T07:00:51.1126526Z hint:
+2026-11-12T07:00:51.1127227Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-12T07:00:51.1128382Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-12T07:00:51.1129249Z hint:
+2026-11-12T07:00:51.1129760Z hint: 	git branch -m <name>
+2026-11-12T07:00:51.1130326Z hint:
+2026-11-12T07:00:51.1131259Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-12T07:00:51.1132593Z Initialized empty Git repository in /home/runner/work/ailang-world/ailang-world/.git/
+2026-11-12T07:00:51.1142022Z [command]/usr/bin/git remote add origin https://github.com/sunholo-data/ailang-world
+2026-11-12T07:00:51.1188280Z ##[endgroup]
+2026-11-12T07:00:51.1189241Z ##[group]Disabling automatic garbage collection
+2026-11-12T07:00:51.1192611Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-12T07:00:51.1225561Z ##[endgroup]
+2026-11-12T07:00:51.1226468Z ##[group]Setting up auth
+2026-11-12T07:00:51.1231719Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-12T07:00:51.1268917Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-12T07:00:51.3572164Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-12T07:00:51.3613310Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-12T07:00:51.3826601Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-12T07:00:51.3866912Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-12T07:00:51.4079708Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-12T07:00:51.4172464Z ##[endgroup]
+2026-11-12T07:00:51.4173145Z ##[group]Fetching the repository
+2026-11-12T07:00:51.4182450Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +70823879c28bb75f4b4f6fae2f6c9dca49d477bb:refs/remotes/origin/dev
+2026-11-12T07:00:53.5738753Z From https://github.com/sunholo-data/ailang-world
+2026-11-12T07:00:53.5742584Z  * [new ref]         70823879c28bb75f4b4f6fae2f6c9dca49d477bb -> origin/dev
+2026-11-12T07:00:53.5745974Z ##[endgroup]
+2026-11-12T07:00:53.5747337Z ##[group]Determining the checkout info
+2026-11-12T07:00:53.5749230Z ##[endgroup]
+2026-11-12T07:00:53.5750069Z [command]/usr/bin/git sparse-checkout disable
+2026-11-12T07:00:53.5813500Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-12T07:00:53.5848521Z ##[group]Checking out the ref
+2026-11-12T07:00:53.5851543Z [command]/usr/bin/git checkout --progress --force -B dev refs/remotes/origin/dev
+2026-11-12T07:00:54.0042626Z Switched to a new branch 'dev'
+2026-11-12T07:00:54.0051891Z branch 'dev' set up to track 'origin/dev'.
+2026-11-12T07:00:54.0066265Z ##[endgroup]
+2026-11-12T07:00:54.0114145Z [command]/usr/bin/git log -1 --format=%H
+2026-11-12T07:00:54.0143751Z 70823879c28bb75f4b4f6fae2f6c9dca49d477bb
+2026-11-12T07:00:54.0381601Z ##[group]Run actions/setup-go@v5
+2026-11-12T07:00:54.0382051Z with:
+2026-11-12T07:00:54.0382387Z   go-version: 1.26.6
+2026-11-12T07:00:54.0382742Z   check-latest: false
+2026-11-12T07:00:54.0385164Z   token: ***
+2026-11-12T07:00:54.0385521Z   cache: true
+2026-11-12T07:00:54.0385875Z env:
+2026-11-12T07:00:54.0386204Z   Z3_VER: 4.16.0
+2026-11-12T07:00:54.0386653Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-11-12T07:00:54.0387160Z   GOTOOLCHAIN: go1.26.6
+2026-11-12T07:00:54.0387517Z ##[endgroup]
+2026-11-12T07:00:54.1587091Z Setup go version spec 1.26.6
+2026-11-12T07:00:54.1605382Z Attempting to download 1.26.6...
+2026-11-12T07:00:54.1720704Z (node:2122) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-12T07:00:54.1722114Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-12T07:00:54.7028505Z matching 1.26.6...
+2026-11-12T07:00:54.7077391Z Acquiring 1.26.6 from https://github.com/actions/go-versions/releases/download/1.26.6-31764261251/go-1.26.6-linux-x64.tar.gz
+2026-11-12T07:00:55.1977423Z Extracting Go...
+2026-11-12T07:00:55.2091129Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/e94e3417-37c9-4167-92ff-47056f8a66f1 -f /home/runner/work/_temp/72b972c0-30fc-4e94-a6b0-e1acf488a8d4
+2026-11-12T07:00:56.5697051Z Successfully extracted go to /home/runner/work/_temp/e94e3417-37c9-4167-92ff-47056f8a66f1
+2026-11-12T07:00:56.5697747Z Adding to the cache ...
+2026-11-12T07:01:00.6601897Z Successfully cached go to /opt/hostedtoolcache/go/1.26.6/x64
+2026-11-12T07:01:00.6602435Z Added go to the path
+2026-11-12T07:01:00.6602792Z Successfully set up Go version 1.26.6
+2026-11-12T07:01:00.6869363Z [command]/opt/hostedtoolcache/go/1.26.6/x64/bin/go env GOMODCACHE
+2026-11-12T07:01:00.6916561Z [command]/opt/hostedtoolcache/go/1.26.6/x64/bin/go env GOCACHE
+2026-11-12T07:01:00.6967920Z /home/runner/go/pkg/mod
+2026-11-12T07:01:00.6985018Z /home/runner/.cache/go-build
+2026-11-12T07:01:00.9437833Z Cache hit for: setup-go-Linux-x64-ubuntu24-go-1.26.6-7e7d34241896909f5f39c60d1a096c08bbef809938b6e24d50fffddb12d9e413
+2026-11-12T07:01:00.9519602Z (node:2122) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-12T07:01:02.2395657Z Received 4258277 of 12646885 (33.7%), 4.1 MBs/sec
+2026-11-12T07:01:02.4291631Z Received 12646885 of 12646885 (100.0%), 10.1 MBs/sec
+2026-11-12T07:01:02.4292225Z Cache Size: ~12 MB (12646885 B)
+2026-11-12T07:01:02.4311278Z [command]/usr/bin/tar -xf /home/runner/work/_temp/7c5f9643-2bdc-4eaf-826e-6fe27c47ef58/cache.tzst -P -C /home/runner/work/ailang-world/ailang-world --use-compress-program unzstd
+2026-11-12T07:01:02.5125591Z Cache restored successfully
+2026-11-12T07:01:02.5135978Z Cache restored from key: setup-go-Linux-x64-ubuntu24-go-1.26.6-7e7d34241896909f5f39c60d1a096c08bbef809938b6e24d50fffddb12d9e413
+2026-11-12T07:01:02.5154972Z go version go1.26.6 linux/amd64
+2026-11-12T07:01:02.5155152Z 
+2026-11-12T07:01:02.5155409Z ##[group]go env
+2026-11-12T07:01:02.5282560Z AR='ar'
+2026-11-12T07:01:02.5282865Z CC='gcc'
+2026-11-12T07:01:02.5283131Z CGO_CFLAGS='-O2 -g'
+2026-11-12T07:01:02.5283733Z CGO_CPPFLAGS=''
+2026-11-12T07:01:02.5283927Z CGO_CXXFLAGS='-O2 -g'
+2026-11-12T07:01:02.5284118Z CGO_ENABLED='1'
+2026-11-12T07:01:02.5284302Z CGO_FFLAGS='-O2 -g'
+2026-11-12T07:01:02.5284502Z CGO_LDFLAGS='-O2 -g'
+2026-11-12T07:01:02.5284691Z CXX='g++'
+2026-11-12T07:01:02.5284889Z GCCGO='gccgo'
+2026-11-12T07:01:02.5285064Z GO111MODULE=''
+2026-11-12T07:01:02.5285236Z GOAMD64='v1'
+2026-11-12T07:01:02.5285416Z GOARCH='amd64'
+2026-11-12T07:01:02.5285583Z GOAUTH='netrc'
+2026-11-12T07:01:02.5285752Z GOBIN=''
+2026-11-12T07:01:02.5285937Z GOCACHE='/home/runner/.cache/go-build'
+2026-11-12T07:01:02.5286163Z GOCACHEPROG=''
+2026-11-12T07:01:02.5286327Z GODEBUG=''
+2026-11-12T07:01:02.5286705Z GOENV='/home/runner/.config/go/env'
+2026-11-12T07:01:02.5286918Z GOEXE=''
+2026-11-12T07:01:02.5287080Z GOEXPERIMENT=''
+2026-11-12T07:01:02.5287250Z GOFIPS140='off'
+2026-11-12T07:01:02.5287425Z GOFLAGS=''
+2026-11-12T07:01:02.5287980Z GOGCCFLAGS='-fPIC -m64 -pthread -Wl,--no-gc-sections -fmessage-length=0 -ffile-prefix-map=/tmp/go-build987252635=/tmp/go-build -gno-record-gcc-switches'
+2026-11-12T07:01:02.5288519Z GOHOSTARCH='amd64'
+2026-11-12T07:01:02.5288700Z GOHOSTOS='linux'
+2026-11-12T07:01:02.5288868Z GOINSECURE=''
+2026-11-12T07:01:02.5289108Z GOMOD='/home/runner/work/ailang-world/ailang-world/go.mod'
+2026-11-12T07:01:02.5289391Z GOMODCACHE='/home/runner/go/pkg/mod'
+2026-11-12T07:01:02.5289601Z GONOPROXY=''
+2026-11-12T07:01:02.5289763Z GONOSUMDB=''
+2026-11-12T07:01:02.5289925Z GOOS='linux'
+2026-11-12T07:01:02.5290090Z GOPATH='/home/runner/go'
+2026-11-12T07:01:02.5290277Z GOPRIVATE=''
+2026-11-12T07:01:02.5290488Z GOPROXY='https://proxy.golang.org,direct'
+2026-11-12T07:01:02.5290764Z GOROOT='/opt/hostedtoolcache/go/1.26.6/x64'
+2026-11-12T07:01:02.5291172Z GOSUMDB='sum.golang.org'
+2026-11-12T07:01:02.5291380Z GOTELEMETRY='local'
+2026-11-12T07:01:02.5291596Z GOTELEMETRYDIR='/home/runner/.config/go/telemetry'
+2026-11-12T07:01:02.5291833Z GOTMPDIR=''
+2026-11-12T07:01:02.5292005Z GOTOOLCHAIN='go1.26.6'
+2026-11-12T07:01:02.5292277Z GOTOOLDIR='/opt/hostedtoolcache/go/1.26.6/x64/pkg/tool/linux_amd64'
+2026-11-12T07:01:02.5292554Z GOVCS=''
+2026-11-12T07:01:02.5292719Z GOVERSION='go1.26.6'
+2026-11-12T07:01:02.5292903Z GOWORK=''
+2026-11-12T07:01:02.5293089Z PKG_CONFIG='pkg-config'
+2026-11-12T07:01:02.5293206Z 
+2026-11-12T07:01:02.5293471Z ##[endgroup]
+2026-11-12T07:01:02.5498656Z ##[group]Run go version
+2026-11-12T07:01:02.5498957Z go version
+2026-11-12T07:01:02.5499151Z go env GOVERSION
+2026-11-12T07:01:02.5521861Z shell: /usr/bin/bash -e {0}
+2026-11-12T07:01:02.5522098Z env:
+2026-11-12T07:01:02.5522268Z   Z3_VER: 4.16.0
+2026-11-12T07:01:02.5522554Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-11-12T07:01:02.5522886Z   GOTOOLCHAIN: go1.26.6
+2026-11-12T07:01:02.5523079Z ##[endgroup]
+2026-11-12T07:01:02.5605659Z go version go1.26.6 linux/amd64
+2026-11-12T07:01:02.5633502Z go1.26.6
+2026-11-12T07:01:02.5671631Z ##[group]Run set -euo pipefail
+2026-11-12T07:01:02.5672011Z set -euo pipefail
+2026-11-12T07:01:02.5672378Z # ONE pin, and it tracks current AILANG. World was pinned to v0.30.0 because the
+2026-11-12T07:01:02.5672835Z # replay tests drive the released ailang as a subprocess and byte-compare its
+2026-11-12T07:01:02.5673276Z # output against goldens (testdata/recorded_result.bytes, recorded_world_hash.txt)
+2026-11-12T07:01:02.5673724Z # that were recorded under v0.30.0 — so the pin was assumed to be load-bearing.
+2026-11-12T07:01:02.5674161Z # MEASURED 2026-09-22: it is not. All 10 replay tests reproduce the goldens
+2026-11-12T07:01:02.5674576Z # byte-exactly under v0.41.0, with a discriminating control (binary unset -> 13
+2026-11-12T07:01:02.5674989Z # SKIPs, so the arms really do drive the subprocess). The goldens are stable
+2026-11-12T07:01:02.5675428Z # across v0.30.0 -> v0.41.0, so a second frozen artifact bought nothing and cost
+2026-11-12T07:01:02.5676020Z # world eleven releases of drift against the language it exists to exercise.
+2026-11-12T07:01:02.5676329Z #
+2026-11-12T07:01:02.5676584Z # Pin the TAG, not `latest`: a silent bump is how a goldens mismatch or a
+2026-11-12T07:01:02.5676999Z # world-package hash break arrives without a red step naming it. Moving this pin
+2026-11-12T07:01:02.5677439Z # is a deliberate edit, and host/replay re-verifies the goldens on the new tag.
+2026-11-12T07:01:02.5677869Z # Without AILANG_BIN, host/replay's pinnedBinary and verifygate's requirePinned
+2026-11-12T07:01:02.5678265Z # t.Skip() and CI is false-green — hence the loud assert below.
+2026-11-12T07:01:02.5678662Z base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
+2026-11-12T07:01:02.5679069Z curl -fsSL -o pinned.tar.gz "$base/linux.x64.ailang.tar.gz"
+2026-11-12T07:01:02.5679451Z curl -fsSL -o pinned.tar.gz.sha256 "$base/linux.x64.ailang.tar.gz.sha256"
+2026-11-12T07:01:02.5679861Z # the published checksum names the release asset, not our local filename
+2026-11-12T07:01:02.5680262Z echo "$(cut -d' ' -f1 pinned.tar.gz.sha256)  pinned.tar.gz" | sha256sum -c -
+2026-11-12T07:01:02.5680575Z mkdir -p "$HOME/.local/bin"
+2026-11-12T07:01:02.5680845Z tar -xzf pinned.tar.gz -C "$HOME/.local/bin" ailang
+2026-11-12T07:01:02.5681344Z chmod +x "$HOME/.local/bin/ailang"
+2026-11-12T07:01:02.5681680Z # Assert the pinned version loudly so a tag drift is a red step here,
+2026-11-12T07:01:02.5682017Z # not a silent goldens mismatch downstream.
+2026-11-12T07:01:02.5682344Z # Same no-pipe form as the world-package install above. This site has
+2026-11-12T07:01:02.5682720Z # never gone red, but only by ACCIDENT OF SIZE: `--version` is 167 bytes,
+2026-11-12T07:01:02.5683093Z # which fits the 64 KiB pipe buffer, so `echo` never blocks and never
+2026-11-12T07:01:02.5683459Z # takes SIGPIPE. That is a property of the output length, not of the
+2026-11-12T07:01:02.5683826Z # shape — the shape is the same race, one verbose release away.
+2026-11-12T07:01:02.5684147Z ver="$("$HOME/.local/bin/ailang" --version)"
+2026-11-12T07:01:02.5684395Z echo "$ver"
+2026-11-12T07:01:02.5684583Z case "$ver" in
+2026-11-12T07:01:02.5684786Z   *'AILANG v0.41.0'*) ;;
+2026-11-12T07:01:02.5685044Z   *) echo "✗ AILANG_BIN is not v0.41.0" >&2; exit 1 ;;
+2026-11-12T07:01:02.5685296Z esac
+2026-11-12T07:01:02.5685528Z echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
+2026-11-12T07:01:02.5703050Z shell: /usr/bin/bash -e {0}
+2026-11-12T07:01:02.5703257Z env:
+2026-11-12T07:01:02.5703421Z   Z3_VER: 4.16.0
+2026-11-12T07:01:02.5703716Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-11-12T07:01:02.5704220Z   GOTOOLCHAIN: go1.26.6
+2026-11-12T07:01:02.5704422Z ##[endgroup]
+2026-11-12T07:01:04.2548933Z pinned.tar.gz: OK
+2026-11-12T07:01:04.8326924Z AILANG v0.41.0
+2026-11-12T07:01:04.8327391Z Commit: 24ee108
+2026-11-12T07:01:04.8327721Z Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+2026-11-12T07:01:04.8328106Z Built:  2026-09-21T15:50:02Z
+2026-11-12T07:01:04.8328302Z 
+2026-11-12T07:01:04.8328453Z The AI-First Programming Language
+2026-11-12T07:01:04.8328776Z Copyright (c) 2025-2026
+2026-11-12T07:01:04.8381384Z ##[group]Run set -euo pipefail
+2026-11-12T07:01:04.8381677Z set -euo pipefail
+2026-11-12T07:01:04.8381941Z # 9/OD-11, RATIFIED: "Yes you can install z3 on cicd".
+2026-11-12T07:01:04.8382344Z # host/verifygate's shim arms run scripts/verify_ail.sh end to end. Without a solver
+2026-11-12T07:01:04.8382791Z # `ai-check` reports verify.available=false and every contract vanishes from
+2026-11-12T07:01:04.8383234Z # verify.results[] (V20/V27), so the gate reds at leg 1 and the accept-arms could only
+2026-11-12T07:01:04.8383870Z # assert markers emitted BEFORE Z3 matters — they were green in a lane where the gate
+2026-11-12T07:01:04.8384349Z # they drive was red. Same version and sha as job 1, from the workflow-level pin above.
+2026-11-12T07:01:04.8384715Z Z3_DIR="z3-${Z3_VER}-x64-glibc-2.39"
+2026-11-12T07:01:04.8385161Z curl -fsSL -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VER}/${Z3_DIR}.zip"
+2026-11-12T07:01:04.8385558Z echo "${Z3_SHA}  z3.zip" | sha256sum -c -
+2026-11-12T07:01:04.8385804Z unzip -q z3.zip
+2026-11-12T07:01:04.8386076Z sudo install -m 0755 "${Z3_DIR}/bin/z3" /usr/local/bin/z3
+2026-11-12T07:01:04.8386345Z z3 --version
+2026-11-12T07:01:04.8405047Z shell: /usr/bin/bash -e {0}
+2026-11-12T07:01:04.8405262Z env:
+2026-11-12T07:01:04.8405431Z   Z3_VER: 4.16.0
+2026-11-12T07:01:04.8405696Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-11-12T07:01:04.8406014Z   GOTOOLCHAIN: go1.26.6
+2026-11-12T07:01:04.8406239Z   AILANG_BIN: /home/runner/.local/bin/ailang
+2026-11-12T07:01:04.8406480Z ##[endgroup]
+2026-11-12T07:01:05.3146918Z z3.zip: OK
+2026-11-12T07:01:06.2716715Z Z3 version 4.16.0 - 64 bit
+2026-11-12T07:01:06.2753307Z ##[group]Run ./scripts/verify_go.sh
+2026-11-12T07:01:06.2753579Z ./scripts/verify_go.sh
+2026-11-12T07:01:06.2771723Z shell: /usr/bin/bash -e {0}
+2026-11-12T07:01:06.2771934Z env:
+2026-11-12T07:01:06.2772096Z   Z3_VER: 4.16.0
+2026-11-12T07:01:06.2772365Z   Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+2026-11-12T07:01:06.2772682Z   GOTOOLCHAIN: go1.26.6
+2026-11-12T07:01:06.2772893Z   AILANG_BIN: /home/runner/.local/bin/ailang
+2026-11-12T07:01:06.2773126Z   VERIFY_GO_LEGS: race
+2026-11-12T07:01:06.2773320Z   VERIFY_GO_RACE_TIMEOUT_S: 1500
+2026-11-12T07:01:06.2773528Z ##[endgroup]
+2026-11-12T07:01:06.3062578Z ── AILANG_BIN=/home/runner/.local/bin/ailang (AILANG v0.41.0
+2026-11-12T07:01:06.3063117Z Commit: 24ee108
+2026-11-12T07:01:06.3063522Z Full:   24ee1088776e21cd06a3781ed18e77f40be06db3
+2026-11-12T07:01:06.3063914Z Built:  2026-09-21T15:50:02Z
+2026-11-12T07:01:06.3064056Z 
+2026-11-12T07:01:06.3064157Z The AI-First Programming Language
+2026-11-12T07:01:06.3064457Z Copyright (c) 2025-2026)
+2026-11-12T07:01:06.3064731Z ── legs: race (race bound 1500s)
+2026-11-12T07:01:06.3064984Z ── tracked-binary hygiene gate
+2026-11-12T07:01:06.3691138Z ok 01-valid-png-in-dir
+2026-11-12T07:01:06.4266899Z ok 02-valid-png-outside-dir (not-allowlisted)
+2026-11-12T07:01:06.4855592Z ok 03-renamed-binary (bad-signature)
+2026-11-12T07:01:06.5454022Z ok 04-polyglot-after-iend (trailing-bytes)
+2026-11-12T07:01:06.6042755Z ok 05-text-chunk (chunk-not-allowed:tEXt)
+2026-11-12T07:01:06.6636349Z ok 06-corrupt-idat (bad-crc)
+2026-11-12T07:01:06.7981479Z ok 07-over-file-cap (file-cap-exceeded)
+2026-11-12T07:01:07.5599887Z ok 08-over-dir-cap (dir-cap-exceeded)
+2026-11-12T07:01:07.6192650Z ok 09-gitattributes-in-dir (bad-signature)
+2026-11-12T07:01:07.6778539Z ok 10-gitattributes-tree-wide (not-allowlisted)
+2026-11-12T07:01:07.7173985Z ok 11-empty-tree (enumerated 0 blobs)
+2026-11-12T07:01:07.7759618Z ok 12-nul-past-8000-bytes (not-allowlisted)
+2026-11-12T07:01:07.9186339Z ok 13-row150-deliverable-names
+2026-11-12T07:01:07.9927840Z ok 14-bad-name-and-subdir (not-allowlisted)
+2026-11-12T07:01:08.0505239Z ok 15-no-allowance-no-images (not-allowlisted)
+2026-11-12T07:01:08.2308315Z ok 16-pinned-font-in-dir
+2026-11-12T07:01:08.3038153Z ok 17-renamed-binary-pinned (bad-signature)
+2026-11-12T07:01:08.3619524Z ok 18-unpinned-font (not-allowlisted)
+2026-11-12T07:01:08.4204430Z ok 19-pinned-name-other-bytes (sha256-mismatch)
+2026-11-12T07:01:08.4987367Z ok 20-font-over-file-cap (file-cap-exceeded)
+2026-11-12T07:01:08.5559588Z ok 21-font-outside-dir (not-allowlisted)
+2026-11-12T07:01:08.6145302Z ok 22-font-in-subdirectory (not-allowlisted)
+2026-11-12T07:01:08.7263704Z ok 23-font-dir-cap (dir-cap-exceeded)
+2026-11-12T07:01:08.8009985Z ok 24-png-and-font-together
+2026-11-12T07:01:08.8011632Z test_tracked_binary_gate: 24 passed, 0 failed
+2026-11-12T07:01:09.2242723Z    ✓ 3 pinned font(s) validated, 1017220 bytes (host/surfacepage/fonts/)
+2026-11-12T07:01:09.2243360Z    ✓ 0 other binary blobs among 6807 tracked files
+2026-11-12T07:01:09.2396841Z ── World mission-input gate (decision ledger)
+2026-11-12T07:01:09.2547727Z decision ledger valid: 101 rows
+2026-11-12T07:01:09.2552713Z    World decision-ledger validated; centralized runtime currency is NOT certified here.
+2026-11-12T07:01:09.2638895Z    ✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6
+2026-11-12T07:01:09.2639496Z ── race-detector known-positive control
+2026-11-12T07:01:09.2661813Z go version go1.26.6 linux/amd64
+2026-11-12T07:01:16.1394498Z ==================
+2026-11-12T07:01:16.1394845Z WARNING: DATA RACE
+2026-11-12T07:01:16.1395138Z Read at 0x00c00012e038 by goroutine 9:
+2026-11-12T07:01:16.1395502Z   main.main.func1()
+2026-11-12T07:01:16.1396400Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0x99
+2026-11-12T07:01:16.1396825Z 
+2026-11-12T07:01:16.1396955Z Previous write at 0x00c00012e038 by goroutine 7:
+2026-11-12T07:01:16.1397206Z   main.main.func1()
+2026-11-12T07:01:16.1398085Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0xab
+2026-11-12T07:01:16.1398468Z 
+2026-11-12T07:01:16.1398577Z Goroutine 9 (running) created at:
+2026-11-12T07:01:16.1398800Z   main.main()
+2026-11-12T07:01:16.1399412Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x7d
+2026-11-12T07:01:16.1417621Z 
+2026-11-12T07:01:16.1417821Z Goroutine 7 (finished) created at:
+2026-11-12T07:01:16.1418140Z   main.main()
+2026-11-12T07:01:16.1418954Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x7d
+2026-11-12T07:01:16.1419447Z ==================
+2026-11-12T07:01:16.1419696Z ==================
+2026-11-12T07:01:16.1419861Z WARNING: DATA RACE
+2026-11-12T07:01:16.1420052Z Write at 0x00c00012e038 by goroutine 9:
+2026-11-12T07:01:16.1420355Z   main.main.func1()
+2026-11-12T07:01:16.1420928Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0xab
+2026-11-12T07:01:16.1422778Z 
+2026-11-12T07:01:16.1422950Z Previous write at 0x00c00012e038 by goroutine 7:
+2026-11-12T07:01:16.1423248Z   main.main.func1()
+2026-11-12T07:01:16.1423886Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:16 +0xab
+2026-11-12T07:01:16.1424427Z 
+2026-11-12T07:01:16.1424596Z Goroutine 9 (running) created at:
+2026-11-12T07:01:16.1424831Z   main.main()
+2026-11-12T07:01:16.1425452Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x7d
+2026-11-12T07:01:16.1425916Z 
+2026-11-12T07:01:16.1426005Z Goroutine 7 (finished) created at:
+2026-11-12T07:01:16.1426330Z   main.main()
+2026-11-12T07:01:16.1426877Z       /home/runner/work/ailang-world/ailang-world/design_docs/verification/w-race-gate-blindspot/racecontrol/main.go:13 +0x7d
+2026-11-12T07:01:16.1427485Z ==================
+2026-11-12T07:01:16.1427742Z control finished, shared = 37902
+2026-11-12T07:01:16.1428025Z Found 2 data race(s)
+2026-11-12T07:01:16.1428206Z exit status 66
+2026-11-12T07:01:16.1428665Z ── go build ./...
+2026-11-12T07:01:16.1438503Z go version go1.26.6 linux/amd64
+2026-11-12T07:01:16.2780949Z go: downloading golang.org/x/text v0.42.0
+2026-11-12T07:01:16.2861365Z go: downloading github.com/sunholo-data/ailang v0.47.2
+2026-11-12T07:01:16.6991636Z go: downloading modernc.org/sqlite v1.54.0
+2026-11-12T07:01:17.9754633Z go: downloading golang.org/x/sys v0.48.0
+2026-11-12T07:01:18.1252970Z go: downloading modernc.org/libc v1.74.1
+2026-11-12T07:01:19.3892311Z go: downloading github.com/dustin/go-humanize v1.0.1
+2026-11-12T07:01:19.4073597Z go: downloading github.com/google/uuid v1.6.0
+2026-11-12T07:01:19.4263130Z go: downloading modernc.org/mathutil v1.7.1
+2026-11-12T07:01:19.4500323Z go: downloading modernc.org/memory v1.11.0
+2026-11-12T07:01:19.4720921Z go: downloading github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec
+2026-11-12T07:01:47.0329242Z ── go test ./... -count=1 -race -timeout 8m (leg bound 1500s)
+2026-11-12T07:01:47.0356132Z go version go1.26.6 linux/amd64
+2026-11-12T07:06:44.7012363Z ok  	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	248.976s
+2026-11-12T07:06:44.7031699Z ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	48.170s
+2026-11-12T07:06:44.7034741Z ok  	github.com/sunholo-data/ailang-world/host/agentrun	15.505s
+2026-11-12T07:06:44.7035748Z ok  	github.com/sunholo-data/ailang-world/host/agui	7.988s
+2026-11-12T07:06:44.7038572Z ok  	github.com/sunholo-data/ailang-world/host/approval	1.401s
+2026-11-12T07:06:44.7039751Z ok  	github.com/sunholo-data/ailang-world/host/approval/approvaltest	1.156s
+2026-11-12T07:06:44.7040794Z ok  	github.com/sunholo-data/ailang-world/host/archive	5.132s
+2026-11-12T07:06:44.7041805Z ok  	github.com/sunholo-data/ailang-world/host/authority	6.435s
+2026-11-12T07:06:44.7043242Z ok  	github.com/sunholo-data/ailang-world/host/boundary	5.374s
+2026-11-12T07:08:12.5939728Z ok  	github.com/sunholo-data/ailang-world/host/broker	315.515s
+2026-11-12T07:08:12.5943644Z ok  	github.com/sunholo-data/ailang-world/host/canon	1.018s
+2026-11-12T07:08:12.5944418Z ok  	github.com/sunholo-data/ailang-world/host/capsule	36.597s
+2026-11-12T07:08:12.5945066Z ok  	github.com/sunholo-data/ailang-world/host/checkrun	1.568s
+2026-11-12T07:08:12.5945726Z ok  	github.com/sunholo-data/ailang-world/host/childenv	1.012s
+2026-11-12T07:08:12.5946528Z ok  	github.com/sunholo-data/ailang-world/host/coordinator	134.747s
+2026-11-12T07:10:46.1913819Z ailang-worldd: internal error: POST /agui/: failure
+2026-11-12T07:10:46.1914635Z ailang-worldd: a2a refusal: tasks/send -: "projection: invocation coordinator is unavailable"
+2026-11-12T07:10:46.1915494Z ailang-worldd: a2a refusal: tasks/send -: "projection: invocation coordinator is unavailable"
+2026-11-12T07:10:46.1916520Z ailang-worldd: exec cache for episode "ep1" (proj): seeding at bind failed: seed-cache: GOCACHE: the copy exited 1 (attempt 1 of 3)
+2026-11-12T07:10:46.1917398Z ailang-worldd: exec cache for episode "ep1" (proj): GOCACHE seeded at bind in 0.00s
+2026-11-12T07:10:46.1918051Z ailang-worldd: exec cache for episode "ep1" (proj): GOCACHE seeded at bind in 0.01s
+2026-11-12T07:10:46.1918730Z ailang-worldd: exec cache for episode "ep3" (proj): GOCACHE seeded at bind in 0.01s
+2026-11-12T07:10:46.1919420Z ailang-worldd: exec cache for episode "ep2" (proj): GOCACHE seeded at bind in 0.02s
+2026-11-12T07:10:46.1920116Z ailang-worldd: exec cache for episode "ep4" (proj): GOCACHE seeded at bind in 0.01s
+2026-11-12T07:10:46.1920807Z ailang-worldd: exec cache for episode "ep5" (proj): GOCACHE seeded at bind in 0.00s
+2026-11-12T07:10:46.1921635Z ailang-worldd: exec cache for episode "ep6" (proj): GOCACHE seeded at bind in 0.01s
+2026-11-12T07:10:46.1922321Z ailang-worldd: exec cache for episode "ep7" (proj): GOCACHE seeded at bind in 0.01s
+2026-11-12T07:10:46.1923032Z ailang-worldd: exec cache for episode "ep8" (proj): GOCACHE seeded at bind in 0.00s
+2026-11-12T07:10:46.1923802Z ailang-worldd: internal error: GET /v1/head: store: read selected head: sql: database is closed
+2026-11-12T07:10:46.1924482Z --- FAIL: TestMCPPostBudgetProductionConstants (36.19s)
+2026-11-12T07:10:46.1925152Z     --- FAIL: TestMCPPostBudgetProductionConstants/batch (15.14s)
+2026-11-12T07:10:46.1926058Z         mcp_budget_test.go:208: timed callback did not return within finite teardown
+2026-11-12T07:10:46.1926782Z ailang-worldd: internal error: GET /v1/objects/by-semantic-id/x: host-secret-detail
+2026-11-12T07:10:46.1927506Z ailang-worldd: internal error: GET /workbench: private commit read detail
+2026-11-12T07:10:46.1928139Z ailang-worldd: internal error: GET /workbench: private table detail
+2026-11-12T07:10:46.1929083Z ailang-worldd: internal error: GET /workbench: SECRET approval I/O
+2026-11-12T07:10:46.1930172Z ailang-worldd: internal error: GET /workbench: store: open "/private/var/folders/kQ7v-store-detail-9f3c1d82/world.db": disk I/O error
+2026-11-12T07:10:46.1931531Z ailang-worldd: internal error: GET /workbench: store: open "/private/var/folders/kQ7v-store-detail-9f3c1d82/world.db": disk I/O error
+2026-11-12T07:10:46.1932412Z ailang-worldd: internal error: GET /workbench: SECRET latest read detail
+2026-11-12T07:10:46.1933136Z ailang-worldd: internal error: GET /workbench: SECRET latest read detail
+2026-11-12T07:10:46.1933767Z ailang-worldd: internal error: GET /workbench: reference source relation mismatch
+2026-11-12T07:10:46.1934172Z FAIL
+2026-11-12T07:10:46.1934500Z FAIL	github.com/sunholo-data/ailang-world/host/daemon	430.883s
+2026-11-12T07:10:46.1935035Z ok  	github.com/sunholo-data/ailang-world/host/evidence	78.654s
+2026-11-12T07:10:46.1935577Z ok  	github.com/sunholo-data/ailang-world/host/hashref	1.017s
+2026-11-12T07:10:46.1936157Z ok  	github.com/sunholo-data/ailang-world/host/pinfetch	1.425s
+2026-11-12T07:10:46.1936664Z ok  	github.com/sunholo-data/ailang-world/host/pins	1.599s
+2026-11-12T07:10:46.1937316Z ok  	github.com/sunholo-data/ailang-world/host/pkgproj	13.025s
+2026-11-12T07:10:46.1937837Z ?   	github.com/sunholo-data/ailang-world/host/plugindoc	[no test files]
+2026-11-12T07:10:46.1938381Z ok  	github.com/sunholo-data/ailang-world/host/procbound	1.076s
+2026-11-12T07:10:46.1938916Z ok  	github.com/sunholo-data/ailang-world/host/proctest	1.014s
+2026-11-12T07:10:46.1939496Z ok  	github.com/sunholo-data/ailang-world/host/projection	21.261s
+2026-11-12T07:10:46.1940068Z ok  	github.com/sunholo-data/ailang-world/host/ptytest	1.043s
+2026-11-12T07:10:46.1940593Z ok  	github.com/sunholo-data/ailang-world/host/registry	1.481s
+2026-11-12T07:10:46.1941498Z ok  	github.com/sunholo-data/ailang-world/host/replay	18.617s
+2026-11-12T07:10:46.1942043Z ok  	github.com/sunholo-data/ailang-world/host/runbook	1.835s
+2026-11-12T07:10:46.1942479Z ok  	github.com/sunholo-data/ailang-world/host/sshsign	1.030s
+2026-11-12T07:10:46.1942979Z ok  	github.com/sunholo-data/ailang-world/host/store	65.470s
+2026-11-12T07:10:46.1943417Z ok  	github.com/sunholo-data/ailang-world/host/surface	2.938s
+2026-11-12T07:10:46.1943895Z ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	3.054s
+2026-11-12T07:10:46.1944452Z ok  	github.com/sunholo-data/ailang-world/host/surfacepage	3.999s
+2026-11-12T07:10:46.1945060Z ?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+2026-11-12T07:10:46.1945675Z ok  	github.com/sunholo-data/ailang-world/host/transitionreg	6.336s
+2026-11-12T07:13:54.0563592Z ok  	github.com/sunholo-data/ailang-world/host/verifygate	372.729s
+2026-11-12T07:13:54.0564165Z ok  	github.com/sunholo-data/ailang-world/host/workbench	1.608s
+2026-11-12T07:13:54.0564531Z ok  	github.com/sunholo-data/ailang-world/host/worktree	1.777s
+2026-11-12T07:13:54.0564915Z ok  	github.com/sunholo-data/ailang-world/scripts/marketingcheck	151.608s
+2026-11-12T07:13:54.0565276Z FAIL
+2026-11-12T07:13:54.3329161Z ##[error]Process completed with exit code 1.
+2026-11-12T07:13:54.3448206Z Post job cleanup.
+2026-11-12T07:13:54.4194987Z [command]/usr/bin/git version
+2026-11-12T07:13:54.4233296Z git version 2.56.0
+2026-11-12T07:13:54.4264503Z Temporarily overriding HOME='/home/runner/work/_temp/10c9efcf-59cf-48d4-b923-ef7ec344a637' before making global git config changes
+2026-11-12T07:13:54.4265549Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-12T07:13:54.4268697Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ailang-world/ailang-world
+2026-11-12T07:13:54.4305814Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-12T07:13:54.4338152Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-12T07:13:54.4582890Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-12T07:13:54.4607537Z http.https://github.com/.extraheader
+2026-11-12T07:13:54.4617021Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-12T07:13:54.4650740Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-12T07:13:54.4888568Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-12T07:13:54.4927728Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-12T07:13:54.5958512Z Cleaning up orphan processes
+2026-11-12T07:13:54.6315332Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-go@v5. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

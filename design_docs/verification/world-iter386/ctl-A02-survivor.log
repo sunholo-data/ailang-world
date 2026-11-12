@@ -1,0 +1,4 @@
+=== RUN   TestSurfaceAppPure
+--- PASS: TestSurfaceAppPure (0.08s)
+PASS
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	0.357s
