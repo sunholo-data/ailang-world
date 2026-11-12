@@ -9,6 +9,7 @@
 //	ailang-worldd serve --db <path> [--bind 127.0.0.1:7644] [--ailang-bin <path>]
 //	                    [--workspace-root <dir> --tool-ailang-bin <path>]
 //	                    [--examples-dir <dir>] [--surface-index <file>] [--surface-follow <file>]
+//	                    [--surface-origin https://<host>.ts.net ...]
 //	                    [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
 //	                    [--workspace-package-cache <dir>]
 //	                    [--run-allow-caps Env,Net,Declassify]
@@ -63,6 +64,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 )
@@ -85,6 +87,7 @@ Usage:
                       [--workbench-still]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
                       [--examples-dir <dir>] [--surface-index <file>] [--surface-follow <file>]
+                      [--surface-origin https://<host>.ts.net ...]
                       [--workspace-module-root REL] [--workspace-episode-module-root EP=REL ...]
                       [--workspace-package-cache <dir>]
                       [--run-allow-caps Env,Net,Declassify]
@@ -282,6 +285,12 @@ serve flags:
                        world:episode:<ep>); the page re-reads
                        /surface/model.json every 15 s while visible and each
                        repo's line says when its local branch was last checked
+  --surface-origin <origin>
+                       an origin the approval routes also answer at, beside
+                       loopback and the enrolled passkeys' origins: exactly
+                       https://<host>.ts.net[:port] or http(s)://localhost[:port]
+                       (repeatable; serve refuses any other). An operator who
+                       approves with SSH through tailscale serve needs it
   --proof-key-file <file>
                        a file holding exactly 32 bytes: the MAC key the
                        workbench grade validator authenticates stored proof
@@ -520,6 +529,14 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	examplesDir := fs.String("examples-dir", "", "AILANG examples corpus for examples-search (default ~/.ailang/examples when it exists)")
 	surfaceIndex := fs.String("surface-index", "", "generated surface index outside --workspace-root (optional; may be built later)")
 	surfaceFollow := fs.String("surface-follow", "", "follow config outside --workspace-root; mutually exclusive with --surface-index")
+	var surfaceOrigins []string
+	fs.Func("surface-origin", "an origin the approval routes also answer at, https://<host>.ts.net[:port] (repeatable)", func(v string) error {
+		if _, err := approval.ParseCeremonyOrigin(v); err != nil {
+			return err
+		}
+		surfaceOrigins = append(surfaceOrigins, v)
+		return nil
+	})
 	var moduleRoot string
 	var episodeModuleRoots []string
 	fs.Func("workspace-module-root", "REL under each episode worktree that is the AILANG sandbox and module root (default .)", func(v string) error {
@@ -613,8 +630,9 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	cfg := daemon.Config{DBPath: *dbPath, CredentialsPath: *credsDB, BindHost: host, BindPort: port, AilangBin: *ailangBin,
 		WorkbenchStill: *workbenchStill,
 		WorkspaceRoot:  *workspaceRoot, ToolAilangBin: *toolAilangBin, SurfaceIndex: *surfaceIndex, SurfaceFollow: *surfaceFollow,
-		ExamplesDir:  resolveExamplesDefault(*examplesDir, os.UserHomeDir),
-		RunAllowCaps: runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP,
+		SurfaceOrigins: surfaceOrigins,
+		ExamplesDir:    resolveExamplesDefault(*examplesDir, os.UserHomeDir),
+		RunAllowCaps:   runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP,
 		ExecProfiles: execProfiles, ExecProfilesDir: resolveProfilesDirDefault(*execProfilesDir, execProfiles, *execSandbox),
 		ExecEpisodeProjects: execEpisodeProjects, ExecSandbox: *execSandbox,
 		ExecNode: *execNode, ExecMaxOutputBytes: execMaxOutput,

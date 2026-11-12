@@ -258,6 +258,10 @@ type Config struct {
 	SurfaceIndex string
 	// SurfaceFollow enrolls read-only sources; mutually exclusive with SurfaceIndex.
 	SurfaceFollow string
+	// SurfaceOrigins (`--surface-origin`, repeatable; row 201 A3) are the origins, beside
+	// loopback and the enrolled passkeys' origins, at which the approval routes answer and accept
+	// a POST (design §2.3 [r1]). Each is A2's ceremony origin; startup refuses any other.
+	SurfaceOrigins []string
 	// RunAllowCaps, RunNetAllow and RunNetAllowHTTP (`--run-allow-caps`,
 	// `--run-net-allow`, `--run-net-allow-http`; row 135 §4.3/§4.6) are the
 	// operator's ailang-run allowlist: the extra capabilities (Declassify,
@@ -709,6 +713,11 @@ func newDaemon(ctx, phaseParent context.Context, registryBudget time.Duration, c
 	_ = CurrentBuild()
 	if cfg.SurfaceIndex != "" && cfg.SurfaceFollow != "" {
 		return nil, &StartupError{Stage: StageConfig, Detail: "surface follow refused: --surface-follow and --surface-index are mutually exclusive; next: ailang-worldd serve --help"}
+	}
+	for _, origin := range cfg.SurfaceOrigins {
+		if err := checkSurfaceOrigin(origin); err != nil {
+			return nil, &StartupError{Stage: StageConfig, Detail: err.Error() + "; next: ailang-worldd serve --help"}
+		}
 	}
 	if !isLoopbackHost(cfg.BindHost) {
 		return nil, &StartupError{
