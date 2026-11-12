@@ -1,6 +1,11 @@
 # w-world-approvals-by-key-a4: decide a `Human.Approve` decision packet with an enrolled key
 
-- **Status**: Planned. Designed in iteration 388, **r0**. Queue row 201, `w-world-approvals-by-key`,
+- **Status**: Planned. Designed in iteration 388, **r1**. r0 was **BLOCKED** at quorum round 1
+  (2/2 present; §15). r1 applies both reviewers' fixes and nothing else; changed text is marked
+  **[r1]**: (1) D4 now requires a **complete** request-wide packet discovery (§2.4, §2.5 D4a/D4b,
+  RD9b–RD9d); (2) the `key_decisions` DDL is tightened verbatim and a crashed, unlanded key decision
+  is retried **idempotently with its exact artifact**, which also closes the counter-0 replay
+  (§2.7, KD5–KD8, RD13). Queue row 201, `w-world-approvals-by-key`,
   parent milestone **A4**. Parent: [`w-world-approvals-by-key.md`](w-world-approvals-by-key.md)
   (attended; its rulings are not reopened). Built siblings, settled and not reopened:
   [`-a0a1`](w-world-approvals-by-key-a0a1.md) (the mint request object, digest, challenge, expiry,
@@ -29,7 +34,7 @@
   approvals head, with `decidedBy` derived from what verified (`ssh:<name>`, `webauthn:<name>`,
   `operator:terminal`). It changes no `.ail` code.
 - **Designer lane**: `claude:claude-opus-5-5`.
-- **Estimated**: **3 sprints, about 4,800 changed lines** (§9): sprint 1 ≈ 1,700, sprint 2 ≈ 1,600,
+- **Estimated**: **3 sprints, about 5,250 changed lines** (§9): sprint 1 ≈ 1,950 **[r1]** (+≈ 250 for the complete discovery, DS1, DL4a/b, RD9b–RD9d), sprint 2 ≈ 1,800 **[r1]** (+≈ 200 for K0, KD5–KD8, RD13),
   sprint 3 ≈ 1,500. Calibration (V31): A3a's four sprints measured 1,543, 1,995, 1,861 and 393
   changed lines outside `design_docs/` against plans of 1,650, 1,900 and 1,950 (≈ 1.05×).
 - **Measurement base**: `b0fbcd3eee7b5b29190e678e296635a3dd3a0d0c` (PR #561's merge), worktree
@@ -320,6 +325,28 @@ SSHSIG namespace    = "world-decision@sunholo"         -- DecisionNamespace
   not carried by **exactly one** validated packet: "request <ref> is carried by N decision packets;
   deciding it would decide all of them; it cannot be decided here". (One decision on the chain
   would answer every invocation that shares the request; A4 refuses rather than guess.)
+- **[r1] "Exactly one" needs a complete count (gpt6-1-sol's fix).** There is no request index for
+  packets: they list only by `ObjectsBySemanticID`, ordered by `hash_ref`, and `ValidatePacket`'s
+  own pair-unique scan stops at `packetScanLimit = 100` and still returns code 0 with
+  `UniqueTruncated` set (`decisionpacket_validate.go:34`, `:190-215`, V33). So a second packet
+  carrying the request can sort outside any bounded prefix. A4 therefore does **not** reuse that
+  scan or the listing's view. Under `humanMu`, the decide handler runs its own **discovery**:
+  keyset pages of `ObjectsBySemanticID(DecisionPacketV1, after, 500)` (the store's
+  `MaxSemanticIDPage`, a unique total order on the primary key, V34), following the cursor, each
+  packet read with `GetObject` and decoded, up to `decisionDiscoveryLimit = 2000` packets **plus one
+  sentinel read**. It yields `Discovery{Complete, Scanned, Carrying, Undecodable}`:
+  - `Complete` is true **only** when the cursor ran out (a page shorter than its limit) before the
+    sentinel; reaching the sentinel means the set is not established;
+  - `Carrying` counts every decoded packet whose `requestRef == Q`, whatever its validity;
+  - `Undecodable` counts packets that did not decode (a packet that cannot be read cannot be shown
+    not to carry `Q`).
+  Packet discovery must establish a complete request-wide candidate set. If the bounded global scan
+  reaches its overflow sentinel, or `Undecodable > 0`, the law refuses with 409 (D4a); it never
+  treats one visible match as exactly one match. Then `Carrying` must be exactly 1 and that packet
+  must validate with code 0 (D4b). **Listing truncation warnings do not authorize decisions**: the
+  `requests.json` `decisions` view (§2.8) is display only, and the POST always re-discovers.
+  The cost is at most 2,001 envelope rows and 2,000 payload reads per decide POST, all under the
+  read deadline (RK3b names the cap).
 - **The row-176 residual.** A `Human.Approve` that lost its commit leaves a request and a pending
   head with **no** committed packet. Such a request has zero validated packets, so the law refuses
   it ("no committed decision packet carries request <ref>"). *Needs you* never lists it (§2.8).
@@ -337,7 +364,8 @@ first failure winning. Each refusal has its own mutant (§6).
 | D1 | `{ref}` is not `sha256:` + 64 lowercase hex | not a request ref | 400 |
 | D2 | the object is absent, not `world/approval-request/v1`, does not decode strictly, or its `effect` ≠ `Human.Approve` | no such approval request | 404 |
 | D3 | it is not on the approvals chain (`findApprovalRequest`) | not an approval request of this world | 404 |
-| D4 | its validated packets ≠ exactly 1 (0: row-176 residual; ≥ 2: §2.4; a code-5 bound names "not established") | the packet sentence | 409 |
+| D4a **[r1]** | the discovery is not complete: the scan reached its overflow sentinel (`!Complete`), or `Undecodable > 0` (§2.4) | "the decision packets carrying request <ref> cannot be counted completely (more than 2000 stored packets, or one that does not decode); it cannot be decided here" | 409 |
+| D4b | `Carrying ≠ 1` (0: row-176 residual; ≥ 2: §2.4), or the one carrying packet's `ValidatePacket` code ≠ 0 (its sentence; a code-5 bound names "not established") | the count, or the packet sentence | 409 |
 | D5 | **reserved scope** (§2.6): publish-shaped or finish-shaped | "publish approvals are minted by `world-publish approve` at a terminal (R4)" / "finish approvals are made by `ailang-worldd episode finish`" | 403 |
 | D6 | already decided | "request <ref> was already decided <verb> by <decidedBy>" | 409 |
 | D7 | `now ≥ packet.deadlineAt` | "the packet's deadline passed at <t>; its policy is Cancel" | 409 |
@@ -362,8 +390,11 @@ constant `operator:terminal` to `broker.DecideApproval`.
 
 **Pure-core form.** `DecisionRefusal(f DecisionFacts) (code int, reason string)` where
 `DecisionFacts` holds booleans and values the daemon read (ref grammar, request decoded, on chain,
-packet count and validator code, scope class, decided-by, now, deadline, posted digests, verb,
-expiry). The format arm runs after it in the daemon. The law has no IO and no clock.
+**[r1]** the discovery result `Discovery{Complete bool, Scanned, Carrying, Undecodable int}` and
+the carrying packet's validator code, scope class, decided-by, now, deadline, posted digests, verb,
+expiry). The format arm runs after it in the daemon. The law has no IO and no clock. **[r1]** D4a is
+evaluated from `Discovery` alone, before D4b reads `Carrying`, so no count from an incomplete scan
+reaches D4b.
 
 ### 2.6 R4: publishing stays typed-only, by construction (two layers)
 
@@ -415,16 +446,18 @@ be a publish stamp. Two layers stop that.
   -- kept beside the approvers; the authority is the world store's decision, never this row.
   CREATE TABLE key_decisions (
       request_ref   TEXT PRIMARY KEY CHECK (length(request_ref) = 71 AND request_ref GLOB 'sha256:*'),
-      packet_ref    TEXT NOT NULL CHECK (length(packet_ref) = 71),
+      packet_ref    TEXT NOT NULL CHECK (length(packet_ref) = 71 AND packet_ref GLOB 'sha256:*'),
       verb          TEXT NOT NULL CHECK (verb IN ('approve', 'deny')),
       format        TEXT NOT NULL CHECK (format IN ('ssh', 'webauthn')),
       approver      TEXT NOT NULL CHECK (approver <> ''),
       artifact      BLOB NOT NULL CHECK (length(artifact) BETWEEN 1 AND 16384),
       expiry        INTEGER NOT NULL,
       decided_at    INTEGER NOT NULL,
-      decision_ref  TEXT          -- NULL until the world decision landed
+      decision_ref  TEXT CHECK (decision_ref IS NULL OR (length(decision_ref) = 71 AND decision_ref GLOB 'sha256:*'))
+                                  -- NULL until the world decision landed
   )
   ```
+  **[r1]** Both `packet_ref` and `decision_ref` CHECKs are gemini-4-argon's text, verbatim (KD5, KD6).
   `RecordKeyDecision(ctx, row, signed, now)`, one transaction: K1 deadline, below v8 →
   `OlderCredentialsStoreError{Feature: "key decisions", Need: 8}`; K2 grammar; K3+K4 the mint
   consume's own in-transaction helpers, **reused unchanged**: `useApprover` (the approver still
@@ -437,10 +470,35 @@ be a publish stamp. Two layers stop that.
   decisionRef)` sets `decision_ref`.
 - **Order inside the handler (under `humanMu`).** law D1–D10 → judge (read-only) → writer open
   (non-waiting; busy → 503 `Busy`, `Retry-After: 1`) → `RecordKeyDecision` → `broker.DecideApproval`
-  → `LandKeyDecision` → close. A crash after the record and before the decision leaves an unlanded
-  row and an undecided request: a fresh signature replaces it (K5). A crash after the decision and
-  before the land leaves `decision_ref` NULL: the chain is the authority, so *Decided* still shows
-  it, and `approve --list --decided` marks the evidence "not linked". No path decides twice (D6).
+  → `LandKeyDecision` → close. A crash after the decision and before the land leaves `decision_ref`
+  NULL: the chain is the authority, so *Decided* still shows it, and `approve --list --decided`
+  marks the evidence "not linked". No path decides twice (D6).
+- **[r1] A crash, or a failed world write, between `RecordKeyDecision` and `DecideApproval`
+  (gemini-4-argon's objection; the reviewer's second option, chosen).** The unlanded row (`decision_ref
+  IS NULL`) has already moved the counter, so a retry with the same hardware-counter assertion would
+  fail `usePasskey` (stored `N`, assertion `N`: `sign_count < ?` is false; V32). r1 makes the retry
+  **idempotent on the exact artifact**:
+  - **K0 (new, inside the handler, before K3/K4).** Read the request's `key_decisions` row on the
+    writer handle. If it exists with `decision_ref IS NULL` **and** its `artifact` is byte-equal to
+    the POSTed artifact **and** its `verb`, `packet_ref`, `expiry`, `format` and `approver` equal the
+    ones the judge just verified for this POST, then **skip `useApprover`/`usePasskey`** and go
+    straight to `broker.DecideApproval` + `LandKeyDecision`. The law D1–D10 and the judge still run
+    first, in full, on every retry: the signature is verified again, the approver must still be
+    active (the read-only judge's P4), and D6 still refuses if the decision already landed.
+  - **Otherwise** (no row, or a different artifact) the record path runs as above: K3/K4 move the
+    counter, and K5 replaces an unlanded row only through that path. So a **fresh** assertion
+    (counter `N+1`) also lands, by replacement; a different artifact can never skip the counter.
+  - **The counter-0 replay, measured.** `usePasskey`'s SQL is `… AND (sign_count < ? OR (sign_count
+    = 0 AND ? = 0))` (`passkeys.go:226`), and the A2 law refuses only `(ad.SignCount != 0 ||
+    p.SignCount != 0) && ad.SignCount <= p.SignCount` (`passkey_assert.go`, W15; V32). So for an
+    authenticator that always reports 0 (stored 0, assertion 0), **the counter accepts the same
+    assertion twice**. What refuses a second *use*: (1) once landed, D6 on the world chain refuses
+    any decision of that request, before the judge, under `humanMu` (BR1, RD8); (2) while unlanded,
+    the same artifact takes K0's idempotent path, which lands the **one** decision that artifact
+    signs and writes no second row (the request is the primary key); (3) the artifact signs one
+    `(verb, P, Q, expiry)`, so it cannot decide another request or the other verb (DM5, DM6). A
+    counter-0 assertion therefore lands at most one decision, ever; the counter adds nothing for such
+    authenticators, as on the mint path (A2 §2.9). KD8 and RD13 test it.
 - **Writer sites.** This is the daemon's second `store.OpenCredentials(` (beside A3a's, V14);
   `TestDaemonCredentialWriterSites` is edited to pin exactly these two. The writer is never held
   across anything but the two credentials transactions and one world-store write.
@@ -487,7 +545,9 @@ Then, under `humanMu`, the law (§2.5) and the arm; success → 200 `{"v":1,"dec
 per read, `packetScanLimit`), as `{request, packet, effect, scope, cost, requester, deadline,
 reserved, refusal}`. A pending request with zero packets is omitted (row-176 residual, §2.4); with
 two, it is listed with its refusal. `"decisionsTruncated": true` when either bound was hit, and
-*Needs you* says so. `pending`/`decided` (mint requests) are unchanged.
+*Needs you* says so. `pending`/`decided` (mint requests) are unchanged. **[r1]** This listing is
+display only: a request it shows with one packet may still be refused by the POST's complete
+discovery (D4a/D4b, §2.4), and the card shows that refusal.
 
 **`GET /surface/decide/{ref}` + `GET /surface/decide.js`** (sprint 3): the decision card, static
 embedded bytes under the unchanged `surfaceCSP`, `approvalRoute`. The script:
@@ -553,10 +613,11 @@ shape: `sha256:` + 64 hex selects the **decision mode**, in `cmd/ailang-worldd/a
 | Piece | Where | Pure? | Tested by |
 |---|---|---|---|
 | the decision message, its hash, the namespace, the SSHSIG/assertion laws, `SignedDecision` | `host/approval/decision.go` | yes (stdlib only, A2 §3 S2) | DM1–DM8 |
-| the decision law `DecisionRefusal`, `ReservedApprovalScope` | `host/broker/decision_law.go` | yes | DL1–DL12, R4a |
+| the decision law `DecisionRefusal`, `ReservedApprovalScope` | `host/broker/decision_law.go` | yes | DL1–DL12, DL4a, DL4b, R4a |
+| **[r1]** the request-wide packet discovery `DiscoverRequestPackets` | `host/coordinator/decisionpacket_discover.go` | store reads only (`PacketReader`) | DS1, RD9b–RD9d |
 | first-decision-final, publish L2 | `host/broker/approve.go` | store via the existing interfaces | BR1–BR3, R4b–R4d |
 | the decision judge | `host/authority/judge_decision.go` | store reads only | JD1–JD3 |
-| schema 8 `key_decisions` | `host/store/key_decisions.go` | effect | KD1–KD4 |
+| schema 8 `key_decisions`, K0's unlanded-row read | `host/store/key_decisions.go` | effect | KD1–KD8 |
 | body grammar, subject JSON, `decisions` listing fold | `host/surfacepage/decide_model.go` | yes | DMD1–DMD3 |
 | the routes | `host/daemon/surface_decide.go` | effect (HTTP, stores) | RD1–RD12 |
 | the CLI | `cmd/ailang-worldd/approve_decide.go` | effect | CD1–CD9 |
@@ -581,7 +642,8 @@ shape: `sha256:` + 64 hex selects the **decision mode**, in `cmd/ailang-worldd/a
 | T4 | the same decision replayed after it landed, or after a restart | D6 on the durable chain under `humanMu` (BR1, RD8) |
 | T5 | a signature for packet A used on packet B | `P` and `Q` are in the message; D8 and `Binds` (DM6, RD7) |
 | T6 | a key-approved publish stamp | L1 (D5) and L2 (§2.6); R4a–R4e |
-| T7 | one decision silently answering two invocations | D4 refuses a request carried by ≠ 1 packet (DL4, RD9) |
+| T7 | one decision silently answering two invocations | D4b refuses a request carried by ≠ 1 packet; **[r1]** D4a refuses when the count is not complete (DL4a, DL4b, RD9, RD9b–RD9d) |
+| T15 **[r1]** | a crash or failed world write after the counter moved; a counter-0 assertion replayed | K0's exact-artifact idempotent retry; D6 after landing; the request is the row's key (KD7, KD8, RD13) |
 | T8 | deciding a request whose invocation lost its commit | D4 (zero packets) (DL4) |
 | T9 | a stale signature held back and posted late | D10's 10-minute window and the packet deadline (DL9, DL10) |
 | T10 | a cloned security key | the counter advances in SQL inside `RecordKeyDecision` (KD2) |
@@ -622,6 +684,9 @@ fixtures (A2); the browser rows use the A2/A3 driver with Chrome's virtual authe
 | DM1 | `TestDecisionMessageLayout` (`host/approval`) | 91 bytes; prefix, `0x00`, verb at 18, `P` at 19, `Q` at 51, BE expiry at 83; golden hex for two subjects | field order swapped; LE expiry |
 | DM2 | `TestDecisionMessageRefusesBadInput` | verb 0/3 and negative expiry refused | verb not checked |
 | DL1–DL10 | `TestDecisionRefusal<Dn>` (`host/broker`), one test per D1–D10 | each fact false alone → its code and reason; all true → 0 | **each Dn branch deleted** (unit = the branch) |
+| DL4a **[r1]** | `TestDecisionRefusalD4a` | `Discovery{Complete: false}` with `Carrying: 1` → D4a (409), never 0; `Undecodable: 1` with `Complete: true, Carrying: 1` → D4a | **D4a deleted** (one visible match treated as exactly one); D4a reading `Carrying` instead of `Complete` |
+| DL4b **[r1]** | `TestDecisionRefusalD4b` | complete with `Carrying` 0 and 2 → D4b; complete, 1, validator code 5 → D4b with the "not established" sentence | D4b `Carrying >= 1`; the validator code ignored |
+| DS1 **[r1]** | `TestDiscoverRequestPacketsCompleteness` (`host/coordinator`) | fake `PacketReader` with page limit 500: 0, 499, 500, 1,999 and exactly 2,000 packets → `Complete: true` (the sentinel read returns none); 2,001 → `Complete: false`; the cursor follows `after` across pages; one undecodable payload → `Undecodable: 1` | off-by-one at the sentinel (`>=` for `>`); the cursor not advanced (the first page re-read); undecodable payloads skipped silently |
 | DL11 | `TestDecisionRefusalOrder` | two facts false → the lower Dn wins | order swapped |
 | DL12 | `TestDecisionRefusalMustLive` | a well-formed approve and a well-formed deny → 0 (control) | a law that refuses everything |
 | R4a | `TestReservedApprovalScope` | `PublishApprovalScopeFor(…)` → publish; `registry:x`, `…effect=Registry.Publish…` near-misses → publish; `FormatFinishApprovalScope(…)`, `github-pr:x` → finish; `worktree`, `world` → not reserved (control) | prefix arm deleted; parse arm deleted |
@@ -637,7 +702,10 @@ fixtures (A2); the browser rows use the A2/A3 driver with Chrome's virtual authe
 | RD6 | `TestDecideTypedProofBindsTheVerb` | a `decide-deny` proof with `verb: approve` → 403, 0 decisions | phase not carrying the verb |
 | RD7 | `TestDecidePOSTStaleDigests` | `P` or `Q` from another packet → 409 | D8 dropped |
 | RD8 | `TestDecideReplayAfterRestart` | decide, close and reopen the daemon on the same store, POST again → 409 D6 | in-memory single use |
-| RD9 | `TestDecideRefusesASharedRequest` | two invocations producing one request ref and two packets → 409 D4 | D4 counting only ≥ 1 |
+| RD9 | `TestDecideRefusesASharedRequest` | two invocations producing one request ref and two packets → 409 D4b | D4b counting only ≥ 1 |
+| RD9b **[r1]** | `TestDecideDiscoveryFindsAHiddenSecondPacket` (`host/daemon`) | a store with **150 packets**, two carrying the target request, the second chosen so its `hash_ref` sorts **after the first 101** (the test asserts its position in `ObjectsBySemanticID` order before posting); a valid typed POST for the first → **409 D4b**, **0 new decisions, head unchanged**; sprint 2 re-runs it with a valid SSHSIG and also asserts **0 `key_decisions` rows** | discovery reusing `ValidatePacket`'s 100-packet prefix or `UniqueTruncated`-blind code 0 (gpt6-1-sol's scenario) |
+| RD9c **[r1]** | `TestDecideDiscoveryRefusesAnOverflow` | **2,001 packets**, exactly one carrying the request → **409 D4a**, 0 decisions (sprint 2 adds the SSHSIG arm and 0 `key_decisions` rows) | the overflow sentinel ignored |
+| RD9d **[r1]** | `TestDecideDiscoveryFindsTheOnlyPacketBeyondThePrefix` (must-live) | 150 packets, exactly one carrying the request, sorted after position 101 → the typed POST lands one decision | a discovery that refuses everything past the prefix |
 | R4d | `TestDecideRefusesReservedScopesTyped` | a publish-shaped and a finish-shaped request, typed → 403 with the owner; **must-die control: with L1 compiled out, R4b's L2 still refuses the resulting key decision** (sprint 2 extends it with a key) | L1 bypassed for typed |
 | CD1 | `TestApproveDecideTyped` (`cmd/ailang-worldd`) | a fake terminal answering `y` → POST `typed` with the verb; `n` → no POST; every field printed | the prompt skipped |
 | CD2 | `TestApproveDecideNoTerminal` | no terminal → `exitUsage` naming `--sign-with` | a silent typed default |
@@ -660,8 +728,13 @@ fixtures (A2); the browser rows use the A2/A3 driver with Chrome's virtual authe
 | KD2 | `TestRecordKeyDecisionCounter` | a non-advancing counter → `ErrSignCountRegression`, 0 rows; advancing → updated | the SQL counter check deleted |
 | KD3 | `TestRecordKeyDecisionRevokedSince` | revoke between judge and record → refused | K3 deleted |
 | KD4 | `TestRecordKeyDecisionReplaceUnlanded` | an unlanded row is replaced; a landed one is not | K5 replacing landed rows |
+| KD5 **[r1]** | `TestKeyDecisionsPacketRefCheck` | raw `INSERT`s with `packet_ref` of length 71 not starting `sha256:` (e.g. `sha512:` + 64 hex) and of length 70 → constraint error; a `sha256:` + 64 hex value → accepted (control) | the `GLOB 'sha256:*'` clause dropped from `packet_ref` |
+| KD6 **[r1]** | `TestKeyDecisionsDecisionRefCheck` | `decision_ref` NULL → accepted; `sha256:` + 64 hex → accepted; length 71 without `sha256:`, length 70, empty string → constraint error | the `decision_ref` CHECK dropped, or `IS NULL OR` dropped (NULL refused) |
+| KD7 **[r1]** | `TestRecordKeyDecisionIdempotentRetry` | an unlanded row from a hardware-counter assertion (counter 7, stored now 7); the same artifact retried → K0 match → **no `usePasskey` call, counter still 7**, `DecideApproval` + `LandKeyDecision` run once; a **second, independently made** valid assertion that also carries counter 7 → `ErrSignCountRegression`, 0 decisions | K0 deleted (the retry dies on the counter: the objection's failure); K0 matching on request ref alone, without the byte-equal artifact (lets a different artifact skip the counter) |
+| KD8 **[r1]** | `TestDecidePOSTCounterZeroAssertionLandsOnce` (`host/daemon`) | a counter-0 passkey (stored 0, assertion 0): first POST lands; the identical POST again → **409 D6**, still one decision, one row; a crash simulated between record and decide, then the identical POST twice → one decision | D6 deleted (the counter-0 assertion lands twice); K0 inserting a second row instead of landing the first |
 | RD10 | `TestDecidePOSTSSHSIG` / `TestDecidePOSTPasskey` | → 200, one decision `ssh:<name>` / `webauthn:<name>`, one landed `key_decisions` row | recording before the law |
 | RD11 | `TestDecidePOSTKeyDecidedByIsDerived` | a body with a forged `decidedBy` → 400; the landed `decidedBy` equals the verified approver | caller-supplied `decidedBy` |
+| RD13 **[r1]** | `TestDecidePOSTRetryAfterAFailedWorldWrite` (`host/daemon`) | a fault-injected `DecideApproval` failure (the store's write seam) after `RecordKeyDecision`, for (a) an SSHSIG, (b) a counter-N passkey, (c) a counter-0 passkey → 500, one unlanded row, 0 decisions; the **identical** body retried → 200, one decision, the row landed, the counter unchanged by the retry; a fresh assertion at `N+1` instead → 200 by replacement | the retry path running `usePasskey` again; the unlanded row left unlanded |
 | RD12 | `TestDecidePOSTBusyWriter` | a held credentials writer → 503 `Busy`, **0 decisions** | deciding before the evidence |
 | R4e | `TestDecideRefusesReservedScopesByKey` | publish- and finish-shaped requests with a valid key → 403; with L1 compiled out → the decision lands but `validatePublishApproval` refuses it (must-die) | either layer alone deleted |
 | CD5–CD9 | `TestApproveDecide{SignWith,Signature,WriteMessage,WebAuthnLink,WebAuthnAssertion}` | the 91-byte message on disk; `ssh-keygen -Y sign -n world-decision@sunholo` (an `approvaltest` key file); the POST; refusals print the judge's text | the mint message written |
@@ -712,26 +785,26 @@ and its own tests. Every sprint ends with `./scripts/verify_ail.sh`;
 `go test ./host/daemon/ -run '^(TestFrozenV1RouteTableMatchesMux|TestSurfaceAppRoutes|TestDaemonDependencyAllowlist|TestDaemonCredentialWriterSites)$' -count=1 -v`
 (each must print `--- PASS`).
 
-**Sprint 1 = M1–M3, "the law and the typed root", about 1,700 lines.**
-- **M1 the message and the law** (≈ 220 + 520): DM1, DM2, DL1–DL12, R4a.
-  `go test ./host/approval/ ./host/broker/ -run '^(TestDecisionMessage|TestDecisionRefusal|TestReservedApprovalScope)' -count=1 -v`
+**Sprint 1 = M1–M3, "the law and the typed root", about 1,950 lines [r1].**
+- **M1 the message, the law and the discovery** (≈ 280 + 700 **[r1]**): DM1, DM2, DL1–DL12, DL4a, DL4b, DS1, R4a.
+  `go test ./host/approval/ ./host/broker/ ./host/coordinator/ -run '^(TestDecisionMessage|TestDecisionRefusal|TestReservedApprovalScope|TestDiscoverRequestPackets)' -count=1 -v`
 - **M2 the broker rules** (≈ 40 + 260): BR1, BR2, R4b, R4c, XG1.
   `go test ./host/broker/ -run '^(TestDecideApproval|TestPublishApproval|TestDecideApprovalCallerCensus)' -count=1 -v`;
   `go test ./host/broker/ -count=1` (the publish arms unedited).
-- **M3 the subject, the typed POST, the typed CLI** (≈ 260 + 400): RD1–RD9, R4d, CD1–CD4.
-  `go test ./host/daemon/ -run '^(TestDecisionRoutesRegistered|TestDecidePOST|TestDecisionSubjectJSON|TestDecideTyped|TestDecideReplay|TestDecideRefuses)' -count=1 -v`;
+- **M3 the subject, the typed POST, the typed CLI** (≈ 260 + 590 **[r1]**): RD1–RD9, RD9b–RD9d, R4d, CD1–CD4.
+  `go test ./host/daemon/ -run '^(TestDecisionRoutesRegistered|TestDecidePOST|TestDecisionSubjectJSON|TestDecideTyped|TestDecideReplay|TestDecideRefuses|TestDecideDiscovery)' -count=1 -v`;
   `go test ./cmd/ailang-worldd/ -run '^(TestApproveDecide|TestEveryVerbHasHelp)' -count=1 -v`
-- **Fallback cut:** CD1–CD4 (the typed CLI) move to sprint 2's head; the route and its tests
+- **Fallback cut:** CD1–CD4 (the typed CLI) move to sprint 2's head (**[r1]** this brings sprint 1 back to ≈ 1,550); the discovery, D4a and RD9b–RD9d are never cut; the route and its tests
   stay, and §10's typed step waits for them. M1 and M2 are never cut.
 
-**Sprint 2 = M4–M5, "the keys", about 1,600 lines.**
-- **M4 the laws, the judge, schema 8** (≈ 330 + 620): DM3–DM8, JD1–JD3, KD1–KD4.
+**Sprint 2 = M4–M5, "the keys", about 1,800 lines [r1].**
+- **M4 the laws, the judge, schema 8** (≈ 350 + 700 **[r1]**): DM3–DM8, JD1–JD3, KD1–KD7.
   `go test ./host/approval/ ./host/authority/ ./host/store/ -run 'Decision|Decide|JudgeDecision|KeyDecision|Credentials' -count=1 -v`;
   the A2 matrix `go test ./host/approval/ -count=1` unedited.
-- **M5 the key POST arms and the key CLI** (≈ 200 + 450): RD10–RD12, R4e, CD5–CD9, edited inventories.
+- **M5 the key POST arms and the key CLI** (≈ 230 + 520 **[r1]**): RD10–RD13, KD8, R4e, CD5–CD9, edited inventories.
   `go test ./host/daemon/ ./cmd/ailang-worldd/ -run '^(TestDecidePOST|TestDecideRefusesReservedScopesByKey|TestApproveDecide|TestDaemonCredentialWriterSites)' -count=1 -v`
 - **Fallback cut:** the webauthn arm (RD10 passkey half, CD8–CD9, DM7) moves to sprint 3, which
-  needs it for XD1 anyway; SSHSIG ships alone. R4e is never cut.
+  needs it for XD1 anyway; SSHSIG ships alone. R4e is never cut. **[r1]** K0, KD7, KD8 and RD13 move with the webauthn arm only in their passkey halves; RD13 (a) (SSHSIG) and the DDL CHECKs (KD5, KD6) are never cut.
 
 **Sprint 3 = M6–M7, "the surface", about 1,500 lines.** **Planner obligation P1** (§1.12) runs
 first: measure A4's 91-byte message with `crypto.subtle` in Chrome against Go's goldens, as A3 V23.
@@ -774,6 +847,7 @@ QUICKSTART §18 *(attended — pending first verbatim run)*. Mark, on the studio
 - **RK3** The 40-head anchor bound (§2.4): a busy world can make an old packet undecidable here; it
   then expires under `Cancel`. An indexed approvals surface (the comment at `approve.go:261-264`)
   removes it.
+- **RK3b [r1]** The complete-discovery cap (§2.4): with more than 2,000 stored packets in one world, D4a refuses **every** A4 decision; the packets then expire under `Cancel`, and the typed owners are unaffected. A request-indexed packet lookup with a verified completeness contract (the reviewer's alternative) lifts it; it needs a store index and is not built here.
 - **RK4** The typed arm inherits row 236's operator-proof fence: it is as strong as the agent's
   inability to write the directory beside the credentials store.
 - **RK5** No L2 on the finish record (§2.6).
@@ -840,12 +914,16 @@ a positive control in the same command.
 | V29 | The world-demo plan requests one `Human.Approve` with a requester | `grep -n "requester" packages/world-demo/approve.ail` | `:109 kv("payload", jo([kv("requester", js("demo"))]))`; `:116` plan `{"effect":"Human.Approve","scope":"worktree","cost":1,"payload":{"requester":"demo"}}` |
 | V30 | Probes stayed out of the repo | `git status --short` (worktree) after writing this doc | `?? design_docs/planned/w-world-approvals-by-key-a4.md` only (the controller re-checks) |
 | V31 | A3a's measured sprint sizes (calibration) | `git log --merges --oneline -40 \| grep -i "a3a\|row201-a3"`; `for m in $(git log --merges --format=%h -40 --grep='a3a'); do git diff --numstat $m^1 $m -- . ':!design_docs' \| awk '{a+=$1+$2} END {print a}'; done` | `b44b5f7d` (s1) `1543`; `d1027477` (s2) `1995`; `70823879` (s3) `1861`; `4134ce89` (s4) `393` |
+| **V32 [r1]** | **The counter-0 rule: the same counter-0 assertion passes the counter twice** | `cat -n host/store/passkeys.go \| sed -n 221,250p`; `grep -n "W15" host/approval/passkey_assert.go` | `passkeys.go:226 UPDATE webauthn_credentials SET sign_count = ? WHERE name = ? AND credential_id = ? AND (sign_count < ? OR (sign_count = 0 AND ? = 0))`; `:231 if n … == 1 { return err }` (accepted); `:244-246` C18 `ErrSignCountRegression` otherwise; `passkey_assert.go:88 if (ad.SignCount != 0 \|\| p.SignCount != 0) && ad.SignCount <= p.SignCount { // W15`. Stored 0 / assertion 0 → W15 false and the UPDATE matches → accepted, every time; stored N / assertion N → W15 refuses and the UPDATE matches no row |
+| **V33 [r1]** | **`ValidatePacket`'s uniqueness scan is a 100-packet hash-ordered prefix and still returns code 0 when truncated** | `grep -n "packetScanLimit\|UniqueTruncated" host/coordinator/*.go host/daemon/*.go \| grep -v _test`; `cat -n host/coordinator/decisionpacket_validate.go \| sed -n 185,216p` | `decisionpacket_validate.go:34 const packetScanLimit = 100`; `:190 ObjectsBySemanticID(ctx, DecisionPacketV1, "", packetScanLimit+1)`; `:194 res.UniqueTruncated = len(others) > packetScanLimit`; `:195 for _, o := range others[:min(len(others), packetScanLimit)]`; `:214 f[6] = true` → code 0 with `UniqueTruncated` set; its only reader `workbench_packet.go:78` appends a display sentence |
+| **V34 [r1]** | **The discovery's page contract: keyset by `hash_ref`, unique total order, payload nil, page ≤ 500** | `cat -n host/store/objects_by_semantic_id.go \| sed -n 13,45p` | `:13 const MaxSemanticIDPage = 500`; `:15-18` "a keyset page … it never depends on OFFSET or SQLite rowids: hash_ref is the PRIMARY KEY, so it is a unique total order"; `:20 … WHERE semantic_id = ? AND hash_ref > ? ORDER BY hash_ref LIMIT ?`; `:24-25` "Payload is always nil: callers fetch the one payload they want with GetObject"; `:34` a limit outside `1..500` → `InvalidLimitError` |
 
 ## 15. Quorum verification log
 
-*(controller fills)*
-
-- **Round 1** (r0, date, cost): seats, verdicts, objections.
+- **Round 1 (2026-11-12T12:44:28Z): BLOCKED 2/2 present (gemini-4-argon, gpt6-1-sol); oc-glm-5-3 and oc-kimi-k3 absent (ollama 429 weekly limit); objections and the r1 changes:** artifact `/Users/voightkampff/.ailang/state/mission-quorum-world/w-world-approvals-by-key-a4-2026-11-12T12-44-28Z.json`. Neither disputed the direction.
+  - **(gpt6-1-sol) D4's "exactly one packet" rested on a 101-packet hash-ordered scan with no completeness branch** → lands on §2.4 (the complete request-wide discovery, `Discovery{Complete, Scanned, Carrying, Undecodable}`, overflow sentinel, "listing truncation warnings do not authorize decisions"), §2.5 (D4 split into D4a completeness and D4b count, `DecisionFacts` carries the discovery), §2.8 (the listing is display only), §3, §4 T7, §6 (DL4a, DL4b, DS1, RD9b with 150 packets and the second outside the first 101, RD9c with 2,001, RD9d must-live), §9 gates and sizes, §11 RK3b, V33, V34. The reviewer's first option (refuse on an incomplete scan) is applied; the request-indexed alternative is named as RK3b's lift, not built.
+  - **(gemini-4-argon) a crash between `RecordKeyDecision` and `DecideApproval` strands the counter, a counter-0 assertion could be replayed, and two refs lacked the `sha256:*` CHECK** → lands on §2.7 (both CHECKs verbatim; the reviewer's second option chosen: K0, an idempotent retry on the byte-equal artifact of an unlanded row that skips `useApprover`/`usePasskey` and goes to `DecideApproval` + `LandKeyDecision`; the counter-0 analysis), §4 T15, §6 (KD5, KD6, KD7, KD8, RD13), §9 gates and sizes, V32. Measured (V32): the counter-0 replay **is** accepted twice by the counter alone; what refuses a second use is D6 after landing and K0's single row while unlanded, so one counter-0 assertion lands at most one decision.
+- **Round 2:** *(controller fills)*
 - **Amendment confirmation:** (a) the decision message and the derived challenge (§0) — confirmed /
   reverted; filed as D-WORLD-115 on (date).
 - **Anchors found false by the designer:** `MintRequestIDPattern` is defined at
