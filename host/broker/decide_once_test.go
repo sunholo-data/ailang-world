@@ -158,6 +158,7 @@ var decideCallers = []string{
 	"host/broker/approve.go:DecideApproval",
 	"host/broker/approve.go:RecordOperatorApproval",
 	"host/broker/publish_op.go:mintAttendedApproval",
+	"host/daemon/surface_decide.go:handleSurfaceDecide",
 }
 
 // XG1: the only non-test callers of the decide entry point are the ones named above: no effect
