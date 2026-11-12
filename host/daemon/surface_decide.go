@@ -176,15 +176,29 @@ func (d *Daemon) handleSurfaceDecide(w http.ResponseWriter, r *http.Request, o [
 		return
 	}
 	q := hashref.MustParse(ref) // D1 held
-	// 2. the arm (D11). The grammar admits typed only in sprint 1; the phase carries the verb.
-	if err := d.consumeOperatorProof("decision-"+q.Digest(), "decide-"+body.Verb, r.Header.Get("X-World-Operator-Proof")); err != nil {
+	// 2. the arm (D11): a key's judge and evidence (sprint 2, surface_decide_key.go), or the typed
+	// proof, whose phase carries the verb.
+	decidedBy, evidence := typedDecider, (*store.Credentials)(nil)
+	if body.SSHSIG != nil {
+		var ok bool
+		if evidence, decidedBy, ok = d.keyArm(ctx, w, r, f, body, now); !ok {
+			return
+		}
+		defer func() { _ = evidence.Close() }()
+	} else if err := d.consumeOperatorProof("decision-"+q.Digest(), "decide-"+body.Verb, r.Header.Get("X-World-Operator-Proof")); err != nil {
 		writeApprovalRefusal(w, http.StatusForbidden, "Forbidden", "the typed decision is not proven: "+err.Error()+"; decide at a terminal with ailang-worldd approve "+ref)
 		return
 	}
-	decision, err := broker.DecideApproval(ctx, d.store, q, body.Verb, typedDecider, now) // 3.
+	decision, err := broker.DecideApproval(ctx, d.store, q, body.Verb, decidedBy, now) // 3.
 	if err != nil {
 		d.approvalInternal(w, r, err)
 		return
 	}
-	writeApprovalJSON(w, http.StatusOK, surfacepage.DecisionMade{V: 1, Decided: body.Verb, Request: ref, Decision: decision.String(), DecidedBy: typedDecider})
+	if evidence != nil { // 4. the key decision's evidence names the decision that landed
+		if err := evidence.LandKeyDecision(ctx, ref, decision.String()); err != nil {
+			d.approvalInternal(w, r, err)
+			return
+		}
+	}
+	writeApprovalJSON(w, http.StatusOK, surfacepage.DecisionMade{V: 1, Decided: body.Verb, Request: ref, Decision: decision.String(), DecidedBy: decidedBy})
 }
