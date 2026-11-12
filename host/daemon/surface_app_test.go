@@ -17,8 +17,9 @@ import (
 // same bytes whatever the index holds), its assets are the exact embedded
 // bytes, and every other name under /surface/ is a 404 (row 201 A2 adds
 // /surface/passkey and /surface/passkey.js, PG1's, and no name under them; row 201 A3
-// sprint 2 adds the approval routes /surface/requests.json and /surface/requests/{id},
-// which answer only an allowed Host, and /surface/approve.js stays a 404 until sprint 3).
+// sprint 2 adds the approval routes /surface/requests.json and /surface/requests/{id}, and
+// sprint 3 the card page /surface/approve/{id} and /surface/approve.js, which answer only an
+// allowed Host).
 func TestSurfaceAppRoutes(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "operator-index.json")
 	d, err := New(boundedTestContext(t), Config{DBPath: filepath.Join(t.TempDir(), "world.db"), BindHost: DefaultBindHost, SurfaceIndex: path})
@@ -153,12 +154,12 @@ func TestSurfaceAppRoutes(t *testing.T) {
 		for _, target := range []string{"/surface/", "/surface/nope", "/surface/app.jsx", "/surface/index.html", "/surface/data.js",
 			"/surface/spike-data.json", "/surface/app/app.js", "/surface/static/x", "/surface/fonts.css",
 			"/surface/passkey/", "/surface/passkey/index.html", "/surface/passkey/passkey.js", "/surface/passkey.html",
-			"/surface/approve.js", "/surface/approve", "/surface/requests", "/surface/requests.json/x"} {
+			"/surface/approve", "/surface/approve/", "/surface/requests", "/surface/requests.json/x"} {
 			if w := request("GET", target); w.Code != 404 {
 				t.Errorf("%s = %d, want 404", target, w.Code)
 			}
 		}
-		for _, target := range []string{"/surface/requests.json", "/surface/requests/mr-0123456789abcdef"} {
+		for _, target := range []string{"/surface/requests.json", "/surface/requests/mr-0123456789abcdef", "/surface/approve/mr-0123456789abcdef", "/surface/approve.js"} {
 			if w := request("GET", target); w.Code != 421 { // registered; example.com is no Host of the surface's
 				t.Errorf("%s = %d, want 421", target, w.Code)
 			}

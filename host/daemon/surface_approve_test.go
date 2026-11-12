@@ -15,12 +15,12 @@ import (
 	"github.com/sunholo-data/ailang-world/host/approval/approvaltest"
 )
 
-// approvalRoutes is every approval route Handler registers this sprint (the card page and its
-// script are sprint 3's).
-var approvalRoutes = []string{"GET /surface/requests.json", "GET /surface/requests/{id}", "POST /surface/approve/{id}"}
+// approvalRoutes is every approval route Handler registers (sprint 3 adds the card page and its
+// script).
+var approvalRoutes = []string{"GET /surface/approve.js", "GET /surface/approve/{id}", "GET /surface/requests.json", "GET /surface/requests/{id}", "POST /surface/approve/{id}"}
 
 // RT1: exactly the approval routes are registered, under /surface, each behind approvalRoute; no
-// other method is answered on them; the card page and its script are not served yet.
+// other method is answered on them; no other name under them is served.
 func TestApprovalRoutesRegistered(t *testing.T) {
 	src, err := os.ReadFile("daemon.go")
 	if err != nil {
@@ -50,9 +50,9 @@ func TestApprovalRoutesRegistered(t *testing.T) {
 			}
 		}
 	}
-	for _, target := range []string{"/surface/approve.js", "/surface/approve", "/surface/requests", "/surface/requests/mr-0123456789abcdef/x"} {
+	for _, target := range []string{"/surface/approve", "/surface/approve/", "/surface/approve.jsx", "/surface/approve/mr-0123456789abcdef/x", "/surface/requests", "/surface/requests/mr-0123456789abcdef/x"} {
 		if rec := a.serve("GET", target, apLoopback, nil); rec.Code != 404 {
-			t.Errorf("GET %s = %d, want 404 (not served this sprint)", target, rec.Code)
+			t.Errorf("GET %s = %d, want 404", target, rec.Code)
 		}
 	}
 }
@@ -63,7 +63,7 @@ func TestApprovalRoutesRegistered(t *testing.T) {
 func TestApprovalRoutesRefuseForeignHost(t *testing.T) {
 	a := newApprovalRig(t)
 	row := a.putRequest("mr-00000000000000b1", "w201b", apT0-30)
-	targets := []string{"/surface/requests.json", "/surface/requests/" + row.RequestID}
+	targets := []string{"/surface/requests.json", "/surface/requests/" + row.RequestID, "/surface/approve/" + row.RequestID, "/surface/approve.js"}
 	for _, target := range targets {
 		for _, host := range []string{"rebind.example:7644", "localhost:7645", "localhost", "127.0.0.1:7644.evil", "studio.tail0.ts.net", "cfg.tail0.ts.net"} {
 			requireRefusal(t, host+target, a.serve("GET", target, host, nil), 421, "MisdirectedRequest")
