@@ -31,6 +31,7 @@ var contextRootPins = map[string]int{
 	// Row 201 A4 sprint 2: approve <request-ref>'s daemon reads before the y/N, and its POST after it (10 s each).
 	"cmd/ailang-worldd/approve_decide.go|runApproveDecide|Background": 1,
 	"cmd/ailang-worldd/approve_decide.go|postDecision|Background":     1,
+	"cmd/ailang-worldd/approve_decide.go|decideBySignWith|Background": 1, // --sign-with's signer, bounded by the signed expiry (≤ 600 s)
 
 	"cmd/ailang-worldd/cli.go|get|Background":                                1,
 	"cmd/ailang-worldd/cli.go|execute|Background":                            1,

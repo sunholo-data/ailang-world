@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -21,8 +22,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/coordinator"
+	"github.com/sunholo-data/ailang-world/host/sshsign"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/surfacepage"
 )
@@ -35,7 +38,7 @@ const approveDecideBudget = 10 * time.Second
 
 // decideOptions are approve's flags in the decision mode.
 type decideOptions struct {
-	ref, verb, db, credsDB, daemon string
+	ref, verb, db, credsDB, daemon, signWith string
 }
 
 // decisionSubject is a subject the CLI checked: its request and packet, decoded from bytes that
@@ -71,6 +74,12 @@ func checkDecisionSubject(ref string, body []byte) (decisionSubject, string) {
 		return s, mismatch
 	}
 	return s, ""
+}
+
+// refDigest is the 32 bytes of a sha256: ref the subject check has held to its bytes.
+func refDigest(ref string) [32]byte {
+	d, _ := hex.DecodeString(strings.TrimPrefix(ref, "sha256:"))
+	return [32]byte(d)
 }
 
 // sha256Ref is the sha256: ref of b.
@@ -137,6 +146,9 @@ func runApproveDecide(o decideOptions, stdout, stderr io.Writer, env sessionEnv,
 	if s.Refusal != "" {
 		return refuse("request %s cannot be decided now: %s", o.ref, s.Refusal)
 	}
+	if o.signWith != "" {
+		return decideBySignWith(o, s, c, base, env, stdout, stderr, refuse)
+	}
 	const nothing = "nothing was decided; decide with an enrolled key instead (--sign-with <key> or --signature <file>)"
 	term, code := openApproverTerminal(env, stderr, "ailang-worldd approve: ", nothing)
 	if code != exitOK {
@@ -153,6 +165,39 @@ func runApproveDecide(o decideOptions, stdout, stderr io.Writer, env sessionEnv,
 	}
 	return postDecision(c, base, o.ref, surfacepage.DecideBody{V: 1, Verb: o.verb, Packet: strings.TrimPrefix(s.Packet, "sha256:"),
 		Request: strings.TrimPrefix(o.ref, "sha256:"), Expiry: s.Window.Max, Typed: true}, proof, stdout, refuse)
+}
+
+// decideBySignWith is approve <request-ref> --sign-with (design §2.10, CD5): the 91-byte decision
+// message for the window's latest expiry, signed by env.signDecision (ssh-keygen -Y sign under
+// DecisionNamespace) under a root bounded by that expiry, and posted as sshsig. The daemon judges
+// it (design §2.7); no terminal opens and no proof is written.
+func decideBySignWith(o decideOptions, s decisionSubject, c *client, base string, env sessionEnv, stdout, stderr io.Writer, refuse func(string, ...any) int) int {
+	if env.signDecision == nil {
+		fmt.Fprintln(stderr, "ailang-worldd approve: internal error: no signer (sessionEnv.signDecision)")
+		return exitFatal
+	}
+	verb, _ := approval.DecisionVerb(o.verb)
+	body := surfacepage.DecideBody{V: 1, Verb: o.verb, Packet: strings.TrimPrefix(s.Packet, "sha256:"), Request: strings.TrimPrefix(o.ref, "sha256:"), Expiry: s.Window.Max}
+	msg, err := approval.DecisionMessage(verb, refDigest(s.Packet), refDigest(o.ref), body.Expiry)
+	if err != nil {
+		return refuse("%v", err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(max(body.Expiry-env.now(), 1))*time.Second)
+	defer cancel()
+	armored, err := env.signDecision(ctx, o.signWith, msg, stderr)
+	if err != nil {
+		return refuse("--sign-with %s: %v; nothing was decided", o.signWith, err)
+	}
+	sig := string(armored)
+	body.SSHSIG = &sig
+	return postDecision(c, base, o.ref, body, "", stdout, refuse)
+}
+
+// signDecisionWithSSHKeygen is the production decision signer: ssh-keygen from PATH through
+// host/sshsign's one driven, environment-scrubbed site, under DecisionNamespace. PATH is not a
+// trust boundary: the daemon verifies the output against the enrolled key over World's message.
+func signDecisionWithSSHKeygen(ctx context.Context, key string, msg []byte, stderr io.Writer) ([]byte, error) {
+	return sshsign.SignIn(ctx, "ssh-keygen", approval.DecisionNamespace, key, msg, stderr)
 }
 
 // postDecision POSTs body to /surface/decide/{ref} with the daemon's own loopback Origin (in O by

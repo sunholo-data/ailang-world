@@ -30,6 +30,7 @@ const approveHelp = `usage: ailang-worldd approve <request-id> [--db <path>] [--
        ailang-worldd approve <request-id> --await [--await-for <duration>] [--db <path>] [--credentials-db <path>]
        ailang-worldd approve --list [--decided] [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-ref> [--deny] [--daemon <host:port>] [--db <path>] [--credentials-db <path>]
+       ailang-worldd approve <request-ref> [--deny] --sign-with <key> [--daemon <host:port>] [--db <path>] [--credentials-db <path>]
 
 ATTENDED, or SIGNED. Mints the session a stored mint request describes (row
 201), after a y/N typed at /dev/tty, or, with --signature or --sign-with,
@@ -101,7 +102,9 @@ installed service's address), checks that both hash to their refs, shows every
 field, asks y at /dev/tty, and has the daemon record the decision (decided by
 operator:terminal). A request is decided once. --await is refused (the daemon
 decides at once); publish and finish approvals stay with world-publish
-approve and episode finish.
+approve and episode finish. --sign-with <key> opens no terminal: ssh-keygen
+-Y sign -n world-decision@sunholo signs the 91-byte decision message, and the
+decision is by ssh:<name>, an approver enrolled with 'approver enroll'.
 `
 
 // approveAdmission is approve's admission of a stored row, before any terminal: the decoded
@@ -212,14 +215,14 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	if !*list {
 		id = positional[0]
 		if decisionRefPattern.MatchString(id) { // row 201 A4: a request ref selects the decision mode (design §2.10)
-			if modes != 0 { // CD3: --await, and the key flags until they decide a request ref
-				return refuse("a request ref is decided at once by the daemon: there is nothing to await, and no key flag decides it yet")
+			if modes != 0 && *signWith == "" { // CD3: --sign-with is the key flag that decides a request ref (plan S2-D1)
+				return refuse("a request ref is decided at once by the daemon, by the typed y or --sign-with <key>: there is nothing to await, and the other key flags do not decide it")
 			}
 			verb := "approve"
 			if *deny {
 				verb = "deny"
 			}
-			return runApproveDecide(decideOptions{ref: id, verb: verb, db: *db, credsDB: *credsDB, daemon: *daemonAddr}, stdout, stderr, env, refuse)
+			return runApproveDecide(decideOptions{ref: id, verb: verb, db: *db, credsDB: *credsDB, daemon: *daemonAddr, signWith: *signWith}, stdout, stderr, env, refuse)
 		}
 		if !store.MintRequestIDPattern.MatchString(id) {
 			return refuse("%q is not a mint request id (mr- and 16 lowercase hex)", id)
