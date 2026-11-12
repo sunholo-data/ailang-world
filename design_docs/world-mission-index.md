@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 385 | 2026-11-12 | row 201 A3a sprint 2 LANDED (PR #556, merge `d1027477`): the read routes, the surface origin set and its guards, and `POST /surface/approve/{id}` (... |
 | 384 | 2026-11-11 | row 201 A3a sprint 1 LANDED (PR #554, merge `b44b5f7d`): credentials schema 7 `surface_approvals`, one shared judge `host/authority/judge.go`, and ... |
 | 383 | 2026-11-11 | row 201 A3 child design r2 (`w-world-approvals-by-key-a3.md`): quorum blocked twice, controller carve-out, independent audit VALID 84; D-WORLD-114 ... |
 | 382 | 2026-11-11 | row 201 A2 sprint 4 built: the passkey ceremony page under the unchanged surfaceCSP, live-Chrome XB1/XB2 on a CDP virtual authenticator, `generate.... |
