@@ -422,14 +422,32 @@
   }
 
   // needsYouHTML is the now card's Needs you (row 201 A3, design §2.8): the pending mint requests of
-  // GET /surface/requests.json, each a link to its card; a request the daemon could not read shows why.
-  function needsYouHTML(r, now) {
+  // GET /surface/requests.json, each a link to its card; a request the daemon could not read shows why;
+  // then the notification opt-in for this browser's permission (design §2.9).
+  function needsYouHTML(r, now, permission) {
     const p = r && Array.isArray(r.pending) ? r.pending : [];
     const head = `<div class="nh" style="color:${p.length ? 'var(--youShell)' : 'var(--sub)'}">Needs you · ${p.length}</div>`;
-    if (!p.length) return `<div class="nsec" data-needs>${head}<div class="nl sub">${esc(r && r.unavailable || 'Nothing needs you')}</div></div>`;
+    if (!p.length) return `<div class="nsec" data-needs>${head}<div class="nl sub">${esc(r && r.unavailable || 'Nothing needs you')}</div>${notifyHTML(permission)}</div>`;
     return `<div class="nsec" data-needs>${head}` + p.map(q => q.refused ? `<div class="nl sub">${esc(q.id)} · refused: ${esc(q.refused)}</div>`
       : `<div class="nl"><a id="needs-${esc(q.id)}" href="/surface/approve/${esc(q.id)}"><b>${esc(q.episode)}</b> · ${esc(q.agent)} · ${q.grants} grant${q.grants === 1 ? '' : 's'} · expires in ${Math.max(0, Math.ceil((q.expires - now) / 60))} min</a>`
-        + (q.recorded ? ` · approved by ${esc(q.recorded)}, waiting for the minter` : '') + '</div>').join('') + '</div>';
+        + (q.recorded ? ` · approved by ${esc(q.recorded)}, waiting for the minter` : '') + '</div>').join('') + notifyHTML(permission) + '</div>';
+  }
+  // notifyHTML is the opt-in: "Notify me" while this browser has not been asked (permission "default"),
+  // its answer once it has, and nothing where the browser has no notifications.
+  function notifyHTML(permission) {
+    if (permission === 'default') return '<button type="button" class="nl run" id="notify-me">Notify me</button>';
+    if (permission === 'granted') return '<div class="nl sub" data-notify>Notifications on</div>';
+    return permission === 'denied' ? '<div class="nl sub" data-notify>Notifications are blocked for this page</div>' : '';
+  }
+  // notifications is what one read of GET /surface/requests.json raises (design §2.9): a "World needs you"
+  // for each pending request this tab has not seen, while notifications are granted; each opens its card.
+  // seen is null before the page's first read, which raises nothing (the page itself shows those); a read
+  // that failed changes nothing. Refused and already-recorded requests are seen but raise nothing.
+  function notifications(r, seen, permission) {
+    if (!r || !Array.isArray(r.pending)) return { notes: [], seen };
+    const fresh = seen ? r.pending.filter(q => !seen.has(q.id) && !q.refused && !q.recorded) : [];
+    return { seen: new Set([...(seen || []), ...r.pending.map(q => q.id)]), notes: permission !== 'granted' ? [] : fresh.map(q => ({ title: 'World needs you', tag: q.id,
+      body: `Approve mint request for ${q.episode} (${q.grants} grant${q.grants === 1 ? '' : 's'}), expires ${hm(new Date(q.expires * 1000))}`, href: '/surface/approve/' + q.id })) };
   }
   // decidedHTML is the decision list under Needs you (design §2.8): the last few of GET
   // /surface/requests.json's decided requests (newest first; the daemon sends 20), and all of them on request.
@@ -442,7 +460,7 @@
       + (d.length > DECIDED_FEW ? `<button type="button" class="nl run" id="decided-all" aria-expanded="${!!all}">${all ? 'Show fewer' : 'Show all ' + d.length}</button>` : '') + '</div>';
   }
 
-  if (typeof module !== 'undefined') module.exports = { needsYouHTML, decidedHTML, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
+  if (typeof module !== 'undefined') module.exports = { needsYouHTML, decidedHTML, notifications, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
     adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW } };
   if (typeof document === 'undefined') return;
 
@@ -623,7 +641,7 @@
       ${sourcesHTML(D.repos)}
       ${today}
       ${running}
-      ${needsYouHTML(REQS, REQS ? REQS.now : 0)}
+      ${needsYouHTML(REQS, REQS ? REQS.now : 0, notifyPermission())}
       ${decidedHTML(REQS, decidedAll)}
     </div>`;
   }
@@ -902,10 +920,16 @@
   }
   // REQS is GET /surface/requests.json, read with the model and on every refresh (no timer of its own);
   // decidedAll is the decision list's "show all".
-  let REQS = null, decidedAll = false;
+  let REQS = null, decidedAll = false, seenIds = null;
+  const notifyPermission = () => typeof Notification === 'undefined' ? '' : Notification.permission;
   async function loadRequests() {
     try { REQS = (await getJSON('/surface/requests.json')).body; } catch (_) { REQS = null; }
+    const n = notifications(REQS, seenIds, notifyPermission());
+    seenIds = n.seen;
+    n.notes.forEach(x => { const note = new Notification(x.title, { body: x.body, tag: x.tag }); note.onclick = () => { window.focus(); location.assign(x.href); }; });
   }
+  // askNotify asks this browser for notifications, only from the "Notify me" click (a user gesture).
+  function askNotify() { Promise.resolve(Notification.requestPermission()).then(repaintNow, repaintNow); }
   const FOLLOW_MODEL = 'world/surface-model/v2', POLL_MS = 15000;
   let followMode = false, shownGen = null, shownAt = '', pollTimer = null, liveStarted = false;
   const poll = { note: '' };
@@ -1297,6 +1321,7 @@
     const qb = e.target.closest('[data-quiet]');
     if (qb) { const l = [...document.querySelectorAll('[data-quiet-list]')].find(x => x.dataset.quietList === qb.dataset.quiet); if (l) { l.hidden = !l.hidden; qb.setAttribute('aria-expanded', String(!l.hidden)); } return; }
     if (e.target.closest('#decided-all')) { decidedAll = !decidedAll; return repaintNow(); }
+    if (e.target.closest('#notify-me')) return askNotify();
     const lab = e.target.closest('.lhead');
     if (lab) { const key = lab.dataset.lane, s = lastState(key); return s ? openState(key, s.id) : say(`${nameOf(key)} has no states yet`); }
     if (e.target.closest('#now-b')) return goNow();

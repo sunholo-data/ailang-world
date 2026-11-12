@@ -31,7 +31,7 @@ func TestNeedsYouListsPendingRequests(t *testing.T) {
 	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface", "raw": true})
 	var needs string
 	b.do(t, &needs, "waitFor", map[string]any{"expression": `(() => { const e = document.querySelector('[data-needs]'); return e && e.textContent; })()`})
-	if want := "Needs you · 1ep1 · claude · 10 grants · expires in 10 min"; needs != want {
+	if want := "Needs you · 1ep1 · claude · 10 grants · expires in 10 minNotify me"; needs != want {
 		t.Fatalf("Needs you shows %q, want %q", needs, want)
 	}
 	newApproveRigIn(t, a.r, "ep2", now)

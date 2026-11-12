@@ -172,7 +172,7 @@ const model = JSON.parse(fs.readFileSync('model.json', 'utf8'));
 const stacks = JSON.parse(fs.readFileSync('stacks.json', 'utf8'));
 const index = JSON.parse(fs.readFileSync('index.json', 'utf8'));
 assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'applyDelta', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'decidedHTML', 'esc', 'fetchCoherent', 'frontHTML',
-  'geometry', 'isSharedKey', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'needsYouHTML', 'nextBackoff', 'openRunningHTML', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'serviceLineHTML', 'shortTitle', 'sourcesHTML', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict']);
+  'geometry', 'isSharedKey', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'needsYouHTML', 'nextBackoff', 'notifications', 'openRunningHTML', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'serviceLineHTML', 'shortTitle', 'sourcesHTML', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict']);
 
 assert.equal(app.serviceLineHTML(undefined), '');
 // Row 201 A3: Needs you is the pending requests, each a link to its card; a refused row shows why, with no link.
@@ -187,6 +187,24 @@ assert.equal(app.needsYouHTML({pending: [{id: 'mr-"><img src=x onerror=1>', epis
   + '<div class="nl"><a id="needs-mr-&quot;&gt;&lt;img src=x onerror=1&gt;" href="/surface/approve/mr-&quot;&gt;&lt;img src=x onerror=1&gt;"><b>e</b> · &lt;img src=x onerror=2&gt; · 1 grant · expires in 1 min</a>'
   + ' · approved by &quot;&gt;&lt;script&gt;3&lt;/script&gt;, waiting for the minter</div><div class="nl sub">mr-&lt;b&gt;&quot;4&lt;/b&gt; · refused: &lt;i&gt;5&lt;/i&gt;</div></div>');
 assert(app.needsYouHTML({pending: [], unavailable: '<i>"down"</i>'}, 0).includes('<div class="nl sub">&lt;i&gt;&quot;down&quot;&lt;/i&gt;</div>'));
+// The notification opt-in follows the browser's permission; nothing without the API (the calls above).
+assert(app.needsYouHTML(null, 0, 'default').endsWith('<div class="nl sub">Nothing needs you</div><button type="button" class="nl run" id="notify-me">Notify me</button></div>'));
+assert(app.needsYouHTML({pending: [{id: 'mr-1', episode: 'e', agent: 'a', grants: 1, expires: 60}]}, 0, 'granted').endsWith(' min</a></div><div class="nl sub" data-notify>Notifications on</div></div>'));
+assert(app.needsYouHTML(null, 0, 'denied').endsWith('<div class="nl sub" data-notify>Notifications are blocked for this page</div></div>'));
+// A notification per request this tab has not seen, while granted: none on the page's first read, none twice, none for a refused or recorded one.
+{ const r1 = {pending: [{id: 'mr-a', episode: 'e1', grants: 2, expires: 50520}]}, r2 = {pending: r1.pending.concat([{id: 'mr-b', episode: 'e<2>', grants: 1, expires: 50580},
+    {id: 'mr-c', episode: 'e3', refused: 'bad'}, {id: 'mr-d', episode: 'e4', grants: 3, expires: 60, recorded: 'webauthn:m'}])};
+  assert.deepEqual(app.notifications(null, null, 'granted'), {notes: [], seen: null});
+  const first = app.notifications(r1, null, 'granted');
+  assert.deepEqual(first.notes, []); assert.deepEqual([...first.seen], ['mr-a']);
+  assert.equal(app.notifications({}, first.seen, 'granted').seen, first.seen);
+  const second = app.notifications(r2, first.seen, 'granted');
+  assert.deepEqual(second.notes, [{title: 'World needs you', tag: 'mr-b', body: 'Approve mint request for e<2> (1 grant), expires 14:03', href: '/surface/approve/mr-b'}]);
+  assert.deepEqual([...second.seen], ['mr-a', 'mr-b', 'mr-c', 'mr-d']);
+  assert.deepEqual(app.notifications(r2, second.seen, 'granted').notes, []);
+  const asked = app.notifications(r2, first.seen, 'default');
+  assert.deepEqual(asked.notes, []); assert.deepEqual([...asked.seen], ['mr-a', 'mr-b', 'mr-c', 'mr-d']);
+  assert.equal(app.notifications({pending: [{id: 'mr-e', episode: 'e5', grants: 2, expires: 50520}]}, new Set(), 'granted').notes[0].body, 'Approve mint request for e5 (2 grants), expires 14:02'); }
 // The decision list: the last three decided requests, newest first, and a toggle for all of them; every value escaped.
 assert.equal(app.decidedHTML(null, false), '');
 assert.equal(app.decidedHTML({decided: []}, true), '');
