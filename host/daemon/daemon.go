@@ -1098,7 +1098,9 @@ func releaseFromVersion(version string) string {
 // read routes outside the frozen table, as are GET /surface/follow-status.json, GET /surface/model.json and
 // GET /surface/stack.json (the app's view model, N1) and GET /surface with /surface/app.js,
 // /surface/app.css and /surface/ailang-logo.svg (the app, N2b), and GET /surface/passkey with
-// /surface/passkey.js (the passkey ceremony page, row 201 A2: static, it reads nothing).
+// /surface/passkey.js (the passkey ceremony page, row 201 A2: static, it reads nothing), and the
+// approval routes of row 201 A3 (requests.json, requests/{id}, the approve POST, the card page
+// GET /surface/approve/{id} and its approve.js), each behind approvalRoute's Host check.
 // The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
 // such as "world/epoch-registry/v1" contain slashes.
 func (d *Daemon) Handler() http.Handler {
@@ -1135,6 +1137,8 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/requests.json", d.approvalRoute(d.handleSurfaceRequests))
 	mux.HandleFunc("GET /surface/requests/{id}", d.approvalRoute(d.handleSurfaceRequestCard))
 	mux.HandleFunc("POST /surface/approve/{id}", d.approvalRoute(d.handleSurfaceApprove))
+	mux.HandleFunc("GET /surface/approve/{id}", d.approvalRoute(d.handleSurfaceApprovePage))
+	mux.HandleFunc("GET /surface/approve.js", d.approvalRoute(d.handleSurfaceApproveScript))
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
 	// are ADDITIVE: the frozen /v1/ table above is untouched, and the routes
 	// are NOT in isProtected — the projection handler resolves the session

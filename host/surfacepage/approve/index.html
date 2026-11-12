@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AILANG World: approve a mint request</title>
+<style>
+body { font: 16px/1.5 system-ui, sans-serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; color: #1d1d1f; }
+h1 { font-size: 1.4rem; }
+h2 { font-size: 1.05rem; margin: 1.2rem 0 0.3rem; }
+#what, #status { white-space: pre-wrap; }
+#status[data-error] { color: #b00020; font-weight: 600; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.15rem 1rem; margin: 0; }
+dt { color: #555; }
+dd { margin: 0; font: 14px ui-monospace, monospace; overflow-wrap: anywhere; }
+dd:empty::after { content: "(none)"; color: #888; }
+section[data-group="what"] dd { font-size: 16px; font-weight: 600; }
+#sshline { font: 13px ui-monospace, monospace; overflow-wrap: anywhere; }
+#sig { font: 12px ui-monospace, monospace; width: 100%; height: 7rem; }
+button, #save { font-size: 1rem; padding: 0.4rem 1rem; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body data-state="loading">
+<h1>Approve a mint request</h1>
+<p id="what">Reading the request…</p>
+<div id="card" hidden></div>
+<p id="origin-note" hidden></p>
+<p><button id="go" type="button" hidden disabled>Approve with passkey</button></p>
+<p id="status"></p>
+<p><button id="again" type="button" hidden>Check again</button></p>
+<div id="ssh" hidden>
+<h2>Or approve with an SSH key</h2>
+<p><a id="save" hidden>Save the message</a></p>
+<p id="sshline"></p>
+<p><label for="sig">Paste the signature</label><br><textarea id="sig"></textarea></p>
+<p><button id="post-sig" type="button" disabled>Approve with this signature</button></p>
+</div>
+<script src="/surface/approve.js"></script>
+</body>
+</html>

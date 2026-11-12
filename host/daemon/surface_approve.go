@@ -3,8 +3,8 @@ package daemon
 // Row 201 A3 sprint 2 (design_docs/planned/w-world-approvals-by-key-a3.md §2.3, §2.4): the
 // approval routes under /surface, none under /v1. GET /surface/requests.json (Needs you and the
 // decision list) and GET /surface/requests/{id} (the card's data) read the credentials store on a
-// fresh read-only handle; POST /surface/approve/{id} records a passkey approval only after the
-// A2 law verified it. Each route answers only a Host in the surface origin set O (R2); every
+// fresh read-only handle; POST /surface/approve/{id} records a passkey or SSH approval only after
+// the A1b/A2 law verified it. Each route answers only a Host in the surface origin set O (R2); every
 // existing route stays exactly as row 199 leaves it.
 
 import (
@@ -189,7 +189,8 @@ func (d *Daemon) approvalStoreError(w http.ResponseWriter, r *http.Request, err 
 }
 
 // handleSurfaceApprove is POST /surface/approve/{id} (design §2.4): after R2 (approvalRoute), the
-// checks R1, R3-R12 in order on a read-only handle, each refusal writing nothing; then R13 a
+// checks R1, R3-R12 in order on a read-only handle (R11 judges the passkey assertion or the SSH
+// signature with the CLI's own judge), each refusal writing nothing; then R13 a
 // non-waiting writer, opened for R14's RecordSurfaceApproval and closed at once. It reads no
 // Cookie and no Authorization, answers no CORS, and never mints: the minter (approve --await)
 // judges the recorded artifact again.
@@ -252,19 +253,23 @@ func (d *Daemon) handleSurfaceApprove(w http.ResponseWriter, r *http.Request, o 
 		writeApprovalRefusal(w, http.StatusConflict, "Conflict", "request "+id+"'s stored challenge is not 64 hex; make a new request")
 		return
 	}
-	if body.SSHSIG != nil { // R11, sprint 2's fallback cut: the SSHSIG arm is sprint 3's
-		writeApprovalRefusal(w, http.StatusUnprocessableEntity, "NotApproved",
-			"this daemon records only passkey approvals from the surface; approve an SSH signature at a terminal: ailang-worldd approve "+id+" --signature <file>")
-		return
+	format, artifact, what := approval.FormatWebAuthn, []byte(body.WebAuthn), "the passkey's assertion"
+	if body.SSHSIG != nil {
+		format, artifact, what = approval.FormatSSH, []byte(*body.SSHSIG), "the SSH signature"
 	}
-	signed, err := authority.JudgeAssertion(ctx, ro, row, body.WebAuthn, now) // R11: the law
+	var signed *approval.SignedApproval
+	if format == approval.FormatSSH { // R11: the law, before anything is recorded
+		signed, err = authority.JudgeSSHSignature(ctx, ro, row, artifact, now)
+	} else {
+		signed, err = authority.JudgeAssertion(ctx, ro, row, artifact, now)
+	}
 	if err != nil {
 		var je *authority.JudgeError
 		if errors.As(err, &je) && je.Step == authority.JudgeStepStore {
 			d.approvalStoreError(w, r, err)
 			return
 		}
-		writeApprovalRefusal(w, http.StatusUnprocessableEntity, "NotApproved", "the passkey's assertion does not approve request "+id+": "+err.Error())
+		writeApprovalRefusal(w, http.StatusUnprocessableEntity, "NotApproved", what+" does not approve request "+id+": "+err.Error())
 		return
 	}
 	digest, _ := hex.DecodeString(row.Digest)                                                  // R8 has shown it is 64 hex
@@ -277,8 +282,8 @@ func (d *Daemon) handleSurfaceApprove(w http.ResponseWriter, r *http.Request, o 
 		d.approvalStoreError(w, r, err)
 		return
 	}
-	err = wr.RecordSurfaceApproval(ctx, store.SurfaceApprovalRow{RequestID: id, Format: approval.FormatWebAuthn, Approver: signed.ApprovedBy(),
-		Artifact: body.WebAuthn, Digest: row.Digest}, d.approveNow()) // R14, at the time it is received
+	err = wr.RecordSurfaceApproval(ctx, store.SurfaceApprovalRow{RequestID: id, Format: format, Approver: signed.ApprovedBy(),
+		Artifact: artifact, Digest: row.Digest}, d.approveNow()) // R14, at the time it is received
 	_ = wr.Close()
 	switch {
 	case isRequestRace(err):

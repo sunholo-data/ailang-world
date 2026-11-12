@@ -172,9 +172,15 @@ const model = JSON.parse(fs.readFileSync('model.json', 'utf8'));
 const stacks = JSON.parse(fs.readFileSync('stacks.json', 'utf8'));
 const index = JSON.parse(fs.readFileSync('index.json', 'utf8'));
 assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'applyDelta', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'esc', 'fetchCoherent', 'frontHTML',
-  'geometry', 'isSharedKey', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'nextBackoff', 'openRunningHTML', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'serviceLineHTML', 'shortTitle', 'sourcesHTML', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict']);
+  'geometry', 'isSharedKey', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'needsYouHTML', 'nextBackoff', 'openRunningHTML', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'serviceLineHTML', 'shortTitle', 'sourcesHTML', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict']);
 
 assert.equal(app.serviceLineHTML(undefined), '');
+// Row 201 A3: Needs you is the pending requests, each a link to its card; a refused row shows why, with no link.
+assert.equal(app.needsYouHTML(null, 0), '<div class="nsec" data-needs><div class="nh" style="color:var(--sub)">Needs you · 0</div><div class="nl sub">Nothing needs you</div></div>');
+{ const h = app.needsYouHTML({now: 1000, pending: [{id: 'mr-0123456789abcdef', episode: 'w<1>', agent: 'claude', grants: 2, expires: 1601, recorded: 'webauthn:mark'}, {id: 'mr-00000000000000ff', episode: 'x', refused: 'digest <bad>', recorded: null}]}, 1000);
+  assert(h.includes('Needs you · 2') && h.includes('<a id="needs-mr-0123456789abcdef" href="/surface/approve/mr-0123456789abcdef"><b>w&lt;1&gt;</b> · claude · 2 grants · expires in 11 min</a> · approved by webauthn:mark, waiting for the minter</div>'), h);
+  assert(h.includes('mr-00000000000000ff · refused: digest &lt;bad&gt;') && !h.includes('/surface/approve/mr-00000000000000ff'), h); }
+assert(app.needsYouHTML({pending: [], unavailable: 'the mint requests could not be read'}, 0).includes('>the mint requests could not be read<'));
 assert.equal(app.serviceLineHTML({line:'<build & file>',warn:false}), '<div class="nl sub" data-service>&lt;build &amp; file&gt;</div>');
 assert.equal(app.serviceLineHTML({line:'restart',warn:true}), '<div class="nl sub" data-service style="color:var(--you)">restart</div>');
 
