@@ -1,0 +1,267 @@
+{
+ "sprint_id": "w-world-approvals-by-key-a3a-s3",
+ "design_doc": "design_docs/planned/w-world-approvals-by-key-a3.md",
+ "design_revision": "r2 (quorum r1+r2 + controller carve-out + independent audit VALID 84; not reopened)",
+ "sprint_plan": "design_docs/planned/w-world-approvals-by-key-a3a-sprint3-plan.md",
+ "previous_sprint": {
+  "plan": "design_docs/planned/w-world-approvals-by-key-a3a-sprint2-plan.md",
+  "json": "design_docs/planned/sprint_w-world-approvals-by-key-a3a-s2.json",
+  "landed_merge": "d1027477",
+  "recorded": "9ad741bb",
+  "pr": 556,
+  "note": "A3a sprint 2 (M4-M5 minus the SSHSIG arm: the read routes, O, the guards, --surface-origin, the passkey POST; 1,995 lines); its plan's §1.4 P1-P7 and S2-D1..S2-D17 are facts of HEAD; its Appendix C is built here as M5d"
+ },
+ "base_commit": "82fb9afa9086eed2f781bb0d4fe54d4bae3b70d7",
+ "queue_row": 201,
+ "iteration": 386,
+ "sprint_number": 3,
+ "milestone": "A3a",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter386-a3a-s3",
+ "branch": "sprint/world-iter386-row201-a3a-s3",
+ "decisions_open": {
+  "D-WORLD-114": "OPEN, default A (keep both amendments: no Tauri half in A3a; the CLI minter re-judges and mints) applied since iteration 384; built as designed"
+ },
+ "cut": {
+  "cap_loc": 2000,
+  "measure": "git diff --numstat <base> HEAD -- cmd host (insertions + deletions); .js/.html/.mjs under cmd/ and host/ count; docs/ and design_docs/ are outside the filter",
+  "fallback_fired": "yes, first step only: design §9's sprint-3 cut. M7's notification (Notify me, the per-id Notification, XA4, the driver's grantNotifications/notify) and the Decided list (XA3's Decided half) and the N key move to sprint 4 (plan Appendix C). Measured: the sprint as built is 1843; the moved part is ~300 at this tree's density (~135 app.js left of the design's ~160 M7, XA4 ~115, driver ~30, XA3 Decided ~20) -> ~2,143 > 2,000. The second step (Appendix C to sprint 4) is NOT needed: sprint 2's Appendix C is built (M5d, 251 lines) and the total stays <= 2,000.",
+  "committed": "M6a (J36) + M5d (sprint-2 Appendix C) + design M6 whole (PG2, PG3, PG3b, the network deadlines) + M7's Needs-you list + M8 (XA1, XA2 a-c, XA3 list half, XA5, QUICKSTART §17) + two planner browser tests",
+  "total_measured_loc": 1843,
+  "margin": 157,
+  "docs_loc": 18,
+  "design_estimate": "~2,200 (1,950 + ~250 for XA5) before the carried Appendix C",
+  "production_loc": 463,
+  "test_loc": 1380
+ },
+ "moved_to_sprint_4": [
+  "the opt-in browser notification (design §2.9: Notify me, requestPermission only from its click, one Notification per new id per tab)",
+  "XA4 TestNeedsYouNotifiesOnlyWhenAskedOnce + the driver's grantNotifications command and notify recorder",
+  "the Decided list (design §2.8) and XA3's Decided half",
+  "the N key jumping to the first Needs-you link (new in app.js; plan §1.4 P7)"
+ ],
+ "carried_obligations": {
+  "appendix_c_sprint2": "BUILT as M5d: R11's sshsig arm (authority.JudgeSSHSignature on *body.SSHSIG at now, recorded ssh/ssh:<name>, judged before the record; replaces surface_approve.go:255's refusal and RT4's R11-sshsig-cut), RT6 TestApprovePOSTRecordsAVerifiedSSHSIG, RT13 TestApprovePOSTSSHSIGViaTailnetOriginWithNoPasskey, AW6's route half TestSurfaceSSHSIGThenAwaitMints",
+  "j36": "BUILT as M6a: TestRequestCardPasskeyReadError (webauthn_credentials.origin renamed: the open and MintRequest work, ActivePasskeys fails non-older) -> 500 Internal, no card. Proof (plan §1.2 C7, logs/j36_proof.txt): the base + 'if false' leaves 29 PASS incl. TestRequestCardJSON (survivor); M6a + the same edit -> --- FAIL: TestRequestCardPasskeyReadError (200 card with passkeys:[]); the non-inventory host/daemon subset fails on it alone; restored -> PASS. A DROP TABLE injection did NOT kill it (the open refuses the store first, §1.4 P5)"
+ },
+ "next_sprint": "A3a sprint 4 = the notification, the Decided list, XA4, XA3's Decided half, the N key (plan Appendix C); then A3a's attended exit run (design §10)",
+ "executor_lane": "as routed by the controller; runs: (M6a, M5d, M6b), (M6c, M7a, M8a), (M8b, M8c, M8d); Chrome headless only through the [chrome] go test commands (temporary profiles, a CDP virtual authenticator, test keys); no ssh-keygen, no real store",
+ "executor_form": "every sub-milestone is a unified diff in the plan Appendix P, applied with patch -p1 after a --dry-run (plan §2); no hand edits",
+ "estimate_loc": {
+  "production": 463,
+  "test": 1380,
+  "total_cumulative": 1843,
+  "docs": 18,
+  "measure": "insertions + deletions (git diff --numstat -- cmd host), measured after a commit of each scratch stage"
+ },
+ "constraints": [
+  "D-WORLD-109: approvaltest keys, temp stores under t.TempDir(), Chrome --headless=new with a temporary profile and a CDP virtual authenticator (XA1 enrols through the A2 page + CLI; the others receive approvaltest's ES256 seed by WebAuthn.addCredential); httptest servers on the loopback; no real key, store, /dev/tty, ~/.ssh, ~/.ailang/world, real browser profile, mint into a real store, publish or ssh-keygen",
+  "host/approval, host/store, host/authority unchanged; surfaceCSP (PG2 pins its text), isProtected, /surface/passkey, passkey.js, passkey/index.html (PG2 pins their sha256), model.go unchanged; no CORS header; approve.js has no innerHTML, eval(, document.cookie",
+  "the SSHSIG arm judges with the A1b law before it records, on the passkey arm's R12-R14 path; the daemon never keeps the credentials writer and never mints",
+  "the card and its script register through approvalRoute (the Host check); the page verifies SHA-256(bytes) == digest itself, renders every signed field from the hashed bytes, refuses any field it cannot show, and computes the 90-byte message and its hash itself (never a server hash)",
+  "every card GET and POST (body included) has a 10 s AbortController deadline; only an explicit 503 Busy is retried (<= 3, 1 s apart); a POST without an answer is 'outcome unknown', never refused or minted; no format fallback",
+  "no t.Parallel; no new production exec site, module, package, context root or /v1 route; no .ail change"
+ ],
+ "baseline": {
+  "env": "export AILANG_BIN=$HOME/.pinned-ailang/ailang; go1.26.6 darwin/arm64; node v26.13.0; Google Chrome 157.0.8103.51",
+  "git_status": "clean at 82fb9afa",
+  "pre_commit_script": "tools/gates.sh <base> logs/baseline base (= plan §6 minus the new tests): PRE_COMMIT_GATES_GREEN 420 s; 50 named --- PASS; AW 9; live Chrome: TestPasskeyPageInChrome, TestPasskeyPageAbortsAPendingCeremony PASS; cmd/ailang-worldd 127.9 s, host/daemon 277.9 s",
+  "verify_go": "`✓ 0 other binary blobs among 6791 tracked files`; `✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6`; `✓ all 64 required top-level evidence tests passed exactly once`; `✓ go gate PASSED (plain)` (nothing else running; `logs/base_verify_go.log`)"
+ },
+ "design_premises_found_false": [
+  "P1: design §6 XA2 (b) 'the POST is 422' is false: R9 (the body's digest) precedes R11, so a consistently forged card's POST is 409 Conflict 'the request changed since the card was shown'; XA2 asserts 409 and 0 rows (T4's own R9 sentence agrees)",
+  "P2: design §2.7 step 5 'then re-reads /surface/requests/{id}': the card JSON carries no recorded approval (RT3), so the page shows the POST's answer; the outcome-unknown status check reads requests.json's recorded; a later open shows used",
+  "P3: design §6's driver commands: grantNotifications/notify move with XA4 (the cut); click exists as an internal helper so the command is press; openCard, waitFor, credential, fill, save, card are added",
+  "P4: design §9's Chrome -run matches TestPasskeyPageRecordsTheFixtures, a SKIP at the base by design (WORLD_PASSKEY_RECORD_DIR); the gate names TestPasskeyPageInChrome and TestPasskeyPageAbortsAPendingCeremony instead",
+  "P5: the J36 injection 'DROP TABLE webauthn_credentials' does not reach ActivePasskeys (the read-only open refuses the store's table set first) and the mutant survives it; the test renames a column instead",
+  "P6: the SSH judge's store step cannot be 'below schema' (approvers exists at every version the daemon opens): it is the sanitized 500 Internal (RT4 R11-sshsig-store)",
+  "P7: design §2.8 'N jumps to the first one (the key already exists, surface.js:257)': surface.js is the static pages' script and its N is a help-table entry; app.js has no N key; moved with M7's cut",
+  "P8: design line numbers drift: daemon.go a8ff6175 (not 9a935777) after sprints 1-2, the approval routes at :1135-1137; app.js, passkey.js, passkey_cdp.mjs, surface_page.go hashes equal the design's"
+ ],
+ "files_outside_design_section_8": [
+  "host/daemon/surface_approve_card_error_test.go",
+  "host/daemon/surface_approve.go",
+  "host/daemon/surface_approve_post_test.go",
+  "host/daemon/surface_approve_sshsig_test.go",
+  "cmd/ailang-worldd/approve_surface_sshsig_e2e_test.go",
+  "host/daemon/surface_approve_page.go",
+  "host/daemon/surface_approve_page_test.go",
+  "host/daemon/surface_approve_test.go",
+  "host/daemon/surface_app_test.go",
+  "host/surfacepage/app_test.go",
+  "host/surfacepage/approve_page_test.go",
+  "cmd/ailang-worldd/approve_page_driver_test.go",
+  "cmd/ailang-worldd/approve_page_chrome_test.go",
+  "cmd/ailang-worldd/approve_page_swap_test.go",
+  "cmd/ailang-worldd/approve_card_deadline_test.go",
+  "cmd/ailang-worldd/needs_you_chrome_test.go"
+ ],
+ "ci_change": "none (CI has no Chrome step: the XA tests are counted SKIPs there; PG2/PG3/PG3b, RT1/RT7, J36, RT4/RT6/RT13, AW6's route half and TestSurfaceAppPure (node via WORLD_EXEC_NODE) run in CI)",
+ "not_touched": [
+  "host/approval/**",
+  "host/store/**",
+  "host/authority/**",
+  "host/surfacepage/passkey/**",
+  "host/surfacepage/model.go",
+  "host/daemon/surface_page.go (surfaceCSP)",
+  "cmd/ailang-worldd/*.go production",
+  "cmd/ailang-worldd/passkey_page_driver_test.go",
+  "world/*.ail",
+  "packages/**",
+  "scripts/**",
+  "tools/launchd/*",
+  "cmd/world-publish/*",
+  "design_docs/mockups/*"
+ ],
+ "milestones": [
+  {
+   "id": "M6a",
+   "title": "J36: TestRequestCardPasskeyReadError (iteration 385 judge survivor, carried)",
+   "production_loc": 0,
+   "test_loc": 29,
+   "expected_cumulative_numstat_after_commit": 29,
+   "run": 1,
+   "acceptance_ref": "plan §3 M6a",
+   "patch_ref": "plan Appendix P, fence ````diff M6a"
+  },
+  {
+   "id": "M5d",
+   "title": "the POST's SSHSIG arm (R11 sshsig: JudgeSSHSignature before the record); RT4 SSHSIG arms, RT6, RT13, AW6 route half (sprint-2 Appendix C, carried)",
+   "production_loc": 27,
+   "test_loc": 224,
+   "expected_cumulative_numstat_after_commit": 280,
+   "run": 1,
+   "acceptance_ref": "plan §3 M5d",
+   "patch_ref": "plan Appendix P, fence ````diff M5d"
+  },
+  {
+   "id": "M6b",
+   "title": "the card: host/surfacepage/approve/{index.html,approve.js}, approve.go embed, surface_approve_page.go, GET /surface/approve/{id} + GET /surface/approve.js through approvalRoute; PG2; RT1/RT7/TestSurfaceAppRoutes edits",
+   "production_loc": 411,
+   "test_loc": 97,
+   "expected_cumulative_numstat_after_commit": 788,
+   "run": 1,
+   "acceptance_ref": "plan §3 M6b",
+   "patch_ref": "plan Appendix P, fence ````diff M6b"
+  },
+  {
+   "id": "M6c",
+   "title": "PG3 TestApprovePageRendersEveryCanonicalField, PG3b TestApprovePageFieldTagControls",
+   "production_loc": 0,
+   "test_loc": 155,
+   "expected_cumulative_numstat_after_commit": 943,
+   "run": 2,
+   "acceptance_ref": "plan §3 M6c",
+   "patch_ref": "plan Appendix P, fence ````diff M6c"
+  },
+  {
+   "id": "M7a",
+   "title": "Needs you in app.js (needsYouHTML, requests.json on load and on every refresh); TestSurfaceAppPure node assertions",
+   "production_loc": 25,
+   "test_loc": 8,
+   "expected_cumulative_numstat_after_commit": 976,
+   "run": 2,
+   "acceptance_ref": "plan §3 M7a",
+   "patch_ref": "plan Appendix P, fence ````diff M7a"
+  },
+  {
+   "id": "M8a",
+   "title": "the A2 driver extended (passkey_cdp.mjs), the card helpers; XA1 TestApprovePageInChrome",
+   "production_loc": 0,
+   "test_loc": 407,
+   "expected_cumulative_numstat_after_commit": 1383,
+   "run": 2,
+   "acceptance_ref": "plan §3 M8a",
+   "patch_ref": "plan Appendix P, fence ````diff M8a"
+  },
+  {
+   "id": "M8b",
+   "title": "XA2 TestApprovePageRefusesASwappedRequest (arms a-c); TestApprovePageSSHSIGInChrome (planner)",
+   "production_loc": 0,
+   "test_loc": 119,
+   "expected_cumulative_numstat_after_commit": 1502,
+   "run": 3,
+   "acceptance_ref": "plan §3 M8b",
+   "patch_ref": "plan Appendix P, fence ````diff M8b"
+  },
+  {
+   "id": "M8c",
+   "title": "XA5 TestApproveCardNetworkDeadlines; TestApproveCardPasskeyDeadline (planner)",
+   "production_loc": 0,
+   "test_loc": 286,
+   "expected_cumulative_numstat_after_commit": 1788,
+   "run": 3,
+   "acceptance_ref": "plan §3 M8c",
+   "patch_ref": "plan Appendix P, fence ````diff M8c"
+  },
+  {
+   "id": "M8d",
+   "title": "XA3 list half TestNeedsYouListsPendingRequests; QUICKSTART §17 (attended — pending first verbatim run)",
+   "production_loc": 0,
+   "test_loc": 55,
+   "expected_cumulative_numstat_after_commit": 1843,
+   "run": 3,
+   "acceptance_ref": "plan §3 M8d",
+   "patch_ref": "plan Appendix P, fence ````diff M8d"
+  }
+ ],
+ "sprint_gates": {
+  "script_ref": "plan §6 (one bash shell, tee to $HOME/.ailang/state/world-iter386/gates/, not under nohup, nothing else running)",
+  "live_chrome_leg": "WORLD_CHROME=... WORLD_REQUIRE_PASSKEY_BROWSER=1 go test ./cmd/ailang-worldd/ -run '^(TestPasskeyPageInChrome|TestPasskeyPageAbortsAPendingCeremony|TestApprovePage|TestApproveCard|TestNeedsYou)' -v: every --- PASS (this machine only)",
+  "after_commit": "VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh",
+  "planner_final_tree": "`PRE_COMMIT_GATES_GREEN 473s` on the round-trip tree: pkgs all `ok` (`host/daemon` 278.4 s, `cmd/ailang-worldd` 118.3 s), 57 named tests `--- PASS`, the AW leg 9, `-race` ok ×3, the live-Chrome leg every test and subtest `--- PASS` (§1.2 C22, C23, C25); the after-commit `verify_go.sh` rc 1 on its first run (two known-list tests, each green alone) and **rc 0** on its second, alone (§1.2 C26)."
+ },
+ "executor_directives": {
+  "no_git_writes": true,
+  "never_nohup_or_background_a_test_leg": true,
+  "apply": "patch -p1 after --dry-run, extracted with plan §2's awk",
+  "snapshots": "$HOME/.ailang/state/world-iter386/snap/<M>/ with MANIFEST.sha256 (the two plan files excluded)",
+  "expected_numstat": {
+   "M6a": 29,
+   "M5d": 280,
+   "M6b": 788,
+   "M6c": 943,
+   "M7a": 976,
+   "M8a": 1383,
+   "M8b": 1502,
+   "M8c": 1788,
+   "M8d": 1843
+  },
+  "stop_conditions": "plan §7"
+ },
+ "mutation_harness": "plan-scratch/tools/mutate.py + tools/mutants.py (M6b, M7a: Go and JS) and forkA's mutA/ (M6a, M5d): one edit per mutant in a worker copy, -vet=off, the named test then its package suite with the inventories excluded (host/daemon ^(TestApprov|TestRequest|TestSurfaceAppRoutes|TestPasskeyPageRoutes); host/surfacepage whole with node; cmd/ailang-worldd ^(TestApprovePage|TestApproveCard|TestNeedsYou) in live Chrome, or ^(TestApprove|TestSurfaceApprove|TestSurfaceSSHSIG) for M5d), restore asserted byte-identical, one ledger line per run",
+ "mutation_ledger": [
+  "$HOME/.ailang/state/world-iter386/plan-scratch/logs/mutant_ledger.tsv",
+  "$HOME/.ailang/state/world-iter386/plan-scratch/logs/mutant_ledger_forkA.tsv"
+ ],
+ "mutation_count": {
+  "total": 88,
+  "killed": 87,
+  "named_equivalents_survived": 1,
+  "not_as_expected": 0,
+  "ledger_lines": 109,
+  "runs": {
+   "forkA-run1": 18,
+   "run1": 67,
+   "run2-final": 24
+  },
+  "run1_findings": "JS-WALK-TYPE survived run1 (XA2's 'type' arm made ttl_s a string, which the integer check also refuses): the arm now makes reuse a string; killed in run2-final. JS-PAGEHIDE survived as predicted (named equivalent)."
+ },
+ "mutation_equivalents_named": [
+  "JS-PAGEHIDE (the browser itself aborts a document's in-flight fetches when the document is unloaded (and Chrome keeps no page with an in-flight fetch in the back/forward cache), so removing the explicit abort on pagehide changes nothing a test can observe; it stays as the design's explicit statement (\"Navigation cancels outstanding operations\", §2.7 [r2]))"
+ ],
+ "mutation_table_ref": "plan §4",
+ "j36_kill_proof": "plan §1.2 C7",
+ "live_chrome_results": "§6's live leg (`WORLD_CHROME=… WORLD_REQUIRE_PASSKEY_BROWSER=1 go test -v ./cmd/ailang-worldd/ -run '^(TestPasskeyPageInChrome|TestPasskeyPageAbortsAPendingCeremony|TestApprovePage|TestApproveCard|TestNeedsYou)'`, Chrome 157.0.8103.51, `logs/final_gates/chrome.log`): `--- PASS: TestApproveCardNetworkDeadlines (79.17s)` with `--- PASS: …/get (21.74s)` and `--- PASS: …/post (57.43s)`; `--- PASS: TestApproveCardPasskeyDeadline (1.78s)`; `--- PASS: TestApprovePageInChrome (1.76s)`; `--- PASS: TestApprovePageRefusesASwappedRequest (1.73s)`; `--- PASS: TestApprovePageSSHSIGInChrome (1.20s)`; `--- PASS: TestNeedsYouListsPendingRequests (1.04s)`; A2's `--- PASS: TestPasskeyPageAbortsAPendingCeremony (3.33s)` (4 subtests PASS) and `--- PASS: TestPasskeyPageInChrome (3.17s)` (3 subtests PASS); `ok cmd/ailang-worldd 93.455s`; 0 SKIP, 0 FAIL",
+ "roundtrip": "a fresh `git archive 82fb9afa` export + `patch -p1` of Appendix P's nine patches **extracted from this file with §2's `awk`** (each `cmp`-equal to the generated patch; `--dry-run` first; no `.orig`/`.rej`) → `diff -r cmd host docs` against `plan-scratch/work` (the tree §4's mutants were cut from): **identical** (`ROUNDTRIP_IDENTICAL_TO_MUTANT_TREE`) (`tools/roundtrip.sh`, `logs/roundtrip.log`); nothing uncommitted after M8d",
+ "acceptance_criteria_ref": "plan §9 (15 criteria)",
+ "controller_decisions": [
+  "none blocking; D-WORLD-114 stays open (default A)",
+  "the design's fallback cut fired at its first step only (notification + Decided + N key -> sprint 4, measured ~2,100 with them); sprint 2's Appendix C is built (M5d). Confirm at Gate 2 if a different reading is wanted",
+  "the gate's Chrome leg runs on the controller's machine only (CI has no Chrome step); the XA5 deadline windows assume nothing else heavy is running"
+ ],
+ "deferred": [
+  "design M7's notification, Decided list, XA4, XA3's Decided half, the N key -> sprint 4 (plan Appendix C)",
+  "A3b (Tauri) per D-WORLD-114 default A",
+  "A3a's attended exit run (design §10) after sprint 4"
+ ]
+}
