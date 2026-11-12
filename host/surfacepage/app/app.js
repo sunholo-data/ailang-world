@@ -431,8 +431,18 @@
       : `<div class="nl"><a id="needs-${esc(q.id)}" href="/surface/approve/${esc(q.id)}"><b>${esc(q.episode)}</b> · ${esc(q.agent)} · ${q.grants} grant${q.grants === 1 ? '' : 's'} · expires in ${Math.max(0, Math.ceil((q.expires - now) / 60))} min</a>`
         + (q.recorded ? ` · approved by ${esc(q.recorded)}, waiting for the minter` : '') + '</div>').join('') + '</div>';
   }
+  // decidedHTML is the decision list under Needs you (design §2.8): the last few of GET
+  // /surface/requests.json's decided requests (newest first; the daemon sends 20), and all of them on request.
+  const DECIDED_FEW = 3;
+  function decidedHTML(r, all) {
+    const d = r && Array.isArray(r.decided) ? r.decided : [];
+    if (!d.length) return '';
+    return '<div class="nsec" data-decided><div class="nh">Decided</div>' + (all ? d : d.slice(0, DECIDED_FEW)).map(x =>
+      `<div class="nl sub">You · Minted · ${esc(x.episode)} · ${esc(x.approvedBy)} · ${hm(new Date(x.at * 1000))}</div>`).join('')
+      + (d.length > DECIDED_FEW ? `<button type="button" class="nl run" id="decided-all" aria-expanded="${!!all}">${all ? 'Show fewer' : 'Show all ' + d.length}</button>` : '') + '</div>';
+  }
 
-  if (typeof module !== 'undefined') module.exports = { needsYouHTML, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
+  if (typeof module !== 'undefined') module.exports = { needsYouHTML, decidedHTML, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
     adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW } };
   if (typeof document === 'undefined') return;
 
@@ -614,6 +624,7 @@
       ${today}
       ${running}
       ${needsYouHTML(REQS, REQS ? REQS.now : 0)}
+      ${decidedHTML(REQS, decidedAll)}
     </div>`;
   }
 
@@ -889,8 +900,9 @@
     try { body = await r.json(); } catch (_) { body = null; }
     return { ok: r.ok, status: r.status, body };
   }
-  // REQS is GET /surface/requests.json, read with the model and on every refresh (no timer of its own).
-  let REQS = null;
+  // REQS is GET /surface/requests.json, read with the model and on every refresh (no timer of its own);
+  // decidedAll is the decision list's "show all".
+  let REQS = null, decidedAll = false;
   async function loadRequests() {
     try { REQS = (await getJSON('/surface/requests.json')).body; } catch (_) { REQS = null; }
   }
@@ -1284,6 +1296,7 @@
     if (n) return open(n.dataset.id);
     const qb = e.target.closest('[data-quiet]');
     if (qb) { const l = [...document.querySelectorAll('[data-quiet-list]')].find(x => x.dataset.quietList === qb.dataset.quiet); if (l) { l.hidden = !l.hidden; qb.setAttribute('aria-expanded', String(!l.hidden)); } return; }
+    if (e.target.closest('#decided-all')) { decidedAll = !decidedAll; return repaintNow(); }
     const lab = e.target.closest('.lhead');
     if (lab) { const key = lab.dataset.lane, s = lastState(key); return s ? openState(key, s.id) : say(`${nameOf(key)} has no states yet`); }
     if (e.target.closest('#now-b')) return goNow();

@@ -171,7 +171,7 @@ const seams = require('./surface.js');
 const model = JSON.parse(fs.readFileSync('model.json', 'utf8'));
 const stacks = JSON.parse(fs.readFileSync('stacks.json', 'utf8'));
 const index = JSON.parse(fs.readFileSync('index.json', 'utf8'));
-assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'applyDelta', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'esc', 'fetchCoherent', 'frontHTML',
+assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'applyDelta', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'decidedHTML', 'esc', 'fetchCoherent', 'frontHTML',
   'geometry', 'isSharedKey', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'needsYouHTML', 'nextBackoff', 'openRunningHTML', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'serviceLineHTML', 'shortTitle', 'sourcesHTML', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict']);
 
 assert.equal(app.serviceLineHTML(undefined), '');
@@ -187,6 +187,15 @@ assert.equal(app.needsYouHTML({pending: [{id: 'mr-"><img src=x onerror=1>', epis
   + '<div class="nl"><a id="needs-mr-&quot;&gt;&lt;img src=x onerror=1&gt;" href="/surface/approve/mr-&quot;&gt;&lt;img src=x onerror=1&gt;"><b>e</b> · &lt;img src=x onerror=2&gt; · 1 grant · expires in 1 min</a>'
   + ' · approved by &quot;&gt;&lt;script&gt;3&lt;/script&gt;, waiting for the minter</div><div class="nl sub">mr-&lt;b&gt;&quot;4&lt;/b&gt; · refused: &lt;i&gt;5&lt;/i&gt;</div></div>');
 assert(app.needsYouHTML({pending: [], unavailable: '<i>"down"</i>'}, 0).includes('<div class="nl sub">&lt;i&gt;&quot;down&quot;&lt;/i&gt;</div>'));
+// The decision list: the last three decided requests, newest first, and a toggle for all of them; every value escaped.
+assert.equal(app.decidedHTML(null, false), '');
+assert.equal(app.decidedHTML({decided: []}, true), '');
+{ const d = [{episode: 'w<4>', approvedBy: 'webauthn:"m"', at: 50520}, {episode: 'w3', approvedBy: 'ssh:<k>', at: 50460}, {episode: 'w2', approvedBy: 'tty', at: 3600}, {episode: 'w1', approvedBy: 'tty', at: 0}];
+  const few = '<div class="nsec" data-decided><div class="nh">Decided</div><div class="nl sub">You · Minted · w&lt;4&gt; · webauthn:&quot;m&quot; · 14:02</div>'
+    + '<div class="nl sub">You · Minted · w3 · ssh:&lt;k&gt; · 14:01</div><div class="nl sub">You · Minted · w2 · tty · 01:00</div>';
+  assert.equal(app.decidedHTML({decided: d}, false), few + '<button type="button" class="nl run" id="decided-all" aria-expanded="false">Show all 4</button></div>');
+  assert.equal(app.decidedHTML({decided: d}, true), few + '<div class="nl sub">You · Minted · w1 · tty · 00:00</div><button type="button" class="nl run" id="decided-all" aria-expanded="true">Show fewer</button></div>');
+  assert.equal(app.decidedHTML({decided: d.slice(0, 3)}, false), few + '</div>'); }
 assert.equal(app.serviceLineHTML({line:'<build & file>',warn:false}), '<div class="nl sub" data-service>&lt;build &amp; file&gt;</div>');
 assert.equal(app.serviceLineHTML({line:'restart',warn:true}), '<div class="nl sub" data-service style="color:var(--you)">restart</div>');
 
