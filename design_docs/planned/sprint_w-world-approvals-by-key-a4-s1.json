@@ -1,0 +1,261 @@
+{
+  "sprint_id": "w-world-approvals-by-key-a4-s1",
+  "design_doc": "design_docs/planned/w-world-approvals-by-key-a4.md",
+  "design_revision": "r2 (quorum r1+r2 BLOCKED on narrow defects, controller carve-out, independent sonnet audit VALID 84, iteration 388; not reopened)",
+  "sprint_plan": "design_docs/planned/w-world-approvals-by-key-a4-sprint1-plan.md",
+  "previous_sprint": {
+    "plan": "design_docs/planned/w-world-approvals-by-key-a3a-sprint4-plan.md",
+    "json": "design_docs/planned/sprint_w-world-approvals-by-key-a3a-s4.json",
+    "landed_merge": "4134ce89",
+    "note": "A3a code-complete; the A4 design merged at 9a6b959d (PR #562)"
+  },
+  "base_commit": "9a6b959deed573d7966863a1f166f3a8c5700f2e",
+  "queue_row": 201,
+  "iteration": 389,
+  "sprint_number": 1,
+  "milestone": "A4",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter389-a4-s1",
+  "branch": "sprint/world-iter389-row201-a4-s1",
+  "decisions_open": {
+    "D-WORLD-115": "OPEN, default A (keep the decision message with the derived challenge) applied from iteration 389; sprint 1 does not depend on the answer (plan S1-D2: nothing in sprint 1 verifies a signature over the message)"
+  },
+  "cut": {
+    "cap_loc": 2000,
+    "measure": "git diff --numstat <base> HEAD -- cmd host (insertions + deletions); docs/ and design_docs/ are outside the filter",
+    "fallback_fired": "yes: CD1-CD4 (the typed CLI, design's price ~400) moved to sprint 2's head; M1-M3 without them measured 1,985 of 2,000 (margin 15)",
+    "never_cut_and_built": "M1, M2, the discovery, D4a, RD9b-RD9d"
+  },
+  "scope": [
+    "the 91-byte decision message (host/approval/decision.go) and its layout tests",
+    "the pure decision law D1-D10 with D4a/D4b (host/broker/decision_law.go) and the reserved-scope predicate L1",
+    "the complete request-wide decision-packet discovery (host/coordinator/decisionpacket_discover.go)",
+    "the broker refuses a second, different decision of a request (an identical one is idempotent); publish consumer L2 refuses ssh:/webauthn: decisions; the caller census XG1",
+    "GET /surface/decisions/{ref} (bytes, window, display verdict) and POST /surface/decide/{ref} (R0, A3a's R2-R6, the law under humanMu, the typed arm via the row-236 operator proof, DecideApproval with decidedBy operator:terminal)"
+  ],
+  "moved_to_sprint_2_head": [
+    "CD1 TestApproveDecideTyped",
+    "CD2 TestApproveDecideNoTerminal",
+    "CD3 TestApproveDecideFlagRules",
+    "CD4 TestApproveDecideRefusesAMismatchedSubject",
+    "cmd/ailang-worldd/approve_decide.go (sha256: id dispatch, --deny, GET + hash checks, /dev/tty y, writeOperatorProof decision-<hex>/decide-<verb>, POST)",
+    "design Q2 (approve --list decisions)"
+  ],
+  "n4_k0_handler_order": "R2 (approvalRoute) -> R0 -> R3 -> R4 -> R5 -> R6 -> humanMu -> readDecision -> law D1-D10 -> [arm slot: typed consumeOperatorProof | sprint 2 key: read-only judge (W15 deferred) -> non-waiting writer -> RecordKeyDecision {K1, K2, K0 (useApprover both paths; exact unlanded artifact skips only W15/usePasskey), else W15 + usePasskey, K5}] -> broker.DecideApproval -> [key: LandKeyDecision -> close] -> 200 (plan S1-D9)",
+  "executor_lane": "as routed by the controller; runs: (M1a, M1b, M1c, M2), (M3a, M3b, M3c, M3d); no keys, no Chrome, no ssh-keygen, no real store",
+  "executor_form": "every sub-milestone is a unified diff in the plan Appendix P, applied with patch -p1 after a --dry-run (plan §2); no hand edits",
+  "estimate_loc": {
+    "production": 587,
+    "test": 1398,
+    "total_cumulative": 1985,
+    "docs": 0,
+    "measure": "insertions + deletions (git diff --numstat -- cmd host), measured after a commit of each scratch stage and re-measured on the round-trip tree"
+  },
+  "constraints": [
+    "D-WORLD-109: temp stores under t.TempDir(), forged validated packet commits, test-written operator proofs; no real key, store, /dev/tty, ~/.ssh, ~/.ailang/world, ssh-keygen, mint or publish",
+    "host/approval stdlib-only and pure; the law pure (no I/O, no clock); effects only in the daemon handler",
+    "no /v1 route (TestFrozenV1RouteTableMatchesMux 13), no .ail, surfaceCSP unchanged, no CORS, no new dependency, no new store.OpenCredentials( site, no context root",
+    "decidedBy derived (operator:terminal), never accepted (strict grammar)",
+    "no t.Parallel in new tests; never nohup, never background a test leg; no git writes by the executor"
+  ],
+  "baseline": {
+    "env": "export AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0); go1.26.6 darwin/arm64; load average 90-190 on 16 cores",
+    "git_status": "clean at 9a6b959d",
+    "verify_ail": "PASSED (16 identities, 40 named tests, 503 se-tools named tests)",
+    "packages": "rc 1 under load: coordinator TestCapsuleWarmEqualsColdForSeTools, daemon TestMarketingCaptureInventoryMutation/TestRegistryPhaseHasItsOwnClock (each green alone) and TestServeStartsWhenTheProbeSpendsTheStartupClock (node --version > 5 s, red alone too: environmental)",
+    "broker_whole": "rc 1: only TestExecProtectedCheckTimeout (known list)",
+    "race_and_inventories": "green: 33 named PASS, -race ok x4, 265 s",
+    "verify_go_after_commit": "not measured by the planner (time); the controller's after-commit leg"
+  },
+  "design_premises_found_false": [
+    "P1: design §7/§6 RD1 'TestSurfaceAppRoutes edited': not needed; RD1 is new; TestSurfaceAppRoutes and TestApprovalRoutesRegistered stay unedited",
+    "P2: design §0/§2.4 'the two production deciders ... are unaffected': false for a byte-identical re-approval (identical requests collide); TestEpisodeFinishOperatorProofExpiryBoundary re-approves one finish scope at one pinned second (500 with the literal rule). Routed: an identical decision answers its existing ref, nothing written (S1-D10)",
+    "P3: context_thread_test.go:61 pins the mint path's read census (5/4); BR1's walk adds one head and one object read: one line edited to 6/5",
+    "P4: design §2.5 DecisionRefusal (code int, reason string) and Discovery in the coordinator: built as broker.LawRefusal{Step, Status, Reason} and broker.Discovery (the coordinator imports the broker)",
+    "P5: design §0/§9 'after sprint 1 an operator at a terminal can approve or deny a packet': not after this sprint (CLI moved by the size cut)",
+    "P6: design §6 R4d's must-die control needs a key decision: sprint 2's R4e",
+    "P7: design §2.8 subject 'passkeys': sprint 2 (needs the credentials handle of the key arms)",
+    "P8: BR1's refusal is unreachable end to end through the new POST (D6 refuses first under humanMu); unit-proven",
+    "P9: an unrelated DecisionRefusal identifier exists in host/surface (no collision)"
+  ],
+  "files_outside_design_section_8": [
+    "host/approval/decision_test.go",
+    "host/broker/decision_law_test.go",
+    "host/broker/decide_once_test.go",
+    "host/broker/context_thread_test.go",
+    "host/coordinator/decisionpacket_discover_test.go",
+    "host/daemon/surface_decide_routes_test.go",
+    "host/daemon/surface_decide_rig_test.go",
+    "host/daemon/surface_decide_subject_test.go",
+    "host/daemon/surface_decide_post_test.go",
+    "host/daemon/surface_decide_discovery_test.go"
+  ],
+  "ci_change": "none",
+  "not_touched": [
+    "cmd/** (the CLI moved)",
+    "host/store/**",
+    "host/authority/**",
+    "host/approval/{request,signed,sshsig,passkey_assert}.go",
+    "host/daemon/{episode_finish,surface_approve,surface_approve_guard,surface_page}.go",
+    "host/surfacepage/{approve_model.go,app/**,approve/**,passkey/**}",
+    "docs/QUICKSTART.md",
+    "world/*.ail",
+    "packages/**",
+    "scripts/**",
+    "tools/launchd/*",
+    "cmd/world-publish/*",
+    "skills",
+    "~/.ssh",
+    "~/.ailang/world",
+    "~/.ailang/state/mission-v1*"
+  ],
+  "milestones": [
+    {
+      "id": "M1a",
+      "title": "the decision message: host/approval/decision.go (DecisionMessage 91 bytes, DecisionMessageHash, DecisionNamespace, DecisionVerb); DM1, DM2",
+      "production_loc": 69,
+      "test_loc": 93,
+      "expected_cumulative_numstat_after_commit": 162,
+      "run": 1,
+      "acceptance_ref": "plan §3 M1a",
+      "patch_ref": "plan Appendix P, fence ````diff M1a",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M1b",
+      "title": "the pure decision law D1-D10 (D4a/D4b) and L1 ReservedApprovalScope: host/broker/decision_law.go; DL1-DL12, DL4a, DL4b, R4a",
+      "production_loc": 132,
+      "test_loc": 214,
+      "expected_cumulative_numstat_after_commit": 508,
+      "run": 1,
+      "acceptance_ref": "plan §3 M1b",
+      "patch_ref": "plan Appendix P, fence ````diff M1b",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M1c",
+      "title": "the complete request-wide packet discovery: host/coordinator/decisionpacket_discover.go (2000 + sentinel, keyset cursor, Undecodable); DS1",
+      "production_loc": 63,
+      "test_loc": 162,
+      "expected_cumulative_numstat_after_commit": 733,
+      "run": 1,
+      "acceptance_ref": "plan §3 M1c",
+      "patch_ref": "plan Appendix P, fence ````diff M1c",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M2",
+      "title": "the broker rules: first decision final (an identical one idempotent, S1-D10), ApprovalChainState, publish L2; BR1, BR2, R4b, R4c, XG1; the read-census line (P3)",
+      "production_loc": 36,
+      "test_loc": 235,
+      "expected_cumulative_numstat_after_commit": 1004,
+      "run": 1,
+      "acceptance_ref": "plan §3 M2",
+      "patch_ref": "plan Appendix P, fence ````diff M2",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M3a",
+      "title": "GET /surface/decisions/{ref} and POST /surface/decide/{ref} (typed arm only) behind approvalRoute: surface_decide.go, decide_model.go, daemon.go; RD1; XG1 gains the handler",
+      "production_loc": 287,
+      "test_loc": 65,
+      "expected_cumulative_numstat_after_commit": 1356,
+      "run": 2,
+      "acceptance_ref": "plan §3 M3a",
+      "patch_ref": "plan Appendix P, fence ````diff M3a",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M3b",
+      "title": "the decision rig and RD3 TestDecisionSubjectJSON",
+      "production_loc": 0,
+      "test_loc": 272,
+      "expected_cumulative_numstat_after_commit": 1628,
+      "run": 2,
+      "acceptance_ref": "plan §3 M3b",
+      "patch_ref": "plan Appendix P, fence ````diff M3b",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M3c",
+      "title": "RD2, RD4, RD5, RD6, RD7, RD8, R4d",
+      "production_loc": 0,
+      "test_loc": 273,
+      "expected_cumulative_numstat_after_commit": 1901,
+      "run": 2,
+      "acceptance_ref": "plan §3 M3c",
+      "patch_ref": "plan Appendix P, fence ````diff M3c",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M3d",
+      "title": "RD9, RD9b, RD9c, RD9d (the discovery end to end)",
+      "production_loc": 0,
+      "test_loc": 84,
+      "expected_cumulative_numstat_after_commit": 1985,
+      "run": 2,
+      "acceptance_ref": "plan §3 M3d",
+      "patch_ref": "plan Appendix P, fence ````diff M3d",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "sprint_gates": {
+    "script_ref": "plan §6 (one bash shell, tee to $HOME/.ailang/state/world-iter389/gates/, not under nohup, nothing else running)",
+    "after_commit": "VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh",
+    "final_tree_result": "round-trip tree (byte-identical to the mutant tree): verify_ail PASSED; gofmt/build/vet/fence clean; packages ok except host/daemon TestMCPPostBudgetProductionConstants/batch (known list; PASS alone 42.45 s); -race ok x4; 68 named PASS (33 carried + 35 new) in 312 s; host/broker whole ok 356.8 s rc 0 (on a clone identical to the round-trip tree)"
+  },
+  "mutants": {
+    "rows": 96,
+    "killed_named_and_suite": 88,
+    "equivalents_and_named_survivors": 8,
+    "not_as_expected": 0,
+    "nocompile_last_lines": 0,
+    "ledger_lines": 104,
+    "ledger": "$HOME/.ailang/state/world-iter389/plan-scratch/logs/mutant_ledger.tsv",
+    "equivalents": [
+      "RES-FINISH-PARSE",
+      "DIS-NOTFOUND",
+      "R-DISC-GATE"
+    ],
+    "named_survivors": [
+      "BR1-READ-ERR",
+      "H-LOCK",
+      "H-DECIDE-ERR",
+      "R-D2-SEMANTIC",
+      "R-DISCOVERY-ERR"
+    ]
+  },
+  "roundtrip": "ROUNDTRIP_IDENTICAL_TO_MUTANT_TREE (patches extracted from the plan with §2's awk, cmp-equal to the generated ones, applied to a fresh git archive 9a6b959d export; NUMSTAT 162/508/733/1004/1356/1628/1901/1985)",
+  "executor_directives": {
+    "no_git_writes": true,
+    "never_nohup_or_background_a_test_leg": true,
+    "apply": "patch -p1 after --dry-run, extracted with plan §2's awk",
+    "snapshots": "$HOME/.ailang/state/world-iter389/snap/<M>/ with MANIFEST.sha256 (the two plan files excluded)",
+    "stop_conditions": "patch --dry-run failure; numstat other than expected; a red earlier-milestone test; --- FAIL or --- SKIP in a §3 -v run; a file outside plan §5; any real key/store/tty/~/.ssh/ssh-keygen"
+  },
+  "acceptance_criteria_ref": "plan §9 (13 criteria)",
+  "next_sprint": "A4 sprint 2 'the keys' (M4-M5) with CD1-CD4 at its head (plan Appendix C); sprint 2's planner prices its own fallback (design: the webauthn arm to sprint 3)"
+}
