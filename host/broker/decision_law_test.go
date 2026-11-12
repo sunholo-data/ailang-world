@@ -199,8 +199,9 @@ func TestReservedApprovalScope(t *testing.T) {
 	for _, tc := range []struct{ scope, owner string }{
 		{PublishApprovalScopeFor(id, PublishHashes{TarballSHA256: "t", ContentHash: "c", InterfaceHash: "i"}, 9), "publish"},
 		{"pkg#effect=Other&manifest=m&tarball=t&content=c&interface=i&expires=9", "publish"}, // the parse arm alone
-		{"registry:x", "publish"},                       // the prefix arm alone
-		{"worktree#effect=Registry.Publish", "publish"}, // the effect arm alone
+		{"registry:x", "publish"},                           // the prefix arm alone
+		{"worktree#effect=Registry.Publish", "publish"},     // the effect arm alone
+		{"worktree#effect=Registry.Publish&x=1", "publish"}, // the effect arm, not at the end (sprint-1 judge J07)
 		{FormatFinishApprovalScope(FinishApprovalScope{Repository: "o/r", Remote: "https://github.com/o/r.git", Head: "world/e", SHA: strings.Repeat("a", 40),
 			Base: "dev", TitleSHA256: strings.Repeat("b", 64), BodySHA256: strings.Repeat("c", 64), ExpiresAt: 9}), "finish"},
 		{"github-pr:x", "finish"}, // the finish prefix arm alone
