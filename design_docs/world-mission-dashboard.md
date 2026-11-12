@@ -1,19 +1,18 @@
-# World mission dashboard — iteration 388 (2026-11-12)
+# World mission dashboard — iteration 389 (2026-11-12)
 
-- **Done this fire:** the row 201 A4 child design, r2: [`w-world-approvals-by-key-a4.md`](planned/w-world-approvals-by-key-a4.md). No code.
-  - An operator approves or denies an agent's `Human.Approve` request (the row-172 decision packet) with a typed `y`, an enrolled SSH key or a passkey, from the CLI (`approve <request-ref> [--deny]`) or the surface.
-  - The gap was measured first: no production code calls `broker.DecideApproval`, so these packets could never be decided.
-  - The daemon decides and derives who decided. A key decision can never authorize a publish: there are two separate fences, because the publish check never reads who decided.
-  - Three sprints, about 5,250 lines.
-- **Quorum:** blocked in rounds 1 and 2, with 2 of 3 seats present (gemini-4-argon and gpt6-1-sol; glm and kimi absent on ollama's weekly limit). r2 was made under the controller's carve-out. The independent audit (sonnet) found the carve-out VALID, 84/100, zero blocking. Metered $0.36.
-- **New decision:** D-WORLD-115 asks whether to keep the A4 decision message without the parent's stored random challenge. Default A, applied from iteration 389.
-- **Next loop work:** the A4 sprint-1 planner ("the law and the typed root"), with no re-design.
+- **Done this fire:** row 201 A4 sprint 1 LANDED ([#563](https://github.com/sunholo-data/ailang-world/pull/563), merge `338ff821`, CI 3/3 head and merge first try). Judge (sonnet) PASS 88/100, zero blocking.
+  - A `Human.Approve` decision packet now has a pure refusal ladder (D1–D10), a complete request-wide packet discovery, and the 91-byte `world-decision/v1` message.
+  - A request is decided at most once. A key-made decision can never authorize a publish (fences L1 and L2).
+  - The daemon serves `GET /surface/decisions/{ref}` and accepts a typed decision at `POST /surface/decide/{ref}` behind the A3a guards. It derives `decidedBy` itself and consumes the verb-bound operator proof first.
+  - The typed CLI (`approve <request-ref> [--deny]`) moved to sprint 2 by the design's priced fallback, so an operator cannot decide from a terminal yet. The sprint is 1,985 of 2,000 lines.
+- **Judge gaps carried to sprint 2 (non-blocking):** J07 (the L1 effect arm), J31/J32 (the D1 regex anchor and case at the daemon; reproduced by the controller), J33 (the GET's D4a mapping).
+- **Next loop work:** the A4 sprint-2 planner ("the keys"), typed CLI first. Expect the webauthn fallback cut.
 - **Attended, pending Mark:** the A1b exit run (QUICKSTART §15), the A2 real-passkey exit run (A2 §10, QUICKSTART §16) and the A3a exit run (QUICKSTART §17).
-- **OPEN decisions:** D-WORLD-105 (default C), D-WORLD-114 (default A, applied), D-WORLD-115 (default A, from 389).
+- **OPEN decisions:** D-WORLD-105 (default C), D-WORLD-114 (default A, applied), D-WORLD-115 (default A, applied from 389).
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
-- **Routing this fire:** designer opus (Agent; r0 17 min, r1 4.5 min), evaluator sonnet (Agent, 2 min). No planner or executor. Codex was over ration (probe rc 75).
+- **Routing this fire:** planner opus (Agent, 105 min), executor haiku (Agent ×2; run A resumed once after ending its turn on a wait), evaluator sonnet (Agent, 50 min). No designer. Codex was over ration (probe rc 75). Metered $0.00.
 - **Instrument notes:**
-  - The self-notice script reports `watermark channel unavailable` until a directive is marked on #524.
-  - Row 258 gains the 387 record-PR race red (`marketingcheck` shell-wait).
-  - macOS has no `timeout`, so one quorum launch exited rc 127 having run nothing.
+  - The rig ran at load 40–210. Local `verify_go` hit five 10-minute package timeouts; every red was on a known list or green alone, and clean-runner CI was the gate.
+  - `TestWorkspaceProtectedPolicyWiring` (host/daemon) and `TestExecProtectedCheckTimeout/reserve-after-before` (host/broker) are new load reds, each green alone.
+  - The self-notice script still reports `watermark channel unavailable` until a directive is marked on #524.
 - **Bookkeeping thread:** #524 (rotates Monday 2026-11-16 07:00).

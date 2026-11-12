@@ -1,0 +1,18 @@
+rerun_daemon.log:--- PASS: TestMarketingCaptureInventoryMutation (1.12s)
+rerun_daemon.log:--- PASS: TestSessionSelfGit (3.15s)
+rerun_daemon.log:--- PASS: TestRegistryPhaseHasItsOwnClock (4.70s)
+rerun_daemon.log:--- PASS: TestWorkspaceProtectedPolicyWiring (2.32s)
+rerun_daemon.log:ok  	github.com/sunholo-data/ailang-world/host/daemon	11.688s
+rerun_broker.log:--- PASS: TestProtectedChecker (4.46s)
+rerun_broker.log:--- FAIL: TestExecProtectedCheckTimeout (46.35s)
+rerun_broker.log:FAIL
+rerun_broker.log:FAIL	github.com/sunholo-data/ailang-world/host/broker	51.158s
+rerun_broker.log:FAIL
+base_broker_timeout.log:--- PASS: TestExecProtectedCheckTimeout (54.44s)
+base_broker_timeout.log:ok  	github.com/sunholo-data/ailang-world/host/broker	54.828s
+rerun_broker_timeout_head1.log:--- PASS: TestExecProtectedCheckTimeout (39.25s)
+rerun_broker_timeout_head1.log:ok  	github.com/sunholo-data/ailang-world/host/broker	39.498s
+rerun_broker_timeout_head2.log:--- PASS: TestExecProtectedCheckTimeout (36.83s)
+rerun_broker_timeout_head2.log:ok  	github.com/sunholo-data/ailang-world/host/broker	37.076s
+rerun_store.log:ok  	github.com/sunholo-data/ailang-world/host/store	1.849s
+rerun_pkgproj.log:ok  	github.com/sunholo-data/ailang-world/host/pkgproj	1.536s
