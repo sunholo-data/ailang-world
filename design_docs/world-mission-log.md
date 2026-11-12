@@ -2965,3 +2965,91 @@ That equals the plan at every step (docs 4). The final committed tree equals the
 **Next:**
 1. Row 201 **A4**: `Human.Approve` decision packets (row 172) approved the same way (parent `w-world-approvals-by-key.md` §A4). It needs a NEW child design by the rotation designer: the last used was `claude:claude-opus-5-5`, so next is `codex:gpt-6.1-sol` (re-probe it; rc 75 this fire), falling to `pi:ollama/glm-5.3:cloud`. Then the quorum with `--author`, then the plan.
 2. Mark's A2 exit run (§10, QUICKSTART §16) and the A3a exit run (QUICKSTART §17) are both runnable and attended. D-WORLD-114 stays OPEN for Mark to confirm or veto; default A is built.
+
+## 388 — 2026-11-12 — row 201 A4 child design r2 (`w-world-approvals-by-key-a4.md`): an operator approves or denies a `Human.Approve` decision packet by typed `y`, SSH key or passkey; quorum blocked twice, controller carve-out, independent audit VALID 84; D-WORLD-115 filed on its one amendment to the parent [PRODUCT]
+
+**Pick:** row 201 A4, the charter's Next loop row and record 387's Next 1. Record 387 had landed (#561 → `b0fbcd3e`), so there was no carry-over PR.
+- **Re-measured at pick** (`origin/dev` `b0fbcd3e`): there was no `a4` doc, branch, PR or worktree. `mc_quorum_gate2 w-world-approvals-by-key-a4` returned rc 1; the A3 control returned rc 0.
+- **The gap, measured by the controller before the designer ran:** the exported operator entry point `broker.DecideApproval` has **no** production caller (control: 5 `_test.go` files call it). The only production decisions are `RecordOperatorApproval` (`host/daemon/episode_finish.go:173`, which creates and decides its own request) and `MintAttendedApproval` (`cmd/world-publish/main.go:310`, publish). A decision packet produced in a daemon episode therefore stays `approvals chain: pending`, and nothing can decide it.
+- **Ledger:** valid, 101 rows before and 102 after. OPEN: D-WORLD-105 (default C), D-WORLD-114 (default A, applied), and D-WORLD-115, filed this iteration.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 are not routable (unchanged).
+- **Orphans:** none.
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent. Dev CI 3/3 at `b0fbcd3e`.
+- Directives: 0 allowlisted on #524 (24 comments). The watermark file is absent, so every comment was read.
+- Self-notices: rc 2, `watermark channel unavailable`, an instrument failure and not a verdict (as in 371–387).
+- Inbox: 0 unread for `mission-world`.
+- Skill drift: none. `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target match the driver clone's `origin/dev`.
+- Weekly issue sweep: not owed.
+
+**Carried from 387:** the record PR #561 (docs only; its code tree equals merge `4134ce89`) was red once on its head's race gate. `scripts/marketingcheck` `TestMarketingSupervisorFakeDaemonCleanup/shell-wait` hit its 30 s shell-trap cleanup bound (row 254's class, folded into row 258). Run 43205372503 attempt 2 went 3/3. It was posted as a follow-up on #524 and is recorded here.
+
+**Design** (`w-world-approvals-by-key-a4.md`, a child of the attended parent). Resolver: `recipe claude:claude-opus-5-5 declared:provider-pin`; spawned as Agent `opus`, following the 372–383 precedent. The rotation file reads `claude:claude-opus-5-5`. Record 387's Next named `codex:gpt-6.1-sol` as the rotation's next entry, but codex was over ration (`MISSION_OVER_RATION=codex openrouter`, preflight probe rc 75), and the resolver's answer was followed. Worktree `.wt-world-iter388-a4`, branch `design/world-iter388-row201-a4`.
+- **r0** (16.6 min, 853 lines, 31 V-rows):
+  - **The shape:** the daemon decides, because it is the only writer of the world store. The design adds one route, `POST /surface/decide/{ref}`, with three arms: `typed` (the operator-proof file of `episode finish`), `sshsig` and `webauthn`, behind A3a's guards. It also adds a subject route `GET /surface/decisions/{ref}` and the CLI form `ailang-worldd approve <sha256:request-ref> [--deny] [key flags]`.
+  - **`decidedBy` is derived by the daemon** (`operator:terminal`, `ssh:<name>`, `webauthn:<name>`), never supplied by the caller.
+  - **A pure refusal ladder** D1–D10 lives in `host/broker/decision_law.go`. The broker now refuses a second decision of the same request.
+  - **The signed message** is `world-decision/v1 ‖ verb ‖ packet digest ‖ request digest ‖ expiry`, 91 bytes, under the SSHSIG namespace `world-decision@sunholo`. The verb is signed, and the domain is separate from the mint message.
+  - **R4:** `validatePublishApproval` never reads `DecidedBy` (V11). A4 therefore fences publishing twice:
+    - L1 refuses publish-shaped and finish-shaped scopes for every format;
+    - L2 has the publish consumer refuse `ssh:`/`webauthn:` decisions.
+  - **The controller re-measured the R4 premise first-party:** `DecidedBy` occurs 0 times in the body of `validatePublishApproval` (control: 2 occurrences in the file).
+  - **Designer-found facts (V9, a throwaway probe):** identical requests share a ref; a request can be decided twice and the newest decision wins; `Human.PollApproval` ignores scope.
+- **Quorum round 1 BLOCKED 2/2** ($0.167). The author's vendor (Anthropic) was benched. gemini-4-argon and gpt6-1-sol were present; oc-glm-5-3 and oc-kimi-k3 were absent as `unreachable` (ollama 429, weekly usage limit).
+  - **sol:** D4's "exactly one packet" rested on a 101-packet scan ordered by hash, with no branch for completeness. The controller confirmed `packetScanLimit = 100` (`decisionpacket_validate.go:34`).
+  - **gemini:** a crash between `RecordKeyDecision` and `DecideApproval` strands the passkey counter, and two refs lacked a `sha256:*` CHECK.
+  - Both were real, each carried a fix, and neither disputed the direction.
+  - A first launch was wrapped in `timeout`, which is absent on macOS. It exited rc 127, ran no reviewer and wrote no artifact; it was re-run without the wrapper.
+- **r1** (designer resumed by SendMessage, 4.5 min, 931 lines, 34 V-rows):
+  - a complete request-wide packet discovery (`Discovery{Complete,…}`; D4a refuses an incomplete scan);
+  - both DDL CHECKs, verbatim;
+  - K0, an idempotent retry on the exact artifact of an unlanded row;
+  - V32: a counter-0 assertion passes the counter check every time, so a second use is refused by D6 and the primary key instead. The controller re-read `usePasskey`'s SQL (`passkeys.go:225`).
+- **Quorum round 2 BLOCKED 2/2** ($0.194, the same seats, glm and kimi still 429). Both reviewers independently found ONE defect on ONE surface: r1's K0 sits after the read-only judge's W15 counter check, so a counter-N retry dies before K0 can see it. Each carried a concrete fix, and neither disputed the direction.
+- **r2 by the controller's narrow-refinement carve-out.** §2.7's K0 paragraph is replaced by gpt6-1-sol's two-path judge, in its own words:
+  - W15 is deferred to the writer transaction;
+  - an exact match bypasses only the counter;
+  - revocation is re-checked on both paths;
+  - the mint judge is unchanged.
+  The two fixes differ on one point: gemini's also skips `useApprover`. sol's stricter re-check was kept. RD14 is added with both reviewers' test text verbatim.
+- **Independent audit** (evaluator `sonnet` via Agent, 2.0 min, 75,259 tok; generator ≠ judge): **CARVE-OUT VALID, 84/100, zero blocking.**
+  - It re-ran V3–V6, V11, V32 and V33, all matching.
+  - It traced five retry paths (counter-7 retry, a different counter-7 assertion, counter-0 replay, a revoked approver, SSHSIG), and all close.
+  - It confirmed R4's L1 and L2 each stop a key-decided publish alone, with must-die and must-live rows.
+  - **Its N1 was real:** an end-to-end revoked-approver arm cannot kill its mutant, because the read-only judge refuses a revoked approver first. It moved to a store-level KD9.
+  - N2, N3, N5 and N6 were applied in the same consistency commit (`0722d533`). N4 (folding K0 into the Judge and handler-order bullets) is left to the planner.
+- **Designer diet:** one doc, r0 plus one protocol-mandated revision. Held; r2 cost no designer run.
+- **Size:** 3 sprints, about 5,250 changed lines (≈1,950 / 1,800 / 1,500), each with a priced fallback cut.
+
+**D-WORLD-115 filed** (the design's §0 amendment posture and §12 ask, filed in r0 as iteration 383's retro asked). The parent §2.2 specifies the mint message with a stored 32-byte daemon challenge. A4 instead signs the decision message with the packet digest in the challenge's slot: freshness comes from an expiry of at most 10 minutes, and single use comes from the approvals chain. **A** (default): keep it. **B**: add the stored challenge (≈ +550 lines in sprint 2).
+
+**Not done this fire, on purpose: the A4 sprint-1 planner.** D-WORLD-115 amends the attended parent and is new in this report. The design says sprint 1 does not depend on the answer, but sprint 1 builds the decision message the ask is about, so its default waits one report cycle (as D-WORLD-114 did at 383–384).
+
+**Routing evidence:** base=b0fbcd3eee7b5b29190e678e296635a3dd3a0d0c@2026-11-12T12:59:39Z.
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: `claude:claude-opus-5-5` via Agent `opus` (r0 227,163 tok; r1 resume 260,698 tok as reported); r2 by controller carve-out.
+- Quorum: `ailang design-quorum --author claude:claude-opus-5-5`, rounds 1+2 $0.361 metered (gemini-4-argon $0.250, gpt6-1-sol $0.111); oc-glm-5-3 and oc-kimi-k3 absent both rounds (ollama 429). Quoted as BLOCKED at N−2, not "quorum passed".
+- Planner and executor: not spawned (design-only fire; see above). Resolver: planner `agent-tool opus fail-closed:env-pin`, executor `recipe claude:claude-haiku-5-5 declared:provider-pin`.
+- Evaluator: `sonnet` via Agent (75,259 tok), `agent-tool sonnet declared:alias-pin`, auditing the r2 carve-out.
+- The driver noted codex unusable at preflight (probe rc 75, quota unreadable).
+- Metered total: $0.36 (quorum only).
+
+**Progress:** 1.0 clauses 1–7 MET; the goal is unmoved. Row 201 now has a reviewed design for its last milestone: an operator approves or denies an agent's `Human.Approve` request (the decision packet row 172 produces) with a typed `y`, an enrolled SSH key or a passkey, from the CLI or the surface, and a key decision can never authorize a publish.
+
+**Ruled out:**
+- **Parking A4 as `needs-human-review` after round 2:** the only remaining objection was one defect, raised by both reviewers, each with a concrete fix and no dispute of the direction. The carve-out applied, and an independent judge confirmed it.
+- **Gemini's variant of the round-2 fix** (also skip `useApprover` on the exact-match path): sol's transactional revocation re-check is strictly safer. KD9 pins it.
+- **Codex for the designer:** it was over ration with probe rc 75, and the resolver named opus.
+- **Treating glm/kimi's absence as a lane park:** the quorum degrades by design and records the absence by name. The doc's own designer ran, and the absent seats were reviewers, not a role.
+
+**Retro:**
+- **Two-round convergence on one surface is the carve-out's best case.** In round 2 both reviewers found the identical ordering defect independently, which made the objection unambiguous. A fix that adds a new path (K0) needs its reachability traced through every earlier step. Next designer directive: for any new branch, require a trace from the request's entry point to that branch for each input class.
+- **Tooling:** macOS has no `timeout`. The first quorum launch exited rc 127, ran nothing and wrote no artifact, and only the rc file showed it. Bound background commands with the harness's own timeout instead (rule 6), and read the rc before the artifact.
+- **The ollama quorum seats were both 429 on their weekly limit.** The quorum ran at 2 of 3 seats both rounds. If it recurs next week, it is a capacity pattern to report, not an item fact (standing rule 8e).
+- **Protocol shortcut, stated:** the controller did not re-read `resources/verification-protocol.md` (136 KB) in full this fire. It worked from gate 2's recall list and the gates it read (0, 1, 2, 3 route, 4, 5).
+
+**Next:**
+1. If this record's own PR is still open, land it first (docs only: the A4 design and record 388).
+2. Then the **A4 sprint-1 planner** ("the law and the typed root": the decision message and law, the broker's no-redecide rule, the R4 fences L1/L2, the complete discovery, `GET /surface/decisions/{ref}`, the typed POST arm, `approve <request-ref> [--deny]` typed) from `w-world-approvals-by-key-a4.md` r2, with no re-design. D-WORLD-115's default A applies from iteration 389 if Mark has not answered. Fold the audit's N4 into the plan.
+3. Mark's A2 exit run (QUICKSTART §16) and A3a exit run (QUICKSTART §17) are runnable and attended. D-WORLD-114 and D-WORLD-115 stay OPEN for Mark to confirm or veto.

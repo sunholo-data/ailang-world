@@ -1,0 +1,78 @@
+{
+  "doc": "design_docs/planned/w-world-approvals-by-key-a4.md",
+  "iso_ts": "2026-11-12T12:44:28Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.11616,
+      "tokens_in": 25820,
+      "tokens_out": 644,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "In §2.7, the crash-recovery analysis for `POST /surface/decide/{ref}` violates WebAuthn hardware counter physics and creates a permanent denial-of-service on crash: if the daemon crashes after `RecordKeyDecision` commits (which advances `webauthn_credentials.sign_count` to N via `usePasskey`) but before `broker.DecideApproval` commits to the world store, a retry with the same signature is refused by `usePasskey` (`sign_count` N \u003c= N). Worse, if a non-cloning or software authenticator (which always reports `sign_count = 0`) was used on the crashed attempt, `RecordKeyDecision` left an unlanded row (`decision_ref IS NULL`), and if the operator retries or signs again with `sign_count = 0`, `usePasskey`'s `(sign_count = 0 AND ? = 0)` branch allows the exact same captured `sign_count = 0` assertion to be replayed within the 10-minute expiry window if `broker.DecideApproval` fails transiently, or conversely locks out hardware-counter keys on retry unless a brand-new assertion is generated.",
+        "catch": "In §2.7 (`key_decisions` DDL), `packet_ref` has `CHECK (length(packet_ref) = 71)` without `AND packet_ref GLOB 'sha256:*'`, whereas `request_ref` checks both length and prefix, and `decision_ref` has no length or prefix `CHECK` constraint at all (`decision_ref TEXT -- NULL until the world decision landed`).",
+        "proposed_fix": "Tighten the `key_decisions` DDL in §2.7 so `packet_ref` and `decision_ref` enforce the `sha256:*` grammar (`packet_ref TEXT NOT NULL CHECK (length(packet_ref) = 71 AND packet_ref GLOB 'sha256:*')`, `decision_ref TEXT CHECK (decision_ref IS NULL OR (length(decision_ref) = 71 AND decision_ref GLOB 'sha256:*'))`), and explicitly state in §2.7 that when an unlanded `key_decisions` row (`decision_ref IS NULL`) exists from a prior crash, a retry cannot replay the same hardware-counter WebAuthn assertion (because `sign_count` already advanced in SQLite) and must instead prompt the authenticator for a fresh assertion (which increments `sign_count` to N+1 and replaces the unlanded row under K5), OR reorder/recover by allowing an idempotent retry carrying the exact same `artifact` blob of an unlanded row to skip `useApprover`/`usePasskey` and proceed directly to `broker.DecideApproval` + `LandKeyDecision`."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "ollama error: 429 Too Many Requests: you (marked) have reached your weekly usage limit, upgrade for higher limits: https://ollama.com/upgrade or add usage credits: https://ollama.com/settings (ref: f817144a-a7d9-4f06-bd76-3c45cb6ef5cf)",
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "ollama error: 429 Too Many Requests: you (marked) have reached your weekly usage limit, upgrade for higher limits: https://ollama.com/upgrade or add usage credits: https://ollama.com/settings (ref: 70f7e101-f309-44f6-ba07-f181e8ed549c)",
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.050872,
+      "tokens_in": 23816,
+      "tokens_out": 324,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "D4 claims to establish that exactly one validated packet carries a request, but the proposed discovery scan is bounded to 101 packets and ordered by hash_ref, not by request. No decision-law branch requires refusing when that scan is truncated. A second packet carrying the same request can therefore lie outside the scan, allowing a signature over one packet to land a request-keyed decision that answers both invocations. This defeats the explicit T7 safety guarantee.",
+        "catch": "§2.8 exposes decisionsTruncated as a listing warning, while §2.5 DecisionFacts has no explicit packet-discovery completeness fact. V8 establishes the scan limit and ordering; it does not verify that D4 can prove request-wide uniqueness beyond that limit. RD9 tests two visible packets, not a duplicate outside the scanned prefix.",
+        "proposed_fix": "Add a mandatory D4 completeness check: 'Packet discovery must establish a complete request-wide candidate set. If the bounded global scan reaches its overflow sentinel, or validation reports truncation that prevents establishing uniqueness, refuse with 409; never treat one visible match as exactly one match. Listing truncation warnings do not authorize decisions.' Alternatively, add an exhaustive request-indexed lookup with a verified completeness contract. Extend DecisionFacts with the completeness result and add a regression test containing more than 101 packets, with two carrying the target request and the second outside the scanned hash-ordered prefix; assert refusal and zero decision/evidence writes."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r0 read (sections 0,2 headings,9 summary); R4 premise re-measured first-party: validatePublishApproval reads DecidedBy 0 times (file control 2); DecideApproval has no production caller (5 test-file control)."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-4-argon: In §2.7, the crash-recovery analysis for `POST /surface/decide/{ref}` violates WebAuthn hardware counter physics and creates a permanent denial-of-service on crash: if the daemon crashes after `RecordKeyDecision` commits (which advances `webauthn_credentials.sign_count` to N via `usePasskey`) but before `broker.DecideApproval` commits to the world store, a retry with the same signature is refused by `usePasskey` (`sign_count` N \u003c= N). Worse, if a non-cloning or software authenticator (which always reports `sign_count = 0`) was used on the crashed attempt, `RecordKeyDecision` left an unlanded row (`decision_ref IS NULL`), and if the operator retries or signs again with `sign_count = 0`, `usePasskey`'s `(sign_count = 0 AND ? = 0)` branch allows the exact same captured `sign_count = 0` assertion to be replayed within the 10-minute expiry window if `broker.DecideApproval` fails transiently, or conversely locks out hardware-counter keys on retry unless a brand-new assertion is generated.",
+      "gpt6-1-sol: D4 claims to establish that exactly one validated packet carries a request, but the proposed discovery scan is bounded to 101 packets and ordered by hash_ref, not by request. No decision-law branch requires refusing when that scan is truncated. A second packet carrying the same request can therefore lie outside the scan, allowing a signature over one packet to land a request-keyed decision that answers both invocations. This defeats the explicit T7 safety guarantee."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "oc-glm-5-3",
+        "reason": "unreachable"
+      },
+      {
+        "model": "oc-kimi-k3",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.167032,
+    "total_tokens_in": 49636,
+    "total_tokens_out": 968
+  }
+}

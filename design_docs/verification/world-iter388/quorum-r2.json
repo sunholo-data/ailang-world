@@ -1,0 +1,78 @@
+{
+  "doc": "design_docs/planned/w-world-approvals-by-key-a4.md",
+  "iso_ts": "2026-11-12T12:53:54Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.133928,
+      "tokens_in": 30432,
+      "tokens_out": 610,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "In §2.7 (r1), the K0 idempotent retry path states that on a retry of an unlanded decision (`decision_ref IS NULL`), 'the law D1–D10 and the judge still run first, in full, on every retry'. However, `JudgeDecisionAssertion` (which reuses W15 from `ApproveByAssertion`) runs on the read-only credentials store BEFORE K0 is reached. Because the first attempt already committed `RecordKeyDecision` and advanced `webauthn_credentials.sign_count` to `N`, the read-only judge on the retry will read `p.SignCount == N` from the store, compare it against the retried assertion's `ad.SignCount == N`, and fail at W15 (`ad.SignCount \u003c= p.SignCount`, `ErrSignCountRegression`) before the handler ever opens the writer or checks K0. Thus, K0 is dead code for hardware-counter passkeys (counter \u003e 0) and fails to fix the exact crash window it was introduced for.",
+        "catch": "Trace the exact execution order in `handleSurfaceDecide` for a counter-N passkey retry (`ad.SignCount == 7`, stored `sign_count` already updated to `7` by the prior crashed attempt): `JudgeDecisionAssertion` reads `p.SignCount = 7` from `ro` and rejects `ad.SignCount (7) \u003c= p.SignCount (7)` at step W15 before K0 is ever reached.",
+        "proposed_fix": "In §2.7, check for an existing unlanded `key_decisions` row (`decision_ref IS NULL` with byte-equal `artifact`, `verb`, `packet_ref`, `expiry`, and `format`) on the read-only handle (or pass the unlanded row into `JudgeDecisionAssertion`) BEFORE running W15 in the judge. Specifically: when the read-only lookup finds an unlanded row for `request_ref` whose `artifact` is byte-equal to the POSTed assertion, `JudgeDecisionAssertion` still verifies W1–W14 and P2–P5 (cryptographic signature, challenge hash, origin, RP hash, UV, and that the approver is currently active and not revoked), but skips W15 (`ad.SignCount \u003c= p.SignCount`), and K0 then skips `useApprover`/`usePasskey` on the writer handle. Update RD13(b) and KD7 to explicitly assert that the full HTTP/judge path succeeds on a counter-7 retry when `webauthn_credentials.sign_count` is already 7 in SQLite."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "ollama error: 429 Too Many Requests: you (marked) have reached your weekly usage limit, upgrade for higher limits: https://ollama.com/upgrade or add usage credits: https://ollama.com/settings (ref: f779ef28-97d3-4450-82d8-e68e46dbafbd)",
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0,
+      "tokens_in": 0,
+      "tokens_out": 0,
+      "present": false,
+      "absent_reason": "unreachable",
+      "error": "ollama error: 429 Too Many Requests: you (marked) have reached your weekly usage limit, upgrade for higher limits: https://ollama.com/upgrade or add usage credits: https://ollama.com/settings (ref: 2cda888b-2175-467a-91e0-53c8834c1879)",
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.059844,
+      "tokens_in": 28212,
+      "tokens_out": 342,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The r1 crash-recovery path cannot recover a nonzero-counter WebAuthn assertion as specified. §2.7 requires the full judge, including W15, before K0. After RecordKeyDecision commits counter N and the world write fails, retrying the identical assertion presents counter N against stored N, so W15 rejects before K0 can recognize the artifact. V32 explicitly confirms this behavior; skipping usePasskey later does not resolve it.",
+        "catch": "KD7 and RD13(b) require a successful exact-artifact retry that contradicts the prescribed handler order. A store-level K0 test could pass while the actual HTTP retry remains permanently rejected until a fresh assertion is obtained.",
+        "proposed_fix": "Replace the retry paragraph with an explicit two-path decision judge: verify the signature, challenge binding, origin, RP hash, UV, and approver identity/status first, but defer counter acceptance. On the non-waiting credentials writer, transactionally reload the approver and passkey and compare the existing unlanded row against the exact artifact and all signed subject fields. Only an exact match to previously committed evidence may bypass counter advancement; otherwise enforce the existing W15 and usePasskey rules. Recheck revocation transactionally even on the exact-match path. Leave the mint judge unchanged. Add an HTTP integration test that commits stored counter 7, injects a world-write failure, restarts the daemon, and retries the identical assertion successfully without moving the counter; a different assertion carrying counter 7 must still fail."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r1 applies both round-1 fixes in the reviewers' own options; controller re-read usePasskey SQL (passkeys.go:225) and packetScanLimit=100 (decisionpacket_validate.go:34) first-party."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-4-argon: In §2.7 (r1), the K0 idempotent retry path states that on a retry of an unlanded decision (`decision_ref IS NULL`), 'the law D1–D10 and the judge still run first, in full, on every retry'. However, `JudgeDecisionAssertion` (which reuses W15 from `ApproveByAssertion`) runs on the read-only credentials store BEFORE K0 is reached. Because the first attempt already committed `RecordKeyDecision` and advanced `webauthn_credentials.sign_count` to `N`, the read-only judge on the retry will read `p.SignCount == N` from the store, compare it against the retried assertion's `ad.SignCount == N`, and fail at W15 (`ad.SignCount \u003c= p.SignCount`, `ErrSignCountRegression`) before the handler ever opens the writer or checks K0. Thus, K0 is dead code for hardware-counter passkeys (counter \u003e 0) and fails to fix the exact crash window it was introduced for.",
+      "gpt6-1-sol: The r1 crash-recovery path cannot recover a nonzero-counter WebAuthn assertion as specified. §2.7 requires the full judge, including W15, before K0. After RecordKeyDecision commits counter N and the world write fails, retrying the identical assertion presents counter N against stored N, so W15 rejects before K0 can recognize the artifact. V32 explicitly confirms this behavior; skipping usePasskey later does not resolve it."
+    ],
+    "absent_reviewers": [
+      {
+        "model": "oc-glm-5-3",
+        "reason": "unreachable"
+      },
+      {
+        "model": "oc-kimi-k3",
+        "reason": "unreachable"
+      }
+    ],
+    "total_cost_usd": 0.193772,
+    "total_tokens_in": 58644,
+    "total_tokens_out": 952
+  }
+}

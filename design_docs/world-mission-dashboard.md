@@ -1,20 +1,19 @@
-# World mission dashboard — iteration 387 (2026-11-12)
+# World mission dashboard — iteration 388 (2026-11-12)
 
-- **Landed this fire:** row 201 A3a sprint 4, the last A3a sprint (PR #560, merge `4134ce89`). CI was 3/3 on the head and on the merge, both at the first attempt. Judge sonnet PASS 90, zero blocking.
-  - The Decided list under *Needs you* (the last 3, and "Show all" for the 20 in `requests.json`).
-  - The opt-in browser notification. "Notify me" asks for permission only from its click. With permission granted, each new pending request raises one notification per tab, and clicking it opens the card.
-  - The `N` key jumps to what needs you, and Enter on a now-card link follows it.
-  - The sprint-3 judge's test gap is closed: every `esc()` in the Needs-you list is now pinned by `TestSurfaceAppPure`.
-  - A live-Chrome test shows a hostile signed-field value as text on the card. QUICKSTART §17 gains its notification step.
-  - The only production change is `app.js`: no new route, and the CSP is unchanged.
-- **A3a is code-complete** except Mark's attended exit run (QUICKSTART §17).
-- **Next loop work:** row 201 A4, `Human.Approve` decision packets approved the same way. It needs a new child design by the rotation designer (next is `codex:gpt-6.1-sol`, then glm), then the quorum and the plan.
-- **Attended, pending Mark:** A1b exit run (QUICKSTART §15); A2 real-passkey exit run (A2 §10, QUICKSTART §16); A3a exit run (QUICKSTART §17).
-- **OPEN decisions:** D-WORLD-105 (default C), D-WORLD-114 (default A, applied).
-- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150/151 not routable.
-- **Routing this fire:** planner opus (Agent, 85 min), executor haiku (Agent ×2, 5 min), evaluator sonnet (Agent, 8 min); no designer, no quorum. Codex unusable at preflight (rc 75). Metered $0.00.
+- **Done this fire:** the row 201 A4 child design, r2: [`w-world-approvals-by-key-a4.md`](planned/w-world-approvals-by-key-a4.md). No code.
+  - An operator approves or denies an agent's `Human.Approve` request (the row-172 decision packet) with a typed `y`, an enrolled SSH key or a passkey, from the CLI (`approve <request-ref> [--deny]`) or the surface.
+  - The gap was measured first: no production code calls `broker.DecideApproval`, so these packets could never be decided.
+  - The daemon decides and derives who decided. A key decision can never authorize a publish: there are two separate fences, because the publish check never reads who decided.
+  - Three sprints, about 5,250 lines.
+- **Quorum:** blocked in rounds 1 and 2, with 2 of 3 seats present (gemini-4-argon and gpt6-1-sol; glm and kimi absent on ollama's weekly limit). r2 was made under the controller's carve-out. The independent audit (sonnet) found the carve-out VALID, 84/100, zero blocking. Metered $0.36.
+- **New decision:** D-WORLD-115 asks whether to keep the A4 decision message without the parent's stored random challenge. Default A, applied from iteration 389.
+- **Next loop work:** the A4 sprint-1 planner ("the law and the typed root"), with no re-design.
+- **Attended, pending Mark:** the A1b exit run (QUICKSTART §15), the A2 real-passkey exit run (A2 §10, QUICKSTART §16) and the A3a exit run (QUICKSTART §17).
+- **OPEN decisions:** D-WORLD-105 (default C), D-WORLD-114 (default A, applied), D-WORLD-115 (default A, from 389).
+- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
+- **Routing this fire:** designer opus (Agent; r0 17 min, r1 4.5 min), evaluator sonnet (Agent, 2 min). No planner or executor. Codex was over ration (probe rc 75).
 - **Instrument notes:**
   - The self-notice script reports `watermark channel unavailable` until a directive is marked on #524.
-  - Row 258 gains the 386 record-merge race red (`host/surfacefollow` `TestBackoff`, first instance).
-  - The planner saw a new untouched-package flake once: `host/broker` `TestPublishApprovalRefusalSetWithALandedPositiveControl`.
+  - Row 258 gains the 387 record-PR race red (`marketingcheck` shell-wait).
+  - macOS has no `timeout`, so one quorum launch exited rc 127 having run nothing.
 - **Bookkeeping thread:** #524 (rotates Monday 2026-11-16 07:00).
