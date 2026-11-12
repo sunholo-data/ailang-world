@@ -1,0 +1,292 @@
+{
+  "sprint_id": "w-world-approvals-by-key-a4-s2",
+  "design_doc": "design_docs/planned/w-world-approvals-by-key-a4.md",
+  "design_revision": "r2 (reviewed iteration 388; not reopened)",
+  "sprint_plan": "design_docs/planned/w-world-approvals-by-key-a4-sprint2-plan.md",
+  "previous_sprint": {
+    "plan": "design_docs/planned/w-world-approvals-by-key-a4-sprint1-plan.md",
+    "json": "design_docs/planned/sprint_w-world-approvals-by-key-a4-s1.json",
+    "landed_merge": "338ff821",
+    "note": "A4 sprint 1 landed (PR #563, judge sonnet PASS 88); recorded at 8338eebb (PR #564)"
+  },
+  "base_commit": "8338eebb173290168f07e6b426d461c0122f67a8",
+  "queue_row": 201,
+  "iteration": 390,
+  "sprint_number": 2,
+  "milestone": "A4",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter390-a4-s2",
+  "branch": "sprint/world-iter390-row201-a4-s2",
+  "decisions_open": {
+    "D-WORLD-115": "OPEN, default A applied (built as designed); under B the P slot carries a stored challenge: plan S2-D9"
+  },
+  "cut": {
+    "cap_loc": 2000,
+    "measure": "git diff --numstat <base> HEAD -- cmd host (insertions + deletions); docs/ and design_docs/ outside",
+    "fallback_fired": "yes, from the measured size: the webauthn arm (DM7, RD10 passkey half, CD8-CD9, KD2, the passkey halves of K0/KD7/KD8/RD13/RD14, DecisionSubject.Passkeys) and CD6-CD7 (--write-message/--signature on a request ref; 63 lines measured: 2,019 with them) move to sprint 3",
+    "never_cut_and_built": "CD1-CD4, R4e, RD13 (a) SSHSIG, KD5/KD6, schema 8, the judge, J07/J31/J32/J33"
+  },
+  "scope": [
+    "the typed CLI approve <request-ref> [--deny] (CD1-CD4), sprint 1 Appendix C's head",
+    "the sprint-1 judge's test gaps J07, J31/J32, J33",
+    "the decision signature law and credentials schema 8 key_decisions (KD1, KD3-KD7, KD9 SSH halves)",
+    "the decision judge JudgeDecisionSSH (JD1-JD3)",
+    "the POST's sshsig arm (RD10-RD13 a, R4e, H-LOCK) and approve <request-ref> --sign-with (CD5)"
+  ],
+  "moved_to_sprint_3": [
+    "the webauthn arm (design price ~500): DecideByAssertion/DM7, JudgeDecisionAssertion, the POST webauthn arm with W15 + usePasskey in the writer, KD2, passkey halves of KD7/KD8/RD13/RD14, DecisionSubject.Passkeys, CD8, CD9",
+    "CD6 --write-message and CD7 --signature --expiry on a request ref (63 lines measured; tagged CD67-CUT in plan-scratch/work)"
+  ],
+  "how_the_cli_finds_the_daemon": "--daemon <host:port> (default defaultServiceAddr()); GET /v1/health must name --db and the credentials store (store.SameDatabase, episode finish F6), because the typed proof is written beside the served credentials store",
+  "schema_8_forward_compatibility": "the design's DDL verbatim, format-agnostic (format IN ('ssh','webauthn'), artifact BLOB); the passkey counter stays webauthn_credentials.sign_count; sprint 3 adds Go only, no schema 9",
+  "n4_k0_handler_order": "R2 -> R0 -> R3 -> R4 -> R5 -> R6 (grammar: exactly one of typed, sshsig) -> humanMu -> readDecision -> law D1-D10 -> arm slot: sshsig = keyArm (JudgeDecisionSSH read-only -> Binds -> OpenCredentials non-waiting -> RecordKeyDecision K1 K2 K0 K3 K5) | typed = consumeOperatorProof -> broker.DecideApproval(decidedBy derived) -> LandKeyDecision (key arm) -> 200",
+  "executor_lane": "as routed by the controller; runs: (M4a, M4b, M4c), (M4d, M4e, M4f, M4g), (M5a, M5b, M5c); approvaltest keys and a temp-dir ssh-keygen key only",
+  "executor_form": "every sub-milestone is a unified diff in the plan Appendix P, applied with patch -p1 after --dry-run, extracted with plan §2's awk",
+  "estimate_loc": {
+    "production": 738,
+    "test": 1245,
+    "total_cumulative": 1983,
+    "docs": 0,
+    "measure": "insertions + deletions (git diff --numstat -- cmd host), measured after a commit of each scratch stage and on the round-trip tree; production includes the 15-line credentials_schema.sql"
+  },
+  "constraints": [
+    "D-WORLD-109: approvaltest keys, temp stores, an httptest loopback daemon; ssh-keygen -Y sign only on a key made in a test temp dir",
+    "host/approval pure and stdlib-only; effects at the store/daemon/CLI boundary; the daemon never keeps the credentials writer",
+    "decidedBy derived, never accepted; no /v1 route, no new route, no CSP change, no CORS, no new dependency",
+    "no t.Parallel; every Go Bash call timeout 600000, foreground",
+    "no git writes by the executor"
+  ],
+  "baseline": {
+    "env": "export AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0); go1.26.6 darwin/arm64; load 13-53",
+    "git_status": "clean at 8338eebb",
+    "verify_ail": "PASSED (16 identities, 40 named tests, 503 se-tools named tests)",
+    "packages": "rc 0 (host/daemon 404 s, cmd/ailang-worldd 194 s)",
+    "broker_whole": "rc 1: only TestExecProtectedCheckTimeout (known list); green alone (39.6 s)",
+    "race_and_inventories": "race rc 0; 49 named PASS, 0 SKIP/FAIL; whole script 1,459 s",
+    "verify_go_after_commit": "not measured by the planner (no commit in the worktree); the controller's after-commit leg"
+  },
+  "design_premises_found_false": [
+    "P1 the production SSH signer hard-codes the mint namespace (sshsign.go:47) -> sshsign.SignIn + sessionEnv.signDecision",
+    "P2 schema 8 breaks ten downgrade fixtures across host/daemon, host/authority, cmd (some in the design's unedited list) + four store pins -> one token per fixture (A3a precedent 38a6d903)",
+    "P3 approve refuses the global --addr -> local --daemon",
+    "P4 sprint-1 DecideBody.Typed has no omitempty -> omitempty",
+    "P5 KD2 is passkey-only -> moved",
+    "P6 RD11's forged decidedBy is already sprint 1's grammar -> re-asserted on an sshsig body",
+    "P7 KD9's HTTP mapping is unreachable end to end -> store-level, named survivor D-RACE",
+    "P8 no route this sprint (TestSurfaceAppRoutes unchanged)"
+  ],
+  "files_outside_design_section_8": [
+    "host/sshsign/sshsign.go",
+    "cmd/ailang-worldd/session.go",
+    "cmd/ailang-worldd/main.go",
+    "every new and edited _test.go (plan §5)"
+  ],
+  "ci_change": "none",
+  "not_touched": [
+    "host/approval/{request,signed,sshsig,passkey_assert}.go",
+    "host/authority/judge.go",
+    "host/broker/** production",
+    "host/coordinator/**",
+    "host/daemon/{daemon,episode_finish,surface_approve,surface_approve_guard,surface_page}.go",
+    "host/surfacepage/{approve_model.go,app/**,approve/**,passkey/**}",
+    "docs/QUICKSTART.md",
+    "world/*.ail",
+    "packages/**",
+    "scripts/**",
+    "tools/launchd/*",
+    "cmd/world-publish/*",
+    "any skill",
+    "~/.ssh",
+    "~/.ailang/world",
+    "~/.ailang/state/mission-v1*"
+  ],
+  "milestones": [
+    {
+      "id": "M4a",
+      "title": "the sprint-1 judge's test gaps: J07 (R4a row), J31/J32 (TestDecideRefGrammarIsAnchored), J33 (TestDecisionSubjectRefusesAnUndecodablePacket)",
+      "production_loc": 0,
+      "test_loc": 55,
+      "expected_cumulative_numstat_after_commit": 55,
+      "run": 1,
+      "acceptance_ref": "plan §3 M4a",
+      "patch_ref": "plan Appendix P, fence ````diff M4a",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M4b",
+      "title": "the typed decision mode: cmd/ailang-worldd/approve_decide.go, the request-ref dispatch, --deny, --daemon, help, +2 context roots; CD2, CD3 and the fake daemon rig",
+      "production_loc": 211,
+      "test_loc": 184,
+      "expected_cumulative_numstat_after_commit": 450,
+      "run": 1,
+      "acceptance_ref": "plan §3 M4b",
+      "patch_ref": "plan Appendix P, fence ````diff M4b",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M4c",
+      "title": "CD1 TestApproveDecideTyped, CD4 TestApproveDecideRefusesAMismatchedSubject",
+      "production_loc": 0,
+      "test_loc": 109,
+      "expected_cumulative_numstat_after_commit": 559,
+      "run": 1,
+      "acceptance_ref": "plan §3 M4c",
+      "patch_ref": "plan Appendix P, fence ````diff M4c",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M4d",
+      "title": "host/approval/decision_signed.go: DecideBySignature, SignedDecision, VerifyDecisionSSHSIG; DM3-DM6, DM8 (SSH halves)",
+      "production_loc": 91,
+      "test_loc": 127,
+      "expected_cumulative_numstat_after_commit": 777,
+      "run": 2,
+      "acceptance_ref": "plan §3 M4d",
+      "patch_ref": "plan Appendix P, fence ````diff M4d",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M4e",
+      "title": "credentials schema 8: host/store/key_decisions.go (RecordKeyDecision K0-K5, LandKeyDecision, KeyDecision), the DDL verbatim, the 7->8 upgrade; KD1, KD5, KD6; P2's ten downgrade fixtures",
+      "production_loc": 196,
+      "test_loc": 169,
+      "expected_cumulative_numstat_after_commit": 1142,
+      "run": 2,
+      "acceptance_ref": "plan §3 M4e",
+      "patch_ref": "plan Appendix P, fence ````diff M4e",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M4f",
+      "title": "KD3/KD9, KD4/KD7 (SSH), K2 grammar",
+      "production_loc": 0,
+      "test_loc": 116,
+      "expected_cumulative_numstat_after_commit": 1258,
+      "run": 2,
+      "acceptance_ref": "plan §3 M4f",
+      "patch_ref": "plan Appendix P, fence ````diff M4f",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M4g",
+      "title": "host/authority/judge_decision.go JudgeDecisionSSH; JD1-JD3",
+      "production_loc": 45,
+      "test_loc": 77,
+      "expected_cumulative_numstat_after_commit": 1380,
+      "run": 2,
+      "acceptance_ref": "plan §3 M4g",
+      "patch_ref": "plan Appendix P, fence ````diff M4g",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M5a",
+      "title": "the POST's sshsig arm: host/daemon/surface_decide_key.go keyArm, the arm slot, the grammar (exactly one of typed/sshsig); RD10, RD11, the judge's refusals; writer sites 1->2",
+      "production_loc": 128,
+      "test_loc": 150,
+      "expected_cumulative_numstat_after_commit": 1658,
+      "run": 3,
+      "acceptance_ref": "plan §3 M5a",
+      "patch_ref": "plan Appendix P, fence ````diff M5a",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M5b",
+      "title": "RD12 busy, RD13 (a) failed world write + identical retry (key and typed), R4e, H-LOCK, RD9b/RD9c by key",
+      "production_loc": 0,
+      "test_loc": 146,
+      "expected_cumulative_numstat_after_commit": 1804,
+      "run": 3,
+      "acceptance_ref": "plan §3 M5b",
+      "patch_ref": "plan Appendix P, fence ````diff M5b",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M5c",
+      "title": "approve <request-ref> --sign-with: sshsign.SignIn, sessionEnv.signDecision, decideBySignWith; CD5 + the real ssh-keygen sibling",
+      "production_loc": 77,
+      "test_loc": 112,
+      "expected_cumulative_numstat_after_commit": 1983,
+      "run": 3,
+      "acceptance_ref": "plan §3 M5c",
+      "patch_ref": "plan Appendix P, fence ````diff M5c",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "sprint_gates": {
+    "script_ref": "plan §6 = plan-scratch/tools/gates.sh (bash 3.2, every leg records its rc, tee to $HOME/.ailang/state/world-iter390/gates/, not under nohup)",
+    "after_commit": "VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh",
+    "final_tree_result": "`verify_ail` → `✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass` (no `.ail` changed); `gofmt`, `build`, `vet`, `fence` rc 0; `pkgs` rc 0 (`host/daemon 370.4s`, `cmd/ailang-worldd 152.0s`, every package `ok`); `broker_named` rc 0; `broker_whole_reported` rc 0 (`ok host/broker 221.1s`: green on this run, the base's known-list red did not recur); `race` rc 0 (`ok` ×6: host/approval, host/authority, host/store, host/sshsign, host/daemon (the decide, approve and finish tests), cmd/ailang-worldd (the approve tests); no race report); `inv` rc 0: **73** named `--- PASS` (49 carried, as at the base, + 24 new: `TestDecideBySignatureApprover` … `TestApproveDecideSignWithSSHKeygen`), 0 SKIP, 0 FAIL, none missing — incl. `TestFrozenV1RouteTableMatchesMux` (13), `TestDaemonCredentialWriterSites` (two sites), `TestProductionContextRoots` (+3), `TestCredentialsMethodsRequireADeadline` (+3), `TestDaemonDependencyAllowlist`, `TestWorldBoundaryDependencyAllowlist`, `TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential`, `TestEveryVerbHasHelp`, the quickstart tests; `GATES_DONE 858s FAILS: none` (`logs/final_gates/legs.txt`)",
+    "per_stage_acceptance": "`ACCEPT_OK` for **every one of the ten** (`M4a` … `M5c`): each stage gofmt-clean, `go build ./...` and `go vet` of the touched packages clean, the `_test.go` compile fence without a FAIL line, its §3 `-v` tests `--- PASS` with no SKIP/FAIL (CD5's real-`ssh-keygen` sibling ran: `--- PASS: TestApproveDecideSignWithSSHKeygen`), and its package runs `ok` (M5b's whole `host/daemon`, M5c's whole `cmd/ailang-worldd`)"
+  },
+  "mutants": {
+    "rows": 125,
+    "killed_named_and_suite": 109,
+    "equivalents_and_named_survivors": 14,
+    "inventory_only": 1,
+    "must_live": 1,
+    "not_as_expected": 0,
+    "nocompile_last_lines": 0,
+    "ledger": "$HOME/.ailang/state/world-iter390/plan-scratch/logs/mutant_ledger.tsv",
+    "equivalents": [
+      "C-HEALTH-ERR",
+      "C-BASE64",
+      "C-PKT-DECODE",
+      "A-DECIDEDBY-FORMAT",
+      "S-K0-FORMAT",
+      "S-K0-APPROVER",
+      "S-K5-WHERE",
+      "D-BINDS"
+    ],
+    "named_survivors": [
+      "C-PROOF-ERR",
+      "C-MADE-REQUEST",
+      "C-SIGN-NIL",
+      "D-LAND-ERR",
+      "D-RO-ERR",
+      "D-RACE"
+    ],
+    "inventory_only_row": "S-K1-DEADLINE",
+    "must_live_row": "LAW-D5-L2"
+  },
+  "roundtrip": "ROUNDTRIP_IDENTICAL_TO_STAGE_TREE (patches extracted from the plan with §2's awk, cmp-equal to the generated ones, applied to a fresh git archive 8338eebb export; numstat 55/450/559/777/1142/1258/1380/1658/1804/1983)",
+  "executor_directives": {
+    "no_git_writes": true,
+    "never_nohup_or_background_a_test_leg": true,
+    "go_bash_timeout_ms": 600000,
+    "apply": "patch -p1 after --dry-run, extracted with plan §2's awk",
+    "snapshots": "$HOME/.ailang/state/world-iter390/snap/<M>/ with MANIFEST.sha256 (the two plan files excluded)",
+    "stop_conditions": "patch --dry-run failure; numstat other than expected; a red earlier-milestone test; --- FAIL or --- SKIP in a §3 -v run; a file outside §5; any real key, store, tty or ~/.ssh"
+  },
+  "acceptance_criteria_ref": "plan §9 (14 criteria)",
+  "operator_after_sprint": "approve or deny a packet at a terminal by typed y (approve <request-ref> [--deny]) or by an enrolled SSH key (--sign-with <key>)",
+  "next_sprint": "A4 sprint 3 'the surface' + the moved webauthn arm and CD6-CD7 (plan Appendix C; its planner prices its own fallback, ~2,060)"
+}
