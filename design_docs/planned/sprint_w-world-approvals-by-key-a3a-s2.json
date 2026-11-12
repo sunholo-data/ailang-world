@@ -1,0 +1,237 @@
+{
+  "sprint_id": "w-world-approvals-by-key-a3a-s2",
+  "design_doc": "design_docs/planned/w-world-approvals-by-key-a3.md",
+  "design_revision": "r2 (quorum r1+r2 + controller carve-out + independent audit VALID 84; not reopened)",
+  "sprint_plan": "design_docs/planned/w-world-approvals-by-key-a3a-sprint2-plan.md",
+  "previous_sprint": {
+    "plan": "design_docs/planned/w-world-approvals-by-key-a3a-sprint1-plan.md",
+    "json": "design_docs/planned/sprint_w-world-approvals-by-key-a3a-s1.json",
+    "landed_merge": "b44b5f7d",
+    "recorded": "621ebf9c",
+    "pr": 554,
+    "note": "A3a sprint 1 (M1-M3: schema 7 surface_approvals, the shared judge, approve --await; 1,543 lines); its plan's §1.4 P1-P6 are facts of HEAD"
+  },
+  "base_commit": "a8c666554f284651de33d2f6a2c85a16f5b72c02",
+  "queue_row": 201,
+  "iteration": 385,
+  "sprint_number": 2,
+  "milestone": "A3a",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter385-a3a-s2",
+  "branch": "sprint/world-iter385-row201-a3a-s2",
+  "decisions_open": {
+    "D-WORLD-114": "OPEN, default A (keep both amendments: no Tauri half in A3a; the CLI minter re-judges and mints) applied since iteration 384; built as designed"
+  },
+  "cut": {
+    "cap_loc": 2000,
+    "measure": "git diff --numstat <base> HEAD -- cmd host (insertions + deletions); docs/ and design_docs/ are outside the filter",
+    "fallback_fired": "yes: design §9's pre-named sprint-2 cut. The SSHSIG arm of the POST (R11's sshsig, RT6, RT13, AW6's route half) moves to sprint 3 (plan Appendix C). As built with the cut the sprint measures 1,995 (margin 5); the design's own estimate with the SSHSIG arm is ~2,100 (1,900 + ~200 for --surface-origin and RT13). The guards R2-R5, the origin set O and --surface-origin/CF1 are NOT cut. A POST carrying sshsig is refused 422 NotApproved naming approve <id> --signature <file>.",
+    "committed": "M4a-M5c (= design M4 whole; M5 minus the SSHSIG arm) + AW-NOW",
+    "total_measured_loc": 1995,
+    "margin": 5,
+    "design_estimate": "~1,900 (M4 ~940, M5 ~960) + ~200 [r1]",
+    "production_loc": 689,
+    "test_loc": 1306
+  },
+  "moved_to_sprint_3": [
+    "R11 sshsig arm (authority.JudgeSSHSignature on the POST, recorded ssh/ssh:<name>)",
+    "RT6 TestApprovePOSTRecordsAVerifiedSSHSIG",
+    "RT13 TestApprovePOSTSSHSIGViaTailnetOriginWithNoPasskey",
+    "AW6's route half (an SSHSIG POSTed, approve --await mints ssh:<name>)"
+  ],
+  "carried_obligation": {
+    "test": "TestApproveAwaitJudgesTheApproverAtNow (cmd/ailang-worldd/approve_await_now_test.go, M4a)",
+    "proof": "sed 's/Artifact, now)/Artifact, p.row.CreatedAt)/' (2 lines) -> --- FAIL both subtests (webauthn, ssh); restored -> PASS (plan §1.2 C12, logs/awnow_proof.txt); the two single-line halves are §4 MUT-AW-JUDGE-AT-CREATION and -PK, each KILLED"
+  },
+  "next_sprint": "A3a sprint 3 = design M6-M8 (the card page and approve.js through approvalRoute, Needs you/Decided/notification, live Chrome XA1-XA5, PG2/PG3/PG3b, QUICKSTART §17) + the SSHSIG arm moved by the cut (plan Appendix C)",
+  "executor_lane": "as routed by the controller; runs: (M4a, M4b, M4c), (M4d, M4e), (M5a, M5b, M5c); no browser, no node, no ssh-keygen",
+  "executor_form": "every sub-milestone is a unified diff in the plan Appendix P, applied with patch -p1 after a --dry-run (plan §2); no hand edits",
+  "estimate_loc": {
+    "production": 689,
+    "test": 1306,
+    "total_cumulative": 1995,
+    "measure": "insertions + deletions (git diff --numstat -- cmd host), measured after a commit of each scratch stage"
+  },
+  "constraints": [
+    "D-WORLD-109: approvaltest keys, temp stores under t.TempDir(), httptest recorders with a context-carried local address (no listener), the minter's fake clock; no real key, store, /dev/tty, ~/.ssh, ~/.ailang/world, browser, node, mint, publish or ssh-keygen",
+    "host/approval, host/store, host/authority unchanged; surfaceCSP, isProtected, /surface/passkey, passkey.js, app.js unchanged; no CORS header",
+    "the POST judges with the A2 law before it records; the daemon never keeps the credentials writer (one non-waiting open per POST, closed before the answer)",
+    "the approval routes are Host-checked against O (loopback at the arriving port, --surface-origin, enrolled passkeys' origins); existing routes unchanged",
+    "no new Go module, package, production exec site, context root or /v1 route",
+    "no t.Parallel in new tests",
+    "no git writes by the executor; patch -p1 only",
+    "never under /tmp for scratch; never a gate under nohup"
+  ],
+  "baseline": {
+    "env": "export AILANG_BIN=$HOME/.pinned-ailang/ailang; go1.26.6 darwin/arm64",
+    "git_status": "clean at a8c66655",
+    "pre_commit_script": "tools/gates.sh <base> logs/baseline base (= plan §6 minus the 20 new tests): PRE_COMMIT_GATES_GREEN 457 s; 35 named tests --- PASS; AW 8; cmd/ailang-worldd 127.0 s, host/daemon 286.2 s"
+  },
+  "design_premises_found_false": [
+    "P1: RT12's 'exactly two production store.OpenCredentials call sites: ensureCredentialsStore and the POST' is false: ensureCredentialsStore's writable open is store.UpgradeCredentials (credentials.go:66); RT12 pins {ensureCredentialsStore: UpgradeCredentials, handleSurfaceApprove: OpenCredentials}",
+    "P2: 'the five new routes' (RT1/RT7/T7) include GET /surface/approve/{id} and approve.js, which are sprint 3's; sprint 2 registers and tests three",
+    "P3: R8's 'the CLI's own refusal text (approveAdmission)' cannot be shared from package main; reproduced word for word in surfacepage.AdmissionRefusal (AM3)",
+    "P4: RT10/T12's 'the page retries 3 times' is sprint 3's page; sprint 2 pins the daemon half",
+    "P5: R13's 'below v7 -> 503 Restart' is detected by RecordSurfaceApproval's S1 after the open (same status/class); below 6 by the judge's store step",
+    "P6: RT11's refusal classes are the handler's own (422/400), proving neither the middleware nor a session/cookie decides; isProtected asserted unchanged",
+    "P7: RT2's pending cap cannot be exceeded through the store (PutMintRequest refuses the 17th); the decided cap (20) is pinned"
+  ],
+  "files_outside_design_section_8": [
+    "cmd/ailang-worldd/approve_await_now_test.go",
+    "host/daemon/surface_app_test.go",
+    "host/daemon/surface_approve_rig_test.go",
+    "host/daemon/surface_approve_read_test.go",
+    "host/daemon/surface_approve_post_test.go",
+    "host/daemon/surface_approve_post_guard_test.go",
+    "cmd/ailang-worldd/serve_surface_origin_test.go",
+    "cmd/ailang-worldd/approve_surface_e2e_test.go"
+  ],
+  "ci_change": "none",
+  "not_touched": [
+    "host/approval/**",
+    "host/store/**",
+    "host/authority/**",
+    "host/surfacepage/passkey/**",
+    "host/surfacepage/app/**",
+    "host/daemon/surface_page.go (surfaceCSP)",
+    "cmd/ailang-worldd/approve*.go (production)",
+    "world/*.ail",
+    "packages/**",
+    "scripts/**",
+    "tools/launchd/*",
+    "cmd/world-publish/*",
+    "docs/**",
+    "any skill",
+    "any /v1 route"
+  ],
+  "milestones": [
+    {
+      "id": "M4a",
+      "title": "the read-side model (summaries, card); AM1, AM2; AW-NOW (iteration 384 carried obligation)",
+      "production_loc": 171,
+      "test_loc": 179,
+      "expected_cumulative_numstat_after_commit": 350,
+      "run": 1,
+      "acceptance_ref": "plan §3 M4a",
+      "patch_ref": "plan Appendix P, fence ````diff M4a"
+    },
+    {
+      "id": "M4b",
+      "title": "the POST-side model (body grammar, admission texts, refusal/success bodies); AM3",
+      "production_loc": 96,
+      "test_loc": 71,
+      "expected_cumulative_numstat_after_commit": 517,
+      "run": 1,
+      "acceptance_ref": "plan §3 M4b",
+      "patch_ref": "plan Appendix P, fence ````diff M4b"
+    },
+    {
+      "id": "M4c",
+      "title": "the origin set O, the guards, isRequestRace, Config.SurfaceOrigins + startup check, serve --surface-origin; RG1, CF1",
+      "production_loc": 122,
+      "test_loc": 154,
+      "expected_cumulative_numstat_after_commit": 793,
+      "run": 1,
+      "acceptance_ref": "plan §3 M4c",
+      "patch_ref": "plan Appendix P, fence ````diff M4c"
+    },
+    {
+      "id": "M4d",
+      "title": "the read routes behind the Host check (approvalRoute, approveNow, two HandleFunc); the rig; RT1, RT7; TestSurfaceAppRoutes edit",
+      "production_loc": 175,
+      "test_loc": 289,
+      "expected_cumulative_numstat_after_commit": 1257,
+      "run": 2,
+      "acceptance_ref": "plan §3 M4d",
+      "patch_ref": "plan Appendix P, fence ````diff M4d"
+    },
+    {
+      "id": "M4e",
+      "title": "RT2, RT3",
+      "production_loc": 0,
+      "test_loc": 139,
+      "expected_cumulative_numstat_after_commit": 1396,
+      "run": 2,
+      "acceptance_ref": "plan §3 M4e",
+      "patch_ref": "plan Appendix P, fence ````diff M4e"
+    },
+    {
+      "id": "M5a",
+      "title": "POST /surface/approve/{id} (R1, R3-R14; sshsig refused: the fallback cut); RT4, RT5",
+      "production_loc": 127,
+      "test_loc": 222,
+      "expected_cumulative_numstat_after_commit": 1741,
+      "run": 3,
+      "acceptance_ref": "plan §3 M5a",
+      "patch_ref": "plan Appendix P, fence ````diff M5a"
+    },
+    {
+      "id": "M5b",
+      "title": "RT8, RT9, RT10, RT11, RT12 (TestDaemonCredentialWriterSites)",
+      "production_loc": 0,
+      "test_loc": 171,
+      "expected_cumulative_numstat_after_commit": 1912,
+      "run": 3,
+      "acceptance_ref": "plan §3 M5b",
+      "patch_ref": "plan Appendix P, fence ````diff M5b"
+    },
+    {
+      "id": "M5c",
+      "title": "E2E1 TestSurfaceApproveThenAwaitMints",
+      "production_loc": 0,
+      "test_loc": 83,
+      "expected_cumulative_numstat_after_commit": 1995,
+      "run": 3,
+      "acceptance_ref": "plan §3 M5c",
+      "patch_ref": "plan Appendix P, fence ````diff M5c"
+    }
+  ],
+  "sprint_gates": {
+    "script_ref": "plan §6 (one bash shell, tee to $HOME/.ailang/state/world-iter385/gates/, not under nohup)",
+    "after_commit": "VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh",
+    "planner_final_tree": "PRE_COMMIT_GATES_GREEN 347s; 55 named PASS; AW 9; race ok host/surfacepage/ok host/daemon/ok cmd/ailang-worldd; verify_go rc 0"
+  },
+  "executor_directives": {
+    "no_git_writes": true,
+    "apply": "patch -p1 after --dry-run, extracted with plan §2's awk",
+    "snapshots": "$HOME/.ailang/state/world-iter385/snap/<M>/ with MANIFEST.sha256 (the two plan files excluded)",
+    "expected_numstat": {
+      "M4a": 350,
+      "M4b": 517,
+      "M4c": 793,
+      "M4d": 1257,
+      "M4e": 1396,
+      "M5a": 1741,
+      "M5b": 1912,
+      "M5c": 1995
+    },
+    "stop_conditions": "plan §7"
+  },
+  "mutation_harness": "plan-scratch/tools/mutate.py + tools/mutants.py: one edit per mutant in a worker copy, test binary of the named test's package built -vet=off, named test then package suite (host/surfacepage whole; host/daemon ^(TestApprov|TestRequest|TestDaemonCredentialWriterSites|TestSurfaceAppRoutes|TestFrozenV1RouteTableMatchesMux|TestPasskeyPageRoutes); cmd/ailang-worldd ^(TestApprove|TestServe|TestSurfaceApprove|TestEveryVerbHasHelp|TestQuickstartServiceSectionMatchesTheCLIHelp)), restore asserted byte-identical",
+  "mutation_ledger": "$HOME/.ailang/state/world-iter385/plan-scratch/logs/mutant_ledger.tsv",
+  "mutation_count": {
+    "total": 115,
+    "killed": 114,
+    "named_equivalents_survived": 1,
+    "not_as_expected": 0,
+    "ledger_lines": 230,
+    "runs": {
+      "run1": 115,
+      "run2-final": 115
+    }
+  },
+  "mutation_equivalents_named": [
+    "MUT-R12 (Binds after a verified judgement of the same row cannot fail; kept as the design's defense in depth)"
+  ],
+  "mutation_table_ref": "plan §4",
+  "roundtrip": "ROUNDTRIP_IDENTICAL_TO_MUTANT_TREE: Appendix P extracted from the plan with §2 awk (cmp-equal to the generated patches), applied to a fresh git archive a8c66655 export, ACCEPT M4a rc=0, ACCEPT M4b rc=0, ACCEPT M4c rc=0, ACCEPT M4d rc=0, ACCEPT M4e rc=0, ACCEPT M5a rc=0, ACCEPT M5b rc=0, ACCEPT M5c rc=0, numstat 350/517/793/1257/1396/1741/1912/1995 (logs/roundtrip.log)",
+  "acceptance_criteria_ref": "plan §9 (15 criteria)",
+  "controller_decisions": [
+    "none blocking; D-WORLD-114 stays open (default A)",
+    "the fallback cut fired as design §9 names it (SSHSIG arm to sprint 3); confirm at Gate 2 if a different reading of the cap is wanted"
+  ],
+  "deferred": [
+    "design M5's SSHSIG arm (RT6, RT13, AW6 route half) -> sprint 3 by the fallback cut",
+    "design M6-M8 (sprint 3: card page, Needs you, notification, live Chrome, QUICKSTART §17)",
+    "A3b (Tauri) per D-WORLD-114 default A"
+  ]
+}

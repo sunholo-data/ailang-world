@@ -258,6 +258,10 @@ type Config struct {
 	SurfaceIndex string
 	// SurfaceFollow enrolls read-only sources; mutually exclusive with SurfaceIndex.
 	SurfaceFollow string
+	// SurfaceOrigins (`--surface-origin`, repeatable; row 201 A3) are the origins, beside
+	// loopback and the enrolled passkeys' origins, at which the approval routes answer and accept
+	// a POST (design §2.3 [r1]). Each is A2's ceremony origin; startup refuses any other.
+	SurfaceOrigins []string
 	// RunAllowCaps, RunNetAllow and RunNetAllowHTTP (`--run-allow-caps`,
 	// `--run-net-allow`, `--run-net-allow-http`; row 135 §4.3/§4.6) are the
 	// operator's ailang-run allowlist: the extra capabilities (Declassify,
@@ -454,6 +458,10 @@ type Daemon struct {
 	// NOT the coordinator's clock (coordinator.Config.Now, wired below): no
 	// finish-route time is ever compared with a coordinator time.
 	finishNow func() int64
+
+	// approveNow is the approval routes' clock (row 201 A3 sprint 2), Unix seconds; New sets the
+	// wall clock, and a test may pin it between synchronous handler calls.
+	approveNow func() int64
 
 	// readDeadline bounds every store read a GET handler performs. New always
 	// sets it from the readDeadline constant; it is a field rather than a
@@ -710,6 +718,11 @@ func newDaemon(ctx, phaseParent context.Context, registryBudget time.Duration, c
 	if cfg.SurfaceIndex != "" && cfg.SurfaceFollow != "" {
 		return nil, &StartupError{Stage: StageConfig, Detail: "surface follow refused: --surface-follow and --surface-index are mutually exclusive; next: ailang-worldd serve --help"}
 	}
+	for _, origin := range cfg.SurfaceOrigins {
+		if err := checkSurfaceOrigin(origin); err != nil {
+			return nil, &StartupError{Stage: StageConfig, Detail: err.Error() + "; next: ailang-worldd serve --help"}
+		}
+	}
 	if !isLoopbackHost(cfg.BindHost) {
 		return nil, &StartupError{
 			Stage: StageBindPolicy,
@@ -814,6 +827,7 @@ func newDaemon(ctx, phaseParent context.Context, registryBudget time.Duration, c
 		aguiBudget: aguiRunBudget, aguiBodyBound: aguiBodyBound, aguiTick: aguiTick,
 		aguiStop: make(chan struct{}), aguiSlots: make(chan struct{}, aguiCap),
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog), finishNow: func() int64 { return time.Now().Unix() },
+		approveNow:   func() int64 { return time.Now().Unix() },
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget, workspace: workspace,
 		resolver: authority.New(authority.ReadOnlyAt(credPath)), credentialsPath: credPath,
@@ -1117,6 +1131,10 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/fonts/{name...}", d.handleSurfaceFont)
 	mux.HandleFunc("GET /surface/model.json", d.handleSurfaceModel)
 	mux.HandleFunc("GET /surface/stack.json", d.handleSurfaceStack)
+	// The approval routes (row 201 A3): Host-checked against the surface origin set; none under /v1.
+	mux.HandleFunc("GET /surface/requests.json", d.approvalRoute(d.handleSurfaceRequests))
+	mux.HandleFunc("GET /surface/requests/{id}", d.approvalRoute(d.handleSurfaceRequestCard))
+	mux.HandleFunc("POST /surface/approve/{id}", d.approvalRoute(d.handleSurfaceApprove))
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
 	// are ADDITIVE: the frozen /v1/ table above is untouched, and the routes
 	// are NOT in isProtected — the projection handler resolves the session
