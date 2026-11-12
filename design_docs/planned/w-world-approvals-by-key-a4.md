@@ -1,6 +1,8 @@
 # w-world-approvals-by-key-a4: decide a `Human.Approve` decision packet with an enrolled key
 
-- **Status**: Planned. Designed in iteration 388, **r1**. r0 was **BLOCKED** at quorum round 1
+- **Status**: Planned. Designed in iteration 388, **r2** (r2 by the controller's narrow-refinement
+  carve-out: quorum round 2 BLOCKED 2/2 on one surface, the K0 retry order; both reviewers' fixes applied
+  in their own text, marked **[r2]**; §15). r0 was **BLOCKED** at quorum round 1
   (2/2 present; §15). r1 applies both reviewers' fixes and nothing else; changed text is marked
   **[r1]**: (1) D4 now requires a **complete** request-wide packet discovery (§2.4, §2.5 D4a/D4b,
   RD9b–RD9d); (2) the `key_decisions` DDL is tightened verbatim and a crashed, unlanded key decision
@@ -478,13 +480,34 @@ be a publish stamp. Two layers stop that.
   IS NULL`) has already moved the counter, so a retry with the same hardware-counter assertion would
   fail `usePasskey` (stored `N`, assertion `N`: `sign_count < ?` is false; V32). r1 makes the retry
   **idempotent on the exact artifact**:
-  - **K0 (new, inside the handler, before K3/K4).** Read the request's `key_decisions` row on the
-    writer handle. If it exists with `decision_ref IS NULL` **and** its `artifact` is byte-equal to
-    the POSTed artifact **and** its `verb`, `packet_ref`, `expiry`, `format` and `approver` equal the
-    ones the judge just verified for this POST, then **skip `useApprover`/`usePasskey`** and go
-    straight to `broker.DecideApproval` + `LandKeyDecision`. The law D1–D10 and the judge still run
-    first, in full, on every retry: the signature is verified again, the approver must still be
-    active (the read-only judge's P4), and D6 still refuses if the decision already landed.
+  - **K0 (new, inside the handler, before K3/K4).** **[r2] Superseded by the two-path judge below:
+    r1 put the judge's W15 counter check before K0, so for a hardware-counter passkey the retry
+    died at W15 (stored `N`, assertion `N`) before K0 could recognise the artifact — K0 was
+    unreachable on exactly the path it was added for (quorum round 2, both reviewers).**
+  - **[r2] The two-path decision judge (gpt6-1-sol's fix, verbatim):** "Replace the retry paragraph
+    with an explicit two-path decision judge: verify the signature, challenge binding, origin, RP
+    hash, UV, and approver identity/status first, but defer counter acceptance. On the non-waiting
+    credentials writer, transactionally reload the approver and passkey and compare the existing
+    unlanded row against the exact artifact and all signed subject fields. Only an exact match to
+    previously committed evidence may bypass counter advancement; otherwise enforce the existing W15
+    and usePasskey rules. Recheck revocation transactionally even on the exact-match path. Leave the
+    mint judge unchanged."
+    Concretely: `JudgeDecisionAssertion` runs W1–W14 and P2–P5 on the read-only handle and does **not**
+    run W15; it returns the verified assertion's counter. Inside `RecordKeyDecision`'s transaction:
+    K0 reloads the approver (`useApprover`'s active/unrevoked check runs on both paths) and the
+    passkey row, then — **exact match** (an unlanded row, `decision_ref IS NULL`, whose `artifact` is
+    byte-equal to the POSTed one and whose `verb`, `packet_ref`, `request_ref`, `expiry`, `format`
+    and `approver` equal the verified ones) → skip `usePasskey`, no counter move, go to
+    `broker.DecideApproval` + `LandKeyDecision`; **no exact match** → W15 and `usePasskey` exactly as
+    the mint consume enforces them, then K5. SSHSIG has no counter: its exact-match path still
+    re-checks the approver. gemini-4-argon's equivalent fix ("check for an existing unlanded
+    `key_decisions` row … BEFORE running W15 in the judge … skips W15 … and K0 then skips
+    `useApprover`/`usePasskey`") is the same ordering; the one difference — gemini also skips
+    `useApprover` — is resolved by gpt6-1-sol's "Recheck revocation transactionally even on the
+    exact-match path", which is the stricter of the two and is kept. The mint judge (`judge.go`) is
+    unchanged.
+    The law D1–D10 still runs first on every retry, and D6 still refuses if the decision already
+    landed.
   - **Otherwise** (no row, or a different artifact) the record path runs as above: K3/K4 move the
     counter, and K5 replaces an unlanded row only through that path. So a **fresh** assertion
     (counter `N+1`) also lands, by replacement; a different artifact can never skip the counter.
@@ -730,11 +753,12 @@ fixtures (A2); the browser rows use the A2/A3 driver with Chrome's virtual authe
 | KD4 | `TestRecordKeyDecisionReplaceUnlanded` | an unlanded row is replaced; a landed one is not | K5 replacing landed rows |
 | KD5 **[r1]** | `TestKeyDecisionsPacketRefCheck` | raw `INSERT`s with `packet_ref` of length 71 not starting `sha256:` (e.g. `sha512:` + 64 hex) and of length 70 → constraint error; a `sha256:` + 64 hex value → accepted (control) | the `GLOB 'sha256:*'` clause dropped from `packet_ref` |
 | KD6 **[r1]** | `TestKeyDecisionsDecisionRefCheck` | `decision_ref` NULL → accepted; `sha256:` + 64 hex → accepted; length 71 without `sha256:`, length 70, empty string → constraint error | the `decision_ref` CHECK dropped, or `IS NULL OR` dropped (NULL refused) |
-| KD7 **[r1]** | `TestRecordKeyDecisionIdempotentRetry` | an unlanded row from a hardware-counter assertion (counter 7, stored now 7); the same artifact retried → K0 match → **no `usePasskey` call, counter still 7**, `DecideApproval` + `LandKeyDecision` run once; a **second, independently made** valid assertion that also carries counter 7 → `ErrSignCountRegression`, 0 decisions | K0 deleted (the retry dies on the counter: the objection's failure); K0 matching on request ref alone, without the byte-equal artifact (lets a different artifact skip the counter) |
+| KD7 **[r1] [r2]** | `TestRecordKeyDecisionIdempotentRetry` | an unlanded row from a hardware-counter assertion (counter 7, stored now 7); the same artifact retried → K0 match → **no `usePasskey` call, counter still 7**, `DecideApproval` + `LandKeyDecision` run once; a **second, independently made** valid assertion that also carries counter 7 → `ErrSignCountRegression`, 0 decisions | K0 deleted (the retry dies on the counter: the objection's failure); K0 matching on request ref alone, without the byte-equal artifact (lets a different artifact skip the counter) |
 | KD8 **[r1]** | `TestDecidePOSTCounterZeroAssertionLandsOnce` (`host/daemon`) | a counter-0 passkey (stored 0, assertion 0): first POST lands; the identical POST again → **409 D6**, still one decision, one row; a crash simulated between record and decide, then the identical POST twice → one decision | D6 deleted (the counter-0 assertion lands twice); K0 inserting a second row instead of landing the first |
 | RD10 | `TestDecidePOSTSSHSIG` / `TestDecidePOSTPasskey` | → 200, one decision `ssh:<name>` / `webauthn:<name>`, one landed `key_decisions` row | recording before the law |
 | RD11 | `TestDecidePOSTKeyDecidedByIsDerived` | a body with a forged `decidedBy` → 400; the landed `decidedBy` equals the verified approver | caller-supplied `decidedBy` |
-| RD13 **[r1]** | `TestDecidePOSTRetryAfterAFailedWorldWrite` (`host/daemon`) | a fault-injected `DecideApproval` failure (the store's write seam) after `RecordKeyDecision`, for (a) an SSHSIG, (b) a counter-N passkey, (c) a counter-0 passkey → 500, one unlanded row, 0 decisions; the **identical** body retried → 200, one decision, the row landed, the counter unchanged by the retry; a fresh assertion at `N+1` instead → 200 by replacement | the retry path running `usePasskey` again; the unlanded row left unlanded |
+| RD13 **[r1] [r2]** | `TestDecidePOSTRetryAfterAFailedWorldWrite` (`host/daemon`) | a fault-injected `DecideApproval` failure (the store's write seam) after `RecordKeyDecision`, for (a) an SSHSIG, (b) a counter-N passkey, (c) a counter-0 passkey → 500, one unlanded row, 0 decisions; the **identical** body retried → 200, one decision, the row landed, the counter unchanged by the retry; a fresh assertion at `N+1` instead → 200 by replacement | the retry path running `usePasskey` again; the unlanded row left unlanded |
+| RD14 **[r2]** | `TestDecidePOSTRetryAfterAFailedWorldWriteAcrossRestart` (`host/daemon`) | gpt6-1-sol's test, verbatim: "commits stored counter 7, injects a world-write failure, restarts the daemon, and retries the identical assertion successfully without moving the counter; a different assertion carrying counter 7 must still fail"; and gemini-4-argon's: "the full HTTP/judge path succeeds on a counter-7 retry when `webauthn_credentials.sign_count` is already 7 in SQLite". Plus: the approver revoked between the failed attempt and the identical retry → refused, 0 decisions | the read-only judge running W15 before the exact-match check (the round-2 defect: the retry dies at W15); the exact-match path skipping the transactional approver re-check (a revoked approver's retry lands); exact match on the artifact alone without the signed subject fields |
 | RD12 | `TestDecidePOSTBusyWriter` | a held credentials writer → 503 `Busy`, **0 decisions** | deciding before the evidence |
 | R4e | `TestDecideRefusesReservedScopesByKey` | publish- and finish-shaped requests with a valid key → 403; with L1 compiled out → the decision lands but `validatePublishApproval` refuses it (must-die) | either layer alone deleted |
 | CD5–CD9 | `TestApproveDecide{SignWith,Signature,WriteMessage,WebAuthnLink,WebAuthnAssertion}` | the 91-byte message on disk; `ssh-keygen -Y sign -n world-decision@sunholo` (an `approvaltest` key file); the POST; refusals print the judge's text | the mint message written |
@@ -923,7 +947,8 @@ a positive control in the same command.
 - **Round 1 (2026-11-12T12:44:28Z): BLOCKED 2/2 present (gemini-4-argon, gpt6-1-sol); oc-glm-5-3 and oc-kimi-k3 absent (ollama 429 weekly limit); objections and the r1 changes:** artifact `/Users/voightkampff/.ailang/state/mission-quorum-world/w-world-approvals-by-key-a4-2026-11-12T12-44-28Z.json`. Neither disputed the direction.
   - **(gpt6-1-sol) D4's "exactly one packet" rested on a 101-packet hash-ordered scan with no completeness branch** → lands on §2.4 (the complete request-wide discovery, `Discovery{Complete, Scanned, Carrying, Undecodable}`, overflow sentinel, "listing truncation warnings do not authorize decisions"), §2.5 (D4 split into D4a completeness and D4b count, `DecisionFacts` carries the discovery), §2.8 (the listing is display only), §3, §4 T7, §6 (DL4a, DL4b, DS1, RD9b with 150 packets and the second outside the first 101, RD9c with 2,001, RD9d must-live), §9 gates and sizes, §11 RK3b, V33, V34. The reviewer's first option (refuse on an incomplete scan) is applied; the request-indexed alternative is named as RK3b's lift, not built.
   - **(gemini-4-argon) a crash between `RecordKeyDecision` and `DecideApproval` strands the counter, a counter-0 assertion could be replayed, and two refs lacked the `sha256:*` CHECK** → lands on §2.7 (both CHECKs verbatim; the reviewer's second option chosen: K0, an idempotent retry on the byte-equal artifact of an unlanded row that skips `useApprover`/`usePasskey` and goes to `DecideApproval` + `LandKeyDecision`; the counter-0 analysis), §4 T15, §6 (KD5, KD6, KD7, KD8, RD13), §9 gates and sizes, V32. Measured (V32): the counter-0 replay **is** accepted twice by the counter alone; what refuses a second use is D6 after landing and K0's single row while unlanded, so one counter-0 assertion lands at most one decision.
-- **Round 2:** *(controller fills)*
+- **Round 2 (2026-11-12T12:53:54Z): BLOCKED 2/2 present (gemini-4-argon, gpt6-1-sol); oc-glm-5-3 and oc-kimi-k3 absent (ollama 429 weekly limit, unreachable).** Artifact `/Users/voightkampff/.ailang/state/mission-quorum-world/w-world-approvals-by-key-a4-2026-11-12T12-53-54Z.json`. Both objections land on ONE surface, §2.7's retry order (r1's K0 sat after the judge's W15, so a counter-N retry could never reach it); round 1's discovery fix drew no objection. Neither disputed the direction; both carried a concrete `proposed_fix`.
+  - **r2, by the controller's narrow-refinement carve-out (gate 2), not a designer run:** §2.7's K0 bullet replaced by gpt6-1-sol's two-path judge in its own words (W15 deferred to the writer transaction; exact match bypasses only the counter; revocation re-checked on both paths; mint judge unchanged); gemini-4-argon's equivalent ordering cited, its `useApprover` skip not taken because gpt6-1-sol's stricter revocation re-check is kept; KD7/RD13 marked; RD14 added with both reviewers' test text verbatim plus a revoked-approver arm. No other section changed. An independent evaluator audits this carve-out before any plan.
 - **Amendment confirmation:** (a) the decision message and the derived challenge (§0) — confirmed /
   reverted; filed as D-WORLD-115 on (date).
 - **Anchors found false by the designer:** `MintRequestIDPattern` is defined at
