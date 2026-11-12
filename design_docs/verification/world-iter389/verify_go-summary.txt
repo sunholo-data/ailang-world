@@ -1,0 +1,87 @@
+ok 01-valid-png-in-dir
+ok 02-valid-png-outside-dir (not-allowlisted)
+ok 03-renamed-binary (bad-signature)
+ok 04-polyglot-after-iend (trailing-bytes)
+ok 05-text-chunk (chunk-not-allowed:tEXt)
+ok 06-corrupt-idat (bad-crc)
+ok 07-over-file-cap (file-cap-exceeded)
+ok 08-over-dir-cap (dir-cap-exceeded)
+ok 09-gitattributes-in-dir (bad-signature)
+ok 10-gitattributes-tree-wide (not-allowlisted)
+ok 11-empty-tree (enumerated 0 blobs)
+ok 12-nul-past-8000-bytes (not-allowlisted)
+ok 13-row150-deliverable-names
+ok 14-bad-name-and-subdir (not-allowlisted)
+ok 15-no-allowance-no-images (not-allowlisted)
+ok 16-pinned-font-in-dir
+ok 17-renamed-binary-pinned (bad-signature)
+ok 18-unpinned-font (not-allowlisted)
+ok 19-pinned-name-other-bytes (sha256-mismatch)
+ok 20-font-over-file-cap (file-cap-exceeded)
+ok 21-font-outside-dir (not-allowlisted)
+ok 22-font-in-subdirectory (not-allowlisted)
+ok 23-font-dir-cap (dir-cap-exceeded)
+ok 24-png-and-font-together
+--- FAIL: TestCLIRealSubprocessEpisode (30.15s)
+panic: test timed out after 10m0s
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	600.482s
+--- FAIL: TestSeToolsManifestPublishes (23.50s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/world-publish	142.250s
+ok  	github.com/sunholo-data/ailang-world/host/agentrun	30.897s
+ok  	github.com/sunholo-data/ailang-world/host/agui	127.518s
+ok  	github.com/sunholo-data/ailang-world/host/approval	4.405s
+ok  	github.com/sunholo-data/ailang-world/host/approval/approvaltest	4.228s
+ok  	github.com/sunholo-data/ailang-world/host/archive	32.445s
+ok  	github.com/sunholo-data/ailang-world/host/authority	5.532s
+ok  	github.com/sunholo-data/ailang-world/host/boundary	92.614s
+--- FAIL: TestExecProbeNet6ForeignDialIsRetriedNotRefused (113.01s)
+panic: test timed out after 10m0s
+FAIL	github.com/sunholo-data/ailang-world/host/broker	603.127s
+ok  	github.com/sunholo-data/ailang-world/host/canon	2.830s
+--- FAIL: TestPinnedInterpreterHonoursCacheDir (18.46s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/capsule	234.154s
+ok  	github.com/sunholo-data/ailang-world/host/checkrun	3.699s
+ok  	github.com/sunholo-data/ailang-world/host/childenv	3.379s
+--- FAIL: TestCapsuleWarmEqualsColdForSeTools (34.05s)
+panic: test timed out after 10m0s
+FAIL	github.com/sunholo-data/ailang-world/host/coordinator	603.573s
+--- FAIL: TestAGUISlowReaderCutIsResumable (91.08s)
+--- FAIL: TestSessionSelfGit (9.48s)
+--- FAIL: TestServeStartsWhenTheProbeSpendsTheStartupClock (1.91s)
+--- FAIL: TestRegistryPhaseHasItsOwnClock (12.03s)
+panic: test timed out after 10m0s
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	603.908s
+ok  	github.com/sunholo-data/ailang-world/host/evidence	212.872s
+ok  	github.com/sunholo-data/ailang-world/host/hashref	0.993s
+ok  	github.com/sunholo-data/ailang-world/host/pinfetch	2.036s
+ok  	github.com/sunholo-data/ailang-world/host/pins	4.363s
+--- FAIL: TestInterfaceV2IgnoresACommentOnlyEdit (32.41s)
+--- FAIL: TestQueryInterfaceRefusesAV1Disagreement (32.65s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/pkgproj	124.839s
+ok  	github.com/sunholo-data/ailang-world/host/procbound	2.896s
+ok  	github.com/sunholo-data/ailang-world/host/proctest	1.765s
+ok  	github.com/sunholo-data/ailang-world/host/projection	23.174s
+ok  	github.com/sunholo-data/ailang-world/host/ptytest	1.340s
+ok  	github.com/sunholo-data/ailang-world/host/registry	1.319s
+ok  	github.com/sunholo-data/ailang-world/host/replay	189.706s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	10.002s
+ok  	github.com/sunholo-data/ailang-world/host/sshsign	4.986s
+--- FAIL: TestConvertedStoreMethodsM5b (9.10s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/store	193.949s
+ok  	github.com/sunholo-data/ailang-world/host/surface	7.152s
+ok  	github.com/sunholo-data/ailang-world/host/surfacefollow	39.559s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	20.137s
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	85.496s
+panic: test timed out after 10m0s
+FAIL	github.com/sunholo-data/ailang-world/host/verifygate	600.918s
+ok  	github.com/sunholo-data/ailang-world/host/workbench	18.151s
+ok  	github.com/sunholo-data/ailang-world/host/worktree	113.867s
+--- FAIL: TestMarketingTwoPassInventory (73.10s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	528.750s
+FAIL
+verify_go rc=1

@@ -1,0 +1,17 @@
+verify_ail rc=0
+gofmt rc=0
+build rc=0
+vet rc=0
+fence rc=0
+pkgs rc=1
+--- FAIL: TestMarketingCaptureInventoryMutation (30.52s)
+--- FAIL: TestSessionSelfGit (5.60s)
+--- FAIL: TestServeStartsWhenTheProbeSpendsTheStartupClock (2.36s)
+--- FAIL: TestRegistryPhaseHasItsOwnClock (11.89s)
+--- FAIL: TestWorkspaceProtectedPolicyWiring (12.88s)
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/daemon	956.397s
+FAIL
+broker rc=1
+race_grep_hits rc=0
+GATES_DONE for 4c2cac17 2828s
