@@ -459,6 +459,10 @@ type Daemon struct {
 	// finish-route time is ever compared with a coordinator time.
 	finishNow func() int64
 
+	// approveNow is the approval routes' clock (row 201 A3 sprint 2), Unix seconds; New sets the
+	// wall clock, and a test may pin it between synchronous handler calls.
+	approveNow func() int64
+
 	// readDeadline bounds every store read a GET handler performs. New always
 	// sets it from the readDeadline constant; it is a field rather than a
 	// direct constant reference for the same two reasons drainTimeout is —
@@ -823,6 +827,7 @@ func newDaemon(ctx, phaseParent context.Context, registryBudget time.Duration, c
 		aguiBudget: aguiRunBudget, aguiBodyBound: aguiBodyBound, aguiTick: aguiTick,
 		aguiStop: make(chan struct{}), aguiSlots: make(chan struct{}, aguiCap),
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog), finishNow: func() int64 { return time.Now().Unix() },
+		approveNow:   func() int64 { return time.Now().Unix() },
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget, workspace: workspace,
 		resolver: authority.New(authority.ReadOnlyAt(credPath)), credentialsPath: credPath,
@@ -1126,6 +1131,9 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/fonts/{name...}", d.handleSurfaceFont)
 	mux.HandleFunc("GET /surface/model.json", d.handleSurfaceModel)
 	mux.HandleFunc("GET /surface/stack.json", d.handleSurfaceStack)
+	// The approval routes (row 201 A3): Host-checked against the surface origin set; none under /v1.
+	mux.HandleFunc("GET /surface/requests.json", d.approvalRoute(d.handleSurfaceRequests))
+	mux.HandleFunc("GET /surface/requests/{id}", d.approvalRoute(d.handleSurfaceRequestCard))
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
 	// are ADDITIVE: the frozen /v1/ table above is untouched, and the routes
 	// are NOT in isProtected — the projection handler resolves the session
