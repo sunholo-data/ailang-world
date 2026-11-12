@@ -38,6 +38,9 @@ type sessionEnv struct {
 	// sign is approve --sign-with's signer, signWithSSHKeygen in production (row 201 A1b §2.9):
 	// the armored SSHSIG of msg by key. World never reads the private key; ssh-keygen does.
 	sign func(ctx context.Context, key string, msg []byte, stderr io.Writer) ([]byte, error)
+	// signDecision is approve <request-ref> --sign-with's signer, signDecisionWithSSHKeygen in
+	// production (row 201 A4): the same, under the decision namespace world-decision@sunholo.
+	signDecision func(ctx context.Context, key string, msg []byte, stderr io.Writer) ([]byte, error)
 }
 
 // sessionTTYFix ends every terminal refusal of the attended session verbs. It
@@ -55,6 +58,8 @@ func realSessionEnv() sessionEnv {
 		random: func(b []byte) error { _, err := rand.Read(b); return err },
 		after:  time.After,
 		sign:   signWithSSHKeygen,
+
+		signDecision: signDecisionWithSSHKeygen,
 	}
 }
 

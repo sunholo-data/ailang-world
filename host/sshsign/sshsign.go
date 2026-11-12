@@ -39,12 +39,16 @@ var (
 	ErrEmptySignature    = errors.New("ssh-keygen -Y sign printed nothing")
 )
 
-// Sign runs `<bin> -Y sign -n world-approval@sunholo -f <key>` under ctx with msg on stdin and
-// returns its standard output, the armored signature. stderr (where ssh-keygen reports, and
-// from where a passphrase prompt goes to /dev/tty) is the operator's. A failed run (G1), over
-// MaxSignatureBytes of output (G2) and no output (G3) are errors.
+// Sign is SignIn under the mint namespace, world-approval@sunholo.
 func Sign(ctx context.Context, bin, key string, msg []byte, stderr io.Writer) ([]byte, error) {
-	cmd := exec.CommandContext(ctx, bin, "-Y", "sign", "-n", approval.Namespace, "-f", key)
+	return SignIn(ctx, bin, approval.Namespace, key, msg, stderr)
+}
+
+// SignIn runs `<bin> -Y sign -n <namespace> -f <key>` under ctx with msg on stdin and returns the
+// armored signature it prints (row 201 A4: decisions under world-decision@sunholo). stderr is the
+// operator's. A failed run (G1), over MaxSignatureBytes of output (G2) and none (G3) are errors.
+func SignIn(ctx context.Context, bin, namespace, key string, msg []byte, stderr io.Writer) ([]byte, error) {
+	cmd := exec.CommandContext(ctx, bin, "-Y", "sign", "-n", namespace, "-f", key)
 	cmd.Env = childenv.Scrubbed(os.Environ())
 	cmd.Stdin = bytes.NewReader(msg)
 	out := &cappedBuffer{max: MaxSignatureBytes}

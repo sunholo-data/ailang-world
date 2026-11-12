@@ -140,7 +140,7 @@ func TestApprovePOSTRefusalArms(t *testing.T) {
 		}},
 		{"R11-store-v5", "", "Restart", "restart `ailang-worldd serve`", 503, func(a approvalRig, row store.MintRequestRow) ([]byte, []string) {
 			body := approveBody(row.Digest, assertionFor(t, apPasskey, row, 2))
-			setVersion(t, a.d.credentialsPath, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`)
+			setVersion(t, a.d.credentialsPath, `DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`)
 			return body, nil
 		}},
 		{"R13-busy", "", "Busy", "busy", 503, func(a approvalRig, row store.MintRequestRow) ([]byte, []string) {
@@ -152,7 +152,7 @@ func TestApprovePOSTRefusalArms(t *testing.T) {
 			return approveBody(row.Digest, assertionFor(t, apPasskey, row, 2)), nil
 		}},
 		{"R14-v6", "", "Restart", "restart `ailang-worldd serve`", 503, func(a approvalRig, row store.MintRequestRow) ([]byte, []string) {
-			setVersion(t, a.d.credentialsPath, `DROP TABLE surface_approvals`, `PRAGMA user_version = 6`)
+			setVersion(t, a.d.credentialsPath, `DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `PRAGMA user_version = 6`)
 			return approveBody(row.Digest, assertionFor(t, apPasskey, row, 2)), nil
 		}},
 		{"R14-race", "", "Conflict", "changed while it was approved", 409, func(a approvalRig, row store.MintRequestRow) ([]byte, []string) {

@@ -145,8 +145,8 @@ func TestApproveAwaitNeedsSchema7AndItsRequest(t *testing.T) {
 		gone  bool     // delete the request after the first wait
 		want  string
 	}{
-		{name: "v6-store", setup: []string{`DROP TABLE surface_approvals`, `PRAGMA user_version = 6`}, want: "surface approvals need schema 7: restart `ailang-worldd serve`"},
-		{name: "v5-store", setup: []string{`DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`}, want: "passkeys need schema 6"},
+		{name: "v6-store", setup: []string{`DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `PRAGMA user_version = 6`}, want: "surface approvals need schema 7: restart `ailang-worldd serve`"},
+		{name: "v5-store", setup: []string{`DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`}, want: "passkeys need schema 6"},
 		{name: "deleted", gone: true, want: "is no longer in the store"},
 	} {
 		t.Run(arm.name, func(t *testing.T) {

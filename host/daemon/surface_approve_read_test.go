@@ -63,7 +63,7 @@ func TestRequestsJSON(t *testing.T) {
 			t.Errorf("requests.json carries %q", leak)
 		}
 	}
-	setVersion(t, a.d.credentialsPath, `DROP TABLE surface_approvals`, `PRAGMA user_version = 6`) // below 7: listed, nothing recorded
+	setVersion(t, a.d.credentialsPath, `DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `PRAGMA user_version = 6`) // below 7: listed, nothing recorded
 	if body := a.serve("GET", "/surface/requests.json", apLoopback, nil).Body.String(); strings.Count(body, `"recorded":null`) != 3 || !strings.Contains(body, `"unavailable":""`) {
 		t.Fatalf("a schema-6 store: %s", body)
 	}
@@ -128,7 +128,7 @@ func TestRequestCardJSON(t *testing.T) {
 	if err := json.Unmarshal(a.serve("GET", "/surface/requests/"+row.RequestID, apLoopback, nil).Body.Bytes(), &c); err != nil || !c.Consumed || c.ApprovedBy != "tty" {
 		t.Fatalf("consumed card = %+v, %v", c, err)
 	}
-	setVersion(t, a.d.credentialsPath, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`)
+	setVersion(t, a.d.credentialsPath, `DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`)
 	if rec := a.serve("GET", "/surface/requests/"+row.RequestID, apLoopback, nil); rec.Code != 200 || !strings.Contains(rec.Body.String(), `"passkeys":[]`) {
 		t.Fatalf("a schema-5 store's card = %d %s, want 200 with no passkeys", rec.Code, rec.Body.String())
 	}

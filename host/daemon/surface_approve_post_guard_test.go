@@ -165,7 +165,7 @@ func TestDaemonCredentialWriterSites(t *testing.T) {
 			})
 		}
 	}
-	if want := map[string]string{"ensureCredentialsStore": "UpgradeCredentials", "handleSurfaceApprove": "OpenCredentials"}; !reflect.DeepEqual(sites, want) || readOnly < 5 {
+	if want := map[string]string{"ensureCredentialsStore": "UpgradeCredentials", "handleSurfaceApprove": "OpenCredentials", "keyArm": "OpenCredentials"}; !reflect.DeepEqual(sites, want) || readOnly < 5 {
 		t.Fatalf("writer sites %v (read-only opens %d), want exactly %v and at least 5 read-only opens", sites, readOnly, want)
 	}
 }

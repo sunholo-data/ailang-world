@@ -174,7 +174,7 @@ func TestJudgeAssertionIsTheCLIJudge(t *testing.T) {
 	arms := append(requestArms(good),
 		judgeArm{name: "WF3-not-an-assertion", artifact: func(*testing.T, store.MintRequestRow) []byte { return []byte(`{"id":"x"}`) },
 			step: JudgeStepParse, cause: approval.ErrPasskeyResponse},
-		judgeArm{name: "WF4-v5-store", setup: []string{`DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`}, artifact: good, step: JudgeStepStore},
+		judgeArm{name: "WF4-v5-store", setup: []string{`DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`}, artifact: good, step: JudgeStepStore},
 		judgeArm{name: "WF5-unknown-credential", artifact: func(t *testing.T, row store.MintRequestRow) []byte {
 			return stranger.Assert(jgOrigin, jgRPID, jgHash(t, row), 2)
 		}, step: JudgeStepUnknownKey, cause: ErrNotEnrolled, field: string(stranger.CredentialID())},
@@ -218,7 +218,7 @@ func TestJudgeSSHSignatureIsTheCLIJudge(t *testing.T) {
 	arms := append(requestArms(good),
 		judgeArm{name: "F11-garbage", artifact: func(*testing.T, store.MintRequestRow) []byte { return []byte("not a signature\n") },
 			step: JudgeStepParse, cause: approval.ErrArmor},
-		judgeArm{name: "F12-v4-store", setup: []string{`DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `DROP TABLE approvers`, `PRAGMA user_version = 4`},
+		judgeArm{name: "F12-v4-store", setup: []string{`DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `DROP TABLE approvers`, `PRAGMA user_version = 4`},
 			artifact: good, step: JudgeStepStore},
 		judgeArm{name: "F13-unenrolled-key", artifact: func(t *testing.T, row store.MintRequestRow) []byte {
 			return stranger.Sign(approval.Namespace, jgMessage(t, row))

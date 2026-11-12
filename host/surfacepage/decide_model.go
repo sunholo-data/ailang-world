@@ -1,8 +1,8 @@
 package surfacepage
 
 // Row 201 A4 sprint 1 (design_docs/planned/w-world-approvals-by-key-a4.md §2.8): the decision
-// routes' JSON shapes and the POST body's grammar, pure. Sprint 1 decides with the typed arm only;
-// the key formats (sshsig, webauthn) arrive with sprint 2, so until then they are unknown fields.
+// routes' JSON shapes and the POST body's grammar, pure. Sprint 2 admits exactly one of typed and
+// sshsig; webauthn arrives with sprint 3's passkey arm, so until then it is an unknown field.
 
 import (
 	"bytes"
@@ -52,23 +52,25 @@ type DecisionMade struct {
 	DecidedBy string `json:"decidedBy"`
 }
 
-// DecideBody is the POST body (design §2.8), sprint 1's typed arm: the verb, the packet digest P
-// and request digest Q the caller saw (64 lowercase hex), the expiry, and typed: true.
+// DecideBody is the POST body (design §2.8): the verb, the packet digest P and request digest Q
+// the caller saw (64 lowercase hex), the expiry, and exactly one format: typed: true (sprint 1) or
+// sshsig, an armored SSH signature over the decision message (sprint 2).
 type DecideBody struct {
-	V       int    `json:"v"`
-	Verb    string `json:"verb"`
-	Packet  string `json:"packet"`
-	Request string `json:"request"`
-	Expiry  int64  `json:"expiry"`
-	Typed   bool   `json:"typed"`
+	V       int     `json:"v"`
+	Verb    string  `json:"verb"`
+	Packet  string  `json:"packet"`
+	Request string  `json:"request"`
+	Expiry  int64   `json:"expiry"`
+	Typed   bool    `json:"typed,omitempty"`
+	SSHSIG  *string `json:"sshsig,omitempty"`
 }
 
 // ErrDecideBody refuses a body that is not DecideBody's grammar.
-var ErrDecideBody = errors.New(`the body is not {"v":1,"verb":…,"packet":<64 hex>,"request":<64 hex>,"expiry":…,"typed":true}`)
+var ErrDecideBody = errors.New(`the body is not {"v":1,"verb":…,"packet":<64 hex>,"request":<64 hex>,"expiry":…} with exactly one of "typed":true and "sshsig":<armored SSHSIG>`)
 
-// ParseDecideBody is the POST's grammar: strict JSON (no unknown field, so no decidedBy and no key
-// format yet; exactly one value), v 1, typed true, both digests 64 lowercase hex. The verb and the
-// expiry are the law's (D9, D10), not the grammar's.
+// ParseDecideBody is the POST's grammar: strict JSON (no unknown field, so no decidedBy; exactly
+// one value), v 1, exactly one format, both digests 64 lowercase hex. The verb and the expiry are
+// the law's (D9, D10), not the grammar's.
 func ParseDecideBody(b []byte) (body DecideBody, packet, request [32]byte, err error) {
 	dec := json.NewDecoder(bytes.NewReader(b))
 	dec.DisallowUnknownFields()
@@ -81,8 +83,10 @@ func ParseDecideBody(b []byte) (body DecideBody, packet, request [32]byte, err e
 	switch {
 	case body.V != 1:
 		return DecideBody{}, packet, request, fmt.Errorf("%w: v is %d", ErrDecideBody, body.V)
-	case !body.Typed:
-		return DecideBody{}, packet, request, fmt.Errorf("%w: it has no format (this build decides with typed only)", ErrDecideBody)
+	case !body.Typed && body.SSHSIG == nil:
+		return DecideBody{}, packet, request, fmt.Errorf("%w: it has no format", ErrDecideBody)
+	case body.Typed && body.SSHSIG != nil:
+		return DecideBody{}, packet, request, fmt.Errorf("%w: it has two formats", ErrDecideBody)
 	case !lowerHex64(body.Packet) || !lowerHex64(body.Request):
 		return DecideBody{}, packet, request, fmt.Errorf("%w: packet and request are each 64 lowercase hex", ErrDecideBody)
 	}
