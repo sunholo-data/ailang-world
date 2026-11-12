@@ -39,8 +39,9 @@ var credentialsSchemaSQL string
 // independent of the world store's currentSchemaVersion. Version 2 added
 // profile bindings; version 3 adds immutable attended episode start history;
 // version 4 adds mint requests (row 201); version 5 adds approvers (row 201 A1b); version 6 adds
-// passkeys (row 201 A2); version 7 adds the surface's recorded approvals (row 201 A3).
-const credentialsSchemaVersion = 7
+// passkeys (row 201 A2); version 7 adds the surface's recorded approvals (row 201 A3); version 8
+// adds the key decisions of Human.Approve requests (row 201 A4).
+const credentialsSchemaVersion = 8
 
 // CredentialsSchemaVersion exports credentialsSchemaVersion: serve compares a
 // store's version with it to decide whether to upgrade.
@@ -71,7 +72,9 @@ const credentialsTable = "session_credentials"
 // credentialsTables is the exact, sorted application table set of a credentials store at version.
 func credentialsTables(version int) []string {
 	switch {
-	case version >= 7:
+	case version >= 8:
+		return []string{approversTable, "episode_starts", keyDecisionsTable, mintRequestsTable, credentialsTable, surfaceApprovalsTable, passkeysTable}
+	case version == 7:
 		return []string{approversTable, "episode_starts", mintRequestsTable, credentialsTable, surfaceApprovalsTable, passkeysTable}
 	case version == 6:
 		return []string{approversTable, "episode_starts", mintRequestsTable, credentialsTable, passkeysTable}
@@ -368,6 +371,9 @@ func upgradeCredentials(display string, db *sql.DB, version int) error {
 	}
 	if version < 7 {
 		statements = append(statements, surfaceApprovalsSQL)
+	}
+	if version < 8 {
+		statements = append(statements, keyDecisionsSQL)
 	}
 	for _, stmt := range statements {
 		if _, err := tx.Exec(stmt); err != nil {

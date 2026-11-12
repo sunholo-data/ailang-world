@@ -110,11 +110,11 @@ func TestCredentialsSchema7SurfaceApprovals(t *testing.T) {
 	if again, err := UpgradeCredentials(path); err != nil || again {
 		t.Fatalf("second UpgradeCredentials: upgraded %v, err %v; want false, nil", again, err)
 	}
-	if got := userVersion(t, path); got != 7 {
-		t.Fatalf("user_version after the upgrade = %d, want 7", got)
+	if got := userVersion(t, path); got != credentialsSchemaVersion {
+		t.Fatalf("user_version after the upgrade = %d, want %d", got, credentialsSchemaVersion)
 	}
 	up := tableDDL(t, rawDB(t, path))
-	requireExactTableNames(t, "upgraded v6 store", up, credentialsTables(7))
+	requireExactTableNames(t, "upgraded v6 store", up, credentialsTables(credentialsSchemaVersion))
 	if got, want := normalizeDDL(up["surface_approvals"]), normalizeDDL(canonicalSurfaceApprovalsDDL); got != want {
 		t.Fatalf("upgraded surface_approvals DDL:\n got: %s\nwant: %s", got, want)
 	}

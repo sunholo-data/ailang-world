@@ -96,7 +96,7 @@ func TestApproveByPasskey(t *testing.T) {
 			t.Fatalf("rc %d, terminal %v, daemon calls %d, stderr %q", code, opened, *calls, stderr.String())
 		}
 		raw := rawCredentials(t, a.credPath)
-		for _, stmt := range []string{`DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`} {
+		for _, stmt := range []string{`DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`} {
 			if _, err := raw.Exec(stmt); err != nil {
 				t.Fatal(err)
 			}

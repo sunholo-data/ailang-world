@@ -96,3 +96,18 @@ CREATE TABLE IF NOT EXISTS surface_approvals (
     digest      TEXT NOT NULL CHECK (length(digest) = 64),
     received_at INTEGER NOT NULL
 );
+
+-- Key decisions of Human.Approve requests (version 8, row 201 A4). The evidence of what verified,
+-- kept beside the approvers; the authority is the world store's decision, never this row.
+-- decision_ref is NULL until the world decision landed.
+CREATE TABLE IF NOT EXISTS key_decisions (
+    request_ref   TEXT PRIMARY KEY CHECK (length(request_ref) = 71 AND request_ref GLOB 'sha256:*'),
+    packet_ref    TEXT NOT NULL CHECK (length(packet_ref) = 71 AND packet_ref GLOB 'sha256:*'),
+    verb          TEXT NOT NULL CHECK (verb IN ('approve', 'deny')),
+    format        TEXT NOT NULL CHECK (format IN ('ssh', 'webauthn')),
+    approver      TEXT NOT NULL CHECK (approver <> ''),
+    artifact      BLOB NOT NULL CHECK (length(artifact) BETWEEN 1 AND 16384),
+    expiry        INTEGER NOT NULL,
+    decided_at    INTEGER NOT NULL,
+    decision_ref  TEXT CHECK (decision_ref IS NULL OR (length(decision_ref) = 71 AND decision_ref GLOB 'sha256:*'))
+);
