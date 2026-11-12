@@ -29,6 +29,7 @@ const approveHelp = `usage: ailang-worldd approve <request-id> [--db <path>] [--
        ailang-worldd approve <request-id> --webauthn-assertion <file> [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-id> --await [--await-for <duration>] [--db <path>] [--credentials-db <path>]
        ailang-worldd approve --list [--decided] [--db <path>] [--credentials-db <path>]
+       ailang-worldd approve <request-ref> [--deny] [--daemon <host:port>] [--db <path>] [--credentials-db <path>]
 
 ATTENDED, or SIGNED. Mints the session a stored mint request describes (row
 201), after a y/N typed at /dev/tty, or, with --signature or --sign-with,
@@ -91,6 +92,16 @@ after it is made; at most 16 are pending per credentials store.
                             (default ~/.ailang/world/world.db)
   --credentials-db <path>   default credentials.db beside --db
 The global --addr is refused: the daemon's address is part of the request.
+
+approve <request-ref> (sha256: and 64 hex, row 201 A4) decides a pending
+Human.Approve request an agent raised in an episode, whose decision packet the
+daemon committed: approve, or with --deny deny. It reads the request and its
+packet from the daemon serving --db (--daemon <host:port>, default the
+installed service's address), checks that both hash to their refs, shows every
+field, asks y at /dev/tty, and has the daemon record the decision (decided by
+operator:terminal). A request is decided once. --await is refused (the daemon
+decides at once); publish and finish approvals stay with world-publish
+approve and episode finish.
 `
 
 // approveAdmission is approve's admission of a stored row, before any terminal: the decoded
@@ -155,6 +166,8 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	assertion := fs.String("webauthn-assertion", "", "approve with an enrolled passkey's assertion file (no terminal)")
 	await := fs.Bool("await", false, "wait for an approval recorded by the daemon's surface, judge it, and mint (no terminal)")
 	awaitFor := fs.Duration("await-for", 0, "with --await: stop waiting after this long (default: the request's expiry)")
+	deny := fs.Bool("deny", false, "with a request ref: deny it instead of approving it")
+	daemonAddr := fs.String("daemon", "", "with a request ref: the daemon serving --db (default: the installed service's address)")
 	positional, err := parseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, approveHelp)
@@ -192,9 +205,22 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
+	if (*deny || *daemonAddr != "") && (*list || !decisionRefPattern.MatchString(positional[0])) { // CD3: --deny and --daemon decide a request ref
+		return refuse("--deny and --daemon take a Human.Approve request ref (sha256: and 64 hex); a mint request has no deny: it expires")
+	}
 	id := ""
 	if !*list {
 		id = positional[0]
+		if decisionRefPattern.MatchString(id) { // row 201 A4: a request ref selects the decision mode (design §2.10)
+			if modes != 0 { // CD3: --await, and the key flags until they decide a request ref
+				return refuse("a request ref is decided at once by the daemon: there is nothing to await, and no key flag decides it yet")
+			}
+			verb := "approve"
+			if *deny {
+				verb = "deny"
+			}
+			return runApproveDecide(decideOptions{ref: id, verb: verb, db: *db, credsDB: *credsDB, daemon: *daemonAddr}, stdout, stderr, env, refuse)
+		}
 		if !store.MintRequestIDPattern.MatchString(id) {
 			return refuse("%q is not a mint request id (mr- and 16 lowercase hex)", id)
 		}
