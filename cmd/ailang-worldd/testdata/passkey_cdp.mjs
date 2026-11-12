@@ -70,6 +70,17 @@ const injections = {
     const b = (x) => btoa(String.fromCharCode(...new Uint8Array(x.buffer || x))).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
     navigator.credentials.get = (o) => { const k = o.publicKey; window.__gets.push({ challenge: b(k.challenge), rpId: k.rpId, allow: (k.allowCredentials || []).map((c) => b(c.id)),
       userVerification: k.userVerification, timeout: k.timeout, signal: !!o.signal }); return get(o); }; }`,
+  // notify (XA4): a recorder in place of window.Notification. It shows nothing (no notification is
+  // raised, even in this headless profile): it records each notification the page makes in
+  // window.__notes and each permission request, with whether a user gesture was active, in
+  // window.__asks, and passes the permission and its request through to the browser. The page's
+  // window.focus calls are counted in sessionStorage, which outlives a navigation.
+  notify: `window.__notes = []; window.__asks = []; if (window.Notification) { const N = window.Notification;
+    const R = function (title, o) { const n = { title, body: o && o.body, tag: o && o.tag, onclick: null }; window.__notes.push(n); return n; };
+    Object.defineProperty(R, 'permission', { get: () => N.permission });
+    R.requestPermission = () => { window.__asks.push({ active: navigator.userActivation.isActive }); return N.requestPermission(); };
+    window.Notification = R; }
+    { const focus = window.focus.bind(window); window.focus = () => { sessionStorage.setItem('__focus', String(+(sessionStorage.getItem('__focus') || 0) + 1)); focus(); }; }`,
   eddsa: `{ const create = navigator.credentials.create.bind(navigator.credentials);
     navigator.credentials.create = (o) => { o.publicKey.pubKeyCredParams = o.publicKey.pubKeyCredParams.filter((p) => p.alg === -8); return create(o); }; }`,
 };
@@ -269,9 +280,39 @@ async function waitFor({ expression, ms = 15000 }) {
   return v;
 }
 
+// key presses key ('n', 'N' (with Shift), 'Enter') at the focused element; with page, it waits for the new document. It
+// returns the focused element's id and the app's view (row 201 A3 sprint 4, the N key).
+const KEYS = { n: { code: 'KeyN', windowsVirtualKeyCode: 78, text: 'n' }, N: { code: 'KeyN', windowsVirtualKeyCode: 78, text: 'N', modifiers: 8 }, Enter: { code: 'Enter', windowsVirtualKeyCode: 13, text: '\r' } };
+async function key({ key, page = false }) {
+  const from = events.length;
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key, ...KEYS[key] });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key, code: KEYS[key].code, windowsVirtualKeyCode: KEYS[key].windowsVirtualKeyCode });
+  if (page) await until(() => events.slice(from).some((e) => e.method === 'Page.loadEventFired'), 15000, 'the next page');
+  return evaluate(`({ location: location.href, active: document.activeElement ? document.activeElement.id : '', view: document.getElementById('stage') ? document.getElementById('stage').dataset.view : '' })`);
+}
+// grantNotifications grants origin notifications, as the browser does after its own prompt (XA4), and
+// returns the page's permission.
+async function grantNotifications({ origin }) {
+  await send('Browser.grantPermissions', { permissions: ['notifications'], origin }, null);
+  return evaluate('Notification.permission');
+}
+// notification clicks the index'th recorded notification and waits for the new document; it returns the
+// location and how many times the page focused its window.
+async function notification({ index }) {
+  const from = events.length;
+  await evaluate(`(window.__notes[${index}].onclick(), 1)`);
+  await until(() => events.slice(from).some((e) => e.method === 'Page.loadEventFired'), 15000, 'the next page');
+  return evaluate(`({ location: location.href, focused: +(sessionStorage.getItem('__focus') || 0) })`);
+}
+// tap clicks element id on any page.
+async function tap({ id }) {
+  if (!(await click(id))) throw new Error(id + ' is not visible');
+  return {};
+}
+
 const product = (await send('Browser.getVersion', {}, null)).product;
 console.log(JSON.stringify({ ready: true, chrome: product, pid: chrome.pid }));
-const commands = { tab, open, ceremony, uv, advance, fetchRewrite, openCard, press, waitFor, credential, fill, save, card: cardState };
+const commands = { tab, open, ceremony, uv, advance, fetchRewrite, openCard, press, waitFor, credential, fill, save, card: cardState, key, tap, grantNotifications, notification };
 for await (const line of readline.createInterface({ input: process.stdin })) {
   const { cmd, ...args } = JSON.parse(line);
   try {

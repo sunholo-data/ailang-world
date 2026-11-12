@@ -1,0 +1,249 @@
+{
+  "sprint_id": "w-world-approvals-by-key-a3a-s4",
+  "design_doc": "design_docs/planned/w-world-approvals-by-key-a3.md",
+  "design_revision": "r2 (quorum r1+r2 + controller carve-out + independent audit VALID 84; not reopened)",
+  "sprint_plan": "design_docs/planned/w-world-approvals-by-key-a3a-sprint4-plan.md",
+  "previous_sprint": {
+    "plan": "design_docs/planned/w-world-approvals-by-key-a3a-sprint3-plan.md",
+    "json": "design_docs/planned/sprint_w-world-approvals-by-key-a3a-s3.json",
+    "landed_merge": "70823879",
+    "recorded": "a141f0ba",
+    "pr": 558,
+    "note": "A3a sprint 3 (the card page and its routes, PG2/PG3/PG3b, Needs you's pending list, XA1/XA2/XA3 list half/XA5, the SSHSIG arm, J36, QUICKSTART §17); its Appendix C is this sprint's scope"
+  },
+  "base_commit": "bed9d135fe38a1c8f7e2784414aaac348b76879f",
+  "queue_row": 201,
+  "iteration": 387,
+  "sprint_number": 4,
+  "milestone": "A3a",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter387-a3a-s4",
+  "branch": "sprint/world-iter387-row201-a3a-s4",
+  "decisions_open": {
+    "D-WORLD-114": "OPEN, default A (keep both amendments: no Tauri half in A3a; the CLI minter re-judges and mints) applied since iteration 384; built as designed. This sprint's notification is the WEB notification of design §2.9, not the native one D-WORLD-114 (a) defers"
+  },
+  "cut": {
+    "cap_loc": 2000,
+    "measure": "git diff --numstat <base> HEAD -- cmd host (insertions + deletions); .js/.html/.mjs/.css under cmd/ and host/ count; docs/ and design_docs/ are outside the filter",
+    "fallback_fired": "no: measured 389 of 2,000 (margin 1,611)",
+    "optional_item_5": "built (M10c, 32 lines): the live-Chrome hostile signed-field value on the card"
+  },
+  "scope": [
+    "the opt-in browser notification (design §2.9): Notify me calls Notification.requestPermission only from its click; one 'World needs you' per new pending id per tab while granted (tag = id, body names the episode, grants and UTC expiry); its click focuses the tab and opens /surface/approve/<id>",
+    "XA4 TestNeedsYouNotifiesOnlyWhenAskedOnce with the driver's grantNotifications command and notify recorder injection",
+    "the Decided list under Needs you ('You · Minted · <episode> · <approvedBy> · <hh:mm>', the last 3, Show all toggling the daemon's 20) and XA3's Decided half (after a real passkey approval and approve --await, Decided shows webauthn:mark-mac)",
+    "the N key in app.js (the static pages' surface.js key never ran on the app shell): focuses the first Needs-you link, from a brane too; Enter inside the now card is the browser's",
+    "judge survivors A02/A03/A05 (iteration 386): every esc() of needsYouHTML pinned by TestSurfaceAppPure hostile rows, each kill proved at the base (6 survive) and at M9a (8 killed)",
+    "optional item 5 (judge C03/C04): TestApprovePageShowsAHostileValueAsText"
+  ],
+  "carried_obligations": {
+    "iteration_386_judge_A02_A03_A05": "CLOSED by M9a: plan §4 rows ESC-* (base: 6 SURVIVED; M9a: 8 KILLED; final: 8 KILLED)",
+    "iteration_386_judge_C03_C04": "CLOSED by M10c: plan §4 row CARD-TEXTCONTENT (base: SURVIVED; final: KILLED by TestApprovePageShowsAHostileValueAsText)"
+  },
+  "next_sprint": "none in A3a: A3a is code-complete except Mark's attended exit run (design §10, QUICKSTART §17 executed verbatim); then A4 per the row 201 queue",
+  "executor_lane": "as routed by the controller; runs: (M9a, M9b, M9c), (M10a, M10b, M10c); Chrome headless only through the [chrome] go test commands (temporary profiles, a CDP virtual authenticator, test keys, the notify recorder: no notification is raised); no ssh-keygen, no real store",
+  "executor_form": "every sub-milestone is a unified diff in the plan Appendix P, applied with patch -p1 after a --dry-run (plan §2); no hand edits",
+  "estimate_loc": {
+    "production": 58,
+    "test": 331,
+    "total_cumulative": 389,
+    "docs": 4,
+    "measure": "insertions + deletions (git diff --numstat -- cmd host), measured after a commit of each scratch stage"
+  },
+  "constraints": [
+    "D-WORLD-109: approvaltest keys, temp stores under t.TempDir(), Chrome --headless=new with a temporary profile and a CDP virtual authenticator (approvaltest ES256 seed via WebAuthn.addCredential); httptest servers on the loopback; the notify recorder never constructs a real Notification; no real key, store, profile, /dev/tty, ~/.ssh, ~/.ailang/world, ssh-keygen, mint or publish",
+    "no Go production change: no route, surfaceCSP byte-unchanged, isProtected unchanged, no CORS, no cookie",
+    "app.js: every new HTML value through esc(); the notification body is plain text; no eval(, no document.cookie",
+    "no t.Parallel in new tests; no new module, package, exec site, context root or /v1 route; no .ail",
+    "never nohup, never background a test leg; no git writes by the executor"
+  ],
+  "baseline": {
+    "env": "export AILANG_BIN=$HOME/.pinned-ailang/ailang (AILANG v0.41.0); go1.26.6 darwin/arm64; node v26.13.0; Google Chrome 157.0.8103.51",
+    "git_status": "clean at bed9d135",
+    "pre_commit_script": "tools/gates.sh <base> logs/baseline base (= plan §6 minus the sprint's new Chrome tests): PRE_COMMIT_GATES_GREEN 521 s; 57 named --- PASS; AW leg 9; -race ok x3; live Chrome 8 tests PASS",
+    "verify_go_after_commit": "rc 1 under the planner's load (TestWorldContextAndStatusline, TestWorktreeSnapshotRefusesAConfiguredFilter, TestMissionConfigDefaultFlowIntegration/valid_ledger: all known-list, each green alone)"
+  },
+  "design_premises_found_false": [
+    "P1: design §2.8 'N jumps to the first one (the key already exists, surface.js:257)': surface.js's N is the static pages'; it returns before its key handler on the app shell (data-app); app.js had no N. Built new in app.js",
+    "P2: an N that focuses a link presumes Enter follows it: the app's timeline Enter handled every Enter not on #home and cancelled the default. Routed: Enter inside the now card is the browser's (mutant ENTER-NOW)",
+    "P3: design §2.8 'fetched on the app's existing refresh tick': the app polls (15 s) only in follow mode; in v1 mode it refreshes on a world-log commit. Kept (no new timer, as designed); tests drive window.World.poll(); Appendix C",
+    "P4: design §6 XA4 'the next refresh -> none' presumes a refresh can be awaited: the driver's evaluate does not await a Promise inside JSON.stringify, and refresh drops a poll while one runs. Routed in the test (pollSurface)",
+    "P5: design §2.8 line numbers (app.js:605-606 at 0140bd7f) are now app.js:616",
+    "P6: design §6 driver 'notify' + V26 'the constructor succeeds': the recorder never constructs a real Notification (D-WORLD-109); the grant, the gesture-bound request and the click path are re-measured live (XA4)",
+    "P7: window.World.open answers before the brane opens (async); the test waits for the brane view"
+  ],
+  "files_outside_design_section_8": [
+    "host/surfacepage/app_test.go",
+    "cmd/ailang-worldd/needs_you_chrome_test.go",
+    "cmd/ailang-worldd/needs_you_notify_chrome_test.go",
+    "cmd/ailang-worldd/approve_page_hostile_test.go"
+  ],
+  "ci_change": "none (CI has no Chrome step: XA3, XA4 and the hostile-value test are counted SKIPs there; TestSurfaceAppPure (node via WORLD_EXEC_NODE) runs in CI and kills 36 of the 60 mutants)",
+  "not_touched": [
+    "every Go production file",
+    "host/approval/**",
+    "host/store/**",
+    "host/authority/**",
+    "host/daemon/** (surfaceCSP, routes, isProtected)",
+    "host/surfacepage/surface.js",
+    "host/surfacepage/approve/**",
+    "host/surfacepage/passkey/**",
+    "host/surfacepage/app/index.html",
+    "host/surfacepage/app/app.css",
+    "host/surfacepage/model.go",
+    "world/*.ail",
+    "packages/**",
+    "scripts/**",
+    "tools/launchd/*",
+    "cmd/world-publish/*",
+    "skills",
+    "~/.ssh",
+    "~/.ailang/world",
+    "~/.ailang/state/mission-v1*"
+  ],
+  "milestones": [
+    {
+      "id": "M9a",
+      "title": "the judge's survivors are pinned: TestSurfaceAppPure's hostile rows (A02/A03/A05)",
+      "production_loc": 0,
+      "test_loc": 6,
+      "expected_cumulative_numstat_after_commit": 6,
+      "run": 1,
+      "acceptance_ref": "plan §3 M9a",
+      "patch_ref": "plan Appendix P, fence ````diff M9a",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M9b",
+      "title": "Decided: decidedHTML (pure, exported), the now card call, the Show all toggle; node rows",
+      "production_loc": 19,
+      "test_loc": 11,
+      "expected_cumulative_numstat_after_commit": 36,
+      "run": 1,
+      "acceptance_ref": "plan §3 M9b",
+      "patch_ref": "plan Appendix P, fence ````diff M9b",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M9c",
+      "title": "the opt-in and the notification: needsYouHTML(r, now, permission) + notifyHTML, notifications (pure, exported), loadRequests raising, askNotify on the click; node rows; XA3's one-line expectation",
+      "production_loc": 39,
+      "test_loc": 22,
+      "expected_cumulative_numstat_after_commit": 93,
+      "run": 1,
+      "acceptance_ref": "plan §3 M9c",
+      "patch_ref": "plan Appendix P, fence ````diff M9c",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M10a",
+      "title": "the N key and the now card's Enter, the keys row; the driver's key/tap; XA3 extended (Decided half, Show all, N)",
+      "production_loc": 4,
+      "test_loc": 144,
+      "expected_cumulative_numstat_after_commit": 239,
+      "run": 2,
+      "acceptance_ref": "plan §3 M10a",
+      "patch_ref": "plan Appendix P, fence ````diff M10a",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M10b",
+      "title": "XA4 TestNeedsYouNotifiesOnlyWhenAskedOnce; the driver's notify recorder, grantNotifications, notification",
+      "production_loc": 0,
+      "test_loc": 120,
+      "expected_cumulative_numstat_after_commit": 357,
+      "run": 2,
+      "acceptance_ref": "plan §3 M10b",
+      "patch_ref": "plan Appendix P, fence ````diff M10b",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M10c",
+      "title": "TestApprovePageShowsAHostileValueAsText (judge C03/C04); QUICKSTART §17 (+4 docs lines)",
+      "production_loc": 0,
+      "test_loc": 32,
+      "expected_cumulative_numstat_after_commit": 389,
+      "run": 2,
+      "acceptance_ref": "plan §3 M10c",
+      "patch_ref": "plan Appendix P, fence ````diff M10c",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "sprint_gates": {
+    "script_ref": "plan §6 (one bash shell, tee to $HOME/.ailang/state/world-iter387/gates/, not under nohup, nothing else running)",
+    "live_chrome_leg": "WORLD_CHROME=... WORLD_REQUIRE_PASSKEY_BROWSER=1 go test -v ./cmd/ailang-worldd/ -run '^(TestPasskeyPageInChrome|TestPasskeyPageAbortsAPendingCeremony|TestApprovePage|TestApproveCard|TestNeedsYou)' (this machine only)",
+    "after_commit": "VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh",
+    "final_tree_result": "PRE_COMMIT_GATES_GREEN 548s on the round-trip tree (57 named PASS, AW 9, -race ok x3, live Chrome all PASS); verify_go after commit: `VERIFY_GO_LEGS=plain ./scripts/verify_go.sh` on the committed round-trip tree at M10c, nothing else running → **rc 1** (514 s), one untouched package red, on the directive's known list: `host/verifygate` (`--- FAIL: TestMissionConfigDefaultFlowIntegration/valid_ledger`: `default-flow fixture timed out … instrument failure: context deadline exceeded`, the same failure the base showed, §1.1); every other leg `✓` (`✓ 0 other binary blobs among 6824 tracked files`; `✓ toolchain floor gate: go1.26.6 >= root module floor go1.26.6`; `✓ all 64 required top-level evidence tests passed exactly once`) and every other package `ok` (`logs/final_verify_go.log`). **Re-run alone** (§6's rule; `logs/rerun_alone.log`): `--- PASS: TestMissionConfigDefaultFlowIntegration (7.96s)` with `/valid_ledger` and `/invalid_ledger` PASS, `ok host/verifygate 8.253s`. `host/verifygate` is not touched by the sprint (§5). **The whole gate re-run once, alone** → **rc 1** (470 s) on a different untouched test: `host/broker` `--- FAIL: TestPublishApprovalRefusalSetWithALandedPositiveControl` (`registry_publish_test.go:2399: AC9 positive control counters = POST=2 dispatches=1 credentialLoads=1, want POST=1 …`; `host/verifygate` was `ok` this time); every leg `✓` as above, every other package `ok` (`logs/final_verify_go_2.log`). Re-run alone on the final tree and at the base: `--- PASS: TestPublishApprovalRefusalSetWithALandedPositiveControl (0.36s)` / `(0.38s)`, all 21 subtests PASS, `ok host/broker` (`logs/rerun_alone.log`). It is **not** on the directive's known list: a load-sensitive counter in a package the sprint does not touch (§1.4 is unaffected; flagged for the controller). Across the two runs every package was `ok` at least once and every red was green alone."
+  },
+  "executor_directives": {
+    "no_git_writes": true,
+    "never_nohup_or_background_a_test_leg": true,
+    "apply": "patch -p1 after --dry-run, extracted with plan §2's awk",
+    "snapshots": "$HOME/.ailang/state/world-iter387/snap/<M>/ with MANIFEST.sha256 (the two plan files excluded)",
+    "expected_numstat": {
+      "M9a": 6,
+      "M9b": 36,
+      "M9c": 93,
+      "M10a": 239,
+      "M10b": 357,
+      "M10c": 389
+    },
+    "expected_docs_numstat_after_M10c": 4,
+    "stop_conditions": "plan §7"
+  },
+  "mutation_harness": "plan-scratch/tools/mutate.py + tools/mutants.py: one edit per mutant in a worker copy, -vet=off, the named test then its package suite with the inventories excluded (host/surfacepage whole with WORLD_EXEC_NODE; cmd/ailang-worldd ^(TestApprovePage|TestApproveCard|TestNeedsYou) in live headless Chrome); restore asserted byte-identical; one ledger line per run",
+  "mutation_ledger": [
+    "$HOME/.ailang/state/world-iter387/plan-scratch/logs/mutant_ledger.tsv"
+  ],
+  "mutation_count": {
+    "total": 60,
+    "killed": 59,
+    "named_equivalents_survived": 1,
+    "pending": 0,
+    "ledger_lines": 77,
+    "runs": {
+      "run1-node": 36,
+      "base-esc": 8,
+      "m9a-esc": 8,
+      "run1-chrome": 24,
+      "base-card": 1
+    }
+  },
+  "mutation_equivalents_named": [
+    "NP-NOAPI"
+  ],
+  "mutation_table_ref": "plan §4",
+  "a02_kill_proof": "plan §4 (the kill-proof table) and §3 M9a: at the base removing esc() on agent / id= / href / recorded / the refused id / unavailable each SURVIVES TestSurfaceAppPure (named and suite); at M9a all 8 esc() removals are KILLED",
+  "live_chrome_results": "final tree, Chrome 157.0.8103.51: --- PASS TestNeedsYouNotifiesOnlyWhenAskedOnce (1.66s), TestNeedsYouListsPendingRequests (1.93s), TestApprovePageShowsAHostileValueAsText (1.25s), TestApproveCardNetworkDeadlines (79.61s; /get 22.27s, /post 57.34s), TestApproveCardPasskeyDeadline (1.42s), TestApprovePageInChrome (1.65s), TestApprovePageRefusesASwappedRequest (2.14s), TestApprovePageSSHSIGInChrome (1.72s), TestPasskeyPageAbortsAPendingCeremony (3.58s, 4 subtests PASS), TestPasskeyPageInChrome (3.43s, 3 subtests PASS); 0 SKIP, 0 FAIL. CI skips the browser tests (counted); TestSurfaceAppPure (node) pins the renderers and the notification rules in CI",
+  "roundtrip": "fresh git archive bed9d135 + the six Appendix P patches extracted from the plan file with §2 awk (cmp-equal to the generated patches, --dry-run first, no .orig/.rej), each sub-milestone acceptance run live (ACCEPT M9a 71s, M9b 33s, M9c 31s, M10a 40s, M10b 34s, M10c 255s), numstat 6/36/93/239/357/389 (docs 4): ROUNDTRIP_IDENTICAL_TO_MUTANT_TREE A last extraction-only re-check after the final assembly (`SKIP_ACCEPT=1`, a second fresh export) again printed `ROUNDTRIP_IDENTICAL_TO_MUTANT_TREE` with the same six numstat values.",
+  "acceptance_criteria_ref": "plan §9 (12 criteria)",
+  "controller_decisions": [
+    "none blocking; D-WORLD-114 stays open (default A)",
+    "S4-D2: the page's first read of requests.json notifies nothing (design §2.9 says 'on a refresh'); confirm at Gate 2 if a notification for every pending request on opening the tab is wanted",
+    "S4-D4: notification and Decided times are UTC hh:mm, the app's clock (as the now card); a local-time display is an app-wide choice (Appendix C)",
+    "P3: in v1 mode a new request is listed/notified only at the next refresh (no new timer, as designed); Appendix C names it for the exit run"
+  ],
+  "deferred": [
+    "A3a's attended exit run (design §10; QUICKSTART §17 verbatim; the only check that a notification is displayed)",
+    "A3b (Tauri) per D-WORLD-114 default A",
+    "a requests.json poll in v1 mode, if the exit run finds the refresh too slow (a design change)",
+    "model.json's needsYou for A4's decision packets"
+  ]
+}
