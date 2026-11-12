@@ -421,7 +421,18 @@
     return '<div class="nl sub" data-service' + (service.warn ? ' style="color:var(--you)"' : '') + '>' + esc(service.line) + '</div>';
   }
 
-  if (typeof module !== 'undefined') module.exports = { isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
+  // needsYouHTML is the now card's Needs you (row 201 A3, design §2.8): the pending mint requests of
+  // GET /surface/requests.json, each a link to its card; a request the daemon could not read shows why.
+  function needsYouHTML(r, now) {
+    const p = r && Array.isArray(r.pending) ? r.pending : [];
+    const head = `<div class="nh" style="color:${p.length ? 'var(--youShell)' : 'var(--sub)'}">Needs you · ${p.length}</div>`;
+    if (!p.length) return `<div class="nsec" data-needs>${head}<div class="nl sub">${esc(r && r.unavailable || 'Nothing needs you')}</div></div>`;
+    return `<div class="nsec" data-needs>${head}` + p.map(q => q.refused ? `<div class="nl sub">${esc(q.id)} · refused: ${esc(q.refused)}</div>`
+      : `<div class="nl"><a id="needs-${esc(q.id)}" href="/surface/approve/${esc(q.id)}"><b>${esc(q.episode)}</b> · ${esc(q.agent)} · ${q.grants} grant${q.grants === 1 ? '' : 's'} · expires in ${Math.max(0, Math.ceil((q.expires - now) / 60))} min</a>`
+        + (q.recorded ? ` · approved by ${esc(q.recorded)}, waiting for the minter` : '') + '</div>').join('') + '</div>';
+  }
+
+  if (typeof module !== 'undefined') module.exports = { needsYouHTML, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
     adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW } };
   if (typeof document === 'undefined') return;
 
@@ -580,7 +591,7 @@
   }
 
   function nowCard() {
-    const ne = D.nowEdge || {}, now = NOW_D, sess = ne.sessions || [], needs = ne.needsYou || [], td = ne.today;
+    const ne = D.nowEdge || {}, now = NOW_D, sess = ne.sessions || [], td = ne.today;
     const healthy = /healthy/i.test(ne.health);
     let today = '';
     if (td) {
@@ -602,8 +613,7 @@
       ${sourcesHTML(D.repos)}
       ${today}
       ${running}
-      <div class="nsec"><div class="nh" style="color:${needs.length ? 'var(--youShell)' : 'var(--sub)'}">Needs you · ${needs.length}</div>
-        ${needs.length ? '' : `<div class="nl sub">Nothing needs you</div>`}</div>
+      ${needsYouHTML(REQS, REQS ? REQS.now : 0)}
     </div>`;
   }
 
@@ -879,11 +889,17 @@
     try { body = await r.json(); } catch (_) { body = null; }
     return { ok: r.ok, status: r.status, body };
   }
+  // REQS is GET /surface/requests.json, read with the model and on every refresh (no timer of its own).
+  let REQS = null;
+  async function loadRequests() {
+    try { REQS = (await getJSON('/surface/requests.json')).body; } catch (_) { REQS = null; }
+  }
   const FOLLOW_MODEL = 'world/surface-model/v2', POLL_MS = 15000;
   let followMode = false, shownGen = null, shownAt = '', pollTimer = null, liveStarted = false;
   const poll = { note: '' };
   async function loadModel() {
     let res;
+    await loadRequests();
     try { res = await getJSON('/surface/model.json'); } catch (e) { return renderVoid('error', 'the surface model could not be fetched: ' + e.message); }
     const b = res.body || {};
     followMode = b.schema === FOLLOW_MODEL;
@@ -974,6 +990,7 @@
     const count = live.count;
     try {
       const selection = T && st.d === 1 && F ? {brane: F.brane, at: F.id, seq: openSeq} : null;
+      await loadRequests();
       const r = await fetchCoherent(getJSON, selection, T ? shownGen : null);
       if (r.kind === 'fail') {
         if (!followMode) throw new Error('refresh failed (HTTP ' + r.status + ')');
