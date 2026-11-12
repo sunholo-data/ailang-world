@@ -106,10 +106,10 @@ exported signature changed. The loop never publishes; a human runs steps 6–7 b
 
 | field | digest |
 |---|---|
-| `contentHash` | `sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780` |
+| `contentHash` | `sha256:7c3d7e940616901e365a37f9f3d3a079a43117bee19b33962730bc46465b2946` |
 | `interfaceHash` (manifest coverage only) | `sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083` |
 | `interfaceHashV2` (exported interface) | `sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8` |
-| `tarballSHA256` | `sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3` |
+| `tarballSHA256` | `sha256:7125cb1d5e119902cf50325fa0e2bf68f6eafd203e02e397264d57cf93cc3c9f` |
 
 They are gated against the golden by `host/runbook`, so this table cannot rot silently: change the
 package without reprojecting, or edit one nibble here, and the repository gate reds.

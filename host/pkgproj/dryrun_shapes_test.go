@@ -114,7 +114,7 @@ func TestParseDryRunLeadingWhitespaceAndRefusals(t *testing.T) {
 		"no content hash":     regexp.MustCompile(`(?m)^.*Content hash:.*\n`).ReplaceAllString(src, ""),
 		"two tarball hashes":  src + "  Tarball hash: sha256:" + strings.Repeat("a", 64) + "\n",
 		"inline and separate": strings.Replace(readFixture(t, "dryrun_v0.41.0.txt"), "  Content hash:", "  Tarball hash: sha256:"+strings.Repeat("b", 64)+"\n  Content hash:", 1),
-		"short hash no dots":  strings.Replace(src, "Content hash: sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780", "Content hash: sha256:473517079249f3959", 1),
+		"short hash no dots":  strings.Replace(src, "Content hash: sha256:7c3d7e940616901e365a37f9f3d3a079a43117bee19b33962730bc46465b2946", "Content hash: sha256:7c3d7e940616901e3", 1),
 	}
 	for name, out := range cases {
 		if out == src {
