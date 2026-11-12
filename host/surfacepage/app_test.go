@@ -181,6 +181,12 @@ assert.equal(app.needsYouHTML(null, 0), '<div class="nsec" data-needs><div class
   assert(h.includes('Needs you · 2') && h.includes('<a id="needs-mr-0123456789abcdef" href="/surface/approve/mr-0123456789abcdef"><b>w&lt;1&gt;</b> · claude · 2 grants · expires in 11 min</a> · approved by webauthn:mark, waiting for the minter</div>'), h);
   assert(h.includes('mr-00000000000000ff · refused: digest &lt;bad&gt;') && !h.includes('/surface/approve/mr-00000000000000ff'), h); }
 assert(app.needsYouHTML({pending: [], unavailable: 'the mint requests could not be read'}, 0).includes('>the mint requests could not be read<'));
+// Every value is escaped where it lands: hostile text in each field and in the link's id and href (sprint-4 judge A02/A03/A05).
+assert.equal(app.needsYouHTML({pending: [{id: 'mr-"><img src=x onerror=1>', episode: 'e', agent: '<img src=x onerror=2>', grants: 1, expires: 60, recorded: '"><script>3</script>'},
+  {id: 'mr-<b>"4</b>', episode: 'f', refused: '<i>5</i>'}]}, 0), '<div class="nsec" data-needs><div class="nh" style="color:var(--youShell)">Needs you · 2</div>'
+  + '<div class="nl"><a id="needs-mr-&quot;&gt;&lt;img src=x onerror=1&gt;" href="/surface/approve/mr-&quot;&gt;&lt;img src=x onerror=1&gt;"><b>e</b> · &lt;img src=x onerror=2&gt; · 1 grant · expires in 1 min</a>'
+  + ' · approved by &quot;&gt;&lt;script&gt;3&lt;/script&gt;, waiting for the minter</div><div class="nl sub">mr-&lt;b&gt;&quot;4&lt;/b&gt; · refused: &lt;i&gt;5&lt;/i&gt;</div></div>');
+assert(app.needsYouHTML({pending: [], unavailable: '<i>"down"</i>'}, 0).includes('<div class="nl sub">&lt;i&gt;&quot;down&quot;&lt;/i&gt;</div>'));
 assert.equal(app.serviceLineHTML({line:'<build & file>',warn:false}), '<div class="nl sub" data-service>&lt;build &amp; file&gt;</div>');
 assert.equal(app.serviceLineHTML({line:'restart',warn:true}), '<div class="nl sub" data-service style="color:var(--you)">restart</div>');
 
