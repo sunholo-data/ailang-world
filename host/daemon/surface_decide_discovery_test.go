@@ -8,8 +8,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/coordinator"
+	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/store"
 )
 
 // RD9: two invocations whose requests collide (one ref) and two packets → 409 D4b, 0 decisions.
@@ -48,6 +51,19 @@ func TestDecideDiscoveryFindsAHiddenSecondPacket(t *testing.T) {
 		t.Errorf("hidden: %q", got.Reason)
 	}
 	r.requireNothingDecided("hidden", q, head)
+	r.requireKeyRefused("hidden", q, p, head) // sprint 2: the SSHSIG arm too
+}
+
+// requireKeyRefused fails unless a valid SSHSIG decision of q is 409 with nothing decided and no
+// key_decisions row: the discovery refuses before the key arm runs.
+func (r decideRig) requireKeyRefused(what string, q hashref.HashRef, p store.Object, head hashref.HashRef) {
+	r.t.Helper()
+	r.enrolDecider("mark-ssh", kdSigner)
+	requireRefusal(r.t, what+" ssh", r.postKey(q, decideSSHBody(r.t, kdSigner, approval.DecisionNamespace, "approve", p, q, decNow+50)), 409, "Conflict")
+	if _, ok := r.keyRow(q); ok {
+		r.t.Fatalf("%s ssh: evidence was recorded", what)
+	}
+	r.requireNothingDecided(what+" ssh", q, head)
 }
 
 // RD9c: 2,001 packets, exactly one carrying the request → 409 D4a (the overflow sentinel), 0
@@ -63,6 +79,7 @@ func TestDecideDiscoveryRefusesAnOverflow(t *testing.T) {
 		t.Errorf("overflow: %q", got.Reason)
 	}
 	r.requireNothingDecided("overflow", q, head)
+	r.requireKeyRefused("overflow", q, p, head) // sprint 2: the SSHSIG arm too
 }
 
 // RD9d (must live): 150 packets, exactly one carrying the request, sorting after the first 101 →
