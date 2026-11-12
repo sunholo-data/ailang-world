@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 387 | 2026-11-12 | row 201 A3a sprint 4 LANDED (PR #560, merge `4134ce89`): the Decided list, the opt-in browser notification (XA4), the `N` key, the Needs-you `esc()... |
 | 386 | 2026-11-12 | row 201 A3a sprint 3 LANDED (PR #558, merge `70823879`): the card page and `approve.js`, *Needs you*, the live-Chrome XA1/XA2/XA3-list/XA5 tests, Q... |
 | 385 | 2026-11-12 | row 201 A3a sprint 2 LANDED (PR #556, merge `d1027477`): the read routes, the surface origin set and its guards, and `POST /surface/approve/{id}` (... |
 | 384 | 2026-11-11 | row 201 A3a sprint 1 LANDED (PR #554, merge `b44b5f7d`): credentials schema 7 `surface_approvals`, one shared judge `host/authority/judge.go`, and ... |

@@ -1,0 +1,7 @@
+# Iteration 387 controller gates (sprint worktree `.wt-world-iter387-a3a-s4`, head `6723807a`)
+- Round trip: `git archive bed9d135` + 6 patches extracted from the plan with §2's awk → `diff -rq` vs planner `work/`: SAME cmd, SAME host, SAME docs; appended-byte control detected. Final committed tree == round-trip tree (cmd/host/docs).
+- Numstat after each commit (`-- cmd host`): M9a 6, M9b 36, M9c 93, M10a 239, M10b 357, M10c 389; docs 4 — equal to plan §7.
+- Plan §6 pre-commit script (`gates.sh`): rc 0, `PRE_COMMIT_GATES_GREEN 577s`; pkgs: surfacepage, store, authority, approval, approvaltest, cmd/ailang-worldd (166.2 s), host/daemon (305.9 s) all `ok`; inv.log 189 `--- PASS` lines; chrome.log incl. `--- PASS: TestNeedsYouNotifiesOnlyWhenAskedOnce (3.32s)`, `--- PASS: TestApprovePageShowsAHostileValueAsText (2.46s)`.
+- After commit: `VERIFY_GO_LEGS=plain verify_go.sh` rc 0, "all 64 required top-level evidence tests passed exactly once", `test_tracked_binary_gate: 24 passed, 0 failed`.
+- Judge survivor DEC-GUARD-ARR reproduced: `Array.isArray(r.decided)` → `r.decided` in `decidedHTML`; `WORLD_EXEC_NODE=$(command -v node) go test -count=1 -vet=off ./host/surfacepage/ -run '^TestSurfaceAppPure$'` rc 0 (`ctl-DEC-GUARD-ARR-survivor.log`); restored, worktree clean.
+- Judge "id safe by store schema" claim: table CHECK is `length=19 AND GLOB 'mr-[0-9a-f]*'` (constrains char 4 only); the real guard is `PutMintRequest`'s `MintRequestIDPattern` `^mr-[0-9a-f]{16}$` (`host/store/mint_requests.go:105`).
