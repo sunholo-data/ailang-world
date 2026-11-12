@@ -2622,3 +2622,109 @@ The A1b design is fully built. A terminal `y` is no longer the only way to appro
 **Next:**
 1. Row 201 A3a sprint 2, "the routes" (M4 the read routes, the origin set and the guards; M5 the POST), from `w-world-approvals-by-key-a3.md` r2 §9 (no re-design). Carry the judge's NOW gap: an await test that enrols or revokes between the request and the poll.
 2. Mark's A2 exit run (§10, QUICKSTART §16) stays attended and runnable. D-WORLD-114 stays OPEN for Mark to confirm or veto; default A is being built.
+
+## 385 — 2026-11-12 — row 201 A3a sprint 2 LANDED (PR #556, merge `d1027477`): the read routes, the surface origin set and its guards, and `POST /surface/approve/{id}` (judge, then record; SSHSIG arm cut to sprint 3); judge PASS 92 [PRODUCT]
+
+**Pick:** the A3a sprint-2 planner, which was record 384's Next 1 and the charter's Next. Record 384 had landed (#555 → `a8c66655`), so there was no carry-over PR. D-WORLD-114 is still unanswered, and its default A (build as designed) still applies.
+- **Re-measured at pick** (`origin/dev` `a8c66655`, record 384): there is no `a3a` sprint-2 plan, sprint branch, open PR or worktree.
+  - Sprint 1's symbols are on HEAD: `host/store/surface_approvals.go`, `JudgeAssertion`/`JudgeSSHSignature` in `host/authority/judge.go:65,102`, and `approve_await.go`.
+  - Production code has 0 hits for `requests.json`/`"/surface/approve` and 0 for `SurfaceOrigins|surface-origin`. The control, `/surface/passkey`, has 11.
+- **Quorum reader:** rc 0. The A3 doc has its two iteration-383 artifacts (both `blocked`, seats glm-5-3/kimi-k3/gpt6-1-sol, `absent_reviewers` `[]`), followed by the controller carve-out and the audit (VALID 84). No quorum was owed at pick.
+- **Ledger:** valid, 101 rows. OPEN: D-WORLD-105 (default C) and D-WORLD-114 (default A, applied).
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 are not routable (unchanged).
+- **Orphans:** none. The only driver notice on #524 since 383 is iteration 381's `rc=143 after landing its record` (2026-11-11T10:51Z), already credited in log 382. All iteration-384 worktrees are clean.
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
+- Directives: 0 allowlisted on #524 (18 comments) and 0 on #449 (47). Neither watermark file exists, so every comment was read.
+- Self-notices: rc 2, `watermark channel unavailable`. This is an instrument failure, not a verdict, as in 371–384.
+- Inbox: nothing unread is addressed to `mission-world`. The newest messages are this mission's own 383/384 reports.
+- Skill drift: none. `SKILL.md` and all 12 `resources/*.md` match the driver clone's `origin/dev`, at both the resolved symlink target and the pin worktree (inode 271495741 vs 272502315, two separate files). The mismatch control fired.
+- Weekly issue sweep: not owed (#524 was opened Monday).
+
+**Planner** (Agent `opus`, 77 min, 466,125 tok): plan `w-world-approvals-by-key-a3a-sprint2-plan.md` with 8 compiled patches in Appendix P.
+- **Size:** 1,995 lines (689 production, 1,306 test) against the 2,000 cap. **The design's fallback cut fired:** with the SSHSIG arm the planner measured about 2,100 lines. R11's `sshsig` arm, RT6, RT13 and AW6's route half move to sprint 3 (Appendix C). An `sshsig` POST is a 422 naming `approve <id> --signature`, so nothing is silently accepted. The guards, the origin set `O` and `--surface-origin`/CF1 are not cut, as the design requires.
+- **Mutants:** 115 diff-anchored, 114 killed by both the named test and the suite, 1 named equivalent (`MUT-R12`: `Binds` cannot fail after the law verified the same row). Run 1 exposed two test gaps, fixed before run 2:
+  - `MUT-HEX32-LEN`: a 31-byte challenge case was added;
+  - `MUT-R11-NOW`: the test rig now enrols the passkey after the requests are made.
+- **Premises found false (plan §1.4):**
+  - P1: `ensureCredentialsStore` opens its writer through `store.UpgradeCredentials`, not `OpenCredentials`, so RT12's inventory pins those two calls;
+  - P2: the design's "five routes" includes sprint 3's card page and `approve.js`, so sprint 2 registers three;
+  - P3: the CLI's admission refusal text lives in `package main`, so the model repeats it and a test pins the equality;
+  - P4: the page's retries belong to sprint 3, and only the daemon side (503, `Retry-After: 1`, no kept writer) is here;
+  - P5: "below schema 7 → 503" is caught by `RecordSurfaceApproval` after the writer opens, while a store below 6 is caught earlier by the judge's lookup;
+  - P6: RT11's refusals are the handler's own (422/400), with `isProtected` asserted unchanged;
+  - P7: the store refuses a 17th pending request, so only the decided cap of 20 is pinned.
+- The carried NOW obligation is in M4a as `TestApproveAwaitJudgesTheApproverAtNow`. With iteration 384's `sed` applied (2 lines), both subtests fail.
+
+**Controller round trip:** I ran `git archive a8c66655`, extracted the 8 patches from the plan file with §2's awk, and applied them. `diff -rq` against the planner's `work/` tree is empty for `cmd` and `host`, and the appended-byte control was detected. The plan was committed (`0d88d820`) before any sub-milestone commit (retro 384).
+
+**Executor** (env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`, as 374–384), two runs:
+- Run A, M4a–M4e: 5.9 min, 52,970 tok.
+- Run B, M5a–M5c: 7.3 min, 45,017 tok.
+- No hand edits, no git writes, no stop condition.
+- **One deviation:** Run B started M5a's whole-`host/daemon` leg under `nohup`, which §7 forbids. Its log reads `ok host/daemon 250.244s` and its rc file `0`, and the controller's §6 gate re-ran the package green. The deviation is procedural only.
+
+The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`. Cumulative numstat after each commit:
+
+| Sub-milestone | Commit | Numstat |
+|---|---|---|
+| M4a | `fb4e2ae2` | 350 |
+| M4b | `b9025b20` | 517 |
+| M4c | `627d825e` | 793 |
+| M4d | `f76c6bea` | 1,257 |
+| M4e | `6a3f07ae` | 1,396 |
+| M5a | `76aa7dcd` | 1,741 |
+| M5b | `456fb26c` | 1,912 |
+| M5c | `d52b3ae3` | 1,995 |
+
+That equals the plan at every step. The final `cmd` and `host` equal the round-trip tree, and the M4e/M5c snapshots equal the committed files.
+
+**Gates** (controller, before the judge, not concurrent with it):
+- Plan §6 script: rc 0, `PRE_COMMIT_GATES_GREEN 355s`. Every inventory and all 20 new tests `--- PASS` by name, the three `-race` legs, and the AW leg 9/9.
+- After commit, `VERIFY_GO_LEGS=plain verify_go.sh`: **rc 0** ("all 64 required top-level evidence tests passed exactly once"). There were no load-sensitive reds this time.
+
+**Judge** (evaluator `sonnet` via Agent, 8.6 min, 84,797 tok; own worktree; generator ≠ judge): **PASS 92/100, zero blocking** (correctness 28, tests 27, security 19, standards 9, scope 9).
+- Its ledger has 64 lines: 56 killed, 2 survived (J36 and the must-live control), 5 non-compiling edits and 1 no-diff edit (neither credited). It sampled about 25 of the plan's §4 rows and added more than 25 of its own, including fail-open statuses, wrong approver/artifact, and injected challenge and request-bytes leaks, which were caught.
+- **Survivor J36, controller-reproduced:** in `handleSurfaceRequestCard`, replacing the `ActivePasskeys` error check with `if false` leaves the approval tests green (rc 0). The path is read-only and fail-soft (the card shows no passkeys instead of a 500), so it was not a blocker. It is carried to sprint 3 as a test obligation.
+- **Must-die control, re-measured:** the judge's K01 (record before the judge) was killed by the writer *inventory* under `-failfast`, which does not show that a behavioural test catches it. The controller re-ran it with the inventory excluded: a record inserted before `JudgeAssertion` makes `TestApprovePOSTRefusalArms` fail on four R11 arms' 0-row checks (rc 1). Unmutated, the same command is rc 0. The planner's `MUT-RECORD-BEFORE-LAW` row agrees.
+- **The judge's numstat was wrong:** it reported 1,596. The stated unit (insertions + deletions) reads 1,995, and insertions alone 1,991. Both are under the cap, so the verdict is unaffected.
+
+**Gate 3b:**
+- PR #556 head `d52b3ae3`, run 43138995090 attempt 1: `go host build + test gate` red on `host/broker` `TestSeedRestartIgnoresASurvivingOldCopy/survivor` (`exec_seed_test.go:656`). The sprint touches 0 `host/broker` files. This is **row 259, instance 4**.
+- `gh run rerun --failed` → attempt 2: **3/3 success**.
+- `gh pr merge 556 --merge --match-head-commit d52b3ae3…` → merge **`d1027477`** at 02:36:43Z. No closing keywords.
+- Push CI on the merge (run 43142623795): **3/3 success**. LANDED.
+
+**Routing evidence:** base=a8c666554f284651de33d2f6a2c85a16f5b72c02@2026-11-12T00:06:27Z.
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (A3 r2 covers A3a sprint 2).
+- Planner: `opus` via Agent (466,125 tok), `agent-tool opus fail-closed:env-pin`.
+- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (52,970 + 45,017 tok).
+- Evaluator: `sonnet` via Agent (84,797 tok), `agent-tool sonnet declared:alias-pin`.
+- The driver noted codex unusable at preflight (probe rc 75).
+- Metered total: $0.00.
+
+**Progress:** 1.0 clauses 1–7 MET; the goal is unmoved. Row 201 A3a now has its daemon half on `dev`. The surface can list pending requests, serve a request's card data, and accept a passkey approval that the shared law verifies before one row is recorded. `approve <id> --await` mints from that row with no terminal, and the end-to-end test proves the seam in process. No page posts yet; that is sprint 3.
+
+**Ruled out:**
+- **A design r3:** sprint 2 builds §2.3/§2.4 as written. Every design-vs-HEAD drift the planner found is recorded as P1–P7 and routed minimally.
+- **Shipping the SSHSIG POST arm in this sprint:** about 2,100 lines against the 2,000 cap. The design names this exact cut.
+- **Treating the PR's `host/broker` red as a regression:** the package is untouched, the failure is row 259's known CI-only flake (now 4 instances), and a re-run went 3/3.
+- **Crediting the judge's K01 as behavioural proof of judge-before-record:** it was killed by an inventory. The controller re-measured it against the behavioural tests alone (above).
+- **Adding the J36 test in this fire:** the controller would be writing unreviewed code after the judge. It becomes a sprint-3 obligation.
+
+**Retro:**
+- **Commit the plan before `commit_ms.sh` worked:** the plan was `0d88d820` before M4a, and nothing was deleted (the helper's refusal guard never fired).
+- **A judge's control can be killed by the wrong test.** Under `-failfast`, an inventory that pins call sites kills any mutant that adds a call, so a "record before judge" control proves only the inventory. That was one friction this fire. Directive tweak for the next evaluator: run must-die controls with the inventory excluded, and name which test killed them.
+- **The executor broke a `nohup` rule it was given verbatim**, after 374–384 obeyed it. The result was verifiable from its own artifact. Keep the rule in the directive; no further action until it recurs.
+- **Planner time:** 77 min for 1,995 lines and 115 mutants, against 69 min for 1,543 lines at 384. The "ship patches first, checkpoint the plan" practice still holds.
+
+**Next:**
+1. Row 201 A3a sprint 3, "the page and the app", from `w-world-approvals-by-key-a3.md` r2 §9 (no re-design):
+   - M6 the card page and `approve.js` (PG2/PG3/PG3b, network deadlines);
+   - M7 *Needs you*, Decided, and the opt-in notification;
+   - M8 live-Chrome XA1–XA5 and QUICKSTART §17 (attended — pending);
+   - plus Appendix C's SSHSIG arm (R11 `sshsig`, RT6, RT13, AW6's route half) and the J36 test (an injected `ActivePasskeys` error on the card route → 500).
+   - The design's own estimate is about 2,200 lines before Appendix C, so expect its fallback cut (M7's notification and Decided move to a fourth sprint).
+2. Mark's A2 exit run (§10, QUICKSTART §16) stays attended and runnable. D-WORLD-114 stays OPEN for Mark to confirm or veto; default A is being built.
