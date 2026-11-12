@@ -128,8 +128,15 @@ func TestApprovePOSTRefusalArms(t *testing.T) {
 		{"R11-garbage", "", "NotApproved", "does not approve request", 422, func(a approvalRig, row store.MintRequestRow) ([]byte, []string) {
 			return approveBody(row.Digest, []byte(`{"id":"x"}`)), nil
 		}},
-		{"R11-sshsig-cut", "", "NotApproved", "--signature", 422, func(a approvalRig, row store.MintRequestRow) ([]byte, []string) {
-			return []byte(`{"v":1,"digest":"` + row.Digest + `","sshsig":"-----BEGIN SSH SIGNATURE-----\n"}`), nil
+		{"R11-sshsig-garbage", "", "NotApproved", "the SSH signature does not approve request", 422, func(a approvalRig, row store.MintRequestRow) ([]byte, []string) {
+			return sshBody(row.Digest, []byte("-----BEGIN SSH SIGNATURE-----\n")), nil
+		}},
+		{"R11-sshsig-unenrolled", "", "NotApproved", "no enrolled approver", 422, func(a approvalRig, row store.MintRequestRow) ([]byte, []string) {
+			return sshBody(row.Digest, signatureFor(t, approvaltest.NewSigner(74), row)), nil
+		}},
+		{"R11-sshsig-store", "", "Internal", "internal store failure", 500, func(a approvalRig, row store.MintRequestRow) ([]byte, []string) {
+			setVersion(t, a.d.credentialsPath, `ALTER TABLE approvers RENAME COLUMN public_key TO public_key_gone`)
+			return sshBody(row.Digest, signatureFor(t, apSigner, row)), nil
 		}},
 		{"R11-store-v5", "", "Restart", "restart `ailang-worldd serve`", 503, func(a approvalRig, row store.MintRequestRow) ([]byte, []string) {
 			body := approveBody(row.Digest, assertionFor(t, apPasskey, row, 2))
