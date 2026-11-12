@@ -269,9 +269,25 @@ async function waitFor({ expression, ms = 15000 }) {
   return v;
 }
 
+// key presses key ('n', 'N' (with Shift), 'Enter') at the focused element; with page, it waits for the new document. It
+// returns the focused element's id and the app's view (row 201 A3 sprint 4, the N key).
+const KEYS = { n: { code: 'KeyN', windowsVirtualKeyCode: 78, text: 'n' }, N: { code: 'KeyN', windowsVirtualKeyCode: 78, text: 'N', modifiers: 8 }, Enter: { code: 'Enter', windowsVirtualKeyCode: 13, text: '\r' } };
+async function key({ key, page = false }) {
+  const from = events.length;
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', key, ...KEYS[key] });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', key, code: KEYS[key].code, windowsVirtualKeyCode: KEYS[key].windowsVirtualKeyCode });
+  if (page) await until(() => events.slice(from).some((e) => e.method === 'Page.loadEventFired'), 15000, 'the next page');
+  return evaluate(`({ location: location.href, active: document.activeElement ? document.activeElement.id : '', view: document.getElementById('stage') ? document.getElementById('stage').dataset.view : '' })`);
+}
+// tap clicks element id on any page.
+async function tap({ id }) {
+  if (!(await click(id))) throw new Error(id + ' is not visible');
+  return {};
+}
+
 const product = (await send('Browser.getVersion', {}, null)).product;
 console.log(JSON.stringify({ ready: true, chrome: product, pid: chrome.pid }));
-const commands = { tab, open, ceremony, uv, advance, fetchRewrite, openCard, press, waitFor, credential, fill, save, card: cardState };
+const commands = { tab, open, ceremony, uv, advance, fetchRewrite, openCard, press, waitFor, credential, fill, save, card: cardState, key, tap };
 for await (const line of readline.createInterface({ input: process.stdin })) {
   const { cmd, ...args } = JSON.parse(line);
   try {
