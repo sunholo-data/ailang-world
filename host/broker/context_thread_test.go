@@ -57,8 +57,9 @@ func TestApprovalContextIdentity(t *testing.T) {
 			}
 			// Mint traverses Execute, append, decide, findRequest, walk's request and
 			// decision branches, and both sessions. Exact read counts prevent dead arms.
-			if w.objects != 5 || w.heads != 4 {
-				t.Fatalf("mint read census objects=%d heads=%d, want 5/4", w.objects, w.heads)
+			// Row 201 A4 BR1: decide's first-decision-final walk reads one head and one object more.
+			if w.objects != 6 || w.heads != 5 {
+				t.Fatalf("mint read census objects=%d heads=%d, want 6/5", w.objects, w.heads)
 			}
 			w.objects = 0
 			w.heads = 0

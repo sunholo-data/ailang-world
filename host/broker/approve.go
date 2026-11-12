@@ -26,6 +26,8 @@ const (
 var (
 	ErrApprovalRequestNotFound = errors.New("broker: approval request not found")
 	ErrInvalidApprovalDecision = errors.New("broker: invalid approval decision")
+	// ErrApprovalAlreadyDecided: the first decision of a request is final (row 201 A4 §2.4).
+	ErrApprovalAlreadyDecided = errors.New("broker: approval request already decided")
 
 	// The five publish-approval refusal classes (SM.B2b / AC9). They are
 	// separate sentinels rather than one because a caller that cannot tell
@@ -213,6 +215,16 @@ func decideApproval(ctx context.Context,
 	payload := mustApprovalJSON(approvalDecisionWire{
 		RequestRef: requestRef.String(), Decision: decision, DecidedBy: decidedBy, Now: now,
 	})
+	// Row 201 A4 §2.4: the first decision is final. Nothing is written for a second one; the
+	// same decision again (the same verb, decider and time: byte-identical, so the same object)
+	// answers its existing ref, as it did before the rule (two identical requests share one ref).
+	if existing, decided, err := findApprovalDecision(ctx, s, requestRef); err != nil {
+		return hashref.HashRef{}, err
+	} else if decided && bytes.Equal(existing.Payload, payload) {
+		return existing.Hash, nil
+	} else if decided {
+		return hashref.HashRef{}, ErrApprovalAlreadyDecided
+	}
 	obj := brokerObject(ApprovalDecisionV1, payload)
 	if err := s.PutObject(ctx, obj); err != nil {
 		return hashref.HashRef{}, fmt.Errorf("broker: put approval decision: %w", err)
@@ -221,6 +233,24 @@ func decideApproval(ctx context.Context,
 		return hashref.HashRef{}, err
 	}
 	return obj.Hash, nil
+}
+
+// ApprovalChainState reads requestRef's place on the approvals chain (row 201 A4 §2.5 D3, D6):
+// whether it is an approval request of the chain, and the decision that landed for it, if any.
+// Pass the caller's intended read ctx; this API supplies no default timeout.
+func ApprovalChainState(ctx context.Context, s *store.Store, requestRef hashref.HashRef) (onChain, decided bool, verb, decidedBy string, err error) {
+	if _, onChain, err = findApprovalRequest(ctx, s, requestRef); err != nil || !onChain {
+		return false, false, "", "", err
+	}
+	obj, decided, err := findApprovalDecision(ctx, s, requestRef)
+	if err != nil || !decided {
+		return true, false, "", "", err
+	}
+	var w approvalDecisionWire
+	if err := decodeApprovalJSON(obj.Payload, &w); err != nil {
+		return false, false, "", "", err
+	}
+	return true, true, w.Decision, w.DecidedBy, nil
 }
 
 func appendApprovalHead(ctx context.Context, s approvalStore, requestRef, decisionRef hashref.HashRef) error {
@@ -544,6 +574,12 @@ func validatePublishApproval(ctx context.Context,
 	if decision.Decision != "approve" {
 		return hashref.HashRef{}, fmt.Errorf(
 			"%w: decision %s says %q", ErrPublishApprovalDenied, id.ApprovalRef.String(), decision.Decision)
+	}
+	// Row 201 A4 §2.6 L2: a decision a key made never stamps a publish.
+	if strings.HasPrefix(decision.DecidedBy, "ssh:") || strings.HasPrefix(decision.DecidedBy, "webauthn:") {
+		return hashref.HashRef{}, fmt.Errorf(
+			"%w: publishing stays typed-only (D-WORLD-89 R4): decision %s was made by %s",
+			ErrPublishApprovalDenied, id.ApprovalRef.String(), decision.DecidedBy)
 	}
 
 	requestRef, err := hashref.Parse(decision.RequestRef)
