@@ -1837,3 +1837,21 @@ ailang-worldd approver revoke demo-mac --db /tmp/se-world/world.db
 ```
 
 The first `--webauthn-assertion` mints with no terminal and records `approved_by=webauthn:demo-mac`; it checks the assertion before any network call, against the enrolled, unrevoked passkey, the request's own message hash, the origin and a signature counter that must move forward. The second, the same file again, is refused as already used. `approve --list --decided` shows `webauthn:demo-mac`; `approver revoke` (a typed `y`) lists the sessions the passkey approved and revokes none of them, and from then on that passkey approves nothing. `approve --webauthn-assertion` also refuses a file over 16 KiB or not a regular file, an assertion for another request, a passkey that is not enrolled, and one made without user verification.
+
+## 17. Approve from the surface *(attended — pending first verbatim run)*
+
+The surface app lists the mint requests waiting for you under **Needs you**, and each one opens a request card at `/surface/approve/<request-id>`. The card shows every field of the request the daemon stored (the episode, agent, model, task, every grant, the worktree, the stores, the requesting daemon), checks that those bytes match the request's digest, and computes the message to sign itself; it refuses a request it cannot show in full. **Approve with passkey** signs it with a §16 passkey, and the daemon records the approval only after checking it as `approve --webauthn-assertion` does. The daemon never mints: `approve <request-id> --await`, running in another shell, waits for the recorded approval, checks it again, and mints with no terminal. This guide uses the §0 scratch store `/tmp/se-world/world.db` with its daemon serving at `127.0.0.1:7644` and the §16 passkey `demo-mac`, enrolled at `http://localhost:7644`; never a real store.
+
+```bash
+ailang-worldd episode start surface-demo --repo "$PWD" --db /tmp/se-world/world.db --request
+ailang-worldd approve mr-<the 16 hex it printed> --await --db /tmp/se-world/world.db &
+```
+
+`--await` prints the request's id, the first 16 hex of its message hash and the card's address, `open http://localhost:7644/surface/approve/mr-<id>`. Open `http://localhost:7644/surface`: **Needs you · 1** lists `surface-demo` with its agent, grant count and minutes to expiry. Follow it to the card, check every field and that the message hash matches the one `--await` printed, press **Approve with passkey** and pass your device's check. The card shows `Approved by webauthn:demo-mac`; the waiting `approve` mints and prints `approved by webauthn:demo-mac`, and `approve --list --decided` shows it.
+
+```bash
+wait
+ailang-worldd approve --list --decided --db /tmp/se-world/world.db
+```
+
+Open the same card again and press **Approve with passkey**: the daemon refuses it as already used. With an SSH approver (§15) instead, **Save the message** on the card, sign it with the `ssh-keygen -Y sign -n world-approval@sunholo` line the card shows, paste the signature and press **Approve with this signature**. Every request and answer has a 10-second limit: a card that cannot be read says so and offers to read it again, and an approval whose answer never arrives is shown as *outcome unknown* with a status check, never as refused or minted. A busy credentials store is tried again at most three times, a second apart. Reached through `tailscale serve`, start `serve` with `--surface-origin https://<host>.ts.net`, or the card and its Approve are refused (421, 403) naming that flag.
