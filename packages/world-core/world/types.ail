@@ -36,6 +36,7 @@ export type EvidenceGrade
   | TESTED
   | ATTESTED
   | CLAIMED
+  deriving (Eq)
 
 -- Canonical grading for the ratified five-constructor representation.
 -- No current Evidence constructor has authority to mint PROVEN.
@@ -150,6 +151,7 @@ export type TimeoutOutcome
   = ResolveRejectedTimeout
   | EscalateWithNewDeadline
   | ExecuteUnderPriorAuthority
+  deriving (Eq)
 
 -- The frozen v1 decision packet (HUMAN-SURFACE §7 point 3), semantic ID
 -- world/decision-packet/v1. References, not embeds: proposalHash reaches
