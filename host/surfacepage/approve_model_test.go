@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"reflect"
 	"sort"
 	"strings"
@@ -134,5 +135,75 @@ func TestApproveModelCard(t *testing.T) {
 	}
 	if c := RequestCard(r, nil); c.Passkeys == nil || len(c.Passkeys) != 0 {
 		t.Fatalf("no passkeys = %#v, want []", c.Passkeys)
+	}
+}
+
+// AM3: the POST body's grammar (R6).
+func TestApproveModelBodyGrammar(t *testing.T) {
+	dg := strings.Repeat("ab", 32)
+	ok := map[string]string{
+		"webauthn": `{"v":1,"digest":"` + dg + `","webauthn":{"id":"x"}}`,
+		"sshsig":   `{"v":1,"digest":"` + dg + `","sshsig":"-----BEGIN SSH SIGNATURE-----\n"}`,
+	}
+	for name, body := range ok {
+		b, err := ParseApproveBody([]byte(body))
+		if err != nil || b.Digest != dg || (name == "webauthn") != (b.WebAuthn != nil) || (name == "sshsig") != (b.SSHSIG != nil) {
+			t.Errorf("%s: %+v, %v", name, b, err)
+		}
+	}
+	if b, _ := ParseApproveBody([]byte(ok["webauthn"])); string(b.WebAuthn) != `{"id":"x"}` {
+		t.Errorf("the envelope is %q, want the posted bytes", b.WebAuthn)
+	}
+	for name, body := range map[string]string{
+		"both":          `{"v":1,"digest":"` + dg + `","webauthn":{},"sshsig":"x"}`,
+		"neither":       `{"v":1,"digest":"` + dg + `"}`,
+		"null-and-ssh":  `{"v":1,"digest":"` + dg + `","webauthn":null,"sshsig":"x"}`,
+		"unknown-field": `{"v":1,"digest":"` + dg + `","sshsig":"x","approver":"webauthn:mark"}`,
+		"trailing":      `{"v":1,"digest":"` + dg + `","sshsig":"x"} {}`,
+		"v2":            `{"v":2,"digest":"` + dg + `","sshsig":"x"}`,
+		"v-missing":     `{"digest":"` + dg + `","sshsig":"x"}`,
+		"digest-upper":  `{"v":1,"digest":"` + strings.ToUpper(dg) + `","sshsig":"x"}`,
+		"digest-short":  `{"v":1,"digest":"` + dg[2:] + `","sshsig":"x"}`,
+		"not-json":      `v=1`,
+		"empty":         ``,
+	} {
+		if _, err := ParseApproveBody([]byte(body)); !errors.Is(err, ErrApproveBody) {
+			t.Errorf("%s: err %v, want ErrApproveBody", name, err)
+		}
+	}
+}
+
+// AM3 (admission, R8): approve's admission in the CLI's words; "" only when admitted.
+func TestApproveModelAdmission(t *testing.T) {
+	r := amRequest(t)
+	if got := AdmissionRefusal(r, amCreated); got != "" {
+		t.Fatalf("admitted at creation: %q", got)
+	}
+	if got := AdmissionRefusal(r, amExpires-1); got != "" {
+		t.Fatalf("admitted a second before expiry: %q", got)
+	}
+	for name, tc := range map[string]struct {
+		edit func(*StoredRequest)
+		now  int64
+		want string
+	}{
+		"expired": {func(*StoredRequest) {}, amExpires, "request mr-0123456789abcdef expired at 2027-01-15T08:10:00Z; fix: make a new request with episode start --request"},
+		"clock":   {func(*StoredRequest) {}, amCreated - 1, "the clock is behind request mr-0123456789abcdef's creation time (2027-01-15T08:00:00Z); refusing"},
+		"consumed": {func(r *StoredRequest) {
+			r.Consumed, r.ConsumedAt, r.ApprovedBy, r.CredentialID = true, amCreated+5, "ssh:mark", "c1"
+		}, amCreated + 9, "request mr-0123456789abcdef was already used at 2027-01-15T08:00:05Z by ssh:mark (credential c1); fix: make a new request with episode start --request"},
+		"digest":     {func(r *StoredRequest) { r.Digest = strings.Repeat("0", 64) }, amCreated, "request mr-0123456789abcdef's stored bytes do not match its digest; refusing; fix: make a new request with episode start --request"},
+		"digest-hex": {func(r *StoredRequest) { r.Digest = "zz" }, amCreated, "request mr-0123456789abcdef's stored bytes do not match its digest; refusing; fix: make a new request with episode start --request"},
+		"canonical":  {func(r *StoredRequest) { r.Request = append(r.Request, ' ') }, amCreated, "request mr-0123456789abcdef is not a canonical mint request (approval: request bytes are not canonical); fix: make a new request with episode start --request"},
+	} {
+		r := amRequest(t)
+		tc.edit(&r)
+		if got := AdmissionRefusal(r, tc.now); got != tc.want {
+			t.Errorf("%s: %q, want %q", name, got, tc.want)
+		}
+	}
+	if got := Recorded("mr-0123456789abcdef", "webauthn:mark"); got != (ApproveRecorded{V: 1, Recorded: true, Request: "mr-0123456789abcdef", ApprovedBy: "webauthn:mark",
+		Next: "the minter (approve mr-0123456789abcdef --await) mints it; it then appears under Decided"}) {
+		t.Fatalf("recorded = %+v", got)
 	}
 }

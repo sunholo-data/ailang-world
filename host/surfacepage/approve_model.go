@@ -7,17 +7,24 @@ package surfacepage
 // /surface/approve/{id} takes ApproveBody and answers ApproveRecorded or ApproveRefusal.
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
 )
 
 // MaxDecidedListed is the decision list's length (design §2.3, Q3).
 const MaxDecidedListed = 20
+
+// MaxApproveBodyBytes bounds a POST /surface/approve/{id} body (design §2.4 R6).
+const MaxApproveBodyBytes = 20 << 10
 
 // StoredRequest is one mint_requests row as the routes read it (store.MintRequestRow's fields).
 type StoredRequest struct {
@@ -168,4 +175,93 @@ func RequestCard(r StoredRequest, passkeys []CardPasskey) Card {
 		c.Passkeys[i].Allow = append(c.Passkeys[i].Allow, base64.RawURLEncoding.EncodeToString(p.CredentialID))
 	}
 	return c
+}
+
+// ApproveBody is a POST /surface/approve/{id} body: v 1, the digest the page displayed, and
+// exactly one of a WebAuthn assertion envelope (A2 §2.7) and an armored SSHSIG.
+type ApproveBody struct {
+	V        int             `json:"v"`
+	Digest   string          `json:"digest"`
+	WebAuthn json.RawMessage `json:"webauthn"`
+	SSHSIG   *string         `json:"sshsig"`
+}
+
+// ErrApproveBody refuses a body that is not ApproveBody's grammar (R6).
+var ErrApproveBody = errors.New("the body is not {\"v\":1,\"digest\":<64 hex>} with exactly one of webauthn and sshsig")
+
+// ParseApproveBody is R6's grammar: strict JSON (no unknown field, exactly one value), v 1,
+// exactly one format, the digest 64 lowercase hex.
+func ParseApproveBody(b []byte) (ApproveBody, error) {
+	dec := json.NewDecoder(bytes.NewReader(b))
+	dec.DisallowUnknownFields()
+	var body ApproveBody
+	if err := dec.Decode(&body); err != nil {
+		return ApproveBody{}, fmt.Errorf("%w: %v", ErrApproveBody, err)
+	}
+	if _, err := dec.Token(); err != io.EOF {
+		return ApproveBody{}, fmt.Errorf("%w: more than one JSON value", ErrApproveBody)
+	}
+	switch {
+	case body.V != 1:
+		return ApproveBody{}, fmt.Errorf("%w: v is %d", ErrApproveBody, body.V)
+	case (body.WebAuthn != nil) == (body.SSHSIG != nil):
+		return ApproveBody{}, fmt.Errorf("%w: it has %s", ErrApproveBody, map[bool]string{true: "both", false: "neither"}[body.SSHSIG != nil])
+	case !lowerHex64(body.Digest):
+		return ApproveBody{}, fmt.Errorf("%w: digest is not 64 lowercase hex", ErrApproveBody)
+	}
+	return body, nil
+}
+
+// lowerHex64 is exactly 64 lowercase hex characters.
+func lowerHex64(s string) bool {
+	b, ok := hex32(s)
+	return ok && hex.EncodeToString(b[:]) == s
+}
+
+// AdmissionRefusal is approve's admission (approval.Admit) of r at now, in the CLI's words
+// (cmd/ailang-worldd approveAdmission); "" when r is admitted (R8).
+func AdmissionRefusal(r StoredRequest, now int64) string {
+	if _, err := approval.Decode(r.Request); err != nil {
+		return fmt.Sprintf("request %s is not a canonical mint request (%v); fix: make a new request with episode start --request", r.ID, err)
+	}
+	digestRefusal := fmt.Sprintf("request %s's stored bytes do not match its digest; refusing; fix: make a new request with episode start --request", r.ID)
+	stored, _ := hex32(r.Digest) // not 64 hex: the zero array, which no bytes hash to (the digest refusal)
+	switch approval.Admit(approval.AdmitInput{Now: now, CreatedAt: r.Created, ExpiresAt: r.Expires, Consumed: r.Consumed,
+		StoredDigest: stored, BytesDigest: sha256.Sum256(r.Request)}) {
+	case approval.Admitted:
+		return ""
+	case approval.RefuseConsumed:
+		return fmt.Sprintf("request %s was already used at %s by %s (credential %s); fix: make a new request with episode start --request",
+			r.ID, rfc3339(r.ConsumedAt), r.ApprovedBy, r.CredentialID)
+	case approval.RefuseClockBehind:
+		return fmt.Sprintf("the clock is behind request %s's creation time (%s); refusing", r.ID, rfc3339(r.Created))
+	case approval.RefuseExpired:
+		return fmt.Sprintf("request %s expired at %s; fix: make a new request with episode start --request", r.ID, rfc3339(r.Expires))
+	default:
+		return digestRefusal
+	}
+}
+
+func rfc3339(t int64) string { return time.Unix(t, 0).UTC().Format(time.RFC3339) }
+
+// ApproveRefusal is every refusal of the approval routes: inert JSON, nothing written.
+type ApproveRefusal struct {
+	V      int    `json:"v"`
+	Error  string `json:"error"`
+	Reason string `json:"reason"`
+}
+
+// ApproveRecorded is a POST's success: the verified approval is recorded for the minter.
+type ApproveRecorded struct {
+	V          int    `json:"v"`
+	Recorded   bool   `json:"recorded"`
+	Request    string `json:"request"`
+	ApprovedBy string `json:"approvedBy"`
+	Next       string `json:"next"`
+}
+
+// Recorded is the success body for request id approved by approvedBy.
+func Recorded(id, approvedBy string) ApproveRecorded {
+	return ApproveRecorded{V: 1, Recorded: true, Request: id, ApprovedBy: approvedBy,
+		Next: "the minter (approve " + id + " --await) mints it; it then appears under Decided"}
 }
