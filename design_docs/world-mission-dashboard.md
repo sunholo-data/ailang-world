@@ -1,18 +1,17 @@
-# World mission dashboard — iteration 389 (2026-11-12)
+# World mission dashboard — iteration 390 (2026-11-12)
 
-- **Done this fire:** row 201 A4 sprint 1 LANDED ([#563](https://github.com/sunholo-data/ailang-world/pull/563), merge `338ff821`, CI 3/3 head and merge first try). Judge (sonnet) PASS 88/100, zero blocking.
-  - A `Human.Approve` decision packet now has a pure refusal ladder (D1–D10), a complete request-wide packet discovery, and the 91-byte `world-decision/v1` message.
-  - A request is decided at most once. A key-made decision can never authorize a publish (fences L1 and L2).
-  - The daemon serves `GET /surface/decisions/{ref}` and accepts a typed decision at `POST /surface/decide/{ref}` behind the A3a guards. It derives `decidedBy` itself and consumes the verb-bound operator proof first.
-  - The typed CLI (`approve <request-ref> [--deny]`) moved to sprint 2 by the design's priced fallback, so an operator cannot decide from a terminal yet. The sprint is 1,985 of 2,000 lines.
-- **Judge gaps carried to sprint 2 (non-blocking):** J07 (the L1 effect arm), J31/J32 (the D1 regex anchor and case at the daemon; reproduced by the controller), J33 (the GET's D4a mapping).
-- **Next loop work:** the A4 sprint-2 planner ("the keys"), typed CLI first. Expect the webauthn fallback cut.
-- **Attended, pending Mark:** the A1b exit run (QUICKSTART §15), the A2 real-passkey exit run (A2 §10, QUICKSTART §16) and the A3a exit run (QUICKSTART §17).
-- **OPEN decisions:** D-WORLD-105 (default C), D-WORLD-114 (default A, applied), D-WORLD-115 (default A, applied from 389).
+- **Done this fire:** row 201 A4 sprint 2 LANDED ([#566](https://github.com/sunholo-data/ailang-world/pull/566), merge `9ea7b45f`, CI 3/3 head first try; merge 3/3 on attempt 2 after the known filter-control flake). Judge (sonnet) PASS 88/100, zero blocking.
+  - An operator can approve or deny a `Human.Approve` decision packet at a terminal: `ailang-worldd approve <sha256:request-ref> [--deny]` checks the subject's hashes, takes `y`, and posts the verb-bound proof.
+  - An enrolled SSH key can decide too: `--sign-with` signs the 91-byte decision message under `world-decision@sunholo`. The daemon judges the key, records it in credentials schema 8 `key_decisions`, decides, then lands the row.
+  - A key decision still cannot authorize a publish (L1 + L2). Concurrent POSTs decide once, and a busy writer gets 503 with 0 decisions.
+  - The passkey arm and `--write-message`/`--signature` on a request ref moved to sprint 3 by the design's priced fallback. The sprint is 1,983 of 2,000 lines.
+- **Judge gaps carried to sprint 3 (non-blocking):** JM22 (`LandKeyDecision`'s request filter; reproduced by the controller), K0's approver/format operands at the store API, JM01–JM04 (`isApproverRace` → 422), JM27, JM46.
+- **Next loop work:** the A4 sprint-3 planner. The webauthn arm and CD6–CD7 come first, then the surface (decision listing, card, live Chrome, QUICKSTART §18). It is ≈ 2,060 lines, so expect its own fallback cut.
+- **Attended, pending Mark:** the A1b exit run (QUICKSTART §15), the A2 real-passkey exit run (QUICKSTART §16) and the A3a exit run (QUICKSTART §17).
+- **OPEN decisions:** D-WORLD-105 (default C), D-WORLD-114 (default A, applied), D-WORLD-115 (default A, applied).
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
-- **Routing this fire:** planner opus (Agent, 105 min), executor haiku (Agent ×2; run A resumed once after ending its turn on a wait), evaluator sonnet (Agent, 50 min). No designer. Codex was over ration (probe rc 75). Metered $0.00.
+- **Routing this fire:** planner opus (Agent, 77 min), executor haiku (Agent ×3, all clean), evaluator sonnet (Agent, 18 min). No designer. Codex was unusable at preflight (probe rc 75). Metered $0.00.
 - **Instrument notes:**
-  - The rig ran at load 40–210. Local `verify_go` hit five 10-minute package timeouts; every red was on a known list or green alone, and clean-runner CI was the gate.
-  - `TestWorkspaceProtectedPolicyWiring` (host/daemon) and `TestExecProtectedCheckTimeout/reserve-after-before` (host/broker) are new load reds, each green alone.
+  - The rig ran at load 16–30. Every leg of the §6 gates was green, and `verify_go` plain gave rc 0 on its first run.
   - The self-notice script still reports `watermark channel unavailable` until a directive is marked on #524.
 - **Bookkeeping thread:** #524 (rotates Monday 2026-11-16 07:00).
