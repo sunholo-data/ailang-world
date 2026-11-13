@@ -424,13 +424,28 @@
   // needsYouHTML is the now card's Needs you (row 201 A3, design §2.8): the pending mint requests of
   // GET /surface/requests.json, each a link to its card; a request the daemon could not read shows why;
   // then the notification opt-in for this browser's permission (design §2.9).
+  // Row 201 A4 (design §2.8): then the pending Human.Approve decisions of the same read, each a link to
+  // its decision card; a reserved one names its typed owner and a refused one its reason, with no link.
   function needsYouHTML(r, now, permission) {
     const p = r && Array.isArray(r.pending) ? r.pending : [];
-    const head = `<div class="nh" style="color:${p.length ? 'var(--youShell)' : 'var(--sub)'}">Needs you · ${p.length}</div>`;
-    if (!p.length) return `<div class="nsec" data-needs>${head}<div class="nl sub">${esc(r && r.unavailable || 'Nothing needs you')}</div>${notifyHTML(permission)}</div>`;
+    const ds = r && Array.isArray(r.decisions) ? r.decisions : [];
+    const n = p.length + ds.length;
+    const head = `<div class="nh" style="color:${n ? 'var(--youShell)' : 'var(--sub)'}">Needs you · ${n}</div>`;
+    const more = r && r.decisionsTruncated ? '<div class="nl sub">Older approval requests are not listed; decide them at a terminal with ailang-worldd approve &lt;request-ref&gt;</div>' : '';
+    if (!n) return `<div class="nsec" data-needs>${head}<div class="nl sub">${esc(r && r.unavailable || 'Nothing needs you')}</div>${more}${notifyHTML(permission)}</div>`;
     return `<div class="nsec" data-needs>${head}` + p.map(q => q.refused ? `<div class="nl sub">${esc(q.id)} · refused: ${esc(q.refused)}</div>`
       : `<div class="nl"><a id="needs-${esc(q.id)}" href="/surface/approve/${esc(q.id)}"><b>${esc(q.episode)}</b> · ${esc(q.agent)} · ${q.grants} grant${q.grants === 1 ? '' : 's'} · expires in ${Math.max(0, Math.ceil((q.expires - now) / 60))} min</a>`
-        + (q.recorded ? ` · approved by ${esc(q.recorded)}, waiting for the minter` : '') + '</div>').join('') + notifyHTML(permission) + '</div>';
+        + (q.recorded ? ` · approved by ${esc(q.recorded)}, waiting for the minter` : '') + '</div>').join('') + ds.map(decisionLineHTML).join('')
+      + more + notifyHTML(permission) + '</div>';
+  }
+  // RESERVED_OWNERS is the typed command that owns a reserved decision (design §2.6 L1).
+  const RESERVED_OWNERS = { publish: 'world-publish approve', finish: 'ailang-worldd episode finish' };
+  // decisionLineHTML is one decision's Needs-you line (design §2.8).
+  function decisionLineHTML(x) {
+    if (x.reserved) return `<div class="nl sub">${esc(x.reserved)} approval — use ${esc(RESERVED_OWNERS[x.reserved] || 'its typed owner')} at a terminal</div>`;
+    if (x.refusal) return `<div class="nl sub">Decide · ${esc(x.scope)} · refused: ${esc(x.refusal)}</div>`;
+    const ref = String(x.request || '').replace(/^sha256:/, '');
+    return `<div class="nl"><a id="decide-${esc(ref)}" href="/surface/decide/sha256:${esc(ref)}">Decide · ${esc(x.scope)} · requested by ${esc(x.requester)} · deadline ${hm(new Date(x.deadline * 1000))}</a></div>`;
   }
   // notifyHTML is the opt-in: "Notify me" while this browser has not been asked (permission "default"),
   // its answer once it has, and nothing where the browser has no notifications.
@@ -443,11 +458,16 @@
   // for each pending request this tab has not seen, while notifications are granted; each opens its card.
   // seen is null before the page's first read, which raises nothing (the page itself shows those); a read
   // that failed changes nothing. Refused and already-recorded requests are seen but raise nothing.
+  // A decision (row 201 A4) is keyed by its request ref; a reserved or refused one is seen but raises nothing.
   function notifications(r, seen, permission) {
     if (!r || !Array.isArray(r.pending)) return { notes: [], seen };
+    const ds = Array.isArray(r.decisions) ? r.decisions : [];
     const fresh = seen ? r.pending.filter(q => !seen.has(q.id) && !q.refused && !q.recorded) : [];
-    return { seen: new Set([...(seen || []), ...r.pending.map(q => q.id)]), notes: permission !== 'granted' ? [] : fresh.map(q => ({ title: 'World needs you', tag: q.id,
-      body: `Approve mint request for ${q.episode} (${q.grants} grant${q.grants === 1 ? '' : 's'}), expires ${hm(new Date(q.expires * 1000))}`, href: '/surface/approve/' + q.id })) };
+    const freshD = seen ? ds.filter(x => !seen.has(x.request) && !x.reserved && !x.refusal) : [];
+    return { seen: new Set([...(seen || []), ...r.pending.map(q => q.id), ...ds.map(x => x.request)]), notes: permission !== 'granted' ? [] : fresh.map(q => ({ title: 'World needs you', tag: q.id,
+      body: `Approve mint request for ${q.episode} (${q.grants} grant${q.grants === 1 ? '' : 's'}), expires ${hm(new Date(q.expires * 1000))}`, href: '/surface/approve/' + q.id }))
+      .concat(freshD.map(x => ({ title: 'World needs you', tag: x.request,
+        body: `Decide ${x.scope} requested by ${x.requester}, deadline ${hm(new Date(x.deadline * 1000))}`, href: '/surface/decide/' + x.request }))) };
   }
   // decidedHTML is the decision list under Needs you (design §2.8): the last few of GET
   // /surface/requests.json's decided requests (newest first; the daemon sends 20), and all of them on request.
