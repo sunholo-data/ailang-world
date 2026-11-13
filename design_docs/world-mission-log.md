@@ -3263,6 +3263,8 @@ That equals the plan at every step.
 - `gh pr merge 566 --merge --match-head-commit e4510375…` → merge **`9ea7b45f`** at 23:49:51Z.
 - Push CI on the merge: **run 43332117627 attempt 1: 2/3, with `go host build + test gate` red only on `TestWorktreeSnapshotRefusesAConfiguredFilter` ("control: plain git status did not run the clean filter"). That is the known queue row `w-filter-refusal-control-flake` (filed at iteration 285), in a broker test this sprint does not touch: the sprint's only broker change is one test row in `decision_law_test.go`. It was green 5/5 alone on the merged tree locally. `gh run rerun --failed`, attempt 2: **3/3 success**. LANDED**.
 
+- **Carried from record 389 (owed by its note):** record PR #564 (docs only, code tree = `338ff821`), run 43302235014 attempt 1: the race job was red once on host/daemon `TestCommitInvocationReceiptIdentity/A_landed_uncertain_then_B_on_top` (`commit_budget_test.go:323`: commit B got 409 `HeadConflict`). The other two jobs were green. This is instance 2 of that test (iteration 226 was instance 1), in the row-258 class. `rerun --failed`, attempt 2: 3/3 success. The job's two `DATA RACE` warnings come from the gate's own positive control (`design_docs/verification/w-race-gate-blindspot/racecontrol/main.go`), not from a failure. Verified first-party this iteration from the job log and the run's attempt history.
+
 **Routing evidence:** base=9ea7b45fbb8dd17e522e238ff2436d098a90981d.
 - Controller: `claude-opus-5-5` (tok: not reported).
 - Designer: not spawned (A4 r2 covers sprint 2).
