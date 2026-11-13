@@ -1,6 +1,6 @@
 package main
 
-// Row 201 A4 sprint 2 M5b (design §2.10, §6 CD5; CD6-CD9 are sprint 3's, plan S2-D1): approve
+// Row 201 A4 sprint 2 M5b (design §2.10, §6 CD5; CD6-CD9 are sprint 3's, approve_decide_artifact_test.go): approve
 // <request-ref> --sign-with against the fake daemon (approve_decide_rig_test.go): the 91-byte
 // decision message through the signer seam, and the real ssh-keygen on a key made in a temp dir
 // (D-WORLD-109: no real key, no agent).
@@ -64,11 +64,6 @@ func TestApproveDecideSignWith(t *testing.T) {
 	}
 	if got, want := reflect.ValueOf(realSessionEnv().signDecision).Pointer(), reflect.ValueOf(signDecisionWithSSHKeygen).Pointer(); got != want {
 		t.Fatal("realSessionEnv().signDecision is not signDecisionWithSSHKeygen")
-	}
-	for _, flag := range []string{"--signature", "--write-message"} { // not a request ref's flags in this sprint
-		if code, _, stderr := g.keyRun(t, env, flag, "/x"); code != exitUsage || g.gets != 1 || !strings.Contains(stderr, "the other key flags do not decide it") {
-			t.Errorf("%s: rc %d, GETs %d\nstderr %s", flag, code, g.gets, stderr)
-		}
 	}
 }
 
