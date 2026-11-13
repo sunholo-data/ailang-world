@@ -1,0 +1,7 @@
+--- PASS: TestApproveDecideWebAuthnLinkInChrome (1.84s)
+--- PASS: TestApprovePageInChrome (1.66s)
+--- PASS: TestApprovePageShowsAHostileValueAsText (1.13s)
+--- PASS: TestApprovePageRefusesASwappedRequest (1.97s)
+--- PASS: TestApprovePageSSHSIGInChrome (1.44s)
+--- PASS: TestPasskeyPageAbortsAPendingCeremony (4.18s)
+--- PASS: TestPasskeyPageInChrome (5.01s)

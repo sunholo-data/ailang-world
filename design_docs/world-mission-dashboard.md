@@ -1,17 +1,19 @@
-# World mission dashboard — iteration 390 (2026-11-12)
+# World mission dashboard — iteration 391 (2026-11-13)
 
-- **Done this fire:** row 201 A4 sprint 2 LANDED ([#566](https://github.com/sunholo-data/ailang-world/pull/566), merge `9ea7b45f`, CI 3/3 head first try; merge 3/3 on attempt 2 after the known filter-control flake). Judge (sonnet) PASS 88/100, zero blocking.
-  - An operator can approve or deny a `Human.Approve` decision packet at a terminal: `ailang-worldd approve <sha256:request-ref> [--deny]` checks the subject's hashes, takes `y`, and posts the verb-bound proof.
-  - An enrolled SSH key can decide too: `--sign-with` signs the 91-byte decision message under `world-decision@sunholo`. The daemon judges the key, records it in credentials schema 8 `key_decisions`, decides, then lands the row.
-  - A key decision still cannot authorize a publish (L1 + L2). Concurrent POSTs decide once, and a busy writer gets 503 with 0 decisions.
-  - The passkey arm and `--write-message`/`--signature` on a request ref moved to sprint 3 by the design's priced fallback. The sprint is 1,983 of 2,000 lines.
-- **Judge gaps carried to sprint 3 (non-blocking):** JM22 (`LandKeyDecision`'s request filter; reproduced by the controller), K0's approver/format operands at the store API, JM01–JM04 (`isApproverRace` → 422), JM27, JM46.
-- **Next loop work:** the A4 sprint-3 planner. The webauthn arm and CD6–CD7 come first, then the surface (decision listing, card, live Chrome, QUICKSTART §18). It is ≈ 2,060 lines, so expect its own fallback cut.
-- **Attended, pending Mark:** the A1b exit run (QUICKSTART §15), the A2 real-passkey exit run (QUICKSTART §16) and the A3a exit run (QUICKSTART §17).
+- **Done this fire:** row 201 A4 sprint 3 LANDED ([#569](https://github.com/sunholo-data/ailang-world/pull/569), merge `e6761873`, CI 3/3 on head and merge, both first try). Judge (sonnet) PASS 91/100, zero blocking.
+  - An operator can decide a `Human.Approve` packet with a passkey: `approve <request-ref> [--deny] --webauthn-link` prints a link and the message hash; after the device ceremony, `--webauthn-assertion <file> --expiry <printed>` posts it. The daemon checks the counter inside the credentials writer's transaction.
+  - Out-of-band SSH decisions work too: `--write-message` writes the 91-byte message, and `--signature <file> --expiry <printed>` posts it.
+  - A live-Chrome test drives the passkey decision with Chrome's own bytes; QUICKSTART §18 documents it.
+  - The whole surface (decision listing, *Needs you*, the card) moved to a sprint 4. That goes further than the design's fallback, and the controller accepted it. The sprint is 1,493 of 2,000 lines.
+- **Known defect, for sprint 4:** the A2 passkey page reads "Approve request …" even for a deny. The signature binds the verb, and a mismatched post is refused with 422.
+- **Safety note:** while planning, one test draft made a read-only health GET to the rig's real World service (nothing written). The landed test refuses to run unless its temp service record resolves to the fake daemon.
+- **Next loop work:** the A4 sprint-4 planner — the surface (≈ 1,250 lines).
+- **Attended, pending Mark:** the A1b exit run (QUICKSTART §15), the A2 real-passkey exit run (§16), the A3a exit run (§17); A4 design §10 steps 1–3 and 5 are runnable now.
 - **OPEN decisions:** D-WORLD-105 (default C), D-WORLD-114 (default A, applied), D-WORLD-115 (default A, applied).
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
-- **Routing this fire:** planner opus (Agent, 77 min), executor haiku (Agent ×3, all clean), evaluator sonnet (Agent, 18 min). No designer. Codex was unusable at preflight (probe rc 75). Metered $0.00.
+- **Routing this fire:** planner opus (Agent, 57 min), executor haiku (Agent ×3, all clean), evaluator sonnet (Agent, 37 min). No designer. Codex was unusable at preflight (probe rc 75). Metered $0.00.
 - **Instrument notes:**
-  - The rig ran at load 16–30. Every leg of the §6 gates was green, and `verify_go` plain gave rc 0 on its first run.
+  - The §6 Chrome leg went red once on an untouched A2 timing test (`TestPasskeyPageAbortsAPendingCeremony/get-late`); the leg passed 7/7 twice on re-run.
+  - The judge's one surviving-mutant claim was refuted at package scope by the controller.
   - The self-notice script still reports `watermark channel unavailable` until a directive is marked on #524.
 - **Bookkeeping thread:** #524 (rotates Monday 2026-11-16 07:00).
