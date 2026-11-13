@@ -28,7 +28,7 @@ func TestDecisionRoutesRegistered(t *testing.T) {
 		got = append(got, m[1])
 	}
 	sort.Strings(got)
-	if want := []string{"GET /surface/decisions/{ref}", "POST /surface/decide/{ref}"}; !reflect.DeepEqual(got, want) {
+	if want := []string{"GET /surface/decide.js", "GET /surface/decide/{ref}", "GET /surface/decisions/{ref}", "POST /surface/decide/{ref}"}; !reflect.DeepEqual(got, want) { // sprint 4: the card
 		t.Fatalf("decision routes %v, want %v", got, want)
 	}
 	r := newApprovalRig(t)
@@ -42,7 +42,7 @@ func TestDecisionRoutesRegistered(t *testing.T) {
 		methods []string
 	}{
 		{"/surface/decisions/" + ref, []string{"POST", "PUT", "DELETE", "OPTIONS"}},
-		{"/surface/decide/" + ref, []string{"GET", "PUT", "DELETE", "OPTIONS"}},
+		{"/surface/decide/" + ref, []string{"PUT", "DELETE", "OPTIONS"}}, // sprint 4: GET is the card
 	} {
 		for _, method := range tc.methods {
 			rec := r.serve(method, tc.target, apLoopback, nil, "Origin", "http://localhost:7644", "Access-Control-Request-Method", "POST")
