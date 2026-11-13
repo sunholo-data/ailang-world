@@ -1,0 +1,14 @@
+LEG status rc=0 0s
+LEG verify_ail rc=0 31s
+LEG gofmt rc=0 0s
+LEG build rc=0 1s
+LEG vet rc=0 1s
+LEG fence rc=0 0s
+LEG pkgs rc=0 293s
+LEG broker_named rc=0 8s
+LEG race rc=0 49s
+LEG inv rc=0 18s
+LEG chrome rc=0 18s
+named PASS: 69
+LEG verify_go rc=0 375s
+GATES_DONE 794s FAILS: none

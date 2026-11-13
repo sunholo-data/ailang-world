@@ -1,0 +1,23 @@
+  Z3_SHA: 7288c49a5bd6dbafd7b0b0d1f65956b91672da24b08f09242919af159be3418e
+  GOTOOLCHAIN: go1.26.6
+  WORLD_PKG_AILANG_BIN: /home/runner/.pinned-ailang/ailang
+##[endgroup]
+── legs 1-2 AILANG_BIN=/home/runner/.local/bin/ailang (AILANG v0.60.4)
+ℹ UNRECOGNISED RELEASE: legs 1-2 resolved 'v0.60.4', which is not among the
+  releases this repo expects (v0.41.0 v0.33.0 v0.30.0). The primary
+  .ail gate has switched compiler — review it, then update scripts/testdata/ailang_release_observed.txt.
+── Leg 1: ai-check required-check manifest
+   ✓ swept .ail module set equals the LEG1_MODULES allowlist (24 modules)
+   ai-check design_docs/sketches/decisionpacket.ail
+   ai-check design_docs/sketches/effectbroker.ail
+   ai-check design_docs/sketches/effectplan.ail
+   ai-check design_docs/sketches/execargs.ail
+   ai-check design_docs/sketches/logepoch.ail
+   ai-check design_docs/sketches/storejournal.ail
+   ai-check design_docs/sketches/transitions.ail
+   ai-check design_docs/sketches/worlddapi.ail
+   ai-check design_docs/sketches/worldkernel.ail
+   ai-check design_docs/sketches/worldtypes.ail
+   ai-check world/contracts.ail
+✗ world/contracts.ail: check.passed != true
+##[error]Process completed with exit code 1.

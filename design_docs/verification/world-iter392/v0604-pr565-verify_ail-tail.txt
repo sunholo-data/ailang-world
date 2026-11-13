@@ -1,0 +1,6 @@
+   ai-check design_docs/sketches/worldkernel.ail
+   ai-check design_docs/sketches/worldtypes.ail
+   ai-check world/contracts.ail
+   ai-check world/logepoch.ail
+   ai-check world/transitions.ail
+✗ world/transitions.ail: check.passed != true
