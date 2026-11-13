@@ -1,0 +1,261 @@
+{
+  "sprint_id": "w-world-approvals-by-key-a4-s3",
+  "design_doc": "design_docs/planned/w-world-approvals-by-key-a4.md",
+  "design_revision": "r2 (reviewed iteration 388; not reopened)",
+  "sprint_plan": "design_docs/planned/w-world-approvals-by-key-a4-sprint3-plan.md",
+  "previous_sprint": {
+    "plan": "design_docs/planned/w-world-approvals-by-key-a4-sprint2-plan.md",
+    "json": "design_docs/planned/sprint_w-world-approvals-by-key-a4-s2.json",
+    "landed_merge": "9ea7b45f",
+    "note": "A4 sprint 2 landed (PR #566, judge sonnet PASS 88); recorded at 7004f591 (PRs #567, #568)"
+  },
+  "base_commit": "7004f5913d85cc1f307068a7f4c4e4e31aa190ea",
+  "queue_row": 201,
+  "iteration": 391,
+  "sprint_number": 3,
+  "milestone": "A4",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter391-a4-s3",
+  "branch": "sprint/world-iter391-row201-a4-s3",
+  "decisions_open": {
+    "D-WORLD-115": "OPEN, default A applied (built as designed); under B the P slot carries a stored challenge for both laws and CD6/CD8: plan S3-D8"
+  },
+  "cut": {
+    "cap_loc": 2000,
+    "measure": "git diff --numstat <base> HEAD -- cmd host docs (insertions + deletions); -- cmd host alone also stated",
+    "fallback_fired": "yes, further than the design's: the whole surface moves to sprint 4 (requests.json decisions DMD1-DMD3, Needs you XD3, the card GET /surface/decide/{ref} + decide.js PD1 PD2 XD1 XD2 XD4, approve --list decisions Q2, DecisionSubject.Passkeys); for the time cap and coherence, not the line cap (507 left); every shipped arm reachable by an operator from the CLI (S3-D1, S3-D2)",
+    "never_cut_and_built": "P1, JM22/K0/JM01-JM04/JM46, KD2, KD7, KD8, RD13 (b)(c), RD14"
+  },
+  "p1": "PASSED: Chrome 157.0.8103.51 headless, a page under exactly surfaceCSP on http://localhost, rebuilt DM1's two 91-byte decision messages and SHA-256 with TextEncoder, DataView.setBigUint64(BigInt) and crypto.subtle: msg=EQUAL hash=EQUAL for both (plan §1.2 C4; plan-scratch/p1/P1_RESULT.html)",
+  "scope": [
+    "P1 (planner obligation, design §1.12)",
+    "the sprint-2 judge's findings 1-4 (JM22, K0 approver, JM01-JM04, JM46; JM27 a named equivalent)",
+    "the webauthn arm: DecideByAssertion (W15 deferred), JudgeDecisionAssertion, RecordKeyDecision K4, the POST's webauthn member and arm (KD2, KD7, KD8, RD10/RD11, RD13 b/c, RD14)",
+    "CD6-CD9 on a request ref (--write-message, --signature --expiry, --webauthn-link, --webauthn-assertion --expiry)",
+    "a live-Chrome sibling (Chrome signs a decision through the unchanged A2 passkey page)",
+    "QUICKSTART §18"
+  ],
+  "moved_to_sprint_4": [
+    "the surface (~1,250): requests.json decisions + decisionsTruncated (DMD1-DMD3), Needs you in app.js (XD3), the decision card GET /surface/decide/{ref} + GET /surface/decide.js (PD1, PD2, XD1, XD2, XD4; BigInt expiry per P1), DecisionSubject.Passkeys, approve --list decisions (design Q2), TestSurfaceAppRoutes +2"
+  ],
+  "how_an_operator_decides_with_a_passkey": "approve <request-ref> [--deny] --webauthn-link -> the A2 /surface/passkey page (unchanged; challenge = SHA-256 of the decision message; it reads 'Approve request decide-<verb>-<16 hex>') -> approve <request-ref> [--deny] --webauthn-assertion <saved file> --expiry <printed>",
+  "w15_placement": "the decision judge runs W1-W14 only; RecordKeyDecision K4 runs usePasskey (W15 on the stored counter, in the transaction) on every path but the exact match of an unlanded row; useApprover runs on both",
+  "executor_lane": "as routed by the controller; runs: (M6a, M6b, M6c), (M6d, M6e), (M6f, M6g); approvaltest keys/passkeys, Chrome's virtual authenticator in a temp profile and a temp-dir ssh-keygen key only",
+  "executor_form": "every sub-milestone is a unified diff in the plan Appendix P, applied with patch -p1 after --dry-run, extracted with plan §2's awk",
+  "estimate_loc": {
+    "production": 376,
+    "test": 1088,
+    "docs": 29,
+    "total_cumulative": 1493,
+    "cmd_host_only": 1464,
+    "measure": "insertions + deletions (git diff --numstat -- cmd host docs), measured after a commit of each scratch stage and on the round-trip tree"
+  },
+  "constraints": [
+    "D-WORLD-109: approvaltest keys and passkeys, temp stores, an httptest loopback daemon, Chrome's virtual authenticator in a temp profile; ssh-keygen -Y sign only on a key made in a test temp dir; JM46's test refuses to run unless the temp service record resolves to the fake daemon",
+    "host/approval pure and stdlib-only; effects at the store/daemon/CLI boundary; the daemon never keeps the credentials writer",
+    "decidedBy derived, never accepted; no /v1 route, no new route, no CSP change, no CORS, no new dependency, no schema change",
+    "the A2 mint law behaviourally unchanged: every A2 test unedited and green",
+    "no t.Parallel; every Go Bash call timeout 600000, foreground",
+    "no git writes by the executor"
+  ],
+  "baseline": "verify_ail PASSED; build/vet/fence/gofmt rc 0; pkgs rc 1 only TestSessionSelfGit (known list; ok alone 6.4 s); broker_named rc 0; broker_whole_reported rc 1 only TestExecProtectedCheckTimeout (known list); race rc 0; inv 49 PASS; chrome 6 PASS; inv2 9 PASS; load 9-45",
+  "design_premises_found_false": [
+    "P1 the A2 passkey page signs any challenge its link carries and always reads 'Approve request' -> CD8 builds a decision link for it; passkey.js unchanged; the deny wording recorded",
+    "P2 two sprint-2 tests pin sprint 2's cut (approve_decide_key_test.go loop, approve_decide_rig_test.go one row) -> edited",
+    "P3 DecideBody with json.RawMessage breaks approve_decide_test.go:50's struct comparison -> *json.RawMessage",
+    "P4 the writer's counter refusal is store.ErrSignCountRegression, not approval's text -> 422 NotApproved with the store's text",
+    "P5 RD13 (b) 'fresh assertion at N+1' after a failed write that moved the counter to N+1 -> the test posts N+2",
+    "P6 identical Human.Approve requests share a ref -> distinct requesters in the daemon tests",
+    "P7 JM46 with an incomplete service record fell through to 127.0.0.1:7644 (the real service; one read-only health GET in this planner's first draft) -> complete record + a guard that refuses to run otherwise",
+    "P8 TestSurfaceAppRoutes +2 does not happen this sprint (the card moved)"
+  ],
+  "files_outside_design_section_8": [
+    "host/approval/passkey_assert.go (the design §2.3 refactor)",
+    "host/approval/decision_signed.go",
+    "host/authority/judge_decision.go",
+    "host/store/key_decisions.go",
+    "host/daemon/surface_decide_key.go",
+    "host/surfacepage/decide_model.go",
+    "cmd/ailang-worldd/approve_decide.go",
+    "every new and edited _test.go (plan §5)"
+  ],
+  "ci_change": "none",
+  "not_touched": [
+    "host/approval/{request,signed,sshsig,passkey}.go",
+    "host/authority/judge.go",
+    "host/store/{passkeys,approvers,credentials}.go, credentials_schema.sql",
+    "host/broker/**",
+    "host/coordinator/**",
+    "host/daemon/{daemon,episode_finish,surface_approve*,surface_page}.go",
+    "host/surfacepage/{approve_model.go,app/**,approve/**,passkey/**}",
+    "host/sshsign/**",
+    "cmd/ailang-worldd/{main,session}.go",
+    "world/*.ail",
+    "packages/**",
+    "scripts/**",
+    "tools/launchd/*",
+    "cmd/world-publish/*"
+  ],
+  "milestones": [
+    {
+      "id": "M6a",
+      "title": "the sprint-2 judge's test gaps: JM22 (TestLandKeyDecisionLandsOnlyItsRequest), K0 approver (TestRecordKeyDecisionExactMatchNeedsTheSameApprover), JM01-JM04 (TestIsApproverRaceOperands), JM46 (TestApproveDecideDefaultDaemonIsTheService)",
+      "production_loc": 0,
+      "test_loc": 124,
+      "docs_loc": 0,
+      "expected_cumulative_numstat_after_commit": 124,
+      "run": 1,
+      "acceptance_ref": "plan §3 M6a",
+      "patch_ref": "plan Appendix P, fence ````diff M6a",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M6b",
+      "title": "the decision assertion law: assertionSteps (W1-W14 shared, design §2.3 refactor), DecideByAssertion (W15 deferred), SignedDecision.PasskeyUse; DM7",
+      "production_loc": 111,
+      "test_loc": 146,
+      "docs_loc": 0,
+      "expected_cumulative_numstat_after_commit": 381,
+      "run": 1,
+      "acceptance_ref": "plan §3 M6b",
+      "patch_ref": "plan Appendix P, fence ````diff M6b",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M6c",
+      "title": "JudgeDecisionAssertion; RecordKeyDecision K4 (usePasskey off the exact match) and K2's passkey rule; JD passkey, KD2, KD7 passkey half",
+      "production_loc": 51,
+      "test_loc": 196,
+      "docs_loc": 0,
+      "expected_cumulative_numstat_after_commit": 628,
+      "run": 1,
+      "acceptance_ref": "plan §3 M6c",
+      "patch_ref": "plan Appendix P, fence ````diff M6c",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M6d",
+      "title": "the POST's webauthn member (*json.RawMessage) and arm, isCounterRefusal -> 422; RD10/RD11 passkey halves, KD8, RD13 (b)(c), RD14",
+      "production_loc": 84,
+      "test_loc": 251,
+      "docs_loc": 0,
+      "expected_cumulative_numstat_after_commit": 963,
+      "run": 2,
+      "acceptance_ref": "plan §3 M6d",
+      "patch_ref": "plan Appendix P, fence ````diff M6d",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M6e",
+      "title": "CD6 --write-message, CD7 --signature --expiry, CD8 --webauthn-link, CD9 --webauthn-assertion --expiry on a request ref; CD6+CD7 real ssh-keygen sibling; sprint-2 cut-pinning rows edited (P2)",
+      "production_loc": 130,
+      "test_loc": 235,
+      "docs_loc": 0,
+      "expected_cumulative_numstat_after_commit": 1328,
+      "run": 2,
+      "acceptance_ref": "plan §3 M6e",
+      "patch_ref": "plan Appendix P, fence ````diff M6e",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M6f",
+      "title": "the live-Chrome sibling TestApproveDecideWebAuthnLinkInChrome (gated as XB1)",
+      "production_loc": 0,
+      "test_loc": 83,
+      "docs_loc": 0,
+      "expected_cumulative_numstat_after_commit": 1411,
+      "run": 3,
+      "acceptance_ref": "plan §3 M6f",
+      "patch_ref": "plan Appendix P, fence ````diff M6f",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    },
+    {
+      "id": "M6g",
+      "title": "QUICKSTART §18 + TestQuickstartSection18FlagsMatchTheCLI (29 docs lines)",
+      "production_loc": 0,
+      "test_loc": 53,
+      "docs_loc": 29,
+      "expected_cumulative_numstat_after_commit": 1493,
+      "run": 3,
+      "acceptance_ref": "plan §3 M6g",
+      "patch_ref": "plan Appendix P, fence ````diff M6g",
+      "passes": null,
+      "started": null,
+      "completed": null,
+      "notes": null
+    }
+  ],
+  "sprint_gates": {
+    "script_ref": "plan §6 = plan-scratch/tools/gates.sh (bash 3.2, every leg records its rc, tee to $HOME/.ailang/state/world-iter391/gates/, not under nohup; a chrome leg with WORLD_CHROME and WORLD_REQUIRE_PASSKEY_BROWSER=1)",
+    "after_commit": "VERIFY_GO_LEGS=plain AILANG_BIN=$HOME/.pinned-ailang/ailang ./scripts/verify_go.sh",
+    "final_tree_result": "GATES_DONE 1001s FAILS: none (verify_ail PASSED; pkgs ok; broker whole ok 230 s; race ok x6; inv 67 PASS; inv2 9 PASS; chrome 7 PASS incl. TestApproveDecideWebAuthnLinkInChrome)"
+  },
+  "mutants": {
+    "rows": 76,
+    "killed_named_and_suite": 65,
+    "unit_only_kills": 5,
+    "named_equivalents": 4,
+    "named_survivors": 2,
+    "not_as_expected": 0,
+    "nocompile_last_lines": 0,
+    "ledger": "$HOME/.ailang/state/world-iter391/plan-scratch/logs/mutant_ledger.tsv",
+    "runs": {
+      "R1": 68,
+      "R2": 11,
+      "R3": 1
+    },
+    "unit_only": [
+      "JM01",
+      "JM02",
+      "JM03",
+      "JM04",
+      "KA-COUNTER-CHANGED"
+    ],
+    "equivalents": [
+      "D-PKUSE-OK",
+      "J-A-SIGNCOUNT",
+      "J-A-LASTUSED",
+      "K0-FORMAT"
+    ],
+    "survivors": [
+      "KA-RACE-TEXT",
+      "C-LINK-ERR"
+    ],
+    "sprint2_survivors_carried": [
+      "D-LAND-ERR",
+      "C-PROOF-ERR",
+      "C-SIGN-NIL"
+    ],
+    "sprint2_survivor_pinned": "D-RACE operands by TestIsApproverRaceOperands (JM01-JM04)"
+  },
+  "roundtrip": "ROUNDTRIP_IDENTICAL_TO_STAGE_TREE_AND_MUTANT_TREE (patches extracted from the plan with §2's awk, cmp-equal to the generated ones, applied to a fresh git archive 7004f591 export; numstat 124/381/628/963/1328/1411/1493)",
+  "executor_directives": {
+    "no_git_writes": true,
+    "never_nohup_or_background_a_test_leg": true,
+    "go_bash_timeout_ms": 600000,
+    "apply": "patch -p1 after --dry-run, extracted with plan §2's awk",
+    "snapshots": "$HOME/.ailang/state/world-iter391/snap/<M>/ with MANIFEST.sha256 (the two plan files excluded)",
+    "stop_conditions": "dry-run failure; any --- FAIL / --- SKIP / FAIL in an acceptance; gofmt output; numstat mismatch; a file outside plan §5",
+    "chrome_env": "WORLD_CHROME=\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" WORLD_REQUIRE_PASSKEY_BROWSER=1 (M6f and the gates' chrome leg)"
+  },
+  "acceptance_criteria_ref": "plan §9 (14 criteria)",
+  "operator_after_sprint": "decide a pending Human.Approve request at a terminal by typed y, by an enrolled SSH key (--sign-with, or --write-message -> ssh-keygen -> --signature --expiry), or by an enrolled passkey (--webauthn-link -> the passkey page -> --webauthn-assertion --expiry); replays refused; a failed world write retried with the same artifact",
+  "next_sprint": "A4 sprint 4 'the surface' (plan Appendix C, ~1,250): the listing, Needs you, the decision card + decide.js, approve --list decisions, DecisionSubject.Passkeys"
+}

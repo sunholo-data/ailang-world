@@ -1857,3 +1857,32 @@ ailang-worldd approve --list --decided --db /tmp/se-world/world.db
 ```
 
 Open the same card again and press **Approve with passkey**: the daemon refuses it as already used. With an SSH approver (§15) instead, **Save the message** on the card, sign it with the `ssh-keygen -Y sign -n world-approval@sunholo` line the card shows, paste the signature and press **Approve with this signature**. Every request and answer has a 10-second limit: a card that cannot be read says so and offers to read it again, and an approval whose answer never arrives is shown as *outcome unknown* with a status check, never as refused or minted. A busy credentials store is tried again at most three times, a second apart. Reached through `tailscale serve`, start `serve` with `--surface-origin https://<host>.ts.net`, or the card and its Approve are refused (421, 403) naming that flag.
+
+## 18. Decide an agent's approval request *(attended — pending first verbatim run)*
+
+When an agent's plan requests `Human.Approve` under a live grant (§11's **Inspect a decision packet**), the daemon commits a decision packet and the request stays `approvals chain: pending` until you decide it. `ailang-worldd approve <request-ref>` decides it: the ref is the packet page's approval request, `sha256:` and 64 hex. It reads the request and its one packet from the daemon serving `--db` (`--daemon <host:port>`, default the installed service's address), checks that both hash to their refs, shows every field and the verb in capitals, and has the daemon record the decision. A request is decided once, approve or deny; publish- and finish-shaped requests stay with `world-publish approve` and `episode finish`. This guide uses the §0 scratch store `/tmp/se-world/world.db` with its daemon serving at `127.0.0.1:7644`, a §15 SSH approver and a §16 passkey `demo-mac`; never a real store.
+
+```bash
+ailang-worldd approve sha256:<64 hex> --deny --daemon 127.0.0.1:7644 --db /tmp/se-world/world.db
+ailang-worldd approve sha256:<another ref> --sign-with ~/.ssh/<your enrolled key> --daemon 127.0.0.1:7644 --db /tmp/se-world/world.db
+```
+
+The first asks `y` at the terminal and records `deny by operator:terminal`. The second opens no terminal: `ssh-keygen -Y sign -n world-decision@sunholo` signs the 91-byte decision message (`world-decision/v1`, the verb, the packet and request digests, an expiry at most 10 minutes ahead and never past the packet's deadline), and the daemon records `approve by ssh:<name>` after checking the signature against the enrolled, unrevoked key. A decision message is not a mint message: a §15 mint signature never decides, and a decision signature never mints.
+
+To sign elsewhere, write the message to a new file and post the signature with the expiry the CLI printed:
+
+```bash
+ailang-worldd approve sha256:<ref> --write-message /tmp/se-world/decide.msg --daemon 127.0.0.1:7644 --db /tmp/se-world/world.db
+ssh-keygen -Y sign -n world-decision@sunholo -f ~/.ssh/<your enrolled key> /tmp/se-world/decide.msg
+ailang-worldd approve sha256:<ref> --signature /tmp/se-world/decide.msg.sig --expiry <the printed expiry> --daemon 127.0.0.1:7644 --db /tmp/se-world/world.db
+```
+
+With a passkey, `--webauthn-link` prints one link per passkey origin to the §16 page. That page reads *Approve request decide-approve-<16 hex>* (or *decide-deny-…*) whichever verb you chose: check that it shows the message hash the CLI printed, press **Approve with passkey**, pass your device's check and **Save**. Then post the saved file with the printed expiry:
+
+```bash
+ailang-worldd approve sha256:<ref> --webauthn-link --daemon 127.0.0.1:7644 --db /tmp/se-world/world.db
+ailang-worldd approve sha256:<ref> --webauthn-assertion ~/Downloads/world-assertion-decide-approve-<16 hex>.json --expiry <the printed expiry> \
+  --daemon 127.0.0.1:7644 --db /tmp/se-world/world.db
+```
+
+The daemon records `approve by webauthn:demo-mac` after checking the assertion against the enrolled passkey, the decision message's hash, the origin and a signature counter that must move forward. Posting the same file again is refused as already decided. If the world write fails after the daemon checked a key decision, the same file (or signature) posted again lands that one decision without moving the counter twice; a different assertion carrying the same counter is refused. The packet page then reads `approvals chain: approve by …`.

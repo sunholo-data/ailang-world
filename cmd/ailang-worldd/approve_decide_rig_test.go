@@ -153,8 +153,8 @@ func TestApproveDecideNoTerminal(t *testing.T) {
 	}
 }
 
-// CD3: --deny and --daemon need a request ref (an mr- id, --list); --await, a passkey flag and a
-// key flag are refused with a request ref; two modes are F1. Each before any daemon call.
+// CD3: --deny and --daemon need a request ref (an mr- id, --list); --await, and an assertion
+// without --expiry (CD9), are refused with a request ref; two modes are F1. Each before any daemon call.
 func TestApproveDecideFlagRules(t *testing.T) {
 	f := newFakeDecider(t)
 	for _, tc := range []struct {
@@ -166,7 +166,7 @@ func TestApproveDecideFlagRules(t *testing.T) {
 		{[]string{"mr-0123456789abcdef", "--daemon", f.addr()}, "a mint request has no deny"},
 		{[]string{"--list", "--deny"}, "a mint request has no deny"},
 		{[]string{f.ref, "--await"}, "there is nothing to await"},
-		{[]string{f.ref, "--webauthn-link"}, "there is nothing to await"},
+		{[]string{f.ref, "--webauthn-assertion", "x"}, "go with --expiry <t>"},
 		{[]string{f.ref, "--signature", "x", "--sign-with", "y"}, "usage: ailang-worldd approve"},
 	} {
 		var stdout, stderr bytes.Buffer

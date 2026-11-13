@@ -31,6 +31,8 @@ const approveHelp = `usage: ailang-worldd approve <request-id> [--db <path>] [--
        ailang-worldd approve --list [--decided] [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-ref> [--deny] [--daemon <host:port>] [--db <path>] [--credentials-db <path>]
        ailang-worldd approve <request-ref> [--deny] --sign-with <key> [--daemon <host:port>] [--db <path>] [--credentials-db <path>]
+       ailang-worldd approve <request-ref> [--deny] --write-message <file> | --webauthn-link [--daemon <host:port>] [--db <path>] [--credentials-db <path>]
+       ailang-worldd approve <request-ref> [--deny] --signature <file> | --webauthn-assertion <file> --expiry <t> [--daemon <host:port>] [...]
 
 ATTENDED, or SIGNED. Mints the session a stored mint request describes (row
 201), after a y/N typed at /dev/tty, or, with --signature or --sign-with,
@@ -105,6 +107,13 @@ decides at once); publish and finish approvals stay with world-publish
 approve and episode finish. --sign-with <key> opens no terminal: ssh-keygen
 -Y sign -n world-decision@sunholo signs the 91-byte decision message, and the
 decision is by ssh:<name>, an approver enrolled with 'approver enroll'.
+--write-message <file> writes that message (expiry: the latest the daemon
+allows) to a NEW file and prints the signing line and the --signature <file>
+--expiry <t> step that posts it. --webauthn-link prints, per passkey origin, a
+link to the passkey page over the message's hash (the page says "Approve
+request decide-<verb>-…" for either verb: check the hash it shows), and the
+--webauthn-assertion <file> --expiry <t> step that posts the saved file; that
+decision is by webauthn:<name>. The daemon judges every artifact.
 `
 
 // approveAdmission is approve's admission of a stored row, before any terminal: the decoded
@@ -171,6 +180,7 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	awaitFor := fs.Duration("await-for", 0, "with --await: stop waiting after this long (default: the request's expiry)")
 	deny := fs.Bool("deny", false, "with a request ref: deny it instead of approving it")
 	daemonAddr := fs.String("daemon", "", "with a request ref: the daemon serving --db (default: the installed service's address)")
+	expiry := fs.Int64("expiry", 0, "with a request ref and --signature or --webauthn-assertion: the expiry the signed decision message carries")
 	positional, err := parseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, approveHelp)
@@ -208,21 +218,25 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		fmt.Fprint(stderr, approveHelp)
 		return exitUsage
 	}
-	if (*deny || *daemonAddr != "") && (*list || !decisionRefPattern.MatchString(positional[0])) { // CD3: --deny and --daemon decide a request ref
-		return refuse("--deny and --daemon take a Human.Approve request ref (sha256: and 64 hex); a mint request has no deny: it expires")
+	if (*deny || *daemonAddr != "" || *expiry != 0) && (*list || !decisionRefPattern.MatchString(positional[0])) { // CD3: they decide a request ref
+		return refuse("--deny, --daemon and --expiry take a Human.Approve request ref (sha256: and 64 hex); a mint request has no deny: it expires")
 	}
 	id := ""
 	if !*list {
 		id = positional[0]
 		if decisionRefPattern.MatchString(id) { // row 201 A4: a request ref selects the decision mode (design §2.10)
-			if modes != 0 && *signWith == "" { // CD3: --sign-with is the key flag that decides a request ref (plan S2-D1)
-				return refuse("a request ref is decided at once by the daemon, by the typed y or --sign-with <key>: there is nothing to await, and the other key flags do not decide it")
+			if *await { // CD3
+				return refuse("a request ref is decided at once by the daemon: there is nothing to await")
+			}
+			if (*sigPath != "" || *assertion != "") != (*expiry != 0) { // CD7, CD9: an artifact is posted with the expiry it signed
+				return refuse("--signature and --webauthn-assertion go with --expiry <t> on a request ref, and --expiry with one of them: the expiry is part of the signed message")
 			}
 			verb := "approve"
 			if *deny {
 				verb = "deny"
 			}
-			return runApproveDecide(decideOptions{ref: id, verb: verb, db: *db, credsDB: *credsDB, daemon: *daemonAddr, signWith: *signWith}, stdout, stderr, env, refuse)
+			return runApproveDecide(decideOptions{ref: id, verb: verb, db: *db, credsDB: *credsDB, daemon: *daemonAddr, signWith: *signWith,
+				sigPath: *sigPath, msgPath: *msgPath, assertion: *assertion, passkeyLink: *passkeyLink, expiry: *expiry}, stdout, stderr, env, refuse)
 		}
 		if !store.MintRequestIDPattern.MatchString(id) {
 			return refuse("%q is not a mint request id (mr- and 16 lowercase hex)", id)
