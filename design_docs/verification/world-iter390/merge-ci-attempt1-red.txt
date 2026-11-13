@@ -1,0 +1,8 @@
+2026-11-12T23:55:46.0652167Z ok  	github.com/sunholo-data/ailang-world/host/archive	3.186s
+2026-11-12T23:55:46.0652847Z ok  	github.com/sunholo-data/ailang-world/host/authority	0.673s
+2026-11-12T23:55:46.0653527Z ok  	github.com/sunholo-data/ailang-world/host/boundary	3.926s
+2026-11-12T23:58:18.6064883Z --- FAIL: TestWorktreeSnapshotRefusesAConfiguredFilter (0.02s)
+2026-11-12T23:58:18.6067095Z     worktree_delta_test.go:432: control: plain git status did not run the clean filter (stat /tmp/TestWorktreeSnapshotRefusesAConfiguredFilter4239641682/002/filter-ran: no such file or directory); the arm below would prove nothing
+2026-11-12T23:58:18.6068031Z FAIL
+2026-11-12T23:58:18.6069112Z FAIL	github.com/sunholo-data/ailang-world/host/broker	222.968s
+2026-11-12T23:58:18.6069600Z ok  	github.com/sunholo-data/ailang-world/host/canon	0.004s

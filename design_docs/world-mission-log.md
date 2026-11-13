@@ -3164,3 +3164,133 @@ An operator cannot yet decide a packet from a terminal: that is sprint 2's first
 1. If this record's own PR is still open, land it first (docs only).
 2. Then the **A4 sprint-2 planner** ("the keys"), headed by the typed CLI CD1–CD4 moved from sprint 1, from `w-world-approvals-by-key-a4.md` r2 and the sprint-1 plan's Appendix C, with no re-design. Expect design §9's webauthn fallback cut (sprint 2 would be ≈ 2,200 otherwise). Carry the judge gaps J07, J31/J32 and J33, and the sprint-1 handler order S1-D9 for K0.
 3. Mark's A2 exit run (QUICKSTART §16) and A3a exit run (QUICKSTART §17) are runnable and attended. D-WORLD-114 and D-WORLD-115 stay OPEN for Mark to confirm or veto; both defaults are applied.
+
+## 390 — 2026-11-12 — row 201 A4 sprint 2 LANDED (PR #566, merge `9ea7b45f`): the typed CLI `approve <request-ref> [--deny]`, credentials schema 8 `key_decisions`, the decision SSHSIG law and judge, the POST's `sshsig` arm and `--sign-with` on a request ref; the webauthn arm and CD6–CD7 moved to sprint 3; judge PASS 88 [PRODUCT]
+
+**Pick:** the A4 sprint-2 planner. It was record 389's Next 2 and the charter's Next loop row. Record 389 had landed (#564 → `8338eebb`), so there was no carry-over PR. D-WORLD-115 is unanswered and its default A still applies.
+- **Re-measured at pick** (`origin/dev` `8338eebb`):
+  - There was no A4 sprint-2 plan, branch or worktree, and `gh pr list --author @me --state open` was empty.
+  - `credentialsSchemaVersion = 7` (`host/store/credentials.go:43`).
+  - `approve.go:199` refuses any non-`mr-` id.
+  - `surface_decide.go` admits only the typed arm.
+- **Quorum:** none owed (the A4 r2 design covers sprint 2).
+- **Ledger:** valid, 102 rows before and after. OPEN: D-WORLD-105 (default C), D-WORLD-114 (default A, applied), D-WORLD-115 (default A, applied).
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 are not routable (unchanged).
+- **Orphans:** none.
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent. Dev CI 3/3 at `8338eebb`.
+- Directives: 0 allowlisted on #524 (26 comments), read through both the issue-scoped watermark (absent) and `mission-world-last-seen` (LEGACY, 2026-10-27).
+- Self-notices: rc 2, `watermark channel unavailable`. This is an instrument failure, not a verdict, as in 371–389.
+- Inbox: none addressed to `mission-world`. The global unread list (3,060) is other agents' traffic.
+- Skill drift: none. `SKILL.md` and all 13 `resources/*.md` match the driver clone's `origin/dev` ref, at both the resolved symlink target and the pin worktree (two different inodes, both clean).
+- Weekly issue sweep: not owed (#524 was opened Monday).
+
+**Planner** (Agent `opus`, 77 min, 536,608 tok): plan `w-world-approvals-by-key-a4-sprint2-plan.md` with 10 compiled patches in Appendix P.
+- **Size:** 1,983 lines (1,929 insertions + 54 deletions; 738 production, 1,245 test) by `git diff --numstat 8338eebb HEAD -- cmd host`, 17 under the cap.
+- **Cut (S2-D1):** the design's priced fallback fired. The whole webauthn arm (DM7, the passkey halves of RD10/K0/KD7/KD8/RD13/RD14, KD2, CD8–CD9, `DecisionSubject.Passkeys`) moved to sprint 3. The build was still 2,019 with CD6–CD7, so `--write-message` and `--signature --expiry` on a request ref (63 lines) moved too. Never cut: CD1–CD4, R4e, RD13 (a), KD5/KD6, schema 8, the judge, and the J-gap tests.
+- **Mutants:** 125 rows. 109 were killed by both the named test and the package suite, 8 are named equivalents and 6 are named survivors. One row (`S-K1-DEADLINE`) is killed by an inventory test only, and both results are recorded. Ledger: 135 lines.
+- **Premises found false (plan §1.4):**
+  - **P1:** `sshsign.Sign` hard-codes the mint namespace, so `--sign-with` could never sign a decision. The real-`ssh-keygen` sibling test found it; the fake signer could not. The fix is `sshsign.SignIn` (namespace parameter; `Sign` delegates) plus a second seam, `sessionEnv.signDecision`.
+  - **P2:** schema 8 breaks the downgrade fixtures inside tests the design lists as "must stay green, unedited". Each site gets one `DROP TABLE key_decisions` token, as A3a sprint 1 did for schema 7 (`38a6d903`), and four store tests pin the new table set and version. **Controller decision: accepted.** Schema 8 cannot land otherwise. The judge audited every edit.
+  - **P3:** `approve` refuses the global `--addr`, so the decision mode takes `--daemon`.
+  - **P4:** `DecideBody.Typed` needs `omitempty`.
+  - **P5–P8:**
+    - KD2 is passkey-only, so it moves with the webauthn arm.
+    - RD11's forged-`decidedBy` 400 already holds in sprint 1.
+    - KD9's HTTP mapping is unreachable end to end.
+    - No route changes this sprint.
+- **The CLI finds the daemon (S2-D2):** through `--daemon <host:port>`, defaulting to the installed service's address. Its `/v1/health` must name the same `--db` and credentials store, the same check `episode finish` F6 makes.
+- **Schema 8 is forward-compatible (S2-D3):** the format is `ssh` or `webauthn`, and the passkey counter stays in `webauthn_credentials.sign_count`. Sprint 3 adds Go only; there is no schema 9.
+
+**Controller round trip:** I ran `git archive 8338eebb`, extracted the 10 patches from the plan with §2's awk, and applied them. `diff -rq` against the planner's `work/` tree is empty for `cmd` and `host`; the control (the unpatched base against the same tree) shows 42 differences. The plan was committed (`f6652a40`) before any sub-milestone commit. The final committed tree equals the round-trip tree.
+
+**Executor** (env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`, as 374–389), three runs:
+- Run 1 (M4a–M4c): 1.8 min, 46,553 tok.
+- Run 2 (M4d–M4g): 2.9 min, 55,361 tok.
+- Run 3 (M5a–M5c): 9.7 min, 52,940 tok.
+- Every directive carried "every Go Bash call passes `timeout: 600000`, foreground, no Monitor" from the start. All three ran clean in one pass: no resume, no hand edits, no git writes, no stop condition, no timing exception.
+- The whole-package legs were `ok`: `host/daemon` in 287 s and `cmd/ailang-worldd` in 164 s.
+
+The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`; every commit was gofmt/build/vet-gated and ran its own sub-milestone's test command. Cumulative numstat after each commit:
+
+| Sub-milestone | Commit | Numstat |
+|---|---|---|
+| M4a | `c85af51f` | 55 |
+| M4b | `640289ca` | 450 |
+| M4c | `307dda55` | 559 |
+| M4d | `1e7dcca8` | 777 |
+| M4e | `3a4026e9` | 1142 |
+| M4f | `7fb0bc84` | 1258 |
+| M4g | `447cfe0c` | 1380 |
+| M5a | `1a5342db` | 1658 |
+| M5b | `4a7f0f04` | 1804 |
+| M5c | `e4510375` | 1983 |
+
+That equals the plan at every step.
+
+**Gates** (controller; the plan §6 `gates.sh`, every leg recording its own rc; 788 s at load 16–30):
+- `verify_ail`, gofmt, build, vet and the fence: rc 0. `pkgs` (approval, authority, store, sshsign, surfacepage, daemon, cmd): rc 0.
+- `broker_named` rc 0. `broker_whole_reported` rc 0: the base's known-list `TestExecProtectedCheckTimeout` red did not recur.
+- `race` rc 0.
+- `inv` rc 0: **73** named tests print `--- PASS`, none missing, none skipped. That is 49 carried, including `TestFrozenV1RouteTableMatchesMux` (13), `TestDaemonCredentialWriterSites` (two sites), `TestProductionContextRoots` and `TestCredentialsMethodsRequireADeadline`, plus 24 new.
+- `GATES_DONE FAILS: none`.
+- **After commit, `VERIFY_GO_LEGS=plain verify_go.sh`: rc 0 on the first run.** All 64 required evidence tests passed once each, 62 packages were `ok`, and the tracked-binary gate passed 24 of 24.
+
+**Judge** (evaluator `sonnet` via Agent, 18.1 min, 114,138 tok; own worktree; generator ≠ judge): **PASS 88/100, zero blocking** (correctness 27, tests 24, security 19, standards 10, scope 8).
+- **Confirmed:**
+  - The handler order is sprint 1's S1-D9 slot: law under `humanMu`, then the read-only judge, `Binds`, the non-waiting writer, `RecordKeyDecision`, `DecideApproval` and `LandKeyDecision`.
+  - `decidedBy` is derived as `ssh:<name>`.
+  - Unknown-field and `webauthn` bodies are refused with 400 and reach no arm, so the cut is honestly bounded.
+  - The verb is bound inside the 91-byte message.
+  - Mint and decision signatures cannot substitute for each other.
+  - The K0 exact match covers the artifact, packet ref, verb, format, approver and expiry, with `useApprover` run on both paths.
+  - The CLI's hash and `requestRef` checks run before any prompt or proof.
+  - Mint signing is unchanged, pinned behaviourally by a real-`ssh-keygen` test.
+- **P2 audit:** one `DROP TABLE key_decisions` token at each of 14 sites; the table-set and version pins are additive. No assertion is weakened, except that `surface_approvals_test.go` now uses `credentialsSchemaVersion` instead of the literal 7, a non-blocking change in pin form (`credentials_test.go` still pins 8 literally).
+- **Mutants:** its ledger has 68 lines. It re-ran 17 plan rows and ran 43 of its own (`comm -23`). The must-die control (`ssh:evil`) was killed. The must-live controls (JM13 `found &&`, JM14 the `DecidedBy` literal) survived as expected. One wrong-package first run is marked INVALID and was re-run.
+- **Non-blocking test gaps** (carried to sprint 3):
+  - **JM22:** `LandKeyDecision`'s `request_ref` filter is unpinned (tests hold one pending row).
+  - K0's approver and format operands are unpinned at the store API (equivalent through the daemon).
+  - **JM01–JM04:** the four `isApproverRace` operands map to 422, and that mapping is unpinned. A concurrent `approver revoke` can reach it, and it still fails closed.
+  - **JM27:** `LastUsedAt` pass-through is unpinned.
+  - **JM46:** the CLI's default daemon address is unpinned.
+  - `--daemon` is not restricted to loopback. The operator chooses the address.
+- **Controller-reproduced:** JM22 (`WHERE request_ref = ? AND decision_ref IS NULL` → `WHERE decision_ref IS NULL` in `host/store/key_decisions.go:143`) gives `go test ./host/store/ -run KeyDecision` rc 0. The file was restored and the worktree is clean.
+
+**Gate 3b:**
+- PR #566 head `e4510375`, run 43326730776 attempt 1: **3/3 success**. Mergeable CLEAN. Closing-keyword scan: 0 hits over the PR body, title and 11 commit messages (control fired).
+- `gh pr merge 566 --merge --match-head-commit e4510375…` → merge **`9ea7b45f`** at 23:49:51Z.
+- Push CI on the merge: **run 43332117627 attempt 1: 2/3, with `go host build + test gate` red only on `TestWorktreeSnapshotRefusesAConfiguredFilter` ("control: plain git status did not run the clean filter"). That is the known queue row `w-filter-refusal-control-flake` (filed at iteration 285), in a broker test this sprint does not touch: the sprint's only broker change is one test row in `decision_law_test.go`. It was green 5/5 alone on the merged tree locally. `gh run rerun --failed`, attempt 2: **3/3 success**. LANDED**.
+
+**Routing evidence:** base=9ea7b45fbb8dd17e522e238ff2436d098a90981d.
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (A4 r2 covers sprint 2).
+- Planner: `opus` via Agent (536,608 tok), resolver `agent-tool opus fail-closed:env-pin`; derive-planner-lane `opus fail-closed:env-pin`.
+- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (46,553 + 55,361 + 52,940 tok), resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`.
+- Evaluator: `sonnet` via Agent (114,138 tok), `agent-tool sonnet declared:alias-pin`.
+- The driver noted codex unusable at preflight (probe rc 75, quota unreadable).
+- Judge independence: cross-model (opus planner, haiku executor, sonnet judge). Metered total: $0.00.
+
+**Progress:** 1.0 clauses 1–7 MET; the goal is unmoved. Row 201 A4 now has keys:
+- An operator can approve or deny a `Human.Approve` decision packet at a terminal: `ailang-worldd approve <sha256:request-ref> [--deny]` checks the subject, takes `y`, writes the verb-bound proof and posts it.
+- An operator can also decide with an enrolled SSH key: `--sign-with`, signed under `world-decision@sunholo`, judged and recorded in `key_decisions`, then landed after the decision.
+- A key decision still cannot authorize a publish (L1 + L2, R4e).
+
+A passkey cannot decide yet, and there is no out-of-band `--write-message`/`--signature` path: both are sprint 3's head.
+
+**Ruled out:**
+- **Treating "must stay unedited" literally for P2:** schema 8 makes a fixture that drops only `surface_approvals` a non-credentials store. The edit is one token per site, has precedent at `38a6d903`, and the judge audited it.
+- **Running the judge's mutation drills while `verify_go.sh` ran:** they were sequenced instead (charter process fix, iteration 293).
+- **Waiting for merge CI before opening the PR:** PR CI ran on clean runners in parallel with the local gates, at no cost to the rig.
+
+**Retro:**
+- **The timeout line works:** all three executor runs and the judge carried "every Go Bash call passes `timeout: 600000`, foreground, no Monitor", and none ended its turn on a wait. Iteration 389 lost a whole run cycle to that failure. Keep the line in every directive.
+- **A real-tool sibling paid for itself again:** P1 (the mint namespace hard-coded in `sshsign`) was invisible to the fake signer and caught by `ssh-keygen` itself. This is the charter's iteration-299 rule, now at a second instance.
+- **Overlapping remote CI with local gates:** opening the PR as soon as the commits exist overlaps remote CI with the local gates and the judge.
+- **Protocol shortcut, stated:** the controller did not re-read `resources/verification-protocol.md` (136 KB) in full this fire. It worked from gate 2's recall list and the gates it read (0, 1, 2, 3 route + role-spawn-routing, 3b outline, 4, 5).
+
+**Next:**
+1. If this record's own PR is still open, land it first (docs only).
+2. Then the **A4 sprint-3 planner**, from the design (r2), this plan's Appendix C and the sprint-3 table. Its head is the webauthn arm and CD6–CD7 moved from sprint 2; then comes the surface (M6–M7: the `decisions` listing, the decision card, live Chrome XD1–XD4, QUICKSTART §18). Sprint 3 is ≈ 2,060 lines by the design's price, so expect its own fallback cut (the design's: the card page becomes a fourth sprint). Run planner obligation P1 (the 91-byte message measured with `crypto.subtle`) first. Carry the judge gaps JM22, the K0 approver/format operands at the store, JM01–JM04, JM27 and JM46.
+3. Mark's A2 exit run (QUICKSTART §16) and A3a exit run (QUICKSTART §17) are runnable and attended. D-WORLD-114 and D-WORLD-115 stay OPEN for Mark to confirm or veto; both defaults are applied.
