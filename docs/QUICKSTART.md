@@ -1886,3 +1886,11 @@ ailang-worldd approve sha256:<ref> --webauthn-assertion ~/Downloads/world-assert
 ```
 
 The daemon records `approve by webauthn:demo-mac` after checking the assertion against the enrolled passkey, the decision message's hash, the origin and a signature counter that must move forward. Posting the same file again is refused as already decided. If the world write fails after the daemon checked a key decision, the same file (or signature) posted again lands that one decision without moving the counter twice; a different assertion carrying the same counter is refused. The packet page then reads `approvals chain: approve by …`.
+
+**From the surface.** The surface app's **Needs you** lists each pending request under the §17 mint requests as *Decide · <scope> · requested by <requester> · deadline <hh:mm>*, and `approve --list` prints the same requests from the store, offline:
+
+```bash
+ailang-worldd approve --list --db /tmp/se-world/world.db
+```
+
+The line opens the decision card at `/surface/decide/<request-ref>`. The card reads the request and its packet from the daemon, checks that both hash to their refs and that the packet carries the request, shows every field of both, and refuses a field it cannot show. **Approve with passkey** or **Deny with passkey** signs that verb's decision message with a §16 passkey, and the card says which verb it is signing. **Save the approve message** (or the deny message) downloads the 91 bytes for the `ssh-keygen -Y sign` line the card prints; paste the signature and press **Approve with this signature** (or **Deny with this signature**). The daemon checks every decision as it checks the CLI's. A publish- or finish-shaped request is listed with its typed owner and has no link. A request the card cannot decide shows the daemon's reason and no button.
