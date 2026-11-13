@@ -115,13 +115,37 @@ func (d *Daemon) handleSurfaceDecision(w http.ResponseWriter, r *http.Request, _
 	}
 	p, _ := coordinator.DecodeDecisionPacket(rd.packet.Payload) // validated: code 0
 	reserved, _ := broker.ReservedApprovalScope(rd.facts.Scope)
+	passkeys, err := d.decisionPasskeys(ctx)
+	if err != nil {
+		d.approvalInternal(w, r, err)
+		return
+	}
 	writeApprovalJSON(w, http.StatusOK, surfacepage.DecisionSubject{V: 1,
 		Request: ref, RequestBytes: base64.RawURLEncoding.EncodeToString(rd.request.Payload),
 		Packet: rd.packet.Hash.String(), PacketBytes: base64.RawURLEncoding.EncodeToString(rd.packet.Payload),
 		Entry: rd.entry, Proposal: p.ProposalHash.String(), Now: now,
 		Window:  surfacepage.DecisionWindow{Min: now + 1, Max: broker.DecisionWindowMax(now, p.DeadlineAt)},
 		Refusal: law.Reason, Reserved: reserved, DecidedBy: rd.facts.DecidedBy, Decision: rd.facts.DecidedVerb,
-		SSH: surfacepage.DecisionSSH{Namespace: approval.DecisionNamespace}})
+		Passkeys: passkeys, SSH: surfacepage.DecisionSSH{Namespace: approval.DecisionNamespace}})
+}
+
+// decisionPasskeys is the active passkeys by origin on a fresh read-only credentials handle, for
+// the card's ceremony (sprint 4); a store below schema 6 has none.
+func (d *Daemon) decisionPasskeys(ctx context.Context) ([]surfacepage.CardPasskeys, error) {
+	ro, err := store.OpenCredentialsReadOnly(d.credentialsPath)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = ro.Close() }()
+	active, err := ro.ActivePasskeys(ctx)
+	if err != nil && !isOlderStore(err) {
+		return nil, err
+	}
+	var passkeys []surfacepage.CardPasskey
+	for _, e := range active {
+		passkeys = append(passkeys, surfacepage.CardPasskey{Origin: e.Passkey.Origin, RPID: e.Passkey.RPID, CredentialID: e.Passkey.CredentialID})
+	}
+	return surfacepage.DecisionPasskeys(passkeys), nil
 }
 
 // handleSurfaceDecide is POST /surface/decide/{ref} (design §2.8). After R2 (approvalRoute): R0 any

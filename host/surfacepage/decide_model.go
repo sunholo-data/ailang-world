@@ -29,7 +29,14 @@ type DecisionSubject struct {
 	Reserved     string         `json:"reserved"`
 	DecidedBy    string         `json:"decidedBy"`
 	Decision     string         `json:"decision"`
+	Passkeys     []CardPasskeys `json:"passkeys"` // the active passkeys by origin, as the request card's
 	SSH          DecisionSSH    `json:"ssh"`
+}
+
+// DecisionPasskeys is the active passkeys grouped by origin, in the order given: each origin's rpID
+// and credential IDs (base64url), as the request card offers them; never nil.
+func DecisionPasskeys(passkeys []CardPasskey) []CardPasskeys {
+	return RequestCard(StoredRequest{}, passkeys).Passkeys
 }
 
 // DecisionWindow is the expiry window of a decision made now: min = now + 1, max = min(now + 600, deadline).
