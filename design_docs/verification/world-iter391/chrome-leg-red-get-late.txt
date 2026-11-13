@@ -1,0 +1,12 @@
+19:=== RUN   TestPasskeyPageAbortsAPendingCeremony/get-late
+20:    passkey_page_abort_test.go:39: get-late: 250 s of page time in 28 ms
+21-    passkey_page_abort_test.go:45: the operation: {"Method":"get","Signal":true,"Aborted":true,"AbortedAfter":240000.10000002384,"AbortedAfterDate":240001,"ResolvedAfter":245000,"ResolvedAfterDate":245000}; want get with a signal aborted at exactly 240000 ms
+22-=== NAME  TestPasskeyPageAbortsAPendingCeremony
+23-    passkey_page_driver_test.go:104: driver: <nil>
+24---- FAIL: TestPasskeyPageAbortsAPendingCeremony (3.40s)
+25-    --- PASS: TestPasskeyPageAbortsAPendingCeremony/create-abort (0.66s)
+26-    --- PASS: TestPasskeyPageAbortsAPendingCeremony/create-late (0.66s)
+--
+28:    --- FAIL: TestPasskeyPageAbortsAPendingCeremony/get-late (0.64s)
+29-=== RUN   TestPasskeyPageInChrome
+30-    passkey_page_chrome_test.go:28: Chrome/157.0.8103.51, page at http://localhost:53023

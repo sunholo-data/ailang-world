@@ -3296,3 +3296,111 @@ A passkey cannot decide yet, and there is no out-of-band `--write-message`/`--si
 1. If this record's own PR is still open, land it first (docs only).
 2. Then the **A4 sprint-3 planner**, from the design (r2), this plan's Appendix C and the sprint-3 table. Its head is the webauthn arm and CD6–CD7 moved from sprint 2; then comes the surface (M6–M7: the `decisions` listing, the decision card, live Chrome XD1–XD4, QUICKSTART §18). Sprint 3 is ≈ 2,060 lines by the design's price, so expect its own fallback cut (the design's: the card page becomes a fourth sprint). Run planner obligation P1 (the 91-byte message measured with `crypto.subtle`) first. Carry the judge gaps JM22, the K0 approver/format operands at the store, JM01–JM04, JM27 and JM46.
 3. Mark's A2 exit run (QUICKSTART §16) and A3a exit run (QUICKSTART §17) are runnable and attended. D-WORLD-114 and D-WORLD-115 stay OPEN for Mark to confirm or veto; both defaults are applied.
+
+## 391 — 2026-11-13 — row 201 A4 sprint 3 LANDED (PR #569, merge `e6761873`): the passkey decision arm (`DecideByAssertion`, `JudgeDecisionAssertion`, the store counter, the POST's `webauthn` arm), CD6–CD9 on a request ref, a live-Chrome passkey decision and QUICKSTART §18; the whole surface moved to sprint 4; judge PASS 91 [PRODUCT]
+
+**Pick:** the A4 sprint-3 planner. It was record 390's Next 2 and the charter's route line. Record 390 and its addendum had landed (#567 → `a50841f8`, #568 → `7004f591`), so there was no carry-over PR.
+- **Re-measured at pick** (`origin/dev` `7004f591`):
+  - There was no A4 sprint-3 plan, branch or worktree.
+  - `credentialsSchemaVersion = 8` (`host/store/credentials.go:44`); `sshsign.SignIn` exists (`host/sshsign/sshsign.go:50`).
+  - `grep -n -i webauthn host/daemon/surface_decide.go` → no hits: sprint 2 refuses the member as an unknown field.
+  - `docs/QUICKSTART.md` ended its numbered sections at §17.
+- **Open PRs by the fleet account:** one, #565 `fix/contracts-typecheck` (derive `Eq` for `EvidenceGrade`/`TimeoutOutcome` for ailang#2283). It has no worktree in this clone and no World iteration token, so it is **not attributed to this mission** and was left alone (Gate 2 PR-attribution rule (c)).
+- **Quorum:** none owed (the A4 r2 design covers sprint 3).
+- **Ledger:** valid, 102 rows. OPEN: D-WORLD-105 (default C), D-WORLD-114 (default A, applied), D-WORLD-115 (default A, applied).
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 are not routable (unchanged).
+- **Orphans:** none (no iter-391 worktree, branch or PR existed; 390's worktrees are its own landed work).
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent (`mission-world.disabled`). Dev CI 3/3 at `7004f591`.
+- Directives: 0 allowlisted on #524 (27 comments) and 0 on #449 (47 comments); both issue-scoped watermarks are absent.
+- Self-notices: rc 2, `watermark channel unavailable`. This is an instrument failure, not a verdict, as in 371–390.
+- Inbox: none addressed to `mission-world`. The global unread list (3,071) is other agents' traffic.
+- Skill drift: none. `SKILL.md` and all 13 `resources/*.md` match the driver clone's `origin/dev`, at both the resolved symlink target and the pin worktree.
+- Weekly issue sweep: not owed (#524 was opened Monday).
+
+**Planner** (Agent `opus`, 56.6 min, 454,705 tok): plan `w-world-approvals-by-key-a4-sprint3-plan.md` with 7 compiled patches in Appendix P.
+- **Size:** 1,493 lines by `git diff --numstat 7004f591 HEAD -- cmd host docs` (376 production, 1,088 test, 29 docs); `-- cmd host` = 1,464.
+- **P1 (planner obligation):** Chrome 157.0.8103.51 headless, under exactly `surfaceCSP`, rebuilt both golden 91-byte decision messages and their hashes byte-equal to Go.
+- **Cut (S3-D1):** the WHOLE surface moved to a fourth sprint (≈ 1,250): the `requests.json` `decisions` listing, *Needs you*, the decision card and `decide.js`, `approve --list` decisions and `DecisionSubject.Passkeys`. This goes **further than the design's priced fallback**, which kept the listing and the *Needs you* line. The planner's reasons: the time cap, and that *Needs you* should link to the card it ships with rather than to a CLI command re-pointed a sprint later. **Controller decision: accepted.** It is a sequencing change inside the loop's own A4 child design, no attended text changes, every shipped arm is reachable by an operator, and the judge scored it honestly bounded (scope 8/10).
+- **Mutants:** 76 rows: 65 killed by the named test and the package, 5 by a unit test only (JM01–JM04 and `KA-COUNTER-CHANGED`, not reachable through the POST), 4 named equivalents (incl. JM27), 2 named survivors (`KA-RACE-TEXT`, `C-LINK-ERR`, both unreachable). Ledger: 80 lines, runs R1–R3.
+- **Premises found false (plan §1.4):**
+  - **P1:** the A2 passkey page signs whatever challenge its link carries and always reads "Approve request …", even for a deny. Routed around through the CLI; `passkey.js` unchanged.
+  - **P2:** two sprint-2 tests pinned sprint 2's own cut (the refusal of `--signature`/`--write-message` on a request ref) and had to be edited.
+  - **P3–P6:** the `webauthn` member as `json.RawMessage` breaks a sprint-2 struct comparison (a pointer fixes it); a counter refusal carries the store's text; RD13 (b)'s fresh assertion must be N+2 in the test because the failed write already moved the counter; identical requests share a ref, so the daemon tests need distinct requesters.
+  - **P7 — a D-WORLD-109 slip, stated plainly:** the planner's first draft of the JM46 test wrote an incomplete temp service record, the CLI fell back to `127.0.0.1:7644`, and **one read-only `/v1/health` GET reached the machine's real World service**. Nothing was written. The landed test refuses to run unless the temp record resolves to the fake daemon, and the judge mutated the record to incomplete and confirmed it fails at `approve_decide_jgaps_test.go:31` before any dial.
+  - **P8:** `TestSurfaceAppRoutes` gets no new routes this sprint.
+
+**Controller round trip:** I ran `git archive 7004f591`, extracted the 7 patches from the plan with §2's awk, and applied them. `diff -rq` against the planner's final tree is empty for `cmd`, `host` and `docs`; the control (the unpatched base against the same tree) shows 22 differences. The plan was committed (`bb8d5685`) before any sub-milestone commit. The final committed tree equals the planner's tree.
+
+**Executor** (env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`, as 374–390), three runs:
+- Run 1 (M6a–M6c): 2.6 min, 55,314 tok.
+- Run 2 (M6d–M6e): 1.5 min, 50,103 tok. Its report claimed my directive named a wrong plan filename; `grep -c` for that name in the directive is 0, so the claim was false and harmless.
+- Run 3 (M6f–M6g): 3.1 min, 45,708 tok, including the live-Chrome leg (5 PASS, 0 SKIP).
+- All three ran clean in one pass: no resume, no hand edits, no git writes, no stop condition.
+- I gave the executor a porcelain-based snapshot command (changed files only, as sprint 2's plan had) in place of the sprint-3 plan §7's `rsync` wording, because `commit_ms.sh` commits every file in the snapshot.
+
+The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`; every commit was gofmt/build/vet-gated and ran its own sub-milestone's test command. Cumulative numstat (`-- cmd host docs`) after each commit:
+
+| Sub-milestone | Commit | Numstat |
+|---|---|---|
+| M6a | `aac4e5b0` | 124 |
+| M6b | `0362239a` | 381 |
+| M6c | `6962cbea` | 628 |
+| M6d | `c607244c` | 963 |
+| M6e | `c0d0d17d` | 1328 |
+| M6f | `9b2bf00a` | 1411 |
+| M6g | `e3907bbf` | 1493 |
+
+That equals the plan at every step.
+
+**Gates** (controller; the plan §6 `gates.sh`, every leg recording its own rc; 760 s at load ≈ 10–20):
+- `verify_ail`, gofmt, build, vet and the fence: rc 0. `pkgs` rc 0 (305 s). `broker_named` rc 0. `broker_whole_reported` rc 0. `race` rc 0. `inv` rc 0: **67** named tests `--- PASS`, none missing or skipped. `inv2` rc 0.
+- **`chrome` rc 1:** `TestPasskeyPageAbortsAPendingCeremony/get-late`, an A2 test whose file, page driver and `host/surfacepage/passkey` this sprint does not touch (`git diff --quiet 7004f591 HEAD --` on all three: clean). The failure: `AbortedAfter` was `240000.1` against "exactly 240000 ms" (250 s of virtual page time in 28 ms). The whole Chrome leg (7 tests, incl. the new `TestApproveDecideWebAuthnLinkInChrome`) then passed **7/7 twice** on the controller, and the judge saw it pass alone. First instance of this test going red; filed here as a load-sensitive Chrome timing flake (row-258 class), not a regression.
+- **After commit, `VERIFY_GO_LEGS=plain verify_go.sh`: rc 0 on the first run.**
+
+**Judge** (evaluator `sonnet` via Agent, 37.3 min incl. its wait for the gate sweep, 123,613 tok; own worktree; generator ≠ judge): **PASS 91/100, zero blocking** (correctness 28, tests 26, security 19, standards 10, scope 8).
+- **Sequencing:** the judge read and planned while the gates ran and started no Go command until the gates' done-marker existed (charter process fix, iteration 293).
+- **Confirmed:** numstat 1,493 / 1,464; changed files = plan §5 + the two plan files; no new `/v1` route, CORS header, exec site, clock read in a law or `t.Parallel`; an approve assertion posted as deny (or the reverse) is 422 with nothing decided; letting the exact-retry path skip `useApprover` is killed (`TestRecordKeyDecisionRevokedSince`); dropping the verb from the CLI-built message is killed (`TestApproveDecideWebAuthnLinkAndAssertion`).
+- **Mutants:** a 67-line ledger: 22 plan rows re-run, 41 of its own (`comm -12` against the plan's ids is empty), a must-die control (W14 disabled → killed) and a must-live control (comment edit → survived).
+- **Pre-existing test edits:** exactly two sprint-2 files lose the refusal rows for the flags this sprint enables; the behaviours are re-asserted in the new artifact tests.
+- **Deny on the passkey page:** not blocking; named for sprint 4's card. The CLI prints the verb in capitals, the `decide-deny-<16 hex>` request text and the message hash; the unchanged A2 page reads "Approve request decide-deny-…". The signature binds verb, packet, request and expiry, and QUICKSTART §18 tells the operator to check the printed hash.
+- **Non-blocking:** `hErr` placement unpinned (only matters for inputs no entry point produces); the packet the CLI posts with `--signature`/`--webauthn-assertion` is not asserted (the daemon refuses a wrong one); the two file-size read caps are unpinned.
+- **One judge finding refuted by the controller:** the judge reported the W15 mint operand (`|| p.SignCount != 0`, `host/approval/passkey_assert.go:46`) as SURVIVED. Its run used `-run '^(TestDecideByAssertion|TestApproveByAssertion)'`. I applied the same edit in its worktree and ran the whole package: `go test ./host/approval/... -count=1` → **FAIL**, killed by `TestSignCountLaw` (`passkey_law_test.go:206`, "stored 5, new 0 … want ErrSignCountRegression"). File restored, worktree clean. The A2 mint law's counter operand is pinned; the judge's scope was narrower than its sentence (rule 3b).
+
+**Gate 3b:**
+- PR #569 head `e3907bbf`, run 43354034113: **3/3 success**. Mergeable CLEAN. Closing-keyword scan: 0 hits over the PR body, title and 8 commit messages (control: 8 `Co-Authored-By` lines found).
+- `gh pr merge 569 --merge --match-head-commit e3907bbf…` → merge **`e6761873`**.
+- Push CI on the merge: run 43358584140 attempt 1: **3/3 success** (`ailang-code verify gate`, `go host build + test gate`, `go race gate`). **LANDED**.
+
+**Routing evidence:** base=e67618734b2d3a48ccc13b6014e0f2d5b3475ebc.
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (A4 r2 covers sprint 3).
+- Planner: `opus` via Agent (454,705 tok), resolver `agent-tool opus fail-closed:env-pin`; derive-planner-lane `opus fail-closed:env-pin`.
+- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (55,314 + 50,103 + 45,708 tok), resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`.
+- Evaluator: `sonnet` via Agent (123,613 tok), `agent-tool sonnet declared:alias-pin`.
+- The driver noted codex unusable at preflight for planner and executor (probe rc 75, quota unreadable); neither role was routed to codex this fire.
+- Judge independence: cross-model (opus planner, haiku executor, sonnet judge). Metered total: $0.00.
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 201 A4 now has the passkey:
+- An operator can decide a `Human.Approve` packet with a passkey: `approve <request-ref> [--deny] --webauthn-link` prints a link to the existing passkey page and the message hash; the operator checks the hash, uses the device, saves the file, then runs `approve <request-ref> [--deny] --webauthn-assertion <file> --expiry <printed>`. The daemon judges the assertion, checks the counter inside the credentials writer's transaction, decides, and lands the `key_decisions` row.
+- An operator can also decide out of band with an SSH key: `--write-message` writes the 91-byte message, and `--signature <file> --expiry <printed>` posts it.
+- A key decision still cannot authorize a publish (L1 + L2).
+
+The surface lists nothing new yet: pending decisions are not on *Needs you* until sprint 4.
+
+**Ruled out:**
+- **Holding to the design's fallback (listing + *Needs you* in sprint 3):** the planner measured 1,493 with the whole surface out and judged the half-surface incoherent; the judge agreed it is honestly bounded. Accepted, not overridden.
+- **Treating the `chrome` leg red as the sprint's:** the failing test's file, its driver and the passkey page are untouched (`git diff --quiet` on all three), and the leg passed 7/7 twice on re-run.
+- **Acting on the judge's W15 survivor:** refuted at package scope (above).
+
+**Retro:**
+- **A narrow `-run` turns a killed mutant into a "survivor":** the judge's W15 finding was the third instance of a judge reading its filtered run as package truth (sprint-2 plan rows were recorded both ways for the same reason). Next judge directive: "a SURVIVED verdict needs the whole-package run of that package, not only the named tests".
+- **The P7 slip is the reason the D-WORLD-109 rule names "no real daemon":** a fallback address in production code is a real network target for any test that forgets to pin it. The landed test now proves the pin before running; future CLI tests that touch the service record should do the same.
+- **Overlapping the judge's reading with the gate sweep** (judge spawned at once, Go runs gated on a done-marker) saved about 15 minutes with no shared-load runs.
+- **Protocol shortcut, stated:** the controller did not re-read `resources/verification-protocol.md` (136 KB) or all of `gate-3-route.md` / `gate-3b-ci-green.md` in full this fire. It worked from gate 2's recall list and the gates it read (0, 1, 2, 3 route head + role-spawn-routing, 3b outline, 4 head, 5).
+
+**Next:**
+1. If this record's own PR is still open, land it first (docs only).
+2. Then the **A4 sprint-4 planner**, from the design (r2) and this plan's Appendix C: the `requests.json` `decisions` listing (DMD1–DMD3), the decision card `GET /surface/decide/{ref}` + `decide.js` (PD1, PD2; `BigInt` for the expiry per P1), *Needs you*, live Chrome XD1–XD4, `approve --list` decisions (design Q2), `DecisionSubject.Passkeys`, and the card's own verb text so a deny no longer reads "Approve". About 1,250 lines.
+3. Mark's A2 exit run (QUICKSTART §16) and A3a exit run (QUICKSTART §17) are runnable and attended; design §10's A4 steps 1–3 and 5 are runnable after this sprint, step 4 (the card on a phone) waits for sprint 4. D-WORLD-114 and D-WORLD-115 stay OPEN for Mark to confirm or veto; both defaults are applied.

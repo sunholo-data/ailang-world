@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 391 | 2026-11-13 | row 201 A4 sprint 3 LANDED (PR #569, merge `e6761873`): the passkey decision arm (`DecideByAssertion`, `JudgeDecisionAssertion`, the store counter, the POST's `webauthn` arm), CD6–CD9 on a request ref, a live-Chrome passkey decision and QUICKSTART §18; the whole surface moved to sprint 4; judge PASS 91 [PRODUCT] |
 | 390 | 2026-11-12 | row 201 A4 sprint 2 LANDED (PR #566, merge `9ea7b45f`): the typed CLI `approve <request-ref> [--deny]`, credentials schema 8 `key_decisions`, the decision SSHSIG law and judge, the POST's `sshsig` arm and `--sign-with` on a request ref; the webauthn arm and CD6–CD7 moved to sprint 3; judge PASS 88 [PRODUCT] |
 | 389 | 2026-11-12 | row 201 A4 sprint 1 LANDED (PR #563, merge `338ff821`): the decision message, the pure law D1–D10, complete packet discovery, first-decision-final,... |
 | 388 | 2026-11-12 | row 201 A4 child design r2 (`w-world-approvals-by-key-a4.md`): an operator approves or denies a `Human.Approve` decision packet by typed `y`, SSH k... |

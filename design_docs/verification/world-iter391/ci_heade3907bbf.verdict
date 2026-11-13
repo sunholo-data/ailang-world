@@ -1,0 +1,4 @@
+CI for e3907bbf (PR #569 head): total=3
+  ailang-code verify gate: success https://github.com/sunholo-data/ailang-world/actions/runs/43354034113/job/131651646753
+  go host build + test gate: success https://github.com/sunholo-data/ailang-world/actions/runs/43354034113/job/131651646740
+  go race gate (go test -race, own job): success https://github.com/sunholo-data/ailang-world/actions/runs/43354034113/job/131651646372
