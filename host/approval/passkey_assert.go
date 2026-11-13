@@ -37,54 +37,12 @@ func ApproveByAssertion(in AssertionInput) (*SignedApproval, error) {
 	if err := checkApprover(in.Admit, in.Approver, FormatWebAuthn); err != nil { // P2-P5, P3w
 		return nil, err
 	}
+	h, hErr := MessageHash(in.Admit.StoredDigest, in.Challenge, in.Admit.ExpiresAt)
+	ad, err := assertionSteps(in.Response, in.Approver, h, hErr) // W1-W14
+	if err != nil {
+		return nil, err
+	}
 	p := in.Approver.Passkey
-	resp, err := ParseAssertionResponse(in.Response) // W1
-	if err != nil {
-		return nil, err
-	}
-	if !bytes.Equal(resp.RawID, p.CredentialID) { // W2
-		return nil, ErrCredentialIDMismatch
-	}
-	if resp.HasUserHandle && !bytes.Equal(resp.UserHandle, []byte(in.Approver.Name)) { // W3
-		return nil, ErrUserHandle
-	}
-	cd, err := ParseClientData(resp.ClientDataJSON) // W4
-	if err != nil {
-		return nil, err
-	}
-	if cd.Type != "webauthn.get" { // W5
-		return nil, ErrClientDataType
-	}
-	h, err := MessageHash(in.Admit.StoredDigest, in.Challenge, in.Admit.ExpiresAt)
-	if err != nil || cd.Challenge != b64Challenge(h[:]) { // W6
-		return nil, ErrChallenge
-	}
-	if cd.Origin != p.Origin { // W7
-		return nil, ErrOriginMismatch
-	}
-	if cd.CrossOrigin || cd.HasTopOrigin { // W8
-		return nil, ErrCrossOrigin
-	}
-	ad, err := ParseAuthData(resp.AuthenticatorData, false) // W9
-	if err != nil {
-		return nil, err
-	}
-	if ad.RPIDHash != sha256.Sum256([]byte(p.RPID)) { // W10
-		return nil, ErrRPIDHash
-	}
-	if !ad.UP { // W11
-		return nil, ErrUserPresence
-	}
-	if !ad.UV { // W12
-		return nil, ErrUserVerification
-	}
-	if ad.BE != p.BackupEligible { // W13
-		return nil, ErrBackupEligibility
-	}
-	cdh := sha256.Sum256(resp.ClientDataJSON)
-	if err := p.Key.verify(append(bytes.Clone(resp.AuthenticatorData), cdh[:]...), resp.Signature); err != nil { // W14
-		return nil, err
-	}
 	if (ad.SignCount != 0 || p.SignCount != 0) && ad.SignCount <= p.SignCount { // W15
 		return nil, fmt.Errorf("%w: enrolled %d, this assertion %d; if you did not cause this, run: ailang-worldd approver revoke %s",
 			ErrSignCountRegression, p.SignCount, ad.SignCount, in.Approver.Name)
@@ -92,4 +50,60 @@ func ApproveByAssertion(in AssertionInput) (*SignedApproval, error) {
 	return &SignedApproval{ok: true, digest: in.Admit.StoredDigest, challenge: in.Challenge,
 		expiry: in.Admit.ExpiresAt, name: in.Approver.Name, format: FormatWebAuthn, key: p.Key.Canonical(),
 		credentialID: bytes.Clone(p.CredentialID), signCount: ad.SignCount}, nil
+}
+
+// assertionSteps is the assertion law's W1-W14 for approver a over the expected challenge hash h
+// (hErr: h could not be computed, refused at W6, in W6's place), shared by ApproveByAssertion (the
+// mint message) and DecideByAssertion (the decision message, row 201 A4 §2.3). It returns the
+// verified authenticator data; the counter (W15) is the caller's. The caller has run P2-P5 and
+// P3w, so a.Passkey is set.
+func assertionSteps(response []byte, a Approver, h [32]byte, hErr error) (AuthData, error) {
+	p := a.Passkey
+	resp, err := ParseAssertionResponse(response) // W1
+	if err != nil {
+		return AuthData{}, err
+	}
+	if !bytes.Equal(resp.RawID, p.CredentialID) { // W2
+		return AuthData{}, ErrCredentialIDMismatch
+	}
+	if resp.HasUserHandle && !bytes.Equal(resp.UserHandle, []byte(a.Name)) { // W3
+		return AuthData{}, ErrUserHandle
+	}
+	cd, err := ParseClientData(resp.ClientDataJSON) // W4
+	if err != nil {
+		return AuthData{}, err
+	}
+	if cd.Type != "webauthn.get" { // W5
+		return AuthData{}, ErrClientDataType
+	}
+	if hErr != nil || cd.Challenge != b64Challenge(h[:]) { // W6
+		return AuthData{}, ErrChallenge
+	}
+	if cd.Origin != p.Origin { // W7
+		return AuthData{}, ErrOriginMismatch
+	}
+	if cd.CrossOrigin || cd.HasTopOrigin { // W8
+		return AuthData{}, ErrCrossOrigin
+	}
+	ad, err := ParseAuthData(resp.AuthenticatorData, false) // W9
+	if err != nil {
+		return AuthData{}, err
+	}
+	if ad.RPIDHash != sha256.Sum256([]byte(p.RPID)) { // W10
+		return AuthData{}, ErrRPIDHash
+	}
+	if !ad.UP { // W11
+		return AuthData{}, ErrUserPresence
+	}
+	if !ad.UV { // W12
+		return AuthData{}, ErrUserVerification
+	}
+	if ad.BE != p.BackupEligible { // W13
+		return AuthData{}, ErrBackupEligibility
+	}
+	cdh := sha256.Sum256(resp.ClientDataJSON)
+	if err := p.Key.verify(append(bytes.Clone(resp.AuthenticatorData), cdh[:]...), resp.Signature); err != nil { // W14
+		return AuthData{}, err
+	}
+	return ad, nil
 }
