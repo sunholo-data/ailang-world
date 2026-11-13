@@ -176,10 +176,10 @@ func (d *Daemon) handleSurfaceDecide(w http.ResponseWriter, r *http.Request, o [
 		return
 	}
 	q := hashref.MustParse(ref) // D1 held
-	// 2. the arm (D11): a key's judge and evidence (sprint 2, surface_decide_key.go), or the typed
-	// proof, whose phase carries the verb.
+	// 2. the arm (D11): a key's judge and evidence (an SSHSIG, sprint 2; a passkey, sprint 3;
+	// surface_decide_key.go), or the typed proof, whose phase carries the verb.
 	decidedBy, evidence := typedDecider, (*store.Credentials)(nil)
-	if body.SSHSIG != nil {
+	if body.SSHSIG != nil || body.WebAuthn != nil {
 		var ok bool
 		if evidence, decidedBy, ok = d.keyArm(ctx, w, r, f, body, now); !ok {
 			return
