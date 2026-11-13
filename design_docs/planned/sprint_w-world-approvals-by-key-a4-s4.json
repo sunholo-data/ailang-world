@@ -1,0 +1,238 @@
+{
+  "sprint_id": "w-world-approvals-by-key-a4-s4",
+  "design_doc": "design_docs/planned/w-world-approvals-by-key-a4.md",
+  "design_revision": "r2 (reviewed iteration 388; not reopened)",
+  "sprint_plan": "design_docs/planned/w-world-approvals-by-key-a4-sprint4-plan.md",
+  "previous_sprint": {
+    "plan": "design_docs/planned/w-world-approvals-by-key-a4-sprint3-plan.md",
+    "json": "design_docs/planned/sprint_w-world-approvals-by-key-a4-s3.json",
+    "landed_merge": "e6761873",
+    "note": "A4 sprint 3 landed (PR #569, judge sonnet PASS 91); recorded at 799660ac (PR #570)"
+  },
+  "base_commit": "799660ac4521919e2efe9c864fa8f5a0d7666ac8",
+  "queue_row": 201,
+  "iteration": 392,
+  "sprint_number": 4,
+  "milestone": "A4",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter392-a4-s4",
+  "branch": "sprint/world-iter392-row201-a4-s4",
+  "decisions_open": {
+    "D-WORLD-115": "OPEN, default A applied; under B decide.js's message builder changes with the laws and CD6/CD8 (plan S4-D9); nothing else in this sprint depends on it"
+  },
+  "cut": {
+    "cap_loc": 2000,
+    "measure": "git diff --numstat <base> HEAD -- cmd host docs (insertions + deletions); -- cmd host alone also stated",
+    "fallback_fired": "no: all of sprint 3's Appendix C built (S4-D1); margin 53",
+    "cut_order_if_needed": "M7a (judge-note tests), then M7c (--list); PD1 never apart from the page"
+  },
+  "scope": [
+    "requests.json decisions + decisionsTruncated (DMD1-DMD3)",
+    "approve --list decisions (Q2, offline, same function)",
+    "Needs you lists decisions + notification (XD3)",
+    "DecisionSubject.Passkeys",
+    "the decision card GET /surface/decide/{ref} + decide.js (PD1, PD2) with live-Chrome XD1, XD2, XD4",
+    "TestSurfaceAppRoutes +2",
+    "QUICKSTART §18 card paragraph",
+    "the sprint-3 judge's non-blocking notes 2-4 as tests (note 1: narrow-run survivor)"
+  ],
+  "verb_text_decision": "the card shows its own verb (buttons, status, file names; XD1 asserts it). The CLI --webauthn-link path keeps the frozen A2 page's 'Approve request decide-deny-...' wording as residual RS-VERB: design §2.8/§13 freeze passkey.js, an A3 test pins its sha256 (surface_approve_page_test.go:54), the link grammar is shared with mints; measured alternative ~30 lines in frozen A2/A3 files (plan S4-D2)",
+  "how_an_operator_decides_from_the_surface": "Needs you -> 'Decide · scope · requested by … · deadline hh:mm' -> /surface/decide/<ref> (every field, both hashes checked) -> Approve/Deny with passkey, or Save the message -> ssh-keygen -Y sign -n world-decision@sunholo -> paste -> POST /surface/decide/{ref} (sprint 1-3 arms unchanged) -> decidedBy shown; approve --list --db prints the same requests with their decide command",
+  "executor_lane": "as routed by the controller; runs: (M7a, M7b, M7c), (M7d, M7e, M7f), (M7g, M7h, M7i); approvaltest keys/passkeys, Chrome's virtual authenticator in a temp profile, ssh-keygen only on a temp-dir key, node for the app.js harness",
+  "executor_form": "every sub-milestone is a unified diff in the plan Appendix P, applied with patch -p1 after --dry-run, extracted with plan §2's awk",
+  "estimate_loc": {
+    "production": 655,
+    "production_go": 286,
+    "production_page_script": 369,
+    "test": 1284,
+    "docs": 8,
+    "total_cumulative": 1947,
+    "cmd_host_only": 1939,
+    "measure": "insertions + deletions (git diff --numstat -- cmd host docs), measured after a commit of each scratch stage and on the round-trip tree"
+  },
+  "constraints": [
+    "D-WORLD-109: approvaltest keys and passkeys, temp stores, httptest loopback daemons, Chrome's virtual authenticator in a temp profile; ssh-keygen -Y sign only on a temp-dir key; --list never dials a daemon",
+    "host/approval untouched in production; effects at the store/daemon/CLI boundary; the fold pure",
+    "decidedBy derived, never accepted; no /v1 route; exactly the design's two /surface routes; no CSP change, no CORS, no new dependency, no schema change",
+    "A2/A3 pages and the sprint 1-3 POST arms and laws unchanged",
+    "no t.Parallel; every Go Bash call timeout 600000, foreground",
+    "no git writes by the executor; snapshots copy only git status --porcelain files"
+  ],
+  "baseline": "verify_ail PASSED; gofmt/build/vet/fence rc 0; pkgs rc 1 only TestWorkbenchPacketRosterTestedAndProven (load; ok alone 455.8 s); broker_named rc 0; race rc 1 only cmd load-deadline reds (TestApproveAwaitStopsAtExpiry, TestApproveBySignatureRefusalsBeforeAnyEffect), no DATA RACE; inv 51 PASS; chrome 7 PASS; verify_go rc 1 known-flaky list + TestWorldContextAndStatusline (subprocess killed under load); load 18-28",
+  "design_premises_found_false": [
+    "P1 approve --list never contacts a daemon (approve.go:264-283) -> S4-D3 offline through daemon.PendingDecisions",
+    "P2 CD3 refuses --daemon with --list (approve.go:221)",
+    "P3 the listing's refusal needs ValidatePacket's own <=101 scan per row -> <=20 calls, display only",
+    "P4 the sprint-3 judge's X-W15-OPERAND is a narrow-run survivor (TestSignCountLaw kills it)",
+    "P5 passkey.js byte-pinned by an A3 test (surface_approve_page_test.go:54)",
+    "P6 the notification lives in notifications(), not needsYouHTML",
+    "P7 TestDecisionSubjectJSON pins the subject's key list (+1 -1)",
+    "P8 TestDecisionRoutesRegistered pins two routes and GET /surface/decide/{ref} -> 405 (+2 -2)",
+    "P9 PD1's wires are unexported -> PD1 compares against real stored payloads"
+  ],
+  "files_outside_design_section_8": [
+    "host/surfacepage/approve_model.go (RequestsJSON +2 members)",
+    "host/daemon/surface_approve.go (handler calls the listing)",
+    "host/surfacepage/decide_model.go",
+    "host/daemon/surface_decide.go (subject Passkeys)",
+    "new files and every _test.go in plan §5"
+  ],
+  "existing_tests_edited": [
+    "TestSurfaceAppRoutes (+2 routes, design §7)",
+    "TestDecisionSubjectJSON (+passkeys key, P7)",
+    "TestDecisionRoutesRegistered (card routes, P8)"
+  ],
+  "ci_change": "none",
+  "not_touched": [
+    "host/approval/*.go production",
+    "host/authority/**",
+    "host/store/**",
+    "host/broker/**",
+    "host/coordinator/**",
+    "host/surfacepage/{approve,passkey}/**, approve.go, passkey.go, surface.js",
+    "host/daemon/{surface_approve_page.go, surface_decide_key.go, episode_finish.go}",
+    "cmd/ailang-worldd/approve_decide.go",
+    "world/*.ail, packages/**, scripts/**, tools/launchd/*, cmd/world-publish/*"
+  ],
+  "milestones": [
+    {
+      "id": "M7a",
+      "title": "the sprint-3 judge's notes 2-4 as tests: TestDecideByAssertionRefusesAMissingMessageAtW6 (hErr placement), TestApproveDecideArtifactPostsTheSubjectsDigests (the posted P/Q), TestApproveDecideArtifactReadBounds (the two read caps); note 1 is a narrow-run survivor killed by TestSignCountLaw",
+      "production": 0,
+      "test": 106,
+      "docs": 0,
+      "expected_cumulative_numstat": 106,
+      "run": 1
+    },
+    {
+      "id": "M7b",
+      "title": "requests.json decisions + decisionsTruncated: surfacepage.FoldDecisions (pure), daemon.PendingDecisions (RecentApprovals(40), one 101-packet scan, ValidatePacket per one-packet request, SubjectRefusal); DMD1-DMD3",
+      "production": 145,
+      "test": 186,
+      "docs": 0,
+      "expected_cumulative_numstat": 437,
+      "run": 1
+    },
+    {
+      "id": "M7c",
+      "title": "approve --list decisions (design Q2): offline through daemon.PendingDecisions on store.OpenReadOnly(--db), never a dial",
+      "production": 57,
+      "test": 93,
+      "docs": 0,
+      "expected_cumulative_numstat": 587,
+      "run": 1
+    },
+    {
+      "id": "M7d",
+      "title": "Needs you lists decisions (XD3): decidable link to /surface/decide/<ref>, reserved/refused text without a link, truncation line, notification for a new decidable decision id; app.js +25 -5",
+      "production": 30,
+      "test": 102,
+      "docs": 0,
+      "expected_cumulative_numstat": 719,
+      "run": 2
+    },
+    {
+      "id": "M7e",
+      "title": "DecisionSubject.Passkeys (A3a's CardPasskeys shape, grouped by origin, fresh read-only handle)",
+      "production": 33,
+      "test": 58,
+      "docs": 0,
+      "expected_cumulative_numstat": 810,
+      "run": 2
+    },
+    {
+      "id": "M7f",
+      "title": "the decision card: GET /surface/decide/{ref} + GET /surface/decide.js (approvalRoute, unchanged surfaceCSP), decide/index.html + decide.js (DECISION_FIELDS, hash and requestRef checks, passkey ceremony over DecisionMessageHash with a BigInt expiry, Save the message + ssh-keygen line + paste box, the verb on screen); PD1, PD2; TestSurfaceAppRoutes +2",
+      "production": 390,
+      "test": 150,
+      "docs": 0,
+      "expected_cumulative_numstat": 1350,
+      "run": 2
+    },
+    {
+      "id": "M7g",
+      "title": "live Chrome XD1: Approve and Deny with a passkey on the card (virtual authenticator, temp profile), challenge = Go's DecisionMessageHash, verb text asserted",
+      "production": 0,
+      "test": 285,
+      "docs": 0,
+      "expected_cumulative_numstat": 1635,
+      "run": 3
+    },
+    {
+      "id": "M7h",
+      "title": "live Chrome XD2 (16 fail-closed cases, no get) and XD4 (saved 91 bytes = DecisionMessage, approvaltest SSHSIG paste, real ssh-keygen sibling)",
+      "production": 0,
+      "test": 243,
+      "docs": 0,
+      "expected_cumulative_numstat": 1878,
+      "run": 3
+    },
+    {
+      "id": "M7i",
+      "title": "QUICKSTART §18 card paragraph + TestQuickstartSection18CardMatchesThePage",
+      "production": 0,
+      "test": 61,
+      "docs": 8,
+      "expected_cumulative_numstat": 1947,
+      "run": 3
+    }
+  ],
+  "sprint_gates": {
+    "script_ref": "plan §6 = plan-scratch/tools/gates_final.sh (bash 3.2, every leg records its rc, tee to $HOME/.ailang/state/world-iter392/gates/, not under nohup, writes gates/ALL_DONE.<sha>)",
+    "final_tree_result": "GATES_DONE 1326s FAILS: pkgs verify_go; every red an untouched archived-interpreter/exec-profile load test green alone (TestSeToolsPlansAdmittedByPlanLaw, TestExecStartupRefusalTable, TestDemoProofUncertainCommitStops, TestWorkspaceExecEpisodeSelectsItsProfile); inv 69 PASS; chrome 10 PASS; race rc 0; verify_ail PASSED"
+  },
+  "mutants": {
+    "rows": 126,
+    "killed_named_and_suite": 113,
+    "named_equivalents": 7,
+    "named_survivors": 6,
+    "not_as_expected": 0,
+    "nocompile_lines": 1,
+    "ledger": "$HOME/.ailang/state/world-iter392/plan-scratch/logs/mutant_ledger.tsv (148 lines)",
+    "trees": "slice trees wJ/wA/wC/wB (byte-identical slice files) for J1-J2, A1, C1-C2, B1-B5js; final tree work for every E/L row (F1, F2, F2js)",
+    "ids_equal_plan_table": true,
+    "equivalents": [
+      "L-SCAN-DECODE",
+      "L-GUARD",
+      "L-ONE-VALIDATE",
+      "L-RA-ERR",
+      "L-SCAN-ERR",
+      "J-SUBJECT-REF",
+      "J-RP"
+    ],
+    "survivors": [
+      "L-VALIDATE-ERR",
+      "CL-LIST-ERR",
+      "P-PASSKEYS-OLDER",
+      "P-PASSKEYS-ACTIVE-ERR",
+      "J-TIMEOUT",
+      "J-CREDS"
+    ],
+    "judge_gap_rows_killed": [
+      "JG-BODY-PACKET",
+      "JG-BODY-REQUEST",
+      "JG-SIG-CAP",
+      "JG-ASR-CAP",
+      "JG-HERR-TOP",
+      "JG-W15-OPERAND"
+    ]
+  },
+  "roundtrip": "ROUNDTRIP_IDENTICAL_TO_STAGE_TREE_AND_MUTANT_TREE (nine patches extracted from the plan with §2 awk, cmp-equal to the generated ones, applied to a fresh git archive 799660ac export; NUMSTAT M7a 106 ... M7i 1947 (cmd host 1939))",
+  "executor_directives": {
+    "no_git_writes": true,
+    "never_nohup_or_background_a_test_leg": true,
+    "go_bash_timeout_ms": 600000,
+    "apply": "patch -p1 after --dry-run, extracted with plan §2's awk",
+    "snapshot": "copy only files git status --porcelain reports (plus a DELETED list), never rsync of directories; MANIFEST.sha256; exclude the two plan files"
+  },
+  "acceptance_criteria_ref": "plan §9 (16 criteria)",
+  "operator_after_sprint": "open Needs you (studio or phone over the tailnet), open a decision's card, read every field, Approve/Deny with a passkey or save the message, sign with an enrolled SSH key and paste; see decidedBy; approve --list --db lists the same requests offline; every sprint 1-3 CLI path unchanged",
+  "attended_exit_run_waits_for": "Mark's design §10 run (all five steps runnable); step 4 is the first card -> daemon POST with a real authenticator (RS-RIG) and records the arriving Host; RS-VERB for Mark to judge; D-WORLD-115",
+  "residuals": [
+    "RS-VERB (CLI link path wording on the frozen A2 page)",
+    "RS-RIG (Chrome drives the card against the rig's real law/judges, not the daemon's POST over a seeded world)",
+    "R5 listing cost (<=20 ValidatePacket per read)",
+    "J-TIMEOUT, J-CREDS, L-VALIDATE-ERR, CL-LIST-ERR, P-PASSKEYS-OLDER, P-PASSKEYS-ACTIVE-ERR (named survivors)",
+    "carried: D-LAND-ERR, C-PROOF-ERR, C-SIGN-NIL, C-LINK-ERR, KA-RACE-TEXT"
+  ],
+  "next_sprint": "none for A4 (code-complete); Mark's attended exit run (design §10)"
+}

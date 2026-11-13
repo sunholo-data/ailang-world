@@ -36,7 +36,7 @@ func TestDecisionSubjectJSON(t *testing.T) {
 		names = append(names, k)
 	}
 	sort.Strings(names)
-	if want := []string{"decidedBy", "decision", "entry", "now", "packet", "packetBytes", "proposal", "refusal", "request", "requestBytes", "reserved", "ssh", "v", "window"}; !reflect.DeepEqual(names, want) {
+	if want := []string{"decidedBy", "decision", "entry", "now", "packet", "packetBytes", "passkeys", "proposal", "refusal", "request", "requestBytes", "reserved", "ssh", "v", "window"}; !reflect.DeepEqual(names, want) {
 		t.Fatalf("subject keys %v, want %v (no message, no hash)", names, want)
 	}
 	var s surfacepage.DecisionSubject

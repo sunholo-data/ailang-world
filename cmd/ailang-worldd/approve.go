@@ -272,12 +272,12 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 		}
 		if len(rows) == 0 {
 			fmt.Fprintln(stdout, "no pending mint requests")
-			return exitOK
 		}
 		for _, r := range rows {
 			fmt.Fprintf(stdout, "%s  episode %s  digest %s  expires %s\n", r.RequestID, r.EpisodeID, r.Digest[:16],
 				time.Unix(r.ExpiresAt, 0).UTC().Format(time.RFC3339))
 		}
+		approveListDecisions(ctx, *db, env.now(), stdout, stderr) // row 201 A4 (design Q2)
 		return exitOK
 	}
 	row, ok, err := ro.MintRequest(ctx, id)

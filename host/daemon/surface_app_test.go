@@ -154,12 +154,14 @@ func TestSurfaceAppRoutes(t *testing.T) {
 		for _, target := range []string{"/surface/", "/surface/nope", "/surface/app.jsx", "/surface/index.html", "/surface/data.js",
 			"/surface/spike-data.json", "/surface/app/app.js", "/surface/static/x", "/surface/fonts.css",
 			"/surface/passkey/", "/surface/passkey/index.html", "/surface/passkey/passkey.js", "/surface/passkey.html",
-			"/surface/approve", "/surface/approve/", "/surface/requests", "/surface/requests.json/x"} {
+			"/surface/approve", "/surface/approve/", "/surface/requests", "/surface/requests.json/x",
+			"/surface/decide", "/surface/decide/", "/surface/decide.js/x"} {
 			if w := request("GET", target); w.Code != 404 {
 				t.Errorf("%s = %d, want 404", target, w.Code)
 			}
 		}
-		for _, target := range []string{"/surface/requests.json", "/surface/requests/mr-0123456789abcdef", "/surface/approve/mr-0123456789abcdef", "/surface/approve.js"} {
+		for _, target := range []string{"/surface/requests.json", "/surface/requests/mr-0123456789abcdef", "/surface/approve/mr-0123456789abcdef", "/surface/approve.js",
+			"/surface/decide/sha256:" + strings.Repeat("ab", 32), "/surface/decide.js"} {
 			if w := request("GET", target); w.Code != 421 { // registered; example.com is no Host of the surface's
 				t.Errorf("%s = %d, want 421", target, w.Code)
 			}

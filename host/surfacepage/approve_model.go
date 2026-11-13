@@ -67,6 +67,9 @@ type RequestsJSON struct {
 	Pending     []PendingRequest `json:"pending"`
 	Decided     []DecidedRequest `json:"decided"`
 	Unavailable string           `json:"unavailable"`
+	// Decisions are the pending Human.Approve requests a decision card decides (row 201 A4 §2.8).
+	Decisions          []PendingDecision `json:"decisions"`
+	DecisionsTruncated bool              `json:"decisionsTruncated"`
 }
 
 // hex32 decodes 64 hex characters.
