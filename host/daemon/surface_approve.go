@@ -104,6 +104,12 @@ func (d *Daemon) handleSurfaceRequests(w http.ResponseWriter, r *http.Request, _
 	if out.Decided == nil {
 		out.Decided = []surfacepage.DecidedRequest{}
 	}
+	if err := d.readDecisionList(ctx, now, &out); err != nil { // row 201 A4 §2.8: the world store's decisions
+		d.writeInternalErrorLog(r, err)
+	}
+	if out.Decisions == nil {
+		out.Decisions = []surfacepage.PendingDecision{}
+	}
 	writeApprovalJSON(w, http.StatusOK, out)
 }
 
