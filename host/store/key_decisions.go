@@ -2,7 +2,8 @@ package store
 
 // Row 201 A4 sprint 2 (design §2.7): credentials schema 8's key_decisions, the evidence of a key
 // decision. The authority is the world store's decision, never this row; decision_ref links the two
-// once it landed (NULL until then). Format-agnostic: sprint 3's passkey arm adds no column (S2-D3).
+// once it landed (NULL until then). Format-agnostic: sprint 3's passkey arm adds no column (S2-D3);
+// its counter is webauthn_credentials.sign_count, moved by usePasskey in RecordKeyDecision (K4).
 
 import (
 	"bytes"
@@ -71,6 +72,8 @@ func checkKeyDecisionRow(row KeyDecisionRow, use ApproverUse) error {
 		return fmt.Errorf("%w: verb %q", ErrBadKeyDecision, row.Verb)
 	case row.Format != use.Format || row.Approver != use.Format+":"+use.Name:
 		return fmt.Errorf("%w: %s by %q is not the approver %s:%s", ErrBadKeyDecision, row.Format, row.Approver, use.Format, use.Name)
+	case (use.Format == "webauthn") != (use.Passkey != nil): // the counter binding is exactly a passkey's (A2 C13)
+		return fmt.Errorf("%w: a %s decision with passkey use %v", ErrBadKeyDecision, use.Format, use.Passkey != nil)
 	case len(row.Artifact) < 1 || len(row.Artifact) > MaxSurfaceApprovalArtifactBytes:
 		return fmt.Errorf("%w: an artifact is 1 to %d bytes, not %d", ErrBadKeyDecision, MaxSurfaceApprovalArtifactBytes, len(row.Artifact))
 	}
@@ -85,8 +88,10 @@ func scanKeyDecision(scan func(...any) error) (KeyDecisionRow, error) {
 
 // RecordKeyDecision records row for the approver use at now, in one transaction (design §2.7): K1
 // deadline, schema 8; K2 grammar; K0 a landed row refuses, an unlanded one equal in artifact and
-// signed fields is kept (the exact-match retry); K3 useApprover on both paths; K5 insert or replace
-// the unlanded row. The passkey counter (K4) is sprint 3's.
+// signed fields is kept (the exact-match retry); K3 useApprover on both paths; K4, for a passkey and
+// only off the exact match, usePasskey: the assertion law's W15 against the stored counter, in this
+// transaction (design §2.7 [r2]; the decision judge defers it), so a retry of the exact artifact of
+// an unlanded row is not refused by its own first use; K5 insert or replace the unlanded row.
 func (c *Credentials) RecordKeyDecision(ctx context.Context, row KeyDecisionRow, use ApproverUse, now int64) error {
 	if err := requireDeadline(ctx); err != nil { // K1
 		return err
@@ -114,6 +119,11 @@ func (c *Credentials) RecordKeyDecision(ctx context.Context, row KeyDecisionRow,
 		old.Format == row.Format && old.Approver == row.Approver && old.Expiry == row.Expiry // K0: the exact match
 	if err := useApprover(ctx, tx, use, now); err != nil { // K3, on both paths
 		return err
+	}
+	if !exact && use.Passkey != nil { // K4: W15, forward only (both zero: unchanged), off the exact match
+		if err := usePasskey(ctx, tx, use.Name, *use.Passkey); err != nil {
+			return err
+		}
 	}
 	if !exact { // K5
 		if _, err := tx.ExecContext(ctx, `INSERT INTO key_decisions (request_ref, packet_ref, verb, format, approver, artifact, expiry, decided_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
