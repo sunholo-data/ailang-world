@@ -1,0 +1,9 @@
+ok  	github.com/sunholo-data/ailang-world/host/store	49.081s
+ok  	github.com/sunholo-data/ailang-world/host/surface	2.257s
+--- FAIL: TestBackoff (1.01s)
+    scheduler_test.go:131: timed out waiting for test synchronization
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/surfacefollow	2.626s
+ok  	github.com/sunholo-data/ailang-world/host/surfacepage	2.835s
+?   	github.com/sunholo-data/ailang-world/host/toolprobe	[no test files]
+ok  	github.com/sunholo-data/ailang-world/host/transitionreg	3.735s
