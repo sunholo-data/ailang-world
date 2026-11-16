@@ -1,0 +1,7 @@
+ok  	github.com/sunholo-data/ailang-world/host/boundary	1.474s
+--- FAIL: TestSeedRestartIgnoresASurvivingOldCopy (0.02s)
+    --- FAIL: TestSeedRestartIgnoresASurvivingOldCopy/survivor (0.02s)
+        exec_seed_test.go:656: the old staging dir survived the restart: <nil>
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	192.723s
+ok  	github.com/sunholo-data/ailang-world/host/canon	0.002s

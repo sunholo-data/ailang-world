@@ -1,0 +1,4 @@
+COMPLETE for 20b06a2dfdd4a2ddd1170704f9496f689d7688a3 total=3 bad=0
+ailang-code verify gate: success
+go host build + test gate: success
+go race gate (go test -race, own job): success

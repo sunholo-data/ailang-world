@@ -1,0 +1,26 @@
+  GOTOOLCHAIN: go1.26.6
+  AILANG_BIN: /home/runner/.local/bin/ailang
+  WORLD_EXEC_SRT_NODE_MODULES: /home/runner/work/_temp/srt/node_modules
+  WORLD_EXEC_NODE: /usr/local/bin/node
+##[endgroup]
+== go1.26 local-array-literal miscompilation reproduction ==
+host: linux/amd64   default toolchain: go1.26.6
+
+expected BUG (affected):
+  go1.26.0   expect=BAD   got: OK (rc=0)
+  go1.26.3   expect=BAD   got: OK (rc=0)
+  go1.26.4   expect=BAD   got: OK (rc=0)
+  go1.26.5   SKIPPED (toolchain unavailable: go: downloading go1.26.5 (linux/amd64)go: download go1.26.5: golang.or)
+expected OK (unaffected):
+  go1.26.6   expect=GOOD  got: OK (rc=0)
+  go1.25.6   expect=GOOD  got: OK (rc=0)
+  go1.24.9   expect=GOOD  got: OK (rc=0)
+
+-- optimization-level control on the default toolchain --
+  -gcflags=all=-N        got: OK
+  -gcflags=all=-l        got: OK
+
+INSTRUMENT FAILURE: 3 of 4 KNOWN-BAD probes completed —
+a partial (or hollowed-out) negative arm cannot certify linux/amd64. Every
+configured KNOWN-BAD entry must run; a SKIP on this arm is a refusal, not a pass.
+##[error]Process completed with exit code 1.

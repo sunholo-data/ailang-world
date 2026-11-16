@@ -9,97 +9,6 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 373 — 2026-11-09 — row 201 sprint 1 built: the mint request's pure core and a stdlib SSHSIG verifier on real ssh-keygen fixtures; design r3 via a controller carve-out; judge PASS 90 [PRODUCT]
-
-**Pick:** row 201 `w-world-approvals-by-key`, next in the attended **D-WORLD-109 = A** order (after 250, 255 → 257, all landed; row 256 taken attended). Built and judged against fakes and test keys only; no real key, mint or publish.
-- Re-measured at pick: no open PR from this account; no `host/approval`, `sshsig` or approver code on `origin/dev`; release rows not routable (row 150 A1: 0 subjects since 2026-11-07; row 151 N2d/N4a: 0 since 2026-10-01; control N2c: 2).
-- Ledger valid; OPEN: D-WORLD-105 only.
-- The parent design (attended, 93 lines, A0–A4) had no quorum artifact (`mc_quorum_gate2` rc 1), so the route was design → quorum → plan → build → judge, as D-WORLD-109 says.
-- **Progress:** 1.0 clauses 1–7 MET; goal unmoved (clause 5, already MET: the human surface). The row moves the "no terminal" path Mark asked for, but sprint 1 changes no behaviour.
-
-**Gate 0:**
-- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
-- Directives: 0 allowlisted on #524 (4 comments; the issue-scoped watermark is absent, so all were read) and 0 on #449 since the mission-scoped watermark (2026-10-27T09:03:42Z, 47 comments).
-- Self-notices: `mission_gate0_self_notices.sh` rc 2 (instrument failure, not a verdict): neither `mission-524-last-seen` nor `mission-449-last-seen` exists. Same cause as 372.
-- Skill drift: no file differs from the driver clone's `origin/dev` (SKILL.md plus resources; resolved symlink and pin copies).
-- Dev at `693f704e`, CI success, `checks=3`.
-
-**Design** (`w-world-approvals-by-key-a0a1.md`, a child of the attended parent). Resolver `recipe claude:claude-opus-5-5 declared:provider-pin`; spawned as Agent `opus` (the 318–372 precedent). The rotation file reads `claude:claude-opus-5-5`; the resolver's answer was followed, and codex was over ration anyway.
-- r1 (15 min): A0 + A1 would not fit, so the designer took the brief's fallback, A0 plus the SSHSIG verifier (A1a). Enrolment, `approve --signature` and the approvers table move to A1b. The doc is ~2,800 lines in six milestones, with a clean split at M1–M3 / M4–M6. A ~120-line stdlib verifier prototype agreed with `ssh-keygen -Y verify` on every arm. Found false: `crypto/sha512` is required, since `-Y sign` hashes with SHA-512 by default. Also found: `-Y sign -f k msg` exits 0 without writing when `msg.sig` exists.
-- **Quorum r1 BLOCKED 2/3** ($0.355; author Anthropic benched; seats kimi-k3, gpt-6.1-sol, gemini-4-argon).
-  - kimi: "everything the approval executes is inside the request" was never mapped against `mintOptions`/`mintRequest`.
-  - gpt: approve inherits `provisionEpisode`'s unbounded y/N read.
-  - gemini passed, noting the size.
-  - Controller measured both first (rule 3f): `session_new.go:181-224` has fields with no request counterpart (`existingBranch`, `startPoint`, `git`, `db`, …). The y/N read at `:438` precedes the first deadline at `:444`, so the wait is pre-existing at HEAD, with approve as a new caller.
-- r2 (5 min, the designer resumed by `SendMessage`):
-  - a complete field map with a reflective completeness test (CL14);
-  - `MintMatches` over all seven `session_credentials` columns;
-  - approve's read bounded by the request's remaining life, via a goroutine + timer. Measured: darwin `/dev/tty` refuses `SetReadDeadline`, and `Close` does not unblock the read;
-  - sprint boundary M1–M3.
-- **Quorum r2 BLOCKED 2/3** ($0.429), on two new narrow surfaces:
-  - kimi: `broker.Capability` was never dumped, and CL14 could not see the element type.
-  - gpt: `consume.Now` was sampled before worktree preparation, so the SQL expiry check used a stale time.
-  - gemini passed (reap the timed-out read goroutine in tests).
-  - Per round: r1 = field completeness + prompt wait; r2 = Capability element completeness + consume-time clock.
-- **r3, controller narrow-refinement carve-out.** Both rejects carried a concrete `proposed_fix`, and neither disputes the direction. The fixes were applied verbatim:
-  - kimi: the `db` row, the `grants` row, CL14 extended over `broker.Capability`, SG1's regenerate-and-re-pin sentence, and V34 (controller-measured: `Capability{Effect, Scope, ExpiresAt, Budget}`, no json tags, `json.Marshal(grants)` at `authority/mint.go:83`).
-  - gpt: `RequestConsume.Clock`, read once inside the transaction, and CL19.
-  - gemini: the comment constraint and `t.Cleanup`.
-  - Committed `63766f2f`.
-
-**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus` (26 min). Sprint 1 = M1a, M1b, M2a, M2b, M3; ~1,770 LOC; 68 mutants. Two design premises found false and routed around:
-- A checked-in 90-byte `message.bin` holds a NUL at offset 17, which `scripts/tracked_binary_gate.sh` (run by `verify_go.sh`) rejects, so `message.hex` is checked in instead.
-- A constant and a function both named `Admit` do not compile; the constant is now `Admitted = iota + 1`.
-- Sprint-2 risk R5: `MintMatches`' `created_at` upper bound needs the in-transaction clock, so sprint 2 runs that check inside the transaction.
-- Committed `7c8bce58`.
-
-**Executor:** resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`; spawned as Agent `haiku`.
-- Three runs: M1a+M1b (3 min), M2a+M2b (4 min), M3 + sprint gates (8 min). No git writes; per-milestone `.snap/`.
-- The controller restored each milestone from its snapshot, re-ran its package tests at every boundary, checked byte-identity with the executor's final tree, and committed `d9e12564`, `a0138e3f`, `ea472f3f`, `05ff0f5a`, `9c8f8744`.
-- Fixtures came from one `generate.sh` run with `/usr/bin/ssh-keygen` (OpenSSH_10.3p1). No private key, no NUL bytes.
-- One deviation: SG4's doubled-armor arm expects `ErrBase64`, not `ErrArmor` (see the judge).
-
-**Controller gates** at `9c8f8744`:
-- `host/approval` 17 tests plus `-race`; the cross-check with `WORLD_REQUIRE_SSH_KEYGEN=1`; compile fence; `TestDaemonDependencyAllowlist`; `TestProductionContextRoots`.
-- `VERIFY_GO_LEGS=plain verify_go.sh` rc 0 (60 packages ok, 64 evidence tests, tracked-binary gate 24/0).
-- My first standalone run of `tracked_binary_gate.sh` went red on the three pinned fonts. That was the instrument: I had called it without `verify_go.sh`'s `--allow-font` pins. With the caller's flags: 0 other binary blobs among 6,570 tracked files.
-
-**Judge:** sonnet via the Agent tool (generator ≠ judge: executor haiku, designer and planner opus), on an isolated `git archive` copy. **PASS 90/100, zero blocking.**
-- Mutants: 48 of 56 killed.
-- Independent check: 240 fresh `ssh-keygen` signatures (Ed25519 and P-256, sha256 and sha512) all agree with our verifier.
-- SG4 adjudicated for the executor: the doubled block passes the armor frame and fails as base64.
-- Non-blocking notes, logged, not filed (D-WORLD-109):
-  - The sha256 hash path is unguarded. Controller reproduced: `hashalg` appears in 0 test files.
-  - Three strictness branches have no killing test: signature-string trailing bytes, P-256 mpint-pair trailing bytes, `Strict()` base64.
-  - Parse-level `ErrHashAlg` is not asserted directly.
-  - Two equivalent mutants.
-  - Carried into sprint 2's directive.
-
-**Gate 3b:** PR #533, head `9c8f8744`.
-- `pull_request` run `42709886967`: 3/3 success (ailang-code verify gate, go host build + test gate, go race gate).
-- The new step ran on ubuntu-24.04 with `OpenSSH_9.6p1` and printed `--- PASS` for the parent and both subtests. This closes the design's one UNVERIFIED premise; evidence in `ci-ubuntu-ssh-keygen-proof.txt`.
-- Merged by merge commit **`dba0e8b2`** (`--match-head-commit`).
-- Push run `42712373029` on the merge `dba0e8b2`: 3/3 success.
-- Row 201 sprint 1 LANDED; row 201 stays open.
-- **Record PR #534 head `a856609f` (docs only) went red once** in the race job: `TestMarketingSupervisorFakeDaemonCleanup/shell-hup` (`supervisor_test.go:706`, trap killed instead of exiting 129; cleanup 29.9 s against its bound), `scripts/marketingcheck`, run `42714585184`. This is the known row-254 flake class (folded into row 258), not this record's doing: the same tree's code passed `-race` on the sprint head and on the merge. Logged here per D-WORLD-109, not filed. The two `DATA RACE` lines in that job are the gate's own positive control (`w-race-gate-blindspot/racecontrol`).
-
-**Routing evidence:** controller `claude-opus-5-5` (tok: not reported) · designer `claude:claude-opus-5-5` via Agent opus (r1 231,360 tok; r2 resume 273,283 tok as reported) · quorum kimi-k3 / gpt-6.1-sol / gemini-4-argon ($0.784 metered over two rounds) · planner `opus` via Agent (251,775 tok) · executor `claude:claude-haiku-5-5` via Agent haiku (89,565 + 105,080 + 68,091 tok) · evaluator `sonnet` via Agent (72,298 tok). The driver noted codex unusable at preflight (probe rc 75, quota unreadable). Metered spend: $0.784 (quorum only).
-
-**Progress**: 1.0: clauses 1–7 MET; goal unmoved.
-
-**Ruled out:**
-- A0 + A1 in one sprint: ~3,500 lines.
-- Checking in `message.bin`: the NUL byte.
-- A third quorum round: the carve-out applied.
-- Treating the bare `tracked_binary_gate.sh` red as a regression: wrong flags, green with the caller's allowances.
-- Fixing `session new`'s pre-existing unbounded y/N wait here: out of scope, logged as the design's R7.
-
-**Retro:**
-- Two consecutive quorum rounds blocked on completeness of the request ↔ mint mapping, at successively deeper layers (struct fields, then element type). The designer directive should ask for a reflective completeness test over every struct a security digest claims to cover, element types included, from r1.
-- The planner caught a design premise that three quorum rounds and the designer missed, because only it ran the repo's own gates: the NUL byte against the tracked-binary gate. Directives for any design that checks in fixtures should name `verify_go.sh`'s binary gate explicitly.
-
-**Next:** row 201 sprint 2 (M4–M6 of `w-world-approvals-by-key-a0a1.md`: store schema 4, `episode start --request`, `approve` by typed `y`), carrying the judge's four test-gap notes. Then A1b, then row 243.
-
 ## 374 — 2026-11-10 — row 201 sprint 2 built: credentials store schema 4 with one-transaction consume, `episode start --request`, and `approve` by typed y; judge PASS 90 [PRODUCT]
 
 **Pick:** row 201 `w-world-approvals-by-key` sprint 2 (M4–M6 of `w-world-approvals-by-key-a0a1.md` r3), the route iteration 373 named under the attended **D-WORLD-109 = A**. Built and judged against fakes, temp stores and test keys only. No real key, store, mint or publish.
@@ -1994,3 +1903,78 @@ That equals the plan at every step.
 2. Then **row 260** (dev's red outranks the queue): D-WORLD-116 default A unless Mark has answered — a design/plan for the complete contract fix-forward (two enum derivings, a named record type with `Eq` for `plan`, the package regeneration, identity goldens, `interfaceHash`/`interfaceHashV2` before and after), green under v0.60.4 and the pinned v0.41.0, stopping at a ready-to-release `world/core` 0.1.2. Do not touch #565.
 3. Then row 243 (address-bar verbs): a new design r0 from the rotation designer, then quorum.
 4. Mark's attended exit runs (QUICKSTART §15–§18, A4 design §10) are all runnable; D-WORLD-114, D-WORLD-115 and D-WORLD-116 are OPEN with defaults.
+
+## 393 — 2026-11-16 — row 260 LANDED (PR #573, merge `10e6b5dc`): the kernel's contracts type-check under AILANG v0.60.4 — four `TC_CONTRACT_001` sites fixed (two enum `deriving (Eq)`, credited to #565; `plan`/`verify` restated field-wise), a `world/core` 0.1.2 candidate (not published), v0.60.4 recorded as observed; dev's verify gate green again; judge PASS 94 [PRODUCT]
+
+**Pick:** row 260 — dev's `ailang-code verify gate` was red (a red on the owning repo outranks the queue), D-WORLD-116 default **A** applied from this iteration. The record of 392 sat on PR #572 (blocked while dev was red); per Gate 1's blocked-record rule this iteration read the charter, log and ledger from `mission/world-iter392-record` and stacked the sprint on it, so #573's merge also landed #572.
+- **Re-measured at pick:** released v0.60.4 darwin binary (sha256 OK) at `/tmp/ailang-v0604-i393/ailang`; `verify_ail.sh` at `d0c9c4ce` → rc 1, `✗ world/contracts.ail: check.passed != true` (log banked as `world-iter393/baseline-verify_ail-v0604.log`). v0.60.4 still `releases/latest`.
+- **Orphans — three dead attempts at this iteration, credited here:** the 2026-11-13 10:31 fire (CRASHED at gate-3, rc 1, "Failed to authenticate. API Error: 403 … Cloudflare"), the 14:31 fire (CRASHED at gate-3, rc 1, "You've hit your weekly limit · resets Nov 16 at 6am"), and the 2026-11-16 02:31 pi fire (PAUSED-NO-CAPACITY at gate-3, controller rung demoted). They left two empty worktrees (`.wt-world-iter393-row260`, `.claude/worktrees/w393-row260`) and scratch under `/tmp`; no commits, PRs or edits. This fire reused the empty `.wt-world-iter393-row260`. Between 2026-11-13 18:32 and 2026-11-15 22:32 every fire (14) paused for no capacity (Anthropic weekly limit, codex quota unreadable, pi demoted) — a three-day gap, not a loop fault.
+- **Open PRs by the fleet account:** #572 (this mission's 392 record — adopted as above) and #565 (`fix/contracts-typecheck`; not attributed; left untouched).
+- **Quorum:** a new design doc, so the pick-time quorum ran (below).
+- **Ledger:** valid, 103 rows at pick. OPEN: D-WORLD-105 (default C), D-WORLD-114 (A, applied), D-WORLD-115 (A, applied), D-WORLD-116 (A, applied this iteration).
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 not routable. Row 260 moves no clause (it restores clause 1's gate under the current compiler).
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent (`mission-world.disabled`).
+- Directives: 0 allowlisted on #524 (45 comments; issue-scoped watermark absent, so all were read) and 0 on #449.
+- Self-notices: rc 2, `watermark channel unavailable` (no readable watermark) — instrument failure, not a verdict, as in 371–392.
+- Inbox: none addressed to `mission-world`.
+- Skill drift: none — `SKILL.md` + 13 `resources/*.md` (14 files) match the driver clone's `origin/dev` at both the resolved symlink target and the pin worktree.
+
+**Designer** (env `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the operator's standing request; the rotation file's last-used value is `claude:claude-opus-5-5` and its next entries are codex (quota unreadable) and pi glm (demoted today), so the resolver's answer was followed, as at 314): doc `design_docs/planned/w-ailang-v0604-contract-eq.md`.
+- r0 (22.4 min, 178,658 tok): **four** sites, not three — v0.60.4 reports only the first failing clause per module, so `verify`'s `result.proposalHash == p.proposalHash` (transitions:48) was hidden behind `plan`. 8 of 32 gated/packaged `.ail` files fail, all from the four sites; with them fixed every leg runs to completion on v0.60.4. Chosen: enum `deriving (Eq)`; `HashRef` equalities restated field-wise on one line (a multi-line `ensures` breaks `test_kernel_contracts.py`'s line-based control, V8). Alternatives B (`HashRef deriving (Eq)`) and C (a nominal type) measured and rejected. v0.30.0 found unused by any CI lane (the "replay goldens are v0.30.0-scoped" comment is stale).
+- r1 (3.4 min, 216,667 tok cumulative transcript): V15 (field equality ⇔ derived record equality, both directions, both CI compilers; A and B kill the same 7 body mutants), V16 (contentHash invariant under CHANGELOG/manifest text; a module-byte control moves it), V17 (premises banked), V18 (the two new `Eq` instances are real and invisible to both interface hashes → kind `feature`).
+
+**Quorum** (`--author claude:claude-opus-5-5`; seats gemini-4-argon, oc-glm-5-3, oc-kimi-k3; reserve gpt6-1-sol; no absent seat either round):
+- **r1 BLOCKED** ($0.266): gemini PASS; glm REJECT (equivalence and hash invariance asserted, premises uncited); kimi REJECT (release-kind inconsistency, premises uncited). → the one designer revision.
+- **r2 BLOCKED** ($0.253): gemini PASS; glm REJECT (V17a's v0.54.15 install undisposed, AC8 "both jobs" unenumerated, `sameRef` reuse, V14 not banked); kimi REJECT (M2's hand-appended JSON never measured; S2 line 173 vs 174).
+- Every r2 objection carried a reviewer-authored fix and none disputed the direction → **narrow-refinement carve-out** (r2 = the controller applying the reviewers' fixes, each measured first-party, rule 3f): **V19** v0.54.15 is the floor grader's `$TOOL`, never run on `world/`, and verifies 16/16 at base and candidate anyway; **V20** the exact hand-appended M2 bytes in a fresh worktree → `ok host/pins`, verifygate subset `ok`, notice absent; **V21** `sameRef(…)` in `plan`'s `ensures` is verified on v0.60.4 but **`skipped`** on v0.41.0 ("SMT declaration closure could not resolve a required sort") — so it cannot replace the field-wise form. No re-quorum. Quorum spend $0.519 metered. Artifacts in `world-iter393/quorum/` and `~/.ailang/state/mission-quorum-world/`.
+
+**Planner** (Agent `opus`, `opus fail-closed:env-pin`, 32.0 min, 142,919 tok): plan `w-ailang-v0604-contract-eq-sprint-plan.md` (230 lines), compiled `M1.patch`/`M2.patch`, `gates.sh`.
+- M1 14 files +74/−42; M2 4 files +19/−1. Both dry-run fixtures recaptured from real v0.41.0 and v0.54.11 runs (v0.41.0 twice, byte-identical). contentHash `sha256:359a82fd…4a72c` = the design's value; interface hashes unchanged; tarball 11030 bytes.
+- **Premises found false:** design §3 item 14's "commit `563c6c9`" field does not exist in observed-only rows (the verbatim snippet was shipped); `scripts/marketingcheck` also flakes in the full Go gate; M1 larger than the design's +55/−30.
+- Mutants MUT-13..20 added (all killed); **MUT-21 survives**: a *consistent* revert to version 0.1.1 is caught only by `gates.sh`'s AC6 assert — no repo test refuses the already-published 0.1.1.
+
+**Executor** (env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`, as 374–392), two runs, no hand edits, no git writes:
+- M1 (13.8 min, 32,910 tok): checksum OK, numstat = plan, `gates.sh m1` all 11 legs rc 0 (799 s). Controller: `git diff | git patch-id` = M1.patch's → committed `8adbca8b`.
+- M2 (33.4 min, 42,586 tok): numstat = plan; its first gate run was cut by the background-task limit (no verdict); the second: every leg rc 0 except `verify_go_plain` on `cmd/ailang-worldd` `TestCLIRealSubprocessEpisode` ("daemon announcement timed out", a 5 s bound, under load avg ~9). The executor stopped as told. Controller: the test passed `-count=5` in isolation on the M2 tree, and a full `VERIFY_GO_LEGS=plain verify_go.sh` re-run was rc 0 (62 `ok`, `✓ go gate PASSED (plain)`). patch-id = M2.patch's → committed `9e64b719`.
+
+**Judge** (evaluator `sonnet` via Agent, `agent-tool sonnet declared:alias-pin`, 17.3 min, 77,794 tok; own worktree at `9e64b719`; generator ≠ judge): **PASS 94/100, zero blocking** (correctness 38/40, tests 18/20, security 10/10, standards 14/15, scope 14/15).
+- Re-derived: `verify_ail.sh` rc 0 on v0.60.4 and on v0.41.0 (16 / 40 / 503 / 9/9); `test_kernel_contracts.py` rc 0; 8 Go packages ok. `build_world_package.sh` reproduces the package copies byte for byte; fresh dry-runs equal both fixtures; registry `world/core` 0.1.2 → 404 (unpublished), 0.1.1 → 200. Scope = design §3 items 1–16 exactly. #565 untouched.
+- 33 mutants: 27 killed, 4 equivalent/unpinned (m23 equivalent, m28 comment, m26/m27 doc prose), 2 controls survived as required. Baseline: no deterministic red; `host/verifygate` `TestMissionConfigDefaultFlowIntegration` timed out once under 8-way parallel load, passes alone.
+- **Non-blocking (logged here, not filed, per D-WORLD-109's rule):** (1) `docs/SELF_MOD_PUBLISH.md`'s confirmation phrase and fresh-store name are unpinned prose — **controller-reproduced**: reverting `publish world/core@0.1.2 irreversibly` to `0.1.1` at line 233 leaves `host/runbook` and `cmd/world-publish` `ok` (fails safe: the tool refuses a mismatched phrase). (2) `test_kernel_contracts.py` misses a consistent weakening of both copies (the golden catches it). (3) the verifygate fixture's 10 s deadline flakes under parallel load.
+
+**Gate 3b:**
+- PR #573 head `20b06a2d`: **3/3 success** first try (the verify gate installed `releases/latest` = v0.60.4). Mergeable CLEAN. Closing-keyword scan of the body: 0 (title says "supersedes #565", not a closing keyword).
+- `gh pr merge 573 --merge --match-head-commit 20b06a2d…` → merge **`10e6b5dc`**; #572 shows MERGED (its commit is in the branch).
+- Push CI on the merge, run 43829772485: attempt 1 — `ailang-code verify gate` **success**, race success, `go host build + test gate` **failure** on `host/broker` `TestSeedRestartIgnoresASurvivingOldCopy/survivor` (`exec_seed_test.go:656`) — **row 259, instance 5**; the merge tree is byte-identical to the PR head that passed (`git diff 20b06a2d 10e6b5dc` empty). `gh run rerun --failed` → attempt 2: attempt 2 — the Go job failed again, this time at `w-race-gate-blindspot/run.sh`: `INSTRUMENT FAILURE: 3 of 4 KNOWN-BAD probes completed`, because the runner could not download `go1.26.5` (`go: download go1.26.5: golang.or…`; the instrument correctly treats a skip as a refusal). The same step ran all four probes on the PR run 43828016452 an hour earlier. `gh run rerun --failed` → attempt 3: **3/3 success**. **LANDED.**
+
+**Routing evidence:** base=10e6b5dc5a02e1142e966c43ab4eb30e418962e8@2026-11-16T08:31:26Z (Gate 4 record; Gate 1's was `842b9331…@2026-11-16T05:31:49Z`).
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: `claude:claude-opus-5-5` via Agent `opus` (178,658 + 216,667 tok), resolver `recipe claude:claude-opus-5-5 declared:provider-pin`; quorum r1/r2 blocked → designer revision r1 → controller carve-out r2.
+- Planner: `opus` via Agent (142,919 tok), `opus fail-closed:env-pin`.
+- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (32,910 + 42,586 tok), `recipe claude:claude-haiku-5-5 declared:provider-pin`.
+- Evaluator: `sonnet` via Agent (77,794 tok), `agent-tool sonnet declared:alias-pin`.
+- Driver note: codex unusable at preflight for planner and executor (probe rc 75, quota unreadable) → opus / haiku. No role routed to codex.
+- Judge independence: cross-model (opus designer/planner, haiku executor, sonnet judge). Metered total: $0.519 (quorum only).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Dev's verify gate is green again under the current compiler, which also makes row 201 A4 sprint 4 (merge `842b9331`) LANDED. A `world/core` 0.1.2 candidate is ready for Mark to publish (design §7); the published 0.1.1's modules fail `TC_CONTRACT_001` under v0.60.4 (design V1, package copies), so a consumer on the current compiler needs 0.1.2.
+
+**Ruled out:**
+- **Pinning CI to v0.60.3 (D-WORLD-116 C):** not needed; adapted.
+- **Landing on #565:** measured incomplete (no `transitions.ail` fix; version 0.1.1, unpublishable).
+- **`HashRef deriving (Eq)` and `sameRef` in `ensures`:** the first adds a third exported instance and churns `logepoch.ail` (V6); the second is `skipped` on the frozen v0.41.0 (V21).
+- **Calling the M2 `TestCLIRealSubprocessEpisode` red or the merge's `TestSeedRestart…` red this sprint's:** the first passes 5/5 in isolation and in a full re-run; the second is row 259's known flake on a tree identical to a green head.
+
+**Retro:**
+- **A compiler that reports one failure per module hides the rest.** 392's three sites were really four; the designer found the fourth only by fixing and re-running. Measuring the full failure set by iterated fix-and-rerun is now in this doc's V-log; worth the same habit at the next compiler bump.
+- **The quorum blocked twice on measurements, never on direction.** r1 and r2 objections were each answerable by a controller command (V19–V21 took minutes). Instance N of the carve-out; no rule change.
+- **The executor's first M2 gate run was killed by the background-task limit and a second run overlapped the load.** Next executor directive: run `gates.sh` with `GATES_SKIP_VERIFY_GO=1` and let the controller run `verify_go.sh` itself once.
+- **Row 259 reached instance 5.** It stays below the release rows under rule (d); the count is in the row.
+
+**Gate 5 bookkeeping:** the weekly thread rotated — #574 opened with the weekly report, #524 closed with a pointer, `mission-world-gh-issue` = 574 and `-prev` = 524. The weekly external-issue sweep ran: 0 orphans of 1 open issue enumerated (the bookkeeping thread; negative control fired).
+
+**Next:**
+1. Mark: publish `world/core` 0.1.2 (D-WORLD-117; design §7 runbook) — attended.
+2. Row 243 (address-bar verbs): a new design r0 from the rotation designer, then quorum.
+3. Mark's attended exit runs (QUICKSTART §15–§18, A4 design §10) remain runnable; D-WORLD-114/115/116 OPEN with defaults applied.
