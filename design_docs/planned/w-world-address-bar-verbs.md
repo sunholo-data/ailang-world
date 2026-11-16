@@ -104,7 +104,7 @@ follows the tree:
 | phase | what lands | state change from a page? | size (est.) | status |
 |---|---|---|---|---|
 | **V1** | `host/verbs` (tokenizer, verb table, the shared `ParseInterleaved`, `episode report`'s flag set); `GET /surface/verb.json`; the bar runs `episode report`, navigates `approve`, explains the rest | **none** | 1 sprint ≈ 1,750 | **this doc** |
-| V2 | `why <target>` in the bar: the `why` walk (`why.go`, 1,050 lines, V12) behind a reader interface, served in-process | none | 1 sprint ≈ 1,600 | child design r0 |
+| V2 | `why <target>` in the bar: the `why` walk (`why.go`, 1,050 lines, V12) behind a reader interface, served in-process | none | 1 sprint ≈ 1,600 | **child design r0: [`-v2`](w-world-address-bar-verbs-v2.md)** (split V2a ≈ 950 / V2b ≈ 900) |
 | V3 | the verb-approval law: a `world-verb/v1` subject over the canonical argv and the exact prompt bytes, A4's judges (SSHSIG/passkey), credentials schema 9, a card; `episode finish` and `episode start` gain a "confirm on the surface" mode that replaces the typed `y` with a verified key (typed `y` unchanged at a terminal) | only after a verified key | 2–3 sprints ≈ 4,500 | child design r0 + ledger ask (§0.2) |
 | V4 | the host runner: who runs an approved verb's CLI process with no terminal, and the hand-off of an interactive `episode launch` to herdr (`integrations/herdr/ailang-world`, V13) or row 206's agent tab | only after a verified key | 1–2 sprints ≈ 2,000 | child design r0 (Q4) |
 | V5 | readiness for Mark's exit run: QUICKSTART section, the attended script (§10) | none | < 300 | with V4 |
