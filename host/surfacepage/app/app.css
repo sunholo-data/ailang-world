@@ -292,3 +292,8 @@ a.brand:focus-visible { outline: 2px solid var(--hCtl); outline-offset: 2px; }
 .now .run { font: inherit; text-align: left; padding: 0; border: 0; background: none; color: var(--text); cursor: pointer; font-size: 13px; }
 .now .run:hover { text-decoration: underline; }
 .now .run:focus-visible { outline: 2px solid var(--you); outline-offset: 2px; }
+
+/* ---------- After v3: text can be selected and copied (operator, 2026-11-16) ---------- */
+/* v3 sets user-select: none on body, so ids, hashes and paths could not be copied. Controls stay unselectable. */
+body { user-select: text; -webkit-user-select: text; }
+button { user-select: none; -webkit-user-select: none; }
