@@ -1,0 +1,4 @@
+COMPLETE for 10e6b5dc5a02e1142e966c43ab4eb30e418962e8 total=3 bad=1
+go race gate (go test -race, own job): success
+go host build + test gate: failure
+ailang-code verify gate: success
