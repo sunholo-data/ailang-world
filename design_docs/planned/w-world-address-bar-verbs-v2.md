@@ -1,10 +1,13 @@
 # w-world-address-bar-verbs-v2: `why <target>` in the World app's address bar
 
-- **Status**: Planned. Designed in iteration 396, **r0** (unattended designer). Child of
+- **Status**: Planned. Designed in iteration 396, **r1**. r0 (`2562348c`) was **BLOCKED 3/3** at
+  quorum round 1 (gemini-4-argon, oc-glm-5-3, oc-kimi-k3; none disputed the direction). r1 applies
+  the controller-listed fixes and nothing else; changed text is marked **[r1]**; §13.1 records each
+  objection and its answer. Child of
   [`w-world-address-bar-verbs.md`](w-world-address-bar-verbs.md) (r2, reviewed), queue row **243**,
   parent phase **V2**. V1 is **built and landed** (PR #582, merge `fb4d8b89`, judge PASS 91) and is
   the code this design measures, not the V1 plan. This doc carries **five explicit amendments** to
-  the parent (§0.3) and **splits V2 into V2a/V2b** (§0.4, §8): the measured scope is ≈ 1,850 changed
+  the parent (§0.3) and **splits V2 into V2a/V2b** (§0.4, §8): the measured scope is ≈ 1,900 **[r1]** changed
   lines, above the parent's ≈ 1,600.
 - **Authority**: **D-WORLD-107 = A** (the bar accepts operator verbs in the CLI's grammar; the row
   names `why <entry>`), **D-WORLD-109 = A** (the loop builds and judges V2 against fakes and test
@@ -16,8 +19,8 @@
   in-process through V1's `GET /surface/verb.json` — no shell-out, no loopback HTTP, no new route.
   Read-only; no World state changes.
 - **Designer lane**: `claude:claude-opus-5-5`.
-- **Estimated**: **V2a ≈ 950** (the seam: `host/why`, CLI repointed; no user-visible change) and
-  **V2b ≈ 900** (the bar: admission, the in-process getter, the route branch, the page, the V1
+- **Estimated**: **V2a ≈ 970 [r1]** (the seam: `host/why`, CLI repointed; no user-visible change) and
+  **V2b ≈ 930 [r1]** (the bar: admission, the in-process getter, the route branch, the page, the V1
   judge notes) changed lines, `git diff --numstat -- cmd host docs` **with git's default rename
   detection** (§8; W27 shows a whole-file move with renames counts 265, not 2,000). Calibration: V1
   planned 1,750 and landed 1,909 (W28), ≈ 1.09×.
@@ -55,7 +58,10 @@ each measured:
   GET patterns (W5) whose handlers are registered on the daemon's mux (W6). So the interface V2 adds
   is at the **transport**: a `Getter` (one GET path → status and body), which the CLI satisfies with
   its HTTP client and the daemon satisfies by dispatching the same seven handlers in-process (§2.4).
-  The walk then sees byte-identical inputs on both sides by construction.
+  **[r1]** The walk then sees byte-identical inputs on the routes the recorded walk reaches, with
+  one stated exception: `/v1/health` carries a per-request `active` block, so it is compared on the
+  members the answer embeds (§2.1 *Health*; W41). The walk does read health — `buildChain` calls
+  `r.health()` on every walk (`why.go:804`), not only `--expect-store` (`:384`) (W40).
 - **P3 — "the same content" cannot hold past the daemon's read deadline.** The CLI walks under a
   60 s budget (`whyBudget`, W10); the route reads under `d.readCtx`, 10 s (W10). A walk that needs
   more than 10 s cannot answer in the bar; V2 refuses it explicitly (§2.5) — never truncated, never
@@ -186,10 +192,30 @@ type Reader struct {
 Every method of today's `worldReader` (`getJSON`, `entry`, `page`, `object`, `world`, `headIndex`,
 `health`, `record`, `scanEntries`, `locate`, `byWorld`, `scanFor`, `effectRecord`,
 `checkedObject`, `buildChain`) becomes an exported method of `why.Reader` with an unchanged body
-except `r.c.do(r.ctx, GET, p, nil)` → `r.Get(r.Ctx, p)` and `headState(r.ctx, r.c)` → a local
-`r.head()` with `headState`'s exact body (12 lines; `headState` itself stays in cmd for its 8 other
-callers). `http.StatusOK`/`StatusNotFound` become local constants so `host/why` imports no
-`net/http` (VS2).
+except `r.c.do(r.ctx, GET, p, nil)` → `r.Get(r.Ctx, p)` and `headState(r.ctx, r.c)` →
+`Head(r.Ctx, r.Get)`. `http.StatusOK`/`StatusNotFound` become local constants so `host/why` imports
+no `net/http` (VS2).
+
+**[r1] `/v1/head` keeps one implementation.** `why.Head(ctx, get Getter) (ref string, present bool,
+err error)` is `headState`'s body (`mcpclient.go:259-272`) reading through `Getter`, same texts
+(`GET /v1/head returned HTTP %d: %s`). cmd's `headState(ctx, c)` becomes a one-line delegation,
+`return why.Head(ctx, c.get)` (`c.get` = `c.do(ctx, http.MethodGet, p, nil)`), exactly as `elide`
+does. Its 8 non-test call sites outside the walk (`demo_proof.go:204`; `demo_seed.go:98`, `:209`,
+`:699`; `mcpclient.go:305`, `:500`; `episode_report.go:161`; and `why.go:148`, which becomes
+`Head`) and their tests are unedited (W39).
+
+**[r1] Health: what the walk reads, what the answer embeds, and `HealthCache`.** The walk reads
+`/v1/health` once per walk, in `buildChain` (`why.go:804`), and uses exactly two members: it
+compares the entry's `interpreter` with `InterpreterRef`, and when they are equal and non-empty it
+renders **the first line of `InterpreterVersion`** + `, the daemon's pin`; otherwise the fixed
+text `not the daemon's pinned interpreter` (`:808-810`). That string is the `pin` inside the
+`entry` link's detail (both the coordinator and the non-coordinator branch) and nowhere else; the
+`--json` chain carries it only inside that `detail`. No other health member — `db_path`,
+`active`, `started_at`, `credentials_db`, the exec profiles — reaches any answer byte (W40, W41).
+`HealthCache` exists for **`--expect-store` only**: `runWhy` reads health to compare stores
+(`:384`) and stores it (`:389`) so `buildChain` does not read `/v1/health` a second time
+(`health()` returns the cache, `:169-170`). The bar refuses `--expect-store` (§2.3), so in the
+daemon `HealthCache` is always nil and the walk's one health read is the getter's.
 
 **Run** — the CLI front's result half, moved out of `runWhy`:
 
@@ -257,19 +283,22 @@ fresh `FlagSet` (output discarded), in the CLI's order, then the bar profile. Th
 | `sha256:<malformed>` | usage | `refused` + `cli` | `ailang-worldd why: "<arg>" is not a content address: <hashref error>` |
 | `a2a:<id>`, `mcp:<id>` | scans back | **runs** | – |
 | `rest:<id>` | reads the receipt | **runs** (a 400 from `handleReceipt` is the CLI's own `result` exit 1, §2.5) | – |
-| anything else (`x`, `-3`) | usage | `refused` + `cli` | `ailang-worldd why: "<arg>" is not an entry index, head, sha256:<ref>, a2a:/mcp:/rest:<id>, or -` |
+| anything else not starting with `-` (`x`) | usage | `refused` + `cli` | `ailang-worldd why: "x" is not an entry index, head, sha256:<ref>, a2a:/mcp:/rest:<id>, or -` |
 | `--json` | JSON chain | **runs** (`json`) | – |
 | `--scan N`, 1 ≤ N ≤ 5000 | bounded scan | **runs** | – |
 | `--scan N` out of range | usage | `refused` + `cli` | `ailang-worldd why: --scan must be 1..5000` |
 | a second positional | usage | `refused` + `cli` | `ailang-worldd why: unexpected argument "<arg>"` |
-| unknown flag, bad value | usage | `refused` + `cli` | `ailang-worldd why: <flag package error>` |
+| **[r1]** unknown flag (incl. a negative number such as `-3`, which the leading-target rule does not take, `why.go:351`), bad value | usage: the flag package's line, then the help | `refused` + `cli` | the CLI's first stderr line, **without** an `ailang-worldd why:` prefix: `flag provided but not defined: -3`; `--bogus` → `flag provided but not defined: -bogus`; `--scan x` → `invalid value "x" for flag -scan: parse error` (W42) |
 | `-h`, `--help` | prints help | `refused` + `cli` | `see ailang-worldd why --help at a terminal` |
 | `-` | reads stdin | `refused` + `cli` | `why - is not run from the app: the app has no stdin; at a terminal: <cli>` |
 | `--result <file>` | reads a file | `refused` + `cli` | `--result is not run from the app: the app reads no file on the daemon's host; at a terminal: <cli>` |
 | `--expect-store <path>` | compares stores | `refused` + `cli` | `--expect-store is not run from the app: the app reads its own daemon's store; at a terminal: <cli>` |
 
 Order: leading target → parse (help, error) → trailing argument → scan bound → bar profile
-(`--result`, `--expect-store`, `-`, in that order) → `ParseTarget`. Every input is already bounded by
+(`--result`, `--expect-store`, `-`, in that order) → `ParseTarget`. **[r1]** The reason column is
+**provisional**: VA3 generates each usage reason from the real CLI's first stderr line, and on any
+conflict VA3 is authoritative. The rows were re-checked against `parseWhyTarget`'s six error texts
+and a flag-package probe (W42); `-3` moved to the flag row because it is parsed as a flag. Every input is already bounded by
 V1's `Split` (1,024 bytes, 32 words, W32); no further length rule is needed (a `sha256:` target is
 71 bytes, an id is opaque and bounded by the line).
 
@@ -287,15 +316,36 @@ V1's `Split` (1,024 bytes, 32 words, W32); no further length rule is needed (a `
   2. `h, pattern := mux.Handler(req)`; **`pattern == ""` → `err` ("unrouted in-process read"),
      never a 404** — an unregistered path must not read as "absent";
   3. serves into a `boundedRecorder` capped at `why.MaxResponseBytes` (= 8 MiB, the CLI's cap,
-     pinned equal by VW4); overflow → `err` with the CLI's wording `response from <path> exceeds N
-     bytes`;
+     pinned equal by VW4); overflow → `err`. **[r1]** The CLI's text is
+     `fmt.Errorf("response from %s%s exceeds %d bytes", c.base, path, maxClientResponseBytes)`
+     (`cli.go:81`, W15); in-process there is no base URL, so the getter's text is
+     `fmt.Errorf("response from %s exceeds %d bytes", path, why.MaxResponseBytes)`. It is logged
+     only — it never reaches the page, because (c) answers with a fixed reason;
   4. tallies: status 503 → `tally.timeout`; any other status ≥ 500 → `tally.failed`; any `err` →
      `tally.failed` (and `d.writeInternalErrorLog`); returns `(status, body, nil)` otherwise.
 
 The seven handlers run their own `d.readCtx(req)` derived from the walk's context, so every read is
-bounded by the walk's deadline as well as its own. `trackActivityRequests` and the session
-middleware are not traversed: the outer `/surface/verb.json` request is the activity, and none of
-the seven routes is protected (W31).
+bounded by the walk's deadline as well as its own.
+
+**[r1] What the in-process dispatch bypasses, traced.** `Handler()` wraps the mux as
+`trackActivityRequests(SessionMiddleware.Wrap(isProtected, surfaceFontPaths(mux)))`
+(`daemon.go:1157`). Each layer, for the seven GETs:
+- `trackActivityRequests` (`activity.go:78-90`) puts an `activityRequest` in the context under
+  `activityRequestKey{}`; its `done` is set only by `activityResolver.ResolveContext` on a
+  **successful session resolve** (`:97-107`), which runs only inside the session middleware's
+  protected branch;
+- `SessionMiddleware.Wrap` (`middleware.go:48-53`) passes an unprotected request straight to the
+  mux, and `isProtected` is only `POST /v1/commit` (W31) — so for these GETs no resolve happens and
+  the activity state stays empty even on the real HTTP path;
+- `surfaceFontPaths` only diverts `/surface/fonts…` (`surface_fonts.go:30-38`).
+None of the seven handlers reads a context value (0 `Context().Value`/`ctx.Value` in their bodies;
+control: `surface_approve.go:60` reads `http.LocalAddrContextKey` for R2) (W43); they read
+`r.Context()` only through `d.readCtx`, `r.PathValue`, `r.URL.Query()`, and `r.Method`/`r.URL.Path`
+in `writeInternalError`'s log line. The **outer** `/surface/verb.json` request traverses all three
+layers plus `approvalRoute` (R2), so the activity tracker sees exactly one unauthenticated request
+per Enter — the same as it records for `GET /v1/episodes/{e}/report` today. **Planner
+obligation:** VR8 (§6) pins this statically, so a later handler that starts reading
+middleware-injected state fails the build instead of silently reading nil in-process.
 
 ### 2.5 The route's `why` branch and its outcome precedence (V2b)
 
@@ -314,13 +364,16 @@ the seven routes is protected (W31).
 | b | `ctx.Err() == DeadlineExceeded` **or** `tally.timeout` | `refused` + `cli` | `read deadline (10s) exceeded: the walk did not finish in the app; at a terminal it has 60 s: <cli>` |
 | c | `tally.failed` | `refused` + `cli` | `the daemon could not read World during the walk, so no chain is shown; at a terminal: <cli>` (no raw error; the handlers and the getter logged it) |
 | d | `ans` has both or neither of `Stdout`/`Stderr`, or `Exit ∉ {0,1,3}`, or `Stderr` with `Exit ≠ 1` | `refused` + `cli` | `the walk answered something the app cannot show; at a terminal: <cli>` |
-| e | `len(Stdout)+len(Stderr) > MaxVerbAnswerBytes` (1 MiB) | `refused` + `cli` | `the answer is <n> bytes, over the app's 1 MiB cap; at a terminal: <cli>` |
-| f | otherwise | `result` + `cli` | `Exit 0/3` → `text` (or `json` with `--json`) = `Stdout`, `exit` = 3 when 3; `Exit 1` → `stderr` = `Stderr`, `exit: 1` |
+| f | otherwise | `result` + `cli` | `Exit 0/3` → `a.Text` (or `a.JSON` with `--json`) = `ans.Stdout`, `a.Exit` = 3 when 3; `Exit 1` → `a.Stderr` = `ans.Stderr`, `a.Exit = 1` |
+| e **[r1]** | in `handleSurfaceVerb`'s **deferred writer**, whenever `a.Outcome == "result"`: `len(a.Text)+len(a.JSON)+len(a.Stderr) > MaxVerbAnswerBytes` (1 MiB) | `refused` + `cli`; `a.Text`, `a.JSON`, `a.Stderr` cleared and `a.Exit = 0` | `the answer is <n> bytes, over the app's 1 MiB cap; at a terminal: <cli>` |
 
 (b) precedes (c) because a deadline surfaces as 503s and as context errors inside the walk; both
 precede (f) because P4/P5 would otherwise print a deadline as "not found" or a read failure as ✗.
-The A2 cap (e) is applied **once, in the deferred writer**, to every `result` answer (episode
-report's too), so no `result` of any verb leaves the route unbounded.
+**[r1]** The A2 cap (e) is not part of `verbWhy`: it runs **once, in `handleSurfaceVerb`'s
+deferred writer** (`surface_verb.go:45`), on the `verbAnswer` fields that exist there — `Text`,
+`JSON`, `Stderr` (strings) and `Exit` (int); the struct has no `Stdout` (W44). It therefore covers
+`why` and `episode report` uniformly and references no `why.Answer` field; (d) and (f) are the only
+rows that read `why.Answer`.
 
 ### 2.6 The page (V2b)
 
@@ -378,6 +431,10 @@ row, class `read`) → §2.5. Page: `goWith` → `askVerb` (15 s) → `verbOutco
 | an Enter during `goAddress`'s `await loadIndex()` | – | the older `openState` is skipped | no — **fixed** (A4) |
 | `world why` | `address` (V1 step 3) | brane `why` | yes (only path that navigates) |
 
+**[r1]** The quoted stderr texts in this table are read from `why.go` (`locate`, `byWorld`,
+`runWhy`), not run; `rest:x`'s state word is whatever the receipt holds (`receipt %s is %s: nothing
+committed`, `why.go:457-458`). VE1 generates them from the real CLI and is authoritative.
+
 No `why` answer, success or failure, reaches `addressTarget`: the only navigation is a 200,
 schema-valid `outcome:"address"` (V1, unchanged), and `Lookup` gives `why` no address class.
 
@@ -409,8 +466,10 @@ schema-valid `outcome:"address"` (V1, unchanged), and `Lookup` gives `why` no ad
 1. **Same walk.** The CLI and the route both call `why.Run` (one function); the CLI's `runWhy`
    writes `Answer.Stdout`/`Stderr` verbatim and returns `Answer.Exit`.
 2. **Same inputs.** The walk's bytes come from the same seven handler methods, read through the same
-   `d.reads`; the CLI gets them over HTTP, the bar in-process (VR4 compares the two transports'
-   bytes per route).
+   `d.reads`; the CLI gets them over HTTP, the bar in-process. **[r1]** They are byte-identical on
+   the routes the recorded walk reaches; `/v1/health` is compared on the members the answer embeds
+   (`interpreter_ref`, `interpreter_version`'s first line), because its `active` block is
+   per-request and never reaches an answer (§2.1 *Health*; VR4).
 3. **Same parse.** `WhyFlags`, `WhyLeadingTarget`, `WhyTrailingTarget`, `WhyScanOK` and
    `ParseTarget` are called by both; the bar differs only by the named profile of §2.3.
 4. **Never silent.** Every non-`f` row of §2.5 is a `refused` with the CLI line; no `why` answer is
@@ -438,6 +497,8 @@ never typed.
 - **VW3** `Getter` classes: a getter returning 404 for `/v1/objects/…` → "does not resolve"; one
   returning `err` → the CLI's `ailang-worldd why: <err>` line. Kills: a 404 treated as an error;
   an error treated as absent.
+- **VW5 [r1]** one `/v1/head`: cmd's `headState` body is a single `return why.Head(…)` statement
+  (AST), and `TestWhy*`'s `head` target still passes unedited. Kills: a second `/v1/head` reader.
 - **VW4** constants: `why.MaxResponseBytes == maxClientResponseBytes`, `why.ScanDefault == 500`,
   `why.ScanMax == 5000`, `why.ElideAt == 160` (literals, so a constant changed on both sides fails).
   Kills: a drifted cap.
@@ -468,28 +529,39 @@ never typed.
 - **VR3** read failure (c): `d.reads` wrapped to fail the Nth `GetObject` (the `aguiFailReads`
   pattern) for N in {first, mid-chain, the effect record's} → the (c) reason; the response body
   contains no store error text. Kills: (c) deleted (a ✗ chain shown); (c) after (f).
-- **VR4** transport parity: for every path the walk rig's walk requests (recorded by a proxy
-  around `whyRun`), the in-process getter's `(status, body)` equals `Handler()`'s over HTTP, byte
-  for byte (health compared on `interpreter_ref`/`interpreter_version` only: its `active` block is
-  per-request). Kills: a private mux bound to a different handler.
+- **VR4 [r1]** transport parity: for every path the walk rig's walk requests (recorded by a proxy
+  around `whyRun` over all of VE1's target forms), the in-process getter's `(status, body)` equals
+  `Handler()`'s over HTTP **byte for byte for every recorded path except `/v1/health`**, which is
+  compared on `interpreter_ref` and `interpreter_version` — the members the answer embeds (§2.1).
+  Kills: a private mux bound to a different handler.
 - **VR5** unrouted and oversize: a getter call for `/v1/session/self` and `/v1/nowhere` → `err`
   (not 404); a stub handler writing 8 MiB + 1 → `err`. Kills: unrouted read as absent; the cap
   removed.
-- **VR6** `whyReadRoutes` equals the set of patterns the recorded walk reaches (VR4's proxy log,
-  generated) and is a subset of `Handler()`'s GET patterns. Kills: a route added to the private
-  mux beyond the walk's needs.
-- **VR7** the A2 cap: a `result` over 1 MiB (a replay `Getter` returning a large worktree delta
-  under `--json`) → (e); exactly 1 MiB → `result`. Applies to `episode report` too (one row).
-  Kills: the cap removed or applied only to `why`.
+- **VR6 [r1]** `whyReadRoutes` equals the set of mux patterns that VR4's **recorded** requests
+  resolve to (each recorded path mapped through `Handler()`'s mux; the expected set is generated,
+  never typed), and is a subset of `Handler()`'s GET patterns. The recording must include a `rest:`
+  target, a `head` target, a `sha256:` world ref and a scan, so every pattern of W40's call graph is
+  exercised; a pattern in `whyReadRoutes` that no recorded request reaches fails the test. Kills: a
+  route added to the private mux beyond the walk's needs; a walk route missing from it.
+- **VR7 [r1]** the A2 cap, in the deferred writer: a `why` `result` whose
+  `len(a.Text)+len(a.JSON)+len(a.Stderr)` is 1 MiB + 1 (a replay `Getter` returning a large
+  worktree delta under `--json`) → `refused` + `cli`, `text`/`json`/`stderr`/`exit` absent from the
+  body; exactly 1 MiB → `result`. One `episode report` row over the cap the same way. Kills: the cap
+  removed; applied only to `why`; measured on `text` alone; leaving the members in the refusal.
+- **VR8 [r1]** middleware independence (§2.4): an AST check that the seven handler methods in
+  `whyReadRoutes` contain no `Context().Value`, `ctx.Value` or `activityRequestKey` reference
+  (control: `approvalRoute`'s `LocalAddrContextKey` read is found by the same instrument). Kills: a
+  walk handler that starts reading middleware state, which the in-process path would silently miss.
 - **VS2** `surface_verb_why.go`'s imports and `d.*` calls are exact sets (§4 T1); VS1's
   `surface_verb.go` call set gains only `verbWhy`. Kills: a write or spawn added.
 
 **The bar's output is the CLI's (`cmd/ailang-worldd`, generated)**
 - **VE1** on `newWalkRig`: for `3`, `head`, `head --json`, every `sha256:` kind of
   `TestWhyTargetFormsResolveToOneEntry`, an `a2a:` and an `mcp:` id, `999`, and an exhausted
-  `--scan 1`, run the real CLI and the route against the same daemon; assert `text`/`json` ==
-  stdout, `stderr` == stderr, `exit` == the exit code. Kills: the renderer forked; the JSON
-  re-marshalled.
+  `--scan 1`, **[r1]** plus a `rest:` receipt (usage rows are VA3's), run the real CLI and the
+  route against the same daemon; assert `text`/`json` == stdout, `stderr` == stderr, `exit` == the
+  exit code (whole answers, byte for byte: health enters them only through `pin`, which both paths
+  render from the same handler). Kills: the renderer forked; the JSON re-marshalled.
 - **VE2** exit 3 parity: a store fixture whose committed record disagrees with its entry header
   (planner obligation: a `makeCLICommit`-built entry the commit route accepts; if the store refuses
   every such fixture, run VE2 in `host/daemon` with a tampering `d.reads` wrapper and the expected
@@ -555,13 +627,14 @@ note 5, Escape half).
 | sprint | milestone | content | est. changed lines |
 |---|---|---|---|
 | V2a | M1 | `git mv` + host/why edits (exports, `Getter`, `Run`, `ParseTarget`, `Elide`) | ≈ 410 (rename-paired) |
-| V2a | M2 | `why_cli.go` (front + compatibility layer), `mcpclient.go`, tests moved | ≈ 260 |
-| V2a | M3 | `WhyFlags` & friends + CLI use; VW1–VW4, VA1, VS2a | ≈ 280 |
+| V2a | M2 | `why_cli.go` (front + compatibility layer), `mcpclient.go` (`elide`, **[r1]** `headState` delegations), tests moved | ≈ 270 |
+| V2a | M3 | `WhyFlags` & friends + CLI use; VW1–VW5, VA1, VS2a | ≈ 290 |
 | V2b | M4 | `AdmitWhy`, the `why` row, VA2–VA3, VB6–VB7 | ≈ 170 |
-| V2b | M5 | the getter, `verbWhy`, the A2 cap; VR1–VR7, VS2 | ≈ 400 |
+| V2b | M5 | the getter, `verbWhy`, the A2 cap; VR1–VR8, VS2 | ≈ 430 |
 | V2b | M6 | VE1–VE3, the page (A2–A4), VP7–VP11, XV2, QUICKSTART | ≈ 330 |
 
-V2a ≈ 950, V2b ≈ 900, together ≈ 1,850 (× 1.09 ≈ 2,015). **The cut** if V2a over-runs: M3's tests
+**[r1]** V2a ≈ 970, V2b ≈ 930, together ≈ 1,900 (× 1.09 ≈ 2,070); r1 added ≈ 50 (VW5, the
+`headState` delegation, VR8, the VR6/VR7 widenings). **The cut** if V2a over-runs: M3's tests
 before M3's CLI repointing (the repointing is behaviour-neutral and can ride V2b). **If rename
 pairing is lost** (git pairs a rename only above 50 % similarity), M1 counts ≈ 1,700 on its own; the
 planner then keeps host/why's diff from the original minimal (no reflow, no comment rewrites).
@@ -595,7 +668,7 @@ planner then keeps host/why's diff from the original minimal (no reflow, no comm
 
 ## 11. Open questions (each with the default the loop applies)
 
-- **Q1. One sprint or two?** The measured scope is ≈ 1,850 (≈ 2,015 calibrated), over the parent's
+- **Q1. One sprint or two?** The measured scope is ≈ 1,900 (≈ 2,070 calibrated) **[r1]**, over the parent's
   1,600 and at the ~2,000 cap. Default: **two sprints, V2a then V2b**, as §8. A planner whose
   compiled patches measure ≤ 1,900 for both may ask the controller to run them as one.
 - **Q2. Should the bar's `--scan` be capped below 5,000 to fit 10 s?** Default: **no** — the same
@@ -610,11 +683,26 @@ planner then keeps host/why's diff from the original minimal (no reflow, no comm
 - Not running `why --result`, `why -` or `--expect-store` from the bar; not reading a file on the
   daemon host.
 - Not adding a route, a POST, a store write, a process, a key path, or any `.ail`.
-- Not changing the CLI's output, exit codes or wording (RV3), nor `headState`, nor `/v1`.
+- Not changing the CLI's output, exit codes or wording (RV3), nor `/v1`; **[r1]** `headState`'s
+  behaviour is unchanged (its body moves to `why.Head`, §2.1).
 - Not moving the CLI's other World readers (`provenance`, `log tail`, `demo`) into host/why.
 - Not designing V3–V5.
 
 ## 13. Verification Log
+
+### 13.1 Quorum r1 (BLOCKED 3/3 on r0 `2562348c`) and the r1 revision
+
+| reviewer | objection | r1 change |
+|---|---|---|
+| gemini-4-argon | the A2 cap measures `Stdout`/`Stderr`, which do not exist where it runs | §2.5 row (e) and its paragraph, VR7: the cap is `len(a.Text)+len(a.JSON)+len(a.Stderr) > MaxVerbAnswerBytes` in `handleSurfaceVerb`'s deferred writer whenever `a.Outcome == "result"`; it clears `Text`/`JSON`/`Stderr`/`Exit` and answers `refused` + `cli`; no `why.Answer` field is referenced (W44) |
+| oc-glm-5-3 | `/v1/head` forked into two implementations | §2.1: `why.Head` holds `headState`'s body; cmd's `headState` is a one-line delegation (as `elide`); its 8 other call sites unedited; VW5 (W39) |
+| oc-glm-5-3 (a) | the in-process dispatch bypasses `trackActivityRequests` and the session middleware untraced | §2.4: each layer traced; for the seven unprotected GETs the activity state is never set on the HTTP path either; no walk handler reads a context value; the outer request is the one recorded; VR8 pins it (W43) |
+| oc-glm-5-3 (b) | §2.3/§2.7 typed reasons not checked against the CLI | §2.3 reasons re-checked against `parseWhyTarget` and a flag-package probe; the flag row corrected (no `ailang-worldd why:` prefix); the column marked provisional with VA3 authoritative; §2.7 stderr texts marked read-not-run with VE1 authoritative (W42) |
+| oc-glm-5-3 (c) | §2.4 misquotes `cli.go:81` | quoted exactly (`"response from %s%s exceeds %d bytes", c.base, path, …`); the in-process text stated; logged only (W15) |
+| oc-kimi-k3 | the route census is asserted, not traced; `HealthCache` unexplained | W40 traces the walk's call graph and every health/head/`getJSON` site; §2.1 *Health* states what the walk reads (once per walk, `buildChain`), what the answer embeds (`pin` only: `InterpreterRef` equality and `InterpreterVersion`'s first line) and why `HealthCache` exists (`--expect-store` only; nil in the daemon); §0.1 P2, §5.2, VR4, VR6, VE1 reworded to "byte-identical on the recorded routes; health on the embedded members"; VR6's set generated from the recording. Kimi's premise that only `--expect-store` reads health is corrected: `buildChain` reads it on every walk (W40) |
+| oc-kimi-k3 | `-3` is in the wrong §2.3 row | moved to the unknown-flag row with the CLI's real text `flag provided but not defined: -3` (W42) |
+
+Size (§8): +≈ 50 lines (VW5, the delegation, VR8, the VR6/VR7 widenings); the split stands.
 
 All commands ran in `/Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter396-row243-v2`
 at `200ea5d5` on 2026-11-16 (zsh; output trimmed), except W27 (scratch repo, stated).
@@ -659,3 +747,9 @@ at `200ea5d5` on 2026-11-16 (zsh; output trimmed), except W27 (scratch repo, sta
 | W36 | the V1 judge notes handed to V2 | `sed -n 1859p design_docs/world-mission-log.md` | `Non-blocking, logged here and handed to V2 …: (1) a never-verb's refusal text can lose its CLI line unchecked; (2) an empty submit does not supersede a pending ask … plus X-JS-FINALLY-NULL …; (3) MaxWords not pinned apart from its constant; (4) a result answer without cli is accepted by the page; (5) Escape-closes-panel and Enter refocus untested; (6) … start:/uncommitted intents: … untested; (7) the exact 256-byte episode boundary untested; (8) … RS-SAY` |
 | W37 | V1's page tests use `why` as the terminal example | `grep -n "'why'" host/surfacepage/app_verb_test.go \| cut -c1-90` | `106: for (const q of ['why', 'episode finish w1 --preset p'])` (terminal); `129:` VP2 inputs; `138: { ...B('why'), cli: '' }`; `145`, `149`; `161: … app.askVerb('why', rig(golden('why')))` |
 | W38 | the walk rig and its daemon (for VE1) | `grep -n "func newWalkRig" -A9 cmd/ailang-worldd/why_test.go` | `52: func newWalkRig(t *testing.T) *walkRig { … daemon.New(…) … srv := httptest.NewServer(d.Handler())` |
+| W39 **[r1]** | `headState`'s definition and its non-test call sites | `grep -n "^func headState" cmd/ailang-worldd/mcpclient.go`; `grep -n "headState(" cmd/ailang-worldd/*.go \| grep -v _test \| grep -v "func headState"` | `259: func headState(ctx context.Context, c *client) (ref string, present bool, err error) {` (body to `:272`); `demo_proof.go:204`, `demo_seed.go:98`, `:209`, `:699`, `mcpclient.go:305`, `:500`, `episode_report.go:161`, `why.go:148` |
+| W40 **[r1]** | the walk's call graph: every health/head/`getJSON` read | `grep -n "r\.health()\|r\.headIndex()\|r\.getJSON(\|r\.c\.do(\|headState(\|h\.InterpreterRef\|h\.InterpreterVersion\|healthCache" cmd/ailang-worldd/why.go`; control `grep -c '"/v1/' …/why.go` | `95: healthCache *healthInfo`; `103: r.c.do(…)` (getJSON, the one transport); `122` `/v1/log/{i}` (entry); `130` `/v1/log?from&limit` (page); `136` `/v1/objects/{ref}?payload=true` (object); `142` `/v1/worlds/{ref}` (world); `148: headState(r.ctx, r.c)` (headIndex); `169-170` cache; `173` `/v1/health`; `384: h, err := r.health()` + `389: r.healthCache = &h` (`--expect-store`); `440: r.headIndex()` (locate `head`); `454` `/v1/receipts/{id}` (locate `rest:`); `553: r.headIndex()` (scanFor); `804: h, err := r.health()` (buildChain, every walk); `809: if e.Header.Interpreter == h.InterpreterRef && h.InterpreterRef != ""`; `810: pin = … SplitN(h.InterpreterVersion, "\n", 2)[0] + ", the daemon's pin"`; control `6`. Graph: `Run`→`locate`→{`entry`, `headIndex`→`head`+`world`, `getJSON` receipts, `object`, `byWorld`→`world`+`entry`, `scanFor`→`headIndex`, `scanEntries`→`page`+`record`→`object`}; `Run`→`buildChain`→{`health`, `record`, `world`, `checkedObject`→`object`, `effectRecord`→`object`} |
+| W41 **[r1]** | `pin` is the only place health reaches an answer | `sed -n 802,822p cmd/ailang-worldd/why.go`; `grep -n "pin" …/why.go` | `pin := "not the daemon's pinned interpreter"`; `:810` the first-line form; `entryLine := fmt.Sprintf("#%d writtenBy %s prev %s transitionFn %s interpreter %s (%s)", …, pin)` used by both the non-coordinator `entry` link and the coordinator `entry` link; no other `h.` member is read |
+| W42 **[r1]** | the CLI's usage texts: `parseWhyTarget` and the flag package | `sed -n 304,340p cmd/ailang-worldd/why.go \| grep -n "errors.New\|fmt.Errorf"`; `grep -n 'Fprintf(stderr, "ailang-worldd why: %v\\n%s"' …`; `grep -n 'fs.SetOutput(stderr)\|fs.Usage = func() {}' …`; probe `/tmp/v2flagprobe/main.go` (a `FlagSet` with why's four flags, `ContinueOnError`, `Usage` empty), `GOTOOLCHAIN=local go run .` (go1.26.4) | `give either a target or --result, not both`; `read --result %s: %v`; `a target is required`; `read stdin: %v`; `%q is not a content address: %v`; `%q is not an entry index, head, sha256:<ref>, a2a:/mcp:/rest:<id>, or -`; `377: "ailang-worldd why: %v\n%s"` (err + help); `355: fs.SetOutput(stderr)`, `356: fs.Usage = func() {}`; probe: `["-3"] -> flag provided but not defined: -3`; `["--bogus"] -> flag provided but not defined: -bogus`; `["--scan" "x" "head"] -> invalid value "x" for flag -scan: parse error`; `["--help"] -> err=flag: help requested` (nothing printed) |
+| W43 **[r1]** | the middleware the in-process dispatch bypasses; no walk handler reads a context value (negative, with control) | `sed -n 70,110p host/daemon/activity.go`; `sed -n 1157p host/daemon/daemon.go`; `grep -n "func (m \*SessionMiddleware) Wrap" -A6 host/daemon/middleware.go`; `grep -n "func (d \*Daemon) surfaceFontPaths" -A9 host/daemon/surface_fonts.go`; `awk` over `handlers.go`+`daemon.go` printing any `Context().Value\|ctx.Value` inside `handle(Health\|Head\|World\|Object\|LogEntry\|LogRange\|Receipt)`; control `grep -c "Context().Value" host/daemon/surface_approve.go` | `78: func trackActivityRequests(…)` → `88: context.WithValue(r.Context(), activityRequestKey{}, state)`; `97: func (r activityResolver) ResolveContext` → `100: if state, ok := ctx.Value(activityRequestKey{})…` only `if err == nil && out.Success != nil`; `1157: return trackActivityRequests(NewSessionMiddleware(…).Wrap(d.isProtected, d.surfaceFontPaths(mux)))`; `Wrap`: `if !protected(r) { mux.ServeHTTP(w, r); return }`; fonts: diverts only `/surface/fonts…`; handlers: *(no output)*; control `1` (`surface_approve.go:60`, `http.LocalAddrContextKey`) |
+| W44 **[r1]** | `verbAnswer` has `Text`, `JSON`, `Stderr`, `Exit` and no `Stdout` (negative, with control) | `sed -n 18,32p host/daemon/surface_verb.go \| grep -n "Text\|JSON \|Stderr\|Exit\|Stdout"`; `grep -c Stdout host/daemon/surface_verb.go` | `Text string json:"text,omitempty"`, `JSON string json:"json,omitempty"`, `Stderr string json:"stderr,omitempty"`, `Exit int json:"exit,omitempty"` (control: the instrument finds the fields); `0` |
