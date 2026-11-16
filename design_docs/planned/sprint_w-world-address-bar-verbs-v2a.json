@@ -1,0 +1,154 @@
+{
+  "sprint_id": "w-world-address-bar-verbs-v2a",
+  "design_doc": "design_docs/planned/w-world-address-bar-verbs-v2.md",
+  "design_revision": "r1 (quorum r1 BLOCKED 3/3 -> r1 -> quorum r2 PROCEED 3/3; independent audit PASS 84, 0 blocking; iteration 396; not reopened)",
+  "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v2a-sprint-plan.md",
+  "base_commit": "18d30a17a058e9adad71c42b6078b538374378d7",
+  "design_measured_at": "200ea5d5b7c2944e561feeff16a4b2b3042333d1 (git diff --stat 200ea5d5 18d30a17 -- cmd host docs: empty; plan §1.2 C2)",
+  "queue_row": 243,
+  "iteration": 397,
+  "phase": "V2",
+  "sprint": "V2a (the seam)",
+  "sprint_number": 1,
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter397-row243-v2a",
+  "branch": "sprint/world-iter397-row243-v2a",
+  "authority": [
+    "D-WORLD-107 = A",
+    "D-WORLD-109 = A (test stores/keys only)",
+    "D-WORLD-89 R1-R5 untouched (no POST, write or key path)"
+  ],
+  "behaviour": "neutral for the CLI; the bar's why stays terminal; no route, page, /v1, .ail or user-visible change",
+  "cut": {
+    "cap_loc": 1300,
+    "measure": "git diff --numstat <base> HEAD -- cmd host docs (insertions + deletions), git's default rename detection (diff.renames unset)",
+    "measured": 1299,
+    "margin": 1,
+    "fired": "yes: design §2.2 (WhyFlags & friends in host/verbs, the CLI's use, VA1) moves to V2b whole (plan V2a-D2); M3's tests (VW2-VW5, VS2a) stay",
+    "next_cut_if_needed": "M3t's TestHeadAndGetJSONClasses; never VC1, VW2 or VW3"
+  },
+  "planner_decisions": {
+    "V2a-D1_sub_milestones": "M0 (VC1 characterisation pin, at the base), M12 (design M1+M2, atomic: neither half compiles alone), M3t (design M3's tests)",
+    "V2a-D3_audit_input_1": "sum -> why.Sum delegation and whyTarget kept as a cmd struct converted in the locate delegation; demo_seed.go unedited",
+    "V2a-D4_audit_input_2": "why_input_test.go moved (package line; elide(p) -> Elide(p) at lines 31, 58); why_protected_test.go split: 18 pure subtests + TestWhyProtectedJSON -> host/why (whyLink -> Link, a copy of mustJSONT); both e2e subtests (e2e-exec, e2e-tampered) stay in cmd byte for byte",
+    "V2a-D5_audit_input_3": "clientGetter(c *client) why.Getter closure in why_cli.go; cli.go (c.get at :94) unedited",
+    "V2a-D6_audit_input_7": "headState: 8 call lines = 7 + why.go:148 (-> Head(r.Ctx, r.Get) in host/why); VS2a pins DIRECT imports only, host/store is transitive via host/broker/host/coordinator; size from the real patch",
+    "V2a-D7_defined_types": "entryWire/worldWire are defined types (not aliases): vet's composites check refuses another package's unkeyed literal (demo_seed.go:804,807; demo_test.go:1864,1866)",
+    "V2a-D8_delegations": "13, not 15: byWorld and scanFor have no caller outside the walk",
+    "V2a-D9_elideAt": "removed from cmd (no use besides elide)",
+    "V2a-D10_characterisation": "VC1 TestWhyCharacterisedPaths: 11 CLI paths no existing test drove (base coverage), golden generated at the base, deterministic (3 runs)"
+  },
+  "scope": [
+    "host/why: the walk moved from cmd/ailang-worldd/why.go (git-paired rename) behind Getter; Reader, Head, Target, ParseTarget, Options, Answer, Run, Elide, ElideAt, Sum, SumJSON, ScanDefault, ScanMax, LogPageMax, MaxResponseBytes",
+    "cmd/ailang-worldd/why_cli.go: the CLI front (help, flags, --result/- reads, --expect-store) + the compatibility layer",
+    "mcpclient.go: headState -> why.Head, elide -> why.Elide one-line delegations",
+    "tests: VC1 (pinned to the base), VW1 (moved tests), VW2-VW5, VS2a, ParseTarget/Head/GetJSON classes, Elide bounds (checked against the base's elide)"
+  ],
+  "executor_lane": "as routed by the controller; one run: M0, M12, M3t; apply patches, never retype",
+  "executor_form": "every sub-milestone is a unified diff in the plan's Appendix P (whole-file deletions + creations, no rename headers), applied with /usr/bin/patch -p1 -E after --dry-run, extracted with plan §2's awk; acceptance = plan §3's accept.sh arm",
+  "estimate_loc": {
+    "production": 786,
+    "test": 513,
+    "docs": 0,
+    "total_cumulative": 1299,
+    "cmd_host_only": 1299,
+    "measure": "insertions + deletions after a commit of each scratch stage; the rename-paired why.go counts 233+285"
+  },
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "VC1 TestWhyCharacterisedPaths + testdata/why-characterise.golden.jsonl (generated at the base)",
+      "production": 0,
+      "test": 77,
+      "docs": 0,
+      "expected_cumulative_numstat": 77,
+      "run": 1
+    },
+    {
+      "id": "M12",
+      "title": "the move: host/why/why.go (rename-paired 233 285), why_cli.go, mcpclient.go delegations, why_input_test.go moved, why_protected_test.go split",
+      "production": 786,
+      "test": 176,
+      "docs": 0,
+      "expected_cumulative_numstat": 1039,
+      "expected_rename_lines": [
+        "233\t285\t{cmd/ailang-worldd => host/why}/why.go",
+        "3\t3\t{cmd/ailang-worldd => host/why}/why_input_test.go"
+      ],
+      "run": 1
+    },
+    {
+      "id": "M3t",
+      "title": "VW2 TestWhyRunReplaysTheCLI, VW3 TestWhyRunGetterClasses, VW4 TestWhyConstantsMatchTheCLI, VW5 TestWhyHeadIsOneReader; VS2a TestWhyImportsNoEffect, TestParseTargetForms, TestHeadAndGetJSONClasses, TestElideBounds",
+      "production": 0,
+      "test": 260,
+      "docs": 0,
+      "expected_cumulative_numstat": 1299,
+      "run": 1
+    }
+  ],
+  "design_premises_found_false": [
+    "P1 unkeyed literals compile but fail go vet (composites)",
+    "P2 audit input 2 missed e2e-tampered (:96,100,107)",
+    "P3 15 delegations -> 13",
+    "P4 elideAt constant alias unused",
+    "P5 entryWire/worldWire aliases -> defined types",
+    "P6 macOS patch leaves deleted files as 0 bytes without -E",
+    "P7 M1 estimate 410 / W27 56 209 -> measured 233 285; V2a 1,299 vs 970",
+    "P8 VW2/VW3 need cmd's rig -> why_seam_test.go",
+    "P9 a deadline from the getter prints 'not found' (kept; VW3 pins it)",
+    "P10 W35 '9' counts the definition",
+    "P11 Run's lines are :397-421"
+  ],
+  "existing_tests_edited": {
+    "cmd/ailang-worldd/why_input_test.go": "moved to host/why: package line; elide(p) -> Elide(p) at lines 31, 58 (the moved, exported name); no assertion changed",
+    "cmd/ailang-worldd/why_protected_test.go": "split: pure subtests + TestWhyProtectedJSON moved to host/why/why_protected_test.go (whyLink -> Link); the two e2e subtests unchanged in place (+1 comment line, -65)"
+  },
+  "files_outside_design_section_7": [
+    "cmd/ailang-worldd/why_seam_test.go",
+    "cmd/ailang-worldd/why_characterise_test.go",
+    "cmd/ailang-worldd/testdata/why-characterise.golden.jsonl",
+    "host/why/why_protected_test.go (split, not moved)"
+  ],
+  "not_touched": [
+    "cmd/ailang-worldd/cli.go",
+    "cmd/ailang-worldd/demo_seed.go",
+    "host/verbs/*",
+    "host/daemon/*",
+    "host/surfacepage/*",
+    "world/*.ail",
+    "packages/**",
+    "scripts/**",
+    "tools/launchd/*",
+    "cmd/world-publish/*"
+  ],
+  "ci_change": "none",
+  "sprint_gates": "plan §6 gates.sh (status, verify_ail, gofmt, build, vet, fence, pkgs, race, inv, verify_go), after the last commit, writes gates/ALL_DONE.<sha>",
+  "mutants": {
+    "ledger": "~/.ailang/state/world-iter397/plan-scratch/logs/mutant_ledger.tsv",
+    "rows": 72,
+    "by_expectation": {
+      "CTL": 2,
+      "K": 63,
+      "S": 3,
+      "E": 2,
+      "N": 1,
+      "Kw": 1
+    },
+    "as_expected": 72,
+    "not_as_expected": [],
+    "not_run": []
+  },
+  "roundtrip": "plan §1.2 C17: ROUNDTRIP_IDENTICAL_TO_STAGE_TREE (patches extracted from the plan, cmp-equal, patch -p1 -E, numstat 77 / 1039 / 1299, both rename lines)",
+  "executor_directives": "plan §7: no git writes; patch -p1 -E only; never nohup, never background a test leg, 600000 ms timeout on long calls; cumulative snapshots vs the base to ~/.ailang/state/world-iter397/snap/<M>/ with DELETED and MANIFEST.sha256",
+  "acceptance_criteria_ref": "plan §9 (12 criteria)",
+  "operator_after_sprint": "nothing new by design: ailang-worldd why prints the same bytes and exits; the bar's why stays terminal",
+  "residuals": [
+    "RS-REST: resolved rest: receipt arm (V2b VE1)",
+    "HeadIndex 'selected head has no world row' / ScanFor 'no head'",
+    "ScanEntries forward page cap",
+    "the CLI's --scan upper bound value (W-SCANMAX: VW4 literal only)",
+    "design RV3 (CLI keeps P4/P5)"
+  ],
+  "v2b_section_2_2_measured_loc": 111,
+  "next_sprint": "V2b: design §2.2 (WhyFlags & friends + CLI repoint + VA1, moved here), AdmitWhy, the daemon's in-process getter, the route's why branch + A2 cap, the page (A2-A4), V1 judge-note tests, XV2, QUICKSTART §19; audit inputs 4-6"
+}
