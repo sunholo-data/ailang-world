@@ -1,6 +1,12 @@
 # w-world-address-bar-verbs: operator verbs in the World app's address bar, one parser with the CLI
 
-- **Status**: Planned. Designed in iteration 394, **r1** **[r1]** (unattended designer). r0
+- **Status**: Planned. Designed in iteration 394, **r2** **[r2]** — r2 by the controller's
+  **narrow-refinement carve-out**: quorum round 2 BLOCKED 3/3 on two narrow surfaces (bare/unknown
+  `episode` forms falling through to navigation — oc-glm-5-3 and oc-kimi-k3 independently; the
+  page's fetch having no deadline — gpt6-1-sol and oc-glm-5-3), every objection carrying a
+  reviewer-authored fix and none disputing the direction; r2 applies those fixes in the reviewers'
+  own words, marked **[r2]**, with the controller's measurements for the rows they ask for (§15
+  Round 2). r1 (unattended designer, `15070038`) follows. r0
   (committed `ad144327`) was **BLOCKED** at quorum round 1, 3/3 REJECT (oc-glm-5-3, oc-kimi-k3,
   gpt6-1-sol; none disputed the direction). r1 applies the three fixes the controller adopted and
   nothing else; every changed passage is marked **[r1]**; §15 records each objection and its answer:
@@ -244,7 +250,18 @@ classification (traced in §2.4):
 | **[r1]** `commit`, `outcome`, `call`, `demo` | **other** (writes World) | refused: "`<verb>` is a CLI command the app does not run; at a terminal: `<line>`" | they write World with a session credential (`commit` = `POST /v1/commit`; `outcome record`; `call` = MCP `tools/call` on `/mcp/`; `demo seed --db --session`, main.go:109, :164, V33); none has a key-approval path, so none may ever run from a page before V3's law, and none is an operator verb |
 | **[r1]** `doctor`, `head`, `health`, `help`, `hosts`, `log`, `object`, `preset`, `profile`, `provenance`, `registry`, `surface-index`, `tools`, `version`, `whoami` | **other** (reads or local tooling) | refused, same text | not an operator verb (D-WORLD-107's list is start, launch, finish, approve, report; the row adds why) |
 
-5. anything else → `class=address` (the page's existing `parseAddress` path).
+4b. **[r2]** First-word seizure for incomplete or unknown verb forms (oc-kimi-k3's text; it also
+   answers oc-glm-5-3's identical objection, whose reason string lists the same four
+   subcommands): "if the first word is any verb recognized by the table (`why`, `episode`,
+   `approve`, the five never words, the nineteen other words, or `world`) but no row in step 4
+   matched, answer class=refused. For `episode` with a missing or unknown subcommand the reason is
+   `ailang-worldd episode needs a subcommand: start | launch | finish | report`; for any other
+   seized first word, the row's own refusal text applies with cli = Quote([ailang-worldd, argv…]).
+   No input whose first word the CLI switch accepts ever reaches step 5." For `world` this applies
+   only to the shapes steps 3 and 3b leave over (three or more words other than `world get <ref>`),
+   which `parseAddress` refuses today anyway (V34), so no navigation is lost.
+5. anything else → `class=address` (the page's existing `parseAddress` path). **[r2]** By step
+   4b, "anything else" is exactly the inputs whose first word is not a CLI switch arm.
 
 **[r1] The classification is exhaustive and its sets are fixed by the switch.** The 28 arms (§1.13,
 V33) split exactly as: navigation token `world` (steps 3/3b); operator `{why, episode, approve}`
@@ -322,6 +339,15 @@ encodeURIComponent(raw))`:
   before proceeding and is never invoked automatically (gpt6-1-sol's fix, recorded for later). The
   typed `world NAME` form needs the route too; while the route fails, nothing navigates from the
   bar, which is the honest state.
+- **[r2] Bounded wait** (gpt6-1-sol's fix, with oc-glm-5-3's message): the request has a named
+  finite budget, `VERB_ROUTE_BUDGET_MS = 15000`, "enforced with AbortController across both fetch
+  and response-body consumption, with timer cleanup in finally. On expiry, display an explicit
+  timeout refusal and preserve the current view and input; never invoke addressTarget." The
+  message is `say('the verb route did not answer in time')`. The budget sits above the server's
+  own report bound (`d.readCtx` = `context.WithTimeout(r.Context(), d.readDeadline)`, 10 s,
+  V37), so a slow but healthy report answers before the page gives up; a wedged daemon or a proxy
+  holding the connection open lands in the refusal. A second submit while one is pending aborts
+  the first (one controller per bar) so stale answers never render.
 - `address` (schema-valid) → the existing `addressTarget` path, unchanged;
 - `result` → a verb panel in the stage: a header line `$ <cli>` and the `text` (or `json`, or the
   `stderr` line and `exit 1`) set with `textContent` — never `innerHTML`;
@@ -368,6 +394,12 @@ page: `go(raw)` → empty check → fetch → outcome switch.
 | **[r1]** `why`, route answers 500 | fetch | pass | (handler fault) | – | – | `say('… HTTP 500')`; view unchanged |
 | **[r1]** `why`, network error (daemon down) | fetch throws | – | – | – | – | `say('the verb route is unreachable: …')`; view unchanged |
 | **[r1]** `why`, 200 with a body missing `schema` or with an unknown `outcome` | fetch | pass | pass | | | `say('… cannot read')`; view unchanged |
+| **[r2]** `episode` (bare) | fetch | pass | pass | `[episode]` | 4 (no row) → **4b** | `refused`, "ailang-worldd episode needs a subcommand: start \| launch \| finish \| report" — **shadow-set change**: today it navigates to a brane named `episode` (RK1) |
+| **[r2]** `episode frobnicate` | fetch | pass | pass | 2 words | 4 (no row) → 4b | `refused`, needs a subcommand; today "unknown address" |
+| **[r2]** `episode w1` | fetch | pass | pass | 2 words | 4 (no row) → 4b | `refused`, needs a subcommand; today "unknown address" |
+| **[r2]** `session frob` | fetch | pass | pass | 2 words | 4 (never) | `refused` with the never row's text and `cli` — a deliberate RK1 change like `log tail` (today "unknown address") |
+| **[r2]** `why`, the daemon accepts but never sends headers | fetch pending | – | – | – | – | at 15 s the AbortController fires → `say('the verb route did not answer in time')`; view and input unchanged; **not** `world why` |
+| **[r2]** `why`, headers sent, JSON body stalls | `res.json()` pending | pass | pass | | | the same budget covers body consumption → the same timeout refusal; view unchanged |
 
 Step 3 precedes step 4, and step 3b catches `world get <ref>`, so `world` is never treated as the
 CLI's `world get` and a pasted `world get` line is never navigation **[r1]**. Step 2 precedes step
@@ -395,7 +427,7 @@ except through a 200, schema-valid `outcome:"address"`.
 | T5. DNS rebinding or a foreign `Host` | R2 via `approvalRoute` (421), as the approval routes. |
 | T6. Cross-origin read of the answer | no CORS headers (§1.11, V31 **[r1]**); and the data is already open at `/v1` (§1.4). |
 | T7. Open redirect through `navigate` | `href` is built server-side from two strict patterns; the page re-checks the prefix. |
-| T8. Confusion: a brane named after any of the 27 shadow-set words (RK1) **[r1]** | the verb wins on the first word; `world NAME` always navigates (Q2, VP4, VP6). A route failure never turns a verb into navigation (§2.3, VP2) **[r1]**. |
+| T8. Confusion: a brane named after any of the 27 shadow-set words (RK1) **[r1]** | **[r2]** enforced by step 4b, pinned by VB3/VB4: the verb wins on the first word, including an incomplete or unknown form; `world NAME` always navigates (Q2, VP4, VP6). A route failure never turns a verb into navigation (§2.3, VP2) **[r1]**. |
 | T9. A copied `cli` line runs something else in a shell | `Split` refuses shell metacharacters and `Quote` round-trips (VB2). |
 | T10. Denial of service | `q` ≤ 1,024 bytes; one report build bounded by `d.readCtx`, the same as the open `/v1` route. |
 
@@ -436,7 +468,11 @@ the real CLI and the real route produce, never hand-typed.
   Kills: steps 2/3 swapped with 4; `world` classified as the CLI verb; **[r1]** step 3b deleted
   (a pasted `world get` line becomes navigation) or widened to two words (brane `get` lost); a
   missing table row; longest-match broken (`episode` alone → refused "needs a subcommand", not
-  `episode report`).
+  `episode report`). **[r2]** Step-4b rows: `episode` → refused "ailang-worldd episode needs a
+  subcommand: start | launch | finish | report"; `episode frobnicate` and `episode w1` → the same;
+  `session frob` → refused with the never row's text and `cli`; and for every one of the 27
+  shadow-set words, `<word> zzz` never answers `address`. Kills: step 4b deleted (bare `episode`
+  becomes navigation); 4b's seized set short of any switch arm.
 - **VB4 [r1]** parity with the CLI's switch, **without invoking `run()`**: the test parses
   `cmd/ailang-worldd/main.go` with `go/ast`, finds `run`'s `switch verb := rest[0]` and collects
   its non-default `case` string literals (28 at the base, V33); it asserts that set minus the
@@ -486,7 +522,13 @@ the real CLI and the real route produce, never hand-typed.
   schema-valid `outcome:"address"` for `row-189@6`, `world shared@0ffbb9c` and `back` reaches
   `addressTarget` with today's answers. A `TooLong` refusal shows its reason. **Named mutant:
   "fallback on any failure"** (any failure branch calling `addressTarget`), plus "fallback on 404
-  only" and "accept a 200 without schema validation".
+  only" and "accept a 200 without schema validation". **[r2]** Two hang cases with a controlled
+  clock (gpt6-1-sol's fix): stalled response headers (the fetch stub never resolves) and a stalled
+  JSON body (`json()` never resolves); advancing the clock past `VERB_ROUTE_BUDGET_MS` aborts the
+  controller, the page shows "the verb route did not answer in time", `addressTarget` is not
+  called and the input is unchanged; the timer is cleared on every path (a spy on
+  `clearTimeout`). Kills: no AbortSignal passed to `fetch`; the budget not covering body
+  consumption; the timeout branch calling `addressTarget`; a leaked timer.
 - **VP3** hostile values: a report `text` and a `reason` containing `<img src=x onerror=…>` render
   as text (`textContent`), not markup. Kills: `innerHTML`.
 - **VP4** precedence: `world why` → address; `why` → verb route. Kills: the page short-circuiting on
@@ -497,6 +539,8 @@ the real CLI and the real route produce, never hand-typed.
   hand-typed): bare `log` → the refusal panel with `cli` (was navigation), `world session` →
   `addressTarget` → brane `session`, `ailang-worldd world get world-1` → refusal with its `cli`
   echo, never navigation. Kills: the page treating a refused `world …` answer as an address.
+  **[r2]** Bare `episode` → the refusal panel ("needs a subcommand"); `world episode` →
+  `addressTarget` → brane `episode`.
 
 **Live Chrome (one, on the A3 driver):** **XV1** type `episode report <e>` in `#addr` on a served
 daemon, press Enter, read the panel's text; equal to VR3's CLI text. Planner obligation: re-use the
@@ -570,7 +614,9 @@ equals the terminal's output, and `approve mr-…` opens the card.
   switch accepts. The complete set (V33, §2.1(b)): `why`, `episode`, `approve` (operator);
   `approver`, `session`, `service`, `serve`, `setup` (never); `commit`, `outcome`, `call`, `demo`,
   `doctor`, `head`, `health`, `help`, `hosts`, `log`, `object`, `preset`, `profile`, `provenance`,
-  `registry`, `surface-index`, `tools`, `version`, `whoami` (other) — 27 words. A brane so named is
+  `registry`, `surface-index`, `tools`, `version`, `whoami` (other) — 27 words; **[r2]** enforced
+  by step 4b (§2.1(b)), pinned by VB3/VB4, so a bare or incomplete form (`episode`,
+  `session frob`) is seized too. A brane so named is
   reachable only as `world NAME` (Q2). This is a deliberate, enumerated behaviour change from the
   base; VB4's AST-derived arm list is the single source these sets must equal, so an unclassified
   new CLI verb (and any removed one) fails the build. Multi-word inputs that start with these words
@@ -612,7 +658,10 @@ equals the terminal's output, and `approve mr-…` opens the card.
 ## 14. Verification Log
 
 All commands ran in `/Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter394-row243`
-at `48c92a52` on 2026-11-16 (zsh; output trimmed).
+on 2026-11-16 (zsh; output trimmed). **[r2]** V1–V30 ran at `48c92a52`; V31–V35 ran on the r1
+branch atop it (`ad144327`, the r0 commit); V36–V38 were run by the controller at `15070038`
+(r1). V36 shows `cmd/` and `host/` are byte-identical across all three, so every row describes the
+same code.
 
 | # | claim | command | observed |
 |---|---|---|---|
@@ -652,6 +701,9 @@ at `48c92a52` on 2026-11-16 (zsh; output trimmed).
 | V33 **[r1]** | the switch's 28 arms (re-derived, not copied); what `commit`/`outcome`/`call`/`demo` do | `git log -1 --oneline` (`ad144327`, the r0 commit; `cmd/` unchanged since `48c92a52`); `sed -n 375,510p cmd/ailang-worldd/main.go \| grep -oE 'case "[a-z-]+"' \| sort \| tr '\n' ' '`; `… \| wc -l`; `grep -n '"POST /v1/commit"\|"POST /mcp/"' host/daemon/daemon.go`; `grep -n 'outcome' cmd/ailang-worldd/main.go`; `sed -n 12p cmd/ailang-worldd/demo.go` | `approve approver call commit demo doctor episode head health help hosts log object outcome preset profile provenance registry serve service session setup surface-index tools version whoami why world`; `28`; `1118: POST /v1/commit`, `1153: POST /mcp/`; `109: … outcome record --file <outcome.json\|-> [--session …]`, `164: Session credential (tools, call, commit, outcome)`; `usage: ailang-worldd [--addr URL] demo seed --db PATH --session FILE` |
 | V34 **[r1]** | `world` takes exactly `get <ref>`; `parseAddress` takes one or two words | `grep -n 'func requireGet' -A8 cmd/ailang-worldd/cli.go`; `grep -n 'func runWorld' -A4 …`; `sed -n 84,86p host/surfacepage/surface.js` | `158: if len(args) != 2 \|\| args[0] != "get" {`; `166: return requireGet(args, "world", …)`; `84: if (words.length === 1 && (words[0] === "world" \|\| words[0] === "back"))`; `85: const m = words.length === 2 && words[0] === "world" ? …`; `86: if (!m) return {error: "unknown address: " + ADDRESS_HELP};` |
 | V35 **[r1]** | `serve --help` returns from `genericVerbHelp` before the switch; already exercised | `grep -n 'func genericVerbHelp' -A30 cmd/ailang-worldd/main.go`; `sed -n 340,378p …`; `grep -n 'func usageLinesFor' -A15 …`; `grep -n '^  ailang-worldd serve' …`; `sed -n 8,35p cmd/ailang-worldd/help_test.go` | `374: if text, ok := genericVerbHelp(rest); ok { fmt.Fprint(stdout, text); return exitOK }` (before `switch`); `718: if ownHelpVerbs[verb] … return "", false` (serve not in it); `730: lines := usageLinesFor(verb)`; `735: if verb == "serve" { … "serve flags:" …`; `86:   ailang-worldd serve --db <path> …`; `help_test.go:11: {"serve"}, {"health"}, …`; `TestEveryVerbHasHelp … code := run(argv, …); if code != exitOK` for `serve --help` and `help serve` |
+| V36 **[r2]** | `cmd/` and `host/` unchanged from the base to r1 (with control) | `git diff --stat 48c92a52 HEAD -- cmd host \| wc -l`; control: `git diff --stat 48c92a52 HEAD -- design_docs \| tail -1` | `0`; control `1 file changed, 702 insertions(+)` |
+| V37 **[r2]** | `d.readCtx` is a finite 10 s deadline and the report handler builds under it | `sed -n 287,289p host/daemon/handlers.go`; `grep -n 'readDeadline = ' host/daemon/daemon.go`; `sed -n 707,740p host/daemon/episode_report.go \| grep -n ctx` | `func (d *Daemon) readCtx(r *http.Request) (context.Context, context.CancelFunc) { return context.WithTimeout(r.Context(), d.readDeadline) }`; `144: readDeadline = 10 * time.Second`; handler: `ctx, cancel := d.readCtx(r)`, `buildEpisodeReport(ctx, d.intents, d.reads, episode)`, `timedOut(ctx, err)`, `d.readEpisodeStart(ctx, episode)`, `d.readEpisodeFinish(ctx, episode)` — every read takes the bounded ctx. Server `ReadTimeout` 30 s (`daemon.go:95`, `:1234`) |
+| V38 **[r2]** | `maxReportEpisodeBytes` (§1.4) | `grep -rn maxReportEpisodeBytes host/daemon/*.go \| grep -v _test` | `episode_report.go:702: const maxReportEpisodeBytes = 256`; `:709: if episode == "" \|\| len(episode) > maxReportEpisodeBytes {`; `episode_finish.go:146` (same bound) |
 
 ## 15. Quorum verification log
 
@@ -699,4 +751,37 @@ controller adopted the fixes below; r1 applies them and nothing else.
    `TestEveryVerbHasHelp`; per glm's fix (f) VB4 nevertheless invokes no `run()` — it uses the
    go/ast arm list plus `ownHelpVerbs`/`genericVerbHelp` checks.
 
-*(Round 2: for the controller.)*
+### Round 2 (quorum 2026-11-16T10:04:11Z on r1 `15070038`): BLOCKED 3/3 — answered in r2 by the controller's narrow-refinement carve-out
+
+Artifact: `/Users/voightkampff/.ailang/state/mission-quorum-world/w-world-address-bar-verbs-2026-11-16T10-04-11Z.json`.
+Same seats (oc-glm-5-3, oc-kimi-k3, gpt6-1-sol), all present, all REJECT; `absent_reviewers` = `[]`.
+**Surfaces (rule (a), from round 2 on):** glm → the Lookup algorithm (bare `episode`) + the page's
+unbounded fetch (catch); kimi → the Lookup algorithm (bare/unknown `episode`) + the §14 header;
+gpt6-1-sol → the page's unbounded fetch + a `d.readCtx` evidence row. The objections **localised**
+onto two surfaces that round 1's fixes touched; round 1's three surfaces (fallback, shadow-set
+disclosure, CORS/help rows) drew no further objection. Every objection carries a reviewer-authored
+`proposed_fix`, and none disputes the design direction, so the controller applied those fixes in the
+reviewers' words (Gate 2 narrow-refinement carve-out); no designer run was spent.
+
+1. **Bare/unknown `episode` falls through to navigation (oc-kimi-k3; oc-glm-5-3 identically).**
+   Objection (kimi): "Step 4 matches only complete table rows … bare `episode` and any unknown
+   subcommand (`episode frobnicate`) match no row and fall through to step 5 → `class=address` …
+   directly contradicting RK1 … Q2's default … T8, and VB3's own kill-mutant expectation." **r2:**
+   step 4b inserted in kimi's text (§2.1(b)); step 5 restated; §2.4 rows for `episode`,
+   `episode frobnicate`, `episode w1`, `session frob`; VB3 and VP6 rows; RK1 and T8 restated as
+   "enforced by step 4b, pinned by VB3/VB4". glm's alternative text (an `episode` head entry,
+   class=mutate) is subsumed: both seize bare `episode` with the same subcommand list, and kimi's
+   also covers every other seized first word, which glm's own catch asks for symmetrically.
+2. **Unbounded page wait (gpt6-1-sol; oc-glm-5-3 catch).** Objection (sol): "§2.3 makes every
+   nonempty address-bar action await fetch without an explicit deadline or cancellation path …
+   violates the bounded-waits axiom." **r2:** §2.3's bounded-wait bullet in sol's text
+   (`AbortController` across fetch and body, timer cleanup in `finally`, explicit timeout refusal,
+   view and input preserved, never `addressTarget`) with glm's message; the named budget is
+   `VERB_ROUTE_BUDGET_MS = 15000`, chosen above the measured 10 s server bound (V37); §2.4 rows for
+   stalled headers and a stalled body; VP2's controlled-clock hang cases.
+3. **Evidence rows (kimi; sol; glm).** V36 (`cmd/`/`host/` unchanged base → r1, control firing),
+   V37 (`d.readCtx` = `WithTimeout(…, 10 s)`, propagated to every read in the report handler), V38
+   (`maxReportEpisodeBytes = 256`); §14's header now states which sha each row ran at.
+
+Controller verdict on r2: pass. Per the carve-out, r2 goes to an independent audit (the evaluator
+role) rather than a third quorum round.
