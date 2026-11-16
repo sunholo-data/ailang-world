@@ -26,7 +26,7 @@ export func plan(
   transitionFn: HashRef,
   goal: string
 ) -> Proposal ! {}
-ensures { result.inputWorld == w.stateRoot && result.proposalHash == proposalHash && result.transitionFn == transitionFn && result.goal == goal }
+ensures { result.inputWorld.algo == w.stateRoot.algo && result.inputWorld.digest == w.stateRoot.digest && result.proposalHash.algo == proposalHash.algo && result.proposalHash.digest == proposalHash.digest && result.transitionFn.algo == transitionFn.algo && result.transitionFn.digest == transitionFn.digest && result.goal == goal }
  {
   {
     proposalHash: proposalHash,
@@ -45,7 +45,7 @@ ensures { result.inputWorld == w.stateRoot && result.proposalHash == proposalHas
 -- iff the proposal's input world matches the current world (Contract 1). The
 -- verification always names the proposal's own hash so Contract 2 holds.
 export func verify(w: World, p: Proposal) -> Verification ! {}
-ensures { result.proposalHash == p.proposalHash && result.accepted == (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest) }
+ensures { result.proposalHash.algo == p.proposalHash.algo && result.proposalHash.digest == p.proposalHash.digest && result.accepted == (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest) }
  {
   if proposalMatchesWorld(w, p)
   then { proposalHash: p.proposalHash, accepted: true, reason: "accepted" }

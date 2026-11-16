@@ -1,7 +1,8 @@
 #!/bin/bash
 # Attended helper for SM.D — the irreversible publish of world/core at the version the
-# committed ready-packet golden names (0.1.0 published 2026-09-21; 0.1.1 is the D-WORLD-41
-# candidate). The version is READ from the golden, never restated here.
+# committed ready-packet golden names (0.1.0 published 2026-09-21; 0.1.1 published
+# 2026-10-02; 0.1.2 is the row-260 candidate). The version is READ from the golden, never
+# restated here.
 #
 # WHAT THIS IS NOT: an automation of the publish. Every fence in
 # cmd/world-publish stays exactly where it was, and this script cannot satisfy

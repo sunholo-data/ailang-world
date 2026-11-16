@@ -1,5 +1,22 @@
 # Changelog — world/core
 
+## 0.1.2 — 2026-11-16
+
+**Compiler-compatibility release: the kernel's contracts type-check under AILANG v0.60.4**, which
+type-checks `requires`/`ensures` clauses. No exported signature changed; the proven laws are
+unchanged.
+
+- Two exported instances are **added**: `Eq[EvidenceGrade]` and `Eq[TimeoutOutcome]`
+  (`deriving (Eq)`), so `gradeOf`'s and `timeoutOutcome`'s `ensures`, which compare results with
+  `==`, type-check. Code that compares these values with `==` compiles against 0.1.2 and not
+  against 0.1.1. Neither interface hash records derived instances, so both are unchanged.
+  The two `deriving` lines are credited to PR #565.
+- `plan`'s and `verify`'s `ensures` are restated field-wise: each `HashRef` comparison is written
+  as `.algo == … && .digest == …`, the idiom `applyRevision` already used, because `HashRef` has
+  no `Eq` instance.
+
+Contracts: **16 verified, 0 refuted**. Effects: still **none**.
+
 ## 0.1.1 — 2026-09-30
 
 **Proof hardening of the pure semantic core. No exported signature changed** — the interface
