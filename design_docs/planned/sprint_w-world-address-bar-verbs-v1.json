@@ -1,0 +1,203 @@
+{
+  "sprint_id": "w-world-address-bar-verbs-v1",
+  "design_doc": "design_docs/planned/w-world-address-bar-verbs.md",
+  "design_revision": "r2 (quorum r1+r2, controller narrow-refinement carve-out r2, audit CARVE-OUT VALID 84; iteration 394; not reopened)",
+  "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v1-sprint-plan.md",
+  "base_commit": "db2b7423327d5223cd1a37cf40e0794c2019026a",
+  "design_measured_at": "48c92a521fcbf46a0f1120609de80d656326ba5b (drift #577-#580 re-measured, plan §1.2 C2)",
+  "queue_row": 243,
+  "iteration": 395,
+  "phase": "V1",
+  "sprint_number": 1,
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter395-row243-v1",
+  "branch": "sprint/world-iter395-row243-v1",
+  "authority": [
+    "D-WORLD-107 = A",
+    "D-WORLD-109 = A (test stores/keys only)",
+    "D-WORLD-89 (approve only opens the card)"
+  ],
+  "cut": {
+    "cap_loc": 2000,
+    "measure": "git diff --numstat <base> HEAD -- cmd host docs (insertions + deletions); -- cmd host alone 1895",
+    "fallback_threshold_m1_m3": 1500,
+    "m1_m3_measured": 1491,
+    "fallback_fired": "no: M1-M3 = 1,491 <= 1,500 (V1-D3); XV1 and the approve navigate arm stay",
+    "cut_order_if_needed": "M4b's XV1 (78) and the navigate arm, then M1b's VB4 file (80); never VP2"
+  },
+  "planner_decisions": {
+    "V1-D1_superseded_request": "a second submit aborts the pending ask (superseded flag, then ctl.abort()); the aborted ask ends {superseded:true} and verbAct does nothing with it (no message, no panel, no navigation, input untouched); the newer ask answers explicitly within its own budget. Timeout differs: say('the verb route did not answer in time'). A superseded ask can never navigate (abort races both awaits; an answer that beat the abort is dropped too).",
+    "V1-D2_vp2_clock": "askVerb(raw, io) takes fetch/AbortController/setTimeout/clearTimeout; the node harness injects a controlled clock that records (fn, ms) and fires on demand; ms === VERB_ROUTE_BUDGET_MS === 15000 asserted. The budget is a named constant, exported read-only, NOT a tunable (no knob can make the wait unbounded; the server's own bound is 10 s)."
+  },
+  "scope": [
+    "host/verbs: Split, Quote, Lookup + table (steps 1-5, 3b, 4b), ApproveTarget, ParseInterleaved (moved), EpisodeReportFlags + AdmitEpisodeReport",
+    "CLI: ten parseInterleaved call sites repointed; episode report on the shared flag set; printReport moved to host/daemon.WriteEpisodeReportText",
+    "GET /surface/verb.json?q= behind approvalRoute; d.episodeReport extracted (reportBuildError keeps /v1 exact); read-only",
+    "app.js: go asks the route; only a schema-valid address navigates; every failure/timeout/superseded refuses with view and input unchanged; result/terminal panels by textContent",
+    "XV1 live Chrome; QUICKSTART §19"
+  ],
+  "executor_lane": "as routed by the controller; runs: (M1a, M1b, M1c), (M2, M3a, M3b), (M4a, M4b); apply patches, never retype",
+  "executor_form": "every sub-milestone is a unified diff in the plan's Appendix P, applied with patch -p1 after --dry-run, extracted with plan §2's awk; acceptance = plan §3's accept.sh arm",
+  "estimate_loc": {
+    "production": 826,
+    "production_go": 736,
+    "production_page": 90,
+    "test": 1069,
+    "docs": 14,
+    "total_cumulative": 1909,
+    "cmd_host_only": 1895,
+    "measure": "insertions + deletions (git diff --numstat -- cmd host docs), measured after a commit of each scratch stage; a move counts both sides"
+  },
+  "milestones": [
+    {
+      "id": "M1a",
+      "title": "Split, Quote; VB1 TestSplit, VB2 TestQuoteRoundTrip",
+      "production": 110,
+      "test": 93,
+      "docs": 0,
+      "expected_cumulative_numstat": 203,
+      "run": 1
+    },
+    {
+      "id": "M1b",
+      "title": "Lookup + the verb table + ApproveTarget; VB3 TestLookup, TestApproveTarget, VB4 TestVerbTableMatchesTheCLISwitch",
+      "production": 133,
+      "test": 174,
+      "docs": 0,
+      "expected_cumulative_numstat": 510,
+      "run": 1
+    },
+    {
+      "id": "M1c",
+      "title": "ParseInterleaved moved, EpisodeReportFlags + AdmitEpisodeReport; the ten CLI call sites; VB5 TestEpisodeReportFlags, TestParseInterleaved",
+      "production": 129,
+      "test": 58,
+      "docs": 0,
+      "expected_cumulative_numstat": 697,
+      "run": 1
+    },
+    {
+      "id": "M2",
+      "title": "episode report's printer moved to host/daemon (WriteEpisodeReportText); episode_markdown.go on the exported helpers",
+      "production": 208,
+      "test": 0,
+      "docs": 0,
+      "expected_cumulative_numstat": 905,
+      "run": 2
+    },
+    {
+      "id": "M3a",
+      "title": "d.episodeReport extraction; GET /surface/verb.json behind approvalRoute; VR1, VR4, VS1",
+      "production": 156,
+      "test": 187,
+      "docs": 0,
+      "expected_cumulative_numstat": 1248,
+      "run": 2
+    },
+    {
+      "id": "M3b",
+      "title": "VR2 TestSurfaceVerbOutcomes + the page's golden; VR3 TestVerbRouteReportIsTheCLIs (seedReportCalls)",
+      "production": 0,
+      "test": 243,
+      "docs": 0,
+      "expected_cumulative_numstat": 1491,
+      "run": 2
+    },
+    {
+      "id": "M4a",
+      "title": "app.js: go asks the route, verbOutcome/askVerb/verbAct/verbPanel, Enter keeps the input; VP1-VP6 TestSurfaceAppVerbs",
+      "production": 90,
+      "test": 181,
+      "docs": 0,
+      "expected_cumulative_numstat": 1762,
+      "run": 3
+    },
+    {
+      "id": "M4b",
+      "title": "XV1 TestVerbBarEpisodeReportInChrome; QUICKSTART §19 + TestQuickstartSection19MatchesTheBar",
+      "production": 0,
+      "test": 133,
+      "docs": 14,
+      "expected_cumulative_numstat": 1909,
+      "run": 3
+    }
+  ],
+  "design_premises_found_false": [
+    "P1 episode_markdown.go reads unexported namedCount fields: +4 -4 on exported SortedCounts/WriteReportRefusals",
+    "P2 TestSurfaceAppPure pins app.js's export list (app_test.go:174): +2 -1",
+    "P3 Enter clears the bar before go (app.js:1430): V1-D6",
+    "P4 renderCrumbs overwrites index.html's placeholder (app.js:928): both edited",
+    "P5 no cmd rig yields a real report (walk rig has no journal intents): seedReportCalls",
+    "P6 /v1 handler maps only the builder's error to 503: reportBuildError",
+    "P7 QUICKSTART §18 at 1862 and both §18 tests read to EOF: §19 has no bold label/approve line",
+    "P8 Quote needs segment joining for a ' (V1-D7)",
+    "P9 back reaches address via step 5 (V1-D8)",
+    "P10 Split's first check is the 1,024 bound (V1-D10)",
+    "P11 say() fades after 2.6 s (RS-SAY)"
+  ],
+  "existing_tests_edited": [
+    "host/surfacepage/app_test.go: TestSurfaceAppPure's export list +2 -1 (P2)"
+  ],
+  "files_outside_design_section_8": [
+    "host/daemon/episode_report_text.go",
+    "cmd/ailang-worldd/episode_markdown.go",
+    "the eight call-site files besides session.go",
+    "host/surfacepage/app_test.go",
+    "host/surfacepage/testdata/verb-route.golden.json",
+    "docs/QUICKSTART.md (§7)",
+    "every new _test.go"
+  ],
+  "not_touched": [
+    "host/surfacepage/surface.js",
+    "host/surfacepage/{approve,passkey,decide}/**",
+    "row 201 handlers/laws",
+    "surfaceCSP",
+    "/v1 routes (13)",
+    "world/*.ail",
+    "packages/**",
+    "scripts/**",
+    "tools/launchd/*",
+    "cmd/world-publish/*"
+  ],
+  "ci_change": "none",
+  "sprint_gates": {
+    "script_ref": "plan §6 (gates.sh, extracted from the plan; bash 3.2; every leg rc recorded; tee to $HOME/.ailang/state/world-iter395/gates; ALL_DONE.<sha>)",
+    "base_result": "verify_ail PASSED (16 identities, 40 named, 503 se-tools); gofmt/build/vet/fence rc 0; pkgs rc 1 only cmd TestHostTranscriptRefusesSymlink + TestWorldContextAndStatusline (5 s subprocess kills under load, untouched); race rc 0; inv rc 0 (51 named PASS); chrome rc 0; verify_go rc 1 (56 ok; reds only load deadlines in untouched packages); GATES_DONE 1452s",
+    "final_tree_result": "verify_ail PASSED (= base); gofmt/build/vet/fence/pkgs/race/inv/chrome rc 0 (inv 65 named PASS, chrome 15 PASS); verify_go rc 1: 61 ok, reds host/capsule TestCapsuleTemplateIsCopiedNotShared and host/verifygate (10m timeout) — untouched, both green alone; GATES_DONE 1969s FAILS: verify_go"
+  },
+  "mutants": {
+    "rows": 120,
+    "expected": {
+      "S": 5,
+      "K": 106,
+      "N": 7,
+      "L": 2
+    },
+    "as_expected": 120,
+    "not_run": [],
+    "not_as_expected": [],
+    "ledger": "/Users/voightkampff/.ailang/state/world-iter395/plan-scratch/logs/mutant_ledger.tsv (224 lines)",
+    "ids_equal_plan_table": true,
+    "named_survivors_and_equivalents": [
+      "E-ASb",
+      "JW-GO-EMPTY"
+    ]
+  },
+  "roundtrip": "ROUNDTRIP_IDENTICAL_TO_STAGE_TREE_AND_MUTANT_TREE (eight patches extracted from the plan with §2's awk, applied to a fresh git archive db2b7423 export)",
+  "executor_directives": {
+    "no_git_writes": true,
+    "never_nohup_or_background_a_test_leg": true,
+    "go_bash_timeout_ms": 600000,
+    "apply": "patch -p1 after --dry-run, extracted with plan §2's awk",
+    "snapshot": "copy only files git status --porcelain reports (plus a DELETED list), never rsync of directories; $HOME/.ailang/state/world-iter395/snap/<M>/ with MANIFEST.sha256, plan files excluded"
+  },
+  "acceptance_criteria_ref": "plan §9 (16 criteria)",
+  "operator_after_sprint": "type `episode report <episode>` (or --json) into the World app's bar and read the CLI's own bytes; `approve mr-…|sha256:…` opens row 201's card; any other operator verb shows the exact CLI line and that the app cannot run it yet",
+  "attended_exit_run_waits_for": "V2 (why), V3 (verb-approval law + ledger ask), V4 (host runner), V5 (attended script) and Mark's own run (design §10); V1's optional check is QUICKSTART §19 verbatim",
+  "residuals": [
+    "RK1 the 27-word shadow set (deliberate, pinned by VB3/VB4)",
+    "RS-SAY a refusal fades after 2.6 s (input kept)",
+    "R2 the bar navigates only through the route",
+    "named survivors: E-ASb, JW-GO-EMPTY"
+  ],
+  "next_sprint": "V2 child design r0 (why in the bar), plan Appendix C"
+}

@@ -16,6 +16,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/verbs"
 )
 
 // sessionEnv is the injectable human-act seam a session verb performs. It lets
@@ -174,22 +175,6 @@ func openCredentialsForSession(ctx context.Context, db, creds string) (*store.Cr
 		return nil, err
 	}
 	return st, nil
-}
-
-// parseInterleaved parses fs over args, allowing flags and positional
-// arguments in any order (Go's flag package stops at the first positional).
-func parseInterleaved(fs *flag.FlagSet, args []string) ([]string, error) {
-	var positional []string
-	for {
-		if err := fs.Parse(args); err != nil {
-			return nil, err
-		}
-		if fs.NArg() == 0 {
-			return positional, nil
-		}
-		positional = append(positional, fs.Arg(0))
-		args = fs.Args()[1:]
-	}
 }
 
 // multiFlag is a repeatable string flag value (used by the repeatable --grant).
@@ -369,7 +354,7 @@ func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
 	dbPath := fs.String("db", "", "world store database (required)")
 	credsDB := fs.String("credentials-db", "", credentialsDBUsage)
 	episode := fs.String("episode", "", "revoke every credential of this episode")
-	rest, err := parseInterleaved(fs, args)
+	rest, err := verbs.ParseInterleaved(fs, args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			fmt.Fprint(stdout, sessionRevokeHelp)

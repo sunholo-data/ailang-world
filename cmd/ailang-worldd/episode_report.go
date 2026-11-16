@@ -16,11 +16,11 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"sort"
 	"strings"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/daemon"
+	"github.com/sunholo-data/ailang-world/host/verbs"
 )
 
 const episodeReportHelp = `usage: ailang-worldd [--addr <url>] episode report <episode> [--json | --markdown] [--follow] [--interval 2s] [--addr <url>]
@@ -50,12 +50,9 @@ func runEpisodeReport(globalAddr string, args []string, stdout, stderr io.Writer
 	fs := flag.NewFlagSet("ailang-worldd episode report", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	fs.Usage = func() {}
-	markdown := fs.Bool("markdown", false, "render a scrubbed PR body")
-	asJSON := fs.Bool("json", false, "print the route's JSON")
-	follow := fs.Bool("follow", false, "re-print when the episode changes, until Ctrl-C")
-	interval := fs.Duration("interval", 2*time.Second, "poll interval with --follow")
-	addr := fs.String("addr", "", "the daemon (default: the global --addr)")
-	positional, err := parseInterleaved(fs, args)
+	flags := verbs.EpisodeReportFlags(fs) // row 243: the bar's admission parses the same set
+	markdown, asJSON, follow, interval, addr := flags.Markdown, flags.JSON, flags.Follow, flags.Interval, flags.Addr
+	positional, err := verbs.ParseInterleaved(fs, args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			fmt.Fprint(stdout, episodeReportHelp)
@@ -221,95 +218,5 @@ func printFollowed(w io.Writer, o reportOpts, body []byte, rep daemon.EpisodeRep
 	printReport(w, rep)
 }
 
-// printReport renders the compact human table.
-func printReport(w io.Writer, r daemon.EpisodeReport) {
-	if r.Start != nil {
-		data, _ := json.MarshalIndent(r.Start, "  ", "  ")
-		fmt.Fprintf(w, "start:\n  %s\n", data)
-	}
-	fmt.Fprintf(w, "episode %s: %d calls, entries %d-%d, %s .. %s\n",
-		r.Episode, r.TotalCalls, r.Entries[0], r.Entries[1], r.FirstAt, r.LastAt)
-	fmt.Fprintln(w, "calls by tool:")
-	for _, kv := range sortedCounts(r.CallsByTool) {
-		fmt.Fprintf(w, "  %-18s %6d\n", kv.name, kv.n)
-	}
-	fmt.Fprintln(w, readsLine(r.Reads))
-	fmt.Fprintln(w, "effects:")
-	for _, e := range r.Effects {
-		fmt.Fprintf(w, "  %-22s %-16s %6d\n", e.Effect, e.Decision, e.Count)
-	}
-	fmt.Fprintln(w, "budgets (minted / used / left):")
-	for _, b := range r.Budgets {
-		fmt.Fprintf(w, "  %-22s %6d %6d %6d\n", b.Effect+"@"+b.Scope, b.Minted, b.Used, b.Left)
-	}
-	printRefusals(w, "plan refusals (refused before any effect)", r.PlanRefusals)
-	printRefusals(w, "handler refusals (effect allowed, handler ok:false)", r.HandlerRefusals)
-	if r.Uncommitted > 0 {
-		fmt.Fprintf(w, "uncommitted intents: %d\n", r.Uncommitted)
-	}
-	for _, e := range r.ExecCache {
-		fmt.Fprintln(w, execCacheLine(e))
-	}
-}
-
-// execCacheLine is one exec_cache entry of the report table (row 257).
-func execCacheLine(e daemon.ReportExecCache) string {
-	line := fmt.Sprintf("exec cache   %s %s %s", e.Project, e.Cache, e.State)
-	if e.Attempts > 0 {
-		line += fmt.Sprintf(" at %s (attempt %d of 3)", e.By, e.Attempts)
-	}
-	if e.State == "ready" && e.Attempts > 0 {
-		line += fmt.Sprintf(" in %dms", e.TookMS)
-	}
-	if e.Failure != "" {
-		line += ": " + e.Failure
-	}
-	return line
-}
-
-// readsLine is the one-line reads summary; --json carries the file list.
-func readsLine(r daemon.ReportReads) string {
-	line := fmt.Sprintf("reads: %d calls, %d files", r.Count, len(r.Files))
-	if r.Truncated > 0 {
-		line += fmt.Sprintf(", %d more not listed", r.Truncated)
-	}
-	if r.Unlisted > 0 {
-		line += fmt.Sprintf(", %d outside the worktree", r.Unlisted)
-	}
-	return line
-}
-
-func printRefusals(w io.Writer, title string, r daemon.ReportRefusals) {
-	parts := make([]string, 0, len(r.ByTool))
-	for _, kv := range sortedCounts(r.ByTool) {
-		parts = append(parts, fmt.Sprintf("%s %d", kv.name, kv.n))
-	}
-	line := fmt.Sprintf("%s: %d", title, r.Count)
-	if len(parts) > 0 {
-		line += " (" + strings.Join(parts, ", ") + ")"
-	}
-	fmt.Fprintln(w, line)
-	for _, f := range r.First {
-		fmt.Fprintf(w, "  #%d %s: %s\n", f.Entry, f.Tool, f.Reason)
-	}
-}
-
-type namedCount struct {
-	name string
-	n    int
-}
-
-// sortedCounts orders a count map by count, then name.
-func sortedCounts(m map[string]int) []namedCount {
-	out := make([]namedCount, 0, len(m))
-	for k, n := range m {
-		out = append(out, namedCount{k, n})
-	}
-	sort.Slice(out, func(i, j int) bool {
-		if out[i].n != out[j].n {
-			return out[i].n > out[j].n
-		}
-		return out[i].name < out[j].name
-	})
-	return out
-}
+// printReport renders the compact human table: the daemon's own text, which the app's bar shows too.
+func printReport(w io.Writer, r daemon.EpisodeReport) { daemon.WriteEpisodeReportText(w, r) }

@@ -1895,3 +1895,17 @@ ailang-worldd approve --list --db /tmp/se-world/world.db
 ```
 
 The line opens the decision card at `/surface/decide/<request-ref>`. The card reads the request and its packet from the daemon, checks that both hash to their refs and that the packet carries the request, shows every field of both, and refuses a field it cannot show. **Approve with passkey** or **Deny with passkey** signs that verb's decision message with a §16 passkey, and the card says which verb it is signing. **Save the approve message** (or the deny message) downloads the 91 bytes for the `ssh-keygen -Y sign` line the card prints; paste the signature and press **Approve with this signature** (or **Deny with this signature**). The daemon checks every decision as it checks the CLI's. A publish- or finish-shaped request is listed with its typed owner and has no link. A request the card cannot decide shows the daemon's reason and no button.
+
+## 19. Operator verbs in the address bar *(attended — pending first verbatim run)*
+
+The surface app's address bar (`/` focuses it) takes the CLI's own operator verbs, in the CLI's words; a line pasted with a leading `ailang-worldd` works too. The daemon reads the line with the same grammar and flag set the CLI uses (`GET /surface/verb.json`), so the bar and a terminal cannot disagree. No verb changes World from the page.
+
+```text
+episode report w1
+episode report w1 --json
+approve mr-0123456789abcdef
+episode finish w1 --preset se-tools
+world shared@0ffbb9c
+```
+
+The first prints the report exactly as `ailang-worldd episode report w1` prints it at a terminal, and `--json` prints its JSON; an episode with no committed call shows the CLI's own line and `exit 1`. `approve <request-id|request-ref>` opens that request's card (§17, §18), where the decision is your key's. Every other verb shows the exact CLI line and says the app cannot run it yet, with a copy button: `episode start`, `episode finish` and `why` today. Global flags, `--follow`, `--markdown` and `--addr` are refused, as are the commands that stay at a terminal (`approver`, `session`, `service`, `serve`, `setup`). A brane named like a CLI verb (`log`, `episode`, …) is reached as `world NAME`, which always navigates. If the daemon does not answer within 15 seconds, or answers something the page cannot read, the bar says so and keeps your line; it never falls back to navigation.

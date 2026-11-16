@@ -21,6 +21,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/checkrun"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/verbs"
 	"github.com/sunholo-data/ailang-world/host/worktree"
 )
 
@@ -68,7 +69,7 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	dry := fs.Bool("dry-run", false, "print then reset local commit")
 	var allowed multiFlag
 	fs.Var(&allowed, "allow-failing", "allow this failing check")
-	pos, err := parseInterleaved(fs, args)
+	pos, err := verbs.ParseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, episodeFinishHelp)
 		return exitOK

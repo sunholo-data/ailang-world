@@ -83,16 +83,16 @@ func renderReportMarkdown(r daemon.EpisodeReport, db string, add reportAdditions
 	introEnd := b.Len()
 	b.WriteString("## What the agent did\n\n")
 	fmt.Fprintf(&b, "%d calls.\n\nCalls by tool:\n", r.TotalCalls)
-	for _, kv := range sortedCounts(r.CallsByTool) {
-		fmt.Fprintf(&b, "- %s: %d\n", kv.name, kv.n)
+	for _, kv := range daemon.SortedCounts(r.CallsByTool) {
+		fmt.Fprintf(&b, "- %s: %d\n", kv.Name, kv.N)
 	}
 	b.WriteString("\nEffects by decision:\n")
 	for _, e := range r.Effects {
 		fmt.Fprintf(&b, "- %s %s: %d\n", e.Effect, e.Decision, e.Count)
 	}
 	b.WriteString("\n")
-	printRefusals(&b, "Plan refusals", r.PlanRefusals)
-	printRefusals(&b, "Handler refusals", r.HandlerRefusals)
+	daemon.WriteReportRefusals(&b, "Plan refusals", r.PlanRefusals)
+	daemon.WriteReportRefusals(&b, "Handler refusals", r.HandlerRefusals)
 	b.WriteString("\nBudgets (used / left):\n")
 	for _, v := range r.Budgets {
 		fmt.Fprintf(&b, "- %s@%s: %d / %d\n", v.Effect, v.Scope, v.Used, v.Left)

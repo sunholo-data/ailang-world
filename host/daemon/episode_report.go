@@ -31,6 +31,7 @@ package daemon
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"path/filepath"
@@ -712,30 +713,51 @@ func (d *Daemon) handleEpisodeReport(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := d.readCtx(r)
 	defer cancel()
-	rep, ok, err := buildEpisodeReport(ctx, d.intents, d.reads, episode)
-	if err != nil {
-		if timedOut(ctx, err) {
-			writeReadTimeout(w, d.readDeadline)
-			return
-		}
-		d.writeInternalError(w, r, err)
+	rep, found, err := d.episodeReport(ctx, episode)
+	if reportTimedOut(ctx, err) {
+		writeReadTimeout(w, d.readDeadline)
 		return
 	}
-	start, startErr := d.readEpisodeStart(ctx, episode)
-	if startErr != nil {
-		d.writeInternalError(w, r, startErr)
-		return
-	}
-	rep.Start = start
-	rep.Finish, err = d.readEpisodeFinish(ctx, episode)
 	if err != nil {
 		d.writeInternalError(w, r, err)
 		return
 	}
-	rep.ExecCache = d.workspace.execCacheStatus(episode)
-	if !ok && start == nil && rep.Finish == nil && len(rep.ExecCache) == 0 {
+	if !found {
 		writeAPIError(w, "NotFound", "episode "+episode+" has no committed calls", http.StatusNotFound)
 		return
 	}
 	writeJSON(w, http.StatusOK, rep)
+}
+
+// reportBuildError is the builder's own failure: the one the report maps to a read timeout.
+type reportBuildError struct{ err error }
+
+func (e reportBuildError) Error() string { return e.err.Error() }
+func (e reportBuildError) Unwrap() error { return e.err }
+
+// reportTimedOut reports a builder failure past the read deadline (the start and finish reads'
+// failures stay internal errors, as the route has always answered them).
+func reportTimedOut(ctx context.Context, err error) bool {
+	var build reportBuildError
+	return errors.As(err, &build) && timedOut(ctx, build.err)
+}
+
+// episodeReport is the report GET /v1/episodes/{episode}/report serves and the app's bar runs (row
+// 243 V1: extracted unchanged from the handler); found is false when the episode has nothing.
+func (d *Daemon) episodeReport(ctx context.Context, episode string) (EpisodeReport, bool, error) {
+	rep, ok, err := buildEpisodeReport(ctx, d.intents, d.reads, episode)
+	if err != nil {
+		return rep, false, reportBuildError{err}
+	}
+	start, err := d.readEpisodeStart(ctx, episode)
+	if err != nil {
+		return rep, false, err
+	}
+	rep.Start = start
+	rep.Finish, err = d.readEpisodeFinish(ctx, episode)
+	if err != nil {
+		return rep, false, err
+	}
+	rep.ExecCache = d.workspace.execCacheStatus(episode)
+	return rep, ok || start != nil || rep.Finish != nil || len(rep.ExecCache) > 0, nil
 }

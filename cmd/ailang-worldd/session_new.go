@@ -65,6 +65,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/verbs"
 	"github.com/sunholo-data/ailang-world/host/worktree"
 )
 
@@ -607,7 +608,7 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 	outPath := fs.String("out", "", "write the token once to this file (0600)")
 	profile := fs.String("profile", "", "bind the session to this exec profile's project")
 	profilesDir := fs.String("exec-profiles-dir", defaultExecProfilesDir(), "where --profile looks")
-	positional, err := parseInterleaved(fs, args)
+	positional, err := verbs.ParseInterleaved(fs, args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			fmt.Fprint(stdout, sessionNewHelp)
@@ -781,7 +782,7 @@ func runSessionList(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	wsRoot := fs.String("workspace-root", def.workspaceRoot, "workspace root (marks degraded episodes)")
 	episode := fs.String("episode", "", "only this episode")
 	asJSON := fs.Bool("json", false, "print JSON")
-	positional, err := parseInterleaved(fs, args)
+	positional, err := verbs.ParseInterleaved(fs, args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			fmt.Fprint(stdout, sessionListHelp)
