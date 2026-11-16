@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 394 | 2026-11-16 | row 243 design r2 DONE (`w-world-address-bar-verbs.md`): operator verbs in the World app's address bar through one Go grammar shared with the CLI; ... |
 | 393 | 2026-11-16 | row 260 LANDED (PR #573, merge `10e6b5dc`): the kernel's contracts type-check under AILANG v0.60.4 — four `TC_CONTRACT_001` sites fixed (two enum `... |
 | 392 | 2026-11-13 | row 201 A4 sprint 4 MERGED (PR #571, merge `842b9331`): the surface — `requests.json` decisions, `approve --list` decisions, *Needs you* + notifica... |
 | 391 | 2026-11-13 | row 201 A4 sprint 3 LANDED (PR #569, merge `e6761873`): the passkey decision arm (`DecideByAssertion`, `JudgeDecisionAssertion`, the store counter,... |
