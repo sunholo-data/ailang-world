@@ -47,7 +47,8 @@ ailang-worldd why <entry> --expect-store <store= path from the trailer>
 
 Add absolute `--exec-sandbox`, `--exec-node`, `--exec-profiles-dir`,
 `--examples-dir`, `--surface-follow` and `--surface-index` paths to install as
-needed. Stop before publishing transitions (§9), then start again.
+needed. Behind `tailscale serve`, add `--surface-origin https://<host>.ts.net[:port]` (repeatable)
+so the approval routes answer at that origin (§17). Stop before publishing transitions (§9), then start again.
 The writer-lock refusal names the World service, explains the single writer, and tells you to stop, publish, then start.
 Start rotates logs over 10 MiB and asks for approval if the plist changed.
 Uninstall keeps the binary, databases, sessions, worktrees and logs.

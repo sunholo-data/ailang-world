@@ -20,6 +20,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/pinfetch"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -30,7 +31,8 @@ const serviceHelp = `usage: ailang-worldd service install|status|upgrade|stop|st
   install [--bind 127.0.0.1:7644] [--db PATH] [--credentials-db PATH]
     [--workspace-root DIR] [--interpreter-dir DIR] [--tools-dir DIR]
     [--exec-sandbox DIR] [--exec-profiles-dir DIR] [--exec-node PATH]
-    [--examples-dir DIR] [--surface-index PATH] [--surface-follow PATH] [--binary PATH] [--replace]
+    [--examples-dir DIR] [--surface-index PATH] [--surface-follow PATH]
+    [--surface-origin https://<host>.ts.net[:port]]... [--binary PATH] [--replace]
   status [--json] [--verbose]
   upgrade [--binary FILE] [--pause]
 Install, stop and uninstall require a typed y at the controlling terminal.
@@ -301,6 +303,16 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 	for _, name := range []string{"exec-sandbox", "exec-profiles-dir", "exec-node", "examples-dir", "surface-index", "surface-follow"} {
 		extra[name] = fs.String(name, "", "absolute path")
 	}
+	// --surface-origin is forwarded to serve unchanged, with serve's own grammar check, so a
+	// service reached through tailscale serve answers the approval routes at its ts.net origin.
+	var surfaceOrigins []string
+	fs.Func("surface-origin", "an origin the approval routes also answer at, https://<host>.ts.net[:port] (repeatable)", func(v string) error {
+		if _, err := approval.ParseCeremonyOrigin(v); err != nil {
+			return err
+		}
+		surfaceOrigins = append(surfaceOrigins, v)
+		return nil
+	})
 	if code, done := parseVerbFlags(fs, args[1:], serviceHelp, out, errOut); done {
 		return code
 	}
@@ -428,6 +440,9 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 				}
 				argv = append(argv, "--"+name, *extra[name])
 			}
+		}
+		for _, origin := range surfaceOrigins {
+			argv = append(argv, "--surface-origin", origin)
 		}
 		plist := renderServicePlist(e.label, e.paths, argv, filepath.Dir(*db))
 		r := serviceRecord{Schema: "world/service/v1", Label: e.label, Plist: e.paths.Plist, PlistSHA256: serviceHash([]byte(plist)), PlistText: plist, Binary: e.paths.Binary, BinarySHA256: serviceHash(source), Address: *bind, Store: *db, Credentials: *creds, Workspace: *root, Log: e.paths.Log, InstalledAt: e.terminal.now(), Upgrades: []serviceUpgrade{}}
