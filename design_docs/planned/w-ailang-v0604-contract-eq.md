@@ -1,6 +1,6 @@
 # w-ailang-v0604-contract-eq — make the kernel's contracts type-check under AILANG v0.60.4
 
-**Status**: Planned, r1. Designer, iteration 393 (unattended), with a working prototype in a scratch clone.
+**Status**: Planned, r2 (r2 = controller narrow-refinement carve-out after quorum r2, §9). Designer (opus), iteration 393 (unattended), with a working prototype in a scratch clone.
 r1 answers quorum round 1 (§9). The controller owns commits. Nothing was published and nothing
 was requested of the registry.
 **Item**: charter row 260 (`w-ailang-v0604-contract-eq`). Decision `D-WORLD-116` is OPEN with
