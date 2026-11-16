@@ -1,0 +1,20 @@
+tree=/Users/voightkampff/dev/sunholo-data/.wt-world-iter393-row260 head=54d3233f mode=m1 base=cbcf80fb dirty_files=14
+LEG AC1_verify_ail_v0604 rc=0 11s notice=yes
+LEG AC2_verify_ail_pin rc=0 27s notice=no
+LEG AC3_per_file_counts rc=0 0s 8/8 OK
+LEG AC4_kernel_contracts rc=0 2s 
+LEG gofmt rc=0 0s files=2
+LEG AC5_go_build rc=0 2s 
+LEG AC5_go_vet rc=0 0s 
+   ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	22.561s
+   ok  	github.com/sunholo-data/ailang-world/host/broker	200.104s
+   ok  	github.com/sunholo-data/ailang-world/host/pkgproj	12.893s
+   ok  	github.com/sunholo-data/ailang-world/host/runbook	1.352s
+   ok  	github.com/sunholo-data/ailang-world/host/replay	12.706s
+   ok  	github.com/sunholo-data/ailang-world/host/verifygate	154.609s
+   ok  	github.com/sunholo-data/ailang-world/host/pins	0.304s
+LEG AC5_go_test_7pkgs rc=0 409s 7/7 ok
+LEG AC6_identity rc=0 0s 13/13 OK
+LEG AC7_history rc=0 0s 
+LEG verify_go_plain rc=0 347s 
+GATES_DONE mode=m1 799s FAILS: none

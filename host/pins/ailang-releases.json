@@ -80,6 +80,13 @@
       "roles": [
         {"role": "observed", "since": "2026-08-10", "evidence": "the former local pin, listed by 9789b87 (scripts/testdata/ailang_release_observed.txt); also the scripts/verify_ail.sh release-verdict instrument control token"}
       ]
+    },
+    {
+      "release": "v0.60.4",
+      "version": "AILANG v0.60.4",
+      "roles": [
+        {"role": "observed", "since": "2026-11-16", "evidence": "upstream releases/latest on CI PATH from 2026-11-13 (type-checks contract clauses, ailang#2283); reviewed by row 260 (w-ailang-v0604-contract-eq)"}
+      ]
     }
   ]
 }

@@ -41,7 +41,7 @@ func TestCurrentManifestIsTodaysPins(t *testing.T) {
 	for _, r := range m.Holders(RoleRetired) {
 		retired = append(retired, r.Release)
 	}
-	if strings.Join(observed, " ") != "v0.41.0 v0.33.0 v0.30.0" {
+	if strings.Join(observed, " ") != "v0.41.0 v0.33.0 v0.30.0 v0.60.4" {
 		t.Errorf("observed releases %v", observed)
 	}
 	if strings.Join(retired, " ") != "v0.52.1" {
