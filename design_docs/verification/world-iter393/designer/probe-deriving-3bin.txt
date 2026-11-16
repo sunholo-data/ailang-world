@@ -1,0 +1,15 @@
+=== AILANG v0.60.4
+rec: passed=True errs=[] verify=[('same', 'verified', '')]
+recplain: passed=False errs=[('ERROR', 'type error in recplain (decl 0): at recplain.ail:7:5: No instance for Eq[H] in scope. Equality (==, !=) is not defined on H. Add `deriving (Eq)` to type H (decl')] verify=[]
+enumeq: passed=True errs=[] verify=[('g', 'verified', '')]
+named: passed=True errs=[] verify=[('same', 'verified', '')]
+=== AILANG v0.41.0
+rec: passed=True errs=[] verify=[('same', 'verified', '')]
+recplain: passed=False errs=[('ERROR', 'type error in recplain (decl 0): at recplain.ail:7:5: No instance for Eq[H] in scope. Equality (==, !=) needs an Eq instance; H has none. Import std/prelude, or')] verify=[]
+enumeq: passed=True errs=[] verify=[('g', 'verified', '')]
+named: passed=True errs=[] verify=[('same', 'verified', '')]
+=== AILANG v0.30.0
+rec: passed=True errs=[] verify=[('same', 'verified', '')]
+recplain: passed=False errs=[('ERROR', 'type error in recplain (decl 0): at recplain.ail:7:5: No instance for Eq[H] in scope. Equality (==, !=) needs an Eq instance; H has none. Import std/prelude, or')] verify=[]
+enumeq: passed=True errs=[] verify=[('g', 'verified', '')]
+named: passed=True errs=[] verify=[('same', 'verified', '')]

@@ -1,0 +1,23 @@
+== AILANG v0.60.4
+Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+    d=json.load(sys.stdin); c=d.get("check",{}); print("passed",c.get("passed"), [ (e.get("code"), (e.get("message") or "")[:140]) for e in c.get("errors",[])][:2]); print([(r.get("name"),r.get("status"),(r.get("message") or r.get("reason") or "")[:120]) for r in d.get("verify",{}).get("results",[])])
+  File "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 298, in load
+    return loads(fp.read(),
+        cls=cls, object_hook=object_hook,
+        parse_float=parse_float, parse_int=parse_int,
+        parse_constant=parse_constant, object_pairs_hook=object_pairs_hook, **kw)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/__init__.py", line 352, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/lib/python3.14/json/decoder.py", line 348, in decode
+    raise JSONDecodeError("Extra data", s, end)
+json.decoder.JSONDecodeError: Extra data: line 48 column 1 (char 994)
+== AILANG v0.41.0
+passed True []
+[(None, 'skipped', 'SMT declaration closure could not resolve a required sort (cannot encode ensures clause: let body: let body: let value: '), (None, 'verified', ''), (None, 'verified', '')]
+    "passed": true,
+    "skipped": 0,
+        "status": "verified",
+        "status": "verified",
+        "status": "verified",

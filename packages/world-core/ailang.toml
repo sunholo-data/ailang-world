@@ -1,6 +1,6 @@
 [package]
 name = "world/core"
-version = "0.1.1"
+version = "0.1.2"
 edition = "1"
 ailang = ">=0.30.0"
 module_prefix = "world"
@@ -9,6 +9,7 @@ description = "AILANG World's pure semantic core"
 # PUB002: the registry refuses a publish that does not declare what kind of
 # release this is. 0.1.0 was the first publish, so `feature`; 0.1.1 keeps `feature`
 # (D-WORLD-41: five added proven contracts are a capability; no exported signature changed).
+# 0.1.2 keeps `feature` (row 260: adds `Eq` on two exported enums; no signature changed).
 [release]
 kind = "feature"
 

@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-ailang-v0604-contract-eq.md",
+  "iso_ts": "2026-11-16T05:57:48Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.041063999999999996,
+      "tokens_in": 8806,
+      "tokens_out": 292,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In §2 and §3 (items 4 and 6), the release kind is left ambiguous ('fix' vs 'feature': 'Keeping feature is acceptable if the planner prefers zero extra edits'). Leaving a branching choice inside M1 means the exact file diff count and step 4's frozen assertion in `scripts/verify_world_package.sh:136` are not deterministically locked before execution.",
+        "catch": "Lock the `[release].kind` choice in §2 and §3 to one concrete value (`fix` or `feature`) rather than deferring the choice to the planner/executor, and ensure the M2 JSON edit to `pins/ailang-releases.json` and `host/pins/ailang-releases.json` preserves exact formatting without reformatting the rest of the file.",
+        "proposed_fix": "In §2 and §3 items 4 \u0026 6, commit deterministically to `kind = \"fix\"` (updating `packages/world-core/ailang.toml` and `scripts/verify_world_package.sh:136` step 4 `want`) and remove the fallback 'if chosen / if the planner prefers' phrasing."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0666992,
+      "tokens_in": 7816,
+      "tokens_out": 12672,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The load-bearing safety claim of the entire fix — 'Field equality on a two-field record is the same proposition as record equality, so the proven laws do not change' (§1) — is an asserted premise about AILANG's contract semantics with no verification-log entry behind it. V2 only establishes that `deriving (Eq)` type-checks and that `==` on an Eq-less record errors; it never establishes what `==` on a record WITH a derived Eq means in the contract logic. The only supporting evidence offered is 'the same implementation mutants are still killed (MUT-5..7)', but the doc's own §5 concedes the control suite is blind to specification-strength changes (MUT-8, a weakened `plan` clause, SURVIVES). By symmetry, a STRENGTHER restated clause would also pass every gate just as green, so MUT-5..7 cannot substantiate equivalence either. The doc therefore rewrites the text of two `ensures` clauses in the kernel's frozen core with no mechanical or cited evidence that the proven obligations are proposition-identical — a direct gate-1 and gate-3 (minimal frozen core) failure.",
+        "catch": "Two secondary premises are also asserted rather than verified and should be flagged: (1) AC6 demands 'the executor must reproduce this exact value' for contentHash `359a82fd…`, but the invariance probes (V7, V10) varied only the manifest version and release kind with module bytes held fixed — they never varied the CHANGELOG bytes, the one file the doc itself makes executor-dependent (`## 0.1.2 — \u003cdate\u003e` in M1 item 5). CHANGELOG-invariance of contentHash is inferred from mechanism, not measured; if it moves, the executor hits a spurious AC6 red and the doc's own history (#565's hand-edited fixtures, V14) shows hand-editing digests is the human failure mode this row exists to supersede. (2) 'Registry versions are immutable (409)' and 'no CI lane uses v0.30.0' carry no V-log row and no banked ci.yml citation, yet both shape §2 and the §1 v0.30.0 column.",
+        "proposed_fix": "Add two verification-log rows before this doc freezes: (V15) semantic-equivalence probe — under v0.41.0, build the candB variant (original `==` clauses with `HashRef deriving (Eq)`) and run the full MUT-5..7 set against it, recording the identical kill set and counterexamples as candA, plus either a probe or a spec citation establishing that record `==` with derived Eq is field-wise equality; then restate §1's claim as: 'record equality with derived Eq is field-wise per \u003cspec/probe\u003e; the restated clauses kill the identical mutant set as the derived-Eq original clauses (V15), so the proven obligations are unchanged.' (V16) contentHash-invariance probe — with the prototype module bytes fixed, vary ONLY the CHANGELOG date text and re-run `publish --dry-run` under v0.41.0, confirming contentHash stays `359a82fd…`; if it moves, pin the exact CHANGELOG date in M1 item 5 so the bytes are deterministic, or downgrade AC6's first bullet to 'contentHash must equal the value in the step-9 dry-run packet, and interfaceHash/interfaceHashV2 must be byte-identical to base.' Also bank a one-line citation (ci.yml excerpt or registry 409 transcript) for the two asserted premises in §2 and §5."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.157851,
+      "tokens_in": 7787,
+      "tokens_out": 8966,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "Internal contradiction on what counts as an interface change, plus an unverified recommended path. For S3 the doc rejects `HashRef deriving (Eq)` explicitly because it 'adds an Eq[HashRef] instance to the most widely used exported type' — i.e., adding an Eq instance is an interface/capability change. But for S1/S2 the same operation (`deriving (Eq)` on two exported enums) is declared to '[add] no capability', justifying release kind `fix`. Both cannot be true: S1/S2 add exported `Eq[EvidenceGrade]` and `Eq[TimeoutOutcome]` instances to the published package, and the doc's own evidence shows `interfaceHashV2` is unchanged at '53 signatures' — meaning instances are not hashed, so 'moves neither interface hash' proves nothing about interface equality; the frozen fence simply cannot see instance additions. Compound problem: the end-to-end evidence (V5, V7, the AC1 green run, prototype diff) was all measured on kind=`feature` (tarballBytes 10852), while the doc recommends kind=`fix`, which was only exercised via `publish --dry-run` (V10) — never through the full verify_ail/verify_world_package/AC6 sequence with the edited step-4 frozen `want`. The doc pins contentHash to the exact byte for the executor yet leaves a two-way fork ('Keeping feature is acceptable') on a decision that changes the manifest, its comment, the step-4 `want`, the CHANGELOG wording and tarballBytes, and its recommendation rests on a claim its own S3 analysis refutes.",
+        "catch": "Decide the release kind in the doc, not at executor time, and reconcile the interface-change logic: (1) state plainly that S1/S2 add two exported Eq instances and that interfaceHashV2/interfaceHash v1 do not hash instances, so the frozen fence is blind to this addition — justify why that is acceptable, or restate S1/S2 field-wise for consistency with the S3 reasoning; (2) given that, kind=`feature` is the honest kind and matches every end-to-end measurement already taken (V5, V7) — if `fix` is retained instead, the recommended configuration has never been run end-to-end and needs a full AC1+AC6 pass on a kind=fix manifest before this doc can claim executor-determinism; (3) add verification-log rows for the two load-bearing asserted premises: quote ci.yml's 'Install released ailang binary' step (releases/latest) and evidence for 'registry versions are immutable (409)' — the entire §2 version bump, which dominates M1, rests on the latter and currently has no V-row.",
+        "proposed_fix": "Replace the 'Release kind: fix' paragraph in §2 with: 'Release kind: feature (decided, no fork). S1/S2 add exported Eq[EvidenceGrade] and Eq[TimeoutOutcome] instances; per the S3 analysis an added instance is an interface change, so this release adds a capability and kind=feature is honest. Note: neither interfaceHash nor interfaceHashV2 (53 signatures) hashes instances, so the frozenInterfaceHashV2 fence does not cover this addition — accepted because the instances are additive-only and no existing signature changes. All end-to-end evidence (V5, V7) was measured on kind=feature with tarballBytes 10852.' Delete 'Keeping feature is acceptable...' from item 4 and make item 4/6 unconditional. Add to §8: '| V15 | `grep -n \"releases/latest\" ci.yml` + quoted install step | confirms legs 1–2 float on latest | ev/ciyml-install-step.txt |' and '| V16 | registry behavior on existing version (quote runbook/SELF_MOD_PUBLISH.md or observed 409 from the 0.1.1 publish record) | versions immutable, bump required | ev/registry-immutability.txt |'. If kind=fix is preferred anyway, rerun the full AC1/AC6 sequence on a kind=fix manifest and bank it as V7b before keeping the recommendation."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "Controller read r0 in full: four measured TC_CONTRACT_001 sites, field-wise restatement for HashRef with measured reasons vs deriving/nominal, 0.1.2 identity with contentHash pinned, interface hashes unchanged, mutation table incl. a named pre-existing weakening survivor (MUT-8)."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The load-bearing safety claim of the entire fix — 'Field equality on a two-field record is the same proposition as record equality, so the proven laws do not change' (§1) — is an asserted premise about AILANG's contract semantics with no verification-log entry behind it. V2 only establishes that `deriving (Eq)` type-checks and that `==` on an Eq-less record errors; it never establishes what `==` on a record WITH a derived Eq means in the contract logic. The only supporting evidence offered is 'the same implementation mutants are still killed (MUT-5..7)', but the doc's own §5 concedes the control suite is blind to specification-strength changes (MUT-8, a weakened `plan` clause, SURVIVES). By symmetry, a STRENGTHER restated clause would also pass every gate just as green, so MUT-5..7 cannot substantiate equivalence either. The doc therefore rewrites the text of two `ensures` clauses in the kernel's frozen core with no mechanical or cited evidence that the proven obligations are proposition-identical — a direct gate-1 and gate-3 (minimal frozen core) failure.",
+      "oc-kimi-k3: Internal contradiction on what counts as an interface change, plus an unverified recommended path. For S3 the doc rejects `HashRef deriving (Eq)` explicitly because it 'adds an Eq[HashRef] instance to the most widely used exported type' — i.e., adding an Eq instance is an interface/capability change. But for S1/S2 the same operation (`deriving (Eq)` on two exported enums) is declared to '[add] no capability', justifying release kind `fix`. Both cannot be true: S1/S2 add exported `Eq[EvidenceGrade]` and `Eq[TimeoutOutcome]` instances to the published package, and the doc's own evidence shows `interfaceHashV2` is unchanged at '53 signatures' — meaning instances are not hashed, so 'moves neither interface hash' proves nothing about interface equality; the frozen fence simply cannot see instance additions. Compound problem: the end-to-end evidence (V5, V7, the AC1 green run, prototype diff) was all measured on kind=`feature` (tarballBytes 10852), while the doc recommends kind=`fix`, which was only exercised via `publish --dry-run` (V10) — never through the full verify_ail/verify_world_package/AC6 sequence with the edited step-4 frozen `want`. The doc pins contentHash to the exact byte for the executor yet leaves a two-way fork ('Keeping feature is acceptable') on a decision that changes the manifest, its comment, the step-4 `want`, the CHANGELOG wording and tarballBytes, and its recommendation rests on a claim its own S3 analysis refutes."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.2656142,
+    "total_tokens_in": 24409,
+    "total_tokens_out": 21930
+  }
+}

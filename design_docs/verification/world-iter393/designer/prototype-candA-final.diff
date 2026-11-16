@@ -1,0 +1,256 @@
+diff --git a/cmd/world-publish/fences.go b/cmd/world-publish/fences.go
+index 3c4af26a..7d1f8a79 100644
+--- a/cmd/world-publish/fences.go
++++ b/cmd/world-publish/fences.go
+@@ -64,7 +64,7 @@ const (
+ // layer that defeats automation is the controlling-terminal check in tty.go.
+ // Stating that here is deliberate: an operator who believes this phrase is the
+ // security boundary will eventually route around the one that is.
+-const attendedPhrase = "publish world/core@0.1.1 irreversibly"
++const attendedPhrase = "publish world/core@0.1.2 irreversibly"
+ 
+ // frozenPackageVersion is the ONE version this command may publish. The scope
+ // grammar already makes an approval for 0.1.0 unable to authorize 0.1.1; this
+@@ -72,7 +72,7 @@ const attendedPhrase = "publish world/core@0.1.1 irreversibly"
+ // Moved 0.1.0 -> 0.1.1 by D-WORLD-41 (proof hardening, no exported signature
+ // change). 0.1.0 is PUBLISHED and immutable; its record stays in
+ // host/broker/testdata/metadata_world_core_0.1.0.json and is never rewritten.
+-const frozenPackageVersion = "0.1.1"
++const frozenPackageVersion = "0.1.2"
+ 
+ // frozenCompilerVersion is the pinned compiler the ready packet was projected
+ // with. It is stated here INDEPENDENTLY of the golden so the comparison in
+diff --git a/docs/SELF_MOD_PUBLISH.md b/docs/SELF_MOD_PUBLISH.md
+index 6fdd55bc..c53a338a 100644
+--- a/docs/SELF_MOD_PUBLISH.md
++++ b/docs/SELF_MOD_PUBLISH.md
+@@ -106,10 +106,10 @@ exported signature changed. The loop never publishes; a human runs steps 6–7 b
+ 
+ | field | digest |
+ |---|---|
+-| `contentHash` | `sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780` |
++| `contentHash` | `sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c` |
+ | `interfaceHash` (manifest coverage only) | `sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083` |
+ | `interfaceHashV2` (exported interface) | `sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8` |
+-| `tarballSHA256` | `sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3` |
++| `tarballSHA256` | `sha256:b97d07701f6b7277313ae555dfaf22f2bdfad97b1a16df85bb5689c5f25f64e5` |
+ 
+ They are gated against the golden by `host/runbook`, so this table cannot rot silently: change the
+ package without reprojecting, or edit one nibble here, and the repository gate reds.
+diff --git a/host/pkgproj/dryrun_shapes_test.go b/host/pkgproj/dryrun_shapes_test.go
+index 7f077002..979d5076 100644
+--- a/host/pkgproj/dryrun_shapes_test.go
++++ b/host/pkgproj/dryrun_shapes_test.go
+@@ -114,7 +114,7 @@ func TestParseDryRunLeadingWhitespaceAndRefusals(t *testing.T) {
+ 		"no content hash":     regexp.MustCompile(`(?m)^.*Content hash:.*\n`).ReplaceAllString(src, ""),
+ 		"two tarball hashes":  src + "  Tarball hash: sha256:" + strings.Repeat("a", 64) + "\n",
+ 		"inline and separate": strings.Replace(readFixture(t, "dryrun_v0.41.0.txt"), "  Content hash:", "  Tarball hash: sha256:"+strings.Repeat("b", 64)+"\n  Content hash:", 1),
+-		"short hash no dots":  strings.Replace(src, "Content hash: sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780", "Content hash: sha256:473517079249f3959", 1),
++		"short hash no dots":  strings.Replace(src, "Content hash: sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c", "Content hash: sha256:359a82fde07d8e900", 1),
+ 	}
+ 	for name, out := range cases {
+ 		if out == src {
+diff --git a/host/pkgproj/testdata/dryrun_v0.41.0.txt b/host/pkgproj/testdata/dryrun_v0.41.0.txt
+index 82089bc2..3fc0767f 100644
+--- a/host/pkgproj/testdata/dryrun_v0.41.0.txt
++++ b/host/pkgproj/testdata/dryrun_v0.41.0.txt
+@@ -1,5 +1,5 @@
+-Publishing world/core@0.1.1...
+-→ quality world/core@0.1.1 (-)
++Publishing world/core@0.1.2...
++→ quality world/core@0.1.2 (-)
+   compile:   ✓ 5 files
+   contracts: ✓ 16/16 verified, 0 refuted, 3 uncontracted exports (0.1s)
+   interface: ✓ v2 b25fe03155db… (53 signatures)
+@@ -16,8 +16,8 @@ Publishing world/core@0.1.1...
+ 
+ ✓ no gates
+ 
+-  Tarball: 10610 bytes (sha256:07d6180986739249b...)
+-  Content hash: sha256:473517079249f3959...
++  Tarball: 10852 bytes (sha256:b97d07701f6b72773...)
++  Content hash: sha256:359a82fde07d8e900...
+   Interface hash: sha256:d16cc88270ff4c4ea...
+   Exports: [world/types world/contracts world/transitions world/logepoch]
+   Effects: []
+diff --git a/host/pkgproj/testdata/dryrun_v0.54.11.txt b/host/pkgproj/testdata/dryrun_v0.54.11.txt
+index f9df482f..fb4dfad0 100644
+--- a/host/pkgproj/testdata/dryrun_v0.54.11.txt
++++ b/host/pkgproj/testdata/dryrun_v0.54.11.txt
+@@ -1,5 +1,5 @@
+-Publishing world/core@0.1.1...
+-→ quality world/core@0.1.1 (-)
++Publishing world/core@0.1.2...
++→ quality world/core@0.1.2 (-)
+   compile:   ✓ 5 files
+   contracts: ✓ 16/16 verified, 0 refuted, 3 uncontracted exports (0.1s)
+   interface: ✓ v2 b25fe03155db… (53 signatures)
+@@ -17,9 +17,9 @@ Publishing world/core@0.1.1...
+ 
+ ✓ no gates
+ 
+-  Tarball: 10610 bytes
+-  Tarball hash: sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3
+-  Content hash: sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780
++  Tarball: 10852 bytes
++  Tarball hash: sha256:b97d07701f6b7277313ae555dfaf22f2bdfad97b1a16df85bb5689c5f25f64e5
++  Content hash: sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c
+   Interface hash: sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083
+   Interface hash (v2): sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8
+   Exports: [world/types world/contracts world/transitions world/logepoch]
+diff --git a/packages/world-core/CHANGELOG.md b/packages/world-core/CHANGELOG.md
+index a02b3e03..7f3e0827 100644
+--- a/packages/world-core/CHANGELOG.md
++++ b/packages/world-core/CHANGELOG.md
+@@ -1,5 +1,17 @@
+ # Changelog — world/core
+ 
++## 0.1.2 — 2026-11-16
++
++**Compiler-compatibility fix: the kernel's contracts type-check under AILANG v0.60.4.** No exported
++signature changed.
++
++- `EvidenceGrade` and `TimeoutOutcome` derive `Eq`, so `gradeOf`'s and `timeoutOutcome`'s
++  `ensures` (which compare results with `==`) type-check now that contract clauses are typed.
++- `plan`'s and `verify`'s `ensures` compare digest references field by field (`algo`, `digest`),
++  the idiom `applyRevision` already used. The proven laws are unchanged.
++
++Contracts: **16 verified, 0 refuted**. Effects: still **none**.
++
+ ## 0.1.1 — 2026-09-30
+ 
+ **Proof hardening of the pure semantic core. No exported signature changed** — the interface
+diff --git a/packages/world-core/ailang.toml b/packages/world-core/ailang.toml
+index d49849c2..a45561f7 100644
+--- a/packages/world-core/ailang.toml
++++ b/packages/world-core/ailang.toml
+@@ -1,6 +1,6 @@
+ [package]
+ name = "world/core"
+-version = "0.1.1"
++version = "0.1.2"
+ edition = "1"
+ ailang = ">=0.30.0"
+ module_prefix = "world"
+diff --git a/packages/world-core/world/transitions.ail b/packages/world-core/world/transitions.ail
+index 01ad9f22..0e007b07 100644
+--- a/packages/world-core/world/transitions.ail
++++ b/packages/world-core/world/transitions.ail
+@@ -26,7 +26,7 @@ export func plan(
+   transitionFn: HashRef,
+   goal: string
+ ) -> Proposal ! {}
+-ensures { result.inputWorld == w.stateRoot && result.proposalHash == proposalHash && result.transitionFn == transitionFn && result.goal == goal }
++ensures { result.inputWorld.algo == w.stateRoot.algo && result.inputWorld.digest == w.stateRoot.digest && result.proposalHash.algo == proposalHash.algo && result.proposalHash.digest == proposalHash.digest && result.transitionFn.algo == transitionFn.algo && result.transitionFn.digest == transitionFn.digest && result.goal == goal }
+  {
+   {
+     proposalHash: proposalHash,
+@@ -45,7 +45,7 @@ ensures { result.inputWorld == w.stateRoot && result.proposalHash == proposalHas
+ -- iff the proposal's input world matches the current world (Contract 1). The
+ -- verification always names the proposal's own hash so Contract 2 holds.
+ export func verify(w: World, p: Proposal) -> Verification ! {}
+-ensures { result.proposalHash == p.proposalHash && result.accepted == (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest) }
++ensures { result.proposalHash.algo == p.proposalHash.algo && result.proposalHash.digest == p.proposalHash.digest && result.accepted == (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest) }
+  {
+   if proposalMatchesWorld(w, p)
+   then { proposalHash: p.proposalHash, accepted: true, reason: "accepted" }
+diff --git a/packages/world-core/world/types.ail b/packages/world-core/world/types.ail
+index 5883d348..d05f3dde 100644
+--- a/packages/world-core/world/types.ail
++++ b/packages/world-core/world/types.ail
+@@ -36,6 +36,7 @@ export type EvidenceGrade
+   | TESTED
+   | ATTESTED
+   | CLAIMED
++  deriving (Eq)
+ 
+ -- Canonical grading for the ratified five-constructor representation.
+ -- No current Evidence constructor has authority to mint PROVEN.
+@@ -150,6 +151,7 @@ export type TimeoutOutcome
+   = ResolveRejectedTimeout
+   | EscalateWithNewDeadline
+   | ExecuteUnderPriorAuthority
++  deriving (Eq)
+ 
+ -- The frozen v1 decision packet (HUMAN-SURFACE §7 point 3), semantic ID
+ -- world/decision-packet/v1. References, not embeds: proposalHash reaches
+diff --git a/scripts/verify_world_package.sh b/scripts/verify_world_package.sh
+index c60aa29b..636c7cba 100755
+--- a/scripts/verify_world_package.sh
++++ b/scripts/verify_world_package.sh
+@@ -132,7 +132,7 @@ with open(sys.argv[1], "rb") as f: got = tomllib.load(f)
+ # inbox without a GitHub tree URL. These are ADDITIONS to a frozen structure and
+ # are listed exactly, so the freeze still refuses anything not named here.
+ want = {
+-  "package": {"name":"world/core", "version":"0.1.1", "edition":"1", "ailang":">=0.30.0", "module_prefix":"world", "description":"AILANG World's pure semantic core"},
++  "package": {"name":"world/core", "version":"0.1.2", "edition":"1", "ailang":">=0.30.0", "module_prefix":"world", "description":"AILANG World's pure semantic core"},
+   "release": {"kind":"feature"},
+   "metadata": {
+     "repository":"https://github.com/sunholo-data/ailang-world/tree/dev/packages/world-core",
+@@ -213,7 +213,7 @@ python3 - "$tmp_dry" <<'PY' || exit 1
+ import re, sys
+ s = open(sys.argv[1], encoding="utf-8").read()
+ checks = [
+- (r"^[ \t]*Publishing world/core@0\.1\.1\.\.\.$", "package identity"),
++ (r"^[ \t]*Publishing world/core@0\.1\.2\.\.\.$", "package identity"),
+  (r"^[ \t]*Exports: \[world/types world/contracts world/transitions world/logepoch\]$", "exact export set"),
+  (r"^[ \t]*Effects: \[\]$", "empty effects"),
+ ]
+@@ -302,7 +302,7 @@ for line in open(sys.argv[1], encoding="utf-8"):
+ required = ("contentHash", "interfaceHash", "interfaceHashV2", "tarballSHA256", "tarballBytes")
+ if any(not values.get(k) for k in required):
+     sys.stderr.write("✗ ready packet input is incomplete\n"); sys.exit(1)
+-packet = {"compilerVersion":sys.argv[3], "contentHash":values["contentHash"], "effects":[], "exports":["world/types","world/contracts","world/transitions","world/logepoch"], "interfaceHash":values["interfaceHash"], "interfaceHashV2":values["interfaceHashV2"], "package":"world/core", "tarballBytes":int(values["tarballBytes"]), "tarballSHA256":values["tarballSHA256"], "version":"0.1.1"}
++packet = {"compilerVersion":sys.argv[3], "contentHash":values["contentHash"], "effects":[], "exports":["world/types","world/contracts","world/transitions","world/logepoch"], "interfaceHash":values["interfaceHash"], "interfaceHashV2":values["interfaceHashV2"], "package":"world/core", "tarballBytes":int(values["tarballBytes"]), "tarballSHA256":values["tarballSHA256"], "version":"0.1.2"}
+ with open(sys.argv[2], "wb") as f: f.write((json.dumps(packet, sort_keys=True, separators=(",", ":")) + "\n").encode())
+ PY
+ [ -s "$tmp_ready" ] || { printf '%s\n' '✗ ready packet enumeration was zero-length' >&2; exit 1; }
+diff --git a/scripts/world_package_ready_packet.golden.json b/scripts/world_package_ready_packet.golden.json
+index 575e16f4..e3f78c1b 100644
+--- a/scripts/world_package_ready_packet.golden.json
++++ b/scripts/world_package_ready_packet.golden.json
+@@ -1 +1 @@
+-{"compilerVersion":"AILANG v0.41.0","contentHash":"sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780","effects":[],"exports":["world/types","world/contracts","world/transitions","world/logepoch"],"interfaceHash":"sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083","interfaceHashV2":"sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8","package":"world/core","tarballBytes":10610,"tarballSHA256":"sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3","version":"0.1.1"}
++{"compilerVersion":"AILANG v0.41.0","contentHash":"sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c","effects":[],"exports":["world/types","world/contracts","world/transitions","world/logepoch"],"interfaceHash":"sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083","interfaceHashV2":"sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8","package":"world/core","tarballBytes":10852,"tarballSHA256":"sha256:b97d07701f6b7277313ae555dfaf22f2bdfad97b1a16df85bb5689c5f25f64e5","version":"0.1.2"}
+diff --git a/world/transitions.ail b/world/transitions.ail
+index 01ad9f22..0e007b07 100644
+--- a/world/transitions.ail
++++ b/world/transitions.ail
+@@ -26,7 +26,7 @@ export func plan(
+   transitionFn: HashRef,
+   goal: string
+ ) -> Proposal ! {}
+-ensures { result.inputWorld == w.stateRoot && result.proposalHash == proposalHash && result.transitionFn == transitionFn && result.goal == goal }
++ensures { result.inputWorld.algo == w.stateRoot.algo && result.inputWorld.digest == w.stateRoot.digest && result.proposalHash.algo == proposalHash.algo && result.proposalHash.digest == proposalHash.digest && result.transitionFn.algo == transitionFn.algo && result.transitionFn.digest == transitionFn.digest && result.goal == goal }
+  {
+   {
+     proposalHash: proposalHash,
+@@ -45,7 +45,7 @@ ensures { result.inputWorld == w.stateRoot && result.proposalHash == proposalHas
+ -- iff the proposal's input world matches the current world (Contract 1). The
+ -- verification always names the proposal's own hash so Contract 2 holds.
+ export func verify(w: World, p: Proposal) -> Verification ! {}
+-ensures { result.proposalHash == p.proposalHash && result.accepted == (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest) }
++ensures { result.proposalHash.algo == p.proposalHash.algo && result.proposalHash.digest == p.proposalHash.digest && result.accepted == (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest) }
+  {
+   if proposalMatchesWorld(w, p)
+   then { proposalHash: p.proposalHash, accepted: true, reason: "accepted" }
+diff --git a/world/types.ail b/world/types.ail
+index 5883d348..d05f3dde 100644
+--- a/world/types.ail
++++ b/world/types.ail
+@@ -36,6 +36,7 @@ export type EvidenceGrade
+   | TESTED
+   | ATTESTED
+   | CLAIMED
++  deriving (Eq)
+ 
+ -- Canonical grading for the ratified five-constructor representation.
+ -- No current Evidence constructor has authority to mint PROVEN.
+@@ -150,6 +151,7 @@ export type TimeoutOutcome
+   = ResolveRejectedTimeout
+   | EscalateWithNewDeadline
+   | ExecuteUnderPriorAuthority
++  deriving (Eq)
+ 
+ -- The frozen v1 decision packet (HUMAN-SURFACE §7 point 3), semantic ID
+ -- world/decision-packet/v1. References, not embeds: proposalHash reaches

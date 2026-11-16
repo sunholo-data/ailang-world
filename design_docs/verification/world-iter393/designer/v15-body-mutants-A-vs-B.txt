@@ -1,0 +1,36 @@
+== cand=A
+AILANG v0.41.0 | MUT-5  plan inputWorld: w.logHead                       | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.41.0 | MUT-5a plan inputWorld algo-only differs                | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.41.0 | MUT-5b plan inputWorld digest-only differs              | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.41.0 | MUT-6  plan proposalHash: transitionFn                  | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.41.0 | MUT-6a plan transitionFn: proposalHash                  | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.41.0 | MUT-7  verify rejected accepted: true                   | passed=True | plan=verified verify=counterexample applyRevision=verified
+AILANG v0.41.0 | MUT-7a verify accepted-branch proposalHash: p.inputWorld | passed=True | plan=verified verify=counterexample applyRevision=verified
+AILANG v0.41.0 | CTRL   unmutated                                        | passed=True | plan=verified verify=verified applyRevision=verified
+== cand=A
+AILANG v0.60.4 | MUT-5  plan inputWorld: w.logHead                       | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.60.4 | MUT-5a plan inputWorld algo-only differs                | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.60.4 | MUT-5b plan inputWorld digest-only differs              | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.60.4 | MUT-6  plan proposalHash: transitionFn                  | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.60.4 | MUT-6a plan transitionFn: proposalHash                  | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.60.4 | MUT-7  verify rejected accepted: true                   | passed=True | plan=verified verify=counterexample applyRevision=verified
+AILANG v0.60.4 | MUT-7a verify accepted-branch proposalHash: p.inputWorld | passed=True | plan=verified verify=counterexample applyRevision=verified
+AILANG v0.60.4 | CTRL   unmutated                                        | passed=True | plan=verified verify=verified applyRevision=verified
+== cand=B
+AILANG v0.41.0 | MUT-5  plan inputWorld: w.logHead                       | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.41.0 | MUT-5a plan inputWorld algo-only differs                | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.41.0 | MUT-5b plan inputWorld digest-only differs              | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.41.0 | MUT-6  plan proposalHash: transitionFn                  | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.41.0 | MUT-6a plan transitionFn: proposalHash                  | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.41.0 | MUT-7  verify rejected accepted: true                   | passed=True | plan=verified verify=counterexample applyRevision=verified
+AILANG v0.41.0 | MUT-7a verify accepted-branch proposalHash: p.inputWorld | passed=True | plan=verified verify=counterexample applyRevision=verified
+AILANG v0.41.0 | CTRL   unmutated                                        | passed=True | plan=verified verify=verified applyRevision=verified
+== cand=B
+AILANG v0.60.4 | MUT-5  plan inputWorld: w.logHead                       | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.60.4 | MUT-5a plan inputWorld algo-only differs                | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.60.4 | MUT-5b plan inputWorld digest-only differs              | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.60.4 | MUT-6  plan proposalHash: transitionFn                  | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.60.4 | MUT-6a plan transitionFn: proposalHash                  | passed=True | plan=counterexample verify=verified applyRevision=verified
+AILANG v0.60.4 | MUT-7  verify rejected accepted: true                   | passed=True | plan=verified verify=counterexample applyRevision=verified
+AILANG v0.60.4 | MUT-7a verify accepted-branch proposalHash: p.inputWorld | passed=True | plan=verified verify=counterexample applyRevision=verified
+AILANG v0.60.4 | CTRL   unmutated                                        | passed=True | plan=verified verify=verified applyRevision=verified

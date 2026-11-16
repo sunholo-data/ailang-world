@@ -1,0 +1,66 @@
+diff --git a/host/pins/ailang-releases.json b/host/pins/ailang-releases.json
+index 08cf3358..1da01a8f 100644
+--- a/host/pins/ailang-releases.json
++++ b/host/pins/ailang-releases.json
+@@ -80,6 +80,13 @@
+       "roles": [
+         {"role": "observed", "since": "2026-08-10", "evidence": "the former local pin, listed by 9789b87 (scripts/testdata/ailang_release_observed.txt); also the scripts/verify_ail.sh release-verdict instrument control token"}
+       ]
++    },
++    {
++      "release": "v0.60.4",
++      "version": "AILANG v0.60.4",
++      "roles": [
++        {"role": "observed", "since": "2026-11-16", "evidence": "upstream releases/latest on CI PATH from 2026-11-13 (type-checks contract clauses, ailang#2283); reviewed by row 260 (w-ailang-v0604-contract-eq)"}
++      ]
+     }
+   ]
+ }
+diff --git a/host/pins/manifest_test.go b/host/pins/manifest_test.go
+index f534c3c0..40ddf8a8 100644
+--- a/host/pins/manifest_test.go
++++ b/host/pins/manifest_test.go
+@@ -41,7 +41,7 @@ func TestCurrentManifestIsTodaysPins(t *testing.T) {
+ 	for _, r := range m.Holders(RoleRetired) {
+ 		retired = append(retired, r.Release)
+ 	}
+-	if strings.Join(observed, " ") != "v0.41.0 v0.33.0 v0.30.0" {
++	if strings.Join(observed, " ") != "v0.41.0 v0.33.0 v0.30.0 v0.60.4" {
+ 		t.Errorf("observed releases %v", observed)
+ 	}
+ 	if strings.Join(retired, " ") != "v0.52.1" {
+diff --git a/pins/ailang-releases.json b/pins/ailang-releases.json
+index 08cf3358..1da01a8f 100644
+--- a/pins/ailang-releases.json
++++ b/pins/ailang-releases.json
+@@ -80,6 +80,13 @@
+       "roles": [
+         {"role": "observed", "since": "2026-08-10", "evidence": "the former local pin, listed by 9789b87 (scripts/testdata/ailang_release_observed.txt); also the scripts/verify_ail.sh release-verdict instrument control token"}
+       ]
++    },
++    {
++      "release": "v0.60.4",
++      "version": "AILANG v0.60.4",
++      "roles": [
++        {"role": "observed", "since": "2026-11-16", "evidence": "upstream releases/latest on CI PATH from 2026-11-13 (type-checks contract clauses, ailang#2283); reviewed by row 260 (w-ailang-v0604-contract-eq)"}
++      ]
+     }
+   ]
+ }
+diff --git a/scripts/testdata/ailang_release_observed.txt b/scripts/testdata/ailang_release_observed.txt
+index 43906aaa..81c0bf05 100644
+--- a/scripts/testdata/ailang_release_observed.txt
++++ b/scripts/testdata/ailang_release_observed.txt
+@@ -20,8 +20,12 @@
+ # v0.30.0 is RETAINED, not superseded: the replay goldens are still v0.30.0-scoped and that pin
+ # deliberately did not move. Two pins, two reasons to be frozen.
+ #
++#   v0.60.4 — upstream `releases/latest` on CI PATH from 2026-11-13 (commit 563c6c9; type-checks
++#             requires/ensures, ailang#2283); reviewed 2026-11-16 by row 260 (w-ailang-v0604-contract-eq).
++#
+ # Adding an entry is a REVIEW, not a formality: it records that someone looked at what the primary
+ # .ail gate switched to. Blank lines and `#` comments are ignored; an empty set fails the gate loudly.
+ v0.41.0
+ v0.33.0
+ v0.30.0
++v0.60.4

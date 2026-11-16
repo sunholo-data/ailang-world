@@ -1,0 +1,28 @@
+module receq
+
+export type H = { algo: string, digest: string } deriving (Eq)
+
+-- derived == implies and is implied by the field conjunction (body = fields, spec = ==)
+export func eqByFields(a: H, b: H) -> bool ! {}
+ensures { result == (a == b) }
+{ a.algo == b.algo && a.digest == b.digest }
+
+-- same, the other way round (body = ==, spec = fields)
+export func fieldsByEq(a: H, b: H) -> bool ! {}
+ensures { result == (a.algo == b.algo && a.digest == b.digest) }
+{ a == b }
+
+-- negative: digest differs, spec claims record equality
+export func digestDiffers(a: H) -> H ! {}
+ensures { result == a }
+{ { algo: a.algo, digest: "x" } }
+
+-- negative: algo differs, spec claims record equality
+export func algoDiffers(a: H) -> H ! {}
+ensures { result == a }
+{ { algo: "x", digest: a.digest } }
+
+-- control: identical record
+export func same(a: H) -> H ! {}
+ensures { result == a }
+{ { algo: a.algo, digest: a.digest } }

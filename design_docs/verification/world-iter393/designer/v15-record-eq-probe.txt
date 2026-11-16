@@ -1,0 +1,2 @@
+AILANG v0.41.0 passed=True [('algoDiffers', 'counterexample'), ('digestDiffers', 'counterexample'), ('eqByFields', 'verified'), ('fieldsByEq', 'verified'), ('same', 'verified')]
+AILANG v0.60.4 passed=True [('algoDiffers', 'counterexample'), ('digestDiffers', 'counterexample'), ('eqByFields', 'verified'), ('fieldsByEq', 'verified'), ('same', 'verified')]

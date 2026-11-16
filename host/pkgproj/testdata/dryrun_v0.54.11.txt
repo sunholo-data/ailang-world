@@ -1,5 +1,5 @@
-Publishing world/core@0.1.1...
-→ quality world/core@0.1.1 (-)
+Publishing world/core@0.1.2...
+→ quality world/core@0.1.2 (-)
   compile:   ✓ 5 files
   contracts: ✓ 16/16 verified, 0 refuted, 3 uncontracted exports (0.1s)
   interface: ✓ v2 b25fe03155db… (53 signatures)
@@ -17,9 +17,9 @@ Publishing world/core@0.1.1...
 
 ✓ no gates
 
-  Tarball: 10610 bytes
-  Tarball hash: sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3
-  Content hash: sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780
+  Tarball: 11030 bytes
+  Tarball hash: sha256:be02038ea1e5dd77d73a686a67be6440f945abab1d7a84303a6cea41114d5004
+  Content hash: sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c
   Interface hash: sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083
   Interface hash (v2): sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8
   Exports: [world/types world/contracts world/transitions world/logepoch]

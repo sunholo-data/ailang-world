@@ -1,0 +1,20 @@
+── World package step 1/9: required paths
+   ✓ package, manifest, smoke, and 4 allowlisted modules exist
+── World package step 2/9: exact .ail allowlist
+   ✓ find observed exactly 5 expected .ail files; no unexpected .ail file exists
+── World package step 3/9: projection SHA-256 equality
+   ✓ 4/4 projection hashes equal their canonical sources
+── World package step 4/9: frozen manifest
+   ✓ exact package fields, 4 exports, and empty effects
+── World package step 5/9: package check and tests
+   ✓ package check passed and tests reported 43 activity line(s)
+   ✓ exactly 9 skips, all no-generator, all named (upstream M4 / cross-file derive gap)
+── World package step 6/9: bounded smoke execution
+   ✓ plan → verify → commit smoke completed within 30s
+── World package step 7/9: dry-run identity and full pkgproj hashes
+   ✓ dry-run identity/exports/effects and 3 full hashes agree; tarball byte length agrees
+── World package step 8/9: exact tar entry allowlist
+   cache control fired on 55 non-.ail file(s); observed zero cached .ail files
+   ✓ tar contains exactly 7 allowlisted entries
+── World package step 9/9: canonical ready-packet golden
+✗ wrong compiler version: AILANG v0.60.4

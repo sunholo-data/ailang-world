@@ -1,0 +1,253 @@
+diff --git a/host/pins/ailang-releases.json b/host/pins/ailang-releases.json
+index 08cf3358..aeaed7b6 100644
+--- a/host/pins/ailang-releases.json
++++ b/host/pins/ailang-releases.json
+@@ -1,18 +1,41 @@
+ {
+   "schema": "world/ailang-releases/v1",
+   "note": "Single source of truth for the AILANG releases World uses (row 139 D1, design_docs/planned/w-interpreter-epoch-upgrade-path.md). host/pins embeds a byte-identical copy (go:embed cannot reach the repo root); TestEmbeddedManifestMatchesCanonical fails on drift. Every digest was copied from a measured site that already existed in the repo, never invented: the four per-platform rows from cmd/ailang-worldd/pins.go (row 138 M3, 2026-10-03), whose v0.41.0 binary digests are the same values scripts/verify_world_package.sh pins. Releases holding only the observed role carry no assets: no digest for them is recorded anywhere in the repo. Roles interpreter, proof, frozen-compiler, gate-primary and tool are exclusive (exactly one release each); observed and retired may be held by many. retired is history: a release that held a binary role and was superseded keeps its row, its since/evidence and its assets (stores still archive and replay it), may not also hold an exclusive role, and still explains its literals to the release-literal scan. The v0.54.15 row's digests were measured by the operator from the published GitHub release and checked against its .sha256 files (row 139 D7, tool half, 2026-10-17).",
+-  "platforms": ["darwin/arm64", "linux/amd64"],
++  "platforms": [
++    "darwin/arm64",
++    "linux/amd64"
++  ],
+   "releases": [
+     {
+       "release": "v0.41.0",
+       "version": "AILANG v0.41.0",
+       "commit": "24ee108",
+       "roles": [
+-        {"role": "interpreter", "since": "2026-10-03", "evidence": "serve --ailang-bin pin (D-WORLD-57); installed by ailang-worldd setup (row 138 M3)"},
+-        {"role": "proof", "since": "2026-10-16", "evidence": "demo proof checker pin (row 150 M3a, cmd/ailang-worldd/demo_proof.go)"},
+-        {"role": "frozen-compiler", "since": "2026-09-21", "evidence": "world/core ready packet re-projected on v0.41.0; contentHash/interfaceHash byte-identical to v0.30.0 (cmd/world-publish/fences.go)"},
+-        {"role": "gate-primary", "since": "2026-09-22", "evidence": "replay goldens re-verified byte-exact on v0.41.0; CI AILANG_BIN and WORLD_PKG_AILANG_BIN (ci.yml, scripts/verify_go.sh, scripts/verify_world_package.sh)"},
+-        {"role": "observed", "since": "2026-09-21", "evidence": "scripts/testdata/ailang_release_observed.txt (local pin from 2026-09-21)"}
++        {
++          "role": "interpreter",
++          "since": "2026-10-03",
++          "evidence": "serve --ailang-bin pin (D-WORLD-57); installed by ailang-worldd setup (row 138 M3)"
++        },
++        {
++          "role": "proof",
++          "since": "2026-10-16",
++          "evidence": "demo proof checker pin (row 150 M3a, cmd/ailang-worldd/demo_proof.go)"
++        },
++        {
++          "role": "frozen-compiler",
++          "since": "2026-09-21",
++          "evidence": "world/core ready packet re-projected on v0.41.0; contentHash/interfaceHash byte-identical to v0.30.0 (cmd/world-publish/fences.go)"
++        },
++        {
++          "role": "gate-primary",
++          "since": "2026-09-22",
++          "evidence": "replay goldens re-verified byte-exact on v0.41.0; CI AILANG_BIN and WORLD_PKG_AILANG_BIN (ci.yml, scripts/verify_go.sh, scripts/verify_world_package.sh)"
++        },
++        {
++          "role": "observed",
++          "since": "2026-09-21",
++          "evidence": "scripts/testdata/ailang_release_observed.txt (local pin from 2026-09-21)"
++        }
+       ],
+       "assets": {
+         "darwin/arm64": {
+@@ -32,7 +55,11 @@
+       "version": "AILANG v0.54.15",
+       "commit": "0384450",
+       "roles": [
+-        {"role": "tool", "since": "2026-10-17", "evidence": "row 139 D7 tool half: carries World's upstream fixes ailang#1872 (read ranges), #1873 (fs_deny_write follows in-root symlinks, refuses multi-link files), #1874 (** is doublestar), #1875 (delete op), verified by the operator on the published binary; D4 compatibility gate (go test -p 1 ./host/broker ./host/daemon ./host/projection ./cmd/ailang-worldd ./host/pins with WORLD_TOOL_AILANG_BIN on v0.54.15) found no World regression; digests checked against the release's .sha256 files"}
++        {
++          "role": "tool",
++          "since": "2026-10-17",
++          "evidence": "row 139 D7 tool half: carries World's upstream fixes ailang#1872 (read ranges), #1873 (fs_deny_write follows in-root symlinks, refuses multi-link files), #1874 (** is doublestar), #1875 (delete op), verified by the operator on the published binary; D4 compatibility gate (go test -p 1 ./host/broker ./host/daemon ./host/projection ./cmd/ailang-worldd ./host/pins with WORLD_TOOL_AILANG_BIN on v0.54.15) found no World regression; digests checked against the release's .sha256 files"
++        }
+       ],
+       "assets": {
+         "darwin/arm64": {
+@@ -52,7 +79,11 @@
+       "version": "AILANG v0.52.1",
+       "commit": "c68ded4",
+       "roles": [
+-        {"role": "retired", "since": "2026-10-17", "evidence": "the tool binary from 2026-10-03 (confinement matrix re-proved on v0.52.1: row 134 design section 13, V69-V80; row 135 M0) until row 139 D7 moved the tool role to v0.54.15; kept for history (D7): stores archive it and replay resolves it by digest"}
++        {
++          "role": "retired",
++          "since": "2026-10-17",
++          "evidence": "the tool binary from 2026-10-03 (confinement matrix re-proved on v0.52.1: row 134 design section 13, V69-V80; row 135 M0) until row 139 D7 moved the tool role to v0.54.15; kept for history (D7): stores archive it and replay resolves it by digest"
++        }
+       ],
+       "assets": {
+         "darwin/arm64": {
+@@ -71,14 +102,34 @@
+       "release": "v0.33.0",
+       "version": "AILANG v0.33.0",
+       "roles": [
+-        {"role": "observed", "since": "2026-08-10", "evidence": "upstream releases/latest as measured on CI PATH 2026-08-04; listed in scripts/testdata/ailang_release_observed.txt by 9789b87"}
++        {
++          "role": "observed",
++          "since": "2026-08-10",
++          "evidence": "upstream releases/latest as measured on CI PATH 2026-08-04; listed in scripts/testdata/ailang_release_observed.txt by 9789b87"
++        }
+       ]
+     },
+     {
+       "release": "v0.30.0",
+       "version": "AILANG v0.30.0",
+       "roles": [
+-        {"role": "observed", "since": "2026-08-10", "evidence": "the former local pin, listed by 9789b87 (scripts/testdata/ailang_release_observed.txt); also the scripts/verify_ail.sh release-verdict instrument control token"}
++        {
++          "role": "observed",
++          "since": "2026-08-10",
++          "evidence": "the former local pin, listed by 9789b87 (scripts/testdata/ailang_release_observed.txt); also the scripts/verify_ail.sh release-verdict instrument control token"
++        }
++      ]
++    },
++    {
++      "release": "v0.60.4",
++      "version": "AILANG v0.60.4",
++      "commit": "563c6c9",
++      "roles": [
++        {
++          "role": "observed",
++          "since": "2026-11-16",
++          "evidence": "upstream releases/latest on CI PATH from 2026-11-13; reviewed by row 260 (TC_CONTRACT_001)"
++        }
+       ]
+     }
+   ]
+diff --git a/host/pins/manifest_test.go b/host/pins/manifest_test.go
+index f534c3c0..40ddf8a8 100644
+--- a/host/pins/manifest_test.go
++++ b/host/pins/manifest_test.go
+@@ -41,7 +41,7 @@ func TestCurrentManifestIsTodaysPins(t *testing.T) {
+ 	for _, r := range m.Holders(RoleRetired) {
+ 		retired = append(retired, r.Release)
+ 	}
+-	if strings.Join(observed, " ") != "v0.41.0 v0.33.0 v0.30.0" {
++	if strings.Join(observed, " ") != "v0.41.0 v0.33.0 v0.30.0 v0.60.4" {
+ 		t.Errorf("observed releases %v", observed)
+ 	}
+ 	if strings.Join(retired, " ") != "v0.52.1" {
+diff --git a/pins/ailang-releases.json b/pins/ailang-releases.json
+index 08cf3358..aeaed7b6 100644
+--- a/pins/ailang-releases.json
++++ b/pins/ailang-releases.json
+@@ -1,18 +1,41 @@
+ {
+   "schema": "world/ailang-releases/v1",
+   "note": "Single source of truth for the AILANG releases World uses (row 139 D1, design_docs/planned/w-interpreter-epoch-upgrade-path.md). host/pins embeds a byte-identical copy (go:embed cannot reach the repo root); TestEmbeddedManifestMatchesCanonical fails on drift. Every digest was copied from a measured site that already existed in the repo, never invented: the four per-platform rows from cmd/ailang-worldd/pins.go (row 138 M3, 2026-10-03), whose v0.41.0 binary digests are the same values scripts/verify_world_package.sh pins. Releases holding only the observed role carry no assets: no digest for them is recorded anywhere in the repo. Roles interpreter, proof, frozen-compiler, gate-primary and tool are exclusive (exactly one release each); observed and retired may be held by many. retired is history: a release that held a binary role and was superseded keeps its row, its since/evidence and its assets (stores still archive and replay it), may not also hold an exclusive role, and still explains its literals to the release-literal scan. The v0.54.15 row's digests were measured by the operator from the published GitHub release and checked against its .sha256 files (row 139 D7, tool half, 2026-10-17).",
+-  "platforms": ["darwin/arm64", "linux/amd64"],
++  "platforms": [
++    "darwin/arm64",
++    "linux/amd64"
++  ],
+   "releases": [
+     {
+       "release": "v0.41.0",
+       "version": "AILANG v0.41.0",
+       "commit": "24ee108",
+       "roles": [
+-        {"role": "interpreter", "since": "2026-10-03", "evidence": "serve --ailang-bin pin (D-WORLD-57); installed by ailang-worldd setup (row 138 M3)"},
+-        {"role": "proof", "since": "2026-10-16", "evidence": "demo proof checker pin (row 150 M3a, cmd/ailang-worldd/demo_proof.go)"},
+-        {"role": "frozen-compiler", "since": "2026-09-21", "evidence": "world/core ready packet re-projected on v0.41.0; contentHash/interfaceHash byte-identical to v0.30.0 (cmd/world-publish/fences.go)"},
+-        {"role": "gate-primary", "since": "2026-09-22", "evidence": "replay goldens re-verified byte-exact on v0.41.0; CI AILANG_BIN and WORLD_PKG_AILANG_BIN (ci.yml, scripts/verify_go.sh, scripts/verify_world_package.sh)"},
+-        {"role": "observed", "since": "2026-09-21", "evidence": "scripts/testdata/ailang_release_observed.txt (local pin from 2026-09-21)"}
++        {
++          "role": "interpreter",
++          "since": "2026-10-03",
++          "evidence": "serve --ailang-bin pin (D-WORLD-57); installed by ailang-worldd setup (row 138 M3)"
++        },
++        {
++          "role": "proof",
++          "since": "2026-10-16",
++          "evidence": "demo proof checker pin (row 150 M3a, cmd/ailang-worldd/demo_proof.go)"
++        },
++        {
++          "role": "frozen-compiler",
++          "since": "2026-09-21",
++          "evidence": "world/core ready packet re-projected on v0.41.0; contentHash/interfaceHash byte-identical to v0.30.0 (cmd/world-publish/fences.go)"
++        },
++        {
++          "role": "gate-primary",
++          "since": "2026-09-22",
++          "evidence": "replay goldens re-verified byte-exact on v0.41.0; CI AILANG_BIN and WORLD_PKG_AILANG_BIN (ci.yml, scripts/verify_go.sh, scripts/verify_world_package.sh)"
++        },
++        {
++          "role": "observed",
++          "since": "2026-09-21",
++          "evidence": "scripts/testdata/ailang_release_observed.txt (local pin from 2026-09-21)"
++        }
+       ],
+       "assets": {
+         "darwin/arm64": {
+@@ -32,7 +55,11 @@
+       "version": "AILANG v0.54.15",
+       "commit": "0384450",
+       "roles": [
+-        {"role": "tool", "since": "2026-10-17", "evidence": "row 139 D7 tool half: carries World's upstream fixes ailang#1872 (read ranges), #1873 (fs_deny_write follows in-root symlinks, refuses multi-link files), #1874 (** is doublestar), #1875 (delete op), verified by the operator on the published binary; D4 compatibility gate (go test -p 1 ./host/broker ./host/daemon ./host/projection ./cmd/ailang-worldd ./host/pins with WORLD_TOOL_AILANG_BIN on v0.54.15) found no World regression; digests checked against the release's .sha256 files"}
++        {
++          "role": "tool",
++          "since": "2026-10-17",
++          "evidence": "row 139 D7 tool half: carries World's upstream fixes ailang#1872 (read ranges), #1873 (fs_deny_write follows in-root symlinks, refuses multi-link files), #1874 (** is doublestar), #1875 (delete op), verified by the operator on the published binary; D4 compatibility gate (go test -p 1 ./host/broker ./host/daemon ./host/projection ./cmd/ailang-worldd ./host/pins with WORLD_TOOL_AILANG_BIN on v0.54.15) found no World regression; digests checked against the release's .sha256 files"
++        }
+       ],
+       "assets": {
+         "darwin/arm64": {
+@@ -52,7 +79,11 @@
+       "version": "AILANG v0.52.1",
+       "commit": "c68ded4",
+       "roles": [
+-        {"role": "retired", "since": "2026-10-17", "evidence": "the tool binary from 2026-10-03 (confinement matrix re-proved on v0.52.1: row 134 design section 13, V69-V80; row 135 M0) until row 139 D7 moved the tool role to v0.54.15; kept for history (D7): stores archive it and replay resolves it by digest"}
++        {
++          "role": "retired",
++          "since": "2026-10-17",
++          "evidence": "the tool binary from 2026-10-03 (confinement matrix re-proved on v0.52.1: row 134 design section 13, V69-V80; row 135 M0) until row 139 D7 moved the tool role to v0.54.15; kept for history (D7): stores archive it and replay resolves it by digest"
++        }
+       ],
+       "assets": {
+         "darwin/arm64": {
+@@ -71,14 +102,34 @@
+       "release": "v0.33.0",
+       "version": "AILANG v0.33.0",
+       "roles": [
+-        {"role": "observed", "since": "2026-08-10", "evidence": "upstream releases/latest as measured on CI PATH 2026-08-04; listed in scripts/testdata/ailang_release_observed.txt by 9789b87"}
++        {
++          "role": "observed",
++          "since": "2026-08-10",
++          "evidence": "upstream releases/latest as measured on CI PATH 2026-08-04; listed in scripts/testdata/ailang_release_observed.txt by 9789b87"
++        }
+       ]
+     },
+     {
+       "release": "v0.30.0",
+       "version": "AILANG v0.30.0",
+       "roles": [
+-        {"role": "observed", "since": "2026-08-10", "evidence": "the former local pin, listed by 9789b87 (scripts/testdata/ailang_release_observed.txt); also the scripts/verify_ail.sh release-verdict instrument control token"}
++        {
++          "role": "observed",
++          "since": "2026-08-10",
++          "evidence": "the former local pin, listed by 9789b87 (scripts/testdata/ailang_release_observed.txt); also the scripts/verify_ail.sh release-verdict instrument control token"
++        }
++      ]
++    },
++    {
++      "release": "v0.60.4",
++      "version": "AILANG v0.60.4",
++      "commit": "563c6c9",
++      "roles": [
++        {
++          "role": "observed",
++          "since": "2026-11-16",
++          "evidence": "upstream releases/latest on CI PATH from 2026-11-13; reviewed by row 260 (TC_CONTRACT_001)"
++        }
+       ]
+     }
+   ]
+diff --git a/scripts/testdata/ailang_release_observed.txt b/scripts/testdata/ailang_release_observed.txt
+index 43906aaa..d15cfb9a 100644
+--- a/scripts/testdata/ailang_release_observed.txt
++++ b/scripts/testdata/ailang_release_observed.txt
+@@ -25,3 +25,5 @@
+ v0.41.0
+ v0.33.0
+ v0.30.0
++# v0.60.4 — upstream releases/latest from 2026-11-13 (CI legs 1-2). Reviewed by row 260: TC_CONTRACT_001.
++v0.60.4

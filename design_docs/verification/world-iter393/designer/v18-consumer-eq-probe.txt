@@ -1,0 +1,4 @@
+base AILANG v0.41.0: passed=False [('ERROR', 'type error in i393probe/consumer (decl 0): at i393probe/consumer.ail:5:56: No instance for Eq[EvidenceGrade] i')]
+base AILANG v0.60.4: passed=False [('TC_CONTRACT_001', 'ensures clause of gradeOf at world/types.ail:43:11 does not type-check (a contract is a bool predicate over th')]
+scratch AILANG v0.41.0: passed=True []
+scratch AILANG v0.60.4: passed=True []

@@ -1,0 +1,5 @@
+# ailang v0.60.4 darwin.arm64 (gh release download, shasum -a 256 -c OK); per-file ai-check from repo root
+v0604-dev-contracts passed= False [('TC_CONTRACT_001', 'world/types.ail', 43)]
+v0604-pr565-contracts passed= True []
+v0604-pr565-transitions passed= False [('TC_CONTRACT_001', 'world/transitions.ail', 29)]
+v0604-dev-transitions passed= False [('TC_CONTRACT_001', 'world/types.ail', 43)]

@@ -1,0 +1,3 @@
+kind=fix:   release:   kind fix  changelog_section true ✓ no gates 
+kind=patch: 
+kind=feature:   release:   kind feature  changelog_section true ✓ no gates 

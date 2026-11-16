@@ -1,0 +1,5 @@
+--- FAIL: TestCLIRealSubprocessEpisode (5.46s)
+    cli_test.go:210: daemon announcement timed out; stderr=
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	201.596s
+FAIL

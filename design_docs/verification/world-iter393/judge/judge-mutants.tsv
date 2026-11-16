@@ -1,0 +1,33 @@
+id	file:line	mutation	command	verdict
+c60/c41	world/*.ail	no-op control	ai-check v0.60.4 / v0.41.0	SURVIVED (required control)
+m01	world/transitions.ail:29	drop transitionFn.digest conjunct (world/ only)	verify_world_package.sh	KILLED (projection mismatch)
+m02	world/transitions.ail:48	verify ensures digest == to !=	ai-check v0.41.0	KILLED
+m03	world/types.ail:154	remove deriving (Eq) on TimeoutOutcome	ai-check v0.60.4	KILLED
+m04	world/types.ail:39	remove deriving (Eq) on EvidenceGrade	ai-check v0.60.4	KILLED
+m05	world/transitions.ail:29	plan ensures inputWorld.algo compared to stateRoot.digest	ai-check v0.41.0	KILLED
+m06	packages/world-core/world/transitions.ail:29	packaged copy: ensures || extra conjunct	verify_world_package.sh	KILLED (projection mismatch)
+m07	packages/world-core/world/types.ail:39	packaged copy: remove deriving (Eq)	verify_world_package.sh	KILLED
+m08	cmd/world-publish/fences.go:78	frozenPackageVersion 0.1.1	go test ./cmd/world-publish	KILLED
+m09	cmd/world-publish/fences.go:67	attendedPhrase 0.1.1	go test ./cmd/world-publish	KILLED
+m10	cmd/world-publish/fences.go:104	frozenInterfaceHashV2 one nibble	go test ./cmd/world-publish	KILLED
+m11	scripts/world_package_ready_packet.golden.json:1	version 0.1.1	verify_world_package.sh	KILLED
+m12	packages/world-core/ailang.toml:3	version 0.1.1	verify_world_package.sh	KILLED
+m13	packages/world-core/CHANGELOG.md:3	heading renamed 0.1.2x	verify_world_package.sh	KILLED (PUB001)
+m14	scripts/verify_world_package.sh:136	want version 0.1.1	verify_world_package.sh	KILLED
+m15	scripts/verify_world_package.sh:217	identity regex 0.1.1	verify_world_package.sh	KILLED
+m16	scripts/verify_world_package.sh:306	packet version 0.1.1	verify_world_package.sh	KILLED
+m17	pins/ailang-releases.json:86	canonical release v0.60.5	go test ./host/pins	KILLED
+m18	host/pins/ailang-releases.json:86	embedded since date differs	go test ./host/pins	KILLED
+m19	scripts/testdata/ailang_release_observed.txt:30	remove v0.60.4 line	go test ./host/pins	KILLED
+m20	host/pins/manifest_test.go:44	drop v0.60.4 from restated list	go test ./host/pins	KILLED
+m21	host/pkgproj/testdata/dryrun_v0.41.0.txt:20	content hash digit	go test ./host/pkgproj	KILLED
+m22	host/pkgproj/testdata/dryrun_v0.54.11.txt:20	tarball bytes	go test ./host/pkgproj	KILLED
+m23	host/pkgproj/dryrun_shapes_test.go:117	altered REPLACEMENT literal (17-hex)	go test ./host/pkgproj	SURVIVED (equivalent: replacement text is free)
+m23b	host/pkgproj/dryrun_shapes_test.go:117	altered SEARCH literal (full hash)	go test ./host/pkgproj	KILLED
+m24	docs/SELF_MOD_PUBLISH.md:~114	tarballSHA256 row nibble	go test ./host/runbook	KILLED
+m25	docs/SELF_MOD_PUBLISH.md:~113	contentHash row nibble	go test ./host/runbook	KILLED
+m26	docs/SELF_MOD_PUBLISH.md:~233	confirmation phrase prose 0.1.1	go test ./host/runbook	SURVIVED (prose not pinned)
+m27	docs/SELF_MOD_PUBLISH.md:~173	fresh store name world-0.1.1.db	go test ./host/runbook	SURVIVED (prose not pinned)
+m28	tools/attended/self_mod_publish.sh:3	comment text	go test ./cmd/world-publish	SURVIVED (equivalent: comment)
+m29	world/transitions.ail:29	plan ensures || true	test_kernel_contracts.py	KILLED (compile)
+m30	both transitions.ail copies	drop verify proposalHash.digest conjunct consistently	verify_world_package.sh	KILLED (golden); test_kernel_contracts.py passes

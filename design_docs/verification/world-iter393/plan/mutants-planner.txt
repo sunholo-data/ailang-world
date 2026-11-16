@@ -1,0 +1,48 @@
+# planner mutants MUT-13..20 — /tmp/i393-planner-tools/mutants.sh /tmp/i393-planner (M1+M2 tree, AILANG_BIN=WORLD_PKG_AILANG_BIN=v0.41.0)
+# each: apply one textual edit, run its gate, restore from a byte backup; tree diff sha before = after = f06545bf…
+MUT-13 rc=1 KILLED :: ✗ ready packet differs byte-for-byte from golden 
+MUT-13b rc=1 KILLED :: ✗ ready packet differs byte-for-byte from golden 
+MUT-14 rc=1 KILLED :: ── World package step 4/9: frozen manifest ✗ manifest is not the exact frozen structure 
+MUT-15 rc=1 KILLED ::     dryrun_shapes_test.go:121: control: case "short hash no dots" did not mutate the fixture 
+MUT-16 rc=1 KILLED :: --- FAIL: TestAttendedRehearsalNamesTheCandidate (0.01s)     release_history_test.go:102: rehearsal does not contain "publish world/core@0.1.2 irreversibly" 
+MUT-17 rc=1 KILLED ::     release_history_test.go:44: newest CHANGELOG section is "0.1.1" (empty=false), want a non-empty "0.1.2" 
+MUT-17b rc=1 KILLED ::   ✗ PUB001 CHANGELOG.md has no non-empty `## 0.1.2` section — describe what this version changes 
+MUT-18 rc=1 KILLED :: --- FAIL: TestEmbeddedManifestMatchesCanonical (0.00s) 
+MUT-19 rc=1 KILLED ::     manifest_test.go:45: observed releases [v0.41.0 v0.33.0 v0.30.0 v0.60.4] 
+MUT-20 rc=1 KILLED :: --- FAIL: TestObservedReleasesFileMatchesManifest (0.00s)     manifest_test.go:300: ailang_release_observed.txt lists [v0.30.0 v0.33.0 v0.41.0], manifest observed role [v0.30.0 v0.33.0 v0.41.0 v0.60.4] 
+restore check: 18 dirty files; diff vs patches:
+
+## script
+#!/usr/bin/env bash
+# Planner mutants MUT-13..20 on the M1+M2 tree. usage: mutants.sh <tree>
+set -uo pipefail
+T=$1; cd "$T" || exit 2
+PIN=$HOME/.pinned-ailang/ailang
+export AILANG_BIN=$PIN WORLD_PKG_AILANG_BIN=$PIN
+BK=$(mktemp -d)
+mut() { # mut <id> <file> <python-expr old> <new> <check-cmd> <kill-regex>
+  local id=$1 f=$2 old=$3 new=$4 cmd=$5 re=$6 rc
+  cp "$f" "$BK/x"
+  python3 - "$f" "$old" "$new" <<'PY' || { echo "$id APPLY_FAIL"; return; }
+import sys
+p,o,n=sys.argv[1:4]; s=open(p,encoding="utf-8").read()
+assert s.count(o)==1, ("count", s.count(o)); open(p,"w",encoding="utf-8").write(s.replace(o,n))
+PY
+  bash -c "$cmd" > "$BK/out" 2>&1; rc=$?
+  cp "$BK/x" "$f"
+  if [ "$rc" -ne 0 ] && grep -qE -- "$re" "$BK/out"; then v=KILLED; else v=SURVIVED; fi
+  echo "$id rc=$rc $v :: $(grep -E -m2 -- "$re" "$BK/out" | tr '\n' ' ' | cut -c1-220)"
+}
+VWP='env -u AILANG_REGISTRY_API_KEY ./scripts/verify_world_package.sh'
+mut MUT-13 packages/world-core/CHANGELOG.md "the idiom \`applyRevision\` already used" "the idiom \`applyRevision\` already uses" "$VWP" 'differs byte-for-byte from golden'
+mut MUT-13b packages/world-core/ailang.toml "(row 260: adds" "(row 260 adds" "$VWP" 'differs byte-for-byte from golden'
+mut MUT-14 packages/world-core/ailang.toml 'kind = "feature"' 'kind = "fix"' "$VWP" 'step 4/9|frozen manifest|✗'
+mut MUT-15 host/pkgproj/dryrun_shapes_test.go 'Content hash: sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c", "Content hash: sha256:359a82fde07d8e900"' 'Content hash: sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780", "Content hash: sha256:473517079249f3959"' "go test -count=1 ./host/pkgproj/ -run '^TestParseDryRunLeadingWhitespaceAndRefusals\$'" 'did not mutate the fixture'
+mut MUT-16 cmd/world-publish/fences.go 'const attendedPhrase = "publish world/core@0.1.2 irreversibly"' 'const attendedPhrase = "publish world/core@0.1.1 irreversibly"' "go test -count=1 ./cmd/world-publish/ -run '^TestAttendedRehearsalNamesTheCandidate\$'" 'FAIL|does not contain|exit'
+mut MUT-17 packages/world-core/CHANGELOG.md '## 0.1.2 — 2026-11-16' '### 0.1.2 (removed header) 2026-11-16' "go test -count=1 ./cmd/world-publish/ -run '^TestChangelogCarriesTheCandidateAndPreservesPublishedHistory\$'" 'newest CHANGELOG section'
+mut MUT-17b packages/world-core/CHANGELOG.md '## 0.1.2 — 2026-11-16' '### 0.1.2 (removed header) 2026-11-16' "$VWP" 'PUB001'
+mut MUT-18 host/pins/ailang-releases.json '"release": "v0.60.4"' '"release": "v0.60.5"' "go test -count=1 ./host/pins/" 'TestEmbeddedManifestMatchesCanonical'
+mut MUT-19 host/pins/manifest_test.go '"v0.41.0 v0.33.0 v0.30.0 v0.60.4"' '"v0.41.0 v0.33.0 v0.30.0"' "go test -count=1 ./host/pins/" 'observed releases'
+mut MUT-20 scripts/testdata/ailang_release_observed.txt $'v0.30.0\nv0.60.4\n' $'v0.30.0\n' "go test -count=1 ./host/pins/" 'TestObservedReleasesFileMatchesManifest|ailang_release_observed.txt lists'
+echo "restore check: $(git status --porcelain | wc -l | tr -d ' ') dirty files; diff vs patches:"
+rm -rf "$BK"

@@ -1,0 +1,21 @@
+tree=/Users/voightkampff/dev/sunholo-data/.wt-world-iter393-row260 head=8adbca8b mode=m2 base=cbcf80fb dirty_files=4
+LEG AC1_verify_ail_v0604 rc=0 11s notice=no
+LEG AC2_verify_ail_pin rc=0 25s notice=no
+LEG AC3_per_file_counts rc=0 1s 8/8 OK
+LEG AC4_kernel_contracts rc=0 1s 
+LEG gofmt rc=0 0s files=3
+LEG AC5_go_build rc=0 1s 
+LEG AC5_go_vet rc=0 0s 
+   ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	23.227s
+   ok  	github.com/sunholo-data/ailang-world/host/broker	205.025s
+   ok  	github.com/sunholo-data/ailang-world/host/pkgproj	12.823s
+   ok  	github.com/sunholo-data/ailang-world/host/runbook	1.324s
+   ok  	github.com/sunholo-data/ailang-world/host/replay	13.494s
+   ok  	github.com/sunholo-data/ailang-world/host/verifygate	199.674s
+   ok  	github.com/sunholo-data/ailang-world/host/pins	0.297s
+LEG AC5_go_test_7pkgs rc=0 460s 7/7 ok
+LEG AC6_identity rc=0 0s 13/13 OK
+LEG AC7_history rc=0 0s 
+LEG M2_pins_row rc=0 0s 
+LEG verify_go_plain rc=1 384s --- FAIL: TestCLIRealSubprocessEpisode (5.46s) FAIL FAIL	github.com/sunholo-data/ailang-world/cmd/ailang-worldd	201.596s FAIL 
+GATES_DONE mode=m2 883s FAILS: verify_go_plain

@@ -1,0 +1,39 @@
+design_docs/sketches/decisionpacket.ail                 passed=True  errs=- verify={'verified': 9}
+design_docs/sketches/effectbroker.ail                   passed=True  errs=- verify={'verified': 7}
+design_docs/sketches/effectplan.ail                     passed=True  errs=- verify={'verified': 12}
+design_docs/sketches/execargs.ail                       passed=True  errs=- verify={'verified': 15}
+design_docs/sketches/logepoch.ail                       passed=True  errs=- verify=-
+design_docs/sketches/storejournal.ail                   passed=True  errs=- verify={'verified': 8}
+design_docs/sketches/transitions.ail                    passed=True  errs=- verify=-
+design_docs/sketches/worlddapi.ail                      passed=True  errs=- verify={'verified': 3}
+design_docs/sketches/worldkernel.ail                    passed=True  errs=- verify=-
+design_docs/sketches/worldtypes.ail                     passed=True  errs=- verify=-
+host/evidence/testdata/aicheck/encerror.ail             PARSE_FAIL Expecting value: line 2 column 1 (char 1)
+host/evidence/testdata/aicheck/loaderror.ail            PARSE_FAIL Expecting value: line 2 column 1 (char 1)
+host/evidence/testdata/aicheck/mixed.ail                PARSE_FAIL Expecting value: line 2 column 1 (char 1)
+host/evidence/testdata/aicheck/nocontracts.ail          PARSE_FAIL Expecting value: line 2 column 1 (char 1)
+host/evidence/testdata/aicheck/refuted.ail              PARSE_FAIL Expecting value: line 2 column 1 (char 1)
+host/evidence/testdata/aicheck/skippedshape.ail         PARSE_FAIL Expecting value: line 2 column 1 (char 1)
+host/evidence/testdata/aicheck/verifiedpass.ail         PARSE_FAIL Expecting value: line 2 column 1 (char 1)
+host/replay/testdata/transition_fixture.ail             passed=False errs=['TC_CONTRACT_001@world/types.ail:43'] verify=-
+packages/se-tools/se_tools/builtins_search.ail          passed=True  errs=- verify={'verified': 9}
+packages/se-tools/se_tools/check.ail                    passed=True  errs=- verify={'verified': 4}
+packages/se-tools/se_tools/cli.ail                      passed=True  errs=- verify={'verified': 6}
+packages/se-tools/se_tools/delete.ail                   passed=True  errs=- verify={'verified': 4}
+packages/se-tools/se_tools/edit.ail                     passed=True  errs=- verify={'verified': 4}
+packages/se-tools/se_tools/examples_search.ail          passed=True  errs=- verify={'verified': 4}
+packages/se-tools/se_tools/exec.ail                     passed=True  errs=- verify={'verified': 8}
+packages/se-tools/se_tools/read.ail                     passed=True  errs=- verify={'verified': 6}
+packages/se-tools/se_tools/run.ail                      passed=True  errs=- verify={'verified': 9}
+packages/se-tools/se_tools/write.ail                    passed=True  errs=- verify={'verified': 4}
+packages/world-core/_smoke.ail                          passed=False errs=['TC_CONTRACT_001@/tmp/i393-designer-scratch/packages/world-core/world/types.ail:43'] verify=-
+packages/world-core/world/contracts.ail                 passed=False errs=['TC_CONTRACT_001@/tmp/i393-designer-scratch/packages/world-core/world/types.ail:43'] verify=-
+packages/world-core/world/logepoch.ail                  passed=True  errs=- verify={'verified': 2}
+packages/world-core/world/transitions.ail               passed=False errs=['TC_CONTRACT_001@/tmp/i393-designer-scratch/packages/world-core/world/types.ail:43'] verify=-
+packages/world-core/world/types.ail                     passed=False errs=['TC_CONTRACT_001@world/types.ail:43'] verify=-
+packages/world-demo/approve.ail                         passed=True  errs=- verify={'verified': 2}
+packages/world-demo/evidence.ail                        passed=True  errs=- verify={'verified': 3}
+world/contracts.ail                                     passed=False errs=['TC_CONTRACT_001@world/types.ail:43'] verify=-
+world/logepoch.ail                                      passed=True  errs=- verify={'verified': 2}
+world/transitions.ail                                   passed=False errs=['TC_CONTRACT_001@world/types.ail:43'] verify=-
+world/types.ail                                         passed=False errs=['TC_CONTRACT_001@world/types.ail:43'] verify=-

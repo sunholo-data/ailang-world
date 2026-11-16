@@ -1,0 +1,10 @@
+== /tmp/i393-designer-base (d0c9c4ce Record World iteration 392: row; dirty=       0)
+  world/types.ail: passed=True verify={'verified': 6}
+  world/contracts.ail: passed=True verify={'verified': 5}
+  world/transitions.ail: passed=True verify={'verified': 3}
+  world/logepoch.ail: passed=True verify={'verified': 2}
+== /tmp/i393-designer-scratch (4ca92a39 candA-final; dirty=       0)
+  world/types.ail: passed=True verify={'verified': 6}
+  world/contracts.ail: passed=True verify={'verified': 5}
+  world/transitions.ail: passed=True verify={'verified': 3}
+  world/logepoch.ail: passed=True verify={'verified': 2}
