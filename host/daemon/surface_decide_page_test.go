@@ -118,7 +118,7 @@ func TestDecidePageAssets(t *testing.T) {
 	for file, sum := range map[string]string{"passkey/index.html": "1695ebc2ae20f303dbfa3b617b3bec4c76035447ec290deba91e695fec9cc06d",
 		"passkey/passkey.js": "0064c6c90099a3565b178cf170618b80a67bbf1f3444a1018cc4ee29f51ed53f",
 		"approve/index.html": "e353429ab873633b9aae73e26cd43cd8697f7f2af647ecf7be842cad27f4950e",
-		"approve/approve.js": "9c7fadd4e8a5985f53c2e95981e6746cf422c03f07a2b459d13ef67893ad4b25"} {
+		"approve/approve.js": "5bccab34ad30eca1a61142146674eca48e39d8c4328f3943591a4ad516eda8fa"} {
 		b, err := os.ReadFile(filepath.Join("..", "surfacepage", file))
 		if h := sha256.Sum256(b); err != nil || hex.EncodeToString(h[:]) != sum {
 			t.Errorf("the A2/A3 page's %s changed (%v)", file, err)

@@ -410,3 +410,19 @@ assert.deepEqual(app.lookOf(seams.loadLook(store), false, false), L('slate', 're
 assert(kept.has('world.appearance'));
 console.log('APP HARNESS PASS');
 `
+
+// The operator could not copy a request id or hash from the app (2026-11-16): v3's body rule is
+// user-select: none. The marked after-v3 override restores text selection after that rule, and
+// keeps buttons unselectable.
+func TestSurfaceAppTextIsSelectable(t *testing.T) {
+	style := string(AppStyle)
+	v3 := strings.Index(style, "user-select: none; -webkit-user-select: none; cursor: default; }")
+	marker := strings.Index(style, "/* ---------- After v3: text can be selected and copied")
+	override := strings.Index(style, "body { user-select: text; -webkit-user-select: text; }")
+	if v3 < 0 || marker < v3 || override < marker {
+		t.Fatalf("want v3's body rule, then the marked override restoring text selection (v3 %d, marker %d, override %d)", v3, marker, override)
+	}
+	if !strings.Contains(style[marker:], "button { user-select: none; -webkit-user-select: none; }") {
+		t.Fatal("buttons must stay unselectable")
+	}
+}

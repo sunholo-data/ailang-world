@@ -115,6 +115,36 @@
     return '';
   }
   const shown = (f, v) => (f.type === 'bool' ? (v ? f.yes : f.no) : String(v));
+  // A grant reads as one line in the CLI's own Effect=scope:budget form (operator, 2026-11-16: three
+  // rows per grant was hard to check). Each value keeps its own element, id and textContent.
+  const GRANT = ['grants[].effect', 'grants[].scope', 'grants[].budget'];
+  function grantRows(ls, dl) {
+    const byIndex = new Map();
+    for (const l of ls) {
+      const k = GRANT.indexOf(l.pattern);
+      if (k < 0) continue;
+      if (!byIndex.has(l.index)) byIndex.set(l.index, []);
+      byIndex.get(l.index)[k] = l;
+    }
+    for (const [i, parts] of [...byIndex.entries()].sort((a, b) => a[0] - b[0])) {
+      const dt = document.createElement('dt');
+      dt.textContent = 'Grant ' + (i + 1);
+      const dd = document.createElement('dd');
+      GRANT.forEach((path, k) => {
+        if (k > 0) dd.append(k === 1 ? '=' : ':');
+        const span = document.createElement('span');
+        const l = parts[k];
+        if (l) {
+          span.id = 'f-' + l.concrete;
+          span.textContent = shown(FIELDS.find((f) => f.path === path), l.value);
+        } else {
+          span.textContent = '(missing)';
+        }
+        dd.append(span);
+      });
+      dl.append(dt, dd);
+    }
+  }
 
   function render(ls) {
     const card = $('card');
@@ -125,6 +155,10 @@
       h.textContent = title;
       const dl = document.createElement('dl');
       for (const f of FIELDS.filter((x) => x.group === group)) {
+        if (GRANT.includes(f.path)) {
+          if (f.path === GRANT[0]) grantRows(ls, dl);
+          continue;
+        }
         for (const l of ls.filter((x) => x.pattern === f.path)) {
           const dt = document.createElement('dt');
           dt.textContent = f.label + (l.index === undefined ? '' : ' ' + (l.index + 1)) + (f.path === 'ttl_s' ? ` (${(l.value / 3600).toFixed(1)} h)` : '');
