@@ -1,6 +1,13 @@
 # w-world-address-bar-verbs: operator verbs in the World app's address bar, one parser with the CLI
 
-- **Status**: Planned. Designed in iteration 394, **r0** (unattended designer; quorum pending, §15).
+- **Status**: Planned. Designed in iteration 394, **r1** **[r1]** (unattended designer). r0
+  (committed `ad144327`) was **BLOCKED** at quorum round 1, 3/3 REJECT (oc-glm-5-3, oc-kimi-k3,
+  gpt6-1-sol; none disputed the direction). r1 applies the three fixes the controller adopted and
+  nothing else; every changed passage is marked **[r1]**; §15 records each objection and its answer:
+  (1) **no silent fallback** — only a schema-valid `outcome:"address"` ever navigates; every route
+  failure is an explicit refusal with the view unchanged; (2) the **complete shadow set** of 27 CLI
+  words and `world get <ref>` as a refused CLI verb; (3) the CORS, Shell-character and
+  `serve --help` verification gaps.
   Parent design for queue row **243**, with child phases V1–V5. **Only V1 is specified to build
   (§2–§9).** V2–V5 are scoped and sized at parent level (§0.3) and each needs its own child design
   r0 before it is planned.
@@ -161,6 +168,33 @@ change to `approve`'s CLI, the cards, or row 201's routes.
 10. **No `host/verbs` exists** (V25), and `TestDaemonDependencyAllowlist` allows any package of this
     repository (`daemon_test.go:899-…`, its classifier case `host/store` → module path, allowed as
     repo-internal) (V26), so `host/daemon` may import a new repo package.
+11. **[r1] No CORS header is sent by the daemon.** The only `Access-Control`/`cors` matches in
+    non-test `host/daemon` are three comments saying so (`surface_approve.go:31`, `:201`;
+    `surface_approve_guard.go:60`); the same tree's `Header().Set(` calls set only
+    `Cache-Control`, `Content-Security-Policy`, `Content-Type`, `Referrer-Policy`, `Retry-After` and
+    `X-Content-Type-Options` (positive control: the instrument finds header writes) (V31). `/v1`
+    GETs carry no auth wrapper: `GET /v1/episodes/{episode}/report` is registered as the bare
+    `d.handleEpisodeReport` (`daemon.go:1120`, V15), and the CLI reads it with no credential in
+    `TestEpisodeReportJSONAndTableLoopback` (V16).
+12. **[r1] The page and the route ship in one binary.** `app.js`, `index.html` and `surface.js` are
+    `//go:embed`ded in `host/surfacepage` (`app.go:15`, `:29`; `script.go:9`) and served by the
+    daemon itself (`GET /surface/app.js` → `writeSurfaceAsset(…, surfacepage.AppScript)`,
+    `surface_page.go:161-162`) with `Cache-Control: no-cache` (`:190`) (V32). A page that calls
+    `/surface/verb.json` therefore comes from a daemon that serves it; a 404 can arise only from a
+    tab left open across a downgrade or a proxy misroute. V1 needs **no legacy-daemon path**; a 404
+    is one more explicit refusal (§2.3).
+13. **[r1] The CLI's switch has exactly 28 arms** besides `default`: `approve approver call commit
+    demo doctor episode head health help hosts log object outcome preset profile provenance
+    registry serve service session setup surface-index tools version whoami why world` (V33; the
+    controller's count, re-derived). `world` dispatches to `requireGet(args, "world", …)`, which
+    takes exactly `get <ref>` (`cli.go:157-169`) (V34).
+14. **[r1] `serve --help` returns before `serve` binds anything.** `run()` calls
+    `genericVerbHelp(rest)` before the switch (`main.go:374-378`); for `serve` (not in
+    `ownHelpVerbs`) with `--help` it returns the usage lines `usageLinesFor("serve")` finds
+    (`main.go:708-740`, `:750-765`; usage line `main.go:86`), and `run` returns `exitOK`. The
+    existing `TestEveryVerbHasHelp` already runs `run(["serve","--help"])` and `run(["help",
+    "serve"])` expecting exit 0 (`help_test.go:9-33`) (V35). VB4 nevertheless calls no `run()`
+    (§6).
 
 ## 2. Design (V1)
 
@@ -174,7 +208,8 @@ not need (the shell splits its argv). Rules, each a named refusal:
   byte < 0x20 or 0x7f (so no newline, no tab smuggling a second command);
 - words are separated by spaces; `'…'` is literal; `"…"` is literal except `\"` and `\\`;
   `Unclosed`: an unclosed quote;
-- `Shell`: an unquoted `$`, backtick, `;`, `|`, `&`, `<`, `>`, `(`, `)` — the bar runs no shell, and
+- `Shell`: an unquoted `$`, backtick, `;`, `|`, `&`, `<`, `>`, `(`, `)` — **nine characters
+  [r1]** (the r0 test plan's "ten" was wrong) — the bar runs no shell, and
   refusing these keeps "what the bar shows" equal to "what a shell would run" for the line it
   prints.
 - **`Quote(argv) string`** is its inverse for display (`ailang-worldd episode report w1`), with
@@ -185,7 +220,16 @@ classification (traced in §2.4):
 1. a leading word `ailang-worldd` is dropped once;
 2. a first word starting with `-` → `class=refused`, reason "global flags are not accepted: the app
    talks to its own daemon" (the CLI's `--addr`, `--db` etc. never reach the bar);
-3. first word `world` or `back` → `class=address` (navigation keeps both words; P1);
+3. **[r1]** the bare navigation shapes only: `world`, `world NAME`, `world NAME@AT` (one or two
+   words) or `back` → `class=address` (navigation keeps both words; P1);
+3b. **[r1]** `world get <ref>` (first word `world`, second `get`, three or more words) →
+   `class=other`, refused with the CLI line ("`world get` is a CLI command the app does not run; at a
+   terminal: `ailang-worldd world get <ref>`") (it is a CLI verb, V34). Step 3 now captures only
+   bare navigation shapes, so a pasted CLI command is never reinterpreted as brane navigation. 3b
+   shadows nothing: `parseAddress` accepts only one- or two-word `world` input (`surface.js:84-86`,
+   V5), so a three-word `world …` is an address error today. Any other `world` input of three or
+   more words falls to step 5 and gets `parseAddress`'s own error, as today; `world get` (two words)
+   is step 3, navigation to a brane named `get`, as today;
 4. a table verb, longest match first:
 
 | words | class | V1 in the bar | why this class holds |
@@ -197,13 +241,20 @@ classification (traced in §2.4):
 | `episode finish` | **mutate** | `terminal` answer (V3) | commits, records an approval, opens a PR (§0.1 P3) |
 | `episode launch` | **host** | `terminal` answer (V4) | starts an agent process that needs a terminal (`episode_launch_interactive.go:18-21`, V27) |
 | `approver`, `session`, `service`, `serve`, `setup` | **never** | refused, naming the reason | enrolment/revocation are typed-only (D-WORLD-89 R3); mint/revoke and host administration stay at a terminal |
-| any other word that the CLI's switch accepts | **other** | refused: "`<verb>` is a CLI command the app does not run; at a terminal: `<line>`" | not an operator verb (D-WORLD-107's list is start, launch, finish, approve, report; the row adds why) |
+| **[r1]** `commit`, `outcome`, `call`, `demo` | **other** (writes World) | refused: "`<verb>` is a CLI command the app does not run; at a terminal: `<line>`" | they write World with a session credential (`commit` = `POST /v1/commit`; `outcome record`; `call` = MCP `tools/call` on `/mcp/`; `demo seed --db --session`, main.go:109, :164, V33); none has a key-approval path, so none may ever run from a page before V3's law, and none is an operator verb |
+| **[r1]** `doctor`, `head`, `health`, `help`, `hosts`, `log`, `object`, `preset`, `profile`, `provenance`, `registry`, `surface-index`, `tools`, `version`, `whoami` | **other** (reads or local tooling) | refused, same text | not an operator verb (D-WORLD-107's list is start, launch, finish, approve, report; the row adds why) |
 
 5. anything else → `class=address` (the page's existing `parseAddress` path).
 
-The table's top-level words must each reach a non-default arm of `main.go`'s switch, and the
-"other" set must equal the switch's remaining arms; a parity test (VB4) runs the real `run()` for
-every word and a nonsense control.
+**[r1] The classification is exhaustive and its sets are fixed by the switch.** The 28 arms (§1.13,
+V33) split exactly as: navigation token `world` (steps 3/3b); operator `{why, episode, approve}`
+(3); never `{approver, session, service, serve, setup}` (5); other `{commit, outcome, call, demo,
+doctor, head, health, help, hosts, log, object, preset, profile, provenance, registry,
+surface-index, tools, version, whoami}` (19), plus the `world get` shape of step 3b. 1 + 3 + 5 + 19
+= 28. VB4 (§6) asserts the go/ast-derived arm set minus the navigation token `world` (and never
+counting `back` or the dropped `ailang-worldd`, which are not arms) equals operator ∪ never ∪
+other, each arm in exactly one set, so a CLI verb added or removed without a class fails the
+build. These 27 words are the **shadow set** (RK1).
 
 **(c) `ParseInterleaved(fs *flag.FlagSet, args []string) ([]string, error)`** — moved verbatim from
 `session.go:181-193`; the CLI's ten call sites call `verbs.ParseInterleaved` (§1.2). Behaviour is
@@ -225,7 +276,9 @@ way when the bar learns to run them; V1 migrates only the verb it runs.
 Registered behind `d.approvalRoute` (so R2's Host allowlist and 421 apply exactly as on the
 approval routes). It has no POST, no `OpenCredentials`, no store write, no `exec`.
 
-1. `q` absent → 400 `BadRequest`; more than 1,024 bytes → 400 (before `Split`).
+1. **[r1]** `q` absent → 400 `BadRequest` (the page never sends that). A `q` over 1,024 bytes is an
+   operator-input refusal, not an HTTP error: **200** `{outcome:"refused", reason:"TooLong"}`
+   (checked on the raw query value before `Split`, so no oversized input is tokenized).
 2. `Split` → a refusal answers **200** `{outcome:"refused", reason}` (an operator typo is not an HTTP
    error).
 3. `Lookup` → by class:
@@ -248,15 +301,28 @@ approval routes). It has no POST, no `OpenCredentials`, no store write, no `exec
 4. Every answer carries `{v:1, schema:"world/surface-verb/v1", q, argv, verb, class}`.
 
 The response is a GET with no state change, so it needs no Origin/CSRF arm: a cross-origin page
-cannot read it (no CORS headers are sent; same-origin policy), and the only data it returns is the
-episode report that `GET /v1/episodes/{episode}/report` already serves unauthenticated (§1.4).
+cannot read it (no CORS headers are sent, §1.11 **[r1]**, V31; same-origin policy), and the only
+data it returns is the episode report that `GET /v1/episodes/{episode}/report` already serves
+unauthenticated (§1.4, §1.11).
 
 ### 2.3 The page (`app.js`)
 
 `go(raw)` becomes: empty → home (unchanged, no fetch); else `fetch('/surface/verb.json?q=' +
 encodeURIComponent(raw))`:
-- `address`, or the fetch failing (an older daemon answers 404; a network error) → the existing
-  `addressTarget` path, so navigation never regresses;
+- **[r1] No silent fallback.** Only a successful, schema-validated `outcome: address` invokes the
+  existing `addressTarget` path. "Schema-validated" means: HTTP 200, a JSON object, `schema ===
+  "world/surface-verb/v1"`, `v === 1`, and `outcome` one of the five known values with that
+  outcome's required fields. Network errors, non-2xx responses (400, 404, 421, 5xx) and invalid
+  responses display an explicit refusal — `say('the verb route did not answer: HTTP <status>')`,
+  `say('the verb route is unreachable: <error>')` or `say('the verb route answered something this
+  page cannot read')` — and **leave the current view unchanged** (no navigation, no panel, the
+  input kept). A 404 is not treated as "an older daemon": the page and the route ship embedded in
+  one daemon binary (§1.12, V32), so V1 offers **no** "Navigate as an address" action; if one is
+  ever wanted, it must be a separate user-selected action that shows the address interpretation
+  before proceeding and is never invoked automatically (gpt6-1-sol's fix, recorded for later). The
+  typed `world NAME` form needs the route too; while the route fails, nothing navigates from the
+  bar, which is the honest state.
+- `address` (schema-valid) → the existing `addressTarget` path, unchanged;
 - `result` → a verb panel in the stage: a header line `$ <cli>` and the `text` (or `json`, or the
   `stderr` line and `exit 1`) set with `textContent` — never `innerHTML`;
 - `navigate` → `location.assign(href)` only if `href` starts with `/surface/approve/mr-` or
@@ -290,12 +356,23 @@ page: `go(raw)` → empty check → fetch → outcome switch.
 | `approve mr-0123456789abcdef --deny` | fetch | pass | pass | | 4 | `refused` |
 | `episode finish w1 --preset p` | fetch | pass | pass | | 4 | `terminal` |
 | `approver enroll --name x` | fetch | pass | pass | | 4 | `refused` (R3) |
-| `log tail` | fetch | pass | pass | | 4 (other) | `refused` |
-| any, with a foreign `Host` | fetch | **421** | – | – | – | page falls back to `parseAddress` (and the page itself was not served from `O`) |
-| > 1,024 bytes | fetch | pass | **400** | – | – | page falls back to `parseAddress`, which errors |
+| `log tail` | fetch | pass | pass | | 4 (other) | `refused` — **[r1]** a deliberate change: today `parseAddress('world log tail')` answers "unknown address: …"; V1 answers the CLI refusal and line instead (both are errors; the text and the path change) |
+| **[r1]** `log` (bare) | fetch | pass | pass | `[log]` | 4 (other) | `refused` with `cli` — **shadow-set change**: today it navigates to a brane named `log` (`world log`); RK1 |
+| **[r1]** `world session` | fetch | pass | pass | `[world session]` | 3 (before 4) | `address` → brane `session`, unchanged (the shadowed name stays reachable) |
+| **[r1]** `ailang-worldd world get world-1` | fetch | pass | pass | 4 words | 1, then 3b | `refused`, `cli` = `ailang-worldd world get world-1`; not address |
+| **[r1]** `world get` | fetch | pass | pass | 2 words | 3 | `address` → brane `get`, unchanged |
+| **[r1]** > 1,024 bytes | fetch | pass | **200** `refused`, `TooLong` | – | – | `say(reason)`; view unchanged |
+| **[r1]** `why`, with a foreign `Host` | fetch | **421** | – | – | – | `say('the verb route did not answer: HTTP 421')`; view unchanged; **not** `world why` |
+| **[r1]** `why`, page bug drops `q` | fetch | pass | **400** | – | – | `say('… HTTP 400')`; view unchanged |
+| **[r1]** `why`, route answers 404 (tab kept across a downgrade, or a proxy misroute) | fetch | – | – | – | – | `say('… HTTP 404')`; view unchanged; **not** `world why` |
+| **[r1]** `why`, route answers 500 | fetch | pass | (handler fault) | – | – | `say('… HTTP 500')`; view unchanged |
+| **[r1]** `why`, network error (daemon down) | fetch throws | – | – | – | – | `say('the verb route is unreachable: …')`; view unchanged |
+| **[r1]** `why`, 200 with a body missing `schema` or with an unknown `outcome` | fetch | pass | pass | | | `say('… cannot read')`; view unchanged |
 
-Step 3 precedes step 4, so `world` is never treated as the CLI's `world get`. Step 2 precedes
-step 4, so a global flag never reaches a verb's admission.
+Step 3 precedes step 4, and step 3b catches `world get <ref>`, so `world` is never treated as the
+CLI's `world get` and a pasted `world get` line is never navigation **[r1]**. Step 2 precedes step
+4, so a global flag never reaches a verb's admission. **[r1]** No row reaches `addressTarget`
+except through a 200, schema-valid `outcome:"address"`.
 
 ## 3. Pure core, effects at the boundary (coding standards S1–S3)
 
@@ -316,9 +393,9 @@ step 4, so a global flag never reaches a verb's admission.
 | T3. File reads via a path flag (`why --result`, `episode start --task`) | not admissible in V1: `why` and `start` answer `terminal` before any flag parse. |
 | T4. Hostile text in a report (tool names, episode names, refusal reasons from agents) | rendered with `textContent`; a hostile-value node test (VP3). |
 | T5. DNS rebinding or a foreign `Host` | R2 via `approvalRoute` (421), as the approval routes. |
-| T6. Cross-origin read of the answer | no CORS headers; and the data is already open at `/v1` (§1.4). |
+| T6. Cross-origin read of the answer | no CORS headers (§1.11, V31 **[r1]**); and the data is already open at `/v1` (§1.4). |
 | T7. Open redirect through `navigate` | `href` is built server-side from two strict patterns; the page re-checks the prefix. |
-| T8. Confusion: a brane named `why`/`episode`/`approve` | the verb wins on the first word; `world NAME` always navigates (Q2, VP4). |
+| T8. Confusion: a brane named after any of the 27 shadow-set words (RK1) **[r1]** | the verb wins on the first word; `world NAME` always navigates (Q2, VP4, VP6). A route failure never turns a verb into navigation (§2.3, VP2) **[r1]**. |
 | T9. A copied `cli` line runs something else in a shell | `Split` refuses shell metacharacters and `Quote` round-trips (VB2). |
 | T10. Denial of service | `q` ≤ 1,024 bytes; one report build bounded by `d.readCtx`, the same as the open `/v1` route. |
 
@@ -334,8 +411,11 @@ step 4, so a global flag never reaches a verb's admission.
    the parse (§2.1d). VB5 mutates the flag set in one place and both sides change.
 3. **Same output**: the CLI's `printReport` *is* `daemon.WriteEpisodeReportText` after the move;
    VR3 compares the route's `text` with the real CLI's stdout against one loopback daemon and store.
-4. **Navigation never regresses**: every non-verb input reaches the unchanged `addressTarget`
-   path, and every route failure falls back to it (VP2).
+4. **[r1] Navigation never regresses for inputs outside the enumerated shadow set (RK1)**: every
+   other input reaches the unchanged `addressTarget` path through a 200, schema-valid
+   `outcome:"address"`; every route failure is an explicit refusal that leaves the view unchanged
+   and never selects navigation (§2.3, VP2); and the shadow set itself is pinned exhaustively
+   (VB3/VB4), never silently extended. A shadowed name stays reachable as `world NAME` (VP6).
 
 ## 6. Test plan (V1, one sprint)
 
@@ -345,18 +425,30 @@ the real CLI and the real route produce, never hand-typed.
 
 **`host/verbs` (unit)**
 - **VB1** `Split`: one case per refusal (`TooLong` at 1,025 bytes and not at 1,024; `TooMany` at 33
-  and not 32; `NotText` for `\n`, `\t`, 0x7f, invalid UTF-8; `Unclosed`; `Shell` for each of the ten
-  characters unquoted, and accepted inside quotes). Kills: each refusal deleted; off-by-one bounds.
+  and not 32; `NotText` for `\n`, `\t`, 0x7f, invalid UTF-8; `Unclosed`; `Shell` for each of the nine
+  characters **[r1]** unquoted, and accepted inside quotes). Kills: each refusal deleted; off-by-one bounds.
 - **VB2** `Quote` round-trip property over generated argv (seeded `math/rand`, 2,000 cases including
   quotes, spaces, backslashes) and every argv in VB3. Kills: a `Quote` that drops escaping.
-- **VB3** `Lookup` table: every row of §2.1(b)'s table and every row of §2.4's trace. Kills: steps 2/3
-  swapped with 4; `world` classified as the CLI verb; a missing table row; longest-match broken
-  (`episode` alone → refused "needs a subcommand", not `episode report`).
-- **VB4** parity with the CLI's switch: for every top-level table word and every "other" word,
-  `run([]string{w, "--help"})` does **not** print `unknown command`; a control word `nonsuch`
-  **does**; and every non-default arm of the switch is in the table (the list is extracted by
-  `go/ast` from `main.go`, so a new CLI verb fails the test until classified). Kills: a CLI verb
-  added without a class; a table word the CLI does not have.
+- **VB3** `Lookup` table: every row of §2.1(b)'s table and every row of §2.4's trace, **[r1]**
+  including bare `log` → `other`/refused (was brane navigation), `world session` → address,
+  `ailang-worldd world get world-1` → `other`/refused with `cli` = `ailang-worldd world get
+  world-1`, `world get` → address, and one bare word from each of the never and other sets.
+  Kills: steps 2/3 swapped with 4; `world` classified as the CLI verb; **[r1]** step 3b deleted
+  (a pasted `world get` line becomes navigation) or widened to two words (brane `get` lost); a
+  missing table row; longest-match broken (`episode` alone → refused "needs a subcommand", not
+  `episode report`).
+- **VB4 [r1]** parity with the CLI's switch, **without invoking `run()`**: the test parses
+  `cmd/ailang-worldd/main.go` with `go/ast`, finds `run`'s `switch verb := rest[0]` and collects
+  its non-default `case` string literals (28 at the base, V33); it asserts that set minus the
+  navigation token `world` equals operator ∪ never ∪ other from `host/verbs`, each arm in exactly
+  one set (`back` and the dropped `ailang-worldd` are excluded: they are not arms). Help check, also
+  without `run()`: every word in the three sets has a help path — `ownHelpVerbs[w]`, or
+  `genericVerbHelp([]string{w, "--help"})` returns ok, or `w == "demo"`/`"help"` (their own
+  branches, `main.go:370-372`, `:710-716`). Control: a fabricated arm list with one extra word
+  (`nonsuch`) fails the equality, and one with `log` removed fails it too. Kills: a CLI verb added
+  without a class; a table word the CLI does not have; a word in two sets; `world` or `back`
+  counted as an arm. (`serve --help`'s safety is already proven by `TestEveryVerbHasHelp`, V35;
+  VB4 does not depend on it.)
 - **VB5** one flag set: `EpisodeReportFlags` registers exactly `markdown, json, follow, interval,
   addr` with today's defaults (`interval` = 2s) — checked by `VisitAll`; the bar admission's five
   refusals and one allow each asserted. Kills: an admission that allows `--addr`/`--follow`; a
@@ -376,22 +468,35 @@ the real CLI and the real route produce, never hand-typed.
   `episode report <e>` and `--json` against the loopback daemon, and compare byte-for-byte with the
   route's `text` and `json`; and the not-found case's stderr line and exit 1. Kills: the renderer
   copied instead of moved and then edited; the JSON re-marshalled with indentation.
-- **VR4** 400 for missing `q` and for 1,025 bytes; a store error answers `refused` with no raw error
-  text. Kills: the cap removed; the error text leaked.
+- **VR4 [r1]** 400 for a missing `q`; **200 `{outcome:"refused", reason:"TooLong"}`** for a
+  1,025-byte `q` and a normal answer at 1,024; a store error answers `refused` with no raw error
+  text. Kills: the cap removed; the cap answered as 400 (an operator refusal made an HTTP error);
+  the error text leaked.
 - **VS1** static: `host/verbs` imports no I/O package (`os`, `os/exec`, `net`, `io/fs`);
   `surface_verb.go` does not call `OpenCredentials`, `exec.Command` or any `store` method outside the
   read set; `TestDaemonCredentialWriterSites` unchanged. Kills: a write or spawn added to the route.
 
 **Page (`host/surfacepage`, node, non-skippable in CI via `WORLD_EXEC_NODE`)**
 - **VP1** `verbOutcome` maps each `outcome` to its action. Kills: `terminal` treated as `result`.
-- **VP2** fallback: a 404 or a thrown fetch falls back to `addressTarget` with the same answer as
-  today for `row-189@6`, `world shared@0ffbb9c` and `back`. Kills: no fallback.
+- **VP2 [r1]** no silent fallback. For the inputs `why`, `log`, `row-189@6` and `world
+  shared@0ffbb9c`, each of: HTTP 404, 400, 421, 500, a thrown fetch (network error), a 200 that is
+  not JSON, a 200 without `schema`, and a 200 with an unknown `outcome` → the page calls `say` with
+  the explicit message of §2.3, and **neither `addressTarget`/`openState`/`out` nor
+  `location.assign` is called** (spies), and the input value is unchanged. Must-live: a 200
+  schema-valid `outcome:"address"` for `row-189@6`, `world shared@0ffbb9c` and `back` reaches
+  `addressTarget` with today's answers. A `TooLong` refusal shows its reason. **Named mutant:
+  "fallback on any failure"** (any failure branch calling `addressTarget`), plus "fallback on 404
+  only" and "accept a 200 without schema validation".
 - **VP3** hostile values: a report `text` and a `reason` containing `<img src=x onerror=…>` render
   as text (`textContent`), not markup. Kills: `innerHTML`.
 - **VP4** precedence: `world why` → address; `why` → verb route. Kills: the page short-circuiting on
   its own word list.
 - **VP5** navigate prefix check: `href` `https://evil/…` and `/surface/model.json` are refused.
   Kills: the prefix check deleted.
+- **VP6 [r1]** the shadow set at page level, with the route's real answers recorded by VR2 (not
+  hand-typed): bare `log` → the refusal panel with `cli` (was navigation), `world session` →
+  `addressTarget` → brane `session`, `ailang-worldd world get world-1` → refusal with its `cli`
+  echo, never navigation. Kills: the page treating a refused `world …` answer as an address.
 
 **Live Chrome (one, on the A3 driver):** **XV1** type `episode report <e>` in `#addr` on a served
 daemon, press Enter, read the panel's text; equal to VR3's CLI text. Planner obligation: re-use the
@@ -419,7 +524,7 @@ A3a/A4 live-Chrome driver and skip rule exactly as `approve_page_chrome_test.go`
 | `cmd/ailang-worldd/episode_report.go` | flag set from `verbs.EpisodeReportFlags`; printer moved to `host/daemon` | V16's tests unedited; VR3 |
 | `host/daemon/episode_report.go` | handler body extracted into `d.episodeReport` | the `/v1` route's tests unedited; `/v1` stays 13 routes (`route_table_test.go`) |
 | `host/daemon/daemon.go` | one registration under `approvalRoute` | no `/v1` change; `worlddapi.ail` untouched |
-| `host/surfacepage/app/app.js`, `index.html` | `go(raw)` asks the route first; placeholder, keys row | VP2 fallback; the static page (`surface.js`'s own bar) untouched |
+| `host/surfacepage/app/app.js`, `index.html` | `go(raw)` asks the route first; placeholder, keys row | **[r1]** no fallback: only a schema-valid `outcome:"address"` navigates; every failure is an explicit refusal with the view unchanged (VP2). The 27-word shadow set is a deliberate, enumerated behaviour change (RK1). The static page (`surface.js`'s own bar) is untouched |
 | row 201 | none (navigation to existing GET cards only) | no amendment (§0.2) |
 | row 206 / row 222 | none in V1 | V4 consumes them |
 
@@ -461,8 +566,15 @@ equals the terminal's output, and `approve mr-…` opens the card.
 
 ## 11. Residuals and risks
 
-- **RK1 (V1)** a brane named `why`, `episode` or `approve` loses bare-name navigation; `world NAME`
-  keeps it (Q2).
+- **RK1 (V1) [r1]** the verb grammar shadows bare-name navigation for every first word the CLI
+  switch accepts. The complete set (V33, §2.1(b)): `why`, `episode`, `approve` (operator);
+  `approver`, `session`, `service`, `serve`, `setup` (never); `commit`, `outcome`, `call`, `demo`,
+  `doctor`, `head`, `health`, `help`, `hosts`, `log`, `object`, `preset`, `profile`, `provenance`,
+  `registry`, `surface-index`, `tools`, `version`, `whoami` (other) — 27 words. A brane so named is
+  reachable only as `world NAME` (Q2). This is a deliberate, enumerated behaviour change from the
+  base; VB4's AST-derived arm list is the single source these sets must equal, so an unclassified
+  new CLI verb (and any removed one) fails the build. Multi-word inputs that start with these words
+  were address errors before and are CLI refusals now (§2.4, `log tail`).
 - **RK2 (V1)** the route rebuilds a report on every Enter; bounded like `/v1`, no cache.
 - **RK3 (V3)** P3: a finish's prompt exists only after a commit; V3 must choose intent-approval or a
   preview-bound approval (Q3), and either way a declined finish leaves a local commit, as the
@@ -535,6 +647,56 @@ at `48c92a52` on 2026-11-16 (zsh; output trimmed).
 | V29 | the row and rulings quoted | `grep -n '^243\. ' design_docs/world-mission.md`; `sed -n 1026p …`; `sed -n 1028p …` | row 243 at `6330`; D-WORLD-107 `ANSWERED — A … never a typed y from a page`; D-WORLD-109 `ANSWERED — A … never enrols a real key, mints or publishes` |
 | V30 | the route list (no verb route yet) | `grep -rn 'HandleFunc\|mux.Handle(' host/daemon/*.go \| grep -v _test \| grep -o '"[A-Z]* */[^"]*"' \| sort \| uniq` | 41 patterns incl. `"GET /surface/requests.json"`, `"POST /surface/decide/{ref}"`, `"GET /v1/episodes/{episode}/report"`; none matches `verb` |
 
+| V31 **[r1]** | no CORS header in the daemon (negative, with control) | `grep -rniE "Access-Control\|cors" host/daemon --include='*.go' \| grep -v _test`; control: `grep -rn 'Header().Set(' host/daemon --include='*.go' \| grep -v _test \| grep -o 'Set("[A-Za-z-]*"' \| sort \| uniq -c` | 3 lines, all comments: `surface_approve.go:31: … no-store, nosniff, and never a CORS header.`; `:201: … answers no CORS, and never mints …`; `surface_approve_guard.go:60: … the daemon answers no preflight with CORS.`; control: `10 Cache-Control`, `5 Content-Security-Policy`, `15 Content-Type`, `1 Referrer-Policy`, `2 Retry-After`, `10 X-Content-Type-Options` (no `Access-Control-*`) |
+| V32 **[r1]** | the page is embedded in and served by the daemon, `no-cache` | `grep -rn 'go:embed' host/surfacepage/*.go`; `grep -n 'AppScript\|handleSurfaceAppScript' host/daemon/*.go \| grep -v _test`; `grep -n 'func writeSurfaceAsset' -A10 host/daemon/*.go` | `app.go:15: //go:embed app/app.js`, `app.go:29: //go:embed app/index.html`, `script.go:9: //go:embed surface.js`; `daemon.go:1129: mux.HandleFunc("GET /surface/app.js", d.handleSurfaceAppScript)`; `surface_page.go:162: writeSurfaceAsset(w, "text/javascript; charset=utf-8", surfacepage.AppScript)`; `:190: w.Header().Set("Cache-Control", "no-cache")` |
+| V33 **[r1]** | the switch's 28 arms (re-derived, not copied); what `commit`/`outcome`/`call`/`demo` do | `git log -1 --oneline` (`ad144327`, the r0 commit; `cmd/` unchanged since `48c92a52`); `sed -n 375,510p cmd/ailang-worldd/main.go \| grep -oE 'case "[a-z-]+"' \| sort \| tr '\n' ' '`; `… \| wc -l`; `grep -n '"POST /v1/commit"\|"POST /mcp/"' host/daemon/daemon.go`; `grep -n 'outcome' cmd/ailang-worldd/main.go`; `sed -n 12p cmd/ailang-worldd/demo.go` | `approve approver call commit demo doctor episode head health help hosts log object outcome preset profile provenance registry serve service session setup surface-index tools version whoami why world`; `28`; `1118: POST /v1/commit`, `1153: POST /mcp/`; `109: … outcome record --file <outcome.json\|-> [--session …]`, `164: Session credential (tools, call, commit, outcome)`; `usage: ailang-worldd [--addr URL] demo seed --db PATH --session FILE` |
+| V34 **[r1]** | `world` takes exactly `get <ref>`; `parseAddress` takes one or two words | `grep -n 'func requireGet' -A8 cmd/ailang-worldd/cli.go`; `grep -n 'func runWorld' -A4 …`; `sed -n 84,86p host/surfacepage/surface.js` | `158: if len(args) != 2 \|\| args[0] != "get" {`; `166: return requireGet(args, "world", …)`; `84: if (words.length === 1 && (words[0] === "world" \|\| words[0] === "back"))`; `85: const m = words.length === 2 && words[0] === "world" ? …`; `86: if (!m) return {error: "unknown address: " + ADDRESS_HELP};` |
+| V35 **[r1]** | `serve --help` returns from `genericVerbHelp` before the switch; already exercised | `grep -n 'func genericVerbHelp' -A30 cmd/ailang-worldd/main.go`; `sed -n 340,378p …`; `grep -n 'func usageLinesFor' -A15 …`; `grep -n '^  ailang-worldd serve' …`; `sed -n 8,35p cmd/ailang-worldd/help_test.go` | `374: if text, ok := genericVerbHelp(rest); ok { fmt.Fprint(stdout, text); return exitOK }` (before `switch`); `718: if ownHelpVerbs[verb] … return "", false` (serve not in it); `730: lines := usageLinesFor(verb)`; `735: if verb == "serve" { … "serve flags:" …`; `86:   ailang-worldd serve --db <path> …`; `help_test.go:11: {"serve"}, {"health"}, …`; `TestEveryVerbHasHelp … code := run(argv, …); if code != exitOK` for `serve --help` and `help serve` |
+
 ## 15. Quorum verification log
 
-*(empty — for the controller)*
+### Round 1 (quorum 2026-11-16T09:53:06Z on r0 `ad144327`): BLOCKED 3/3 — answered in r1
+
+Artifact: `/Users/voightkampff/.ailang/state/mission-quorum-world/w-world-address-bar-verbs-2026-11-16T09-53-06Z.json`.
+Reviewers oc-glm-5-3, oc-kimi-k3, gpt6-1-sol; all REJECT; none disputed the direction. The
+controller adopted the fixes below; r1 applies them and nothing else.
+
+1. **Silent fallback (gpt6-1-sol; oc-glm-5-3 on the same surface).** Objection: "§2.3 explicitly
+   violates the no-silent-fallback axiom: a failed verb request is reinterpreted as navigation …
+   `why` … becomes `world why` after a network error or an older daemon's 404" (gpt6-1-sol); "the
+   route's 400 being swallowed … a 500 … would degrade to the address path" (glm). Fix adopted
+   (gpt6-1-sol's text, verbatim): "Only a successful, schema-validated `outcome: address` invokes
+   the existing addressTarget path. Network errors, non-2xx responses, and invalid responses display
+   an explicit refusal and leave the current view unchanged. If legacy-daemon compatibility is
+   needed, offer a separate user-selected 'Navigate as an address' action … never invoke it
+   automatically." **r1:** §2.3 (the rule, the schema check, the messages); §2.4 (trace rows for
+   404, 400, 421, 500, a network error and an invalid 200, each an explicit message with the view
+   unchanged); §5.4; §8; VP2 (all failure classes × `why`, `log`, `row-189@6`, `world
+   shared@0ffbb9c`; spies prove no navigation; named mutant "fallback on any failure"). glm (a):
+   over-1,024-byte `q` → 200 `{outcome:"refused", reason:"TooLong"}`, 400 only for a missing `q`
+   (§2.2 step 1, VR4). **The 404 question:** the page is `//go:embed`ded in and served by the same
+   daemon with `Cache-Control: no-cache` (§1.12, V32), so V1 offers no legacy "Navigate as an
+   address" action; a 404 is one more explicit refusal.
+2. **Incomplete shadow set; `world get` (oc-kimi-k3).** Objection: "'Navigation never regresses' …
+   is falsified by the doc's own verb table … a brane named `log`, `session`, … loses bare-name
+   navigation — yet RK1 and T8 enumerate only `why`, `episode`, `approve` … `ailang-worldd world get
+   <ref>` … is silently re-interpreted as navigation to brane `get`." Fix adopted (kimi's terms):
+   RK1 replaced with the full enumerated set; §5.4 now reads "Navigation never regresses for inputs
+   outside the enumerated shadow set (RK1) …"; step 3b `world get <ref>` → class other, refused with
+   the CLI line, bare `world NAME`/`world NAME@AT` stay navigation; VB4 asserts the go/ast arm set
+   equals operator ∪ never ∪ other, excluding the navigation tokens and the dropped binary name;
+   VB3/§2.4/VP6 rows for bare `log`, `world session`, `ailang-worldd world get world-1`. **r1:**
+   §1.13 (V33: the 28 arms re-derived), §2.1(b) steps 3/3b and two new table rows classifying
+   every arm (`commit`, `outcome`, `call`, `demo` as other-writes-World with the reason; the 15
+   read/tooling words as other), the exhaustiveness paragraph (1 + 3 + 5 + 19 = 28), §2.4, T8, RK1,
+   §5.4, §8, VB3, VB4, VP6. The controller's arm list was re-derived independently (V33) and
+   matched.
+3. **Verification gaps (oc-glm-5-3 catch).** (i) CORS: §1.11 and V31 (three comment-only matches,
+   positive control on `Header().Set(`); the `/v1` no-auth note cites the bare registration
+   (`daemon.go:1120`) and `TestEpisodeReportJSONAndTableLoopback`. (ii) Shell characters: the list
+   has **nine**; §2.1(a) and VB1 now both say nine. (iii) `serve --help`: traced by reading
+   (`genericVerbHelp` returns before the switch; §1.14, V35) and already exercised by
+   `TestEveryVerbHasHelp`; per glm's fix (f) VB4 nevertheless invokes no `run()` — it uses the
+   go/ast arm list plus `ownHelpVerbs`/`genericVerbHelp` checks.
+
+*(Round 2: for the controller.)*
