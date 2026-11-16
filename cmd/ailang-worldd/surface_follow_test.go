@@ -73,3 +73,29 @@ func TestHomeServiceSurfaceFollow(t *testing.T) {
 		})
 	}
 }
+
+// service install forwards each --surface-origin to serve, so the home service answers the
+// approval routes at its tailnet origin behind tailscale serve; a bad origin writes nothing.
+func TestHomeServiceSurfaceOrigin(t *testing.T) {
+	const a, b = "https://studio.tail0.ts.net:8453", "https://studio.tail0.ts.net"
+	f := newServiceFixture(t)
+	args := append(append([]string(nil), f.args...), "--surface-origin", a, "--surface-origin", b)
+	if code, msg := f.run(args...); code != 0 {
+		t.Fatalf("%d %s", code, msg)
+	}
+	plist, err := os.ReadFile(f.env.paths.Plist)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "<string>--surface-origin</string>\n<string>" + a + "</string>\n<string>--surface-origin</string>\n<string>" + b + "</string>\n"
+	if !strings.Contains(string(plist), want) {
+		t.Fatal(string(plist))
+	}
+	for _, bad := range []string{"https://example.com", "https://100.64.0.1", "https://x.ts.net:443"} {
+		f := newServiceFixture(t)
+		args := append(append([]string(nil), f.args...), "--surface-origin", bad)
+		if code, msg := f.run(args...); code == 0 || len(f.writes) != 0 {
+			t.Fatalf("%s: %d %s writes=%v", bad, code, msg, f.writes)
+		}
+	}
+}
