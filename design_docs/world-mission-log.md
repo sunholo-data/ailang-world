@@ -9,128 +9,6 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 375 — 2026-11-10 — row 201 A1b sprint 1 built: the approver enrolment law and credentials schema 5 (`approvers`); design r2 via a controller carve-out; judge PASS 91 [PRODUCT]
-
-**Pick:** row 201 `w-world-approvals-by-key`, A1b. This is the route iteration 374 named under the attended **D-WORLD-109 = A**. It is built and judged against fakes, temp stores and test keys only: no real key, store, mint or publish.
-- **Re-measured at pick:**
-  - No open PR from this account.
-  - No `approvers` table, `approver` verb, `--signature` or `--sign-with` on `origin/dev` `3a96cf75`.
-  - Release rows are not routable. Row 150 A1: the only subjects since 2026-11-07 matching `row ?150|A1` are row 201's own A1a design commit `63766f2f` and its merge `dba0e8b2`. Row 151 N2d/N4a: 8 subject hits since 2026-10-01, all record commits and design docs that mention them, none a landing. Control N2c: 4.
-- **Ledger:** valid (100 rows). OPEN: D-WORLD-105 only.
-- **Clause map:** 1.0 clauses 1–7 MET, none UNMET, so no routable UNMET-clause row exists.
-
-**Gate 0:**
-- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
-- Directives: 0 allowlisted on #524 (7 comments; the issue-scoped watermark is absent, so all were read). 0 on #449 since the mission-scoped watermark (2026-10-27T09:03:42Z, 47 comments).
-- Self-notices: `mission_gate0_self_notices.sh` rc 2, an instrument failure and not a verdict. Neither `mission-524-last-seen` nor `mission-449-last-seen` exists, the same cause as 372–374. A direct read found 0 `FAILED to complete` comments on #524 or #449.
-- Mission inbox: 0 unread.
-- Skill drift: none. All 14 files match the driver clone's `origin/dev`.
-- Dev at `3a96cf75`: CI success, `checks=3`.
-
-**Design** (`w-world-approvals-by-key-a1b.md`, a child of the attended parent, a sibling of the built a0a1 doc). Resolver `recipe claude:claude-opus-5-5 declared:provider-pin`; spawned as Agent `opus` (precedent).
-- **r0** (18 min, 1,122 lines, 34 Verification Log rows): two sprints, enrolment first.
-  - Premises it found false: refusals exit `exitUsage = 1`; `ssh-keygen -Y sign -f x.pub` signs from the private file beside it with no agent; the consume does not bind `challenge`; `provisionEpisode` has no no-terminal path; no "decision list" exists in code.
-  - It confirmed CR-TOOMANY (the mutant survives).
-- **Quorum r1 BLOCKED 3/3** ($0.376; author Anthropic benched; seats gpt6-1-sol, gemini-4-argon, oc-glm-5-3).
-  - gpt: the enrol/revoke y/N were unbounded.
-  - gemini: `rem <= 0` reached `context.WithTimeout`.
-  - glm: the `challenge` column and the consume's transaction mode were unevidenced.
-  - The controller measured glm's premises first (rule 3f). Both are true: `credentials_schema.sql:48`, and a deferred `BeginTx` at `mint_requests.go:256` before `Clock()` at `:261`.
-- **r1** (3.4 min, the designer resumed by `SendMessage`): applied all three. Bounded 120 s y/N via `sessionEnv.after`; F7a refuses `rem <= 0` before signing; V35–V38 added, with an empirical race probe.
-- **Quorum r2 BLOCKED 2/3** ($0.361; gemini PASS).
-  - gpt: the confirmation reader drops `ReadString`'s error, so `y`+EOF confirms. The controller measured it (V39): `line="y" err=EOF`. So r1's "EOF already refuses" was false.
-  - glm: `Lstat`-then-read on `--signature`/`--pubkey` (a substituted FIFO blocks with no bound); K8's context root unpinned; no `DecidedMintRequests` tiebreak.
-  - Per round: r1 = prompt bound + expiry arithmetic + unevidenced column; r2 = reader error path + file-open TOCTOU.
-- **r2, controller narrow-refinement carve-out** (ratified; precedent 372, 373). Both rejects carried a concrete `proposed_fix` and neither disputed the direction. The fixes were applied verbatim:
-  - an error-aware reader for the new verbs;
-  - open-then-fstat with `io.LimitReader`;
-  - K8's own 3 s root;
-  - `ORDER BY consumed_at DESC, request_id DESC`.
-  - One named adaptation: glm cited CR7 for the signature FIFO arm, but in this doc that arm is CR4.
-  - R8 logs the pre-existing reader property of the existing verbs (not fixed; it changes attended behaviour).
-
-**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus` (35 min). Committed `83bbc24b`.
-- The design's §8 fallback cut fired: about 2,750 lines for M1–M3 against the 2,000 cap. **Sprint 1 = M1a–c + M2a–c (~1,541 lines).** M3 (`approver enroll|list|revoke`) moves to the head of sprint 2. Its decisions and 46 mutants are kept in the plan's Appendix A.
-- 74 mutants, one per new branch.
-- The planner compiled and smoke-tested the production code in a throwaway copy before planning.
-- Baseline: all gates green except the local `-race` leg, which hit package timeouts in `host/broker`, `host/daemon` and `host/verifygate` under load average about 12.8 on 16 cores. CI's race job was green on the same code.
-- Design premises found false:
-  - **P1:** a plain `os.Open` on a FIFO blocks before any fstat. Open with `O_NONBLOCK` (precedent `episode_launch_interactive.go:252`). This affects the r2 F9/N4 text, which the controller applied verbatim from the reviewer, so sprint 2 must carry it.
-  - **P2:** §2.10a's code sketch still names `readTermLineWithin`, contradicting its own [r2] contract.
-  - **P4:** AS6 as written would not catch a dropped `Feature`, so the full error text is pinned at all four sites.
-  - **P6:** TS3's control is made an external package.
-
-**Executor:** resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`; spawned as Agent `haiku`.
-- Three runs: M1a+M1b (3 min), M1c+M2a (11), M2b+M2c (3). No git writes.
-- `generate.sh` ran once, in a temp HOME. Fixtures are NUL-free and SHA-pinned.
-- The controller rebuilt each sub-milestone from its snapshot and committed it: M1a `bbfb6eba`, M1b `eef98c1b`, M1c `7b023888`, M2a `cd91a67b`, M2b `a28175ba`, M2c `048537c3`. Each run's final tree was sha256-identical to the executor's.
-- Deviations, all accepted by the judge:
-  - M2a trimmed `approvers.go`'s imports until M2b needed them.
-  - The `approverCount`/`testApprover` helpers were placed in M2a.
-  - A test helper `isOlderApprovers` was added.
-  - CT1's task file is named `task.md`.
-- Run 2 lost its full `host/daemon` result (backgrounded past its own poll) and said so. It also ran one read-only `ls ~/.ssh` and reported it. `~/.ssh` mtime is still Sep 9.
-
-**Controller gates** at `048537c3` (AILANG_BIN v0.41.0): all rc 0.
-- `verify_ail.sh`.
-- `VERIFY_GO_LEGS=plain verify_go.sh`: 0 other binary blobs among 6,605 tracked files, 64 evidence tests.
-- `go build ./... && go vet ./...`.
-- Context roots and the dependency allowlist.
-- `-race` on store, approval and authority.
-
-**Judge:** sonnet via the Agent tool, on its own worktree at `048537c3` (generator ≠ judge). **PASS 91/100, zero blocking.**
-- Sub-scores: correctness 28/30, tests 26/30, security 20/20, standards 9/10, scope 8/10.
-- Mutants: 100 run (the plan's set plus 25 of its own), each against the test the plan names. 87 were killed. Of the 13 survivors:
-  - 5 equivalent or unreachable;
-  - 1 message-only;
-  - 1 propagation-only;
-  - 1 the judge's own harness artefact;
-  - 2 real: **PAT-UPPER2** (an uppercase letter after the first character of a name is accepted, `approver.go:25`) and **LK-NAMEPREFIX** (no prefix test on lookup by name, `approvers.go:135`).
-- Non-vacuity: the headline tests of M1b, M2a, M2b and M2c each fail with that milestone's change stubbed. CT1 kills CR-TOOMANY.
-- Security properties confirmed:
-  - revoke marks the row, never deletes it;
-  - no name or key is reused;
-  - a private key file is refused without echoing its bytes;
-  - rsa, p384 and `sk-*` keys are refused;
-  - the prompt is reflectively complete;
-  - stores upgrade v1/v3/v4 → v5;
-  - no new unpinned root.
-- The judge saw one `host/broker` failure, `TestExecProbeNet6ForeignDialIsRetriedNotRefused`, in `go test ./...`. The package is untouched; it is the first recorded instance, logged per D-WORLD-109.
-- **Controller reproduced** PAT-UPPER2 surviving, and RV-DELETE and CR-TOOMANY killed by their named tests. A first CR-TOOMANY attempt whose sed matched nothing printed `ok`; the empty-diff assertion caught it.
-- Non-blocking notes, logged and not filed (D-WORLD-109): PAT-UPPER2, LK-NAMEPREFIX, and that the store does not re-check the name pattern (the pure law runs first). Carried into sprint 2's directive.
-
-**Gate 3b:** PR #537, head `048537c3`.
-- `pull_request` run `42770224305`: 3/3 success (ailang-code verify gate, go host build + test gate, go race gate).
-- Merged by merge commit **`b7d2e629`** (`--match-head-commit`; the auto-close keyword scan read 0, control 1).
-- Push run `42772211406` on the merge `b7d2e629`: 3/3 success.
-- Row 201 A1b sprint 1 LANDED. Row 201 stays open: A1b sprint 2 (M3 verbs, then M4–M5 approving by key), then M6 as its own sprint, then A2–A4.
-
-**Routing evidence:** base=b7d2e629d6ac6665434ddd0bd7a70fc817e929d8@2026-11-10T07:00:09Z.
-- Controller: `claude-opus-5-5` (tok: not reported).
-- Designer: `claude:claude-opus-5-5` via Agent opus (r0 259,187 tok; r1 resume 298,123 tok as reported); r2 by controller carve-out.
-- Quorum: gpt6-1-sol / gemini-4-argon / oc-glm-5-3 ($0.737 metered over two rounds).
-- Planner: `opus` via Agent (350,528 tok).
-- Executor: `claude:claude-haiku-5-5` via Agent haiku (104,801 + 109,031 + 87,422 tok).
-- Evaluator: `sonnet` via Agent (71,477 tok).
-- The driver noted codex unusable at preflight (probe rc 75, quota unreadable).
-- Metered total: $0.74. Details in `verification/world-iter375/routing.md`.
-
-**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Clause 5 (the human surface) was already MET. This sprint lays the store and law for approving a mint by an enrolled key, so World no longer needs a terminal to approve one.
-
-**Ruled out:**
-- A third quorum round: the carve-out applied, and both remaining rejects carried verbatim fixes.
-- Building M1–M3 in one sprint: the planner's estimate (~2,750 lines) tripped the design's own fallback cut.
-- Fixing `readTermLine` for the existing verbs: it changes attended behaviour, so it is logged as design R8.
-- Treating the planner's local `-race` red as a regression: it was load timeouts in untouched packages, and CI's race job and the controller's scoped `-race` were green.
-- Closing PAT-UPPER2/LK-NAMEPREFIX in this sprint: non-blocking, logged under D-WORLD-109.
-
-**Retro:**
-- Third consecutive child design (372, 373, 375) where the quorum blocked twice and the controller carve-out finished it. Each time, round 2's objections landed on code paths the round-1 fix introduced (here, the reader under the new bound). The designer directive should ask, at r0, for a failure-path walk of every new read/wait (EOF, partial bytes, read error, a file swapped between check and use), not only for a bound.
-- An inference from reading code is not a measurement: r1's "EOF already refuses" came from reading that `readTermLine` discards its error, and a four-line probe (V39) refuted it. Designer directives should require a probe for any claim about runtime behaviour.
-- The reviewer's verbatim F9 fix (`os.Open` then fstat) blocks on a FIFO before the fstat (planner P1). Verbatim application is the carve-out's rule, so the correction rides into sprint 2's directive rather than the design text. That is a known limit of the carve-out, worth stating where the next planner will read it.
-
-**Next:** row 201 A1b sprint 2. It starts with M3 (`approver enroll|list|revoke`, typed y bounded at 120 s, the error-aware reader), built from the same doc and plan Appendix A without re-design. It carries planner P1 (`O_NONBLOCK` open, then fstat), P2, and the judge's PAT-UPPER2/LK-NAMEPREFIX gaps. Then M4–M5, then M6, then row 243.
-
 ## 376 — 2026-11-10 — row 201 A1b sprint 2 built: `approver` enroll, list and revoke with a bounded, error-aware typed y; the plan's size gate deferred M4a/M4b; judge PASS 88 [PRODUCT]
 
 **Pick:** row 201 `w-world-approvals-by-key`, A1b sprint 2. This is the route iteration 375 named. It starts with M3 from the sprint-1 plan's Appendix A, with no re-design, under the attended **D-WORLD-109 = A**. It is built and judged against fakes, temp stores and test keys only: no real key, store, mint or publish.
@@ -1941,3 +1819,75 @@ That equals the plan at every step.
 1. Row 243 V1 sprint planner from `w-world-address-bar-verbs.md` r2 (one sprint ≈ 1,750; decide the superseded-abort behaviour and the hang-test clock).
 2. Mark: publish `world/core` 0.1.2 (D-WORLD-117) — attended.
 3. Mark's attended exit runs (QUICKSTART §15–§18) remain runnable; D-WORLD-114/115/116 OPEN with defaults applied.
+
+## 395 — 2026-11-16 — row 243 V1 sprint LANDED (PR #582, merge `fb4d8b89`): operator verbs in the World app's address bar — `host/verbs` (one grammar for the CLI and the page), read-only `GET /surface/verb.json`, `episode report` in the bar with the CLI's own bytes, `approve` navigating to row 201's cards, the CLI line for every other verb; no silent fallback; judge PASS 91 [PRODUCT]
+
+**Pick:** row 243 V1 sprint planner, record 394's Next 1 and the charter's next loop row (D-WORLD-109 = A). Record 394 had landed (#576 → `a51684af`), so there was no carry-over PR.
+- **Re-measured at pick** (`origin/dev` `db2b7423`): no V1 plan, branch or worktree. `mc_quorum_gate2 w-world-address-bar-verbs` → rc 0 (`…-2026-11-16T09-53-06Z.json`); control (a fresh absent id) → rc 1. No quorum owed at pick.
+- **Dev since the design (`48c92a52`):** four attended PRs (#577–#580) touched the surface V1 edits (`daemon.go` +1 route, `surface_home_summary.go`, `home_summary.go`, `app.css`, `app_test.go`, `approve.js`, QUICKSTART). The planner was told and re-measured every premise at `db2b7423`.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 not routable (unchanged). Row 243 moves no clause (clause 5, operator surface, MET); it serves D-WORLD-94.
+- **Ledger at pick:** valid, 104 rows; OPEN D-WORLD-105, 114, 115, 116, 117 (defaults applied).
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent (`mission-world.disabled`).
+- Directives: 0 allowlisted on #574 (3 comments). The issue-scoped watermark file is absent, so every comment was read; nothing to `--mark`.
+- Self-notices: rc 2, `watermark channel unavailable` — instrument failure, not a verdict, as in 371–394.
+- Inbox: nothing addressed to `mission-world` (the newest unread are fleet `harness-resolved` replies to other missions).
+- Skill drift: none — `SKILL.md` + 13 `resources/*.md` at the resolved symlink target match the driver clone's `origin/dev`, per file.
+- Main checkout: local `dev` = `origin/dev` at Gate 1 (`db2b7423`), clean except two untracked worktree dirs.
+
+**Attended rulings that landed mid-iteration** (`#581`, merge `c98eb536`, 16:25 local; read at Gate 3b): **D-WORLD-105 = C** (row 233 closed for 1.0; a mux collision keeps failing closed), **D-WORLD-114 = A** and **D-WORLD-115 = A** (the A3/A4 amendments ratified; the attended exit runs passed, PR #577), **D-WORLD-116 = A** (row 260's fix-forward ratified), **D-WORLD-117 = A** (publish `world/core` 0.1.2 — Mark published it, attended). `scripts/mission_ledger_provenance.sh` → `verdict=attended` for all five (flips `299b3aa4`, `f5ccbaf2`, `0061962f`, `ca707c16`, `e34813fa`). The loop actioned nothing on them beyond this record: every default had already been applied. The ledger now has **no OPEN row**. Row 256 is marked LANDED (PR #529) in the same attended PR.
+
+**Planner** (Agent `opus`, 76.5 min, 433,801 tok; resolver `agent-tool opus fail-closed:env-pin`): `w-world-address-bar-verbs-v1-sprint-plan.md` (3,374 lines) + `sprint_w-world-address-bar-verbs-v1.json`, 8 compiled patches in Appendix P.
+- **Size:** 1,909 (`git diff --numstat db2b7423 HEAD -- cmd host docs`), 91 under the cap; M1–M3 = 1,491, under the design's 1,500 fallback threshold, so nothing moved to V2 (XV1 and the `approve` navigate arm stay).
+- **Mutants:** 120 rows, 224 ledger lines; 106 killed by both the named test and the behaviour suite (no inventory/static kills); 7 non-compiling rewritten and re-run; 2 named survivors (`E-ASb` — a start/finish read failing after the deadline is unreachable because the builder fails first; `JW-GO-EMPTY` — an empty bar asks nothing and goes home); 5 no-mutation controls green.
+- **Premises found false (§1.4):** P1 `episode_markdown.go` reads the printer's unexported fields (+4/−4); P2 `TestSurfaceAppPure` pins `app.js`'s export list (+2/−1, the only existing test edited); P3 the Enter handler cleared the bar before `go` ran; P4 `renderCrumbs` overwrites the placeholder; P5 no `cmd` rig produced a real report (the VR3 test seeds its own journal intents); P6 the `/v1` report handler maps only the builder's error to 503 (kept via a wrapped error type); P7 QUICKSTART §18 tests read to EOF, so §19 carries no bold label; P12 (the planner's own error) the after-fetch "superseded" check is reachable — an answer can beat the newer submit's abort — restored, with a mutant.
+- **Decisions the r2 audit left to the plan (§1.3):** V1-D1 a second submit aborts the pending ask and the aborted one is dropped silently (no message, no navigation, input untouched); a timeout says "the verb route did not answer in time". V1-D2 `askVerb` takes fetch/AbortController/timers as an injected `io`; the node test fires the budget timer on demand; `VERB_ROUTE_BUDGET_MS = 15000` stays a constant, not a tunable.
+- **Controller round trip:** extracted the 8 patches from the committed plan with §2's awk, applied them to `git archive db2b7423`: `diff -rq` against the planner's final tree is empty for `cmd`, `host`, `docs`; control (unpatched base vs the same tree) 26 differences. Plan committed `71c84a08` before any sub-milestone.
+
+**Executor** (env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`, as 374–394), three runs, all foreground with 600 s tool timeouts:
+- Run 1 (M1a–M1c) 3.8 min, 47,723 tok; Run 2 (M2–M3b) 3.8 min, 46,491 tok; Run 3 (M4a–M4b) 1.6 min, 41,688 tok. Every `--dry-run` clean, every acceptance `ACCEPT_OK`, no timing exception, no stop, no hand edit, no git write.
+- The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh` (gofmt/build/vet/test before each commit). Cumulative numstat after each, `-- cmd host docs`, equals the plan's to the line: M1a `0b7e1a19` 203 · M1b `64899fc2` 510 · M1c `9e24bb2b` 697 · M2 `be5fc8c9` 905 · M3a `dc88b6b1` 1,248 · M3b `45987472` 1,491 · M4a `dc4aa6ff` 1,762 · M4b `4962fbea` 1,909. Final tree byte-identical to the planner's for `cmd`, `host`, `docs`; worktree clean; M4b MANIFEST all OK.
+
+**Controller gates** (plan §6 script on `4962fbea`, per-SHA dir `gates-ctl-4962fbea`, 951 s): status, verify_ail (16 / 40 / 503; no `.ail` changed), gofmt, build, vet, fence (39 `ok`), pkgs (`host/verbs`, `host/surfacepage`, `host/daemon` 313 s, `cmd/ailang-worldd` 199 s), race, inv (65 named PASS, none missing/SKIP), chrome (15 PASS incl. XV1), `verify_go` (pinned v0.41.0) — all rc 0, `FAILS: none`.
+
+**Evaluator** (Agent `sonnet`, own worktree `.eval-world-iter395-row243-v1`, 55.5 min, 153,112 tok; resolver `agent-tool sonnet declared:alias-pin`; generator ≠ judge — opus planner, haiku executor, sonnet judge): **PASS 91/100**, 0 blocking (correctness 28/30, tests 25/30, security 19/20, standards 9/10, scope 10/10).
+- Measured 1,759 + 150 = 1,909; 34 paths all in plan §5 (+ the two plan files); `ParseInterleaved` 10 call sites at base and head; row 201 files and the static `surface.js` untouched; the only pre-existing test edit is `app_test.go` +2/−1 (five export names appended; nothing weakened).
+- Own test runs: all four touched packages, `-race` on verbs/surfacepage, `vet`, the compile fence, the live-Chrome leg (3/3) — green.
+- Mutants: ledger 95 lines (`judge/mutants.tsv`); 17 plan rows re-run as the plan says; ~60 own ids not in the plan's table, incl. `app.js` branches; must-die killed, must-live survived; every kill behavioural.
+- **No silent fallback confirmed** on its own reading: `verbOutcome` returns `{address:true}` only for 200 + JSON + schema `world/surface-verb/v1` + `v===1` + an own-key outcome with non-empty members; every other path says why and leaves view and input.
+- **Non-blocking, logged here and handed to V2 (not filed, per D-WORLD-109):** (1) a never-verb's refusal text can lose its CLI line unchecked; (2) **an empty submit does not supersede a pending ask** — controller-reproduced from source: `go('')` returns `out()` before `askVerb`, so a late `address` answer can still navigate (to what the operator typed, within the loopback answer window); the base `go()` already had this shape for index-backed addresses (`await loadIndex()` before `openState`), V1 widens it to every line; plus `X-JS-FINALLY-NULL` (a third submit's supersession untested); (3) `MaxWords` not pinned apart from its constant; (4) a `result` answer without `cli` is accepted by the page; (5) Escape-closes-panel and Enter refocus untested; (6) the moved printer's `start:` and `uncommitted intents:` lines untested (pre-existing gap); (7) the exact 256-byte episode boundary untested; (8) refusal text is a header `say` that fades in 2.6 s (named residual RS-SAY).
+
+**Gate 3b:**
+- Dev moved during the sprint to `c98eb536` (the attended rulings PR #581, docs only). `db2b7423`'s push CI had gone red on `go host build + test gate`: `TestSeedRestartIgnoresASurvivingOldCopy/survivor` (`host/broker`) — **row 259, instance 6** (log 189,192 B, 175 `--- PASS` lines as the control); `c98eb536`'s CI is 3/3 green. Sprint diff vs the new dev commits: 0 shared files (controls 4 and 34).
+- PR #582 head `4962fbea`: **3/3 success** first try (verify gate, Go host gate, race gate; per-SHA poll `ci_pr582_head4962fbea.verdict`). `mergeable` MERGEABLE/CLEAN on that head. Closing-keyword scan of title, body and the 9 commit messages: 0.
+- `gh pr merge 582 --merge --match-head-commit 4962fbea…` → merge **`fb4d8b89`**.
+- Push CI on the merge, run 43907035880: **3/3 success** first try (`ailang-code verify gate`, `go host build + test gate`, `go race gate`). **LANDED.**
+
+**Routing evidence:** base=db2b7423327d5223cd1a37cf40e0794c2019026a@2026-11-16T13:40:16Z (Gate 1; worktree snap at 13:41:59Z, same SHA).
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (doc reviewed at 394).
+- Planner: `opus` via Agent (433,801 tok), resolver `agent-tool opus fail-closed:env-pin` (driver note: codex `gpt-6.1-sol` unusable at preflight, probe rc 75, quota unreadable → opus).
+- Executor: `claude:claude-haiku-5-5` env pin, spawned as Agent `haiku` (47,723 + 46,491 + 41,688 tok), resolver `recipe claude:claude-haiku-5-5 declared:provider-pin` (driver note: codex unusable → haiku).
+- Evaluator: `sonnet` via Agent (153,112 tok), `agent-tool sonnet declared:alias-pin`.
+- Quorum: none (doc reviewed at 394). Metered total: $0.
+- Judge independence: cross-model (opus plan, haiku execution, sonnet judge).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V1 is LANDED: Mark can type `episode report <e>` into the World app's address bar and read the CLI's own text, `approve <id|ref>` opens row 201's card, and every other verb shows its exact CLI line. Mutating verbs from the bar wait for V3 (key-approval law) and V4 (host runner); V2 (`why`) is next.
+
+**Ruled out:**
+- **Rebasing the sprint onto `c98eb536` before the PR:** the new dev commits share no file with the sprint (0 of 4 vs 34), and the PR's checks run on the merge ref.
+- **Treating `db2b7423`'s red as the sprint's or as dev-red:** it is the row-259 flake on a commit before the sprint, and dev's tip is green.
+- **Filing the judge's eight notes as queue rows:** D-WORLD-109 logs non-blocking notes and hands them to the next phase; the empty-submit gap is a V2 design input, not a V1 blocker (it navigates only to the operator's own line, and the base had the same race for index-backed addresses).
+- **Moving XV1 / the `approve` arm to V2:** M1–M3 measured 1,491, under the design's 1,500 threshold.
+
+**Retro:**
+- **The attended rulings landed while the sprint ran.** Gate 0 read the ledger at `db2b7423`; the five rows were resolved at 15:48 local and merged at 16:25. Nothing depended on them (every default was already applied), and Gate 3b's fetch caught them. No rule change needed: Gate 0 (e) already says re-read after the fetch and rebase the record.
+- **A plan with compiled patches + diff-anchored mutants keeps the execution cheap:** three haiku runs totalled 9.2 min with zero stops; the planner (76.5 min) and judge (55.5 min) carried the weight. Same shape as 389–392.
+- **Watermark files for #574 and #524 remain absent**, so the self-notices instrument stays rc 2 (unchanged since 371; not this loop's harness).
+
+**Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16 after the Monday 07:00 local boundary). Weekly external-issue sweep already run this week at 393.
+
+**Next:**
+1. Row 243 **V2** child design (`why` in the bar), from design §0.3, with the judge's V1 notes as inputs (empty-submit supersession, the never-verb CLI line, `result` without `cli`).
+2. Mark's attended no-terminal exit run for V1 (design §10) when convenient.
