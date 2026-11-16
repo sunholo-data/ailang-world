@@ -1,16 +1,20 @@
-# World mission dashboard — iteration 395 (2026-11-16)
+# World mission dashboard — iteration 396 (2026-11-16)
 
-- **Done this fire:** row 243 **V1 sprint LANDED** (PR #582, merge `fb4d8b89`; PR and merge CI 3/3 first try): operator verbs in the World app's address bar.
-  - `host/verbs`: one grammar for the CLI and the page (`Split`/`Quote`, the verb table, `Lookup`, the shared `ParseInterleaved` and `episode report` flags).
-  - A read-only `GET /surface/verb.json`. The bar runs `episode report <e>` with the CLI's own bytes, opens row 201's card for `approve <id|ref>`, and shows the exact CLI line for every other verb.
-  - No silent fallback: only a schema-valid address answer navigates. The page waits at most 15 s, and a superseded ask is dropped.
-  - 1,909 changed lines in 8 sub-milestones. Judge (sonnet) **PASS 91/100**, 0 blocking. Its 8 non-blocking notes are handed to V2.
-- **Next loop work:** row 243 **V2** child design (`why` in the bar). V3 (verb-approval law), V4 (host runner / herdr hand-off) and V5 follow.
-- **Attended, for Mark when convenient:** the V1 no-terminal exit run (design §10).
-- **OPEN decisions:** none. On 2026-11-16 Mark ruled D-WORLD-105 = C, 114 = A, 115 = A, 116 = A and 117 = A, and published `world/core` 0.1.2.
+- **Done this fire:** row 243 **V2 child design r1 DONE** ([`w-world-address-bar-verbs-v2.md`](planned/w-world-address-bar-verbs-v2.md)). It puts `why <target>` in the World app's address bar.
+  - The walk moves to `host/why` behind a `Getter`, so the CLI and the daemon call one implementation. `why.Head` replaces the forked `headState`.
+  - V1's `GET /surface/verb.json` serves it in-process through a private mux over the seven `/v1` GET handlers. It is read-only.
+  - Every failure is a refusal that carries the CLI line, never navigation or "not found". The failures are the 10 s read deadline, a read failure, a malformed answer, and an answer over the 1 MiB cap.
+  - Every Enter owns the bar, which fixes V1 judge note 1.
+  - The work is split into V2a (the seam, ≈ 970 lines, no visible change) and V2b (the bar, ≈ 930 lines).
+  - Quorum round 1 BLOCKED 3/3, round 2 **PROCEED 3/3**. The independent audit (sonnet) gave **PASS 84**, 0 blocking. Its 7 planner inputs are in §13.2.
+- **Next loop work:** the row 243 **V2a** sprint planner. After that come V2b, V3 (the verb-approval law, with a ledger ask), V4 (host runner and herdr hand-off) and V5.
+- **Attended, for Mark when convenient:** the V1 no-terminal exit run (parent design §10).
+- **OPEN decisions:** none.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
-- **Routing this fire:** planner opus (Agent, 76 min), executor haiku (Agent, 3 runs, 9 min), evaluator sonnet (Agent, own worktree, 55 min). Codex unusable at preflight (probe rc 75). Metered $0.
-- **Instrument notes:**
-  - Self-notices still rc 2 (`watermark channel unavailable`; the #574/#524 watermark files are absent).
-  - Dev's push CI at `db2b7423` was red on the row-259 flake (`TestSeedRestartIgnoresASurvivingOldCopy`, instance 6). Dev's tip is green.
+- **Routing this fire:**
+  - Designer: opus via Agent (r0 13.9 min, r1 3.0 min).
+  - Quorum: gemini-4-argon, oc-glm-5-3 and oc-kimi-k3, $0.81 metered.
+  - Evaluator: sonnet via Agent, read-only, 2.8 min.
+  - Codex was over ration and unusable at preflight (probe rc 75).
+- **Instrument notes:** self-notices still return rc 2 (`watermark channel unavailable`), because the #574/#524 watermark files are absent. Dev CI at `200ea5d5` is 3/3 green.
 - **Bookkeeping thread:** #574.

@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 396 | 2026-11-16 | row 243 V2 design r1 DONE (`w-world-address-bar-verbs-v2.md`): `why <target>` in the World app's address bar — the walk moves to `host/why` behind ... |
 | 395 | 2026-11-16 | row 243 V1 sprint LANDED (PR #582, merge `fb4d8b89`): operator verbs in the World app's address bar — `host/verbs` (one grammar for the CLI and the... |
 | 394 | 2026-11-16 | row 243 design r2 DONE (`w-world-address-bar-verbs.md`): operator verbs in the World app's address bar through one Go grammar shared with the CLI; ... |
 | 393 | 2026-11-16 | row 260 LANDED (PR #573, merge `10e6b5dc`): the kernel's contracts type-check under AILANG v0.60.4 — four `TC_CONTRACT_001` sites fixed (two enum `... |

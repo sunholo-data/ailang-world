@@ -1,6 +1,6 @@
 # w-world-address-bar-verbs-v2: `why <target>` in the World app's address bar
 
-- **Status**: Planned. Designed in iteration 396, **r1**. r0 (`2562348c`) was **BLOCKED 3/3** at
+- **Status**: Planned — **quorum r2 PROCEED 3/3; independent audit PASS 84 (0 blocking; planner inputs §13.2)**. Designed in iteration 396, **r1**. r0 (`2562348c`) was **BLOCKED 3/3** at
   quorum round 1 (gemini-4-argon, oc-glm-5-3, oc-kimi-k3; none disputed the direction). r1 applies
   the controller-listed fixes and nothing else; changed text is marked **[r1]**; §13.1 records each
   objection and its answer. Child of
@@ -703,6 +703,49 @@ planner then keeps host/why's diff from the original minimal (no reflow, no comm
 | oc-kimi-k3 | `-3` is in the wrong §2.3 row | moved to the unknown-flag row with the CLI's real text `flag provided but not defined: -3` (W42) |
 
 Size (§8): +≈ 50 lines (VW5, the delegation, VR8, the VR6/VR7 widenings); the split stands.
+
+### 13.2 Quorum r2 and the independent audit (iteration 396) — inputs for the V2a/V2b planner
+
+**Quorum r2 on r1 `39bb1ff7`: PROCEED 3/3** (gemini-4-argon, oc-glm-5-3, oc-kimi-k3 pass;
+`absent_reviewers` = `[]`). Two non-blocking notes: glm, the page's 15 s budget, its timeout text and
+the abort wiring carry no W-row; kimi, VS2/T1's pinned `d.*` set omits `whyGetter`.
+
+**Independent audit** (evaluator, read-only, own worktree at `39bb1ff7`): **PASS 84/100**, 0 blocking
+(evidence 28/30, consistency 19/25, soundness 23/25, buildability 14/20). It re-ran 37 W-rows, all
+reproduce, and every negative row carries a firing control. The controller reproduced findings 1–3
+and 5 first-party. Nothing below changes the design's direction. The planner resolves each one
+by measurement and records how it did:
+
+1. **V2a's "no other CLI file is edited" is false for two identifiers.** `sum` (`why.go:774`) is
+   called by `demo_seed.go:730,801,829,998,1064`, and `whyTarget{kind:…}` (`why.go:297`) is
+   built by `demo_seed.go:658` with unexported fields. Neither is in W4's list or in §2.1's
+   compatibility layer. Add them to the adapter, or list `demo_seed.go` as edited.
+2. **The two moving test files are not "package line only".** `why_protected_test.go:52,59,74`
+   uses cmd's rig (`newWalkRig`, `whyRun`, …), and its `TestWhyProtectedLine` mixes pure subtests
+   with an `e2e-exec` one, so it splits rather than moves. `why_input_test.go:31,58` call
+   `elide(p)`, which §2.1 exports as `why.Elide`. Re-cut §7 and VW1.
+3. **`c.get` collides with an existing method.** `func (c *client) get(path string) (int, string,
+   error)` exists at `cli.go:94`, and it is not a `Getter`. Use a closure or a new name, and list
+   `cli.go` in §7 if it is edited.
+4. **VS2/T1's pinned `d.*` set is incomplete.** It omits `whyGetter` and the seven handler method
+   values `d.whyMux()` selects, plus any `sync.Once` field. VS1's `ast.Inspect` + `DeepEqual` shape
+   (`surface_verb_test.go`) would fail on first run, so this fails loudly, not silently. Pin the full
+   set, and state that T1's read-only argument also rests on VR6/VR8.
+5. **A stale reason can ride on a `result`.** `host/verbs/lookup.go:99` sets `Reason: "why reads
+   World, but its walk runs in the CLI. The app cannot run it yet."`, and the route copies it to
+   `a.Reason`. §2.5 must clear or replace it when `why` runs (A1), with a test.
+6. **The 1 MiB cap is on raw bytes.** The JSON-encoded body can be larger, because control bytes
+   escape to `\u00XX`. It is still bounded; say so in RV2.
+7. Smaller items. §2.1's "8 non-test call sites" lists 7 plus `why.go:148` (W39/W35 counts are
+   right). `host/why` imports `host/broker`/`host/coordinator`, which transitively reach
+   `host/store`; VS2a pins direct imports only, so say so. The audit's own rough W27 re-run paired
+   at `75 228` against the doc's `56 209`; size it from the real patch.
+
+**Confirmed true by the audit**, so no action is needed. `app.js:484` has
+`VERB_ROUTE_BUDGET_MS = 15000`. `:512-519` abort the fetch through `{signal}` and say *the verb
+route did not answer in time*, so glm's note holds as written. The read-only, bounds and
+no-silent-fallback arguments hold. A1–A5 are each needed against the parent's text. The §9 judge-note
+dispositions are reasonable.
 
 All commands ran in `/Users/voightkampff/dev/sunholo-data/ailang-world/.wt-world-iter396-row243-v2`
 at `200ea5d5` on 2026-11-16 (zsh; output trimmed), except W27 (scratch repo, stated).
