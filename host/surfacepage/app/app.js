@@ -480,8 +480,72 @@
       + (d.length > DECIDED_FEW ? `<button type="button" class="nl run" id="decided-all" aria-expanded="${!!all}">${all ? 'Show fewer' : 'Show all ' + d.length}</button>` : '') + '</div>';
   }
 
+  // ---------- The bar's verbs (row 243 V1): GET /surface/verb.json decides; only a schema-valid address navigates ----------
+  const VERB_ROUTE_BUDGET_MS = 15000;   // above the daemon's 10 s read deadline; a named constant, not a setting
+  const VERB_NEEDS = { address: [], result: ['cli'], navigate: ['href'], terminal: ['cli', 'reason'], refused: ['reason'] };
+  const UNREADABLE = { say: 'the verb route answered something this page cannot read' };
+  // verbOutcome maps the route's answer (HTTP status, body text) to one action; anything else is a refusal.
+  function verbOutcome(status, text) {
+    if (status !== 200) return { say: 'the verb route did not answer: HTTP ' + status };
+    let b = null;
+    try { b = JSON.parse(text); } catch (_) { return UNREADABLE; }
+    const need = b && typeof b === 'object' && b.schema === 'world/surface-verb/v1' && b.v === 1 && Object.prototype.hasOwnProperty.call(VERB_NEEDS, b.outcome) ? VERB_NEEDS[b.outcome] : null;
+    if (!need || !need.every(k => typeof b[k] === 'string' && b[k] !== '')) return UNREADABLE;
+    if (b.outcome === 'address') return { address: true };
+    if (b.outcome === 'refused') return { say: b.reason };
+    if (b.outcome === 'navigate') return b.href.startsWith('/surface/approve/mr-') || b.href.startsWith('/surface/decide/sha256:') ? { assign: b.href } : { say: 'refused: unexpected target' };
+    if (b.outcome === 'terminal') return { panel: { head: '$ ' + b.cli, body: b.reason + '\nAt a terminal: ' + b.cli, copy: b.cli } };
+    const shown = [b.text, b.json, b.stderr].filter(x => typeof x === 'string' && x !== '');
+    if (shown.length !== 1 || (b.stderr !== undefined && b.exit !== 1)) return UNREADABLE;
+    return { panel: { head: '$ ' + b.cli, body: b.stderr !== undefined ? b.stderr + 'exit 1' : shown[0], copy: '' } };
+  }
+  // askVerb asks the route under one budget, across the fetch and the body (io carries fetch, the
+  // clock and AbortController). A newer ask supersedes an older one: the older is aborted and its
+  // answer dropped, never acted on; the newer answers for the bar.
+  let verbJob = null;
+  async function askVerb(raw, io) {
+    if (verbJob) { verbJob.superseded = true; verbJob.ctl.abort(); }
+    const job = { ctl: new io.AbortController(), superseded: false, late: false };
+    verbJob = job;
+    const stop = new Promise((_, reject) => job.ctl.signal.addEventListener('abort', () => reject(new Error('aborted'))));
+    stop.catch(() => {});
+    const timer = io.setTimeout(() => { job.late = true; job.ctl.abort(); }, VERB_ROUTE_BUDGET_MS);
+    try {
+      const res = await Promise.race([io.fetch('/surface/verb.json?q=' + encodeURIComponent(raw), { signal: job.ctl.signal, headers: { Accept: 'application/json' } }), stop]);
+      const text = await Promise.race([res.text(), stop]);
+      return job.superseded ? { superseded: true } : verbOutcome(res.status, text);   // an answer that beat the abort is still dropped
+    } catch (e) {
+      if (job.superseded) return { superseded: true };
+      if (job.late) return { say: 'the verb route did not answer in time' };
+      return { say: 'the verb route is unreachable: ' + (e && e.message ? e.message : String(e)) };
+    } finally {
+      io.clearTimeout(timer);
+      if (verbJob === job) verbJob = null;
+    }
+  }
+  // verbAct runs one action through fx: only an address reaches the address path; only an address,
+  // a navigation or a panel clears the bar; a refusal says why and leaves the view and the input.
+  function verbAct(act, raw, fx) {
+    if (act.superseded) return;
+    if (act.address) { fx.clear(); return fx.address(raw); }
+    if (act.assign) { fx.clear(); return fx.assign(act.assign); }
+    if (act.panel) { fx.clear(); return fx.panel(act.panel); }
+    fx.say(act.say);
+  }
+  // verbPanel builds the panel's nodes with textContent only: a report or a reason is never markup.
+  function verbPanel(doc, p) {
+    const el = doc.createElement('div'), head = doc.createElement('div'), body = doc.createElement('pre');
+    el.id = 'verb'; el.className = 'pop'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Verb');
+    head.className = 'mono'; head.textContent = p.head;
+    body.style.cssText = 'margin:10px 0 0;white-space:pre-wrap;max-height:60vh;overflow:auto;font-size:12px'; body.textContent = p.body;
+    el.append(head, body);
+    if (p.copy) { const b = doc.createElement('button'); b.type = 'button'; b.className = 'hbtn'; b.textContent = 'Copy the line'; b.dataset.copy = p.copy; el.append(b); }
+    return el;
+  }
+
   if (typeof module !== 'undefined') module.exports = { needsYouHTML, decidedHTML, notifications, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
-    adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW } };
+    adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW },
+    VERB_ROUTE_BUDGET_MS, verbOutcome, askVerb, verbAct, verbPanel };
   if (typeof document === 'undefined') return;
 
   // ================= The page =================
@@ -925,7 +989,7 @@
   const addrOf = () => F.kind === 'open' ? String(F.id).replace(/:episode:/, ':') : `${String(F.brane).replace(/^([a-z][a-z0-9-]*):brane:/, '$1:')}@${railIdx() + 1}`;
   function renderCrumbs() {
     $('crumbs').innerHTML = crumbsHTML(st.d === 1 && F ? addrOf() : null);
-    $('addr').placeholder = st.d !== 0 ? '' : T && T.GROUPS[0].id ? 'go to a place — ' + T.GROUPS.map(g => g.id).join(' · ') + ' · ' + T.GROUPS[0].id + ':row-N@1' : 'go to a place — row-189@6 · shared@0ffbb9c';
+    $('addr').placeholder = st.d !== 0 ? '' : (T && T.GROUPS[0].id ? 'go to a place — ' + T.GROUPS.map(g => g.id).join(' · ') + ' · ' + T.GROUPS[0].id + ':row-N@1' : 'go to a place — row-189@6 · shared@0ffbb9c') + ' · episode report <episode>';
   }
   let msgT;
   function say(t) { const m = $('hmsg'); m.textContent = t; m.style.opacity = '1'; clearTimeout(msgT); msgT = setTimeout(() => { m.style.opacity = '0'; }, 2600); }
@@ -1198,7 +1262,21 @@
     if (!F || !RAIL[k] || RAIL[k].id === F.id) return;
     openState(F.brane, RAIL[k].id);
   }
+  // go is the bar's Enter: empty is home (no fetch); anything else asks the verb route first.
   async function go(raw) {
+    if (String(raw == null ? '' : raw).trim() === '') return out();
+    const act = await askVerb(raw, { fetch: (u, o) => fetch(u, o), AbortController, setTimeout: (f, ms) => setTimeout(f, ms), clearTimeout: t => clearTimeout(t) });
+    return verbAct(act, raw, { address: goAddress, assign: h => location.assign(h), panel: showVerbPanel, say,
+      clear: () => { if ($('addr').value === raw) $('addr').value = ''; } });
+  }
+  function showVerbPanel(p) {
+    const old = $('verb'), el = verbPanel(document, p);
+    if (old) old.replaceWith(el); else $('stage').appendChild(el);
+    const b = el.querySelector('button');
+    if (b) b.addEventListener('click', () => { try { navigator.clipboard.writeText(b.dataset.copy).then(() => say('copied'), () => say('copy it from the panel')); } catch (_) { say('copy it from the panel'); } });
+  }
+  // goAddress is the address bar's own path (M4a's grammar), reached only through the route's address answer.
+  async function goAddress(raw) {
     const parse = SEAMS.parseAddress;
     let r = addressTarget(raw, null, parse);
     if (r.error && typeof parse === 'function') {
@@ -1210,7 +1288,7 @@
   }
 
   // ---------- Popovers ----------
-  const KEYROWS = [['← →', 'back · forward a page', '—'], ['⇧← ⇧→', 'previous · next state', '—'], ['↑ ↓', 'lane above · below', 'back in time · toward now'], ['+ −', 'zoom in · out', '—'], ['End', 'back to now', 'most recent'], ['Home', 'the oldest state', 'earliest'], ['Enter', 'open brane', '—'], ['Esc', '—', 'back to timeline'], ['N', 'what needs you', 'what needs you'], ['/', 'address bar', 'address bar'], [',', 'appearance', 'appearance'], ['?', 'these keys', 'these keys']];
+  const KEYROWS = [['← →', 'back · forward a page', '—'], ['⇧← ⇧→', 'previous · next state', '—'], ['↑ ↓', 'lane above · below', 'back in time · toward now'], ['+ −', 'zoom in · out', '—'], ['End', 'back to now', 'most recent'], ['Home', 'the oldest state', 'earliest'], ['Enter', 'open brane', '—'], ['Esc', '—', 'back to timeline'], ['N', 'what needs you', 'what needs you'], ['/', 'address bar', 'address bar'], ['Enter', 'in the bar: a place, episode report E, approve ID', 'the same'], [',', 'appearance', 'appearance'], ['?', 'these keys', 'these keys']];
   function renderKeys() {
     $('keys').innerHTML = `<div class="kgrid"><span></span><span style="font-size:12px;font-weight:700;color:${st.d === 0 ? 'var(--text)' : 'var(--faint)'}">Timeline</span><span style="font-size:12px;font-weight:700;color:${st.d === 1 ? 'var(--text)' : 'var(--faint)'}">Brane</span>` +
       KEYROWS.map(([k, a, b]) => `<span><span class="kbd">${k}</span></span><span>${a}</span><span>${b}</span>`).join('') +
@@ -1427,7 +1505,7 @@
   $('look').addEventListener('click', e => { const b = e.target.closest('[data-look]'); if (!b) return; const [k, v] = b.dataset.look.split(':'); look[k] = v; saveLook(); applyLook(); renderLook(); });
   $('addr').addEventListener('keydown', e => {
     e.stopPropagation();
-    if (e.key === 'Enter') { go(e.target.value); e.target.value = ''; $('root').focus({ preventScroll: true }); }
+    if (e.key === 'Enter') { go(e.target.value); $('root').focus({ preventScroll: true }); }
     if (e.key === 'Escape') { e.target.value = ''; $('root').focus({ preventScroll: true }); }
   });
   const onRow = row => Object.keys(DISP).filter(id => DISP[id].row === row).sort((a, b) => DISP[a].x - DISP[b].x);
@@ -1439,7 +1517,7 @@
     if (k === '?') toggle('keys');
     else if (k === ',') toggle('look');
     else if (k === '/') $('addr').focus();
-    else if (k === 'Escape') { if (!$('keys').hidden || !$('look').hidden) { $('keys').hidden = true; $('look').hidden = true; } else out(); }
+    else if (k === 'Escape') { if ($('verb')) $('verb').remove(); else if (!$('keys').hidden || !$('look').hidden) { $('keys').hidden = true; $('look').hidden = true; } else out(); }
     else if (k === 'n' || k === 'N') { const a = document.querySelector('[data-needs] a'); if (a) { if (st.d === 1) out(); a.focus(); } }   // design §2.8: N jumps to what needs you
     else if (st.d === 1 && k === 'ArrowUp') openRail(railIdx() - 1);
     else if (st.d === 1 && k === 'ArrowDown') openRail(railIdx() + 1);
