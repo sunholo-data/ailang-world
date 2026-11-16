@@ -1,0 +1,7 @@
+mr-df1f641555b2267f  episode sig-demo-2  approved by ssh:demo2  at 2026-11-16T12:34:53Z  credential 85ecfc85d7650b1a
+mr-fddebcc8705cbe52  episode surface-demo  approved by webauthn:demo-mac  at 2026-11-16T12:32:23Z  credential 25965af580c53179
+mr-cddf22b43478d3de  episode pk-demo  approved by webauthn:demo-mac  at 2026-11-16T12:31:17Z  credential 1736ba51db218e84
+mr-e737f07e85307fa8  episode sig-demo  approved by ssh:demo  at 2026-11-16T12:27:08Z  credential c8b406997c80cda5
+demo  ssh  ssh-ed25519 SHA256:uhZRBFUQfEUoGDrvlSZdrhd9QeT7SzW+BDm5LEtBWo8  enrolled 2026-11-16T12:25:37Z  last used 2026-11-16T12:27:08Z  revoked 2026-11-16T12:27:40Z
+demo-mac  webauthn  passkey ES256 localhost cred a088829dba59fcc9  enrolled 2026-11-16T12:29:19Z  last used 2026-11-16T12:32:23Z  revoked 2026-11-16T12:39:21Z
+demo2  ssh  ssh-ed25519 SHA256:Ewvq/wHX2J94vyrcElnNsw8DHTeY4XMCnQyaEjtsHxk  enrolled 2026-11-16T12:34:50Z  last used 2026-11-16T12:34:53Z  revoked 2026-11-16T12:39:30Z

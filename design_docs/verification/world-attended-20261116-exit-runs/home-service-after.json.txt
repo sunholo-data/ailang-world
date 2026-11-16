@@ -1,0 +1,38 @@
+{
+  "build": {
+    "vcs_revision": "b0fbcd3eee7b5b29190e678e296635a3dd3a0d0c",
+    "vcs_modified": false,
+    "executable_sha256": "sha256:5f3be220b8bc410a8949bf4b7d5e68872d94a36c26caf85de98f3d5cbe786537",
+    "go_version": "go1.26.6"
+  },
+  "supervisor": "com.sunholo.ailang-world.worldd",
+  "node": {
+    "configured": "/opt/homebrew/bin/node",
+    "target": "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+    "accepted": "/opt/homebrew/Cellar/node/26.13.0_2/bin/node",
+    "probe": "ok",
+    "checked_at": "2026-11-16T12:39:59.036836Z"
+  }
+}
+{
+  "schema": "world/surface-follow-status/v1",
+  "mode": "follow",
+  "repos": [
+    {
+      "id": "world",
+      "state": "fresh",
+      "head": "a51684afdaff457971b3f478baa639432de2bc26",
+      "accepted_head": "a51684afdaff457971b3f478baa639432de2bc26",
+      "built_at": "2026-11-16T12:42:17Z",
+      "checked_at": "2026-11-16T12:42:59Z"
+    }
+  ],
+  "open": {
+    "status": "complete",
+    "checked_at": "2026-11-16T12:42:59Z",
+    "episodes": 0,
+    "running": 0,
+    "omitted": 0,
+    "remainder_unknown": false
+  }
+}
