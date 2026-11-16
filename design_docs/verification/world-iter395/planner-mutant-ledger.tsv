@@ -1,0 +1,224 @@
+15:04:27	V1	work2	S-UTF8	host/verbs/split.go	if !utf8.ValidString(line) { -> if false {	TestSplit	NOCOMPILE	NOCOMPILE		1	K
+15:04:32	V1	work2	S-LONG	host/verbs/split.go	if len(line) > MaxLine { -> if len(line) > MaxLine+1 {	TestSplit	KILLED	KILLED	TestSplit	5	K
+15:04:32	V1	work2	S-DEL	host/verbs/split.go	if line[i] < 0x20 || line[i] == 0x7f { -> if line[i] < 0x20 {	TestSplit	KILLED	KILLED	TestSplit	6	K
+15:04:32	V1	work2	S-CTRL	host/verbs/split.go	if line[i] < 0x20 || line[i] == 0x7f { -> if line[i] < 0x09 || line[i] == 0x7f {	TestSplit	KILLED	KILLED	TestSplit	6	K
+15:04:34	V1	work2	S-SPACE	host/verbs/split.go	case c == ' ': -> case c == '\t':	TestSplit	KILLED	KILLED	TestLookup,TestQuoteRoundTrip,TestSplit	3	K
+15:04:45	V1	work2	S-DQ-ESC-BS	host/verbs/split.go	(line[j+1] == '"' || line[j+1] == '\\') -> (line[j+1] == '"')	TestSplit	KILLED	KILLED	TestSplit	5	K
+15:04:47	V1	work2	S-DQ-ESC-Q	host/verbs/split.go	(line[j+1] == '"' || line[j+1] == '\\') -> (line[j+1] == '\\')	TestSplit	KILLED	KILLED	TestSplit	6	K
+15:04:47	V1	work2	S-SQ-OPEN	host/verbs/split.go	if j < 0 {\n\t\t\t\treturn nil, ErrUnclosed -> if j < -1 {\n\t\t\t\treturn nil, ErrUnclosed	TestSplit	KILLED	KILLED	TestSplit	6	K
+15:04:48	V1	work2	S-DQ-OPEN	host/verbs/split.go	if j == len(line) { -> if j > len(line) {	TestSplit	KILLED	KILLED	TestSplit	4	K
+15:05:10	V1	work2	S-SHELL	host/verbs/split.go	case strings.IndexByte(shellChars, c) >= 0: -> case false:	TestSplit	KILLED	KILLED	TestSplit	18	K
+15:05:10	V1	work2	S-SHELL-SET	host/verbs/split.go	const shellChars = "$`;|&<>()" -> const shellChars = "$`;|&<>)"	TestSplit	KILLED	KILLED	TestSplit	18	K
+15:05:10	V1	work2	S-FLUSH	host/verbs/split.go	\tif in {\n\t\twords = append(words, w.String())\n\t}\n\tif len(words) -> \tif len(words)	TestSplit	KILLED	KILLED	TestLookup,TestQuoteRoundTrip,TestSplit	17	K
+15:05:10	V1	work2	S-EMPTYWORD	host/verbs/split.go	\t\tin = true\n\t} -> \t\tin = w.Len() > 0\n\t}	TestSplit	KILLED	KILLED	TestQuoteRoundTrip,TestSplit	17	K
+15:05:17	V1	work2	S-TOOMANY	host/verbs/split.go	if len(words) > MaxWords { -> if len(words) > MaxWords+1 {	TestSplit	KILLED	KILLED	TestSplit	2	K
+15:05:18	V1	work2	Q-EMPTY	host/verbs/split.go	`^[A-Za-z0-9@%+=:,./_-]+$` -> `^[A-Za-z0-9@%+=:,./_-]*$`	TestQuoteRoundTrip	KILLED	KILLED	TestQuoteRoundTrip	3	K
+15:05:18	V1	work2	Q-SAFE	host/verbs/split.go	`^[A-Za-z0-9@%+=:,./_-]+$` -> `^[A-Za-z0-9@%+=:,./_ -]+$`	TestQuoteRoundTrip	KILLED	KILLED	TestQuoteRoundTrip	3	K
+15:05:19	V1	work2	Q-ESC	host/verbs/split.go	strings.ReplaceAll(a, "'", `'"'"'`) -> a	TestQuoteRoundTrip	KILLED	KILLED	TestQuoteRoundTrip	3	K
+15:05:24	V1	work2	L-STRIP	host/verbs/lookup.go	if len(argv) > 0 && argv[0] == Binary { // 1 -> if false { // 1	TestLookup	KILLED	KILLED	TestLookup	2	K
+15:05:27	V1	work2	L-EMPTY	host/verbs/lookup.go	if len(argv) == 0 {\n\t\treturn Verb{Class: Address}, nil -> if len(argv) == 0 {\n\t\treturn Verb{Class: Refused}, nil	TestLookup	KILLED	KILLED	TestLookup	4	K
+15:05:27	V1	work2	L-FLAG	host/verbs/lookup.go	if strings.HasPrefix(first, "-") { // 2 -> if strings.HasPrefix(first, "--") { // 2	TestLookup	KILLED	KILLED	TestLookup	4	K
+15:05:27	V1	work2	L-FLAG-ORDER	host/verbs/lookup.go	if strings.HasPrefix(first, "-") { // 2 -> if strings.HasPrefix(first, "-") && len(argv) == 1 { // 2	TestLookup	KILLED	KILLED	TestLookup	4	K
+15:05:33	V1	work2	L-NAV-WIDE	host/verbs/lookup.go	if first == "world" && len(argv) <= 2 { // 3 -> if first == "world" && len(argv) <= 3 { // 3	TestLookup	KILLED	KILLED	TestLookup	3	K
+15:05:37	V1	work2	L-EP-REPORT	host/verbs/lookup.go	case "report": -> case "reportx":	TestLookup	KILLED	KILLED	TestLookup	3	K
+15:05:37	V1	work2	L-3B	host/verbs/lookup.go	if first == "world" && argv[1] == "get" { // 3b -> if false { // 3b	TestLookup	KILLED	KILLED	TestLookup	3	K
+15:05:38	V1	work2	L-NAV-NARROW	host/verbs/lookup.go	if first == "world" && len(argv) <= 2 { // 3 -> if first == "world" && len(argv) <= 1 { // 3	TestLookup	KILLED	KILLED	TestLookup	3	K
+15:05:48	V1	work2	L-EP-FINISH	host/verbs/lookup.go	case "start", "finish": -> case "start":	TestLookup	KILLED	KILLED	TestLookup	10	K
+15:05:52	V1	work2	L-APPROVE	host/verbs/lookup.go	case first == "approve": -> case first == "approvex":	TestLookup	KILLED	KILLED	TestLookup	10	K
+15:05:52	V1	work2	L-WHY	host/verbs/lookup.go	case first == "why": -> case first == "whyx":	TestLookup	KILLED	KILLED	TestLookup	10	K
+15:05:52	V1	work2	L-EP-LAUNCH	host/verbs/lookup.go	case "launch": -> case "launchx":	TestLookup	KILLED	KILLED	TestLookup	10	K
+15:05:57	V1	work2	L-NEVER	host/verbs/lookup.go	case member(NeverWords, first): -> case false:	TestLookup	KILLED	KILLED	TestLookup	5	K
+15:06:01	V1	work2	L-SET-LOG	host/verbs/lookup.go	"hosts", "log", "object" -> "hosts", "object"	TestLookup	KILLED	KILLED	TestLookup	5	K
+15:06:01	V1	work2	L-OTHER	host/verbs/lookup.go	case member(OtherWords, first): -> case false:	TestLookup	KILLED	KILLED	TestLookup	6	K
+15:06:01	V1	work2	L-MEMBER	host/verbs/lookup.go	if s == w { -> if s != w {	TestLookup	KILLED	KILLED	TestLookup	6	K
+15:06:03	V1	work2	L-4B-EPISODE	host/verbs/lookup.go	case "episode":\n\t\treturn Verb{Words: "episode", Class: Refused -> case "episodex":\n\t\treturn Verb{Words: "episode", Class: Refused	TestLookup	KILLED	KILLED	TestLookup	3	K
+15:06:11	V1	work2	L-4B-WORLD	host/verbs/lookup.go	case "world":\n\t\treturn Verb{Words: "world", Class: Refused -> case "worldx":\n\t\treturn Verb{Words: "world", Class: Refused	TestLookup	KILLED	KILLED	TestLookup	5	K
+15:06:12	V1	work2	L-CLI	host/verbs/lookup.go	cli := Quote(append([]string{Binary}, argv...)) -> cli := Quote(argv)	TestLookup	KILLED	KILLED	TestLookup	5	K
+15:06:12	V1	work2	A-ONE	host/verbs/lookup.go	if len(args) == 1 && mintRequestID.MatchString(args[0]) { -> if len(args) >= 1 && mintRequestID.MatchString(args[0]) {	TestApproveTarget	KILLED	KILLED	TestApproveTarget	5	K
+15:06:12	V1	work2	A-MR-PAT	host/verbs/lookup.go	`^mr-[0-9a-f]{16}$` -> `^mr-[0-9a-fA-F]{16}$`	TestApproveTarget	KILLED	KILLED	TestApproveTarget	5	K
+15:06:22	V1	work2	A-REF	host/verbs/lookup.go	if len(args) == 1 && decisionRef.MatchString(args[0]) { -> if len(args) == 1 && strings.HasPrefix(args[0], "sha256:") {	TestApproveTarget	KILLED	KILLED	TestApproveTarget	5	K
+15:06:23	V1	work2	F-HELP	host/verbs/flags.go	if errors.Is(err, flag.ErrHelp) { -> if false {	TestEpisodeReportFlags	NOCOMPILE	NOCOMPILE		3	K
+15:06:23	V1	work2	F-PI	host/verbs/flags.go	if fs.NArg() == 0 { -> if fs.NArg() <= 1 {	TestParseInterleaved	KILLED	KILLED	TestEpisodeReportFlags,TestParseInterleaved	4	K
+15:06:23	V1	work2	F-DEFAULT	host/verbs/flags.go	2*time.Second -> 3*time.Second	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	4	K
+15:06:38	V1	work2	F-ERR	host/verbs/flags.go	if err != nil {\n\t\treturn "", false, Binary -> if false {\n\t\treturn "", false, Binary	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	10	K
+15:06:39	V1	work2	F-FOLLOW	host/verbs/flags.go	\t{"follow", "the app shows one report; it re-reads on Enter"},\n -> 	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	10	K
+15:06:39	V1	work2	F-INTERVAL	host/verbs/flags.go	\t{"interval", "the app shows one report; it re-reads on Enter"},\n -> 	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	10	K
+15:06:39	V1	work2	F-MARKDOWN	host/verbs/flags.go	\t{"markdown", "the PR body is rendered by episode finish"},\n -> 	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	10	K
+15:06:46	V1	work2	F-ADDR	host/verbs/flags.go	\t{"addr", "the app reads its own daemon"},\n -> 	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	2	K
+15:06:47	V1	work2	F-VISIT	host/verbs/flags.go	set[f.Name] = true -> set[f.Name] = false	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	3	K
+15:06:47	V1	work2	F-POS-COUNT	host/verbs/flags.go	if len(pos) != 1 || pos[0] == "" { -> if len(pos) < 1 || pos[0] == "" {	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	3	K
+15:06:47	V1	work2	F-POS-EMPTY	host/verbs/flags.go	if len(pos) != 1 || pos[0] == "" { -> if len(pos) != 1 {	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	3	K
+15:06:52	V1	work2	F-JSON	host/verbs/flags.go	return pos[0], *a.JSON, "" -> return pos[0], false, ""	TestEpisodeReportFlags	NOCOMPILE	NOCOMPILE		1	K
+15:06:56	V1	work2	J-404-FALLBACK	host/surfacepage/app/app.js	if (status !== 200) return { say: -> if (status === 404) return { address: true }; if (status !== 200) retu	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:06:56	V1	work2	J-ANY-FALLBACK	host/surfacepage/app/app.js	    fx.say(act.say);\n  } ->     fx.clear(); return fx.address(raw);\n  }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:06:57	V1	work2	J-SCHEMA	host/surfacepage/app/app.js	b.schema === 'world/surface-verb/v1' &&  -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:06:59	V1	work2	J-V	host/surfacepage/app/app.js	b.v === 1 &&  -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:03	V1	work2	J-OWN-OUTCOME	host/surfacepage/app/app.js	Object.prototype.hasOwnProperty.call(VERB_NEEDS, b.outcome) -> b.outcome in VERB_NEEDS	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	3	K
+15:07:05	V1	work2	J-FIELDS	host/surfacepage/app/app.js	if (!need || !need.every(k => typeof b[k] === 'string' && b[k] !== '') -> if (!need) return UNREADABLE;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:05	V1	work2	J-NOTJSON	host/surfacepage/app/app.js	try { b = JSON.parse(text); } catch (_) { return UNREADABLE; } -> try { b = JSON.parse(text); } catch (_) { return { address: true }; }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:08	V1	work2	J-NAV-PREFIX	host/surfacepage/app/app.js	b.href.startsWith('/surface/approve/mr-') || b.href.startsWith('/surfa -> true	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	5	K
+15:07:10	V1	work2	J-TERMINAL	host/surfacepage/app/app.js	if (b.outcome === 'terminal') return { panel: -> if (b.outcome === 'terminal') return { say: b.reason, panel:	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:12	V1	work2	J-RESULT-ONE	host/surfacepage/app/app.js	if (shown.length !== 1 || (b.stderr !== undefined && b.exit !== 1)) re -> if (shown.length < 1) return UNREADABLE;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:12	V1	work2	J-SIGNAL	host/surfacepage/app/app.js	{ signal: job.ctl.signal, headers: -> { headers:	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:14	V1	work2	J-LATE	host/surfacepage/app/app.js	io.setTimeout(() => { job.late = true; job.ctl.abort(); } -> io.setTimeout(() => { job.ctl.abort(); }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:16	V1	work2	J-BUDGET	host/surfacepage/app/app.js	const VERB_ROUTE_BUDGET_MS = 15000; -> const VERB_ROUTE_BUDGET_MS = 1500000;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	3	K
+15:07:18	V1	work2	J-BUDGET-USE	host/surfacepage/app/app.js	}, VERB_ROUTE_BUDGET_MS); -> }, 60000);	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	3	K
+15:07:20	V1	work2	J-BODY-RACE	host/surfacepage/app/app.js	const text = await Promise.race([res.text(), stop]); -> const text = await res.text();	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:20	V1	work2	J-CLEAR	host/surfacepage/app/app.js	      io.clearTimeout(timer);\n -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:22	V1	work2	J-SUPERSEDE	host/surfacepage/app/app.js	if (verbJob) { verbJob.superseded = true; verbJob.ctl.abort(); } -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:25	V1	work2	J-CATCH-SUPERSEDED	host/surfacepage/app/app.js	      if (job.superseded) return { superseded: true };\n -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:27	V1	work2	J-ACT-SUPERSEDED	host/surfacepage/app/app.js	    if (act.superseded) return;\n -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:28	V1	work2	J-ACT-CLEAR	host/surfacepage/app/app.js	if (act.address) { fx.clear(); return fx.address(raw); } -> if (act.address) { return fx.address(raw); }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:30	V1	work2	J-REFUSE-CLEARS	host/surfacepage/app/app.js	    fx.say(act.say);\n  } ->     fx.clear(); fx.say(act.say);\n  }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	5	K
+15:07:31	V1	work2	J-PANEL-TEXT	host/surfacepage/app/app.js	body.textContent = p.body; -> body.innerHTML = p.body;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	5	K
+15:07:34	V1	work2	J-PANEL-HEAD	host/surfacepage/app/app.js	head.textContent = p.head; -> head.innerHTML = p.head;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:34	V1	work2	J-URL	host/surfacepage/app/app.js	'/surface/verb.json?q=' + encodeURIComponent(raw) -> '/surface/verb.json?q=' + raw	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:07:54	V2	work2	F-JSONb	host/verbs/flags.go	return pos[0], *a.JSON, "" -> return pos[0], *a.JSON && false, ""	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	3	K
+15:07:54	V2	work2	S-UTF8b	host/verbs/split.go	if !utf8.ValidString(line) { -> if !utf8.ValidString(line) && false {	TestSplit	KILLED	KILLED	TestSplit	3	K
+15:07:54	V2	work2	F-HELPb	host/verbs/flags.go	if errors.Is(err, flag.ErrHelp) { -> if errors.Is(err, flag.ErrHelp) && false {	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	4	K
+15:14:28	V3	work2	J-SCHEMA	host/surfacepage/app/app.js	b.schema === 'world/surface-verb/v1' &&  -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	7	K
+15:14:28	V3	work2	J-ANY-FALLBACK	host/surfacepage/app/app.js	    fx.say(act.say);\n  } ->     fx.clear(); return fx.address(raw);\n  }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	8	K
+15:14:29	V3	work2	J-404-FALLBACK	host/surfacepage/app/app.js	if (status !== 200) return { say: -> if (status === 404) return { address: true }; if (status !== 200) retu	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	8	K
+15:14:40	V3	work2	J-FIELDS	host/surfacepage/app/app.js	if (!need || !need.every(k => typeof b[k] === 'string' && b[k] !== '') -> if (!need) return UNREADABLE;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	6	K
+15:14:40	V3	work2	J-OWN-OUTCOME	host/surfacepage/app/app.js	Object.prototype.hasOwnProperty.call(VERB_NEEDS, b.outcome) -> b.outcome in VERB_NEEDS	TestSurfaceAppVerbs	SURVIVED	SURVIVED		7	K
+15:14:41	V3	work2	J-V	host/surfacepage/app/app.js	b.v === 1 &&  -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	7	K
+15:14:50	V3	work2	J-NOTJSON	host/surfacepage/app/app.js	try { b = JSON.parse(text); } catch (_) { return UNREADABLE; } -> try { b = JSON.parse(text); } catch (_) { return { address: true }; }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	6	K
+15:14:51	V3	work2	J-TERMINAL	host/surfacepage/app/app.js	if (b.outcome === 'terminal') return { panel: -> if (b.outcome === 'terminal') return { say: b.reason, panel:	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	6	K
+15:14:51	V3	work2	J-NAV-PREFIX	host/surfacepage/app/app.js	b.href.startsWith('/surface/approve/mr-') || b.href.startsWith('/surfa -> true	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	6	K
+15:15:04	V3	work2	J-RESULT-ONE	host/surfacepage/app/app.js	if (shown.length !== 1 || (b.stderr !== undefined && b.exit !== 1)) re -> if (shown.length < 1) return UNREADABLE;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	11	K
+15:15:05	V3	work2	J-SIGNAL	host/surfacepage/app/app.js	{ signal: job.ctl.signal, headers: -> { headers:	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	11	K
+15:15:05	V3	work2	J-LATE	host/surfacepage/app/app.js	io.setTimeout(() => { job.late = true; job.ctl.abort(); } -> io.setTimeout(() => { job.ctl.abort(); }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	11	K
+15:15:12	V3	work2	J-BUDGET	host/surfacepage/app/app.js	const VERB_ROUTE_BUDGET_MS = 15000; -> const VERB_ROUTE_BUDGET_MS = 1500000;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:15:13	V3	work2	J-BUDGET-USE	host/surfacepage/app/app.js	}, VERB_ROUTE_BUDGET_MS); -> }, 60000);	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	5	K
+15:15:13	V3	work2	J-BODY-RACE	host/surfacepage/app/app.js	const text = await Promise.race([res.text(), stop]); -> const text = await res.text();	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	5	K
+15:15:20	V3	work2	J-CLEAR	host/surfacepage/app/app.js	      io.clearTimeout(timer);\n -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	4	K
+15:15:22	V3	work2	J-CATCH-SUPERSEDED	host/surfacepage/app/app.js	      if (job.superseded) return { superseded: true };\n -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	6	K
+15:15:22	V3	work2	J-SUPERSEDE	host/surfacepage/app/app.js	if (verbJob) { verbJob.superseded = true; verbJob.ctl.abort(); } -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	6	K
+15:15:32	V3	work2	J-ACT-SUPERSEDED	host/surfacepage/app/app.js	    if (act.superseded) return;\n -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	9	K
+15:15:35	V3	work2	J-ACT-CLEAR	host/surfacepage/app/app.js	if (act.address) { fx.clear(); return fx.address(raw); } -> if (act.address) { return fx.address(raw); }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	9	K
+15:15:37	V3	work2	J-REFUSE-CLEARS	host/surfacepage/app/app.js	    fx.say(act.say);\n  } ->     fx.clear(); fx.say(act.say);\n  }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	11	K
+15:15:45	V3	work2	J-PANEL-TEXT	host/surfacepage/app/app.js	body.textContent = p.body; -> body.innerHTML = p.body;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	11	K
+15:15:50	V3	work2	J-PANEL-HEAD	host/surfacepage/app/app.js	head.textContent = p.head; -> head.innerHTML = p.head;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	12	K
+15:15:59	V3	work2	J-URL	host/surfacepage/app/app.js	'/surface/verb.json?q=' + encodeURIComponent(raw) -> '/surface/verb.json?q=' + raw	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	17	K
+15:18:46	V4	work2	CTL-V	host/verbs/split.go	func Split(line string) -> func Split(line string)	TestSplit|TestLookup|TestEpisodeReportFlags	SURVIVED	SURVIVED		7	S
+15:18:59	V4	work2	CTL-SP	host/surfacepage/app/app.js	const VERB_ROUTE_BUDGET_MS = 15000; -> const VERB_ROUTE_BUDGET_MS = 15000;	TestSurfaceAppVerbs	SURVIVED	SURVIVED		11	S
+15:19:21	V4	work2	CTL-CH	host/surfacepage/app/app.js	const VERB_ROUTE_BUDGET_MS = 15000; -> const VERB_ROUTE_BUDGET_MS = 15000;	TestVerbBarEpisodeReportInChrome	SURVIVED	SURVIVED		19	S
+15:19:31	V4	work2	S-UTF8b	host/verbs/split.go	if !utf8.ValidString(line) { -> if !utf8.ValidString(line) && false {	TestSplit	KILLED	KILLED	TestSplit	5	K
+15:19:41	V4	work2	S-LONG	host/verbs/split.go	if len(line) > MaxLine { -> if len(line) > MaxLine+1 {	TestSplit	KILLED	KILLED	TestSplit	6	K
+15:19:44	V4	work2	S-UTF8	host/verbs/split.go	if !utf8.ValidString(line) { -> if false {	TestSplit	NOCOMPILE	NOCOMPILE		1	N
+15:19:54	V4	work2	S-CTRL	host/verbs/split.go	if line[i] < 0x20 || line[i] == 0x7f { -> if line[i] < 0x09 || line[i] == 0x7f {	TestSplit	KILLED	KILLED	TestSplit	6	K
+15:20:02	V4	work2	S-DEL	host/verbs/split.go	if line[i] < 0x20 || line[i] == 0x7f { -> if line[i] < 0x20 {	TestSplit	KILLED	KILLED	TestSplit	5	K
+15:20:09	V4	work2	S-SPACE	host/verbs/split.go	case c == ' ': -> case c == '\t':	TestSplit	KILLED	KILLED	TestLookup,TestQuoteRoundTrip,TestSplit	5	K
+15:20:18	V4	work2	S-SQ-OPEN	host/verbs/split.go	if j < 0 {\n\t\t\t\treturn nil, ErrUnclosed -> if j < -1 {\n\t\t\t\treturn nil, ErrUnclosed	TestSplit	KILLED	KILLED	TestSplit	6	K
+15:20:26	V4	work2	S-DQ-ESC-BS	host/verbs/split.go	(line[j+1] == '"' || line[j+1] == '\\') -> (line[j+1] == '"')	TestSplit	KILLED	KILLED	TestSplit	5	K
+15:20:34	V4	work2	S-DQ-ESC-Q	host/verbs/split.go	(line[j+1] == '"' || line[j+1] == '\\') -> (line[j+1] == '\\')	TestSplit	KILLED	KILLED	TestSplit	5	K
+15:20:40	V4	work2	S-DQ-OPEN	host/verbs/split.go	if j == len(line) { -> if j > len(line) {	TestSplit	KILLED	KILLED	TestSplit	4	K
+15:20:47	V4	work2	S-SHELL	host/verbs/split.go	case strings.IndexByte(shellChars, c) >= 0: -> case false:	TestSplit	KILLED	KILLED	TestSplit	5	K
+15:20:54	V4	work2	S-SHELL-SET	host/verbs/split.go	const shellChars = "$`;|&<>()" -> const shellChars = "$`;|&<>)"	TestSplit	KILLED	KILLED	TestSplit	5	K
+15:21:00	V4	work2	S-FLUSH	host/verbs/split.go	\tif in {\n\t\twords = append(words, w.String())\n\t}\n\tif len(words) -> \tif len(words)	TestSplit	KILLED	KILLED	TestLookup,TestQuoteRoundTrip,TestSplit	4	K
+15:21:06	V4	work2	S-EMPTYWORD	host/verbs/split.go	\t\tin = true\n\t} -> \t\tin = w.Len() > 0\n\t}	TestSplit	KILLED	KILLED	TestQuoteRoundTrip,TestSplit	4	K
+15:21:21	V4	work2	S-TOOMANY	host/verbs/split.go	if len(words) > MaxWords { -> if len(words) > MaxWords+1 {	TestSplit	KILLED	KILLED	TestSplit	12	K
+15:21:28	V4	work2	Q-SAFE	host/verbs/split.go	`^[A-Za-z0-9@%+=:,./_-]+$` -> `^[A-Za-z0-9@%+=:,./_ -]+$`	TestQuoteRoundTrip	KILLED	KILLED	TestQuoteRoundTrip	5	K
+15:21:35	V4	work2	Q-EMPTY	host/verbs/split.go	`^[A-Za-z0-9@%+=:,./_-]+$` -> `^[A-Za-z0-9@%+=:,./_-]*$`	TestQuoteRoundTrip	KILLED	KILLED	TestQuoteRoundTrip	5	K
+15:21:41	V4	work2	Q-ESC	host/verbs/split.go	strings.ReplaceAll(a, "'", `'"'"'`) -> a	TestQuoteRoundTrip	KILLED	KILLED	TestQuoteRoundTrip	4	K
+15:21:48	V4	work2	L-STRIP	host/verbs/lookup.go	if len(argv) > 0 && argv[0] == Binary { // 1 -> if false { // 1	TestLookup	KILLED	KILLED	TestLookup	4	K
+15:21:55	V4	work2	L-EMPTY	host/verbs/lookup.go	if len(argv) == 0 {\n\t\treturn Verb{Class: Address}, nil -> if len(argv) == 0 {\n\t\treturn Verb{Class: Refused}, nil	TestLookup	KILLED	KILLED	TestLookup	5	K
+15:22:01	V4	work2	L-FLAG	host/verbs/lookup.go	if strings.HasPrefix(first, "-") { // 2 -> if strings.HasPrefix(first, "--") { // 2	TestLookup	KILLED	KILLED	TestLookup	4	K
+15:22:07	V4	work2	L-FLAG-ORDER	host/verbs/lookup.go	if strings.HasPrefix(first, "-") { // 2 -> if strings.HasPrefix(first, "-") && len(argv) == 1 { // 2	TestLookup	KILLED	KILLED	TestLookup	5	K
+15:22:15	V4	work2	L-NAV-WIDE	host/verbs/lookup.go	if first == "world" && len(argv) <= 2 { // 3 -> if first == "world" && len(argv) <= 3 { // 3	TestLookup	KILLED	KILLED	TestLookup	5	K
+15:22:22	V4	work2	L-NAV-NARROW	host/verbs/lookup.go	if first == "world" && len(argv) <= 2 { // 3 -> if first == "world" && len(argv) <= 1 { // 3	TestLookup	KILLED	KILLED	TestLookup	6	K
+15:22:29	V4	work2	L-3B	host/verbs/lookup.go	if first == "world" && argv[1] == "get" { // 3b -> if false { // 3b	TestLookup	KILLED	KILLED	TestLookup	5	K
+15:22:36	V4	work2	L-EP-REPORT	host/verbs/lookup.go	case "report": -> case "reportx":	TestLookup	KILLED	KILLED	TestLookup	5	K
+15:22:42	V4	work2	L-EP-FINISH	host/verbs/lookup.go	case "start", "finish": -> case "start":	TestLookup	KILLED	KILLED	TestLookup	4	K
+15:22:48	V4	work2	L-EP-LAUNCH	host/verbs/lookup.go	case "launch": -> case "launchx":	TestLookup	KILLED	KILLED	TestLookup	5	K
+15:22:54	V4	work2	L-WHY	host/verbs/lookup.go	case first == "why": -> case first == "whyx":	TestLookup	KILLED	KILLED	TestLookup	4	K
+15:22:58	V4	work2	L-APPROVE	host/verbs/lookup.go	case first == "approve": -> case first == "approvex":	TestLookup	KILLED	KILLED	TestLookup	2	K
+15:23:01	V4	work2	L-NEVER	host/verbs/lookup.go	case member(NeverWords, first): -> case false:	TestLookup	KILLED	KILLED	TestLookup	2	K
+15:23:06	V4	work2	L-OTHER	host/verbs/lookup.go	case member(OtherWords, first): -> case false:	TestLookup	KILLED	KILLED	TestLookup	2	K
+15:23:09	V4	work2	L-MEMBER	host/verbs/lookup.go	if s == w { -> if s != w {	TestLookup	KILLED	KILLED	TestLookup	2	K
+15:23:14	V4	work2	L-SET-LOG	host/verbs/lookup.go	"hosts", "log", "object" -> "hosts", "object"	TestLookup	KILLED	KILLED	TestLookup	3	K
+15:23:20	V4	work2	L-4B-EPISODE	host/verbs/lookup.go	case "episode":\n\t\treturn Verb{Words: "episode", Class: Refused -> case "episodex":\n\t\treturn Verb{Words: "episode", Class: Refused	TestLookup	KILLED	KILLED	TestLookup	3	K
+15:23:25	V4	work2	L-4B-WORLD	host/verbs/lookup.go	case "world":\n\t\treturn Verb{Words: "world", Class: Refused -> case "worldx":\n\t\treturn Verb{Words: "world", Class: Refused	TestLookup	KILLED	KILLED	TestLookup	2	K
+15:23:31	V4	work2	L-CLI	host/verbs/lookup.go	cli := Quote(append([]string{Binary}, argv...)) -> cli := Quote(argv)	TestLookup	KILLED	KILLED	TestLookup	2	K
+15:23:37	V4	work2	A-ONE	host/verbs/lookup.go	if len(args) == 1 && mintRequestID.MatchString(args[0]) { -> if len(args) >= 1 && mintRequestID.MatchString(args[0]) {	TestApproveTarget	KILLED	KILLED	TestApproveTarget	3	K
+15:23:44	V4	work2	A-MR-PAT	host/verbs/lookup.go	`^mr-[0-9a-f]{16}$` -> `^mr-[0-9a-fA-F]{16}$`	TestApproveTarget	KILLED	KILLED	TestApproveTarget	3	K
+15:23:48	V4	work2	A-REF	host/verbs/lookup.go	if len(args) == 1 && decisionRef.MatchString(args[0]) { -> if len(args) == 1 && strings.HasPrefix(args[0], "sha256:") {	TestApproveTarget	KILLED	KILLED	TestApproveTarget	2	K
+15:23:53	V4	work2	F-PI	host/verbs/flags.go	if fs.NArg() == 0 { -> if fs.NArg() <= 1 {	TestParseInterleaved	KILLED	KILLED	TestEpisodeReportFlags,TestParseInterleaved	2	K
+15:23:58	V4	work2	F-DEFAULT	host/verbs/flags.go	2*time.Second -> 3*time.Second	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	2	K
+15:23:59	V4	work2	F-HELP	host/verbs/flags.go	if errors.Is(err, flag.ErrHelp) { -> if false {	TestEpisodeReportFlags	NOCOMPILE	NOCOMPILE		0	N
+15:24:03	V4	work2	F-HELPb	host/verbs/flags.go	if errors.Is(err, flag.ErrHelp) { -> if errors.Is(err, flag.ErrHelp) && false {	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	2	K
+15:24:08	V4	work2	F-ERR	host/verbs/flags.go	if err != nil {\n\t\treturn "", false, Binary -> if false {\n\t\treturn "", false, Binary	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	2	K
+15:24:11	V4	work2	F-FOLLOW	host/verbs/flags.go	\t{"follow", "the app shows one report; it re-reads on Enter"},\n -> 	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	2	K
+15:24:16	V4	work2	F-INTERVAL	host/verbs/flags.go	\t{"interval", "the app shows one report; it re-reads on Enter"},\n -> 	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	2	K
+15:24:21	V4	work2	F-MARKDOWN	host/verbs/flags.go	\t{"markdown", "the PR body is rendered by episode finish"},\n -> 	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	3	K
+15:24:30	V4	work2	F-ADDR	host/verbs/flags.go	\t{"addr", "the app reads its own daemon"},\n -> 	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	4	K
+15:24:37	V4	work2	F-VISIT	host/verbs/flags.go	set[f.Name] = true -> set[f.Name] = false	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	2	K
+15:24:46	V4	work2	F-POS-COUNT	host/verbs/flags.go	if len(pos) != 1 || pos[0] == "" { -> if len(pos) < 1 || pos[0] == "" {	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	3	K
+15:24:54	V4	work2	F-POS-EMPTY	host/verbs/flags.go	if len(pos) != 1 || pos[0] == "" { -> if len(pos) != 1 {	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	3	K
+15:24:59	V4	work2	F-JSON	host/verbs/flags.go	return pos[0], *a.JSON, "" -> return pos[0], false, ""	TestEpisodeReportFlags	NOCOMPILE	NOCOMPILE		0	N
+15:25:06	V4	work2	F-JSONb	host/verbs/flags.go	return pos[0], *a.JSON, "" -> return pos[0], *a.JSON && false, ""	TestEpisodeReportFlags	KILLED	KILLED	TestEpisodeReportFlags	3	K
+15:25:48	V4	work2	F-PI-CLI	host/verbs/flags.go	if fs.NArg() == 0 { -> if fs.NArg() <= 1 {	TestEpisodeReportJSONAndTableLoopback	KILLED	KILLED	TestApproverRevokeListsWhatItApproved	40	K
+15:26:02	V4	work2	CTL-C	host/daemon/surface_verb.go	func (d *Daemon) handleSurfaceVerb( -> func (d *Daemon) handleSurfaceVerb(	TestVerbRouteReportIsTheCLIs|TestEpisodeReportTablePrintsEveryClass	SURVIVED	SURVIVED(whole)		443	S
+15:28:27	V4	work2	CTL-D	host/daemon/surface_verb.go	func (d *Daemon) handleSurfaceVerb( -> func (d *Daemon) handleSurfaceVerb(	TestSurfaceVerbOutcomes|TestSurfaceVerbBoundsAndErrors|TestEpisodeReportRESTRoute	SURVIVED	SURVIVED(whole)		588	S
+15:28:29	V4	work2	P-TOOL-WIDTH	host/daemon/episode_report_text.go	"  %-18s %6d\n", kv.Name, kv.N -> "  %-17s %6d\n", kv.Name, kv.N	TestEpisodeReportTablePrintsEveryClass	KILLED	KILLED	TestEpisodeReportTablePrintsEveryClass,TestEpisodeReportTablePrintsTheReadsLine	144	K
+15:28:29	V4	work2	P-SORT	host/daemon/episode_report_text.go	return out[i].N > out[j].N -> return out[i].N < out[j].N	TestEpisodeReportTablePrintsEveryClass	SURVIVED	KILLED	TestEpisodeReportTablePrintsTheReadsLine	141	K
+15:29:02	V4	work2	E-FOUND	host/daemon/episode_report.go	return rep, ok || start != nil || rep.Finish != nil || len(rep.ExecCac -> return rep, ok, nil	TestEpisodeReport	SURVIVED	KILLED	TestEpisodeReportShowsBindSeedFailure	24	K
+15:29:02	V4	work2	E-WRAP	host/daemon/episode_report.go	return rep, false, reportBuildError{err} -> return rep, false, err	TestEpisodeReportRESTRoute	KILLED	KILLED	TestEpisodeReportRESTRoute,TestSurfaceVerbBoundsAndErrors	24	K
+15:29:18	V4	work2	E-AS	host/daemon/episode_report.go	return errors.As(err, &build) && timedOut(ctx, build.err) -> return err != nil && timedOut(ctx, err)	TestEpisodeReportRESTRoute	NOCOMPILE	NOCOMPILE		11	L
+15:29:28	V4	work2	E-TIMEOUT	host/daemon/episode_report.go	\tif reportTimedOut(ctx, err) {\n\t\twriteReadTimeout(w, d.readDeadlin -> \tif false {\n\t\twriteReadTimeout(w, d.readDeadline)	TestEpisodeReportRESTRoute	KILLED	KILLED	TestEpisodeReportRESTRoute	21	K
+15:29:30	V4	work2	E-NOTFOUND	host/daemon/episode_report.go	\tif !found {\n\t\twriteAPIError(w, "NotFound" -> \tif false {\n\t\twriteAPIError(w, "NotFound"	TestEpisodeReportRESTRoute	NOCOMPILE	NOCOMPILE		6	K
+15:30:16	V4	work2	R-SPLIT	host/daemon/surface_verb.go	\tif err != nil {\n\t\ta.Reason = err.Error() -> \tif false {\n\t\ta.Reason = err.Error()	TestSurfaceVerbBoundsAndErrors	KILLED	KILLED	TestSurfaceVerbBoundsAndErrors,TestSurfaceVerbOutcomes	33	K
+15:30:18	V4	work2	R-Q	host/daemon/surface_verb.go	if !query.Has("q") { -> if false {	TestSurfaceVerbBoundsAndErrors	KILLED	KILLED	TestSurfaceVerbBoundsAndErrors	39	K
+15:30:54	V4	work2	R-REPORT	host/daemon/surface_verb.go	case v.Words == "episode report": -> case v.Words == "episode reportx":	TestSurfaceVerbOutcomes	KILLED	KILLED	TestSurfaceVerbBoundsAndErrors,TestSurfaceVerbOutcomes	22	K
+15:30:55	V4	work2	R-ADDRESS	host/daemon/surface_verb.go	\t\ta.Outcome = "address" -> \t\ta.Outcome = "refused"	TestSurfaceVerbOutcomes	KILLED	KILLED	TestSurfaceVerbBoundsAndErrors,TestSurfaceVerbOutcomes	22	K
+15:31:18	V4	work2	R-TERM-HOST	host/daemon/surface_verb.go	v.Class == verbs.Read || v.Class == verbs.Mutate || v.Class == verbs.H -> v.Class == verbs.Read || v.Class == verbs.Mutate:	TestSurfaceVerbOutcomes	KILLED	KILLED	TestSurfaceVerbOutcomes	18	K
+15:31:20	V4	work2	R-NAV	host/daemon/surface_verb.go	; a.Href != "" { -> ; true {	TestSurfaceVerbOutcomes	KILLED	KILLED	TestSurfaceVerbOutcomes	20	K
+15:31:42	V4	work2	R-TERM-READ	host/daemon/surface_verb.go	v.Class == verbs.Read || v.Class == verbs.Mutate || v.Class == verbs.H -> v.Class == verbs.Mutate || v.Class == verbs.Host:	TestSurfaceVerbOutcomes	KILLED	KILLED	TestSurfaceVerbBoundsAndErrors,TestSurfaceVerbOutcomes	19	K
+15:31:44	V4	work2	R-DEFAULT-OUTCOME	host/daemon/surface_verb.go	Class: string(verbs.Refused), Outcome: "refused"} -> Class: string(verbs.Refused), Outcome: "address"}	TestSurfaceVerbOutcomes	KILLED	KILLED	TestSurfaceVerbBoundsAndErrors,TestSurfaceVerbOutcomes	19	K
+15:32:04	V4	work2	R-ADMIT	host/daemon/surface_verb.go	\tif reason != "" {\n\t\ta.Reason = reason -> \tif false {\n\t\ta.Reason = reason	TestSurfaceVerbOutcomes	KILLED	KILLED	TestSurfaceVerbOutcomes	17	K
+15:32:06	V4	work2	R-EPBOUND	host/daemon/surface_verb.go	if len(episode) > maxReportEpisodeBytes { -> if len(episode) > maxReportEpisodeBytes+1 {	TestSurfaceVerbOutcomes	KILLED	KILLED	TestSurfaceVerbOutcomes	16	K
+15:32:19	V4	work2	P-READS	host/daemon/episode_report_text.go	line += fmt.Sprintf(", %d outside the worktree", r.Unlisted) -> line += fmt.Sprintf(", %d outside", r.Unlisted)	TestEpisodeReportTablePrintsTheReadsLine	KILLED	KILLED	TestEpisodeReportTablePrintsTheReadsLine	222	K
+15:32:27	V4	work2	R-ERR-TIMEOUT	host/daemon/surface_verb.go	if reportTimedOut(ctx, err) {\n\t\t\ta.Reason -> if false {\n\t\t\ta.Reason	TestSurfaceVerbBoundsAndErrors	KILLED	KILLED	TestSurfaceVerbBoundsAndErrors	18	K
+15:32:30	V4	work2	R-ERR-LEAK	host/daemon/surface_verb.go	\t\ta.Reason = internalErrorMessage\n -> \t\ta.Reason = err.Error()\n	TestSurfaceVerbBoundsAndErrors	KILLED	KILLED	TestSurfaceVerbBoundsAndErrors	19	K
+15:32:49	V4	work2	R-NOTFOUND	host/daemon/surface_verb.go	\tcase !found:\n -> \tcase false:\n	TestSurfaceVerbOutcomes	NOCOMPILE	NOCOMPILE		15	K
+15:32:49	V4	work2	R-ERR-LOG	host/daemon/surface_verb.go	\t\td.writeInternalErrorLog(r, err)\n -> 	TestSurfaceVerbBoundsAndErrors	KILLED	KILLED	TestSurfaceVerbBoundsAndErrors	24	K
+15:32:50	V4	work2	R-JSON	host/daemon/surface_verb.go	\tcase asJSON:\n -> \tcase false:\n	TestSurfaceVerbOutcomes	NOCOMPILE	NOCOMPILE		12	K
+15:33:24	V4	work2	R-HEADERS	host/daemon/surface_verb.go	defer func() { writeApprovalJSON(w, http.StatusOK, a) }() -> defer func() { writeJSON(w, http.StatusOK, a) }()	TestSurfaceVerbOutcomes	KILLED	KILLED	TestSurfaceVerbBoundsAndErrors,TestSurfaceVerbOutcomes	27	K
+15:33:24	V4	work2	R-ARGV	host/daemon/surface_verb.go	Argv: []string{}, Class: -> Argv: nil, Class:	TestSurfaceVerbBoundsAndErrors	KILLED	KILLED	TestSurfaceVerbBoundsAndErrors,TestSurfaceVerbOutcomes	28	K
+15:33:37	V4	work2	J-404-FALLBACK	host/surfacepage/app/app.js	if (status !== 200) return { say: -> if (status === 404) return { address: true }; if (status !== 200) retu	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	8	K
+15:33:43	V4	work2	R-ROUTE-HOST	host/daemon/daemon.go	mux.HandleFunc("GET /surface/verb.json", d.approvalRoute(d.handleSurfa -> mux.HandleFunc("GET /surface/verb.json", func(w http.ResponseWriter, r	TestSurfaceVerbRouteRegistered	KILLED	KILLED	TestSurfaceVerbRouteRegistered	14	K
+15:33:46	V4	work2	J-ANY-FALLBACK	host/surfacepage/app/app.js	    fx.say(act.say);\n  } ->     fx.clear(); return fx.address(raw);\n  }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	5	K
+15:33:52	V4	work2	J-SCHEMA	host/surfacepage/app/app.js	b.schema === 'world/surface-verb/v1' &&  -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	5	K
+15:33:55	V4	work2	J-V	host/surfacepage/app/app.js	b.v === 1 &&  -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	5	K
+15:34:01	V4	work2	J-OWN-OUTCOME	host/surfacepage/app/app.js	Object.prototype.hasOwnProperty.call(VERB_NEEDS, b.outcome) -> b.outcome in VERB_NEEDS	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	5	K
+15:34:04	V4	work2	J-FIELDS	host/surfacepage/app/app.js	if (!need || !need.every(k => typeof b[k] === 'string' && b[k] !== '') -> if (!need) return UNREADABLE;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	5	K
+15:34:13	V4	work2	J-NOTJSON	host/surfacepage/app/app.js	try { b = JSON.parse(text); } catch (_) { return UNREADABLE; } -> try { b = JSON.parse(text); } catch (_) { return { address: true }; }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	7	K
+15:34:17	V4	work2	J-NAV-PREFIX	host/surfacepage/app/app.js	b.href.startsWith('/surface/approve/mr-') || b.href.startsWith('/surfa -> true	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	6	K
+15:34:29	V4	work2	J-TERMINAL	host/surfacepage/app/app.js	if (b.outcome === 'terminal') return { panel: -> if (b.outcome === 'terminal') return { say: b.reason, panel:	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	9	K
+15:34:33	V4	work2	J-RESULT-ONE	host/surfacepage/app/app.js	if (shown.length !== 1 || (b.stderr !== undefined && b.exit !== 1)) re -> if (shown.length < 1) return UNREADABLE;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	8	K
+15:34:43	V4	work2	J-SIGNAL	host/surfacepage/app/app.js	{ signal: job.ctl.signal, headers: -> { headers:	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	7	K
+15:34:46	V4	work2	J-LATE	host/surfacepage/app/app.js	io.setTimeout(() => { job.late = true; job.ctl.abort(); } -> io.setTimeout(() => { job.ctl.abort(); }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	7	K
+15:35:01	V4	work2	J-BUDGET	host/surfacepage/app/app.js	const VERB_ROUTE_BUDGET_MS = 15000; -> const VERB_ROUTE_BUDGET_MS = 1500000;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	11	K
+15:35:08	V4	work2	J-BUDGET-USE	host/surfacepage/app/app.js	}, VERB_ROUTE_BUDGET_MS); -> }, 60000);	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	16	K
+15:35:24	V4	work2	J-BODY-RACE	host/surfacepage/app/app.js	const text = await Promise.race([res.text(), stop]); -> const text = await res.text();	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	11	K
+15:35:26	V4	work2	J-SUPERSEDE-CHECK	host/surfacepage/app/app.js	return job.superseded ? { superseded: true } : verbOutcome(res.status, -> return verbOutcome(res.status, text);	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	9	K
+15:35:45	V4	work2	J-CLEAR	host/surfacepage/app/app.js	      io.clearTimeout(timer);\n -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	13	K
+15:35:48	V4	work2	J-SUPERSEDE	host/surfacepage/app/app.js	if (verbJob) { verbJob.superseded = true; verbJob.ctl.abort(); } -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	14	K
+15:36:08	V4	work2	J-CATCH-SUPERSEDED	host/surfacepage/app/app.js	      if (job.superseded) return { superseded: true };\n -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	13	K
+15:36:09	V4	work2	J-ACT-SUPERSEDED	host/surfacepage/app/app.js	    if (act.superseded) return;\n -> 	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	11	K
+15:36:21	V4	work2	J-ACT-CLEAR	host/surfacepage/app/app.js	if (act.address) { fx.clear(); return fx.address(raw); } -> if (act.address) { return fx.address(raw); }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	6	K
+15:36:22	V4	work2	J-REFUSE-CLEARS	host/surfacepage/app/app.js	    fx.say(act.say);\n  } ->     fx.clear(); fx.say(act.say);\n  }	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	6	K
+15:36:37	V4	work2	J-PANEL-TEXT	host/surfacepage/app/app.js	body.textContent = p.body; -> body.innerHTML = p.body;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	9	K
+15:36:38	V4	work2	J-PANEL-HEAD	host/surfacepage/app/app.js	head.textContent = p.head; -> head.innerHTML = p.head;	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	9	K
+15:36:54	V4	work2	J-URL	host/surfacepage/app/app.js	'/surface/verb.json?q=' + encodeURIComponent(raw) -> '/surface/verb.json?q=' + raw	TestSurfaceAppVerbs	KILLED	KILLED	TestSurfaceAppVerbs	11	K
+15:37:54	V4	work2	JW-ENTER-CLEARS	host/surfacepage/app/app.js	if (e.key === 'Enter') { go(e.target.value); $('root') -> if (e.key === 'Enter') { go(e.target.value); e.target.value = ''; $('r	TestVerbBarEpisodeReportInChrome	KILLED	KILLED	TestVerbBarEpisodeReportInChrome	52	K
+15:38:04	V4	work2	JW-GO-ROUTE	host/surfacepage/app/app.js	    const act = await askVerb(raw, ->     if (true) return goAddress(raw);\n    const act = await askVerb(ra	TestVerbBarEpisodeReportInChrome	KILLED	KILLED	TestVerbBarEpisodeReportInChrome	79	K
+15:38:05	V4	work2	R-JSON-INDENT	host/daemon/surface_verb.go	_ = json.NewEncoder(&b).Encode(rep) -> e := json.NewEncoder(&b); e.SetIndent("", " "); _ = e.Encode(rep)	TestVerbRouteReportIsTheCLIs	KILLED	KILLED	TestVerbRouteReportIsTheCLIs	308	K
+15:38:33	V4	work2	JW-PANEL-TEXT	host/surfacepage/app/app.js	const old = $('verb'), el = verbPanel(document, p); -> const old = $('verb'), el = verbPanel(document, p); el.querySelector('	TestVerbBarEpisodeReportInChrome	KILLED	KILLED	TestVerbBarEpisodeReportInChrome	33	K
+15:38:40	V4	work2	JW-GO-EMPTY	host/surfacepage/app/app.js	    if (String(raw == null ? '' : raw).trim() === '') return out();\n -> 	TestVerbBarEpisodeReportInChrome	SURVIVED	SURVIVED		31	L
+15:40:33	V5	work2	E-FOUND	host/daemon/episode_report.go	return rep, ok || start != nil || rep.Finish != nil || len(rep.ExecCac -> return rep, ok, nil	TestEpisodeReportShowsBindSeedFailure	KILLED	KILLED	TestEpisodeReportShowsBindSeedFailure	69	K
+15:41:03	V5	work2	E-NOTFOUNDb	host/daemon/episode_report.go	\tif !found {\n\t\twriteAPIError(w, "NotFound" -> \tif !found && false {\n\t\twriteAPIError(w, "NotFound"	TestEpisodeReportRESTRoute	KILLED	KILLED	TestEpisodeReportRESTRoute	23	K
+15:41:48	V5	work2	R-NOTFOUNDb	host/daemon/surface_verb.go	\tcase !found:\n -> \tcase !found && false:\n	TestSurfaceVerbOutcomes	KILLED	KILLED	TestSurfaceVerbOutcomes	38	K
+15:42:26	V5	work2	R-JSONb	host/daemon/surface_verb.go	\tcase asJSON:\n -> \tcase asJSON && false:\n	TestSurfaceVerbOutcomes	KILLED	KILLED	TestSurfaceVerbOutcomes	26	K
+15:43:59	V5	work2	P-SORT	host/daemon/episode_report_text.go	return out[i].N > out[j].N -> return out[i].N < out[j].N	TestEpisodeReportTablePrintsTheReadsLine	KILLED	KILLED	TestEpisodeReportTablePrintsTheReadsLine	275	K
+15:48:28	V5	work2	E-ASb	host/daemon/episode_report.go	return errors.As(err, &build) && timedOut(ctx, build.err) -> return (errors.As(err, &build) || err != nil) && timedOut(ctx, err)	TestEpisodeReportRESTRoute	SURVIVED	SURVIVED(whole)		543	L
