@@ -1123,6 +1123,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /workbench/live.js", d.handleWorkbenchScript)
 	mux.HandleFunc("GET /surface/index.json", d.handleSurfaceIndex)
 	mux.HandleFunc("GET /surface/follow-status.json", d.handleSurfaceFollowStatus)
+	mux.HandleFunc("GET /surface/home-summary.json", d.handleHomeSummary)
 	mux.HandleFunc("GET /surface", d.handleSurface)
 	mux.HandleFunc("GET /surface/static", d.handleSurfaceStatic)
 	mux.HandleFunc("GET /surface/surface.js", d.handleSurfaceScript)
