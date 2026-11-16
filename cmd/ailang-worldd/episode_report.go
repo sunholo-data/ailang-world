@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/daemon"
+	"github.com/sunholo-data/ailang-world/host/verbs"
 )
 
 const episodeReportHelp = `usage: ailang-worldd [--addr <url>] episode report <episode> [--json | --markdown] [--follow] [--interval 2s] [--addr <url>]
@@ -50,12 +51,9 @@ func runEpisodeReport(globalAddr string, args []string, stdout, stderr io.Writer
 	fs := flag.NewFlagSet("ailang-worldd episode report", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	fs.Usage = func() {}
-	markdown := fs.Bool("markdown", false, "render a scrubbed PR body")
-	asJSON := fs.Bool("json", false, "print the route's JSON")
-	follow := fs.Bool("follow", false, "re-print when the episode changes, until Ctrl-C")
-	interval := fs.Duration("interval", 2*time.Second, "poll interval with --follow")
-	addr := fs.String("addr", "", "the daemon (default: the global --addr)")
-	positional, err := parseInterleaved(fs, args)
+	flags := verbs.EpisodeReportFlags(fs) // row 243: the bar's admission parses the same set
+	markdown, asJSON, follow, interval, addr := flags.Markdown, flags.JSON, flags.Follow, flags.Interval, flags.Addr
+	positional, err := verbs.ParseInterleaved(fs, args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			fmt.Fprint(stdout, episodeReportHelp)

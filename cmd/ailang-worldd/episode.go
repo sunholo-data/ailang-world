@@ -45,6 +45,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/pins"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/verbs"
 )
 
 const episodeHelp = `episode finish <episode> --preset <name>: attended local checks, commit and body; see episode finish --help.
@@ -214,7 +215,7 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	budget := fs.Int64("budget", 50, "budget of each preset grant")
 	sessionsDir := fs.String("sessions-dir", defaultSessionsDir(), "where the session file and the MCP config are written")
 	addr := fs.String("addr", defaultServiceBind(), "the serving daemon, host:port")
-	positional, err := parseInterleaved(fs, args)
+	positional, err := verbs.ParseInterleaved(fs, args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			fmt.Fprint(stdout, episodeHelp)

@@ -19,6 +19,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/verbs"
 )
 
 const approveHelp = `usage: ailang-worldd approve <request-id> [--db <path>] [--credentials-db <path>]
@@ -181,7 +182,7 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	deny := fs.Bool("deny", false, "with a request ref: deny it instead of approving it")
 	daemonAddr := fs.String("daemon", "", "with a request ref: the daemon serving --db (default: the installed service's address)")
 	expiry := fs.Int64("expiry", 0, "with a request ref and --signature or --webauthn-assertion: the expiry the signed decision message carries")
-	positional, err := parseInterleaved(fs, args)
+	positional, err := verbs.ParseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, approveHelp)
 		return exitOK

@@ -20,6 +20,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/verbs"
 )
 
 // ---- M3a ----
@@ -216,7 +217,7 @@ func approverFlags(name string, args []string, stdout, stderr io.Writer, extra f
 	if extra != nil {
 		extra(fs)
 	}
-	positional, err := parseInterleaved(fs, args)
+	positional, err := verbs.ParseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, approverHelp)
 		return "", "", nil, exitOK, true

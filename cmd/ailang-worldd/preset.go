@@ -18,6 +18,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/verbs"
 	"github.com/sunholo-data/ailang-world/host/worktree"
 )
 
@@ -528,7 +529,7 @@ func runPreset(args []string, out, errOut io.Writer) int {
 	remote := fs.String("remote", "origin", "remote name")
 	agent := fs.String("agent", "codex", "agent")
 	profile := fs.String("profile", "", "exec profile")
-	pos, err := parseInterleaved(fs, args[1:])
+	pos, err := verbs.ParseInterleaved(fs, args[1:])
 	fail := func(err error) int { fmt.Fprintln(errOut, err); return exitUsage }
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(out, presetHelp)

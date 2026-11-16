@@ -25,6 +25,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/childenv"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/verbs"
 )
 
 const episodeLaunchHelp = `usage: ailang-worldd episode launch <episode> --preset <name> [--presets-dir D] [--hosts-dir D] [--headless]
@@ -234,7 +235,7 @@ func runEpisodeLaunch(args []string, stdout, stderr io.Writer) int {
 	dir := fs.String("presets-dir", defaultPresetsDir(), "private presets")
 	headless := fs.Bool("headless", false, "headless launch")
 	hostsDir := fs.String("hosts-dir", defaultHostsDir(), "hosts init output directory")
-	pos, err := parseInterleaved(fs, args)
+	pos, err := verbs.ParseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, episodeLaunchHelp)
 		return exitOK
