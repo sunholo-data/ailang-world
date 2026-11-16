@@ -1,0 +1,33 @@
+# gh pr view/diff 565 (read only), 2026-11-16T06:07:48Z
+state=OPEN head=44e6c8a9028f3bb686a9091eec4d77e1449d2a6e
+docs/SELF_MOD_PUBLISH.md
+host/pkgproj/dryrun_shapes_test.go
+host/pkgproj/testdata/dryrun_v0.41.0.txt
+host/pkgproj/testdata/dryrun_v0.54.11.txt
+packages/world-core/world/types.ail
+scripts/world_package_ready_packet.golden.json
+world/types.ail
+--- deriving hunks
+68-   | TESTED
+69-   | ATTESTED
+70-   | CLAIMED
+71:+  deriving (Eq)
+72- 
+--
+76-   = ResolveRejectedTimeout
+77-   | EscalateWithNewDeadline
+78-   | ExecuteUnderPriorAuthority
+79:+  deriving (Eq)
+80- 
+--
+95-   | TESTED
+96-   | ATTESTED
+97-   | CLAIMED
+98:+  deriving (Eq)
+99- 
+--
+103-   = ResolveRejectedTimeout
+104-   | EscalateWithNewDeadline
+105-   | ExecuteUnderPriorAuthority
+106:+  deriving (Eq)
+107- 

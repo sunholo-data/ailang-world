@@ -1,0 +1,8 @@
+v0.41.0 world/types.ail        passed=True verify=[('gradeOf', 'verified'), ('timeoutFiredLegally', 'verified'), ('timeoutOutcome', 'verified'), ('validDefer', 'verified'), ('validEscalation', 'verified'), ('wellFormedSchedule', 'verified')]
+v0.41.0 world/contracts.ail    passed=True verify=[('commitAllowed', 'verified'), ('commitBoundaryHolds', 'verified'), ('isValidNextWorld', 'verified'), ('proposalMatchesWorld', 'verified'), ('verificationMatchesProposal', 'verified')]
+v0.41.0 world/transitions.ail  passed=True verify=[('applyRevision', 'verified'), ('plan', 'verified'), ('verify', 'verified')]
+v0.41.0 world/logepoch.ail     passed=True verify=[('sameRef', 'verified'), ('servesEntry', 'verified')]
+v0.30.0 world/types.ail        passed=True verify=[('gradeOf', 'verified'), ('timeoutFiredLegally', 'verified'), ('timeoutOutcome', 'verified'), ('validDefer', 'verified'), ('validEscalation', 'verified'), ('wellFormedSchedule', 'verified')]
+v0.30.0 world/contracts.ail    passed=True verify=[('commitAllowed', 'skipped'), ('commitBoundaryHolds', 'verified'), ('isValidNextWorld', 'verified'), ('proposalMatchesWorld', 'error'), ('verificationMatchesProposal', 'error')]
+v0.30.0 world/transitions.ail  passed=True verify=[('applyRevision', 'verified'), ('plan', 'error'), ('verify', 'error')]
+v0.30.0 world/logepoch.ail     passed=True verify=[('sameRef', 'verified'), ('servesEntry', 'verified')]

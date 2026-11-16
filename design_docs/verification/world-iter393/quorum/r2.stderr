@@ -1,0 +1,4 @@
+design-quorum: author claude:claude-opus-5-5 — seated gemini-4-argon,oc-glm-5-3,oc-kimi-k3; reserve gpt6-1-sol; sitting out claude-sonnet-5@claude-p
+models registry: source=embedded version=e1b6cc4411e5e1db
+GOOGLE_CLOUD_LOCATION is unset; using deprecated default global. Set GOOGLE_CLOUD_LOCATION. v1.0.0 will refuse to start without it.
+quorum artifact: /Users/voightkampff/.ailang/state/mission-quorum-world/w-ailang-v0604-contract-eq-2026-11-16T06-04-14Z.json

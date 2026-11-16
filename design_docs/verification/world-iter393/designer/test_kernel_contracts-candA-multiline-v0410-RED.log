@@ -1,0 +1,15 @@
+proposalMatchesWorld: verified; rc=0; control=other identity verified 
+proposalMatchesWorld: counterexample; rc=1; control=other identity verified 
+verificationMatchesProposal: verified; rc=0; control=other identity verified 
+verificationMatchesProposal: counterexample; rc=1; control=other identity verified 
+commitAllowed: verified; rc=0; control=other identity verified 
+commitAllowed: counterexample; rc=1; control=other identity verified 
+plan: verified; rc=0; control=other identity verified 
+Traceback (most recent call last):
+  File "/private/tmp/i393-designer-scratch/scripts/test_kernel_contracts.py", line 56, in <module>
+    run(base, module, fn, 'counterexample')
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/private/tmp/i393-designer-scratch/scripts/test_kernel_contracts.py", line 28, in run
+    assert d['check']['passed'], d
+           ~~~~~~~~~~^^^^^^^^^^
+AssertionError: {'file': 'world/transitions.ail', 'check': {'passed': False, 'error_count': 1, 'errors': [{'code': 'ERROR', 'message': "module loading error: failed to load world/transitions.ail: parse errors in world/transitions.ail:\nPAR_UNEXPECTED_TOKEN at world/transitions.ail:30:3: expected next token to be {, got IDENT instead\n\nSuggestion: Add or correct the { token\n\nPAR_NO_PREFIX_PARSE at world/transitions.ail:37:1: unexpected token in expression: }\n\nSuggestion: Check for unmatched delimiters or missing expression\n\nHint: Unexpected closing brace '}'.\n      - Check that all opening braces '{' have matching closing braces\n      - Verify match expressions and block statements are properly closed\n\nSuggested workaround: Try simplifying nested constructs or using let bindings.", 'file': 'world/transitions.ail'}]}, 'verify': {'available': False, 'verified': 0, 'counterexample': 0, 'skipped': 0, 'errors': 0, 'results': []}}

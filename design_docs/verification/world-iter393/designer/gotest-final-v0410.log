@@ -1,0 +1,12 @@
+ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	26.897s
+--- FAIL: TestNotPublishedDoesNotReAuthorizeTheConsumedApproval (0.23s)
+    registry_reconcile_test.go:739: AC16 positive control: POSTs 1 -> 3, want exactly one more; the new attended approval must be what re-authorizes, and it must be able to
+--- FAIL: TestWorktreeSnapshotRefusesAConfiguredFilter (0.05s)
+    worktree_delta_test.go:432: control: plain git status did not run the clean filter (stat /private/var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/TestWorktreeSnapshotRefusesAConfiguredFilter3957771609/002/filter-ran: no such file or directory); the arm below would prove nothing
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/broker	197.228s
+ok  	github.com/sunholo-data/ailang-world/host/pkgproj	18.229s
+ok  	github.com/sunholo-data/ailang-world/host/runbook	2.753s
+ok  	github.com/sunholo-data/ailang-world/host/replay	14.505s
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	158.244s
+FAIL

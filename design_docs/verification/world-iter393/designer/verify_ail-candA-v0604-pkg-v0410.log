@@ -1,0 +1,65 @@
+── legs 1-2 AILANG_BIN=/tmp/ailang-v0604-i393/ailang (AILANG v0.60.4)
+ℹ UNRECOGNISED RELEASE: legs 1-2 resolved 'v0.60.4', which is not among the
+  releases this repo expects (v0.41.0 v0.33.0 v0.30.0). The primary
+  .ail gate has switched compiler — review it, then update scripts/testdata/ailang_release_observed.txt.
+── Leg 1: ai-check required-check manifest
+   ✓ swept .ail module set equals the LEG1_MODULES allowlist (24 modules)
+   ai-check design_docs/sketches/decisionpacket.ail
+   ai-check design_docs/sketches/effectbroker.ail
+   ai-check design_docs/sketches/effectplan.ail
+   ai-check design_docs/sketches/execargs.ail
+   ai-check design_docs/sketches/logepoch.ail
+   ai-check design_docs/sketches/storejournal.ail
+   ai-check design_docs/sketches/transitions.ail
+   ai-check design_docs/sketches/worlddapi.ail
+   ai-check design_docs/sketches/worldkernel.ail
+   ai-check design_docs/sketches/worldtypes.ail
+   ai-check world/contracts.ail
+   ai-check world/logepoch.ail
+   ai-check world/transitions.ail
+   ai-check world/types.ail
+   ai-check packages/se-tools/se_tools/builtins_search.ail
+   ai-check packages/se-tools/se_tools/check.ail
+   ai-check packages/se-tools/se_tools/cli.ail
+   ai-check packages/se-tools/se_tools/delete.ail
+   ai-check packages/se-tools/se_tools/edit.ail
+   ai-check packages/se-tools/se_tools/examples_search.ail
+   ai-check packages/se-tools/se_tools/exec.ail
+   ai-check packages/se-tools/se_tools/read.ail
+   ai-check packages/se-tools/se_tools/run.ail
+   ai-check packages/se-tools/se_tools/write.ail
+   ✓ 16/16 required world/ identities verified across 24 module(s)
+── Leg 2c: execargs sketch named inline tests
+   ✓ all 138 execargs sketch named tests pass
+── Leg 2: named inline tests
+   ✓ all 40 required named tests pass (failed_tests=0)
+── Leg 2b: se-tools named inline tests (per module)
+   ✓ all 503 se-tools named tests pass across 10 modules
+── Leg 3: world package nine-step gate
+── World package step 1/9: required paths
+   ✓ package, manifest, smoke, and 4 allowlisted modules exist
+── World package step 2/9: exact .ail allowlist
+   ✓ find observed exactly 5 expected .ail files; no unexpected .ail file exists
+── World package step 3/9: projection SHA-256 equality
+   ✓ 4/4 projection hashes equal their canonical sources
+── World package step 4/9: frozen manifest
+   ✓ exact package fields, 4 exports, and empty effects
+── World package step 5/9: package check and tests
+   ✓ package check passed and tests reported 43 activity line(s)
+   ✓ exactly 9 skips, all no-generator, all named (upstream M4 / cross-file derive gap)
+── World package step 6/9: bounded smoke execution
+   ✓ plan → verify → commit smoke completed within 30s
+── World package step 7/9: dry-run identity and full pkgproj hashes
+   ✓ dry-run identity/exports/effects and 3 full hashes agree; tarball byte length agrees
+── World package step 8/9: exact tar entry allowlist
+   cache control fired on 53 non-.ail file(s); observed zero cached .ail files
+   ✓ tar contains exactly 7 allowlisted entries
+── World package step 9/9: canonical ready-packet golden
+   ✓ compiler pinned by exact bytes: AILANG v0.41.0 on Darwin/arm64
+✗ ready packet differs byte-for-byte from golden
+--- scripts/world_package_ready_packet.golden.json	2026-11-16 06:35:54
++++ /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world_ready.XXXXXX.8nJ09rN4Dc	2026-11-16 06:37:08
+@@ -1 +1 @@
+-{"compilerVersion":"AILANG v0.41.0","contentHash":"sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780","effects":[],"exports":["world/types","world/contracts","world/transitions","world/logepoch"],"interfaceHash":"sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083","interfaceHashV2":"sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8","package":"world/core","tarballBytes":10610,"tarballSHA256":"sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3","version":"0.1.1"}
++{"compilerVersion":"AILANG v0.41.0","contentHash":"sha256:c4ce6e2b98877a2cd75cee698611fe075e2a82792c5c5479d0f457587f51b4a0","effects":[],"exports":["world/types","world/contracts","world/transitions","world/logepoch"],"interfaceHash":"sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083","interfaceHashV2":"sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8","package":"world/core","tarballBytes":10651,"tarballSHA256":"sha256:eb457bfb3c061bd14dc44775704198b418329a17ba4095b58e133eb08d971ac1","version":"0.1.1"}
+rc=1

@@ -1,0 +1,45 @@
+proposalMatchesWorld: verified; rc=0; control=other identity verified 
+proposalMatchesWorld: counterexample; rc=1; control=other identity verified 
+verificationMatchesProposal: verified; rc=0; control=other identity verified 
+verificationMatchesProposal: counterexample; rc=1; control=other identity verified 
+commitAllowed: verified; rc=0; control=other identity verified 
+commitAllowed: counterexample; rc=1; control=other identity verified 
+plan: verified; rc=0; control=other identity verified 
+plan: counterexample; rc=1; control=other identity verified 
+verify: verified; rc=0; control=other identity verified 
+verify: counterexample; rc=1; control=other identity verified 
+proposalMatchesWorld: counterexample; rc=1; control=other identity verified 
+verificationMatchesProposal: counterexample; rc=1; control=other identity verified 
+commitAllowed: counterexample; rc=1; control=other identity verified 
+plan: counterexample; rc=1; control=other identity verified 
+verify: counterexample; rc=1; control=other identity verified 
+renderRef: error; rc=1; control=other identity verified encoding error: cannot encode ensures clause: let body: let value: unsupported application: $builtin.show([$tmp1])
+renderRef: counterexample; rc=1; control=other identity verified 
+cacheKey: skipped; rc=0; control=other identity verified SMT declaration closure could not resolve a required sort (cannot encode function body: let body: let value: unresolvable SMT declaration types: calls user function "renderRef" that is not SMT-encodable in this context)
+cacheKey: skipped; rc=0; control=other identity verified SMT declaration closure could not resolve a required sort (cannot encode function body: let body: let value: unresolvable SMT declaration types: calls user function "renderRef" that is not SMT-encodable in this context)
+commit: skipped; rc=0; control=other identity verified SMT declaration closure could not resolve a required sort (cannot encode function body: let body: if then: let value: unresolvable SMT declaration types: calls user function "applyRevision" that is not SMT-encodable in this context)
+commit: skipped; rc=0; control=other identity verified SMT declaration closure could not resolve a required sort (cannot encode function body: let body: if then: let value: unresolvable SMT declaration types: calls user function "applyRevision" that is not SMT-encodable in this context)
+renderRef: error; rc=1; control=other identity verified encoding error: cannot encode ensures clause: let body: let body: let body: let value: unsupported application: std/string.concat([$tmp3])
+PUB011 ratchet passed: uncontracted_exports=3
+added uncontracted export killed: PUB011: uncontracted_exports=4, ratchet=3; increases forbidden; decreases require lowering the ratchet
+missing field killed: 'uncontracted_exports'
+zero proofs killed: zero proven contracts
+lower count needs ratchet killed: PUB011: uncontracted_exports=2, ratchet=3; increases forbidden; decreases require lowering the ratchet
+contract errors killed: unproven contracts
+contract counterexample killed: unproven contracts
+contract skipped killed: unproven contracts
+compile failed killed: package did not compile
+wrong package killed: wrong package
+wrong schema killed: unknown quality schema
+kernel contract controls PASSED
+ratchet monotonic: 3 -> 3
+raised baseline killed: ratchet increase forbidden
+pull_request: base=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; PASS
+push: base=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb; PASS
+workflow_dispatch: base=HEAD^; PASS
+contract quality gate: workflow_dispatch fallback to HEAD^
+CI event/base wiring: PASS
+invalid base: rc=1; contract quality gate: cannot resolve ratchet base 0000000000000000000000000000000000000000; no traceback; PASS
+invalid base: rc=1; contract quality gate: cannot resolve ratchet base nosuchref; no traceback; PASS
+pre-checker base: ratchet monotonic: 3 -> 3; rc=0; PASS
+world contract history controls PASSED

@@ -1,0 +1,26 @@
+── World package step 1/9: required paths
+   ✓ package, manifest, smoke, and 4 allowlisted modules exist
+── World package step 2/9: exact .ail allowlist
+   ✓ find observed exactly 5 expected .ail files; no unexpected .ail file exists
+── World package step 3/9: projection SHA-256 equality
+   ✓ 4/4 projection hashes equal their canonical sources
+── World package step 4/9: frozen manifest
+   ✓ exact package fields, 4 exports, and empty effects
+── World package step 5/9: package check and tests
+   ✓ package check passed and tests reported 43 activity line(s)
+   ✓ exactly 9 skips, all no-generator, all named (upstream M4 / cross-file derive gap)
+── World package step 6/9: bounded smoke execution
+   ✓ plan → verify → commit smoke completed within 30s
+── World package step 7/9: dry-run identity and full pkgproj hashes
+   ✓ dry-run identity/exports/effects and 3 full hashes agree; tarball byte length agrees
+── World package step 8/9: exact tar entry allowlist
+   cache control fired on 46 non-.ail file(s); observed zero cached .ail files
+   ✓ tar contains exactly 7 allowlisted entries
+── World package step 9/9: canonical ready-packet golden
+   ✓ compiler pinned by exact bytes: AILANG v0.41.0 on Darwin/arm64
+✗ ready packet differs byte-for-byte from golden
+--- scripts/world_package_ready_packet.golden.json	2026-11-16 06:46:15
++++ /var/folders/kr/h0wr2sj94vd6ljtmsxv8jkt00000gn/T/world_ready.XXXXXX.0hbzmQLaUs	2026-11-16 06:46:28
+@@ -1 +1 @@
+-{"compilerVersion":"AILANG v0.41.0","contentHash":"sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780","effects":[],"exports":["world/types","world/contracts","world/transitions","world/logepoch"],"interfaceHash":"sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083","interfaceHashV2":"sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8","package":"world/core","tarballBytes":10610,"tarballSHA256":"sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3","version":"0.1.1"}
++{"compilerVersion":"AILANG v0.41.0","contentHash":"sha256:2664ce1d4af3b8409b5c3bb05e73cb0f7bcdb55d330c4249a1ff2489a3d3c4e0","effects":[],"exports":["world/types","world/contracts","world/transitions","world/logepoch"],"interfaceHash":"sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083","interfaceHashV2":"sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8","package":"world/core","tarballBytes":10632,"tarballSHA256":"sha256:5f3e3a602fb6f23b26ac013edcbb798122d5d7c9df9fd5715d2aca2b55f4012f","version":"0.1.1"}

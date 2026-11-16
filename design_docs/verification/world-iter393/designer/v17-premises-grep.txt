@@ -1,0 +1,97 @@
+# V17 banked premises at d0c9c4ce (grep -n, repo root)
+
+## (a) CI verify job legs 1-2 install releases/latest
+43:          base="https://github.com/sunholo-data/ailang/releases/latest/download"
+69:      # The step above installs `releases/latest`, which moved to v0.33.0 on 2026-08-04 — so the
+85:          base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
+108:          echo "WORLD_PKG_AILANG_BIN=$HOME/.pinned-ailang/ailang" >> "$GITHUB_ENV"
+113:      - name: Verify all .ail modules (ai-check = check + Z3 verify)
+114:        run: ./scripts/verify_ail.sh
+178:          base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
+199:          echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
+480:          base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
+501:          echo "AILANG_BIN=$HOME/.local/bin/ailang" >> "$GITHUB_ENV"
+
+## (b) registry version immutability — first-party sources
+7:(`registry-validator` 409s on an existing version), so a wrong publish permanently consumes
+host/broker/approve.go:181:// immutable decision object and moves only the approvals registry head.
+host/broker/approve.go:294:	// linear walk rather than weakening that immutable-chain invariant.
+host/broker/exec_probe.go:548:		outsideCtl = errors.New("a probe target already exists")
+host/broker/registry_publish.go:22:// an irreversible public write. The registry is immutable and the publisher
+host/broker/decision_law.go:72:		return LawRefusal{"D4a", 409, fmt.Sprintf("the decision packets carrying request %s cannot be counted completely (more than %d stored packets, or one that does not decode); it cannot be decided here", f.Ref, DecisionDiscoveryLimit)}
+host/broker/decision_law.go:74:		return LawRefusal{"D4b", 409, "no committed decision packet carries request " + f.Ref + "; it cannot be decided here"}
+host/broker/decision_law.go:76:		return LawRefusal{"D4b", 409, fmt.Sprintf("request %s is carried by %d decision packets; deciding it would decide all of them; it cannot be decided here", f.Ref, f.Discovery.Carrying)}
+host/broker/decision_law.go:78:		return LawRefusal{"D4b", 409, "the decision packet carrying request " + f.Ref + " is refused: " + f.PacketSentence}
+host/broker/decision_law.go:85:		return LawRefusal{"D6", 409, fmt.Sprintf("request %s was already decided %s by %s", f.Ref, f.DecidedVerb, f.DecidedBy)}
+host/broker/decision_law.go:87:		return LawRefusal{"D7", 409, "the packet's deadline passed at " + time.Unix(f.Deadline, 0).UTC().Format(time.RFC3339) + "; its policy is Cancel"}
+host/broker/decision_law.go:99:		return LawRefusal{"D8", 409, "the request changed since it was shown; reload it"}
+host/broker/decision_law.go:103:		return LawRefusal{"D10", 409, "the decision's expiry is stale or too far ahead (at most 10 minutes, and not after the packet's deadline)"}
+README.md
+metadata_world_core_0.1.1.served.json
+4:  "version": "0.1.1",
+5:  "published_at": "2026-10-02T07:58:43Z",
+6:  "published_by": "",
+17:    "ailang_version": "AILANG v0.51.0\nCommit: b99dd25\nFull:   b99dd25c22dc7bf1bd5c3ace8dfab14a46aa3f7d\nBuilt:  2026-10-01T19:56:51Z\n\nThe AI-First Programming Language\nCopyright (c) 2025-2026"
+93:    "version": "0.1.1",
+
+## (c) v0.30.0 in CI and gate scripts (any lane that installs or requires it?)
+$ grep -n "v0.30.0" .github/workflows/*.yml
+81:          # world/core froze, and v0.30.0 does not put CHANGELOG.md in the tarball
+84:          # re-verified byte-exact on that tag, so the old v0.30.0 replay pin is gone.
+163:          # ONE pin, and it tracks current AILANG. World was pinned to v0.30.0 because the
+166:          # that were recorded under v0.30.0 — so the pin was assumed to be load-bearing.
+170:          # across v0.30.0 -> v0.41.0, so a second frozen artifact bought nothing and cost
+465:          # ONE pin, and it tracks current AILANG. World was pinned to v0.30.0 because the
+468:          # that were recorded under v0.30.0 — so the pin was assumed to be load-bearing.
+472:          # across v0.30.0 -> v0.41.0, so a second frozen artifact bought nothing and cost
+$ grep -ln "v0.30.0" scripts/*.sh scripts/*.py
+scripts/verify_ail.sh
+scripts/verify_go.sh
+scripts/verify_world_package.sh
+$ grep -n "v0.30.0" scripts/verify_go.sh scripts/verify_world_package.sh scripts/verify_ail.sh | grep -v "^\S*:\s*#"
+scripts/verify_go.sh:18:# (2026-09-22), so the old separate v0.30.0 replay pin is gone: world exercises the
+scripts/verify_go.sh:202:# tightening this cannot red CI. The world-package / verifygate pin moved v0.30.0→v0.41.0 on
+scripts/verify_world_package.sh:7:# This gate needs the PINNED v0.30.0 compiler, which is NOT the same binary the other legs use.
+scripts/verify_world_package.sh:9:# **v0.33.0**, three minor versions past the pin (job 2's step log printed v0.30.0 in the same
+scripts/verify_world_package.sh:14:# other than pinned v0.30.0, the version/SHA assertions below fail LOUDLY rather than skipping.
+scripts/verify_world_package.sh:23:# `releases/download/v0.30.0`, the darwin one from the rig's pinned install and the linux one
+scripts/verify_world_package.sh:27:    # v0.41.0 (commit 24ee108). Moved from v0.30.0 on 2026-09-21: the registry
+scripts/verify_world_package.sh:28:    # grew publish quality gates after this package froze in July, and v0.30.0's
+scripts/verify_ail.sh:5:# released `ailang` (v0.30.0). Two facts make exit codes insufficient, so this gate PARSES JSON:
+scripts/verify_ail.sh:91:v0.30.0|OK
+scripts/verify_ail.sh:92:v0.30.0-205-g54d6bd191-dirty|DEV_BUILD
+scripts/verify_ail.sh:123:# The warning this replaces compared against the v0.30.0 pin and so fired on EVERY CI run once the
+scripts/verify_ail.sh:128:# while a local operator exports the documented v0.30.0 pin. Under equality the local lane then
+scripts/verify_ail.sh:129:# printed `moved from 'v0.33.0' to 'v0.30.0'` on every run — always-firing again, and false: the
+scripts/verify_ail.sh:134:# which is exactly the 2026-08-04 v0.30.0 -> v0.33.0 event that created charter item 9 and ran
+$ grep -n "gate-primary\|frozen-compiler" pins/ailang-releases.json
+11:        {"role": "interpreter", "since": "2026-10-03", "evidence": "serve --ailang-bin pin (D-WORLD-57); installed by ailang-worldd setup (row 138 M3)"},
+12:        {"role": "proof", "since": "2026-10-16", "evidence": "demo proof checker pin (row 150 M3a, cmd/ailang-worldd/demo_proof.go)"},
+13:        {"role": "frozen-compiler", "since": "2026-09-21", "evidence": "world/core ready packet re-projected on v0.41.0; contentHash/interfaceHash byte-ident
+14:        {"role": "gate-primary", "since": "2026-09-22", "evidence": "replay goldens re-verified byte-exact on v0.41.0; CI AILANG_BIN and WORLD_PKG_AILANG_BIN
+
+## (b) excerpts
+$ sed -n 5,8p docs/SELF_MOD_PUBLISH.md
+
+The asymmetry that shapes every refusal below: a public publish is **immutable**
+(`registry-validator` 409s on an existing version), so a wrong publish permanently consumes
+`world/core@0.1.1`, while a refusal costs a human five minutes.
+$ sed -n 20,25p host/broker/registry_publish.go
+
+// EffectRegistryPublish is the one effect in this repository that can perform
+// an irreversible public write. The registry is immutable and the publisher
+// cannot recall a version, so every refusal below is one-way: a false REFUSAL
+// costs a retry, a false ALLOW costs a permanent public artifact.
+const EffectRegistryPublish = "Registry.Publish"
+$ grep -n "409\|exists\|immutable" design_docs/verification/world-attended-2026-10-02-publish-0.1.1/README.md
+
+## (c) every binary-install URL in ci.yml
+43:          base="https://github.com/sunholo-data/ailang/releases/latest/download"
+60:          curl -fsSL -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VER}/${Z3_DIR}.zip"
+69:      # The step above installs `releases/latest`, which moved to v0.33.0 on 2026-08-04 — so the
+85:          base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
+178:          base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
+211:          curl -fsSL -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VER}/${Z3_DIR}.zip"
+410:          base="https://github.com/sunholo-data/ailang/releases/download/v0.54.15"
+480:          base="https://github.com/sunholo-data/ailang/releases/download/v0.41.0"
+513:          curl -fsSL -o z3.zip "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VER}/${Z3_DIR}.zip"

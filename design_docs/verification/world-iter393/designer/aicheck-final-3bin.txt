@@ -1,0 +1,30 @@
+final v0.60.4 world/types.ail                               passed=True errs=[] verify=[('gradeOf', 'verified'), ('timeoutFiredLegally', 'verified'), ('timeoutOutcome', 'verified'), ('validDefer', 'verified'), ('validEscalation', 'verified'), ('wellFormedSchedule', 'verified')]
+final v0.60.4 world/contracts.ail                           passed=True errs=[] verify=[('commitAllowed', 'verified'), ('commitBoundaryHolds', 'verified'), ('isValidNextWorld', 'verified'), ('proposalMatchesWorld', 'verified'), ('verificationMatchesProposal', 'verified')]
+final v0.60.4 world/transitions.ail                         passed=True errs=[] verify=[('applyRevision', 'verified'), ('plan', 'verified'), ('verify', 'verified')]
+final v0.60.4 world/logepoch.ail                            passed=True errs=[] verify=[('sameRef', 'verified'), ('servesEntry', 'verified')]
+final v0.60.4 host/replay/testdata/transition_fixture.ail   passed=True errs=[] verify=[]
+final v0.60.4 packages/world-core/_smoke.ail                passed=True errs=[] verified=0
+final v0.60.4 packages/world-core/world/types.ail           passed=True errs=[] verified=6
+final v0.60.4 packages/world-core/world/contracts.ail       passed=True errs=[] verified=5
+final v0.60.4 packages/world-core/world/transitions.ail     passed=True errs=[] verified=3
+final v0.60.4 packages/world-core/world/logepoch.ail        passed=True errs=[] verified=2
+final v0.41.0 world/types.ail                               passed=True errs=[] verify=[('gradeOf', 'verified'), ('timeoutFiredLegally', 'verified'), ('timeoutOutcome', 'verified'), ('validDefer', 'verified'), ('validEscalation', 'verified'), ('wellFormedSchedule', 'verified')]
+final v0.41.0 world/contracts.ail                           passed=True errs=[] verify=[('commitAllowed', 'verified'), ('commitBoundaryHolds', 'verified'), ('isValidNextWorld', 'verified'), ('proposalMatchesWorld', 'verified'), ('verificationMatchesProposal', 'verified')]
+final v0.41.0 world/transitions.ail                         passed=True errs=[] verify=[('applyRevision', 'verified'), ('plan', 'verified'), ('verify', 'verified')]
+final v0.41.0 world/logepoch.ail                            passed=True errs=[] verify=[('sameRef', 'verified'), ('servesEntry', 'verified')]
+final v0.41.0 host/replay/testdata/transition_fixture.ail   passed=True errs=[] verify=[]
+final v0.41.0 packages/world-core/_smoke.ail                passed=True errs=[] verified=0
+final v0.41.0 packages/world-core/world/types.ail           passed=True errs=[] verified=6
+final v0.41.0 packages/world-core/world/contracts.ail       passed=True errs=[] verified=5
+final v0.41.0 packages/world-core/world/transitions.ail     passed=True errs=[] verified=3
+final v0.41.0 packages/world-core/world/logepoch.ail        passed=True errs=[] verified=2
+final v0.30.0 world/types.ail                               passed=True errs=[] verify=[('gradeOf', 'verified'), ('timeoutFiredLegally', 'verified'), ('timeoutOutcome', 'verified'), ('validDefer', 'verified'), ('validEscalation', 'verified'), ('wellFormedSchedule', 'verified')]
+final v0.30.0 world/contracts.ail                           passed=True errs=[] verify=[('commitAllowed', 'skipped'), ('commitBoundaryHolds', 'verified'), ('isValidNextWorld', 'verified'), ('proposalMatchesWorld', 'error'), ('verificationMatchesProposal', 'error')]
+final v0.30.0 world/transitions.ail                         passed=True errs=[] verify=[('applyRevision', 'verified'), ('plan', 'error'), ('verify', 'error')]
+final v0.30.0 world/logepoch.ail                            passed=True errs=[] verify=[('sameRef', 'verified'), ('servesEntry', 'verified')]
+final v0.30.0 host/replay/testdata/transition_fixture.ail   passed=True errs=[] verify=[]
+final v0.30.0 packages/world-core/_smoke.ail                passed=True errs=[] verified=0
+final v0.30.0 packages/world-core/world/types.ail           passed=True errs=[] verified=6
+final v0.30.0 packages/world-core/world/contracts.ail       passed=True errs=[] verified=2
+final v0.30.0 packages/world-core/world/transitions.ail     passed=True errs=[] verified=1
+final v0.30.0 packages/world-core/world/logepoch.ail        passed=True errs=[] verified=2

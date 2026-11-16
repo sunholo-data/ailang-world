@@ -1,0 +1,75 @@
+diff --git a/host/pins/ailang-releases.json b/host/pins/ailang-releases.json
+index 08cf3358..1da01a8f 100644
+--- a/host/pins/ailang-releases.json
++++ b/host/pins/ailang-releases.json
+@@ -80,6 +80,13 @@
+       "roles": [
+         {"role": "observed", "since": "2026-08-10", "evidence": "the former local pin, listed by 9789b87 (scripts/testdata/ailang_release_observed.txt); also the scripts/verify_ail.sh release-verdict instrument control token"}
+       ]
++    },
++    {
++      "release": "v0.60.4",
++      "version": "AILANG v0.60.4",
++      "roles": [
++        {"role": "observed", "since": "2026-11-16", "evidence": "upstream releases/latest on CI PATH from 2026-11-13 (type-checks contract clauses, ailang#2283); reviewed by row 260 (w-ailang-v0604-contract-eq)"}
++      ]
+     }
+   ]
+ }
+diff --git a/host/pins/manifest_test.go b/host/pins/manifest_test.go
+index f534c3c0..40ddf8a8 100644
+--- a/host/pins/manifest_test.go
++++ b/host/pins/manifest_test.go
+@@ -41,7 +41,7 @@ func TestCurrentManifestIsTodaysPins(t *testing.T) {
+ 	for _, r := range m.Holders(RoleRetired) {
+ 		retired = append(retired, r.Release)
+ 	}
+-	if strings.Join(observed, " ") != "v0.41.0 v0.33.0 v0.30.0" {
++	if strings.Join(observed, " ") != "v0.41.0 v0.33.0 v0.30.0 v0.60.4" {
+ 		t.Errorf("observed releases %v", observed)
+ 	}
+ 	if strings.Join(retired, " ") != "v0.52.1" {
+diff --git a/pins/ailang-releases.json b/pins/ailang-releases.json
+index 08cf3358..1da01a8f 100644
+--- a/pins/ailang-releases.json
++++ b/pins/ailang-releases.json
+@@ -80,6 +80,13 @@
+       "roles": [
+         {"role": "observed", "since": "2026-08-10", "evidence": "the former local pin, listed by 9789b87 (scripts/testdata/ailang_release_observed.txt); also the scripts/verify_ail.sh release-verdict instrument control token"}
+       ]
++    },
++    {
++      "release": "v0.60.4",
++      "version": "AILANG v0.60.4",
++      "roles": [
++        {"role": "observed", "since": "2026-11-16", "evidence": "upstream releases/latest on CI PATH from 2026-11-13 (type-checks contract clauses, ailang#2283); reviewed by row 260 (w-ailang-v0604-contract-eq)"}
++      ]
+     }
+   ]
+ }
+diff --git a/scripts/testdata/ailang_release_observed.txt b/scripts/testdata/ailang_release_observed.txt
+index 43906aaa..1e13ea7b 100644
+--- a/scripts/testdata/ailang_release_observed.txt
++++ b/scripts/testdata/ailang_release_observed.txt
+@@ -25,3 +25,4 @@
+ v0.41.0
+ v0.33.0
+ v0.30.0
++v0.60.4
+=== go test host/pins
+ok  	github.com/sunholo-data/ailang-world/host/pins	0.338s
+rc=0
+=== go test verifygate subset
+--- FAIL: TestEmptyExpectedReleaseSetFailsLoudly (0.00s)
+    ail_binary_gate_test.go:544: AILANG_BIN is unset — the shim arms need the pinned released delegate to run the real gate. Never skip: a silent skip here is the false-green class this milestone closes. verify_go.sh already refuses to run without it — export the pinned released binary named in CLAUDE.md.
+FAIL
+FAIL	github.com/sunholo-data/ailang-world/host/verifygate	0.281s
+FAIL
+=== AILANG_BIN=$HOME/.pinned-ailang/ailang go test verifygate subset
+ok  	github.com/sunholo-data/ailang-world/host/verifygate	78.888s
+rc=0
+=== AILANG_BIN=v0.60.4 verify_ail.sh notice check (first 6 lines)
+── legs 1-2 AILANG_BIN=/tmp/ailang-v0604-i393/ailang (AILANG v0.60.4)
+── Leg 1: ai-check required-check manifest
+   ✓ swept .ail module set equals the LEG1_MODULES allowlist (24 modules)
+   ai-check design_docs/sketches/decisionpacket.ail

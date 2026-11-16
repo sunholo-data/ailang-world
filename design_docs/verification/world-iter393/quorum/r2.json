@@ -1,0 +1,63 @@
+{
+  "doc": "design_docs/planned/w-ailang-v0604-contract-eq.md",
+  "iso_ts": "2026-11-16T06:04:14Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.051452,
+      "tokens_in": 11623,
+      "tokens_out": 248,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "In §3 M2 (item 16 bonus bullet), the doc leaves updating the stale v0.30.0 header comment in scripts/testdata/ailang_release_observed.txt as 'Optional, same edit: ... Correct the sentence or leave it for a follow-up', which leaves the exact diff of M2 slightly non-deterministic for the executor.",
+        "catch": "Decide definitively whether the executor should update the stale v0.30.0 comment in scripts/testdata/ailang_release_observed.txt during M2 or leave it strictly untouched.",
+        "proposed_fix": "In §3 M2, replace 'Optional, same edit: the header's \"v0.30.0 is RETAINED …\" ... Correct the sentence or leave it for a follow-up' with 'Do not edit the header comment regarding v0.30.0 in this row; keep M2 strictly scoped to recording v0.60.4.'"
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0838784,
+      "tokens_in": 10432,
+      "tokens_out": 15744,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc's own banked evidence names a CI surface it never disposes of: V17a records a fifth install site, `releases/download/v0.54.15` at `ci.yml:410`, and no other part of the doc says which job/step uses v0.54.15 or whether it invokes `ailang` on any of the 32 `.ail` modules. The §1 compiler-compatibility table claims to enumerate each binary's 'role in this repo' and the doc spent a dedicated grep (V17c) proving v0.30.0 is installed by no CI lane — yet the one compiler its own grep shows CI installing besides latest/v0.41.0/v0.30.0 is unexplained and unmeasured. This is not pedantic: V3 shows per-version verdicts genuinely differ (v0.30.0 errors on `plan`/`verify` where v0.41.0 verifies), and the sweep (V1) and V5 are scoped to the verify gate's legs under v0.60.4 plus the package leg under v0.41.0. If the v0.54.15 lane type-checks any `.ail` file, the candidate's behavior on a compiler CI actually installs is unmeasured, §0's failure enumeration is incomplete, and AC8's 'both jobs green' rests on an unverified job inventory — the executor is told to check two jobs while the install-site evidence lists five sites across three versions.",
+        "catch": "Secondary, in §1's S3 analysis: the doc establishes `sameRef` (`logepoch.ail:70-79`) as the deliberate, exported, proven field-equality predicate for `HashRef` and uses its existence to reject candidate B — but never disposes of the obvious reuse candidate, `ensures { sameRef(result.inputWorld, w.stateRoot) \u0026\u0026 ... }`, which would satisfy both stated objections to B (no second parallel equality, no logepoch churn). Either measure whether an exported predicate call is admissible and verifiable in contract position, or state why the raw field idiom (per `verify`'s `accepted` conjunct) is the only contract-position form. Also: AC9's characterization of PR #565 (hand-edited fixtures, no `transitions.ail` change, stays 0.1.1) rests entirely on V14, whose only artifact is an explicitly unbanked `/tmp/i393-pr565.diff` — against a mission standard of 'measured, not assumed', bank the excerpt.",
+        "proposed_fix": "Add a V19 row banking the context of the v0.54.15 install: `grep -n -B8 -A12 'v0.54.15' .github/workflows/ci.yml` (plus one line naming the job/step and whether that step runs `ailang` over any `.ail` file). If it never type-checks `.ail`, add a one-line disposition row to the §1 table ('v0.54.15, ci.yml:410, \u003cjob/step\u003e, compiles no `.ail`; no ai-check needed') and rewrite AC8 to enumerate the actual job names instead of the unverified 'both jobs'. If it does exercise `.ail` files, extend V3 with per-file `ai-check -timeout 5s` of `world/{types,contracts,transitions,logepoch}.ail` under v0.54.15 at base and prototype, add the table row, and name that lane in AC8. Separately, close the sameRef hole with either a banked scratch probe of `sameRef` in an `ensures` clause (verdict recorded, both CI compilers) or one sentence in §1 stating that contract position admits only field-access and `==` expressions, which is why the exported predicate cannot be reused; and bank the V14 excerpt (7-file diffstat plus the two `deriving` hunks) under `ev/` so AC9's claims about #565 are auditable."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.117993,
+      "tokens_in": 10371,
+      "tokens_out": 5792,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "M2's executor instructions describe an artifact that was never measured green. V11 — the only verification row claiming the four-file M2 set passes — used probe JSON that was RE-SERIALIZED. §3 then forbids the executor from reproducing that measured state: it mandates a hand-append of 'one row of about 8 lines' plus a comma added to the preceding '}', with 'every other byte of the JSON unchanged' and 'git diff should show additions only'. The byte layout the executor will commit therefore has zero test coverage, and whether TestCurrentManifestIsTodaysPins / TestEmbeddedManifestMatchesCanonical / TestObservedReleasesFileMatchesManifest / TestReleaseLiteralsExplainedByManifest are sensitive to key order, indentation, or trailing-newline differences between 're-serialized green' and 'hand-appended green' is asserted by implication, not measured. This is exactly the hand-edit failure mode the doc cites to disqualify PR #565 ('Do not hand-edit them; that is what #565 did') — the doc holds the pins manifest to a weaker evidentiary standard than the dry-run fixtures.",
+        "catch": "Verify the byte/format sensitivity of the four host/pins tests against the exact hand-appended layout: does any of them string-compare the manifest (or an embedded literal of it) rather than parse it semantically, and does TestCurrentManifestIsTodaysPins embed a canonical serialized form that a hand-appended row (different key order or spacing than the re-serializer's output) would red? The doc asserts neither direction; it only measured the re-serialized variant in V11 and then instructed a different edit.",
+        "proposed_fix": "Add a V19 row before handing to the controller: in the scratch clone, perform the EXACT hand-append §3 mandates (verbatim release row for v0.60.4 / 'AILANG v0.60.4' / commit 563c6c9 with observed-only role and no assets, plus the comma on the preceding '}'), copy pins/ailang-releases.json over host/pins/ailang-releases.json, apply the manifest_test.go:44 literal change, and run `go test -count=1 ./host/pins/...` and `go test -count=1 -run 'Observed|Release|Notice|Expected' ./host/verifygate/...`. Bank (a) the test output and (b) the verbatim ~8-line row text in §3 as a mandatory copy-paste snippet, so the executor reproduces measured bytes rather than prose. If V19 reds because a test is format-sensitive, fall back to the V11 re-serialized bytes as the canonical edit and correct §3's 'additions only' diff expectation accordingly. Either outcome converts the M2 edit from an asserted artifact into a measured one. (Secondary, same revision: reconcile the S2 line number — §0 says types.ail:173 while MUT-2 reports types:174; state that the shift is the added `deriving (Eq)` line or correct one of the two.)"
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "r1 adds measured V15 (equivalence, identical kill sets 7/7 on both compilers), V16 (contentHash invariant under CHANGELOG/manifest text, control moves), V17 (banked premises), V18 (instance addition measured); kind decided feature."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The doc's own banked evidence names a CI surface it never disposes of: V17a records a fifth install site, `releases/download/v0.54.15` at `ci.yml:410`, and no other part of the doc says which job/step uses v0.54.15 or whether it invokes `ailang` on any of the 32 `.ail` modules. The §1 compiler-compatibility table claims to enumerate each binary's 'role in this repo' and the doc spent a dedicated grep (V17c) proving v0.30.0 is installed by no CI lane — yet the one compiler its own grep shows CI installing besides latest/v0.41.0/v0.30.0 is unexplained and unmeasured. This is not pedantic: V3 shows per-version verdicts genuinely differ (v0.30.0 errors on `plan`/`verify` where v0.41.0 verifies), and the sweep (V1) and V5 are scoped to the verify gate's legs under v0.60.4 plus the package leg under v0.41.0. If the v0.54.15 lane type-checks any `.ail` file, the candidate's behavior on a compiler CI actually installs is unmeasured, §0's failure enumeration is incomplete, and AC8's 'both jobs green' rests on an unverified job inventory — the executor is told to check two jobs while the install-site evidence lists five sites across three versions.",
+      "oc-kimi-k3: M2's executor instructions describe an artifact that was never measured green. V11 — the only verification row claiming the four-file M2 set passes — used probe JSON that was RE-SERIALIZED. §3 then forbids the executor from reproducing that measured state: it mandates a hand-append of 'one row of about 8 lines' plus a comma added to the preceding '}', with 'every other byte of the JSON unchanged' and 'git diff should show additions only'. The byte layout the executor will commit therefore has zero test coverage, and whether TestCurrentManifestIsTodaysPins / TestEmbeddedManifestMatchesCanonical / TestObservedReleasesFileMatchesManifest / TestReleaseLiteralsExplainedByManifest are sensitive to key order, indentation, or trailing-newline differences between 're-serialized green' and 'hand-appended green' is asserted by implication, not measured. This is exactly the hand-edit failure mode the doc cites to disqualify PR #565 ('Do not hand-edit them; that is what #565 did') — the doc holds the pins manifest to a weaker evidentiary standard than the dry-run fixtures."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.25332340000000003,
+    "total_tokens_in": 32426,
+    "total_tokens_out": 21784
+  }
+}

@@ -1,0 +1,8 @@
+MUT-1 drop deriving(Eq) on EvidenceGrade                   check.passed=False errs=[('TC_CONTRACT_001', 43)] non-verified=[] verified=0
+MUT-2 drop deriving(Eq) on TimeoutOutcome                  check.passed=False errs=[('TC_CONTRACT_001', 174)] non-verified=[] verified=0
+MUT-3 plan ensures back to record ==                       check.passed=False errs=[('TC_CONTRACT_001', 29)] non-verified=[] verified=0
+MUT-4 verify ensures back to record ==                     check.passed=False errs=[('TC_CONTRACT_001', 48)] non-verified=[] verified=0
+MUT-5 plan body inputWorld: w.logHead                      check.passed=True errs=[] non-verified=[('plan', 'counterexample')] verified=2
+MUT-6 plan body proposalHash: transitionFn                 check.passed=True errs=[] non-verified=[('plan', 'counterexample')] verified=2
+MUT-7 verify rejected branch accepted: true                check.passed=True errs=[] non-verified=[('verify', 'counterexample')] verified=2
+MUT-8 plan ensures drops the algo conjuncts (weakening)    check.passed=True errs=[] non-verified=[] verified=3

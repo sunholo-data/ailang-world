@@ -1,0 +1,4 @@
+== /tmp/i393-designer-base
+ok  	github.com/sunholo-data/ailang-world/host/broker	1.821s
+== /tmp/i393-designer-scratch
+ok  	github.com/sunholo-data/ailang-world/host/broker	1.723s
