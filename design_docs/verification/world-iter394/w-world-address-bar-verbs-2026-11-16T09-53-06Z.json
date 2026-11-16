@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-world-address-bar-verbs.md",
+  "iso_ts": "2026-11-16T09:53:06Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0929202,
+      "tokens_in": 15055,
+      "tokens_out": 16328,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The page's fallback policy is a silent fallback that the doc's own trace shows masking named refusals. §2.3 says 'the fetch failing (an older daemon answers 404; a network error) → the existing addressTarget path', and §2.4's trace row for a \u003e1,024-byte input shows the route's 400 being swallowed: the page 'falls back to parseAddress, which errors', so the user sees 'unknown address' instead of the length refusal. Behavior for a 500 from a current daemon (a real route bug) is unspecified and by the same rule would degrade to the address path, converting a server failure into a misleading address-typo error. VP2's only stated kill is 'no fallback', so the over-broad-fallback mutant (fallback on every non-200) survives the test plan. This contradicts the no-silent-fallbacks axiom in the one phase specified to build: the boundary of which failure modes degrade and which surface must be explicit, and each side must be pinned.",
+        "catch": "Two verification gaps to close alongside the fix: (1) T6/§2.2's load-bearing premise 'no CORS headers are sent' has no verification row — there is no grep for Access-Control/CORS middleware, and /v1's 'unauthenticated GETs' rests on a code comment in why.go:11, not on middleware inspection (the loopback report test is the behavioral evidence but is never cited for this claim); (2) §2.1(a) lists nine Shell metacharacters ($ ` ; | \u0026 \u003c \u003e ( )) while VB1 asserts 'each of the ten characters' — the count is wrong or a character is missing, and VB4's plan to run the real run() for 'serve' (not in ownHelpVerbs per V14) rests on unverified 'serve --help' behavior that could start a server in tests.",
+        "proposed_fix": "Amend §2.2–§2.3, §2.4 and VP2 as follows: (a) in §2.2, answer 200 {outcome:\"refused\", reason:\"TooLong\"} for q over 1,024 bytes — an operator-input refusal, consistent with the doc's own 'an operator typo is not an HTTP error' — and keep 400 only for a missing q (which the page never sends); (b) in §2.3, restrict the fallback to exactly two cases: HTTP 404 (route absent, older daemon) and a thrown fetch (daemon unreachable); on any other status (400/421/5xx) the page shows say('verb route error: HTTP \u003cstatus\u003e') and never runs the address path; (c) in §2.4, add trace rows for a 500 (error surfaced, no fallback) and the \u003e1,024 case (refused with reason); (d) in §6 VP2, add cases '500 → error surfaced, not fallback' and 'TooLong refusal shows its reason', and state the killed mutant as 'fallback on every non-200'; (e) add verification rows: grep -rn 'Access-Control|cors' over host/daemon (observed zero, or the middleware found and the route excluded from it) and an explicit note that no auth wrapper sits on /v1 (cite TestEpisodeReportJSONAndTableLoopback or the mux registration path); (f) correct §2.1(a)/VB1 to an agreed character list (nine, or name the tenth), and before VB4 executes, verify 'serve --help' exits without binding a port — if it cannot be verified, run VB4's parity over the go/ast-extracted arm list plus a help-output check that does not invoke run() for arms without a verified help path."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.200838,
+      "tokens_in": 14936,
+      "tokens_out": 10402,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The by-construction claim 'Navigation never regresses' (§5.4, pinned by VP2/VP4) is falsified by the doc's own verb table: Lookup step 4 classifies as 'never' or 'other' (both refused) every CLI switch word, so bare-name brane navigation silently flips from 'navigates to brane' to a refusal for far more names than disclosed. V18 establishes `^[a-z0-9][a-z0-9-]{0,63}$` brane names are legal, and §1.5/V6 establish that today `go('log')` → `parseAddress('world log')` navigates. Under V1, a brane named `log`, `session`, `service`, `serve`, `setup`, `approver`, `doctor`, `version`, `tools`, `call`, `provenance`, `profile`, `hosts`, `whoami`, `surface-index` or `head` loses bare-name navigation — yet RK1 and T8 enumerate only `why`, `episode`, `approve`, and §2.4's own trace shows `log tail` being swallowed by step 4 without flagging it as a behavior change. Additionally, step 3 pre-empting `world`/`back` means a pasted CLI line `ailang-worldd world get \u003cref\u003e` (a real CLI verb per V4) is silently re-interpreted as navigation to brane `get`, contradicting the 'one grammar' claim P1 makes. This is an asserted, not verified, guarantee (the doc ran no tests, §14) with a counterexample visible inside the document itself.",
+        "catch": "Fix the shadow-set disclosure and the classification boundary: (1) RK1/T8 must enumerate the complete first-word shadow set (all step-4 table words + all never/other words, i.e. every non-default `main.go` switch arm per V3/V14), or better, VB3/VB4 should generate it from the `go/ast` extraction and the doc should state the exact list. (2) Decide and state an explicit policy for `world get \u003cref\u003e` rather than letting step 3 route it to brane `get` — e.g. classify `world get` as `other`/refused-with-cli-echo while single-arg `world NAME` stays navigation. (3) VB4 as written is self-inconsistent: 'every top-level table word must reach a non-default arm' fails for `back` (and for the dropped `ailang-worldd`), which are not CLI verbs — scope VB4 to the step-4 operator table plus an assertion that each switch arm appears exactly once in {operator, never, other}. (4) Add VP-cases for a bare `log` and a brane named `session`, and trace rows for bare single-word brane names, so the navigation-change is pinned rather than hidden behind 'non-verb input' phrasing in §5.4. Also re-check the claim that `parseAddress` errors identically today for multi-word `log tail` vs. V1's `refused` — both error, but the error text and path change, which the trace should acknowledge as a deliberate change.",
+        "proposed_fix": "Replace RK1 with: 'RK1 (V1) the verb grammar shadows bare-name navigation for every first word the CLI switch accepts. The complete set (V3, V14): `why`, `episode`, `approve` (operator table); `approver`, `session`, `service`, `serve`, `setup` (never); `log`, `head`, `doctor`, `version`, `tools`, `call`, `provenance`, `profile`, `surface-index`, `hosts`, `whoami` (other). A brane so named is reachable only as `world NAME`. This is a deliberate, enumerated behavior change from the base; VB4's AST-derived arm list is the single source these sets must equal, so a new CLI verb that is unclassified (and any removed one) fails the build.' Correct §5.4 to: 'Navigation never regresses for inputs outside the enumerated shadow set (RK1): every other input reaches the unchanged addressTarget path, every route failure falls back to it (VP2), and the shadow set itself is pinned exhaustively (VB3/VB4), never silently extended.' Add to the step-1..5 specification, between steps 3 and 4: '3b. `world get \u003cref\u003e` → class=other, refused with the CLI line (it is a CLI verb, V4); this keeps step 3 capturing only bare navigation shapes and prevents a pasted CLI command from being reinterpreted as brane navigation.' Amend VB4: 'VB4 runs `run([w,\"--help\"])` for every word in the step-4 operator table and every never/other word (excluding the navigation tokens `world`, `back` and the dropped binary name); and asserts the go/ast-derived set of non-default switch arms equals the union of the three sets.' Add VB3 rows and §2.4 trace rows for bare `log` (refused, was brane navigation), a brane named `session` (`world session` still navigates), and `ailang-worldd world get world-1` (refused with cli echo, not address); add VP-b cases covering the same at page level. With those corrections, the §2.4 trace, T8, RK1, and the VB4 spec are consistent with each other and with the measured base."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.033156,
+      "tokens_in": 15053,
+      "tokens_out": 305,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§2.3 explicitly violates the no-silent-fallback axiom: a failed verb request is reinterpreted as navigation. For example, `why` means a verb when the route succeeds but becomes `world why` after a network error or an older daemon's 404. Server failure therefore changes the meaning of the same operator input, while §5.4 incorrectly treats that behavior as a safety guarantee.",
+        "catch": "The fallback is intentional and test-enforced in VP2, and §2.4 also applies it to 400 and 421 responses. An authorization refusal, invalid request, or unavailable classifier must not silently select a different operation.",
+        "proposed_fix": "Replace §2.3's fallback rule with: \"Only a successful, schema-validated `outcome: address` invokes the existing addressTarget path. Network errors, non-2xx responses, and invalid responses display an explicit refusal and leave the current view unchanged. If legacy-daemon compatibility is needed, offer a separate user-selected ‘Navigate as an address’ action that displays the address interpretation before proceeding; never invoke it automatically.\" Update §2.4, §5.4, §8, and VP2 accordingly, adding tests that 404, 400, 421, and network failures cannot reinterpret `why` or any other submitted input as navigation."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "iter394 controller: V1 is read-only (no page mutation, no exec, no store write); premises P2/P3 and parseInterleaved call sites spot-checked first-party; phases V2-V5 deferred to child designs"
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: The page's fallback policy is a silent fallback that the doc's own trace shows masking named refusals. §2.3 says 'the fetch failing (an older daemon answers 404; a network error) → the existing addressTarget path', and §2.4's trace row for a \u003e1,024-byte input shows the route's 400 being swallowed: the page 'falls back to parseAddress, which errors', so the user sees 'unknown address' instead of the length refusal. Behavior for a 500 from a current daemon (a real route bug) is unspecified and by the same rule would degrade to the address path, converting a server failure into a misleading address-typo error. VP2's only stated kill is 'no fallback', so the over-broad-fallback mutant (fallback on every non-200) survives the test plan. This contradicts the no-silent-fallbacks axiom in the one phase specified to build: the boundary of which failure modes degrade and which surface must be explicit, and each side must be pinned.",
+      "oc-kimi-k3: The by-construction claim 'Navigation never regresses' (§5.4, pinned by VP2/VP4) is falsified by the doc's own verb table: Lookup step 4 classifies as 'never' or 'other' (both refused) every CLI switch word, so bare-name brane navigation silently flips from 'navigates to brane' to a refusal for far more names than disclosed. V18 establishes `^[a-z0-9][a-z0-9-]{0,63}$` brane names are legal, and §1.5/V6 establish that today `go('log')` → `parseAddress('world log')` navigates. Under V1, a brane named `log`, `session`, `service`, `serve`, `setup`, `approver`, `doctor`, `version`, `tools`, `call`, `provenance`, `profile`, `hosts`, `whoami`, `surface-index` or `head` loses bare-name navigation — yet RK1 and T8 enumerate only `why`, `episode`, `approve`, and §2.4's own trace shows `log tail` being swallowed by step 4 without flagging it as a behavior change. Additionally, step 3 pre-empting `world`/`back` means a pasted CLI line `ailang-worldd world get \u003cref\u003e` (a real CLI verb per V4) is silently re-interpreted as navigation to brane `get`, contradicting the 'one grammar' claim P1 makes. This is an asserted, not verified, guarantee (the doc ran no tests, §14) with a counterexample visible inside the document itself.",
+      "gpt6-1-sol: §2.3 explicitly violates the no-silent-fallback axiom: a failed verb request is reinterpreted as navigation. For example, `why` means a verb when the route succeeds but becomes `world why` after a network error or an older daemon's 404. Server failure therefore changes the meaning of the same operator input, while §5.4 incorrectly treats that behavior as a safety guarantee."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.3269142,
+    "total_tokens_in": 45044,
+    "total_tokens_out": 27035
+  }
+}
