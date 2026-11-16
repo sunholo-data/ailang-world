@@ -310,3 +310,36 @@ func TestSurfaceFollowStopsOnClose(t *testing.T) {
 		}
 	}
 }
+
+// GET /surface/home-summary.json: the start page's card. Before the first accepted graph it
+// carries only Needs you; once the follow model is published it carries the Now edge's counts.
+func TestSurfaceHomeSummary(t *testing.T) {
+	cfg, _ := followFixture(t, 1)
+	d := newFollowDaemon(t, cfg)
+	read := func() surfacepage.HomeSummary {
+		t.Helper()
+		w := followRequest(d, "/surface/home-summary.json")
+		var s surfacepage.HomeSummary
+		if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &s) != nil || s.Schema != surfacepage.HomeSummarySchema ||
+			w.Header().Get("Cache-Control") != "no-store" {
+			t.Fatalf("%d %s", w.Code, w.Body)
+		}
+		return s
+	}
+	if s := read(); len(s.Items) != 1 || s.Items[0] != (surfacepage.HomeItem{Label: "Needs you", Value: "0"}) {
+		t.Fatalf("before the first graph: %+v", s)
+	}
+	startFollowTest(t, d, &followGit{})
+	waitFollow(t, func() bool { e := d.follow.publisher.Snapshot().Envelope; return len(e.Repos) == 1 && e.Open != nil })
+	s := read()
+	var labels []string
+	for _, it := range s.Items {
+		labels = append(labels, it.Label)
+	}
+	if strings.Join(labels, ",") != "Needs you,Running,Landed today,Health" {
+		t.Fatalf("after the first graph: %+v", s)
+	}
+	if w := followRequest(d, "/surface/home-summary.json?x=1"); w.Code != 400 {
+		t.Fatalf("a query: %d %s", w.Code, w.Body)
+	}
+}
