@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-world-address-bar-verbs-v2.md",
+  "iso_ts": "2026-11-16T17:55:49Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.091076,
+      "tokens_in": 20534,
+      "tokens_out": 447,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "In §2.5 and §6 (VR7), the 1 MiB answer cap (`MaxVerbAnswerBytes`) is specified to be applied 'once, in the deferred writer, to every `result` answer' using `len(Stdout)+len(Stderr)`, whereas `verbWhy` converts `Stdout` into a JSON-marshalled member (`a.JSON`) for `--json` before the deferred writer runs, and `verbEpisodeReport` populates `a.Text` directly. More importantly, `a.JSON` is `json.RawMessage` (or `any`), and checking `len(Stdout)+len(Stderr)` inside `verbWhy` (row e) conflicts with applying it 'once, in the deferred writer' on the answer struct `a`, where `Stdout` no longer exists.",
+        "catch": "In `surface_verb.go`, the deferred writer only sees the `verbAnswer` struct `a` (`a.Text`, `a.JSON`, `a.Stderr`), not `ans.Stdout`. Clarify the exact field measurement in the deferred writer (`len(a.Text) + len(a.JSON) + len(a.Stderr) \u003e MaxVerbAnswerBytes`) so it uniformly covers both `why` and `episode report` without referencing `why.Answer` fields.",
+        "proposed_fix": "Amend §2.5 row (e) and the trailing paragraph to read: `| e | len(a.Text)+len(a.JSON)+len(a.Stderr) \u003e MaxVerbAnswerBytes (1 MiB) | refused + cli | the answer is \u003cn\u003e bytes, over the app's 1 MiB cap; at a terminal: \u003ccli\u003e ( clears a.Text, a.JSON, a.Stderr, and a.Exit ) |` and specify that this check runs inside `handleSurfaceVerb`'s deferred writer whenever `a.Outcome == \"result\"`."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.10234480000000001,
+      "tokens_in": 18952,
+      "tokens_out": 17230,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§2.1 forks the /v1/head read into two implementations: host/why's r.head() is a verbatim 12-line copy of cmd's headState (W35: headState has 9 non-test callers — demo_seed, demo_proof, episode_report, mcpclient, why), while one paragraph earlier the doc applies its own one-line-delegation pattern to elide/elideAt. This contradicts the doc's central by-construction claim (§5, one implementation) and creates an unguarded silent-drift surface: a later edit to cmd's shared headState leaves why's copy reading a stale /v1/head form, and no named test pins the two bodies equal — VW4 pins constants, VE1/VR4 compare why across transports, never why against the other CLI verbs — so the drift would ship silently.",
+        "catch": "Three verification gaps against the doc's own W-row bar: (1) §2.4 asserts that bypassing trackActivityRequests and the session middleware is safe (the outer request is the activity) with no W-row verifying what trackActivityRequests records or who reads it, and VR4's status/body parity would not detect lost side effects; (2) the exact-reason strings in §2.3 (parseWhyTarget's fallback and content-address errors) and the stderr examples in §2.7 (log entry not found, no world head selected, neither an object nor a world, receipt pending) are typed, not verified — VA2 pins them exactly while VA3 generates parity from the real CLI, so any wrong typed string makes the two tests conflict with no stated tiebreaker; (3) §2.4 step 3 claims the CLI's wording is 'response from \u003cpath\u003e exceeds N bytes', but W15 shows cli.go:81 has two %s placeholders ('response from %s%s exceeds %d bytes'), so the transcribed wording is already provably incomplete.",
+        "proposed_fix": "Amend §2.1: export why.Head (the current headState body, reading through Getter) and make cmd's headState a one-line delegation to it — exactly the elide pattern — so the 8 other callers and their tests stay unedited while /v1/head keeps one implementation; if the copy is kept instead, add a VW-row test running cmd's headState and why's r.head() against the same rig with byte-equal assertions, plus a W-row recording headState's current body. Separately: add a W-row (or an explicit planner obligation with a test) covering trackActivityRequests and the session middleware — what they record, who reads it, and that none of the seven handlers consumes middleware-injected request state; re-grep parseWhyTarget and the CLI's real stderr and correct §2.3/§2.7's strings, or mark VA2's reason column provisional with VA3's generated parity authoritative on conflict; and fix §2.4 step 3 to quote cli.go:81's actual two-placeholder format."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.220446,
+      "tokens_in": 18792,
+      "tokens_out": 10938,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "The doc's central same-inputs argument ('the walk reads exactly seven /v1 GET patterns', P2/W5, §2.4) is verified by grepping \"/v1/…\" string literals across all of why.go — including the CLI-front region whose `/v1/health` read (why.go:173, the `--expect-store` check) is an effect §2.1 explicitly keeps in cmd. So the route census is asserted, not traced, and the doc's own components contradict each other depending on the answer: (1) `Reader.HealthCache *Health` appears in the core type sketch with zero explanation, implying the walk consumes health mid-run; (2) VR4 already carves health out of byte parity ('its `active` block is per-request'), directly falsifying §5.2/§0.1's 'byte-identical… byte for byte, by construction' for that route; (3) VR6 asserts the hand-fixed 7-route `whyReadRoutes` EQUALS the generated set of paths the recorded walk reaches — if `--expect-store` is the only health consumer, that generated set is six routes and VR6 fails as written; (4) VE1 asserts byte-strict stdout equality against the live CLI without any analysis of whether health's per-request bytes enter the answer. Until the walk's actual call graph (which of the 15 moved methods `Run` invokes, and where health bytes land in output) is established, the by-construction claim that carries the whole design, plus VE1/VR4/VR6, rest on an untraced premise.",
+        "catch": "Two things to fix/verify: (a) run the actual trace — e.g. `grep -n '\\.health(\\|\\.head(\\|headState(' cmd/ailang-worldd/why.go` restricted to the walk section (:424–1050), or record the rig's walk traffic — to determine whether locate/buildChain/printChain ever call `/v1/health`, and explain or delete `HealthCache`; (b) §2.3's admission table groups `-3` under the 'not an entry index…' refusal, but per W8's :351 rule `-3` never becomes a leading target and the plain `fs.Parse` makes it a flag-package error ('flag provided but not defined: -3') — the cell misdescribes both the CLI's behavior and the bar's reason (VA3's generated parity would surface this at build time, but the normative table is wrong now).",
+        "proposed_fix": "Add a verification-log row tracing the walk's real call graph: `grep -n '\\.health(' cmd/ailang-worldd/why.go` (expected hits only in runWhy's `--expect-store` path, :349–423) plus a recorded walk from `newWalkRig` listing the paths actually requested. Then: if the walk never reads health, remove `/v1/health` from `whyReadRoutes` (six routes), delete `HealthCache`, keep `health`/`healthInfo` in cmd as delegations for `--expect-store` (mirroring the `headState` decision), and VR6's equality holds; if the walk does read health, document exactly which answer members embed its bytes and carve VE1/VW2/VE3 to exclude the per-request members. Reword §0.1 P2 and §5.2 from 'byte-identical by construction / byte for byte' to 'byte-identical on the routes the recorded walk reaches; `/v1/health` (if reached) compared structurally because its `active` block is per-request'. Also correct §2.3: move `-3` out of the 'not an entry index' row into the 'unknown flag, bad value' row with reason `ailang-worldd why: flag provided but not defined: -3`, so the table matches the parse order it specifies (leading target → fs.Parse → trailing → scan bound → profile)."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "iter-396 controller: premises P1-P5 spot-checked first-party (why.go:395-401 deadline-\u003enot-found; app.js:485 VERB_NEEDS.result=['cli']; whyBudget 60s vs d.readCtx; worldReader in 9 files). Split V2a/V2b justified by measured size."
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "gemini-4-argon: In §2.5 and §6 (VR7), the 1 MiB answer cap (`MaxVerbAnswerBytes`) is specified to be applied 'once, in the deferred writer, to every `result` answer' using `len(Stdout)+len(Stderr)`, whereas `verbWhy` converts `Stdout` into a JSON-marshalled member (`a.JSON`) for `--json` before the deferred writer runs, and `verbEpisodeReport` populates `a.Text` directly. More importantly, `a.JSON` is `json.RawMessage` (or `any`), and checking `len(Stdout)+len(Stderr)` inside `verbWhy` (row e) conflicts with applying it 'once, in the deferred writer' on the answer struct `a`, where `Stdout` no longer exists.",
+      "oc-glm-5-3: §2.1 forks the /v1/head read into two implementations: host/why's r.head() is a verbatim 12-line copy of cmd's headState (W35: headState has 9 non-test callers — demo_seed, demo_proof, episode_report, mcpclient, why), while one paragraph earlier the doc applies its own one-line-delegation pattern to elide/elideAt. This contradicts the doc's central by-construction claim (§5, one implementation) and creates an unguarded silent-drift surface: a later edit to cmd's shared headState leaves why's copy reading a stale /v1/head form, and no named test pins the two bodies equal — VW4 pins constants, VE1/VR4 compare why across transports, never why against the other CLI verbs — so the drift would ship silently.",
+      "oc-kimi-k3: The doc's central same-inputs argument ('the walk reads exactly seven /v1 GET patterns', P2/W5, §2.4) is verified by grepping \"/v1/…\" string literals across all of why.go — including the CLI-front region whose `/v1/health` read (why.go:173, the `--expect-store` check) is an effect §2.1 explicitly keeps in cmd. So the route census is asserted, not traced, and the doc's own components contradict each other depending on the answer: (1) `Reader.HealthCache *Health` appears in the core type sketch with zero explanation, implying the walk consumes health mid-run; (2) VR4 already carves health out of byte parity ('its `active` block is per-request'), directly falsifying §5.2/§0.1's 'byte-identical… byte for byte, by construction' for that route; (3) VR6 asserts the hand-fixed 7-route `whyReadRoutes` EQUALS the generated set of paths the recorded walk reaches — if `--expect-store` is the only health consumer, that generated set is six routes and VR6 fails as written; (4) VE1 asserts byte-strict stdout equality against the live CLI without any analysis of whether health's per-request bytes enter the answer. Until the walk's actual call graph (which of the 15 moved methods `Run` invokes, and where health bytes land in output) is established, the by-construction claim that carries the whole design, plus VE1/VR4/VR6, rest on an untraced premise."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.4138668,
+    "total_tokens_in": 58278,
+    "total_tokens_out": 28615
+  }
+}

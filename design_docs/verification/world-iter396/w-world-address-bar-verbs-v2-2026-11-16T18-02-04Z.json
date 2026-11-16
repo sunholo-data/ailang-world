@@ -1,0 +1,59 @@
+{
+  "doc": "design_docs/planned/w-world-address-bar-verbs-v2.md",
+  "iso_ts": "2026-11-16T18:02:04Z",
+  "reviewers": [
+    {
+      "model": "gemini-4-argon",
+      "cost_usd": 0.10438000000000001,
+      "tokens_in": 25265,
+      "tokens_out": 166,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The compatibility layer in cmd/ailang-worldd/why_cli.go (15 wrapper methods on worldReader plus 10 type aliases) introduces mild adapter boilerplate, though it is explicitly bounded and justified to avoid churning 8 other CLI files and their tests.",
+        "catch": "In Milestone 1 (V2a), ensure that git rename detection stays above the 50% similarity threshold when moving cmd/ailang-worldd/why.go to host/why/why.go, as noted in §8, so diff size accounting remains accurate."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.08602420000000001,
+      "tokens_in": 23411,
+      "tokens_out": 12102,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The design leans on V1 page-abort behavior that is quoted but never verified: §2.5 row (a) ('the page aborted: superseded or its 15 s budget'), §2.6.3 ('askVerb (15 s)'), and §2.7's stall row ('at 15 s: say(the verb route did not answer in time)') all cite a 15-second askVerb budget and an exact timeout string in app.js with no W-row — even though every neighboring page literal got one (2600 ms fade W24, VERB_NEEDS W19, go/loadIndex W21, Escape/Enter W24, say machinery W24). Row (a)'s whole posture ('written to a closed connection; nobody reads it') additionally presupposes that askVerb's abort actually cancels the fetch; neither the figure, the string, nor the abort wiring is pinned, and this is exactly the class of static, grep-able premise the doc's own instruments cover. It is not decision-bearing (any bounded page budget yields the same design), which is why this is the closest concern rather than a rejection. Secondary, same family: T6's 'expected well under the deadline' for a 5,000-entry scan extrapolates a log-page p50 (W34) to ~5,000 in-process object reads with no per-object-read measurement, though the failure mode is the bounded (b) refusal.",
+        "catch": "Add W45 pinning the 15 s literal, the exact stall say-text, and the abort/signal wiring inside askVerb in app.js, and cite it from §2.5(a), §2.6.3, and the §2.7 stall row. Separately, soften or measure T6's throughput claim before M5.",
+        "proposed_fix": "Append to §13: 'W45 | V1's askVerb page budget, its stall text, and its abort wiring | grep -n \"15000\\|did not answer in time\\|AbortController\\|signal\" host/surfacepage/app.js; sed -n over askVerb's body | observed: the literal and line for the 15 s budget, the exact say string, and the fetch-abort path'. Then cite W45 from §2.5 row (a), §2.6.3's askVerb parenthetical, and §2.7's stall row; if the literal, text, or abort wiring differs from what is quoted, correct those rows (the design does not depend on the exact figure, only on the abort existing). Optionally extend the W34 benchmark plan with a measured 5,000-entry scan — or 500 object-read calls through d.reads — before M5 so T6's 'well under the deadline' becomes a measurement instead of an extrapolation."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.209565,
+      "tokens_in": 23170,
+      "tokens_out": 9337,
+      "present": true,
+      "result": {
+        "verdict": "pass",
+        "strongest_objection": "The one concrete inconsistency that survives r1 is in §4 T1 / §6 VS2: the doc states that VS2 pins `surface_verb_why.go`'s `d.*` calls to the exact set `{readCtx, readDeadline, whyMux, writeInternalErrorLog}`, but §2.5 step 2 has `verbWhy` — which lives in `surface_verb_why.go` — calling `d.whyGetter(ctx, \u0026tally)`, so `whyGetter` is missing from the pinned set, and `readDeadline` is a field access, not a call. Written into the test as stated, either the test fails against the design's own file or the doc's claim about what is pinned is false; either way the T1 argument ('verbWhy reaches no write') currently rests on a pin list that does not match the design. This is minor against an otherwise heavily verified doc (W1–W44 with commands, conflict surface in §7/T-table/§2.4 middleware trace, axiom compliance via explicit refusals and bounded reads), but it is the closest thing to an asserted-not-verified premise that a planner would have to silently correct.",
+        "catch": "Fix the VS2/T1 pin set before planning: it must include `whyGetter` (called by `verbWhy` inside `surface_verb_why.go`) and should distinguish calls from field reads (`readDeadline`). Since VS1/VS2 pins are planner-measured exact sets, the doc should either state the corrected set or mark it as generated-and-asserted so a stale list cannot pass unnoticed.",
+        "proposed_fix": "Amend §4 T1 to: \"VS2 pins `surface_verb_why.go`'s `d.*` calls to the exact set `{readCtx, whyGetter, whyMux, writeInternalErrorLog}` (field reads `readDeadline` excluded; the set is generated from the compiled file by the planner and asserted equal to this list, so a drift in either direction fails the build)\". Apply the same correction to the §6 VS2 row. Optionally add a W45 verification row recording the grep/AST pass over `surface_verb_why.go`'s design that produced the set."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "iter-396 controller r1: each r1 objection's premise measured at HEAD before routing (verbAnswer fields; headState 9 call sites; cli.go:81 two placeholders; buildChain why.go:804 reads health in the walk). r1 applies the reviewers' fixes; W39-W43 added."
+  },
+  "synthesis": {
+    "verdict": "proceed",
+    "blocking_objections": null,
+    "absent_reviewers": [],
+    "total_cost_usd": 0.3999692,
+    "total_tokens_in": 71846,
+    "total_tokens_out": 21605
+  }
+}

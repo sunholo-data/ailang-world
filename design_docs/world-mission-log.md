@@ -9,112 +9,6 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 376 — 2026-11-10 — row 201 A1b sprint 2 built: `approver` enroll, list and revoke with a bounded, error-aware typed y; the plan's size gate deferred M4a/M4b; judge PASS 88 [PRODUCT]
-
-**Pick:** row 201 `w-world-approvals-by-key`, A1b sprint 2. This is the route iteration 375 named. It starts with M3 from the sprint-1 plan's Appendix A, with no re-design, under the attended **D-WORLD-109 = A**. It is built and judged against fakes, temp stores and test keys only: no real key, store, mint or publish.
-- **Re-measured at pick** (`origin/dev` `115f5a2b`):
-  - No open PR from this account.
-  - No `approver` verb in `cmd/` (the only `approver enroll` hit is a comment at `host/store/approvers.go:4`).
-  - No sprint-2 worktree.
-  - The design has two quorum artifacts in `~/.ailang/state/mission-quorum-world/`, so no pick-time quorum was owed.
-- **Ledger:** valid (100 rows). OPEN: D-WORLD-105 only.
-- **Clause map:** 1.0 clauses 1–7 MET, none UNMET, so no routable UNMET-clause row exists. Release rows 150/151 are not routable (no new landing since iteration 375's measurement).
-
-**Gate 0:**
-- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
-- Directives: 0 allowlisted on #524 (8 comments; the issue-scoped watermark is absent, so all were read). 0 allowlisted on #449.
-- Self-notices: `mission_gate0_self_notices.sh` rc 2, an instrument failure and not a verdict. Neither `mission-524-last-seen` nor `mission-449-last-seen` exists, the same cause as 372–375.
-- Skill drift: none. All 14 resolved files match the driver clone's `origin/dev`, and the pin copy is byte-identical (`diff -rq`).
-- Dev at `115f5a2b`: CI success, `checks=3`.
-
-**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus` (31.5 min, 459,045 tok). Committed `c5f00048`.
-- **The cut:** M3 (≈1,637 lines, sized from production code the planner compiled in a scratch export), plus M4a/M4b (the pure signature law, 317 lines, measured), gated by a size check after M3g. The design's store binding, authority, `approve` signature paths and M6 go to Appendix B with their decisions and mutants.
-- 91 mutants (69 for M3, 22 for M4). The planner ran 40 of them in scratch, and all were killed.
-- **Baseline at `115f5a2b`:** build, vet, the four package suites, `go test -run '^$' ./...`, roots, allowlist and `verify_ail.sh` were all rc 0.
-- **Premises found false at HEAD:**
-  - **P3:** Appendix A's two reader mutants (dropping only the error check, or only the newline check) are each equivalent, because `ReadString` errors exactly when `\n` is missing. Both checks are kept, and one mutant drops both.
-  - **P4:** the design's `NotAdmittedError` and `BindingError` have no `Error()` method.
-  - **P5:** nothing exported returns a stored key blob's type, so `approval.KeyFromBlob` is added.
-  - **P6:** M4's store and authority work cannot land apart from M5's `approve` changes. Requiring the challenge would break every typed approve unless `approve.go:213-214` changes in the same commit. Appendix B makes them one sub-milestone.
-  - **P7:** sprint 1 shifted line citations in `mint_requests.go` and `credentials.go`.
-  - **P8:** `isYes` accepts `yes` as well as `y`. This is kept and pinned.
-  - **P9:** `noTerminalEnv` has no prompt timer.
-- P1 (`O_NONBLOCK` open, then fstat) and P2 (`readTermLineErrWithin`) were carried from iteration 375.
-
-**Executor:** env `recipe claude:claude-haiku-5-5`; spawned as Agent `haiku` (the 375 precedent).
-- Four runs: M3a+M3b (2.0 min), M3c+M3d (2.8), M3e+M3f (3.7), M3g (3.0). No git writes.
-- The controller rebuilt each sub-milestone from its cumulative snapshot and committed it: M3a `df9d6280`, M3b `4efba493`, M3c `8437ff2b`, M3d `a80592fe`, M3e `1aee825f`, M3f `636e7761`, M3g `cad109f9`. Each commit's tree matched its snapshot (`cmp`, 0 mismatches).
-- Deviations, all accepted by the judge:
-  - The plan gave CA1–CA10 as prose, so the executor wrote those test bodies.
-  - M3c staged `runApprover`'s switch without the not-yet-defined cases.
-  - CA9's `case r := <-done` did not compile and was fixed to `case r = <-done`.
-  - CA5 asserts `is not a regular file` where the plan's §4 MUT-N4 row had stale text.
-- Run 3 noted that `cmd/ailang-worldd` does not build for Windows. The controller measured this as pre-existing (`host/procbound` `syscall.Kill` at base), and CI is Ubuntu-only.
-- **Size gate (plan §7):** `git diff --numstat 115f5a2b HEAD -- cmd host` = **1,896** > 1,683, so **Run 5 (M4a/M4b) was not run**. M4a/M4b move to Appendix B unchanged; the note is recorded in `3ea0bea9`. M3 came in 16% over its estimate (sprint 1: 11%).
-
-**Controller gates** at `3ea0bea9` (AILANG_BIN v0.41.0; `verification/world-iter376/controller-gates.md`).
-- **Sweep 1:** `verify_go` rc 1. It ran while the judge's own 291 s suite was competing for CPU (load average about 12 on 16 cores). There were five failures, all in packages the sprint does not touch:
-  - broker: `TestExecProbeNet6ForeignDialIsRetriedNotRefused` (its second recorded instance) and `TestPublishClaimIsDurableBeforeDispatchAndSurvivesAFreshBudget` (a counter mismatch, its first recorded instance);
-  - daemon: `TestWorkspaceExecEpisodeSelectsItsProfile`;
-  - surfacepage: `TestSurfaceAppFollow` (30.04 s);
-  - workbench: `TestLiveScriptPure` (30.01 s).
-  - All five passed alone at the same head, and again in sweep 2.
-- **Sweep 2: all rc 0.**
-  - `verify_ail.sh`.
-  - `verify_go.sh` plain: 0 other binary blobs among 6,618 tracked files, 64 evidence tests.
-  - `go build ./... && go vet ./...`.
-  - Roots and allowlist.
-  - `-race` on store, approval, authority and the approver tests.
-  - `go test ./cmd/ailang-worldd/`.
-  - Personal-email check and queue census also run locally.
-
-**Judge:** sonnet via the Agent tool, on its own worktree at `3ea0bea9` (generator ≠ judge). **PASS 88/100, zero blocking.**
-- Sub-scores: correctness 28/30, tests 25/30, security 19/20, standards 9/10, scope 7/10.
-- Mutants: 94 run, each against its named killer test. 86 were killed, 5 were equivalent or no-op, and **3 are real gaps: F-CREDS, AS-CREDFOR and F-DB**. No approver test exercises `--credentials-db` or the default `--db`.
-- Both of sprint 1's judge gaps are now killed: PAT-UPPER2 by `TestApproverNamePatternBoundaries`, LK-NAMEPREFIX by `TestApproverLookups`.
-- Security properties confirmed:
-  - revoke marks the row and never deletes it;
-  - no lock is held during the prompt (N-LOCK and K-LOCK are killed);
-  - the prompt is bounded at exactly 120 s, and a nil timer gives `exitFatal`;
-  - `y`+EOF, a read error, a partial line, a timeout and a non-`y` answer all refuse and write nothing;
-  - FIFO, non-regular and oversize key files are refused without blocking;
-  - a private key file is refused without echoing its bytes;
-  - Q2 and Q3 hold;
-  - `readTermLine` is unchanged (R8).
-- **Controller reproduced** F-CREDS surviving: with `--credentials-db` silently ignored, the approver suite passes. Its control (the 120 s budget changed to 121 s) is killed. A first attempt returning a literal `""` did not build, so it was not counted as a mutant.
-- Non-blocking, logged and not filed (D-WORLD-109): the three flag gaps above, carried into sprint 3's directive.
-
-**Gate 3b:** PR #539, head `3ea0bea9`.
-- `pull_request` checks 3/3 success: ailang-code verify gate, go host build + test gate, go race gate.
-- The auto-close keyword scan read 0 (control 1).
-- Merged by merge commit **`290084ad`** (`--match-head-commit`).
-- Push checks on the merge `290084ad`: 3/3 success (all three jobs, the same set).
-- Row 201 A1b sprint 2 LANDED. Row 201 stays open: sprint 3 (Appendix B: M4a/M4b, then the consume binding and authority together with M5's `approve` paths), then M6, then A2–A4.
-
-**Routing evidence:** base=290084ad3a84939dd4b7701c8fb0529fe7d52976@2026-11-10T10:25:55Z.
-- Controller: `claude-opus-5-5` (tok: not reported).
-- Designer: not spawned (no re-design). Quorum: not run (the doc is reviewed).
-- Planner: `opus` via Agent (459,045 tok).
-- Executor: `claude:claude-haiku-5-5` via Agent haiku (98,185 + 99,595 + 125,768 + 110,032 tok).
-- Evaluator: `sonnet` via Agent (92,745 tok).
-- The driver noted codex unusable at preflight (probe rc 75, quota unreadable).
-- Metered total: $0.00. Details in `verification/world-iter376/routing.md`.
-
-**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Clause 5 (the human surface) was already MET. This sprint makes enrolment real: an operator can now enrol, list and revoke an SSH approver key with a typed `y`. Approving a mint by key (sprint 3) is the next step, after which World no longer needs a terminal to approve a mint.
-
-**Ruled out:**
-- Running Run 5 (M4a/M4b): the plan's own size gate measured 1,896 > 1,683.
-- Treating sweep 1's five reds as a regression: the packages are untouched, all five pass alone at the same head, and sweep 2 was all green. The cause was CPU contention with the judge's concurrent suite.
-- Closing F-CREDS/AS-CREDFOR/F-DB in this sprint: the production code is correct, and the gap is carried to sprint 3 (D-WORLD-109).
-- A Windows fix: `cmd/ailang-worldd` already fails to build for Windows at base, and CI is Ubuntu-only.
-
-**Retro:**
-- Running the controller's full gate sweep at the same time as the judge's suite produced five false reds and cost a second 10-minute sweep. Next time, run the sweep after the judge returns, or run only the sprint's packages concurrently.
-- The plan gave CA1–CA10 as prose, and the small executor wrote them. The judge found all the enumerated arms present and non-vacuous, but the one real gap (store-path flags) sat in arms the prose never listed. A plan that wants a small executor should either give test bodies as code or enumerate every flag a verb accepts.
-- The planner's pre-registered size gate worked as designed: the sprint stopped at a clean boundary, with no judgement call needed.
-
-**Next:** row 201 A1b sprint 3, from the sprint-2 plan's Appendix B with no re-design. Start with M4a/M4b (their code and tests are final in §2.5/§2.8). Then the consume binding and authority together with M5's `approve --signature`/`--write-message`/`--list --decided` (P6: they cannot land apart), plus the revoke session listing (K8/K9). Carry the judge's F-CREDS/AS-CREDFOR/F-DB test gap. M6 (`--sign-with`, the CI step) follows, then row 243.
-
 ## 377 — 2026-11-10 — row 201 A1b sprint 3 built: the signature law, the consume bound to the challenge with the approver re-checked in the transaction, and `approve --signature`/`--write-message`; judge PASS 92 [PRODUCT]
 
 **Pick:** row 201 `w-world-approvals-by-key`, A1b sprint 3, the route iteration 376 named: the sprint-2 plan's Appendix B, with no re-design. D-WORLD-109 = A applies: fakes, temp stores and test keys only, with no real key, store, mint or publish.
@@ -1891,3 +1785,93 @@ That equals the plan at every step.
 **Next:**
 1. Row 243 **V2** child design (`why` in the bar), from design §0.3, with the judge's V1 notes as inputs (empty-submit supersession, the never-verb CLI line, `result` without `cli`).
 2. Mark's attended no-terminal exit run for V1 (design §10) when convenient.
+
+## 396 — 2026-11-16 — row 243 V2 design r1 DONE (`w-world-address-bar-verbs-v2.md`): `why <target>` in the World app's address bar — the walk moves to `host/why` behind a `Getter`, the CLI and the daemon call one implementation, served in-process by V1's `GET /surface/verb.json`; read-only; split V2a (the seam) / V2b (the bar); quorum r1 blocked 3/3, r2 PROCEED 3/3; independent audit PASS 84 [PRODUCT]
+
+**Pick:** row 243 V2 child design. This was record 395's Next 1 and the charter's current route (D-WORLD-109 = A: design → quorum → build). Record 395 had landed (#583 → `200ea5d5`), so there was no carry-over PR.
+- **Re-measured at pick** (`origin/dev` `200ea5d5`):
+  - No V2 doc, plan, branch or worktree existed. `origin/mission/attended-address-bar-verbs` is the attended D-WORLD-107 filing, already merged.
+  - No open PR from the fleet account.
+  - The parent's §0.3 V2 row reads "child design r0".
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 are not routable (unchanged). Row 243 moves no clause (clause 5, operator surface, is MET); it serves D-WORLD-94.
+- **Ledger at pick:** valid, 104 rows, no OPEN row.
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent (`mission-world.disabled`).
+- Directives: 0 allowlisted on #574 (4 comments). The issue-scoped watermark file is absent, so every comment was read; nothing to `--mark`.
+- Self-notices: rc 2, `watermark channel unavailable`. That is an instrument failure, not a verdict, as in 371–395.
+- Inbox: nothing addressed to `mission-world`. The newest unread items are triage digests and this mission's own 395 notice.
+- Skill drift: none. `SKILL.md` and all 13 `resources/*.md` (14 files) match the driver clone's `origin/dev`, both at the resolved symlink target and in the pin worktree.
+- Main checkout: local `dev` was 12 behind and clean except two untracked worktree dirs. I fast-forwarded it (`--ff-only`) to `200ea5d5` = `origin/dev`.
+- Dev CI at `200ea5d5`: 3/3 success (`checks=3`; control `fb4d8b89` also 3).
+
+**Designer** (resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the operator's standing request, as 372–395). The rotation file reads `claude:claude-opus-5-5`; the next entry, codex, is over ration (`MISSION_OVER_RATION=codex`), so I followed the resolver's answer. Work happened in `.wt-world-iter396-row243-v2` on `design/world-iter396-row243-v2`.
+- **r0** (13.9 min, 217,488 tok; `2562348c`): 661 lines, 38 W-rows. The designer found five of the parent row's premises false or incomplete at HEAD:
+  - P1: `why.go` is 1,050 lines, but only lines 424–1050 are the walk. Lines 44–253 are the CLI's shared read layer, used by 8 other files.
+  - P2: there is no reader interface on the CLI side; the daemon already has the `readStore` seam.
+  - P3: the CLI's 60 s `whyBudget` differs from the daemon's 10 s `readCtx`.
+  - P4: the CLI prints a deadline as "not found" (`why.go:399-400`).
+  - P5: the CLI shows read failures as ✗ broken links.
+  - I spot-checked P3, P4 and the judge-note-3 premise (`app.js:485` `VERB_NEEDS.result = ['cli']`) first-party before the quorum.
+- **r1** (SendMessage resume, 3.0 min, 251,434 tok reported; `39bb1ff7`): 755 lines, 44 W-rows. It applied the quorum round-1 fixes I listed and nothing else.
+- **Designer diet:** one doc, r0 plus one protocol-mandated revision. Held.
+
+**Quorum** (`--author claude:claude-opus-5-5`; seats gemini-4-argon, oc-glm-5-3, oc-kimi-k3; reserve gpt6-1-sol; Claude benched; `absent_reviewers` = `[]` in both rounds):
+- **r1 BLOCKED 3/3** ($0.414). Each objection had a reviewer-authored fix, and none disputed the direction. I measured each premise at HEAD before routing:
+  - **gemini-4-argon:** the 1 MiB cap measured `Stdout`, a field the deferred writer never sees. Measured: `verbAnswer` has `Text`/`JSON`/`Stderr`/`Exit` and no `Stdout` (`surface_verb.go:18-32`).
+  - **oc-glm-5-3:** `/v1/head` was forked into a verbatim copy of `headState`. Measured: `mcpclient.go:259`, with 9 non-test call sites. Glm also raised three gaps:
+    - the activity/session middleware bypass was untraced (`activity.go:78-90`, `daemon.go:1157`);
+    - the typed reason strings were unchecked;
+    - `cli.go:81` was misquoted (its format has two `%s`).
+  - **oc-kimi-k3:** the 7-route census was asserted, not traced, and `HealthCache` was unexplained. **Kimi's premise was partly false:** `buildChain` (`why.go:804`) reads `/v1/health` on every walk, not only for `--expect-store`. I handed the designer that measurement, so r1 took kimi's second branch: document which health members reach the answer. Kimi's first branch would have deleted a route the walk actually reads. Kimi also caught `-3` in the wrong §2.3 row.
+- **r2 PROCEED 3/3** ($0.400). There were two non-blocking notes:
+  - glm: the page's 15 s budget and abort carry no W-row. The audit later found it true.
+  - kimi: VS2's pinned `d.*` set omits `whyGetter`.
+- No carve-out was needed.
+
+**Independent audit** (evaluator `sonnet` via Agent, own detached worktree `.eval-world-iter396-row243-v2` at `39bb1ff7`, read-only, 2.8 min, 102,419 tok; generator ≠ judge): **PASS 84/100**, 0 blocking (evidence 28/30, consistency 19/25, soundness 23/25, buildability 14/20).
+- It re-ran 37 W-rows, and all reproduce; every negative row carries a firing control.
+- It confirmed glm's note (a) as true: `app.js:484` sets 15000, `:512-519` abort through `{signal}`, and the page says "did not answer in time". It confirmed kimi's note (b) as a real inconsistency that fails loudly.
+- It confirmed read-only, bounds and no silent fallback, found that A1–A5 are each needed against the parent's text, and judged the §9 dispositions reasonable.
+- **Seven non-blocking planner inputs.** I reproduced 1, 2, 3 and 5 first-party, then recorded all seven in the doc's §13.2 as a controller record, not a design change:
+  1. `sum`/`whyTarget` are used by `demo_seed.go:658,730…`, outside the V2a adapter.
+  2. The moving test files depend on cmd's rig, and `elide`, so they are not "package line only".
+  3. `c.get` collides with `cli.go:94`'s `client.get`.
+  4. VS2's `d.*` set is incomplete.
+  5. `lookup.go:99`'s "cannot run it yet" reason would ride on a `result`.
+  6. The 1 MiB cap is on raw bytes, while the JSON body can be larger.
+  7. Smaller citation and size notes.
+- The audit report and both quorum artifacts are banked under `design_docs/verification/world-iter396/`.
+
+**Routing evidence:** base=200ea5d5b7c2944e561feeff16a4b2b3042333d1@2026-11-16T17:39:40Z (Gate 1).
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: `claude:claude-opus-5-5` via Agent `opus` (r0 217,488 tok; r1 resume 251,434 tok as reported). Resolver `recipe claude:claude-opus-5-5 declared:provider-pin`.
+- Quorum: rounds 1+2 $0.814 metered (gemini-4-argon, oc-glm-5-3, oc-kimi-k3 present in both rounds).
+- Planner and executor: not spawned (design-only fire, 388/394 precedent). Driver note: codex unusable at preflight for planner and executor (probe rc 75, quota unreadable) → opus / haiku.
+- Evaluator: `sonnet` via Agent (102,419 tok), `agent-tool sonnet declared:alias-pin`, auditing r1. **Spawned as required; no role failed to spawn.**
+- Judge independence: cross-model (opus designer, sonnet judge) and a cross-vendor quorum (Google, Z-AI, Moonshot). Metered total: $0.814 (quorum only).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V2 (`why` in the bar) now has a reviewed design and two buildable sprints:
+- **V2a:** move the walk behind a `Getter` in `host/why`, with the CLI repointed and no visible change.
+- **V2b:** the bar runs `why` with the CLI's own bytes and refuses every failure with the CLI line.
+
+V2b also fixes the V1 judge's empty-submit supersession gap (A4).
+
+**Ruled out:**
+- **Kimi's first fix branch** (drop `/v1/health` from the route set, delete `HealthCache`): its premise that only `--expect-store` reads health is false. `buildChain` reads it on every walk (`why.go:804`).
+- **A carve-out or a third designer run:** round 2 passed 3/3 with no absentee.
+- **Editing the design for the audit's findings:** all are non-blocking buildability notes that the planner resolves by measurement. They are recorded verbatim in §13.2, not resolved by the controller (394's lesson: a carve-out applies reviewers' text only).
+- **Running the planner in the same fire:** design-only fires stop at the audit (388/394 precedent).
+- **A ledger ask:** V2 amends only the parent (A1–A5, within D-WORLD-107 = A); no settled sibling is touched. Q1–Q4 carry loop defaults.
+
+**Retro:**
+- **394's directive held.** The designer brief demanded an input-class *and* failure/timeout-class trace for every new path, and no round-1 objection landed on §2.7's failure trace. All three landed on internal consistency between the doc's code sketch and the tree (fields, a duplicated function, a call census). The next designer directive should add: "for every type, field or function your sketch names, cite where it exists at HEAD or mark it new".
+- **Measuring an objection's premise changed the fix, not just its confidence.** Kimi's reject was right that the census was untraced, but wrong about what the trace would show. Forwarding the objection unmeasured would most likely have produced the deletion branch. This is rule 3f paying for itself.
+- **The judge and the quorum find different classes.** Reviewers read only the doc and blocked on doc-vs-doc consistency; the judge ran the code and found four compile-time planner traps the quorum could not see. Both are needed.
+- **Watermark files for #574 and #524 remain absent.** The self-notices instrument stays at rc 2 (unchanged since 371; not this loop's harness).
+
+**Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16, after the Monday 07:00 local boundary). The weekly external-issue sweep already ran this week at 393.
+
+**Next:**
+1. Row 243 **V2a** sprint planner from `w-world-address-bar-verbs-v2.md` r1, starting with §13.2's audit inputs 1–3 (the V2a adapter set, splitting the test files, `c.get`). Decide Q1 (one sprint or two) on the measured patch size.
+2. Mark's attended no-terminal exit run for V1 (parent design §10), when convenient.
