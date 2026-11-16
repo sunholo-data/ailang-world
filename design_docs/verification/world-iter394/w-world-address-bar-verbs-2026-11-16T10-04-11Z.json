@@ -1,0 +1,64 @@
+{
+  "doc": "design_docs/planned/w-world-address-bar-verbs.md",
+  "iso_ts": "2026-11-16T10:04:11Z",
+  "reviewers": [
+    {
+      "model": "oc-glm-5-3",
+      "cost_usd": 0.0905716,
+      "tokens_in": 20870,
+      "tokens_out": 13944,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "RK1 and T8 claim bare `episode` is shadowed ('the verb wins on the first word'; a brane named `episode` reachable only as `world episode`), but the Lookup as specified does not produce that behavior. §2.1(b) step 4's table contains only the two-word verbs (`episode report/start/finish/launch`); there is no one-word `episode` entry and no stated head-match rule, so bare `episode` and `episode \u003cunknown-sub\u003e` match nothing in step 4 and fall to step 5 → class=address → `parseAddress('world episode')` navigates to brane `episode`. The only mention of bare `episode` is VB3's parenthetical kill-note ('episode alone → refused \"needs a subcommand\", not episode report'), which is ambiguous (it reads as either a pinned behavior or a mutant description) and is not a spec; 'needs a subcommand' appears nowhere as a named refusal reason. No §2.4 trace row, no VB3 row (its rows are 'every row of §2.1(b)'s table and every row of §2.4's trace' — neither contains bare `episode`), and no VP6 case pins it; VB4 checks arm-set membership (episode ∈ operator) but not bare-word behavior. So r1's centerpiece — the 'complete' 27-word shadow set that answered the round-1 rejection — is internally contradicted by the doc's own classification steps for exactly one word, the head of the verb family V1 exists to serve, and a builder could ship either behavior with every listed test green.",
+        "catch": "The page's fetch in §2.3 has no bounded wait: a daemon that accepts the connection but never answers (wedged daemon, proxy holding the connection open) hangs the bar indefinitely with no message and no recovery. VP2 enumerates 404/400/421/500/thrown-fetch/non-JSON/missing-schema/unknown-outcome but not a hang; the server side is readCtx-bounded, the client side is not, so the bounded-waits axiom is unmet on the page. (Also verify §1.4's `maxReportEpisodeBytes` claim — V15's observed output does not show it.)",
+        "proposed_fix": "Amend §2.1(b) step 4 so the stated steps produce the shadow set RK1 already claims: make the `episode` head a first-class table entry — 'the word `episode` is itself a table entry: `episode report|start|finish|launch …` match their rows; any other shape beginning with `episode`, including bare `episode`, answers class=mutate, outcome refused, reason \"episode needs a subcommand: report, start, launch, finish\", with the cli line; it never falls to step 5.' Add two §2.4 trace rows: bare `episode` → step 4 → refused (a deliberate shadow-set change: today it navigates to brane `episode`; RK1), and `episode w1` → step 4 → refused (today 'unknown address'). Add the matching VB3 rows and one VP6 row (bare `episode` → refusal panel with cli; `world episode` → addressTarget → brane `episode`). If instead bare `episode` is meant to keep navigating, remove `episode` from RK1's 27-word list and restate T8 as 'the verb wins only on a full table match' — but that contradicts T8 as written, so the head-refusal is the resolution consistent with RK1/T8/VB4. Separately, bound the page's wait: give the §2.3 fetch an AbortSignal timeout that lands in the same explicit-refusal branch ('the verb route did not answer in time'), and add the hang case to VP2's failure classes and one §2.4 row."
+      },
+      "landed": null
+    },
+    {
+      "model": "oc-kimi-k3",
+      "cost_usd": 0.21328199999999997,
+      "tokens_in": 20654,
+      "tokens_out": 10088,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§2.1(b)'s Lookup algorithm does not implement the shadow set the doc claims for it. Step 4 matches only complete table rows, and every `episode` row is two words (`episode report|start|finish|launch`), so bare `episode` and any unknown subcommand (`episode frobnicate`) match no row and fall through to step 5 → `class=address`. Bare `episode` therefore navigates to a brane named `episode` (§1.6/V18 confirms it is a legal name), directly contradicting RK1 ('the verb grammar shadows bare-name navigation for every first word the CLI switch accepts … why, episode, approve'), Q2's default ('the verb wins on the first word'), T8, and VB3's own kill-mutant expectation ('episode alone → refused needs a subcommand'). The doc's normative sections agree with each other and the algorithm disagrees with all of them, and §2.4 — presented as the exhaustive trace ('no earlier step pre-empts a new branch') — has no row covering this input class at all. As written, an executor following the steps literally builds the behavior the doc elsewhere forbids; one fixing it improvises unspecified behavior. A second, smaller premise-verification seam: the log header states all commands ran at base 48c92a52, but V33's own observed output is HEAD ad144327 (the r0 design commit), and the load-bearing bridging claim 'cmd/ unchanged since 48c92a52' — on which the r1 re-derivations V33–V35 stand — is parenthetically asserted with no verification command, unlike every other claim in §14.",
+        "catch": "Add the missing classification branch and traces: bare `episode` and `episode \u003cunknown\u003e` (and symmetrically, any input whose first word is a CLI verb but which matches no table row, e.g. a garbled two-word operator form) currently resolve to `outcome:address` under the written steps — meaning bare `episode` opens brane `episode` instead of the refusal VB3 asserts. Also verify, with a command and observed output, that `git diff --stat 48c92a52 ad144327 -- cmd host` is empty (or re-run V33–V35 on the base), since the log's own HEAD observations contradict its header.",
+        "proposed_fix": "In §2.1(b), insert after step 4 (before step 5): '4b. First-word seizure for incomplete or unknown verb forms: if the first word is any verb recognized by the table (`why`, `episode`, `approve`, the five never words, the nineteen other words, or `world`) but no row in step 4 matched, answer class=refused. For `episode` with a missing or unknown subcommand the reason is `ailang-worldd episode needs a subcommand: start | launch | finish | report`; for any other seized first word, the row's own refusal text applies with cli = Quote([ailang-worldd, argv…]). No input whose first word the CLI switch accepts ever reaches step 5.' Then: (1) add §2.4 trace rows `episode` → refused (needs a subcommand), `episode frobnicate` → refused (needs a subcommand), and one for a seized never/other word with trailing garbage (e.g. `session frob` → refused, not the today's unknown-address error — flag this as a further deliberate RK1 change like `log tail`); (2) add the same cases to VB3's table and a VP6 page-level row for bare `episode`; (3) restate RK1/T8 as 'enforced by step 4b, pinned by VB3/VB4' so the residual and the algorithm match. Additionally add verification-log row V36: `git diff --stat 48c92a52 ad144327 -- cmd host` (expect empty output) and correct the §14 header to state that V1–V32 ran at the base sha and V33–V35 ran on the r1 branch atop it."
+      },
+      "landed": null
+    },
+    {
+      "model": "gpt6-1-sol",
+      "cost_usd": 0.044318,
+      "tokens_in": 20889,
+      "tokens_out": 254,
+      "present": true,
+      "result": {
+        "verdict": "reject",
+        "strongest_objection": "§2.3 makes every nonempty address-bar action await fetch without an explicit deadline or cancellation path. A connection that remains open without completing can leave navigation waiting indefinitely rather than producing the promised explicit refusal. This violates the bounded-waits axiom even if the report builder itself has a timeout.",
+        "catch": "VP2 tests rejected fetches and completed HTTP failures, but not a fetch or response body that never completes. Separately, the assertion that d.readCtx bounds report construction lacks a verification-log entry showing its deadline and cancellation propagation.",
+        "proposed_fix": "Amend §2.3 to impose a named finite request budget, enforced with AbortController across both fetch and response-body consumption, with timer cleanup in finally. On expiry, display an explicit timeout refusal and preserve the current view and input; never invoke addressTarget. Add VP2 cases for stalled response headers and a stalled JSON body using a controlled clock. Add a verification-log row tracing d.readCtx's actual deadline and its propagation through report construction; if it supplies no finite deadline, specify a request-scoped server timeout as well."
+      },
+      "landed": null
+    }
+  ],
+  "controller_in_session": {
+    "verdict": "pass",
+    "note": "iter394 controller r1: all three round-1 fixes applied (sol strict no-fallback adopted, kimi shadow set + world get, glm TooLong/CORS/help rows); go:embed and help-before-switch spot-checked first-party"
+  },
+  "synthesis": {
+    "verdict": "blocked",
+    "blocking_objections": [
+      "oc-glm-5-3: RK1 and T8 claim bare `episode` is shadowed ('the verb wins on the first word'; a brane named `episode` reachable only as `world episode`), but the Lookup as specified does not produce that behavior. §2.1(b) step 4's table contains only the two-word verbs (`episode report/start/finish/launch`); there is no one-word `episode` entry and no stated head-match rule, so bare `episode` and `episode \u003cunknown-sub\u003e` match nothing in step 4 and fall to step 5 → class=address → `parseAddress('world episode')` navigates to brane `episode`. The only mention of bare `episode` is VB3's parenthetical kill-note ('episode alone → refused \"needs a subcommand\", not episode report'), which is ambiguous (it reads as either a pinned behavior or a mutant description) and is not a spec; 'needs a subcommand' appears nowhere as a named refusal reason. No §2.4 trace row, no VB3 row (its rows are 'every row of §2.1(b)'s table and every row of §2.4's trace' — neither contains bare `episode`), and no VP6 case pins it; VB4 checks arm-set membership (episode ∈ operator) but not bare-word behavior. So r1's centerpiece — the 'complete' 27-word shadow set that answered the round-1 rejection — is internally contradicted by the doc's own classification steps for exactly one word, the head of the verb family V1 exists to serve, and a builder could ship either behavior with every listed test green.",
+      "oc-kimi-k3: §2.1(b)'s Lookup algorithm does not implement the shadow set the doc claims for it. Step 4 matches only complete table rows, and every `episode` row is two words (`episode report|start|finish|launch`), so bare `episode` and any unknown subcommand (`episode frobnicate`) match no row and fall through to step 5 → `class=address`. Bare `episode` therefore navigates to a brane named `episode` (§1.6/V18 confirms it is a legal name), directly contradicting RK1 ('the verb grammar shadows bare-name navigation for every first word the CLI switch accepts … why, episode, approve'), Q2's default ('the verb wins on the first word'), T8, and VB3's own kill-mutant expectation ('episode alone → refused needs a subcommand'). The doc's normative sections agree with each other and the algorithm disagrees with all of them, and §2.4 — presented as the exhaustive trace ('no earlier step pre-empts a new branch') — has no row covering this input class at all. As written, an executor following the steps literally builds the behavior the doc elsewhere forbids; one fixing it improvises unspecified behavior. A second, smaller premise-verification seam: the log header states all commands ran at base 48c92a52, but V33's own observed output is HEAD ad144327 (the r0 design commit), and the load-bearing bridging claim 'cmd/ unchanged since 48c92a52' — on which the r1 re-derivations V33–V35 stand — is parenthetically asserted with no verification command, unlike every other claim in §14.",
+      "gpt6-1-sol: §2.3 makes every nonempty address-bar action await fetch without an explicit deadline or cancellation path. A connection that remains open without completing can leave navigation waiting indefinitely rather than producing the promised explicit refusal. This violates the bounded-waits axiom even if the report builder itself has a timeout."
+    ],
+    "absent_reviewers": [],
+    "total_cost_usd": 0.34817159999999997,
+    "total_tokens_in": 62413,
+    "total_tokens_out": 24286
+  }
+}

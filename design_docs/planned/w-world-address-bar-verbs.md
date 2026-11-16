@@ -195,7 +195,7 @@ change to `approve`'s CLI, the cards, or row 201's routes.
     controller's count, re-derived). `world` dispatches to `requireGet(args, "world", …)`, which
     takes exactly `get <ref>` (`cli.go:157-169`) (V34).
 14. **[r1] `serve --help` returns before `serve` binds anything.** `run()` calls
-    `genericVerbHelp(rest)` before the switch (`main.go:374-378`); for `serve` (not in
+    `genericVerbHelp(rest)` before the switch (`main.go:375-378`); for `serve` (not in
     `ownHelpVerbs`) with `--help` it returns the usage lines `usageLinesFor("serve")` finds
     (`main.go:708-740`, `:750-765`; usage line `main.go:86`), and `run` returns `exitOK`. The
     existing `TestEveryVerbHasHelp` already runs `run(["serve","--help"])` and `run(["help",
@@ -233,9 +233,10 @@ classification (traced in §2.4):
    terminal: `ailang-worldd world get <ref>`") (it is a CLI verb, V34). Step 3 now captures only
    bare navigation shapes, so a pasted CLI command is never reinterpreted as brane navigation. 3b
    shadows nothing: `parseAddress` accepts only one- or two-word `world` input (`surface.js:84-86`,
-   V5), so a three-word `world …` is an address error today. Any other `world` input of three or
-   more words falls to step 5 and gets `parseAddress`'s own error, as today; `world get` (two words)
-   is step 3, navigation to a brane named `get`, as today;
+   V5), so a three-word `world …` is an address error today. **[r2, audit B1]** Any other `world`
+   input of three or more words is seized by step 4b and refused with the address help text the
+   page shows today (`surface.js:11`), so its message is unchanged; `world get` (two words) is
+   step 3, navigation to a brane named `get`, as today;
 4. a table verb, longest match first:
 
 | words | class | V1 in the bar | why this class holds |
@@ -259,7 +260,10 @@ classification (traced in §2.4):
    seized first word, the row's own refusal text applies with cli = Quote([ailang-worldd, argv…]).
    No input whose first word the CLI switch accepts ever reaches step 5." For `world` this applies
    only to the shapes steps 3 and 3b leave over (three or more words other than `world get <ref>`),
-   which `parseAddress` refuses today anyway (V34), so no navigation is lost.
+   which `parseAddress` refuses today anyway (V34), so no navigation is lost. **[r2, audit B1]**
+   `world` has no step-4 row, so its refusal text is defined here: reason = the page's existing
+   address help (`unknown address: try "world", "world NAME", "world NAME@N", "world NAME@HASH" or
+   "back"`, `surface.js:11`), `class=refused`, no `cli` (it is not a CLI line).
 5. anything else → `class=address` (the page's existing `parseAddress` path). **[r2]** By step
    4b, "anything else" is exactly the inputs whose first word is not a CLI switch arm.
 
@@ -315,6 +319,8 @@ approval routes). It has no POST, no `OpenCredentials`, no store write, no `exec
    - `read` (`why`), `mutate`, `host` → `{outcome:"terminal", class, cli, reason}`; `cli` is
      `Quote(["ailang-worldd", argv…])`.
    - `never`, `other` → `{outcome:"refused", class, reason, cli}`.
+   - **[r2, audit]** step 4b's seizures → `{outcome:"refused", class:"refused", reason, cli}` (`cli`
+     omitted for a seized `world` shape, §2.1(b) 4b).
 4. Every answer carries `{v:1, schema:"world/surface-verb/v1", q, argv, verb, class}`.
 
 The response is a GET with no state change, so it needs no Origin/CSRF arm: a cross-origin page
@@ -346,8 +352,9 @@ encodeURIComponent(raw))`:
   message is `say('the verb route did not answer in time')`. The budget sits above the server's
   own report bound (`d.readCtx` = `context.WithTimeout(r.Context(), d.readDeadline)`, 10 s,
   V37), so a slow but healthy report answers before the page gives up; a wedged daemon or a proxy
-  holding the connection open lands in the refusal. A second submit while one is pending aborts
-  the first (one controller per bar) so stale answers never render.
+  holding the connection open lands in the refusal. (What a second submit does while one is
+  pending is left to the planner; the audit noted that r2's earlier sentence on it went beyond the
+  reviewers' text, so it was withdrawn — §15 Round 2, audit.)
 - `address` (schema-valid) → the existing `addressTarget` path, unchanged;
 - `result` → a verb panel in the stage: a header line `$ <cli>` and the `text` (or `json`, or the
   `stderr` line and `exit 1`) set with `textContent` — never `innerHTML`;
@@ -397,6 +404,7 @@ page: `go(raw)` → empty check → fetch → outcome switch.
 | **[r2]** `episode` (bare) | fetch | pass | pass | `[episode]` | 4 (no row) → **4b** | `refused`, "ailang-worldd episode needs a subcommand: start \| launch \| finish \| report" — **shadow-set change**: today it navigates to a brane named `episode` (RK1) |
 | **[r2]** `episode frobnicate` | fetch | pass | pass | 2 words | 4 (no row) → 4b | `refused`, needs a subcommand; today "unknown address" |
 | **[r2]** `episode w1` | fetch | pass | pass | 2 words | 4 (no row) → 4b | `refused`, needs a subcommand; today "unknown address" |
+| **[r2, audit B1]** `world a b c` | fetch | pass | pass | 4 words | 3/3b no match → 4b | `refused`, the address help text of today (`surface.js:11`), no `cli`; today `parseAddress` answers the same text |
 | **[r2]** `session frob` | fetch | pass | pass | 2 words | 4 (never) | `refused` with the never row's text and `cli` — a deliberate RK1 change like `log tail` (today "unknown address") |
 | **[r2]** `why`, the daemon accepts but never sends headers | fetch pending | – | – | – | – | at 15 s the AbortController fires → `say('the verb route did not answer in time')`; view and input unchanged; **not** `world why` |
 | **[r2]** `why`, headers sent, JSON body stalls | `res.json()` pending | pass | pass | | | the same budget covers body consumption → the same timeout refusal; view unchanged |
@@ -470,7 +478,8 @@ the real CLI and the real route produce, never hand-typed.
   missing table row; longest-match broken (`episode` alone → refused "needs a subcommand", not
   `episode report`). **[r2]** Step-4b rows: `episode` → refused "ailang-worldd episode needs a
   subcommand: start | launch | finish | report"; `episode frobnicate` and `episode w1` → the same;
-  `session frob` → refused with the never row's text and `cli`; and for every one of the 27
+  `session frob` → refused with the never row's text and `cli`; **[r2, audit B1]** `world a b c` →
+  refused with the address help text and no `cli`; and for every one of the 27
   shadow-set words, `<word> zzz` never answers `address`. Kills: step 4b deleted (bare `episode`
   becomes navigation); 4b's seized set short of any switch arm.
 - **VB4 [r1]** parity with the CLI's switch, **without invoking `run()`**: the test parses
@@ -700,8 +709,8 @@ same code.
 | V32 **[r1]** | the page is embedded in and served by the daemon, `no-cache` | `grep -rn 'go:embed' host/surfacepage/*.go`; `grep -n 'AppScript\|handleSurfaceAppScript' host/daemon/*.go \| grep -v _test`; `grep -n 'func writeSurfaceAsset' -A10 host/daemon/*.go` | `app.go:15: //go:embed app/app.js`, `app.go:29: //go:embed app/index.html`, `script.go:9: //go:embed surface.js`; `daemon.go:1129: mux.HandleFunc("GET /surface/app.js", d.handleSurfaceAppScript)`; `surface_page.go:162: writeSurfaceAsset(w, "text/javascript; charset=utf-8", surfacepage.AppScript)`; `:190: w.Header().Set("Cache-Control", "no-cache")` |
 | V33 **[r1]** | the switch's 28 arms (re-derived, not copied); what `commit`/`outcome`/`call`/`demo` do | `git log -1 --oneline` (`ad144327`, the r0 commit; `cmd/` unchanged since `48c92a52`); `sed -n 375,510p cmd/ailang-worldd/main.go \| grep -oE 'case "[a-z-]+"' \| sort \| tr '\n' ' '`; `… \| wc -l`; `grep -n '"POST /v1/commit"\|"POST /mcp/"' host/daemon/daemon.go`; `grep -n 'outcome' cmd/ailang-worldd/main.go`; `sed -n 12p cmd/ailang-worldd/demo.go` | `approve approver call commit demo doctor episode head health help hosts log object outcome preset profile provenance registry serve service session setup surface-index tools version whoami why world`; `28`; `1118: POST /v1/commit`, `1153: POST /mcp/`; `109: … outcome record --file <outcome.json\|-> [--session …]`, `164: Session credential (tools, call, commit, outcome)`; `usage: ailang-worldd [--addr URL] demo seed --db PATH --session FILE` |
 | V34 **[r1]** | `world` takes exactly `get <ref>`; `parseAddress` takes one or two words | `grep -n 'func requireGet' -A8 cmd/ailang-worldd/cli.go`; `grep -n 'func runWorld' -A4 …`; `sed -n 84,86p host/surfacepage/surface.js` | `158: if len(args) != 2 \|\| args[0] != "get" {`; `166: return requireGet(args, "world", …)`; `84: if (words.length === 1 && (words[0] === "world" \|\| words[0] === "back"))`; `85: const m = words.length === 2 && words[0] === "world" ? …`; `86: if (!m) return {error: "unknown address: " + ADDRESS_HELP};` |
-| V35 **[r1]** | `serve --help` returns from `genericVerbHelp` before the switch; already exercised | `grep -n 'func genericVerbHelp' -A30 cmd/ailang-worldd/main.go`; `sed -n 340,378p …`; `grep -n 'func usageLinesFor' -A15 …`; `grep -n '^  ailang-worldd serve' …`; `sed -n 8,35p cmd/ailang-worldd/help_test.go` | `374: if text, ok := genericVerbHelp(rest); ok { fmt.Fprint(stdout, text); return exitOK }` (before `switch`); `718: if ownHelpVerbs[verb] … return "", false` (serve not in it); `730: lines := usageLinesFor(verb)`; `735: if verb == "serve" { … "serve flags:" …`; `86:   ailang-worldd serve --db <path> …`; `help_test.go:11: {"serve"}, {"health"}, …`; `TestEveryVerbHasHelp … code := run(argv, …); if code != exitOK` for `serve --help` and `help serve` |
-| V36 **[r2]** | `cmd/` and `host/` unchanged from the base to r1 (with control) | `git diff --stat 48c92a52 HEAD -- cmd host \| wc -l`; control: `git diff --stat 48c92a52 HEAD -- design_docs \| tail -1` | `0`; control `1 file changed, 702 insertions(+)` |
+| V35 **[r1]** | `serve --help` returns from `genericVerbHelp` before the switch; already exercised | `grep -n 'func genericVerbHelp' -A30 cmd/ailang-worldd/main.go`; `sed -n 340,378p …`; `grep -n 'func usageLinesFor' -A15 …`; `grep -n '^  ailang-worldd serve' …`; `sed -n 8,35p cmd/ailang-worldd/help_test.go` | `375: if text, ok := genericVerbHelp(rest); ok { fmt.Fprint(stdout, text); return exitOK }` (before `switch`); `718: if ownHelpVerbs[verb] … return "", false` (serve not in it); `730: lines := usageLinesFor(verb)`; `735: if verb == "serve" { … "serve flags:" …`; `86:   ailang-worldd serve --db <path> …`; `help_test.go:11: {"serve"}, {"health"}, …`; `TestEveryVerbHasHelp … code := run(argv, …); if code != exitOK` for `serve --help` and `help serve` |
+| V36 **[r2]** | `cmd/` and `host/` unchanged from the base to r1 (with control) | `git diff --stat 48c92a52 HEAD -- cmd host \| wc -l`; control: `git diff --stat 48c92a52 HEAD -- design_docs \| tail -1` | `0`; control `1 file changed, 702 insertions(+)` (at r1 `15070038`; at r2 the doc grows, the `cmd host` count stays `0`) |
 | V37 **[r2]** | `d.readCtx` is a finite 10 s deadline and the report handler builds under it | `sed -n 287,289p host/daemon/handlers.go`; `grep -n 'readDeadline = ' host/daemon/daemon.go`; `sed -n 707,740p host/daemon/episode_report.go \| grep -n ctx` | `func (d *Daemon) readCtx(r *http.Request) (context.Context, context.CancelFunc) { return context.WithTimeout(r.Context(), d.readDeadline) }`; `144: readDeadline = 10 * time.Second`; handler: `ctx, cancel := d.readCtx(r)`, `buildEpisodeReport(ctx, d.intents, d.reads, episode)`, `timedOut(ctx, err)`, `d.readEpisodeStart(ctx, episode)`, `d.readEpisodeFinish(ctx, episode)` — every read takes the bounded ctx. Server `ReadTimeout` 30 s (`daemon.go:95`, `:1234`) |
 | V38 **[r2]** | `maxReportEpisodeBytes` (§1.4) | `grep -rn maxReportEpisodeBytes host/daemon/*.go \| grep -v _test` | `episode_report.go:702: const maxReportEpisodeBytes = 256`; `:709: if episode == "" \|\| len(episode) > maxReportEpisodeBytes {`; `episode_finish.go:146` (same bound) |
 
@@ -785,3 +794,16 @@ reviewers' words (Gate 2 narrow-refinement carve-out); no designer run was spent
 
 Controller verdict on r2: pass. Per the carve-out, r2 goes to an independent audit (the evaluator
 role) rather than a third quorum round.
+
+**Audit (evaluator `sonnet`, independent, read-only): CARVE-OUT VALID, 84/100** (carve-out 34/40,
+consistency 17/25, evidence 19/20, buildability 14/15); report banked as
+`design_docs/verification/world-iter394/audit.md` in the record. One BLOCKING finding, reproduced
+by the controller and fixed in the same r2 commit series: **B1** — step 3b still said a three-word
+`world` input "falls to step 5", contradicting step 4b, and 4b had no refusal text for a `world`
+shape (no step-4 row). Fixed: 3b and 4b now agree; the refusal is today's address help text with
+no `cli`; a §2.4 row and a VB3 row pin `world a b c`. Non-blocking, applied: the `refused` mapping
+in §2.2 step 3; `main.go:375` (was 374) in §1.14 and V35; V36's control labelled as the r1 value;
+the controller's invented "a second submit aborts the first" sentence withdrawn (a planner
+decision, with the companion question of how a superseded abort differs from the timeout message).
+Non-blocking, left to the planner: the 15 s budget is a tunable the planner may keep; the VP2
+controlled-clock mechanics.
