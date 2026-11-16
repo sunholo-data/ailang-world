@@ -34,6 +34,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/why"
 )
 
 // exitIntegrity is the row-138 integrity refusal: a broken provenance link
@@ -257,18 +259,7 @@ func (m mcpClient) post(ctx context.Context, method string, id int, params any) 
 // headState reads GET /v1/head: the selected world ref, or present=false on
 // the 404 "no world head has been selected yet".
 func headState(ctx context.Context, c *client) (ref string, present bool, err error) {
-	status, body, err := c.do(ctx, http.MethodGet, "/v1/head", nil)
-	if err != nil {
-		return "", false, err
-	}
-	switch status {
-	case http.StatusOK:
-		return strings.TrimSpace(string(body)), true, nil
-	case http.StatusNotFound:
-		return "", false, nil
-	default:
-		return "", false, fmt.Errorf("GET /v1/head returned HTTP %d: %s", status, strings.TrimSpace(string(body)))
-	}
+	return why.Head(ctx, clientGetter(c))
 }
 
 // worldRevision resolves a world ref to its revision (= the entry index of
@@ -592,8 +583,6 @@ func callArguments(kv, kvJSON []string, whole string, stdin io.Reader) (json.Raw
 	return json.Marshal(obj)
 }
 
-const elideAt = 160
-
 // printCallResult renders a result: each top-level field but world (long
 // values elided with byte counts), then the world block.
 func printCallResult(w io.Writer, text string, fields map[string]json.RawMessage) {
@@ -647,14 +636,8 @@ func printCallResult(w io.Writer, text string, fields map[string]json.RawMessage
 	}
 }
 
-// elide shortens a value to elideAt bytes plus its byte count, on one line.
-func elide(s string) string {
-	one := strings.ReplaceAll(s, "\n", `\n`)
-	if len(one) <= elideAt {
-		return one
-	}
-	return fmt.Sprintf("%s… (%d bytes)", strings.ToValidUTF8(one[:elideAt], ""), len(s))
-}
+// elide shortens a value to why.ElideAt bytes plus its byte count, on one line.
+func elide(s string) string { return why.Elide(s) }
 
 func oneLine(s string, n int) string {
 	s = strings.Join(strings.Fields(s), " ")

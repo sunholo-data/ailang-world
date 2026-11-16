@@ -1,4 +1,4 @@
-package main
+package why
 
 import (
 	"strconv"
@@ -28,7 +28,7 @@ func TestWhyInputLineShowsThePathOfALongEdit(t *testing.T) {
 // fields), so short inputs — most of them — read exactly as they did.
 func TestWhyInputLineLeavesAShortInputUnchanged(t *testing.T) {
 	for _, p := range []string{`{"path":"cmd/ailang-worldd/setup.go"}`, `{"args":["-run","TestX","./cmd"],"command":"go-test"}`, `"x"`} {
-		if got := whyInputLine([]byte(p)); got != elide(p) || got != p {
+		if got := whyInputLine([]byte(p)); got != Elide(p) || got != p {
 			t.Fatalf("short input changed: %q -> %q", p, got)
 		}
 	}
@@ -55,7 +55,7 @@ func TestWhyInputLineKeyFieldBounds(t *testing.T) {
 // Not an object, or an object with no short field: plain elide, as before.
 func TestWhyInputLineFallsBackToElide(t *testing.T) {
 	for _, p := range []string{`"` + strings.Repeat("z", 300) + `"`, `{"blob":"` + strings.Repeat("z", 300) + `"}`, strings.Repeat("not json ", 40)} {
-		if got := whyInputLine([]byte(p)); got != elide(p) {
+		if got := whyInputLine([]byte(p)); got != Elide(p) {
 			t.Fatalf("fallback changed: %q", got)
 		}
 	}
