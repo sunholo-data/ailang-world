@@ -7,6 +7,11 @@ The asymmetry that shapes every refusal below: a public publish is **immutable**
 (`registry-validator` 409s on an existing version), so a wrong publish permanently consumes
 `world/core@0.1.2`, while a refusal costs a human five minutes.
 
+**`world/core@0.1.2` — PUBLISHED 2026-11-16T14:52:18Z (Mark, attended, D-WORLD-117 = A), outcome record
+`329708a3…187c`, from the fresh store `~/.ailang/world/world-0.1.2.db`; served digests equal the golden;
+evidence `design_docs/verification/world-attended-2026-11-16-publish-0.1.2/` (the served metadata is
+invalid JSON, a registry-validator defect filed as sunholo-data/ailang#2373).**
+
 **`world/core@0.1.1` — PUBLISHED 2026-10-02T07:58:43Z (Mark, attended), record
 `60b46d4b…3b24` (full value in the evidence folder below), from the fresh store
 `~/.ailang/world/world-0.1.1.db` (`D-WORLD-45` = A).** The served metadata matched the reviewed
