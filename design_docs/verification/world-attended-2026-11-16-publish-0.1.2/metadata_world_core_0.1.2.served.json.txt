@@ -1,0 +1,203 @@
+{
+  "schema": "ailang.package-metadata/v2",
+  "name": "world/core",
+  "version": "0.1.2",
+  "published_at": "2026-11-16T14:52:18Z",
+  "published_by": "",
+  "content_hash": "sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c",
+  "interface_hash": "sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083",
+  "tarball_hash": "sha256:be02038ea1e5dd77d73a686a67be6440f945abab1d7a84303a6cea41114d5004",
+  "tarball_size_bytes": 11030,
+  "validation": {
+    "compiles": true,
+    "effects_valid": true,
+    "contracts_verified": 16,
+    "contracts_total": 16,
+    "contracts_skipped": 0,
+    "ailang_version": "AILANG v0.60.5
+Commit: 2da0618
+Full:   2da0618938ff8c12897db2a8c780b774a617c859
+Built:  2026-11-16T09:46:11Z
+
+The AI-First Programming Language
+Copyright (c) 2025-2026"
+  },
+  "manifest": {
+    "edition": "1",
+    "effects_max": [],
+    "exports": [
+      "world/types",
+      "world/contracts",
+      "world/transitions",
+      "world/logepoch"
+    ],
+    "stability": "",
+    "ai_summary": "AILANG World's pure semantic core: the content-addressed world-graph types, the Z3-proven validity contracts, the pure transition functions and the log-epoch semantics. No effects.",
+    "has_agent_doc": false,
+    "repository": "https://github.com/sunholo-data/ailang-world/tree/dev/packages/world-core",
+    "homepage": "https://ailang.sunholo.com/docs/packages/world/core"
+  },
+  "interface_hash_v2": "sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8",
+  "interface_signatures": [
+    "world/contracts:func:commitAllowed:(World\,Proposal\,Verification)->bool:",
+    "world/contracts:func:commitBoundaryHolds:(bool\,bool\,int\,bool\,bool\,bool)->bool:",
+    "world/contracts:func:isValidNextWorld:(World\,World\,HashRef\,HashRef)->bool:",
+    "world/contracts:func:proposalMatchesWorld:(World\,Proposal)->bool:",
+    "world/contracts:func:verificationMatchesProposal:(Proposal\,Verification)->bool:",
+    "world/logepoch:func:cacheKey:(LogHeader)->string:",
+    "world/logepoch:func:renderRef:(HashRef)->string:",
+    "world/logepoch:func:sameRef:(HashRef\,HashRef)->bool:",
+    "world/logepoch:func:servesEntry:(EpochRecord\,LogHeader)->bool:",
+    "world/logepoch:type:EpochRecord/0",
+    "world/logepoch:type:HashRef/0",
+    "world/logepoch:type:LogHeader/0",
+    "world/logepoch:type:ObjectEnvelope/0",
+    "world/transitions:func:applyRevision:(World\,HashRef\,HashRef)->World:",
+    "world/transitions:func:commit:(World\,Proposal\,Verification\,HashRef\,HashRef)->CommitResult:",
+    "world/transitions:func:plan:(World\,HashRef\,HashRef\,string)->Proposal:",
+    "world/transitions:func:verify:(World\,Proposal)->Verification:",
+    "world/types:ctor:CommitResult:Applied(World\, Transition)",
+    "world/types:ctor:CommitResult:Denied(string)",
+    "world/types:ctor:Evidence:AiReview(HashRef\, float)",
+    "world/types:ctor:Evidence:CompilerOutput(HashRef)",
+    "world/types:ctor:Evidence:HumanApproval(HashRef)",
+    "world/types:ctor:Evidence:ProofReceipt(HashRef)",
+    "world/types:ctor:Evidence:RecordedEffect(HashRef)",
+    "world/types:ctor:Evidence:TestReport(HashRef\, bool)",
+    "world/types:ctor:EvidenceGrade:ATTESTED",
+    "world/types:ctor:EvidenceGrade:CLAIMED",
+    "world/types:ctor:EvidenceGrade:PROVEN",
+    "world/types:ctor:EvidenceGrade:TESTED",
+    "world/types:ctor:TimeoutOutcome:EscalateWithNewDeadline",
+    "world/types:ctor:TimeoutOutcome:ExecuteUnderPriorAuthority",
+    "world/types:ctor:TimeoutOutcome:ResolveRejectedTimeout",
+    "world/types:ctor:TimeoutPolicy:Cancel",
+    "world/types:ctor:TimeoutPolicy:EscalateBounded",
+    "world/types:ctor:TimeoutPolicy:ExecuteIfGranted",
+    "world/types:func:gradeOf:(Evidence)->EvidenceGrade:",
+    "world/types:func:timeoutFiredLegally:(int\,int)->bool:",
+    "world/types:func:timeoutOutcome:(TimeoutPolicy\,int\,bool)->TimeoutOutcome:",
+    "world/types:func:validDefer:(int\,int\,int)->bool:",
+    "world/types:func:validEscalation:(int\,int\,int\,int)->bool:",
+    "world/types:func:wellFormedSchedule:(int\,int\,int)->bool:",
+    "world/types:type:Capability/0",
+    "world/types:type:CommitResult/0",
+    "world/types:type:DecisionPacket/0",
+    "world/types:type:Evidence/0",
+    "world/types:type:EvidenceGrade/0",
+    "world/types:type:Proposal/0",
+    "world/types:type:RecordedTransition/0",
+    "world/types:type:TimeoutOutcome/0",
+    "world/types:type:TimeoutPolicy/0",
+    "world/types:type:Transition/0",
+    "world/types:type:Verification/0",
+    "world/types:type:World/0"
+  ],
+  "quality": {
+    "schema": "ailang.package-quality/v1",
+    "package": "world/core",
+    "version": "0.1.2",
+    "stability": "",
+    "mode": "server",
+    "compile": {
+      "source": "server",
+      "ok": true,
+      "files": 4
+    },
+    "contracts": {
+      "source": "server",
+      "evidence_schema": "ailang.verification-evidence/v1",
+      "numeric_model": {
+        "float_sort": "Real",
+        "int_sort": "Int",
+        "runtime_equivalence": "not_established"
+      },
+      "runtime_contracts": "not_measured",
+      "reason_counts": {
+        "uncontracted": 3
+      },
+      "verified": 16,
+      "total": 16,
+      "counterexample": 0,
+      "skipped": 0,
+      "errors": 0,
+      "uncontracted_exports": 3,
+      "wall_seconds": 1.774286678
+    },
+    "tests": {
+      "source": "attested",
+      "files": 0,
+      "passed": 0,
+      "failed": 0,
+      "notes": "no *_test.ail files; inline test blocks are not yet discovered in package mode (m-package-test-discovery)"
+    },
+    "smoke": {
+      "source": "attested",
+      "present": true,
+      "passed": true,
+      "seconds": 0.074427625
+    },
+    "interface": {
+      "source": "server",
+      "hash_v1": "sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083",
+      "hash_v2": "sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8",
+      "signatures": 53
+    },
+    "effects": {
+      "source": "server",
+      "max": [],
+      "ceiling_declared": true
+    },
+    "release": {
+      "source": "server",
+      "kind": "feature",
+      "changelog_section": true,
+      "notes": "**Compiler-compatibility release: the kernel's contracts type-check under AILANG v0.60.4**, which
+type-checks `requires`/`ensures` clauses. No exported signature changed; the proven laws are
+unchanged.
+
+- Two exported instances are **added**: `Eq[EvidenceGrade]` and `Eq[TimeoutOutcome]`
+  (`deriving (Eq)`), so `gradeOf`'s and `timeoutOutcome`'s `ensures`, which compare results with
+  `==`, type-check. Code that compares these values with `==` compiles against 0.1.2 and not
+  against 0.1.1. Neither interface hash records derived instances, so both are unchanged.
+  The two `deriving` lines are credited to PR #565.
+- `plan`'s and `verify`'s `ensures` are restated field-wise: each `HashRef` comparison is written
+  as `.algo == … && .digest == …`, the idiom `applyRevision` already used, because `HashRef` has
+  no `Eq` instance.
+
+Contracts: **16 verified, 0 refuted**. Effects: still **none**."
+    },
+    "docs": {
+      "agent_md": false,
+      "ai_summary": true
+    },
+    "style": {
+      "exported_funcs": 19,
+      "pure_exports": 19,
+      "pure_ratio": 1
+    },
+    "gates": [],
+    "badges": [
+      {
+        "code": "PUB011",
+        "level": "warn",
+        "msg": "3 exported function(s) carry no contract"
+      },
+      {
+        "code": "PUB008",
+        "level": "info",
+        "msg": "[metadata] license_url is missing — registry consumers cannot inspect the package license"
+      },
+      {
+        "code": "PUB020",
+        "level": "info",
+        "msg": "no AGENT.md — agents get no usage guidance for this package"
+      },
+      {
+        "code": "PUB012",
+        "level": "info",
+        "msg": "no tests discovered (*_test.ail or inline test blocks)"
+      }
+    ]
+  }
+}
