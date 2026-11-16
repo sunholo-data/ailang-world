@@ -1,0 +1,378 @@
+diff --git a/cmd/world-publish/fences.go b/cmd/world-publish/fences.go
+index 3c4af26a..91233cdf 100644
+--- a/cmd/world-publish/fences.go
++++ b/cmd/world-publish/fences.go
+@@ -64,7 +64,7 @@ const (
+ // layer that defeats automation is the controlling-terminal check in tty.go.
+ // Stating that here is deliberate: an operator who believes this phrase is the
+ // security boundary will eventually route around the one that is.
+-const attendedPhrase = "publish world/core@0.1.1 irreversibly"
++const attendedPhrase = "publish world/core@0.1.2 irreversibly"
+ 
+ // frozenPackageVersion is the ONE version this command may publish. The scope
+ // grammar already makes an approval for 0.1.0 unable to authorize 0.1.1; this
+@@ -72,7 +72,10 @@ const attendedPhrase = "publish world/core@0.1.1 irreversibly"
+ // Moved 0.1.0 -> 0.1.1 by D-WORLD-41 (proof hardening, no exported signature
+ // change). 0.1.0 is PUBLISHED and immutable; its record stays in
+ // host/broker/testdata/metadata_world_core_0.1.0.json and is never rewritten.
+-const frozenPackageVersion = "0.1.1"
++// Moved 0.1.1 -> 0.1.2 by row 260 (contracts type-check under AILANG v0.60.4;
++// adds Eq on two exported enums, no exported signature change). 0.1.1 is
++// PUBLISHED (2026-10-02) and immutable.
++const frozenPackageVersion = "0.1.2"
+ 
+ // frozenCompilerVersion is the pinned compiler the ready packet was projected
+ // with. It is stated here INDEPENDENTLY of the golden so the comparison in
+@@ -95,9 +98,10 @@ const frozenPackageVersion = "0.1.1"
+ var frozenCompilerVersion = pins.VersionLine(pins.RoleFrozenCompiler)
+ 
+ // frozenInterfaceHashV2 is the registry-recorded interface identity (v2) of the
+-// immutable world/core@0.1.0. The 0.1.1 candidate changes no exported signature,
+-// and the pinned compiler's dry-run reports the same v2 hash (53 signatures), so
+-// the constant did not move with the version.
++// immutable world/core@0.1.0. Neither 0.1.1 nor the 0.1.2 candidate changes an
++// exported signature, and the pinned compiler's dry-run reports the same v2 hash
++// (53 signatures), so the constant did not move with the version. (0.1.2's two
++// derived Eq instances are not recorded by either interface hash.)
+ const frozenInterfaceHashV2 = "sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8"
+ 
+ // stopError is a fence refusal. It is a value rather than a printf because the
+diff --git a/docs/SELF_MOD_PUBLISH.md b/docs/SELF_MOD_PUBLISH.md
+index 6fdd55bc..ebed8ff2 100644
+--- a/docs/SELF_MOD_PUBLISH.md
++++ b/docs/SELF_MOD_PUBLISH.md
+@@ -5,14 +5,15 @@ public write. Steps 4–8 are **attended**: they are never run headless and neve
+ 
+ The asymmetry that shapes every refusal below: a public publish is **immutable**
+ (`registry-validator` 409s on an existing version), so a wrong publish permanently consumes
+-`world/core@0.1.1`, while a refusal costs a human five minutes.
++`world/core@0.1.2`, while a refusal costs a human five minutes.
+ 
+ **`world/core@0.1.1` — PUBLISHED 2026-10-02T07:58:43Z (Mark, attended), record
+ `60b46d4b…3b24` (full value in the evidence folder below), from the fresh store
+ `~/.ailang/world/world-0.1.1.db` (`D-WORLD-45` = A).** The served metadata matched the reviewed
+ golden on all four digests and the byte length, and the registry validator verified 16/16 contracts;
+ it is banked at `design_docs/verification/world-attended-2026-10-02-publish-0.1.1/`. The next
+-release needs a new candidate; the text below describes the 0.1.1 procedure as run.
++release needs a new candidate; the text below describes the 0.1.1 procedure as run, with the
++version-bearing values moved to the next candidate, `world/core@0.1.2` (row 260).
+ `world/core@0.1.0` is already published (2026-09-21) and immutable; its served record is
+ preserved verbatim at `host/broker/testdata/metadata_world_core_0.1.0.json` and is never
+ rewritten. `D-WORLD-41` (attended, 2026-09-28) chose 0.1.1 as a proof-hardening release with
+@@ -96,20 +97,22 @@ instruction to "compare the digests against the gate's output" is therefore impo
+ this step used to say exactly that, and this paragraph is its repair.
+ 
+ So the eyeball check is **document against artifact, at full length**. These four digests are the
+-identity of the local reviewed projection. **They are the UNPUBLISHED `world/core@0.1.1`
+-candidate** (manifest version, `## 0.1.1` CHANGELOG section, publisher version fence and
+-confirmation phrase moved together in iteration 211 under `D-WORLD-41`). They differ from the
+-already-published 0.1.0 artifact by design: the tarball gained five proven contracts and the
+-0.1.1 release notes, while `interfaceHash` and `interfaceHashV2` are unchanged because no
+-exported signature changed. The loop never publishes; a human runs steps 6–7 below:
++identity of the local reviewed projection. **They are the UNPUBLISHED `world/core@0.1.2`
++candidate** (manifest version, `## 0.1.2` CHANGELOG section, publisher version fence and
++confirmation phrase moved together under row 260, as they did for 0.1.1 in iteration 211 under
++`D-WORLD-41`). They differ from the already-published 0.1.1 artifact by design: the kernel's
++contracts were restated so they type-check under AILANG v0.60.4, and `EvidenceGrade` and
++`TimeoutOutcome` gained derived `Eq` instances, while `interfaceHash` and `interfaceHashV2` are
++unchanged because no exported signature changed (neither hash records derived instances). The
++loop never publishes; a human runs steps 6–7 below:
+ 
+ 
+ | field | digest |
+ |---|---|
+-| `contentHash` | `sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780` |
++| `contentHash` | `sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c` |
+ | `interfaceHash` (manifest coverage only) | `sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083` |
+ | `interfaceHashV2` (exported interface) | `sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8` |
+-| `tarballSHA256` | `sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3` |
++| `tarballSHA256` | `sha256:be02038ea1e5dd77d73a686a67be6440f945abab1d7a84303a6cea41114d5004` |
+ 
+ They are gated against the golden by `host/runbook`, so this table cannot rot silently: change the
+ package without reprojecting, or edit one nibble here, and the repository gate reds.
+@@ -150,8 +153,9 @@ and has no migration, so it refuses to open or modify it (measured iteration 211
+ copy: `STOP fence=store reason=unopenable … has user_version 2 … binary requires 4; refusing
+ to modify`). Two options:
+ 
+-- **CHOSEN (D-WORLD-45 = A): a fresh store file** (`world-0.1.1.db`, below). The 0.1.1
+-  publish record then lives in a new store and is not continuous with the 0.1.0 record.
++- **CHOSEN (D-WORLD-45 = A): a fresh store file** (`world-0.1.1.db` for 0.1.1; `world-0.1.2.db`,
++  below, for 0.1.2). Each publish record then lives in a new store and is not continuous with
++  the earlier record.
+ - **Alternative: migrate the legacy store first** (a future queue row; no migration exists
+   today). This would keep one provenance chain.
+ 
+@@ -166,7 +170,7 @@ words. The helper's own message names the saved ref; export that exact value.
+ 
+ ```bash
+ mkdir -p "$HOME/.ailang/world"
+-export WORLD_STORE="$HOME/.ailang/world/world-0.1.1.db"
++export WORLD_STORE="$HOME/.ailang/world/world-0.1.2.db"
+ export WORLD_BIN="$(mktemp -d)/world-publish"
+ export WORLD_REGISTRY="https://storage.googleapis.com/ailang-registry"
+ export WORLD_CREDENTIAL="$HOME/.config/ailang/registry.key"
+@@ -224,9 +228,9 @@ The stamp is an `ApprovalRequestV1` → `ApprovalDecisionV1` pair. `Session.Invo
+ `approval_claims`' PRIMARY KEY — durably, not by in-memory budget — so the stamp cannot be spent
+ twice even across a process restart. The scope binds `contentHash`, `interfaceHash` and `tarballSHA256` above (not
+ `interfaceHashV2`: the frozen 0.1.0 scope grammar does not carry it), so an approval minted
+-for these bytes authorizes no other bytes, and an approval for `0.1.0` cannot authorize `0.1.1`.
++for these bytes authorizes no other bytes, and an approval for `0.1.1` cannot authorize `0.1.2`.
+ The typed confirmation phrase names the version too — for this candidate it is
+-`publish world/core@0.1.1 irreversibly` — so a stale 0.1.0 approval ref saved by the helper
++`publish world/core@0.1.2 irreversibly` — so a stale 0.1.1 approval ref saved by the helper
+ (`~/.ailang/world/.last_approval_ref`) is refused at the scope check; mint a fresh one.
+ 
+ Rehearse first. This runs every fence and makes no request:
+diff --git a/host/pkgproj/dryrun_shapes_test.go b/host/pkgproj/dryrun_shapes_test.go
+index 7f077002..979d5076 100644
+--- a/host/pkgproj/dryrun_shapes_test.go
++++ b/host/pkgproj/dryrun_shapes_test.go
+@@ -114,7 +114,7 @@ func TestParseDryRunLeadingWhitespaceAndRefusals(t *testing.T) {
+ 		"no content hash":     regexp.MustCompile(`(?m)^.*Content hash:.*\n`).ReplaceAllString(src, ""),
+ 		"two tarball hashes":  src + "  Tarball hash: sha256:" + strings.Repeat("a", 64) + "\n",
+ 		"inline and separate": strings.Replace(readFixture(t, "dryrun_v0.41.0.txt"), "  Content hash:", "  Tarball hash: sha256:"+strings.Repeat("b", 64)+"\n  Content hash:", 1),
+-		"short hash no dots":  strings.Replace(src, "Content hash: sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780", "Content hash: sha256:473517079249f3959", 1),
++		"short hash no dots":  strings.Replace(src, "Content hash: sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c", "Content hash: sha256:359a82fde07d8e900", 1),
+ 	}
+ 	for name, out := range cases {
+ 		if out == src {
+diff --git a/host/pkgproj/testdata/dryrun_v0.41.0.txt b/host/pkgproj/testdata/dryrun_v0.41.0.txt
+index 82089bc2..54c97ee2 100644
+--- a/host/pkgproj/testdata/dryrun_v0.41.0.txt
++++ b/host/pkgproj/testdata/dryrun_v0.41.0.txt
+@@ -1,5 +1,5 @@
+-Publishing world/core@0.1.1...
+-→ quality world/core@0.1.1 (-)
++Publishing world/core@0.1.2...
++→ quality world/core@0.1.2 (-)
+   compile:   ✓ 5 files
+   contracts: ✓ 16/16 verified, 0 refuted, 3 uncontracted exports (0.1s)
+   interface: ✓ v2 b25fe03155db… (53 signatures)
+@@ -16,8 +16,8 @@ Publishing world/core@0.1.1...
+ 
+ ✓ no gates
+ 
+-  Tarball: 10610 bytes (sha256:07d6180986739249b...)
+-  Content hash: sha256:473517079249f3959...
++  Tarball: 11030 bytes (sha256:be02038ea1e5dd77d...)
++  Content hash: sha256:359a82fde07d8e900...
+   Interface hash: sha256:d16cc88270ff4c4ea...
+   Exports: [world/types world/contracts world/transitions world/logepoch]
+   Effects: []
+diff --git a/host/pkgproj/testdata/dryrun_v0.54.11.txt b/host/pkgproj/testdata/dryrun_v0.54.11.txt
+index f9df482f..d5791dcf 100644
+--- a/host/pkgproj/testdata/dryrun_v0.54.11.txt
++++ b/host/pkgproj/testdata/dryrun_v0.54.11.txt
+@@ -1,5 +1,5 @@
+-Publishing world/core@0.1.1...
+-→ quality world/core@0.1.1 (-)
++Publishing world/core@0.1.2...
++→ quality world/core@0.1.2 (-)
+   compile:   ✓ 5 files
+   contracts: ✓ 16/16 verified, 0 refuted, 3 uncontracted exports (0.1s)
+   interface: ✓ v2 b25fe03155db… (53 signatures)
+@@ -17,9 +17,9 @@ Publishing world/core@0.1.1...
+ 
+ ✓ no gates
+ 
+-  Tarball: 10610 bytes
+-  Tarball hash: sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3
+-  Content hash: sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780
++  Tarball: 11030 bytes
++  Tarball hash: sha256:be02038ea1e5dd77d73a686a67be6440f945abab1d7a84303a6cea41114d5004
++  Content hash: sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c
+   Interface hash: sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083
+   Interface hash (v2): sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8
+   Exports: [world/types world/contracts world/transitions world/logepoch]
+diff --git a/packages/world-core/CHANGELOG.md b/packages/world-core/CHANGELOG.md
+index a02b3e03..47c942fd 100644
+--- a/packages/world-core/CHANGELOG.md
++++ b/packages/world-core/CHANGELOG.md
+@@ -1,5 +1,22 @@
+ # Changelog — world/core
+ 
++## 0.1.2 — 2026-11-16
++
++**Compiler-compatibility release: the kernel's contracts type-check under AILANG v0.60.4**, which
++type-checks `requires`/`ensures` clauses. No exported signature changed; the proven laws are
++unchanged.
++
++- Two exported instances are **added**: `Eq[EvidenceGrade]` and `Eq[TimeoutOutcome]`
++  (`deriving (Eq)`), so `gradeOf`'s and `timeoutOutcome`'s `ensures`, which compare results with
++  `==`, type-check. Code that compares these values with `==` compiles against 0.1.2 and not
++  against 0.1.1. Neither interface hash records derived instances, so both are unchanged.
++  The two `deriving` lines are credited to PR #565.
++- `plan`'s and `verify`'s `ensures` are restated field-wise: each `HashRef` comparison is written
++  as `.algo == … && .digest == …`, the idiom `applyRevision` already used, because `HashRef` has
++  no `Eq` instance.
++
++Contracts: **16 verified, 0 refuted**. Effects: still **none**.
++
+ ## 0.1.1 — 2026-09-30
+ 
+ **Proof hardening of the pure semantic core. No exported signature changed** — the interface
+diff --git a/packages/world-core/ailang.toml b/packages/world-core/ailang.toml
+index d49849c2..4a72d4fa 100644
+--- a/packages/world-core/ailang.toml
++++ b/packages/world-core/ailang.toml
+@@ -1,6 +1,6 @@
+ [package]
+ name = "world/core"
+-version = "0.1.1"
++version = "0.1.2"
+ edition = "1"
+ ailang = ">=0.30.0"
+ module_prefix = "world"
+@@ -9,6 +9,7 @@ description = "AILANG World's pure semantic core"
+ # PUB002: the registry refuses a publish that does not declare what kind of
+ # release this is. 0.1.0 was the first publish, so `feature`; 0.1.1 keeps `feature`
+ # (D-WORLD-41: five added proven contracts are a capability; no exported signature changed).
++# 0.1.2 keeps `feature` (row 260: adds `Eq` on two exported enums; no signature changed).
+ [release]
+ kind = "feature"
+ 
+diff --git a/packages/world-core/world/transitions.ail b/packages/world-core/world/transitions.ail
+index 01ad9f22..0e007b07 100644
+--- a/packages/world-core/world/transitions.ail
++++ b/packages/world-core/world/transitions.ail
+@@ -26,7 +26,7 @@ export func plan(
+   transitionFn: HashRef,
+   goal: string
+ ) -> Proposal ! {}
+-ensures { result.inputWorld == w.stateRoot && result.proposalHash == proposalHash && result.transitionFn == transitionFn && result.goal == goal }
++ensures { result.inputWorld.algo == w.stateRoot.algo && result.inputWorld.digest == w.stateRoot.digest && result.proposalHash.algo == proposalHash.algo && result.proposalHash.digest == proposalHash.digest && result.transitionFn.algo == transitionFn.algo && result.transitionFn.digest == transitionFn.digest && result.goal == goal }
+  {
+   {
+     proposalHash: proposalHash,
+@@ -45,7 +45,7 @@ ensures { result.inputWorld == w.stateRoot && result.proposalHash == proposalHas
+ -- iff the proposal's input world matches the current world (Contract 1). The
+ -- verification always names the proposal's own hash so Contract 2 holds.
+ export func verify(w: World, p: Proposal) -> Verification ! {}
+-ensures { result.proposalHash == p.proposalHash && result.accepted == (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest) }
++ensures { result.proposalHash.algo == p.proposalHash.algo && result.proposalHash.digest == p.proposalHash.digest && result.accepted == (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest) }
+  {
+   if proposalMatchesWorld(w, p)
+   then { proposalHash: p.proposalHash, accepted: true, reason: "accepted" }
+diff --git a/packages/world-core/world/types.ail b/packages/world-core/world/types.ail
+index 5883d348..d05f3dde 100644
+--- a/packages/world-core/world/types.ail
++++ b/packages/world-core/world/types.ail
+@@ -36,6 +36,7 @@ export type EvidenceGrade
+   | TESTED
+   | ATTESTED
+   | CLAIMED
++  deriving (Eq)
+ 
+ -- Canonical grading for the ratified five-constructor representation.
+ -- No current Evidence constructor has authority to mint PROVEN.
+@@ -150,6 +151,7 @@ export type TimeoutOutcome
+   = ResolveRejectedTimeout
+   | EscalateWithNewDeadline
+   | ExecuteUnderPriorAuthority
++  deriving (Eq)
+ 
+ -- The frozen v1 decision packet (HUMAN-SURFACE §7 point 3), semantic ID
+ -- world/decision-packet/v1. References, not embeds: proposalHash reaches
+diff --git a/scripts/verify_world_package.sh b/scripts/verify_world_package.sh
+index c60aa29b..32b346fe 100755
+--- a/scripts/verify_world_package.sh
++++ b/scripts/verify_world_package.sh
+@@ -126,13 +126,14 @@ with open(sys.argv[1], "rb") as f: got = tomllib.load(f)
+ # the first real attended publish on two of them:
+ #   PUB001 CHANGELOG.md has no non-empty `## 0.1.0` section
+ # (0.1.1, D-WORLD-41: the frozen version moved in step 4, the step-7 dry-run identity and
+-# the step-9 packet together; the compiler's own dry-run refuses PUB001 for `## 0.1.1`.)
++# the step-9 packet together; the compiler's own dry-run refuses PUB001 for `## 0.1.1`.
++# 0.1.2, row 260: the same three moved together again; 0.1.1 is PUBLISHED and immutable.)
+ #   PUB002 [release] kind is not declared
+ # [metadata] closes PUB021, which warns that no agent serves the pkg:world/core
+ # inbox without a GitHub tree URL. These are ADDITIONS to a frozen structure and
+ # are listed exactly, so the freeze still refuses anything not named here.
+ want = {
+-  "package": {"name":"world/core", "version":"0.1.1", "edition":"1", "ailang":">=0.30.0", "module_prefix":"world", "description":"AILANG World's pure semantic core"},
++  "package": {"name":"world/core", "version":"0.1.2", "edition":"1", "ailang":">=0.30.0", "module_prefix":"world", "description":"AILANG World's pure semantic core"},
+   "release": {"kind":"feature"},
+   "metadata": {
+     "repository":"https://github.com/sunholo-data/ailang-world/tree/dev/packages/world-core",
+@@ -213,7 +214,7 @@ python3 - "$tmp_dry" <<'PY' || exit 1
+ import re, sys
+ s = open(sys.argv[1], encoding="utf-8").read()
+ checks = [
+- (r"^[ \t]*Publishing world/core@0\.1\.1\.\.\.$", "package identity"),
++ (r"^[ \t]*Publishing world/core@0\.1\.2\.\.\.$", "package identity"),
+  (r"^[ \t]*Exports: \[world/types world/contracts world/transitions world/logepoch\]$", "exact export set"),
+  (r"^[ \t]*Effects: \[\]$", "empty effects"),
+ ]
+@@ -302,7 +303,7 @@ for line in open(sys.argv[1], encoding="utf-8"):
+ required = ("contentHash", "interfaceHash", "interfaceHashV2", "tarballSHA256", "tarballBytes")
+ if any(not values.get(k) for k in required):
+     sys.stderr.write("✗ ready packet input is incomplete\n"); sys.exit(1)
+-packet = {"compilerVersion":sys.argv[3], "contentHash":values["contentHash"], "effects":[], "exports":["world/types","world/contracts","world/transitions","world/logepoch"], "interfaceHash":values["interfaceHash"], "interfaceHashV2":values["interfaceHashV2"], "package":"world/core", "tarballBytes":int(values["tarballBytes"]), "tarballSHA256":values["tarballSHA256"], "version":"0.1.1"}
++packet = {"compilerVersion":sys.argv[3], "contentHash":values["contentHash"], "effects":[], "exports":["world/types","world/contracts","world/transitions","world/logepoch"], "interfaceHash":values["interfaceHash"], "interfaceHashV2":values["interfaceHashV2"], "package":"world/core", "tarballBytes":int(values["tarballBytes"]), "tarballSHA256":values["tarballSHA256"], "version":"0.1.2"}
+ with open(sys.argv[2], "wb") as f: f.write((json.dumps(packet, sort_keys=True, separators=(",", ":")) + "\n").encode())
+ PY
+ [ -s "$tmp_ready" ] || { printf '%s\n' '✗ ready packet enumeration was zero-length' >&2; exit 1; }
+diff --git a/scripts/world_package_ready_packet.golden.json b/scripts/world_package_ready_packet.golden.json
+index 575e16f4..86868400 100644
+--- a/scripts/world_package_ready_packet.golden.json
++++ b/scripts/world_package_ready_packet.golden.json
+@@ -1 +1 @@
+-{"compilerVersion":"AILANG v0.41.0","contentHash":"sha256:473517079249f3959b5aba9727f62b40130624c9915612a47736fdc1dae2a780","effects":[],"exports":["world/types","world/contracts","world/transitions","world/logepoch"],"interfaceHash":"sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083","interfaceHashV2":"sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8","package":"world/core","tarballBytes":10610,"tarballSHA256":"sha256:07d6180986739249bc4e5adaf3eb2bf44ce59821861a86652c31149bc09df4a3","version":"0.1.1"}
++{"compilerVersion":"AILANG v0.41.0","contentHash":"sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c","effects":[],"exports":["world/types","world/contracts","world/transitions","world/logepoch"],"interfaceHash":"sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083","interfaceHashV2":"sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8","package":"world/core","tarballBytes":11030,"tarballSHA256":"sha256:be02038ea1e5dd77d73a686a67be6440f945abab1d7a84303a6cea41114d5004","version":"0.1.2"}
+diff --git a/tools/attended/self_mod_publish.sh b/tools/attended/self_mod_publish.sh
+index 348804fc..2a54ec2a 100755
+--- a/tools/attended/self_mod_publish.sh
++++ b/tools/attended/self_mod_publish.sh
+@@ -1,7 +1,8 @@
+ #!/bin/bash
+ # Attended helper for SM.D — the irreversible publish of world/core at the version the
+-# committed ready-packet golden names (0.1.0 published 2026-09-21; 0.1.1 is the D-WORLD-41
+-# candidate). The version is READ from the golden, never restated here.
++# committed ready-packet golden names (0.1.0 published 2026-09-21; 0.1.1 published
++# 2026-10-02; 0.1.2 is the row-260 candidate). The version is READ from the golden, never
++# restated here.
+ #
+ # WHAT THIS IS NOT: an automation of the publish. Every fence in
+ # cmd/world-publish stays exactly where it was, and this script cannot satisfy
+diff --git a/world/transitions.ail b/world/transitions.ail
+index 01ad9f22..0e007b07 100644
+--- a/world/transitions.ail
++++ b/world/transitions.ail
+@@ -26,7 +26,7 @@ export func plan(
+   transitionFn: HashRef,
+   goal: string
+ ) -> Proposal ! {}
+-ensures { result.inputWorld == w.stateRoot && result.proposalHash == proposalHash && result.transitionFn == transitionFn && result.goal == goal }
++ensures { result.inputWorld.algo == w.stateRoot.algo && result.inputWorld.digest == w.stateRoot.digest && result.proposalHash.algo == proposalHash.algo && result.proposalHash.digest == proposalHash.digest && result.transitionFn.algo == transitionFn.algo && result.transitionFn.digest == transitionFn.digest && result.goal == goal }
+  {
+   {
+     proposalHash: proposalHash,
+@@ -45,7 +45,7 @@ ensures { result.inputWorld == w.stateRoot && result.proposalHash == proposalHas
+ -- iff the proposal's input world matches the current world (Contract 1). The
+ -- verification always names the proposal's own hash so Contract 2 holds.
+ export func verify(w: World, p: Proposal) -> Verification ! {}
+-ensures { result.proposalHash == p.proposalHash && result.accepted == (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest) }
++ensures { result.proposalHash.algo == p.proposalHash.algo && result.proposalHash.digest == p.proposalHash.digest && result.accepted == (w.stateRoot.algo == p.inputWorld.algo && w.stateRoot.digest == p.inputWorld.digest) }
+  {
+   if proposalMatchesWorld(w, p)
+   then { proposalHash: p.proposalHash, accepted: true, reason: "accepted" }
+diff --git a/world/types.ail b/world/types.ail
+index 5883d348..d05f3dde 100644
+--- a/world/types.ail
++++ b/world/types.ail
+@@ -36,6 +36,7 @@ export type EvidenceGrade
+   | TESTED
+   | ATTESTED
+   | CLAIMED
++  deriving (Eq)
+ 
+ -- Canonical grading for the ratified five-constructor representation.
+ -- No current Evidence constructor has authority to mint PROVEN.
+@@ -150,6 +151,7 @@ export type TimeoutOutcome
+   = ResolveRejectedTimeout
+   | EscalateWithNewDeadline
+   | ExecuteUnderPriorAuthority
++  deriving (Eq)
+ 
+ -- The frozen v1 decision packet (HUMAN-SURFACE §7 point 3), semantic ID
+ -- world/decision-packet/v1. References, not embeds: proposalHash reaches

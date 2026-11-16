@@ -1,0 +1,149 @@
+# gates.sh planner run — iteration 393 row 260
+# proof tree: fresh worktree /tmp/i393-planner-proof at cbcf80fb; git apply M1.patch (run 1, mode m1), then git apply M2.patch (run 2, mode m2)
+# patched-tree diff sha (git diff cbcf80fb --binary | shasum): f06545bf3e0c2c9346ff619d19c32224653b8317
+
+## run 1: GATES_SKIP_VERIFY_GO=1 bash gates.sh /tmp/i393-planner-proof /tmp/i393-gates-m1 m1  (M1 only)
+tree=/tmp/i393-planner-proof head=cbcf80fb mode=m1 base=cbcf80fb dirty_files=14
+LEG AC1_verify_ail_v0604 rc=0 11s notice=yes
+LEG AC2_verify_ail_pin rc=0 25s notice=no
+LEG AC3_per_file_counts rc=0 1s 8/8 OK
+LEG AC4_kernel_contracts rc=0 2s 
+LEG gofmt rc=0 0s files=2
+LEG AC5_go_build rc=0 1s 
+LEG AC5_go_vet rc=0 1s 
+   ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	22.757s
+   ok  	github.com/sunholo-data/ailang-world/host/broker	199.022s
+   ok  	github.com/sunholo-data/ailang-world/host/pkgproj	12.932s
+   ok  	github.com/sunholo-data/ailang-world/host/runbook	1.304s
+   ok  	github.com/sunholo-data/ailang-world/host/replay	12.712s
+   ok  	github.com/sunholo-data/ailang-world/host/verifygate	155.967s
+   ok  	github.com/sunholo-data/ailang-world/host/pins	0.350s
+LEG AC5_go_test_7pkgs rc=0 409s 7/7 ok
+LEG AC6_identity rc=0 1s 13/13 OK
+LEG AC7_history rc=0 0s 
+LEG verify_go SKIPPED (GATES_SKIP_VERIFY_GO=1)
+GATES_DONE mode=m1 452s FAILS: none
+
+### AC3
+AILANG v0.60.4 world/types.ail passed=True verified=6/6 statuses=['verified'] OK
+AILANG v0.60.4 world/contracts.ail passed=True verified=5/5 statuses=['verified'] OK
+AILANG v0.60.4 world/transitions.ail passed=True verified=3/3 statuses=['verified'] OK
+AILANG v0.60.4 world/logepoch.ail passed=True verified=2/2 statuses=['verified'] OK
+AILANG v0.41.0 world/types.ail passed=True verified=6/6 statuses=['verified'] OK
+AILANG v0.41.0 world/contracts.ail passed=True verified=5/5 statuses=['verified'] OK
+AILANG v0.41.0 world/transitions.ail passed=True verified=3/3 statuses=['verified'] OK
+AILANG v0.41.0 world/logepoch.ail passed=True verified=2/2 statuses=['verified'] OK
+### AC6
+OK   contentHash == design value sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c
+OK   interfaceHash == base sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083
+OK   interfaceHashV2 == base sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8
+OK   golden version 0.1.2 0.1.2
+OK   golden compilerVersion unchanged AILANG v0.41.0
+OK   manifest version 0.1.2 0.1.2
+OK   manifest [release] kind feature feature
+OK   dry-run rc 0 0
+OK   dry-run Publishing world/core@0.1.2... 
+OK   dry-run contracts 16/16 verified 
+OK   dry-run changelog_section true 
+OK   dry-run no gates 
+OK   dry-run full contentHash equals golden 
+### AC7
+OK   host/broker/testdata + host/replay/testdata unchanged vs cbcf80fb
+OK   CHANGELOG ## 0.1.1 and ## 0.1.0 byte-identical (2751 bytes)
+OK   newest section: ## 0.1.2 — 2026-11-16
+
+## run 2: bash gates.sh /tmp/i393-planner-proof /tmp/i393-gates-m2 m2  (M1+M2)
+tree=/tmp/i393-planner-proof head=cbcf80fb mode=m2 base=cbcf80fb dirty_files=18
+LEG AC1_verify_ail_v0604 rc=0 11s notice=no
+LEG AC2_verify_ail_pin rc=0 25s notice=no
+LEG AC3_per_file_counts rc=0 0s 8/8 OK
+LEG AC4_kernel_contracts rc=0 2s 
+LEG gofmt rc=0 0s files=3
+LEG AC5_go_build rc=0 1s 
+LEG AC5_go_vet rc=0 1s 
+   ok  	github.com/sunholo-data/ailang-world/cmd/world-publish	22.622s
+   ok  	github.com/sunholo-data/ailang-world/host/broker	200.648s
+   ok  	github.com/sunholo-data/ailang-world/host/pkgproj	12.816s
+   ok  	github.com/sunholo-data/ailang-world/host/runbook	1.321s
+   ok  	github.com/sunholo-data/ailang-world/host/replay	12.625s
+   ok  	github.com/sunholo-data/ailang-world/host/verifygate	153.553s
+   ok  	github.com/sunholo-data/ailang-world/host/pins	0.319s
+LEG AC5_go_test_7pkgs rc=0 407s 7/7 ok
+LEG AC6_identity rc=0 0s 13/13 OK
+LEG AC7_history rc=0 0s 
+LEG M2_pins_row rc=0 0s 
+LEG verify_go_plain rc=1 346s --- FAIL: TestMarketingSupervisorFakeDaemonCleanup (41.81s) FAIL FAIL	github.com/sunholo-data/ailang-world/scripts/marketingcheck	136.343s FAIL 
+GATES_DONE mode=m2 793s FAILS: verify_go_plain
+
+### AC1 (v0.60.4) tail
+   ✓ plan → verify → commit smoke completed within 30s
+── World package step 7/9: dry-run identity and full pkgproj hashes
+   ✓ dry-run identity/exports/effects and 3 full hashes agree; tarball byte length agrees
+── World package step 8/9: exact tar entry allowlist
+   cache control fired on 46 non-.ail file(s); observed zero cached .ail files
+   ✓ tar contains exactly 7 allowlisted entries
+── World package step 9/9: canonical ready-packet golden
+   ✓ compiler pinned by exact bytes: AILANG v0.41.0 on Darwin/arm64
+   ✓ canonical JSON equals committed golden byte-for-byte
+✓ world package gate PASSED: 9/9 steps performed non-zero work
+PUB011 ratchet passed: uncontracted_exports=3
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
+### AC2 (v0.41.0) key lines
+   ✓ 16/16 required world/ identities verified across 24 module(s)
+   ✓ all 138 execargs sketch named tests pass
+   ✓ all 40 required named tests pass (failed_tests=0)
+   ✓ all 503 se-tools named tests pass across 10 modules
+✓ world package gate PASSED: 9/9 steps performed non-zero work
+PUB011 ratchet passed: uncontracted_exports=3
+✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass
+### AC3
+AILANG v0.60.4 world/types.ail passed=True verified=6/6 statuses=['verified'] OK
+AILANG v0.60.4 world/contracts.ail passed=True verified=5/5 statuses=['verified'] OK
+AILANG v0.60.4 world/transitions.ail passed=True verified=3/3 statuses=['verified'] OK
+AILANG v0.60.4 world/logepoch.ail passed=True verified=2/2 statuses=['verified'] OK
+AILANG v0.41.0 world/types.ail passed=True verified=6/6 statuses=['verified'] OK
+AILANG v0.41.0 world/contracts.ail passed=True verified=5/5 statuses=['verified'] OK
+AILANG v0.41.0 world/transitions.ail passed=True verified=3/3 statuses=['verified'] OK
+AILANG v0.41.0 world/logepoch.ail passed=True verified=2/2 statuses=['verified'] OK
+### AC4 tail
+invalid base: rc=1; contract quality gate: cannot resolve ratchet base nosuchref; no traceback; PASS
+pre-checker base: ratchet monotonic: 3 -> 3; rc=0; PASS
+world contract history controls PASSED
+### gofmt
+changed go files:
+cmd/world-publish/fences.go
+host/pins/manifest_test.go
+host/pkgproj/dryrun_shapes_test.go
+gofmt -l:
+
+### AC6
+OK   contentHash == design value sha256:359a82fde07d8e9004786448da37ea3fb07cdc256682efc0fa57240df3c4a72c
+OK   interfaceHash == base sha256:d16cc88270ff4c4eaaa583e644d3ea30e2e4b2e36f95fd7108d920046cdb4083
+OK   interfaceHashV2 == base sha256:ifacev2:b25fe03155db0c7bf595cf730295b945d6ac64ec415a1998fae8a693d621e8d8
+OK   golden version 0.1.2 0.1.2
+OK   golden compilerVersion unchanged AILANG v0.41.0
+OK   manifest version 0.1.2 0.1.2
+OK   manifest [release] kind feature feature
+OK   dry-run rc 0 0
+OK   dry-run Publishing world/core@0.1.2... 
+OK   dry-run contracts 16/16 verified 
+OK   dry-run changelog_section true 
+OK   dry-run no gates 
+OK   dry-run full contentHash equals golden 
+### AC7
+OK   host/broker/testdata + host/replay/testdata unchanged vs cbcf80fb
+OK   CHANGELOG ## 0.1.1 and ## 0.1.0 byte-identical (2751 bytes)
+OK   newest section: ## 0.1.2 — 2026-11-16
+### verify_go_plain run 2 failure (scripts/marketingcheck, untouched by this diff)
+188:--- FAIL: TestMarketingSupervisorFakeDaemonCleanup (41.81s)
+189:    --- FAIL: TestMarketingSupervisorFakeDaemonCleanup/shell-hup (35.01s)
+190-        supervisor_test.go:706: hangup trap must exit 129 after supervised cleanup: signal: killed
+191-        supervisor_test.go:710: shell trap cleanup exceeded bound: 28.990572333s
+192-        supervisor_test.go:716: shell wait daemon must be dead after bounded cleanup (pid 72549)
+193-a                                      ACCEPT regions=17
+
+## classification of the verify_go red
+isolated: go test -count=1 ./scripts/marketingcheck/ -run '^TestMarketingSupervisorFakeDaemonCleanup$' -v  -> rc=0, --- PASS (5.34s), all 9 subtests incl. shell-hup's siblings; load avg 2.89
+full re-run of the leg (manual, recorded): VERIFY_GO_LEGS=plain AILANG_BIN=$PIN WORLD_PKG_AILANG_BIN=$PIN env -u AILANG_REGISTRY_API_KEY ./scripts/verify_go.sh
+verify_go rerun rc=0 345s; 62 ok lines; 0 FAIL lines
+✓ go gate PASSED (plain): build clean; legs run pass with pinned AILANG_BIN (AILANG v0.41.0
