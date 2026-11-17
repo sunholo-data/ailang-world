@@ -29,7 +29,7 @@ func TestSurfaceVerbOutcomes(t *testing.T) {
 		{"world session", "address", "address", "", "", "", ""},
 		{"world get", "address", "address", "", "", "", ""},
 		{"world episode", "address", "address", "", "", "", ""},
-		{"why", "terminal", "read", "why", "ailang-worldd why", "", "why reads World"},
+		{"why", "refused", "read", "why", "ailang-worldd why", "", "ailang-worldd why: a target is required"},
 		{"episode finish w1 --preset p", "terminal", "mutate", "episode finish", "ailang-worldd episode finish w1 --preset p", "", "changes World"},
 		{"episode start w1", "terminal", "mutate", "episode start", "ailang-worldd episode start w1", "", "changes World"},
 		{"episode launch w1 --preset p", "terminal", "host", "episode launch", "ailang-worldd episode launch w1 --preset p", "", "needs a host process"},
@@ -76,7 +76,7 @@ func TestSurfaceVerbOutcomes(t *testing.T) {
 	for _, q := range []string{"row-189@6", "world shared@0ffbb9c", "back", "world why", "why", "log", "world session",
 		"ailang-worldd world get world-1", "episode", "world episode", "world a b c", "episode finish w1 --preset p",
 		"approve mr-0123456789abcdef", "approve " + ref, "episode report nobody", "episode report w1", "episode report w1 --json",
-		strings.Repeat("x", verbs.MaxLine+1)} {
+		strings.Repeat("x", verbs.MaxLine+1), "why 2", "why head --json", "why 9", "why --result f"} {
 		_, raw := verbGet(a, q)
 		golden[q] = raw
 	}

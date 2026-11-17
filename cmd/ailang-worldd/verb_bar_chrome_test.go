@@ -17,7 +17,7 @@ import (
 )
 
 // XV1: `episode report w1` typed into #addr shows the CLI's own bytes in the verb panel and clears the
-// bar; `why` shows its CLI line; `log` is refused in the panel with its CLI line (V2b A3); `world a b c`, a refusal
+// bar; `why` and `log` are refused in the panel with their CLI lines (V2b A3); `world a b c`, a refusal
 // with no CLI line, is said in the header, the bar and the place kept.
 func TestVerbBarEpisodeReportInChrome(t *testing.T) {
 	b := startPasskeyBrowser(t)
@@ -64,7 +64,7 @@ func TestVerbBarEpisodeReportInChrome(t *testing.T) {
 		t.Fatalf("after episode report: %+v", state)
 	}
 	enter("why")
-	if got := panel("At a terminal: ailang-worldd why"); !strings.HasPrefix(got, "why reads World") {
+	if got := panel("a target is required"); got != "ailang-worldd why: a target is required" {
 		t.Fatalf("why shows %q", got)
 	}
 	read()
