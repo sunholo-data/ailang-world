@@ -1,10 +1,14 @@
 # w-world-address-bar-verbs-v3: confirm `episode finish` with an enrolled key on the surface
 
-- **Status**: Planned **r0**. Designed in iteration 399, 2026-11-17. Child of
+- **Status**: Planned **r1**. Designed in iteration 399, 2026-11-17. r0 (`674fd735`) was
+  **BLOCKED** at quorum round 1 (gemini-4-argon PASS; oc-glm-5-3 and oc-kimi-k3 REJECT; gpt6-1-sol
+  absent on quota). r1 applies the three fixes the controller listed and nothing else; changed text
+  is marked **[r1]**; §15 records each objection and its disposition. Child of
   [`w-world-address-bar-verbs.md`](w-world-address-bar-verbs.md) (r2, reviewed), queue row **243**,
   parent phase **V3**. V1 (PR #582) and V2 (V2a PR #585, V2b PR #587, merge `c251132f`) are landed
   and are the code this design measures. This doc carries **eight explicit amendments** (§0.3), one
-  ledger ask, **D-WORLD-118** (§10), and splits V3 into **five sprints** (§8).
+  ledger ask, **D-WORLD-118** (§10), and splits V3 into **six sprints** (§8) **[r1]**, of which only
+  the first two — which touch no store schema — are built before the answer.
 - **Authority**: **D-WORLD-107 = A** (the bar "shows the CLI's prompt, and is confirmed by row 201's
   key approval, never a typed y from a page"). **D-WORLD-109 = A** (the loop builds and judges
   against fakes and test keys only; never enrols a real key, mints or publishes). **D-WORLD-89**
@@ -18,10 +22,11 @@
   **real post-commit prompt bytes**, bound with the canonical argv, the finish scope, the title and
   the full body. The typed `y` is unchanged without the flag. `episode start` is **not** in V3 (P5).
 - **Designer lane**: `claude:claude-opus-5-5`.
-- **Estimated**: **five sprints, ≈ 4,600 raw / ≈ 6,000 calibrated changed lines** (`git diff
+- **Estimated** **[r1]**: **six sprints, ≈ 4,900 raw / ≈ 6,500 calibrated changed lines** (`git diff
   --numstat -- cmd host docs`), each sprint planned ≤ 1,000 raw so that it lands ≤ 1,400 at the
   measured 1.35× (V2a planned ≈ 970, landed 1,299; V2b ≈ 930 → 1,255; W31). The parent's ≈ 4,500
-  holds as a raw number; the calibration and the 1,400 cap make it five sprints, not 2–3 (§8).
+  holds roughly as a raw number; the calibration, the 1,400 cap and r1's gating of the schema
+  behind the answer make it six sprints, not 2–3 (§8).
 - **Measurement base**: `994ba12358dc50246db2862d78f66d64e03b29f4` (origin/dev, PR #588's merge;
   `cmd/` and `host/` byte-identical to V2b's merge `c251132f`, W1), worktree
   `/Users/voightkampff/dev/sunholo-data/.wt-world-iter399-row243-v3`, branch
@@ -64,7 +69,8 @@ verified key (typed `y` unchanged at a terminal); 2–3 sprints ≈ 4,500". Seve
 - **P4 — "credentials schema 9": holds.** The store is at 8 (`credentials.go:44`, ladder to `< 8`,
   `:375`; no `verb_requests` anywhere, control `key_decisions` found) (W17). Neither existing
   request table can hold another id shape: both `mint_requests` and `surface_approvals` CHECK
-  `request_id GLOB 'mr-[0-9a-f]*'` (W18). V3 adds exactly one table, so schema **9**.
+  `request_id GLOB 'mr-[0-9a-f]*'` (W18). V3 adds exactly one table, so schema **9**. **[r1]** It lands
+  only after D-WORLD-118 is answered A or B: older binaries refuse a newer store (W53, W54; §2.4).
 - **P5 — "`episode start` gains a confirm-on-surface mode": already covered for mints, and the gap
   is V4's.** `episode start --request` stores a mint request that the A3a card approves with a key
   and `approve --await` mints (parent §0.1 P4) — D-WORLD-89 R1 already authorises keys for mints
@@ -79,8 +85,8 @@ verified key (typed `y` unchanged at a terminal); 2–3 sprints ≈ 4,500". Seve
   carries the scope, the title, the **full** body, the committer and the protected paths as well,
   and the daemon refuses a request whose prompt is not exactly the terminal's rendering of those
   fields (§2.2).
-- **P7 — "2–3 sprints ≈ 4,500": the raw total holds; the count does not.** §8 measures ≈ 4,600 raw,
-  five sprints under the 1,400 cap at 1.35× (W31).
+- **P7 — "2–3 sprints ≈ 4,500": the raw total roughly holds; the count does not.** §8 measures
+  ≈ 4,900 raw **[r1]**, six sprints under the 1,400 cap at 1.35× (W31).
 
 ### 0.2 What V3 changes from a page
 
@@ -94,7 +100,7 @@ for a `y`, and the CLI process — not the daemon, not the page — commits, pus
 
 | # | doc and text | amended to | why |
 |---|---|---|---|
-| **AM1** | parent §0.3 V3 row: "`episode finish` and `episode start` gain a 'confirm on the surface' mode"; "A4's judges"; "2–3 sprints ≈ 4,500" | **`episode finish` only**; A3a-shaped judges over a new message (`world-verb/v1`); **five sprints ≈ 4,600 raw / ≈ 6,000 calibrated** | P5 (start is covered for mints; its launch-preset gap is V4's); P3; P7 |
+| **AM1** | parent §0.3 V3 row: "`episode finish` and `episode start` gain a 'confirm on the surface' mode"; "A4's judges"; "2–3 sprints ≈ 4,500" | **`episode finish` only**; A3a-shaped judges over a new message (`world-verb/v1`); **six sprints ≈ 4,900 raw / ≈ 6,500 calibrated [r1]** | P5 (start is covered for mints; its launch-preset gap is V4's); P3; P7 |
 | **AM2** | parent §12 Q3 default: "one approval over the exact prompt bytes from a preview, with the run refusing if its prompt differs" | **commit-then-approve**: the key approves the real prompt after the commit, where the `y` sits today | P1: a preview's sha and body never equal the real ones (W7–W9); §2.1 |
 | **AM3** | parent RK3: "V3 must choose intent-approval or a preview-bound approval" | the third option, commit-then-approve, chosen; "commit kept at <sha>" on decline, expiry or supersession; a re-run resumes | §2.1 |
 | **AM4** | parent §10 step 4: "the app shows `finishPrompt`'s lines … he approves with his key" | holds, on `/surface/confirm/<id>`; **plus**: the preset's pinned checks must all be sandboxed, or surface mode refuses before any check runs | P2, RV3 |
@@ -109,10 +115,9 @@ is not edited; D-WORLD-118 is a new row (§10).
 
 ### 0.4 Where V3 stops and V4 starts
 
-- **V3**: the CLI runs **at a terminal** (finish's F1 — "no controlling terminal" refusal before any
-  IO, `episode_finish.go:85-88`, W2 — is **kept**); with `--confirm-on-surface` it stores a request,
-  prints its card's links, waits up to 10 minutes, and opens the PR after the daemon has recorded a
-  key's confirmation. The bar answers `terminal` for `episode finish`.
+- **V3**: the CLI runs **at a terminal** (F1, `episode_finish.go:85-88`, W2, is **kept**); it stores a
+  request, prints its card's links, waits up to 10 minutes, and opens the PR after a key's
+  confirmation. The bar answers `terminal` for `episode finish`.
 - **V4**: who runs that CLI process with no terminal (relaxing F1 for surface mode only, parent Q4);
   launching it from the bar; `episode start` with a launch preset (the minter's start record and
   launch, P5); handing interactive launches to herdr; per-check confirmation of unsandboxed checks
@@ -181,6 +186,8 @@ is not edited; D-WORLD-118 is a new row (§10).
    `decisions` (`approve_model.go:67-72`) (W50). `host/verbs` may import only a pure set
    (`surface_verb_test.go:151`) (W46). The CLI's `approve` dispatches a `sha256:` ref to the decide
    mode and everything else to the mint path (`approve.go:228`) (W40).
+8. **[r1]** The objects read-back (W55, W56), A4's writer hold (W57) and its world-write retry (W58)
+   are quoted where they are used (§2.6, §2.7).
 
 ## 2. Design
 
@@ -282,19 +289,26 @@ func (s *SignedVerb) Binds(digest, challenge [32]byte, expiry int64) error
 func (s *SignedVerb) ApprovedBy() string                          // format ":" name; "" unless verified
 func (s *SignedVerb) Use() (name, format string, key []byte, ok bool)
 func (s *SignedVerb) PasskeyUse() (credentialID []byte, signCount uint32, ok bool)
+func CheckConfirmation(in VerbCheckInput) (*SignedVerb, error)    // [r1] NEW: the CLI's re-check, below
 ```
 
 W15 runs **in full** in the law (the mint path's rule): the counter moves inside the consume
-(§2.4), and a crashed consume is not retried with the same artifact (RV2), so A4's deferred-W15
-two-path judge is not needed.
+(§2.4), which runs only **after** the world write, so a retry of the same artifact after a failed
+write still passes W15 (§2.6) and A4's deferred-W15 two-path judge is not needed.
 
-**`host/authority/judge_verb.go`** (NEW): `JudgeVerbSSH(ctx, ro, row store.VerbRequestRow, armored,
-now)` and `JudgeVerbAssertion(ctx, ro, row, response, now)`, `judge.go`'s steps and `*JudgeError`
-step names (parse, store, unknown-key, stored-key, law) so texts are shared; a
-`judgeVerbAdmit(row, now)` mirrors `judgeAdmit` (`judge.go:49`).
+**[r1] `CheckConfirmation`** (the CLI's re-check, §2.7 step 6) is that law minus P1 (the row is
+consumed by then) and W15 (the counter was judged at C11 and moved once in C15), over
+`VerbCheckInput{Digest, Challenge [32]byte; Expiry, Now int64; Artifact []byte; Format string;
+Approver Approver}` — as A4's `DecideByAssertion` runs W1–W14 without W15 (`decision_signed.go:79-84`, W60).
 
-**`broker.FinishConfirmRefusal(f FinishConfirmFacts) string`** (NEW, pure, `host/broker`), the
-daemon's step C10 (§2.6), "" when admissible:
+**`host/authority/judge_verb.go`** (NEW): `JudgeVerbSSH(ctx, ro, in VerbJudgeInput, armored)`,
+`JudgeVerbAssertion(ctx, ro, in, response)` and **[r1]** `RecheckVerb(ctx, ro, in, artifact)` (calls
+`CheckConfirmation`), with `VerbJudgeInput{Digest, Challenge, BytesDigest [32]byte; CreatedAt,
+ExpiresAt, Now int64; Consumed bool}` (NEW; primitives, so sprint 1 needs no store type); the
+approver is looked up as `judge_decision.go:31`, `:58` do, with `judge.go`'s `*JudgeError` steps.
+
+**`broker.FinishConfirmRefusal(f FinishConfirmFacts) string`** (NEW, pure, `host/broker`; built in
+sprint 3 **[r1]**, beside its only caller's store), the daemon's step C10 (§2.6), "" when admissible:
 
 | id | refused when | reason |
 |---|---|---|
@@ -305,7 +319,22 @@ daemon's step C10 (§2.6), "" when admissible:
 | F5 | `f.Prompt ≠ FinishPromptText(scope, f.Title, f.Body, f.Protected, f.Committer)` | "the prompt is not the terminal's rendering of what is approved" |
 | F6 (B only) | `!scope.Draft` | "D-WORLD-118 = B: a ready pull request is confirmed with a typed y" |
 
-### 2.4 The store: credentials schema 9 `verb_requests` (sprint 2)
+### 2.4 The store: credentials schema 9 `verb_requests` (sprint 3 **[r1]**; only under A or B)
+
+**[r1] The schema waits for the answer (option (ii)).** A binary refuses a store newer than its
+constant (`known := version >= credentialsSchemaV1 && version <= credentialsSchemaVersion`,
+`credentials.go:320`; `"user_version %d is newer than this binary's %d; use a compatible binary"`,
+`:341-342`, W53), and `serve` upgrades the real store at start (`daemon.go:813` →
+`ensureCredentialsStore` → `store.UpgradeCredentials`, `host/daemon/credentials.go:59-66`, W54). Once
+a v9 daemon has served Mark's store, reverting the constant would strand it. Option (i), a v10 drop
+under C, keeps it usable but leaves a two-version detour for a feature that never shipped. Option
+(ii) avoids it: **no sprint before the answer touches a store schema** (sprints 1–2 are the pure law
+and a page tested against fixtures, ≈ 1,760 raw, §8 — not vacuous), so C removes code only. A later
+reversal of an A/B answer would take (i)'s form, never a constant revert. **Version skew** (this rig
+runs several worktrees' binaries): a pre-v9 binary refuses a v9 store at open with the `:341-342`
+text — loud, never a silent read; a v9 binary opens a v8 store and refuses only the verb-request
+features with `OlderCredentialsStoreError{Feature: "verb requests", Need: 9}` (the per-feature
+pattern, `mint_requests.go:103`, W54) until a v9 `serve` restarts — A2's R6 cost, as for 6–8.
 
 ```sql
 -- Verb requests (version 9, row 243 V3). One stored request per `episode finish
@@ -325,8 +354,7 @@ CREATE TABLE IF NOT EXISTS verb_requests (
     artifact     BLOB CHECK (artifact IS NULL OR length(artifact) BETWEEN 1 AND 16384),
     decision_ref TEXT CHECK (decision_ref IS NULL OR (length(decision_ref) = 71 AND decision_ref GLOB 'sha256:*')),
     CHECK ((consumed_at IS NULL) = (outcome IS NULL)),
-    CHECK ((outcome IS 'approved') = (approved_by IS NOT NULL AND artifact IS NOT NULL)),
-    CHECK (decision_ref IS NULL OR outcome IS 'approved')
+    CHECK ((outcome IS 'approved') = (approved_by IS NOT NULL AND artifact IS NOT NULL AND decision_ref IS NOT NULL))
 );
 ```
 
@@ -334,10 +362,10 @@ CREATE TABLE IF NOT EXISTS verb_requests (
 (after `:375`); the canonical-DDL test compares fresh and upgraded column for column, the A2/A3
 pattern. `host/store/verb_requests.go` (NEW):
 
-- `VerbRequestIDPattern = ^vr-[0-9a-f]{16}$`; `MaxPendingVerbRequests = 16`; sentinels
-  `ErrVerbRequestUnknown|Consumed|Superseded|Expired|ClockBehind|DigestChanged`,
-  `ErrTooManyPendingVerbRequests`, `ErrVerbDecisionLanded` (NEW; the mint sentinels' texts name
-  mint requests, `mint_requests.go:49-54`, W39).
+- `VerbRequestIDPattern = ^vr-[0-9a-f]{16}$`; `MaxPendingVerbRequests = 16`; `VerbRequestRow`;
+  sentinels `ErrVerbRequestUnknown|Consumed|Superseded|Expired|ClockBehind|DigestChanged`,
+  `ErrTooManyPendingVerbRequests` (NEW; the mint sentinels' texts name mint requests,
+  `mint_requests.go:49-54`, W39).
 - **`PutVerbRequest(ctx, row VerbRequestRow, now) error`**, one transaction: S1 deadline, below v9 →
   `*OlderCredentialsStoreError{Feature: "verb requests", Need: 9}`; S2 grammar (id, 64-hex digest
   and challenge, `digest == sha256(request)`, sizes); S3 **supersede**: `UPDATE … SET consumed_at =
@@ -345,21 +373,24 @@ pattern. `host/store/verb_requests.go` (NEW):
   rows expired a day ago; S5 cap → `ErrTooManyPendingVerbRequests`; S6 `INSERT`.
 - `VerbRequest(ctx, id)`, `PendingVerbRequests(ctx, now, limit)` (read-only, deadline-required).
 - **`ConsumeVerbRequest(ctx, id, digest string, use ApproverUse, approvedBy string, artifact []byte,
-  now) error`**, one transaction: re-read the row; `Admit`-order refusals (consumed → `Consumed` or
-  `Superseded` by `outcome`; clock behind; expired; digest); `useApprover` (approver still active,
-  bound by key); `usePasskey` when `use.Passkey != nil` (the counter moves here, exactly once);
-  `UPDATE … consumed_at, outcome = 'approved', approved_by, artifact`.
-- **`LandVerbDecision(ctx, id, decisionRef) error`**: `UPDATE … SET decision_ref = ? WHERE request_id
-  = ? AND outcome = 'approved' AND decision_ref IS NULL`; zero rows → `ErrVerbDecisionLanded`.
+  decisionRef string, now) error`** **[r1]**, one transaction, run **after** the world write (§2.6):
+  re-read the row; `Admit`-order refusals (consumed → `Consumed` or `Superseded` by `outcome`; clock
+  behind; expired; digest); `useApprover` (approver still active, bound by key); `usePasskey` when
+  `use.Passkey != nil` (the counter moves here, exactly once); `UPDATE … consumed_at, outcome =
+  'approved', approved_by, artifact, decision_ref`. Consumed and linked are one write, so no row is
+  ever consumed without its decision (r0's `LandVerbDecision` is gone).
 
-The CLI writes (Put) with a short non-waiting writer; the daemon writes (Consume, Land) with a
-short non-waiting writer per POST; both read through `OpenCredentialsReadOnly`.
+The CLI writes (Put) with a short non-waiting writer; the daemon writes (Consume) with a short
+non-waiting writer per POST; both read through `OpenCredentialsReadOnly`.
 
-### 2.5 The read routes and the card (sprints 2–3; read-only)
+### 2.5 The read routes and the card (page: sprint 2, against fixtures; routes: sprint 3 **[r1]**)
 
-All behind `d.approvalRoute` (R2's 421, `surface_approve.go:76`), `no-store`, `nosniff`:
+All behind `d.approvalRoute` (R2's 421, `surface_approve.go:76`), `no-store`, `nosniff`. **[r1]**
+Sprint 2 builds the page and the pure `surfacepage.ConfirmationCard(in ConfirmationInput, passkeys
+[]CardPasskey)` (NEW; primitives, no store type; `CardPasskey` is A3a's, `approve_model.go:132`)
+that emits the data JSON, tested with fixtures; it registers no route and reads no store.
 
-- **`GET /surface/confirmations/{id}`** (NEW, sprint 2; `{id}` ≠ `VerbRequestIDPattern` → 400;
+- **`GET /surface/confirmations/{id}`** (NEW, sprint 3; `{id}` ≠ `VerbRequestIDPattern` → 400;
   unknown → 404; store below v9 → 503 naming the `serve` restart):
   ```json
   {"v":1,"id":"vr-…","request":"<base64url canonical bytes>","digest":"<64 hex>","challenge":"<64 hex>",
@@ -374,22 +405,23 @@ All behind `d.approvalRoute` (R2's 421, `surface_approve.go:76`), `no-store`, `n
   the stored bytes; a row that does not decode, or whose bytes' SHA-256 is not its digest, is listed
   with `"refused":"<reason>"` and no summary (A3's never-hidden rule); below v9 →
   `"confirmationsUnavailable":"<reason>"`, other lists unchanged.
-- **`GET /surface/confirm/{id}` + `GET /surface/confirm.js`** (NEW, sprint 3; embedded
-  `host/surfacepage/confirm/{index.html,confirm.js}` as `approve.go:13-18` embeds A3a's; unchanged
-  `surfaceCSP`). `confirm.js`: (1) fetch the data (10 s `AbortController`, A3 §2.7's rule); (2)
-  `SHA-256(bytes) == digest` or fail closed; (3) decode the bytes by one table `CONFIRM_FIELDS`
-  (`schema`, `verb`, `argv`, `episode`, `prompt`, `scope`, `title`, `body`, `committer`,
-  `protected`, with types): an unlisted key, a missing key or a wrong type → "a field the page cannot
-  show; confirm at the terminal"; (4) render §2.2's layout with `textContent` only; (5) build the
-  86-byte message and its hash **in the page**; (6) sprint 3 offers **Save the message** (a `blob:`
-  `world-verb-<id>.msg`) and the line `ssh-keygen -Y sign -n world-verb@sunholo -f <key>
+- **`GET /surface/confirm/{id}` + `GET /surface/confirm.js`** (NEW; code sprint 2, routes sprint 3;
+  embedded `host/surfacepage/confirm/{index.html,confirm.js}` as `approve.go:13-18` embeds A3a's;
+  unchanged `surfaceCSP`). `confirm.js`: (1) fetch the data (10 s `AbortController`, A3 §2.7's
+  rule); (2) `SHA-256(bytes) == digest` or fail closed; (3) decode the bytes by one table
+  `CONFIRM_FIELDS` (`schema`, `verb`, `argv`, `episode`, `prompt`, `scope`, `title`, `body`,
+  `committer`, `protected`, with types): an unlisted key, a missing key or a wrong type → "a field
+  the page cannot show; confirm at the terminal"; (4) render §2.2's layout with `textContent` only;
+  (5) build the 86-byte message and its hash **in the page**; (6) offer **Save the message** (a
+  `blob:` `world-verb-<id>.msg`) and the line `ssh-keygen -Y sign -n world-verb@sunholo -f <key>
   world-verb-<id>.msg`; a state other than `pending` shows that state and no controls.
 - **Sprint 4** adds the submit half (§2.6): **Approve with a passkey** (`navigator.credentials.get`,
   `challenge = VerbMessageHash`, UV required, `allowCredentials` from `passkeys`, A2's 240 s abort)
   and the SSHSIG paste box; the answer's `approvedBy`/`decision` or its refusal class and reason;
-  then re-read. `confirm.js` repeats A3's encoding helpers (≈ 40 lines), as `decide.js` did.
-- **app.js** *Needs you* (sprint 3) lists each confirmation under the decisions: "Confirm · episode
-  finish <ep> · <repository> <head>@<sha12> · draft|ready · expires hh:mm" linking to
+  then re-read; after a 500 the state is still `pending` and the controls return (§2.6).
+  `confirm.js` repeats A3's encoding helpers (≈ 40 lines), as `decide.js` did.
+- **app.js** *Needs you* (sprint 6 **[r1]**) lists each confirmation under the decisions: "Confirm ·
+  episode finish <ep> · <repository> <head>@<sha12> · draft|ready · expires hh:mm" linking to
   `/surface/confirm/<id>`; a refused row shows its reason and no link; all text through `esc()`.
 
 ### 2.6 `POST /surface/confirm/{id}`: the confirmation (sprint 4; only under A or B)
@@ -412,15 +444,35 @@ with `typed`, `y` or any other key is refused by the strict decoder (C6).
 | C10 | `DecodeVerb` + `Validate` + `broker.FinishConfirmRefusal` (§2.3 F1–F5; F6 under B) | 409 `NotConfirmable` |
 | C11 | the law: `JudgeVerbSSH` / `JudgeVerbAssertion` (unknown key, revoked, bad signature, namespace, origin, RP hash, UV, counter) | 422 `NotApproved` |
 | C12 | `signed.Binds(digest, challenge, expires_at)` | 422 |
-| C13 | `store.OpenCredentials` non-waiting: busy → 503 `Busy` + `Retry-After: 1`; below v9 → 503 `Restart` | 503 |
-| C14 | `ConsumeVerbRequest` (single use; approver re-checked; counter moved) | 409 race / 422 approver changed or counter |
-| C15 | `broker.RecordOperatorApproval(ctx, d.store, r.Scope, "operator:episode-finish", signed.ApprovedBy(), now)` — **unchanged** (W6) | 500 (row stays consumed, no decision: RV2) |
-| C16 | `LandVerbDecision(id, decision)`; close the writer | 500 (decision exists, row unlinked: RV2) |
+| C13 | `store.OpenCredentials` non-waiting, **before** any write: busy → 503 `Busy` + `Retry-After: 1`; below v9 → 503 `Restart` | 503 |
+| C14 **[r1]** | `broker.RecordOperatorApproval(ctx, d.store, r.Scope, "operator:episode-finish", signed.ApprovedBy(), now)` — **unchanged** (W6) | 500; nothing consumed (the window below) |
+| C15 **[r1]** | `ConsumeVerbRequest(…, decision)`: single use, approver re-checked, counter moved, `decision_ref` set — one transaction; close the writer | 409 race / 422 approver changed or counter; 500 store error (the window below) |
 | ok | 200 `surfacepage.Confirmed(id, approvedBy, decision)` = `{"v":1,"confirmed":true,"request":id,"approvedBy":…,"decision":"sha256:…","next":"the waiting episode finish opens the pull request"}` | |
 
-The writer is held across one credentials transaction, one world write and one more credentials
-transaction — A4's own bound (A4 §2.7). `TestDaemonCredentialWriterSites` gains
-`handleSurfaceConfirm` (AM8). Placement: `host/daemon/surface_confirm.go` (NEW).
+**[r1] The writer's hold, as A4's code holds it**: `keyArm` opens the non-waiting writer
+(`surface_decide_key.go:66`) and returns it (`:90`); `handleSurfaceDecide`, under `humanMu`
+(`surface_decide.go:186-187`), defers its `Close` (`:211`) across `broker.DecideApproval` (`:216`)
+and `LandKeyDecision` (`:222`) (W57). V3 holds its writer across C14 and C15 the same way.
+`TestDaemonCredentialWriterSites` gains `handleSurfaceConfirm` (AM8). Placement:
+`host/daemon/surface_confirm.go` (NEW).
+
+**[r1] Two stores, not atomic; every window retryable.** A4 writes its evidence first and recovers
+a failed world write by retrying the identical body (W58), which needed its deferred-W15 judge. V3
+writes the world first, then consumes and links in **one** credentials transaction, so the counter
+has not moved when a retry arrives and the plain W15 law admits the same artifact again:
+
+| crash or failure | state left | what the user sees | recovery | test |
+|---|---|---|---|---|
+| before C14 (incl. C13 busy) | nothing written | 503 or 500 on the card; state `pending`, controls back | approve again, or the page re-POSTs the same body → 200 | CX20 |
+| C14 fails | no decision; row pending | 500 "the confirmation did not complete; approve again" | as above | CX20 |
+| after C14, C15 fails or the daemon dies | one finish approval in the world store that no row names; the row **pending** | 500, or the card unreachable until restart; then `pending` | the same body (or a fresh gesture) → 200: a second decision, the row names it; the first is inert (RV1) | CX21 |
+| after C15 | done; the 200 may be lost | the card re-reads `approved` | none needed | CX17 |
+
+After a C14 that **succeeded**, a retry in the same Unix second builds the same request object (its
+wire carries `now`, W6): the same key gets the existing decision's ref back, another key
+`ErrApprovalAlreadyDecided` → 500, retryable a second later (`approve.go:219-226`, W59). No row is
+consumed without its decision (C15 writes both, CS6), and the CLI dispatches only on a row that
+names one, after its own re-check (§2.7 step 6).
 
 ### 2.7 The CLI: `episode finish … --confirm-on-surface` (sprint 5; only under A or B)
 
@@ -464,25 +516,40 @@ instead of a typed y; waits up to 10 minutes; the terminal is still required".
    `writeAwaitLinks`, `approve_await.go:29-58`);
 5. **wait** (`awaitVerbConfirmation`, NEW): every `awaitPollInterval` through `env.after`, one
    read-only open under its own 3 s root reading the row; the **wait ends at `expires_at +
-   verbLandGrace`** (`verbLandGrace = 10 s`, above the POST's 3 s `commitBudget`, W35). The tty is
-   **never read** in this mode;
-6. on `outcome = approved` with a `decision_ref`: read the decision and its request through
-   `GET /v1/objects/{ref}?payload=true` (`daemon.go:1113`; the client's existing object read,
-   `host/why/why.go:142`) and require `decision = approve`, `decidedBy == approved_by`, request
-   `effect = Human.Approve`, `requester = operator:episode-finish`, `scope == scopeText`; print
-   `confirmed by <approved_by> (decision <ref>)`; return the ref. The flow continues at `finishStep("approve")`
-   (`:418`), then the unchanged F6 re-check (`:423-430`), dispatch and record.
+   verbLandGrace`** (`verbLandGrace = 10 s`, above the POST's 3 s `commitBudget`, W35, so a POST
+   admitted just before expiry is seen). The tty is **never read** in this mode;
+6. **[r1]** on `outcome = approved` (C15 sets `decision_ref` with it), two checks before any push:
+   - **(a) independent of the daemon.** In the same read-only open, the row's `digest`, `challenge`
+     and `expires_at` must equal this process's own (steps 1–2); `authority.RecheckVerb` (§2.3)
+     verifies `row.Artifact` over `VerbMessage(own digest, own challenge, own expiry)` against the
+     enrolled key read from the credentials store, and `ApprovedBy()` must equal `row.ApprovedBy`.
+     A confirmation no key gave, or a signature over other bytes, fails here (CF6).
+   - **(b) the daemon recorded exactly this scope.** Through the existing
+     `worldReader{ctx: ctx, c: c}.object(ref)` (`why_cli.go:212`; the construction of
+     `episode_report.go:135`; finish holds `ctx` and `c`, `episode_finish.go:96`, `:102`) — that is
+     `why.Reader.Object`, `r.GetJSON("/v1/objects/"+url.PathEscape(ref)+"?payload=true", &o)`
+     (`host/why/why.go:142-145`), over `GET /v1/objects/{ref}` (`daemon.go:1113`; no credential,
+     W55), returning the raw `Payload []byte` (`why.go:66-70`, W56) — the CLI reads the decision
+     and its request and requires `decision = approve`, `decidedBy == approved_by`, `effect =
+     Human.Approve`, `requester = operator:episode-finish`, `scope == scopeText` (CF7). No new
+     client helper.
+   Then `confirmed by <approved_by> (decision <ref>)`; the flow continues at `finishStep("approve")`
+   (`:418`), the unchanged F6 re-check (`:423-430`), dispatch and record. **Stated trust:** (a)
+   trusts the enrolled keys in the credentials store, the root of every key path (typed enrolment,
+   R3); (b) trusts the daemon only to report its own store, as the record phase already does
+   (`host/daemon/episode_finish.go:186-195`) and as the typed path does today without reading back.
+   (a) does not prove passkey counter freshness (W15); only the daemon's C11 and C15 enforce it.
 
 **Who waits, and every way the wait ends** (the full table is §2.9 P1): approved → continue;
 expired → "no confirmation of request <id> by <t>"; superseded → "superseded by a newer finish of
-<ep>"; approved without a landed decision past the grace → "confirmed by <who> but its decision
-did not land"; a decision that does not approve this scope → "(F6)"; a store read error →
+<ep>"; **[r1]** a re-check failure → "the confirmation of request <id> does not verify: <reason>";
+a decision that does not approve this scope → "(F6)"; a store read error →
 "cannot read request <id>". Every refusal ends with "commit kept at <sha>" and `steps(sha)`, exits
 1, and dispatches nothing. **Ctrl-C** ends the process; the request stays pending until its expiry
 or the next run's supersession (RV1). **Daemon restart mid-wait**: the CLI polls the credentials
 store, not the daemon, so its wait is unaffected; the card is unreachable while the daemon is down
-and the wait may end at expiry; a POST cut by the restart either committed C14–C16 or left the row
-pending (C14 is one transaction), or left it consumed without a decision (RV2).
+and the wait may end at expiry; a POST cut by the restart leaves one of §2.6's window states, each
+of which the card can complete before the request expires **[r1]**.
 `TestProductionContextRoots` gains the put and the poll roots (W23).
 
 ### 2.8 The bar (sprint 5)
@@ -516,7 +583,7 @@ pending (C14 is one transaction), or left it consumed without a decision (RV2).
 | 16 pending | §2.7 3 | `ErrTooManyPendingVerbRequests`; commit kept | CF8 |
 | card confirms | §2.7 5–6 | "confirmed by webauthn:<name>"; then the PR URL | CF3, XC3 |
 | decision does not approve this scope | §2.7 6 | "(F6)"; nothing dispatched | CF7 |
-| approved, no decision after grace | §2.7 5 | "did not land"; commit kept | CF6 |
+| **[r1]** the re-check fails (digest/challenge/expiry not this process's; artifact does not verify; approver revoked; `approved_by` differs) | §2.7 6(a) | "does not verify: <reason>"; nothing dispatched; commit kept | CF6 |
 | superseded by a newer run | §2.7 5 | "superseded"; commit kept | CF5 |
 | expiry (+ grace) | §2.7 5 | "no confirmation … by <t>"; commit kept | CF4 |
 | a poll read fails | §2.7 5 | "cannot read request <id>"; commit kept | CF4 |
@@ -525,8 +592,9 @@ pending (C14 is one transaction), or left it consumed without a decision (RV2).
 | the typed path (no flag) | unchanged | today's prompt and `y` | all existing finish tests, unedited |
 
 **P5 — `POST /surface/confirm/{id}`**: each row of §2.6's table is one branch; each has its own
-test (CX0–CX16, §6). Two cross-cutting rows: a replayed artifact on the same request → C8 409
-(consumed); the same artifact on another request → C11/C12 422 (another digest and challenge).
+test (CX0–CX15, §6). Cross-cutting rows: a replayed artifact on the same request → C8 409
+(consumed); the same artifact on another request → C11/C12 422 (another digest and challenge);
+**[r1]** the crash windows are §2.6's table (CX20, CX21).
 
 **P4 — the card**
 
@@ -571,8 +639,9 @@ CLI `approve vr-…` → the card pointer (CB4). **P2/P3** (read routes) are §2
 | T6 a page submits `y` | there is no typed arm: `ParseApproveBody` is strict with exactly one key format (CX6); the CLI never reads the tty in this mode (CF3 asserts zero reads); the bar never runs finish (CB1) |
 | T7 CSRF, DNS rebinding, foreign Origin | R2 421 (`approvalRoute`), C3 Origin ∈ O, C4 `Sec-Fetch-Site`, C5 JSON (preflight; no CORS header is ever sent), C0 `Authorization`/`Cookie` 403 (CX0–CX5) |
 | T8 a signature over bytes the human was not shown | the page renders every field of the signed bytes through one table and fails closed (CP2); it checks the digest itself and builds the message itself (CP1, CP4); the daemon refuses a prompt that is not the terminal's rendering of the approved fields (C10 F5) |
-| T9 TOCTOU between confirmation and dispatch | the CLI re-reads the world decision and requires `scope == scopeText` (CF7); then the existing F6 re-check of HEAD, remote, title and body (`:423-430`); the record route re-checks the scope (`host/daemon/episode_finish.go:186-195`) |
-| T10 daemon restart | the request and the consume are SQLite rows; no in-memory state carries single use; a cut POST leaves either nothing or a consumed row (RV2) |
+| T9 TOCTOU between confirmation and dispatch | **[r1]** the CLI re-verifies the stored artifact over its own digest, challenge and expiry against the enrolled key (CF6), then re-reads the world decision and requires `scope == scopeText` (CF7); then the existing F6 re-check of HEAD, remote, title and body (`:423-430`); the record route re-checks the scope (`host/daemon/episode_finish.go:186-195`) |
+| T9b **[r1]** a daemon (bug or compromise) records a confirmation no key gave | CF6: the CLI's own re-check fails, nothing is pushed. Residual trust: the credentials store's enrolled keys (R3) and the daemon's counter check (§2.7 step 6) |
+| T10 daemon restart | the request and the consume are SQLite rows; no in-memory state carries single use; a cut POST leaves one of §2.6's window states, each completed by a retry **[r1]** |
 | T11 revocation or a cloned passkey between judge and consume | `useApprover` and `usePasskey` inside C14's transaction (CS6) |
 | T12 a key-confirmed finish approval used as a publish stamp | the finish scope never parses as a publish scope, and L2 refuses `ssh:`/`webauthn:` at publish (`approve.go:579`) |
 | T13 an agent writes a verb request | it needs the credentials store's write, the same fence as the operator proof (A4 RK4); the human still sees the request on the card and must sign it; no session reaches the POST (C0) |
@@ -583,13 +652,16 @@ CLI `approve vr-…` → the card pointer (CB4). **P2/P3** (read routes) are §2
 
 1. **No `y` from a page**: the only new POST has no typed arm (C6), and the CLI does not read its tty
    in surface mode.
-2. **What opens is what was approved**: the key signs `SHA-256(CanonicalVerb(r))`, whose `scope`
-   is the exact string the daemon records (C15 passes `r.Scope`), and the CLI dispatches only if
-   that recorded scope equals its own `scopeText` (CF7) and F6 holds.
+2. **What opens is what was approved** **[r1]**: the key signs `SHA-256(CanonicalVerb(r))` of the
+   CLI's own bytes, which the CLI re-verifies itself against the enrolled key before pushing (CF6,
+   independent of the daemon); the scope in those bytes is the exact string the daemon records
+   (C14 passes `r.Scope`), and the CLI dispatches only if that recorded scope equals its own
+   `scopeText` (CF7) and F6 holds.
 3. **What was approved is what was shown**: the page shows every field of `r`; the prompt is a pure
    function of the other fields (C10 F5) and is the terminal's own bytes (VT1).
-4. **Single use**: `consumed_at` in one transaction with the approver and counter checks (C14), and
-   `RecordOperatorApproval` creates a fresh request object per call (W6).
+4. **Single use** **[r1]**: `consumed_at` and `decision_ref` in one transaction with the approver
+   and counter checks (C15); a world approval written before a failed C15 is never named by a row,
+   so no CLI uses it (§2.6).
 5. **Typed `y` unchanged**: without the flag no new branch is reachable (§2.7 steps 1–3 are guarded
    by `*onSurface`); every existing finish test passes unedited.
 
@@ -600,13 +672,7 @@ authenticator fixtures; Chrome: the A3/A4 driver and its skip rule (`approve_pag
 `approve_decide_chrome_test.go:25`, W41); GitHub: the `finishDispatchFactory` fake
 (`episode_finish_dispatch.go:33`). Never a real enrolment, mint or publish (D-WORLD-109).
 
-### Sprint 1 — the law
-- **VB8** (V2b note a) `TestAdmitWhy` gains a row whose argument needs quoting (`--result "a b"`):
-  the reason ends with `at a terminal: ` + `Quote(...)`'s form. Kills: `Quote` → `strings.Join` at
-  `flags.go:137` (the controller's survivor, W27).
-- **VP12** (V2b note b) the placeholder suffix (`app.js:1015`), the keys row's `why T`
-  (`app.js:1303`) and `index.html:67`'s placeholder each asserted (node for the two `app.js`
-  strings, Go for `index.html`). Kills: each string edited (W28).
+### Sprint 1 — the law (before the answer)
 - **VL1** `CanonicalVerb`/`DecodeVerb` round trip; refused: unknown field, trailing data, reordered
   keys, whitespace. Kills: `DisallowUnknownFields` removed; the canonical re-encode check removed.
 - **VL2** `Validate`: one case per rule of §2.2. Kills: each rule deleted (one mutant per rule).
@@ -614,106 +680,135 @@ authenticator fixtures; Chrome: the A3/A4 driver and its skip rule (`approve_pag
   swapped; a wrong length.
 - **VL4** domain separation, both directions: a mint SSHSIG and a decision SSHSIG fail
   `ConfirmBySignature`; a verb SSHSIG fails `ApproveBySignature` and `DecideBySignature`; a mint
-  assertion fails `ConfirmByAssertion` at W6 and back. Kills: `VerbNamespace = Namespace`;
-  `VerbPrefix = MessagePrefix`.
+  assertion fails `ConfirmByAssertion` at W6 and back. Kills: `VerbNamespace = Namespace`; `VerbPrefix =
+  MessagePrefix`.
 - **VL5** `ConfirmBySignature`: P1 each verdict, P2–P5 (revoked, wrong format, clock behind), bad
   signature, wrong digest/challenge/expiry. Kills: P1 or `checkApprover` removed.
 - **VL6** `ConfirmByAssertion`: W1–W14 via the recorded fixtures, W15 regression refused. Kills: W15
   removed; the challenge computed with `MessageHash`.
-- **VL7** `SignedVerb.Binds` per field; the zero value refuses; `ApprovedBy` is "" unverified.
-  Kills: a field comparison removed.
-- **VJ1** `JudgeVerbSSH`/`JudgeVerbAssertion`: each `JudgeError.Step`. Kills: steps reordered.
+- **VL7** `SignedVerb.Binds` per field; the zero value refuses; `ApprovedBy` is "" unverified. Kills: a
+  field comparison removed.
+- **VL8 [r1]** `CheckConfirmation`: verifies an artifact over its own digest/challenge/expiry with no P1
+  (a consumed row) and no W15 (a counter already moved); refuses a revoked approver, another digest,
+  another challenge, another expiry, a mint-namespace SSHSIG. Kills: W15 left in (a consumed passkey
+  artifact refused); the message built from inputs other than the caller's.
+- **VJ1** `JudgeVerbSSH`/`JudgeVerbAssertion`/`RecheckVerb` **[r1]**: each `JudgeError.Step`. Kills:
+  steps reordered.
 - **VT1** for three fixtures (draft/ready, create-label, protected paths, empty committer)
-  `FinishPromptText(...) + "Open this pull request? [y/N] "` equals the bytes `finishPrompt`
-  writes; the existing `episode_finish_m2/m3` prompt tests stay unedited. Kills: the moved text
-  edited; `DisplayCommitter`'s `""` rule dropped.
+  `FinishPromptText(...) + "Open this pull request? [y/N] "` equals the bytes `finishPrompt` writes; the
+  existing `episode_finish_m2/m3` prompt tests stay unedited. Kills: the moved text edited;
+  `DisplayCommitter`'s `""` rule dropped.
 - **VT2** `FinishConfirmRefusal` F1–F5 (and F6 with `DraftOnly`). Kills: each step deleted.
 
-### Sprint 2 — the store and the read routes
-- **CS1** schema 9 DDL: fresh equals upgraded from 8, column for column; `user_version = 9`. Kills:
-  the `< 9` upgrade line removed.
-- **CS2** `PutVerbRequest` below v9 → `OlderCredentialsStoreError{Need: 9}`. Kills: the check removed.
-- **CS3** supersede: two puts for one episode → the first `superseded`; another episode's row
-  untouched. Kills: the supersede removed; its `WHERE episode_id` dropped.
-- **CS4** grammar (id, hex, `digest == sha256(request)`, sizes), the 16 cap, the day-old prune.
-  Kills: each deleted.
-- **CS5** the table's CHECKs refuse a raw `approved` row without `approved_by`, and a
-  `decision_ref` on a `superseded` row. Kills: a CHECK dropped.
-- **CS6** `ConsumeVerbRequest`: consumed, superseded, clock behind, expired, digest changed, approver
-  revoked since the judge, passkey counter not advancing → each refuses and writes nothing;
-  success sets four columns. Kills: each check removed; `usePasskey` skipped.
-- **CS7** `LandVerbDecision` lands once; a second land, or a land on a non-approved row →
-  `ErrVerbDecisionLanded`. Kills: the `decision_ref IS NULL` guard removed.
-- **CR1** `GET /surface/confirmations/{id}`: 400, 404, 421 (foreign Host), 503 (v8), the 200 shape
-  with no hash and no artifact. Kills: registered on the bare mux; the artifact or a message hash
-  served.
-- **CR2** `requests.json` `confirmations`: pending listed; an undecodable row listed with `refused`;
-  consumed and superseded omitted; v8 → `confirmationsUnavailable` with the other lists intact.
-  Kills: the refused row hidden.
-
-### Sprint 3 — the card, read-only
-- **CP1** digest mismatch, fetch failure, non-2xx, timeout → refusal, no controls. Kills: the
-  digest check removed; the abort removed.
+### Sprint 2 — the card page, against fixtures (before the answer) [r1]
+- **VB8** (V2b note a) `TestAdmitWhy` gains a row whose argument needs quoting (`--result "a b"`): the
+  reason ends with `at a terminal: ` + `Quote(...)`'s form. Kills: `Quote` → `strings.Join` at
+  `flags.go:137` (the controller's survivor, W27).
+- **VP12** (V2b note b) the placeholder suffix (`app.js:1015`), the keys row's `why T` (`app.js:1303`)
+  and `index.html:67`'s placeholder each asserted (node for the two `app.js` strings, Go for
+  `index.html`). Kills: each string edited (W28).
+- **CP1** digest mismatch, fetch failure, non-2xx, timeout → refusal, no controls. Kills: the digest
+  check removed; the abort removed.
 - **CP2** `CONFIRM_FIELDS` equals `VerbRequest`'s json tags (a Go test reads both, as A4's PD1);
   unlisted, missing and mistyped fields refuse. Kills: the table loosened.
 - **CP3** hostile values render as text. Kills: `innerHTML`.
 - **CP4** the page's message hash equals Go's `VerbMessageHash` for a golden written by a Go test.
   Kills: a field order changed in JS.
 - **CP5** non-pending states show no controls. Kills: the state check removed.
-- **CP6** *Save the message* is the 86 bytes; the signing line names `world-verb@sunholo`. Kills:
-  the namespace changed.
-- **CP7** *Needs you* line and link; a refused row has no link; `esc()`. Kills: the link on a refused row.
-- **XC1** live Chrome: a seeded request's card shows the prompt equal to `FinishPromptText` of the
-  fixture.
+- **CP6** *Save the message* is the 86 bytes; the signing line names `world-verb@sunholo`. Kills: the
+  namespace changed.
+- **CP0 [r1]** `ConfirmationCard(in, passkeys)` (pure) emits §2.5's JSON: bytes and challenge, no hash,
+  no artifact; state from the row. Kills: the artifact or a message hash emitted.
+- **XC1** live Chrome: the card, served with the fixture data by a test handler (no daemon route exists
+  before sprint 3 **[r1]**), shows the prompt equal to `FinishPromptText` of the fixture.
+
+### Sprint 3 — the store and the read routes (waits for D-WORLD-118) [r1]
+- **CS1** schema 9 DDL: fresh equals upgraded from 8, column for column; `user_version = 9`. Kills: the
+  `< 9` upgrade line removed.
+- **CS2** `PutVerbRequest` below v9 → `OlderCredentialsStoreError{Need: 9}`. Kills: the check removed.
+- **CS3** supersede: two puts for one episode → the first `superseded`; another episode's row untouched.
+  Kills: the supersede removed; its `WHERE episode_id` dropped.
+- **CS4** grammar (id, hex, `digest == sha256(request)`, sizes), the 16 cap, the day-old prune. Kills:
+  each deleted.
+- **CS5** the table's CHECKs refuse a raw `approved` row without `approved_by`, `artifact` or
+  `decision_ref` **[r1]**, and a `decision_ref` on a `superseded` row. Kills: a CHECK dropped.
+- **CS6** `ConsumeVerbRequest`: consumed, superseded, clock behind, expired, digest changed, approver
+  revoked since the judge, passkey counter not advancing → each refuses and writes nothing; success sets
+  five columns, `decision_ref` included **[r1]**, in one transaction. Kills: each check removed;
+  `usePasskey` skipped; `decision_ref` written in a second statement.
+- **CS7 [r1]** version skew: a store at `user_version` 9 opened with the constant set to 8 refuses with
+  "newer than this binary's" (the existing check, W53, now exercised at 9); a v8 store under a v9 build
+  opens and `PutVerbRequest`/`VerbRequest` refuse `OlderCredentialsStoreError{Need: 9}`. Kills: a
+  feature read that skips the version check.
+- **CR1** `GET /surface/confirmations/{id}`: 400, 404, 421 (foreign Host), 503 (v8), the 200 shape with
+  no hash and no artifact. Kills: registered on the bare mux; the artifact or a message hash served.
+- **CR2** `requests.json` `confirmations`: pending listed; an undecodable row listed with `refused`;
+  consumed and superseded omitted; v8 → `confirmationsUnavailable` with the other lists intact. Kills:
+  the refused row hidden.
 
 ### Sprint 4 — the POST (waits for D-WORLD-118)
-- **CX0–CX16** one test per §2.6 step (C0 `Authorization`, C0 `Cookie`, C1, R2, C3 missing/`null`/foreign
-  Origin, C4, C5, C6 oversize/unknown key/`typed`/both formats, C7, C8 consumed/superseded/expired/
-  clock/digest, C9, C10 F1–F5, C11 unknown/revoked/namespace/W6/W15, C12 via a judge seam, C13 busy
-  and v8, C14 a concurrent consume lost, C15 a failing world-store wrapper → 500 and the row consumed
-  with no decision, C16 a failing land → 500). Each kills its step's deletion.
+- **CX0–CX15** one test per §2.6 step (C0 `Authorization`, C0 `Cookie`, C1, R2, C3
+  missing/`null`/foreign Origin, C4, C5, C6 oversize/unknown key/`typed`/both formats, C7, C8
+  consumed/superseded/expired/ clock/digest, C9, C10 F1–F5, C11 unknown/revoked/namespace/W6/W15, C12
+  via a judge seam, C13 busy and v8, C14 a failing world write, C15 a concurrent consume lost / approver
+  revoked / counter). Each kills its step's deletion.
 - **CX17** success: 200; the world decision has `decidedBy` = `ssh:<test>` / `webauthn:<test>`,
   requester `operator:episode-finish`, scope = the request's; the row's `decision_ref` set; a second
-  POST of the same artifact → 409. Kills: C15 passing `"operator:terminal"`; the land skipped.
+  POST of the same artifact → 409. Kills: C14 passing `"operator:terminal"`; `decision_ref` not set.
 - **CX18** `TestDaemonCredentialWriterSites` pins four sites; A4's `POST /surface/decide/{ref}` still
   refuses a finish-shaped request (D5), unedited. Kills: an extra writer site.
 - **CX19** `humanMu`: a confirmation and a typed finish approve phase on one daemon serialize (the
   `surface_decide_race_test.go` shape). Kills: the lock removed.
-- **CP8–CP10** `confirm.js` submit: passkey `challenge` = the hash, `allowCredentials` from groups;
-  the SSHSIG paste posts the body grammar; answers and refusals rendered, then re-read. Kills: the
-  challenge from the mint hash; a refusal shown as success.
-- **XC2** live Chrome: the virtual authenticator confirms a seeded request; the world decision exists.
+- **CP8–CP10** `confirm.js` submit: passkey `challenge` = the hash, `allowCredentials` from groups; the
+  SSHSIG paste posts the body grammar; answers and refusals rendered, then re-read. Kills: the challenge
+  from the mint hash; a refusal shown as success.
+- **CX20 [r1]** world write fails (an `objects` trigger refusing `ApprovalDecisionV1`, the A4 RD13(a)
+  instrument, W58) → 500, 0 decisions, row pending; trigger dropped, the identical body → 200, 1
+  decision, row linked; replay → 409. Kills: C15 before C14 (the retry hits W15 or `Consumed`).
+- **CX21 [r1]** C15 fails after C14 (a `verb_requests` UPDATE trigger) → 500, 1 decision, row pending;
+  trigger dropped, the identical body a second later → 200, 2 decisions, the row names the second; the
+  CLI rig waiting on the row dispatches with the second (CF3's rig). Kills: C14 and C15 swapped; the row
+  named before the world write.
 
 ### Sprint 5 — the CLI and the bar (waits for D-WORLD-118)
-- **CF1–CF14** §2.9 P1's rows, on the finish rig with a real loopback daemon; the test plays the card
-  by POSTing an `approvaltest` SSHSIG. CF3 also asserts the tty reader is never read. CF13: the
-  stored `prompt` equals what the typed path prints before its question. CF14: interleaved flag
-  spellings give one canonical argv; defaults absent. Kills: the CLI reading `y`; the decision
-  check removed (CF7); the unsandboxed refusal moved after the loop (CF2 sees an outcome recorded);
-  an unbounded wait (CF4 under a fake clock and a test deadline).
+- **CF1–CF14** §2.9 P1's rows, on the finish rig with a real loopback daemon; the test plays the card by
+  POSTing an `approvaltest` SSHSIG. CF3 also asserts the tty reader is never read. CF13: the stored
+  `prompt` equals what the typed path prints before its question. CF14: interleaved flag spellings give
+  one canonical argv; defaults absent. **[r1]** CF6: a row marked `approved` by hand (raw SQL) with an
+  artifact over another digest, another challenge, or a revoked approver → "does not verify", no
+  dispatch. Kills: the CLI reading `y`; the re-check removed or run against the row's digest instead of
+  its own (CF6); the decision check removed (CF7); the unsandboxed refusal moved after the loop (CF2
+  sees an outcome recorded); an unbounded wait (CF4 under a fake clock and a test deadline).
 - **CB1–CB4** §2.9 P6. Kills: the allowlist not extended / extended to any `/surface/confirm/`.
 - **CQ1** QUICKSTART §20 is executed by the `quickstart_verbs_test.go` pattern (S7).
+
+### Sprint 6 — the surface end to end (waits for D-WORLD-118) [r1]
+- **CP7** *Needs you* line and link; a refused row has no link; `esc()`. Kills: the link on a refused
+  row.
+- **XC2** live Chrome: the virtual authenticator confirms a seeded request; the world decision exists.
 - **XC3** live Chrome end to end: the real CLI `episode finish … --confirm-on-surface` (fake gh) waits;
   the page confirms with the virtual authenticator; the CLI prints the fake PR URL.
 
 ## 7. Inventories and conflict surface
 
-- **New**: `host/approval/verb.go`, `verb_signed.go` (+ tests); `host/authority/judge_verb.go`
-  (+ test); `host/store/verb_requests.go` (+ test); `host/daemon/surface_confirm.go`,
-  `surface_confirm_read.go` (+ tests); `host/surfacepage/confirm.go`, `confirm_model.go`,
-  `confirm/{index.html,confirm.js}` (+ tests); `cmd/ailang-worldd/episode_finish_surface.go` (+ tests,
-  XC3).
-- **Edited**: `host/broker/approve.go` (`DisplayCommitter`, `FinishPromptText`,
-  `FinishConfirmRefusal`; or a new `finish_prompt.go`), `host/store/credentials.go` and
-  `credentials_schema.sql` (v9), `host/daemon/daemon.go` (four registrations),
-  `surface_approve.go` (`requests.json`), `host/surfacepage/approve_model.go` (`Confirmations`),
-  `app/app.js` (*Needs you*, allowlist), `cmd/ailang-worldd/episode_finish.go` (flag and three hooks),
-  `episode_finish_operator.go` (`finishPrompt` delegates), `committer.go` (delegates), `approve.go`
-  (`vr-` arm), `host/verbs/lookup.go` (reason, `ApproveTarget`), `docs/QUICKSTART.md` (§20).
+- **New**: `host/approval/verb.go`, `verb_signed.go` (+ tests); `host/authority/judge_verb.go` (+ test);
+  `host/store/verb_requests.go` (+ test); `host/daemon/surface_confirm.go`, `surface_confirm_read.go` (+
+  tests); `host/surfacepage/confirm.go`, `confirm_model.go` (`ConfirmationInput`, `ConfirmationCard`,
+  `Confirmed`), `confirm/{index.html,confirm.js}` (+ tests);
+  `cmd/ailang-worldd/episode_finish_surface.go` (+ tests, XC3).
+- **Edited**: `host/broker/approve.go` (`DisplayCommitter`, `FinishPromptText`, `FinishConfirmRefusal`;
+  or a new `finish_prompt.go`), `host/store/credentials.go` and `credentials_schema.sql` (v9),
+  `host/daemon/daemon.go` (four registrations), `surface_approve.go` (`requests.json`),
+  `host/surfacepage/approve_model.go` (`Confirmations`), `app/app.js` (*Needs you*, allowlist),
+  `cmd/ailang-worldd/episode_finish.go` (flag and three hooks), `episode_finish_operator.go`
+  (`finishPrompt` delegates), `committer.go` (delegates), `approve.go` (`vr-` arm),
+  `host/verbs/lookup.go` (reason, `ApproveTarget`), `docs/QUICKSTART.md` (§20). **[r1]** The CLI's
+  read-back uses the existing `worldReader.object` (`why_cli.go:212`) and the existing
+  `OpenCredentialsReadOnly` handle of its poll; no new client helper.
 - **Pre-existing tests edited (each with its reason)**: `surface_approve_post_guard_test.go` (fourth
   writer site, AM8); `host/store/context_roots_test.go` (two roots); the canonical-DDL test (v9);
-  `lookup_test.go` and `verb-route.golden.json` (the finish reason, `vr-`); `TestAdmitWhy` and the
-  page tests (sprint 1 pins); `TestSurfaceAppPure`'s export list if a pure helper is exported.
+  `lookup_test.go` and `verb-route.golden.json` (the finish reason, `vr-`); `TestAdmitWhy` and the page
+  tests (sprint 2 pins **[r1]**); `TestSurfaceAppPure`'s export list if a pure helper is exported.
   Nothing else; in particular every `episode_finish*_test.go` stays unedited.
 - **Not touched**: A4's law and routes (L1, `reservedReason`), `approve.js`, `decide.js`,
   `/surface/passkey`, the mint law, `world-publish`, `/v1`, `approvalRoute`, the CSP, any `.ail`,
@@ -723,19 +818,22 @@ authenticator fixtures; Chrome: the A3/A4 driver and its skip rule (`approve_pag
 
 Raw estimates; each sprint ≤ 1,000 raw so that × 1.35 (W31) ≤ 1,400.
 
-| sprint | milestones | est. raw | depends on D-WORLD-118 |
-|---|---|---|---|
-| **S1 the law** | M0 V2b pins (≈ 45); M1 `host/approval` verb request, message, laws (≈ 240 + 320 tests); M2 judges (≈ 70 + 110); M3 `FinishPromptText`, `DisplayCommitter`, `FinishConfirmRefusal`, cmd delegations (≈ 75 + 90) | ≈ 950 | **no** |
-| **S2 the store and reads** | M4 schema 9 + `verb_requests.go` (≈ 270 + 330); M5 `GET /surface/confirmations/{id}`, `requests.json` (≈ 150 + 240) | ≈ 990 | **no** |
-| **S3 the card, read-only** | M6 page + `confirm.js` render/verify/message (≈ 310 + 220); M7 *Needs you* (≈ 25 + 60); M8 XC1 (≈ 110) | ≈ 725 | **no** |
-| **S4 the POST** | M9 `surface_confirm.go` + `Confirmed` + registration (≈ 215 + 470); M10 submit half of `confirm.js` (≈ 90 + 90); M11 XC2 (≈ 120) | ≈ 985 | **yes** (A or B; B +≈ 15) |
-| **S5 the CLI and the bar** | M12 flag, refusals, `episode_finish_surface.go`, hooks, roots (≈ 260 + 400); M13 bar, `approve vr-` (≈ 30 + 60); M14 QUICKSTART §20 + CQ1 (≈ 90), XC3 (≈ 150) | ≈ 990 | **yes** (A or B; B +≈ 15) |
+| sprint | milestones | est. raw | depends on D-WORLD-118 | touches a store schema |
+|---|---|---|---|---|
+| **S1 the law** | M1 `host/approval` verb request, message, laws, `CheckConfirmation` (≈ 280 + 360 tests); M2 judges incl. `RecheckVerb` (≈ 90 + 130); M3 `FinishPromptText`, `DisplayCommitter`, cmd delegations (≈ 35 + 40) | ≈ 935 | **no** | no |
+| **S2 the card page, against fixtures [r1]** | M0 V2b pins (≈ 45); M4 `ConfirmationInput`/`ConfirmationCard` (≈ 60 + 80); M5 page + `confirm.js` render/verify/message (≈ 310 + 220); M6 XC1 on a test handler (≈ 110) | ≈ 825 | **no** | **no**: no route, no store read |
+| **S3 the store and reads [r1]** | M7 schema 9 + `verb_requests.go` (≈ 255 + 315); M8 `FinishConfirmRefusal` (≈ 40 + 50); M9 the four GET registrations, `GET /surface/confirmations/{id}`, `requests.json` (≈ 120 + 200) | ≈ 980 | **yes** (A or B) | **yes**: schema 9 |
+| **S4 the POST** | M10 `surface_confirm.go` + `Confirmed` + registration, CX20–CX21 (≈ 215 + 550); M11 submit half of `confirm.js` (≈ 90 + 90) | ≈ 945 | **yes** (A or B; B +≈ 15) | no |
+| **S5 the CLI and the bar** | M12 flag, refusals, `episode_finish_surface.go` with the re-check and read-back, hooks, roots (≈ 290 + 440); M13 bar, `approve vr-` (≈ 30 + 60); M14 QUICKSTART §20 + CQ1 (≈ 90) | ≈ 910 | **yes** (A or B; B +≈ 15) | no |
+| **S6 the surface end to end [r1]** | M15 *Needs you* (≈ 25 + 60); M16 XC2 (≈ 120), XC3 (≈ 150) | ≈ 355 | **yes** (A or B) | no |
 
-**Total ≈ 4,640 raw, ≈ 6,000–6,300 calibrated.** Against the parent's ≈ 4,500 (2–3 sprints): the
-raw sum is within 3 %; the difference is the measured over-run of the last two V-sprints (1.34×,
-1.35×, W31) and the 1,400 cap. **Cuts** if a sprint measures over: S3 → XC1 moves to S4; S4 → XC2
-moves to S5; S5 → XC3 moves to a follow-up sprint (QUICKSTART §20 stays: S7). Under **C**, S4–S5
-are not built and S1–S3 are removed in one cleanup (≈ 2,700 lines of unused code, §10).
+**Total ≈ 4,950 raw, ≈ 6,400–6,700 calibrated** **[r1]**. Against the parent's ≈ 4,500 (2–3
+sprints): the raw sum is ≈ 10 % over (r1 adds the CLI's re-check and the crash-window tests); the
+rest of the difference is the measured over-run of the last two V-sprints (1.34×, 1.35×, W31), the
+1,400 cap, and r1's rule that no store schema changes before the answer, which moves the store out of
+the pre-answer sprints. **Cuts** if a sprint measures over: S2 → XC1 moves to S6; S4 → M11 moves to
+S6; S5 → CQ1 stays (S7), M13 moves to S6. Under **C**, S3–S6 are not built and S1–S2 are removed in
+one cleanup (≈ 1,760 raw lines of code; no store was migrated, §2.4, §10).
 
 **Gates** (every sprint): `./scripts/verify_ail.sh` byte-for-byte the base's result (no `.ail`
 changes); `go build ./... && go vet ./... && go test ./...`, with `go test -run '^$' ./...` as the
@@ -743,30 +841,30 @@ test-file compile fence; node tests non-skippable in CI (`WORLD_EXEC_NODE`).
 
 ## 9. The V2b judge notes, disposed
 
-Both are taken in **sprint 1, M0** (tests only, no production change), because they are independent
-of D-WORLD-118, small (≈ 45 lines), and sprint 1 is the first sprint that cannot be blocked by the
-ledger: (a) `AdmitWhy`'s `Quote` in the refusal's CLI line — today every refusal row's arguments
+Both are taken in **sprint 2, M0** **[r1]** (tests only, no production change), because they are
+independent of D-WORLD-118, small (≈ 45 lines), and sprint 2 touches the same `host/surfacepage`
+files before the ledger can block anything: (a) `AdmitWhy`'s `Quote` in the refusal's CLI line — today every refusal row's arguments
 need no quoting (`why_admit_test.go:83-88`), which is why a plain join survives (W27): VB8; (b) the
 three page strings — no test or golden contains them (W28): VP12.
 
 ## 10. The ledger ask: D-WORLD-118 (row text for the controller to file)
 
-> | D-WORLD-118 | OPEN | **Row 243 V3: may `episode finish`'s pull-request confirmation be a verified enrolled key, as D-WORLD-89 R1 allows for mints and `Human.Approve`?** Today `ailang-worldd episode finish` commits, then asks `Open this pull request? [y/N]` at its terminal, and the typed `y` is the only way a finish opens a PR (`cmd/ailang-worldd/episode_finish.go:410-414`); row 201 A4 §2.6 L1 keeps finish-shaped requests off the decision card. The finish approval is already stored as a `Human.Approve` request (`host/broker/approve.go:722-724`), so R1's words could be read to reach it, but A4 read them not to, and the loop asks rather than infers. The V3 design ([`w-world-address-bar-verbs-v3.md`](planned/w-world-address-bar-verbs-v3.md) r0, §2, §10) adds `episode finish … --confirm-on-surface`: after the commit, the CLI stores a `world/verb-request/v1` (the exact prompt lines, the canonical command, the finish scope, the title and the full PR body), prints its card's link and waits up to 10 minutes at the terminal; you approve on `/surface/confirm/<id>` with your passkey or SSH key; the daemon verifies the signature and records the finish approval with `decidedBy` = your key (`webauthn:<name>` / `ssh:<name>`); the CLI then opens the PR. The typed `y` keeps working without the flag; publishing stays typed-only (R4); enrolment stays typed (R3); the app's address bar still runs no mutating verb until V4. **A (recommended):** yes, for every finish, draft or ready — a key already mints sessions (R1), a broader authority than opening a pull request, and the key binds the exact bytes the terminal shows. **B:** yes for draft pull requests only; `--ready` stays typed-only (≈ +30 lines). **C:** no; finish stays typed-only, V3 stops, its sprints 1–3 are removed, and row 243's no-terminal exit run (parent §10 step 4) needs a terminal pane for finish (V4 hands it to herdr). **Default while unanswered:** nothing that confirms a finish from the surface is built or enabled, and the typed `y` stays the only confirmation: the loop builds V3 sprints 1–3 (the law, the store, a read-only card that can show a request but not confirm it — identical under A and B, removed under C) and does not plan sprints 4–5 (the POST that records a key's confirmation, the CLI flag). | Filed iteration 399 (unattended loop). Evidence: the V3 design's §0.1, §0.3 (AM6/AM7 amend A4 §2.6's stated reasons), §2.1, §2.6–§2.7 and its Verification Log. |
+> | D-WORLD-118 | OPEN | **Row 243 V3: may `episode finish`'s pull-request confirmation be a verified enrolled key, as D-WORLD-89 R1 allows for mints and `Human.Approve`?** Today `ailang-worldd episode finish` commits, then asks `Open this pull request? [y/N]` at its terminal, and the typed `y` is the only way a finish opens a PR (`cmd/ailang-worldd/episode_finish.go:410-414`); row 201 A4 §2.6 L1 keeps finish-shaped requests off the decision card. The finish approval is already stored as a `Human.Approve` request (`host/broker/approve.go:722-724`), so R1's words could be read to reach it, but A4 read them not to, and the loop asks rather than infers. The V3 design ([`w-world-address-bar-verbs-v3.md`](planned/w-world-address-bar-verbs-v3.md) r1, §2, §10) adds `episode finish … --confirm-on-surface`: after the commit, the CLI stores a `world/verb-request/v1` (the exact prompt lines, the canonical command, the finish scope, the title and the full PR body), prints its card's link and waits up to 10 minutes at the terminal; you approve on `/surface/confirm/<id>` with your passkey or SSH key; the daemon verifies the signature and records the finish approval with `decidedBy` = your key (`webauthn:<name>` / `ssh:<name>`); the CLI re-verifies your signature over its own bytes, then opens the PR. Building it adds credentials-store schema 9 (one `serve` restart; older binaries then refuse the store). The typed `y` keeps working without the flag; publishing stays typed-only (R4); enrolment stays typed (R3); the app's address bar still runs no mutating verb until V4. **A (recommended):** yes, for every finish, draft or ready — a key already mints sessions (R1), a broader authority than opening a pull request, and the key binds the exact bytes the terminal shows. **B:** yes for draft pull requests only; `--ready` stays typed-only (≈ +30 lines). **C:** no; finish stays typed-only, V3 stops, its sprints 1–2 (pure code and a page; no store schema) are removed, no credentials store is ever migrated for V3, and row 243's no-terminal exit run (parent §10 step 4) needs a terminal pane for finish (V4 hands it to herdr). **Default while unanswered:** nothing that confirms a finish from the surface is built or enabled, no store schema changes, and the typed `y` stays the only confirmation: the loop builds V3 sprints 1–2 (the pure law and a read-only card page tested against fixtures — no route serves it, no store is read or migrated; identical under A and B, removed under C) and does not plan sprints 3–6 (credentials schema 9 and the read routes, the POST that records a key's confirmation, the CLI flag, the end-to-end surface). | Filed iteration 399 (unattended loop). Evidence: the V3 design's §0.1, §0.3 (AM6/AM7 amend A4 §2.6's stated reasons), §2.1, §2.4, §2.6–§2.7 and its Verification Log. |
 
-**Which sprints depend on the answer:** S4 and S5 wait for A or B (B adds the F6 draft check to S4
-and a `--ready` refusal to S5, ≈ 15 lines each). S1–S3 do not: they are the same under A and B,
-change nothing from a page, and are removed under C.
+**Which sprints depend on the answer** **[r1]**: S3–S6 wait for A or B (B adds the F6 draft check to
+S3/S4 and a `--ready` refusal to S5, ≈ 15 lines each). S1–S2 do not: they are the same under A and
+B, change nothing from a page, touch no store schema, and are removed under C.
 
 ## 11. Residuals and risks
 
-- **RV1 Ctrl-C leaves a pending request.** It can still be confirmed until its expiry; the daemon
-  then records an approval no CLI uses. It is inert: `finishReusableApproval` reuses only a recorded
-  finish (`episode_finish_resume.go:119`, W11), the scope expires ≤ 15 minutes after creation, and the
-  next run supersedes the request. A SIGINT handler that marks it cancelled is not designed.
-- **RV2 a POST cut after C14.** The request is spent (consumed, `decision_ref` NULL, or a decision
-  with an unlinked row). The CLI refuses after the 10 s grace with "commit kept"; a re-run resumes
-  and makes a new request. A4's idempotent same-artifact retry (K0) is deliberately not copied: a
-  new request costs one re-run and one gesture.
+- **RV1 Ctrl-C leaves a pending request.** It can still be confirmed until its expiry; the daemon then
+  records an approval no CLI uses. It is inert: `finishReusableApproval` reuses only a recorded finish
+  (`episode_finish_resume.go:119`, W11), the scope expires ≤ 15 minutes after creation, and the next run
+  supersedes the request. A SIGINT handler that marks it cancelled is not designed.
+- **RV2 [r1] the two stores are not written atomically.** World first, then one credentials transaction
+  (§2.6): every crash window leaves the request pending and completable by a retry of the same body or a
+  fresh gesture before expiry; the cost is at most one world-store approval per failed attempt that no
+  row names (inert, as RV1's).
 - **RV3 unsandboxed checks refuse surface mode** (P2). Whether Mark's real presets carry any is
   UNVERIFIED (no presets exist on this machine, W42). If they do, the §10 exit run needs V4 to design
   per-check confirmation, or the checks to be sandboxed.
@@ -774,13 +872,15 @@ change nothing from a page, and are removed under C.
 - **RV5 no deny on the card.** Decline is expiry or Ctrl-C. An unsigned deny would let any local page
   cancel a finish; a signed one needs a verb byte (A4's) and a new message version.
 - **RV6 the request bytes on a GET.** The full PR body (≤ 60,000 bytes) and local paths in `argv`
-  (`--presets-dir` if given) are served behind the Host allowlist, as A3a serves a mint request's
-  paths; the body is the text that goes public with the PR.
-- **RV7** schema 9 costs one `serve` restart (A2's R6 recurs); a CLI against a v8 store refuses with
-  the restart named (CF8).
+  (`--presets-dir` if given) are served behind the Host allowlist, as A3a serves a mint request's paths;
+  the body is the text that goes public with the PR.
+- **RV7** schema 9 costs one `serve` restart (A2's R6 recurs); a CLI against a v8 store refuses with the
+  restart named (CF8). **[r1]** It lands only after A or B (§2.4); an older binary then refuses the v9
+  store loudly (W53, CS7), and a later reversal would drop the table in a v10 migration, never revert
+  the constant.
 - **RV8** the finish record names the approval by ref only; who confirmed is in the decision
   (`decidedBy`), not in `episode report`. V3 does not change the report.
-- **RV9** sizes: five sprints rest on the 1.35× of two sprints; §8 names the cuts.
+- **RV9** sizes: six sprints **[r1]** rest on the 1.35× of two sprints; §8 names the cuts.
 
 ## 12. Open questions (each with the default the loop applies)
 
@@ -789,8 +889,8 @@ change nothing from a page, and are removed under C.
 - **Q3. Per-check key confirmation of unsandboxed checks?** Default **no**: refuse (RV3); V4 or a
   later row.
 - **Q4. Ledger ask?** **Yes**: D-WORLD-118 (§10).
-- **Q5. Five sprints, or merge S2/S3?** Default **five**; a planner whose compiled patches measure
-  ≤ 1,400 together may ask the controller to merge S2 and S3.
+- **Q5. Six sprints, or merge S6 into S5?** Default **six** **[r1]**; a planner whose compiled
+  patches measure ≤ 1,400 together may ask the controller to merge them.
 
 ## 13. What this is NOT doing
 
@@ -804,7 +904,8 @@ change nothing from a page, and are removed under C.
 
 All commands ran in `/Users/voightkampff/dev/sunholo-data/.wt-world-iter399-row243-v3` at `994ba123`
 on 2026-11-17 (zsh; output trimmed); the batch is `/tmp/w399-designer/wlog.sh`. `F` =
-`cmd/ailang-worldd`.
+`cmd/ailang-worldd`. **[r1]** W53–W61 ran on the same worktree at HEAD `674fd735` (the r0 commit);
+W61 shows `cmd/` and `host/` are byte-identical to `994ba123`, so every row describes one tree.
 
 | # | claim | command | observed |
 |---|---|---|---|
@@ -860,3 +961,25 @@ on 2026-11-17 (zsh; output trimmed); the batch is `/tmp/w399-designer/wlog.sh`. 
 | W50 | *Needs you* and its model | `grep -n 'Needs you\|function needsYouHTML' host/surfacepage/app/app.js`; `grep -n 'Decisions\|Pending \|Decided ' host/surfacepage/approve_model.go` | `424`, `429`, `448: /surface/decide/sha256:…`; `67 Pending`, `68 Decided`, `71 Decisions`, `72 DecisionsTruncated` |
 | W51 | the finish route refuses sessions; consumes the proof under `humanMu` | `sed -n 135,163p host/daemon/episode_finish.go` | `137: "… next: run ailang-worldd episode finish at a terminal"`; `158: d.humanMu.Lock()`; `160: d.consumeOperatorProof(episode, input.Phase, …)` |
 | W52 | the finish scope's frozen format | `sed -n 689,701p host/broker/approve.go` | `type FinishApprovalScope struct { Repository, Remote, Head, SHA, Base, TitleSHA256, BodySHA256 string; Draft, CreateLabel bool; ExpiresAt int64 }`; `"github-pr:%s#remote=%s&head=%s&sha=%s&base=%s&title-sha256=%s&body-sha256=%s&label=ailang-world&draft=%t&create-label=%t&expires=%d"` |
+| W53 **[r1]** | a binary refuses a newer store | `sed -n 320p host/store/credentials.go`; `sed -n 341,342p …` | `known := version >= credentialsSchemaV1 && version <= credentialsSchemaVersion`; `case version > credentialsSchemaVersion: return &CredentialsSchemaError{… "user_version %d is newer than this binary's %d; use a compatible binary" …}` |
+| W54 **[r1]** | `serve` upgrades the real store at start; older stores refuse per feature | `sed -n 813p host/daemon/daemon.go`; `sed -n 59,60p host/daemon/credentials.go`; `sed -n 66p …`; `sed -n 103p host/store/mint_requests.go` | `if err := ensureCredentialsStore(credPath, …)`; `func ensureCredentialsStore(path string, errLog io.Writer) error {` … `upgraded, err := store.UpgradeCredentials(path)`; `return &OlderCredentialsStoreError{… Need: mintRequestsSchemaVersion, Feature: "mint requests"}` |
+| W55 **[r1]** | the objects route, its payload branch; only `POST /v1/commit` is protected | `sed -n 1113p host/daemon/daemon.go`; `sed -n 483p host/daemon/handlers.go`; `sed -n 508,510p …`; `sed -n 1168,1169p host/daemon/daemon.go` | `mux.HandleFunc("GET /v1/objects/{ref}", d.handleObject)`; `func (d *Daemon) handleObject(…)`; `if r.URL.Query().Get("payload") == "true" { payload := object.Payload; body.Payload = &payload`; `func (d *Daemon) isProtected(r *http.Request) bool { return r.Method == http.MethodPost && r.URL.Path == "/v1/commit"` |
+| W56 **[r1]** | the CLI's object read and its raw payload; finish holds `ctx` and `c` | `sed -n 66,70p host/why/why.go`; `sed -n 142,145p …`; `sed -n 212p $F/why_cli.go`; `sed -n 135p $F/episode_report.go`; `sed -n 96p $F/episode_finish.go`; `sed -n 102p …` | `type Object struct { Hash string …; SemanticID string …; Payload []byte \`json:"payload"\` // base64 on the wire }`; `func (r Reader) Object(ref string) (Object, bool, error) { … r.GetJSON("/v1/objects/"+url.PathEscape(ref)+"?payload=true", &o)`; `func (r worldReader) object(ref string) (wireObject, bool, error) { return r.why().Object(ref) }`; `(worldReader{ctx: ctx, c: c}).health()`; `ctx, cancel := context.WithTimeout(context.Background(), 2*time.Hour)`; `c := finishClient(p.Addr)` |
+| W57 **[r1]** | A4's writer hold in code | `sed -n 186,187p host/daemon/surface_decide.go`; `sed -n 211p …`; `sed -n 216p …`; `sed -n 222p …`; `sed -n 66p host/daemon/surface_decide_key.go`; `sed -n 90p …` | `d.humanMu.Lock()` / `defer d.humanMu.Unlock()`; `defer func() { _ = evidence.Close() }()`; `decision, err := broker.DecideApproval(ctx, d.store, q, body.Verb, decidedBy, now) // 3.`; `evidence.LandKeyDecision(ctx, ref, decision.String())`; `wr, err := store.OpenCredentials(d.credentialsPath) // non-waiting: a busy writer is 503 Busy`; `return wr, signed.DecidedBy(), true` |
+| W58 **[r1]** | A4 retries a failed world write | `sed -n 44,48p host/daemon/surface_decide_key_retry_test.go`; `grep -n 'CREATE TRIGGER fail_decision' …` | `// RD13 (a): the world write fails after RecordKeyDecision (a trigger refuses the decision object) → 500, one unlanded row, 0 decisions; the identical body retried → 200, one decision …`; `48: func TestDecidePOSTRetryAfterAFailedWorldWrite`; the trigger `BEFORE INSERT ON objects WHEN NEW.semantic_id = '…ApprovalDecisionV1…'` |
+| W59 **[r1]** | an identical decision answers its existing ref; another is refused | `sed -n 219,226p host/broker/approve.go` | `// same decision again (the same verb, decider and time: byte-identical, so the same object) answers its existing ref`; `} else if decided && bytes.Equal(existing.Payload, payload) { return existing.Hash, nil } else if decided { return …, ErrApprovalAlreadyDecided` |
+| W60 **[r1]** | A4's assertion law runs W1–W14 without W15 | `sed -n 79,84p host/approval/decision_signed.go` | `func DecideByAssertion(…)`; `checkApprover(…) // P2-P5, P3w`; `h, hErr := DecisionMessageHash(…)`; `ad, err := assertionSteps(in.Response, in.Approver, h, hErr) // W1-W14` |
+| W61 **[r1]** | cmd/host unchanged at the r0 commit (negative, with control) | `git diff --stat 994ba123 HEAD -- cmd host \| tail -1`; control `… -- design_docs \| tail -1` | *(empty)*; control `1 file changed, 862 insertions(+)` |
+
+## 15. Quorum r1 (BLOCKED on r0 `674fd735`) → r1 changes
+
+gemini-4-argon PASS; oc-glm-5-3 REJECT; oc-kimi-k3 REJECT; gpt6-1-sol absent (quota). The controller
+measured each premise at `994ba123`; r1 re-ran every measurement (W53–W61) and applies the three
+fixes below and nothing else.
+
+| reviewer | objection | disposition |
+|---|---|---|
+| oc-glm-5-3 (REJECT) | schema 9 landed in sprint 2, not gated on D-WORLD-118, while C "removed sprints 1–3" with no disposition for stores already at v9; the newer-store direction had no W-row | **Accepted; option (ii).** The newer-store refusal exists (W53) and `serve` upgrades at start (W54), so reverting the constant would strand a real store. r1 moves schema 9 and every store read into sprint 3, gated on A/B; sprints 1–2 (the law, the page against fixtures, ≈ 1,760 raw) touch no schema; under C only code is removed; a later reversal would be (i)'s v10 drop, never a revert; version skew stated (§2.4, §8, §10, §11 RV7; CS7) |
+| oc-kimi-k3 (REJECT) | "what opens is what was approved" rested on an uncited read-back from the same daemon that wrote the record; "A4's own bound (A4 §2.7)" cited design text | **Accepted.** W55–W57 cite the route, handler, payload branch, `isProtected`, `why.Reader.Object`, `worldReader.object` and A4's writer hold in code; §2.6 now cites that code. Substantively, the CLI now re-verifies the stored artifact over **its own** digest, challenge and expiry against the enrolled key (`CheckConfirmation`/`RecheckVerb`, §2.3, §2.7 step 6(a), CF6, VL8) before the read-back; the remaining trust (enrolled keys; the daemon's counter check) is stated (§2.7, T9b) |
+| gemini-4-argon (PASS, concern) | r0's C14–C16 write two stores non-atomically; a crash left the request consumed with no decision | **Accepted.** Writes reordered: world first (C14), then consume and link in one credentials transaction (C15); no state is consumed without a decision; every window is completed by a retry of the same body before expiry, as A4's RD13(a) (W58) but without A4's deferred W15; the same-second retry is traced (W59); window table in §2.6; CX20, CX21 |
+
