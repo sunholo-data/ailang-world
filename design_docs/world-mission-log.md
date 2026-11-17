@@ -9,131 +9,6 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 378 — 2026-11-10 — row 201 A1b sprint 4 built: the decided list, the revoke listing, and `approve --sign-with` with its real-tool tests, the signer moved to a scrubbed `host/sshsign` after the sweep caught an AC10 red; judge PASS 93 [PRODUCT]
-
-**Pick:** row 201 `w-world-approvals-by-key`, A1b sprint 4, the route iteration 377 named: the sprint-3 plan's Appendix C, with no re-design. D-WORLD-109 = A applies: fakes, temp stores and test keys only.
-- **Re-measured at pick** (`origin/dev` `1fce6999`):
-  - No open PR from this account.
-  - No `DecidedMintRequests` or `--decided` anywhere in `cmd/`/`host/` Go source. The only `"decided"` hits were broker status strings.
-  - No sprint-4 worktree.
-  - `mc_quorum_gate2 w-world-approvals-by-key-a1b` rc 0, so no pick-time quorum was owed.
-- **Ledger:** valid (100 rows). OPEN: D-WORLD-105 only.
-- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows are not routable:
-  - Row 150's attended A1: 0 subjects since 2026-11-07 matching `row ?150|A1\b` (control `A1b`: 16).
-  - Row 151's row-188 N2d/N4a: 0 since 2026-10-01 (control N2c: 1).
-
-**Gate 0:**
-- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
-- Directives: 0 allowlisted on #524, out of 10 comments. The watermark is absent, so all comments were read.
-- Self-notices: rc 2, an instrument failure and not a verdict. No `-last-seen` file exists for 524 or 449, the same as 371–377. A hand read of #524 found no `FAILED to complete` notice.
-- The `mission-world` inbox has 0 unread.
-- Skill drift: none. SKILL.md and all 13 resource files at the resolved symlink target match the driver clone's `origin/dev`.
-- Dev at `1fce6999`: `checks=3`, all success. Local dev was 15 behind and was fast-forwarded (only untracked dirs in the tree).
-
-**Plan:** Agent `opus` (`fail-closed:env-pin`), 38 min, 397,156 tok. Committed `d3a3ffca`. Same form as iteration 377: every sub-milestone is a compiled unified diff in Appendix P, with an expected numstat measured after each commit.
-- **Committed part:** T1 (the sprint-3 judge gaps SIG-NOW, SIG-FORMAT and A4-EXP, tests only), D1 (`DecidedMintRequests`), D2 (`approve --list --decided`), D3 (K8/K9) = 359 lines.
-- **Gated tail:** S1–S3, the `--sign-with` seam, fake-signer tests and the production signer with XS1/XS2, the CI step and QUICKSTART. The gate was ≤ 1,463 after D3; it measured 359.
-- **Mutants:** 68 run in scratch; 66 killed, 2 named equivalents.
-- **Premises found false at HEAD:**
-  - **P2:** `DecidedMintRequests(ctx, limit)` cannot serve K8, so it became `(ctx, approvedBy, limit)`.
-  - **P4:** the signer's root pin moved to `approve_sig.go`.
-  - **P6:** the CI step timeout went from 3 to 8 min.
-  - **P8:** `TestApproverRevoke/yes` gains the K9 line.
-  - **Item 4:** the revoke SQL's `revoked_at IS NULL` was already killed at base by `TestRevokeApprover`.
-
-**Executor:** env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`. Five runs: T1+D1, D2+D3, S1+S2, S3, S4. No hand edits. The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`:
-- T1 `f267e1b8` → 33
-- D1 `387e3b07` → 181
-- D2 `1bfe8c88` → 278
-- D3 `e9d70925` → 359 (size gate PASS)
-- S1 `969626c4` → 461
-- S2 `4b5f9761` → 615
-- S3 `784c9413` → 909
-- S4 `5e85f8bb` → **1,014**
-
-Every value equals the plan's value, except S3's (896), for the correction below.
-- **Executor finding, adjudicated by measurement (rule 3h):**
-  - **The gap:** §3 names `TestCappedBufferKeepsItsBound`, but the S3 patch did not contain it. Its `-run` regex matched nothing and still exited 0.
-  - **The check:** the controller compared all 17 sprint files with the planner's scratch tree. 16 were byte-identical; the 17th differed only by that 13-line function.
-  - **The fix:** the function was copied from the planner's tree, not rewritten. MUT-CAP-WRITE was re-run against it (killed), and the source was restored byte-identical. Recorded as plan §7.1 (`3a6135c2`).
-- **Run-5 slip:** the executor disclosed running `git add -N -n`, a dry run. The controller checked the index: `git diff --cached` was empty.
-
-**Controller gates:** plan §6 in one bash shell, run BEFORE the judge.
-- **Sweep 1 at `784c9413`: rc 1.** Two reds, both in `host/broker`:
-  - **(a) A REAL regression from S3: `TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential`.** It found 13 exec sites but only 12 drivers. The new `exec.CommandContext("ssh-keygen", …)` sat in `package main` with the full inherited environment, so the registry credential reached the child, and no census driver could import it. The planner's §6 list ran only the touched packages, and this census enumerates exec sites across the whole repo.
-  - **(b) `TestWorktreeSnapshotRefusesAConfiguredFilter`:** the known load-sensitive control arm (earlier instances at iterations 300, 334 and a row-257 sprint). It passed 5/5 alone, and the sprint touches neither package.
-- **Fix:** the planner was resumed by SendMessage (13.5 min, 452,035 tok) and compiled **S4** (`7a61cff0` plan, `5e85f8bb` code):
-  - A new `host/sshsign.Sign` is the single exec site, with `cmd.Env = childenv.Scrubbed(os.Environ())`. The 16 KiB cap, `WaitDelay` and the G1–G3 texts are unchanged.
-  - `signWithSSHKeygen` became a one-line call.
-  - The census gained `driveSSHSign`.
-  - **Mutant MUT-ENV-SCRUB:** dropping the scrub fails the census ("the child observed AILANG_REGISTRY_API_KEY") and the new unit test `TestSignHandsTheSignerAScrubbedEnvironment`.
-  - S4's own mutants: 18 run, 17 killed, 1 named equivalent.
-- **Sweep 2 at `5e85f8bb`: rc 0.** This covers:
-  - `verify_ail.sh`, gofmt, build+vet and the compile fence;
-  - the touched packages, `-race`, and the real-tool leg (PASS ×4, no SKIP);
-  - the no-SKIP `-v` run;
-  - `VERIFY_GO_LEGS=plain verify_go.sh` (114 ok lines, 0 FAIL; `host/broker` 344 s).
-
-  The `DATA RACE` lines are the race control.
-- **Unattributed single red:** the first `commit_ms.sh S1` run had `cmd/ailang-worldd` FAIL at 175.6 s. Its log was lost to a `tail`. On the byte-identical tree the package was ok at 112.6 s, and it was ok in every later run. Details are in `verification/world-iter378/controller-gates.md`.
-
-**Judge:** sonnet via the Agent tool, on its own worktree at `5e85f8bb` (generator ≠ judge). **PASS 93/100, zero blocking.**
-- **Sub-scores:** correctness 28, tests 28, security 19, standards 9, scope 9.
-- **Controls:** the must-die control was killed and the must-live control survived.
-- **Mutants:** about 50 were killed by their named tests, covering `DecidedMintRequests`, `--decided`, `--sign-with` F1/F2/F7/F7a/F8, `host/sshsign` (G1–G3, cap, argv, stdin, `WaitDelay`, scrub), and K8/K9. 3 did not compile and were not counted.
-- **Survivor K8-ERRCODE:** in `approver.go:449`, revoke's K8 read-only reopen failure returns `exitFatal`; changing it to `exitOK` survives `TestApprover*`. The **controller reproduced it** and restored the file clean. It is non-exploitable: the revoke has already committed, and only the follow-up listing's exit code is unpinned. Carried forward.
-- **Other non-blocking findings:**
-  - NB2: `host/sshsign` has no unit test for G1 (a failed run); only the cmd test covers it.
-  - NB3: PATH is not narrowed. This is documented, and the output is verified against the enrolled key.
-  - NB4: QUICKSTART §15's new lines were not executed; they are attended.
-- **Security properties confirmed:**
-  - The registry credential is absent from the signer while `SSH_AUTH_SOCK`/`HOME`/`PATH` pass through.
-  - argv is fixed, there is no shell, and the message goes on stdin.
-  - Output is capped and verified.
-  - The deadline equals the remaining lifetime, and an expired request is refused before the signer runs.
-  - Revoke's write root closes before K8 lists, and it revokes no session.
-  - D-WORLD-109 holds: no `~/.ssh`, `/dev/tty` or `~/.ailang/world`.
-
-**Gate 3b:** PR #543, head `5e85f8bb`.
-- `pull_request` run 42880342619: 3/3 success.
-- The CI job log shows the real-tool leg PASS on Linux: `TestSSHSIGCrossCheckWithSSHKeygen` ×2, `TestTestSignerAgreesWithSSHKeygen`, and `TestSignWithSSHKeygenEndToEnd` ×2.
-- The auto-close keyword scan read 0 (control 1).
-- Merged by merge commit **`9429e798`** (`--match-head-commit`).
-- Push checks on the merge `9429e798`: 3/3 success (all three jobs, the same set).
-- Row 201 A1b is **code-complete**. What remains of A1b is Mark's attended exit run (QUICKSTART §15).
-
-**Routing evidence:** base=1fce6999ebf875299254a1d77003e9e3351a3347@2026-11-10T16:50:36Z.
-- Controller: `claude-opus-5-5` (tok: not reported).
-- Designer: not spawned. Quorum: not run (the doc is reviewed).
-- Planner: `opus` via Agent (397,156 + 452,035 tok).
-- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (38,466 + 41,522 + 42,852 + 47,709 + 45,582 tok).
-- Evaluator: `sonnet` via Agent (79,233 tok).
-- The driver noted codex unusable at preflight (probe rc 75); no role needed it.
-- Metered total: $0.00. Details in `verification/world-iter378/routing.md`.
-
-**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Approval by key is now usable without leaving the CLI:
-- `approve <id> --sign-with <key>` signs World's exact message with `ssh-keygen` (agent, file or `sk` key), verifies the result against the enrolled key, and approves.
-- `approve --list --decided` shows what was approved and by whom.
-- `approver revoke` lists the sessions the key approved, so the operator can revoke them.
-
-The A1b design is fully built. A terminal `y` is no longer the only way to approve a mint, and nothing here needs a real key until Mark's attended exit run.
-
-**Ruled out:**
-- **Treating the AC10 census red as environmental:** it named the new site, and the mechanism (unscrubbed env, undriven site) was read in the code.
-- **Fixing the AC10 red by adding the cmd file to the driver map:** `package main` cannot be imported, and a driver-less entry would be a vacuous pass.
-- **Attributing `TestWorktreeSnapshotRefusesAConfiguredFilter` to the sprint:** it passed 5/5 alone, its packages are untouched, and it has prior instances.
-- **Dismissing K8-ERRCODE on the judge's label alone:** it was reproduced first.
-- **Treating the executor's missing-test report as executor error:** it was correct, and the planner's own tree proved it.
-
-**Retro:**
-- **A planner's gate list scoped to the touched packages misses repo-wide inventories.** This repo has several: the AC10 exec-site census, the import allowlist, context roots, and the verifygate subprocess sink. The controller's full sweep caught it, so the sweep-before-judge order earned its keep. Next directive: ask the planner to run every repo-wide inventory test, found by grepping for tests that walk `cmd/` or `host/`, whenever the sprint adds an exec site, a package, an import or a context root.
-- **A patch cut from stages can drift from the tree the mutants ran on.** The planner added a test after generating its patches. Next directive: regenerate the patches last, and `cmp` the round-tripped tree against the mutation tree, not only against the stages.
-- **Never pipe a gate's only copy of its output through `tail`.** The S1 red's log is gone. `commit_ms.sh` callers now `tee` to a file.
-
-**Next:** row 201's NEXT moves to **A2–A4**, starting with A2 (WebAuthn/passkeys). A2 needs a new child design from the rotation designer, then a quorum. The route line lists row 243 after row 201, and the queue governs.
-- Carry the judge's K8-ERRCODE and NB2 test gaps into the next row-201 sprint.
-- Mark's attended A1b exit run (QUICKSTART §15 with `--sign-with` and `--list --decided`) stays attended.
-
 ## 379 — 2026-11-10 — row 201 A2 sprint 1 built: the pure WebAuthn verification law (CBOR, COSE, authData, clientData, origin, registration law, 128-bit enrolment code), from a new child design passed by quorum r2 and the carve-out; judge PASS 93 [PRODUCT]
 
 **Pick:** row 201 `w-world-approvals-by-key`, parent milestone A2 (WebAuthn/passkeys), the route iteration 378 named. D-WORLD-109 = A applies: test keys, temp stores and Chrome's virtual authenticator only.
@@ -1851,3 +1726,84 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 
 **Next:**
 1. Row 243 **V2b** sprint planner (the bar: `AdmitWhy`, the daemon's in-process getter, the route's `why` branch and the A2 cap, the page A2–A4, XV2, QUICKSTART §19), with §2.2 (`WhyFlags`, VA1; 111 measured) folded in, audit inputs 4–6, and the V2a judge's notes as inputs. Budget ≈ 1,041.
+
+## 398 — 2026-11-17 — row 243 V2b sprint LANDED (PR #587, merge `c251132f`): `why <target>` answered in the World app's address bar — in-process through a private mux over the seven `/v1` GET handlers, read-only, every failure a refusal with the CLI line, the bar's answer byte-equal to the CLI's; live Chrome XV2; judge PASS 91 [PRODUCT]
+
+**Pick:** row 243 V2b sprint planner. This was record 397's Next and the queue head (D-WORLD-109 = A). Record 397 had landed (#586 → `c09e0cdb`), so there was no carry-over PR.
+- **Re-measured at pick** (`origin/dev` `c09e0cdb`):
+  - No V2b plan, branch or worktree existed. `mc_quorum_gate2 w-world-address-bar-verbs-v2` → rc 0 (r2 artifact `…T18-02-04Z.json`: `proceed`, `absent_reviewers` `[]`; the r1 artifact reads `blocked`, as recorded at 396), so no quorum was owed at pick.
+  - `git diff --stat 2d530cbe c09e0cdb -- cmd host docs` was empty (control: the whole-repo diff showed 18 record files), so the tree V2a left was unchanged.
+  - No open PR from the fleet account. The last three slot verdicts were all `COMPLETED rc=0`, so there was no orphaned fire.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 are not routable (unchanged). Row 243 moves no clause (clause 5, operator surface, is MET); it serves D-WORLD-94.
+- **Ledger at pick:** valid, 104 rows, no OPEN row.
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent (`mission-world.disabled`).
+- Directives: 0 allowlisted on #574 (6 comments, all the loop's own). The issue-scoped watermark file is absent, so every comment was read; nothing to `--mark`.
+- Self-notices: rc 2, `watermark channel unavailable` (instrument failure, not a verdict, as 371–397). I read #574's comments by hand instead: no driver crash notice.
+- Inbox: nothing new addressed to `mission-world` (the 2026-09-14 coordinator item and the 2026-10-17 CLI note, both old).
+- Skill drift: none. `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target `cmp` equal to the driver clone's `origin/dev`.
+- Main checkout: local `dev` = `origin/dev` = `c09e0cdb`, clean except untracked worktree dirs. Dev CI at `c09e0cdb`: 3/3 success (`checks=3`).
+
+**Planner** (Agent `opus`, 60.9 min, 442,485 tok; resolver `agent-tool opus fail-closed:env-pin`; `derive-planner-lane.sh` → `opus fail-closed:env-pin`): `w-world-address-bar-verbs-v2b-sprint-plan.md` (2,646 lines) + `sprint_w-world-address-bar-verbs-v2b.json`, 5 compiled patches in Appendix P.
+- **Size:** 1,255 (`git diff -M --numstat c09e0cdb HEAD -- cmd host docs`; 343 production, 908 test, 4 docs) against a 1,400 cap; no cut. Over the ≈ 1,135 calibrated budget by tests: the two new `host/daemon` test files are 509 lines.
+- **Sub-milestones:** M4 (§2.2 + `AdmitWhy`) 255 · M6p (the page, A2–A4) 382 · M5g (the getter, `verbWhy`, the cap) 781 · M5r (the route's branch, precedence, golden) 1,106 · M6e (VA3, VE1/VE3, XV2, QUICKSTART §19) 1,255.
+- **Mutants:** 99 table rows (ledger 110 lines): 92 killed by the named test AND the behavioural suites with static tests skipped; 2 killed only by a static pin (a flag usage string, V2a's `W-LOGPAGE`); 1 killed only by live Chrome (DOM wiring); 3 controls; 1 non-compiling form rewritten. One first-run survivor exposed a weak deadline-before-failure test, which was fixed.
+- **Inputs resolved:**
+  - Audit 4: the private mux is built per walk, so there is no new `Daemon` field and no `sync.Once`; the pinned set is the seven handlers plus `whyRoutes`, `whyMux`, `whyGetter`, `readCtx`, `readDeadline`, `writeInternalErrorLog`.
+  - Audit 5: Lookup's `why` row no longer carries the stale reason; VR1 asserts an empty reason on every result.
+  - Audit 6: the cap is on raw bytes; the encoded body is bounded at 6× the cap, tested.
+  - V2a judge notes: `--scan 0` and the `rest:` state words pinned; RS-REST closed (VE1 runs a resolved `rest:` receipt through the route); the bar's `--json` pinned against VC1's base-recorded golden; the head-absent lines stay residuals; VW5 unchanged.
+  - V2a survivors: `W-MAXRESP` now killed by VR5, `W-SCANMAX` by VA3; `W-LOGPAGE` still survives.
+- **Premises found false (§1.4), 11:** among them, five more pre-existing test files need edits than the design listed; a pending receipt reads `indeterminate`/`not-started`, not `pending`; VR8's control is `approvalOrigins`; the walk rig only makes a ✗ through its HTTP proxy, so exit-3 parity is shown on the report seed; the Chrome driver has no Escape key, so XV2 dispatches it in-page; precedence row (a) needed a test because a cancelled walk otherwise came back as a normal result.
+- **Deviations (planner's, accepted by the judge):** no separate `verb-why.golden.json` (the `why` rows live in V1's route golden, generated by the route test); the daemon tests split in two files so the getter milestone lands its own tests.
+- **Controller round trip:** I extracted the 5 patches from the plan with §2's awk and applied them with `patch -p1 -E` to `git archive c09e0cdb` in a scratch repo. Numstat after each: 255 / 382 / 781 / 1,106 / 1,255. `diff -rq` against the planner's `final-tree` and `work2` was empty for `cmd`, `host`, `docs`; the control (unpatched worktree vs `final-tree`) differed. Plan committed `1a244fee` before any sub-milestone.
+
+**Executor** (env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`, as 374–397), two runs, foreground:
+- Run 1 (M4, M6p, M5g): 2.6 min, 54,776 tok. Run 2 (M5r, M6e): 2.1 min, 70,912 tok.
+- Every `--dry-run` clean, every acceptance `ACCEPT_OK` (I re-grepped each log: PASS 45/16/26/37/40, 0 `--- FAIL`, 0 `--- SKIP`, 0 `^FAIL`). Live Chrome passed first time in M6p, M5r and M6e; the real-stack leg passed in M6e. No exception re-run, no stop, no hand edit, no git write. Snapshots matched §7 (STATUS/MANIFEST 5, 10, 13, 19, 22; DELETED empty).
+- The controller committed each snapshot with `commit_ms.sh` (gofmt/build/vet/test before each commit). Commits: M4 `b3458dee` 255 · M6p `66305ae7` 382 · M5g `55d7c197` 781 · M5r `d4daf620` 1,106 · M6e `b613e447` 1,255, each equal to the plan. Final tree byte-identical to the planner's; worktree clean.
+
+**Controller gates** (plan §6 script on `b613e447`, per-SHA dir `gates-ctl-b613e447`, 829 s, in the background while the judge read): status, verify_ail, gofmt, build, vet, fence, pkgs (`host/verbs`, `host/why`, `host/surfacepage`, `host/daemon`, `cmd/ailang-worldd`), race, inv (**71** named PASS, none missing/SKIP), **realstack** (`TestDemoSeedWhyNamedLinks/real-stack`, `TestCLIAgainstSeToolsDaemon` PASS, 0 SKIP), **chrome** (23 PASS incl. `TestVerbBarWhyInChrome`, 0 SKIP), `verify_go` (pinned v0.41.0) — all rc 0, `FAILS: none`.
+
+**Evaluator** (Agent `sonnet`, own worktree `.eval-world-iter398-row243-v2b`, 23.9 min, 97,807 tok; resolver `agent-tool sonnet declared:alias-pin`; generator ≠ judge — opus plan, haiku execution, sonnet judge): **PASS 91/100**, 0 blocking (correctness 28/30, tests 27/30, security 19/20, standards 9/10, scope 10/10; 2 withheld for the survivor groups). It waited for the gates' `ALL_DONE` before running anything.
+- **Read-only:** an eighth handler or a `POST /v1/head` on the private mux is killed by `TestSurfaceVerbWhyIsReadOnly` and `TestWhyGetterTransportParity`.
+- **Precedence:** mapping a cancelled walk to a normal result is killed by `TestSurfaceVerbWhyDeadline` (non-vacuous); the 6× encoded bound is tested and true; restoring Lookup's stale reason is killed by `TestLookup` and the daemon outcome tests.
+- **Bar = CLI, independently:** a one-byte change to the bar's text or JSON is killed by `TestVerbRouteWhyIsTheCLIs`, which compares against the real CLI path and the base-recorded golden, not `why.Run`. VC1's golden (`testdata/`) has no diff against the base.
+- Its own runs: the four touched host packages (`host/daemon` 258.6 s), the touched cmd tests, `-race` on verbs/why, `vet`, the compile fence, the real-stack leg (RAN, not SKIP) and both live-Chrome bar tests — all rc 0. Scope: 25 paths, all in plan §5 + the two plan files; no `.ail`, `t.Parallel`, exec site or context root.
+- Mutants: ledger `judge/mutants.tsv`, 72 lines (58 KILLED, 10 SURVIVED, 4 INVALID); 53 ids not in the plan's table; must-live and must-die controls behaved; a 13-id plan sample reproduced.
+- Pre-existing tests: none weakened, several tightened; no `Test*` name disappeared (verbs 6→10, daemon 382→392, surfacepage 56→56, cmd 425→428, why 10→10).
+- **Non-blocking, logged here (not filed, per D-WORLD-109):** (1) `AdmitWhy`'s `Quote` in the refusal's CLI line is unpinned — a plain join survives the whole `host/verbs` package; **reproduced by the controller** (mutant `host/verbs/flags.go:137`, `go test ./host/verbs/` rc 0, restored); the effect is a mis-quoted reason line only. (2) three cosmetic page strings (the placeholder suffix, the keys-row `why T`, `index.html`'s placeholder) survive `host/surfacepage`. (3) `W-LOGPAGE` and the flag-usage string are killed by static pins only. (4) its daemon-side survivors were confirmed in the narrow `-run` only, not the whole 258 s package. It did not re-run the M5g commit on its own.
+
+**Gate 3b:**
+- Dev did not move during the sprint (`origin/dev` `c09e0cdb` at push and at merge).
+- PR #587 head `b613e447`: **3/3 success** first try (verify gate, Go host gate, race gate; per-SHA poll `ci_pr587_headb613e447.verdict`). `mergeable` MERGEABLE/CLEAN on that head. Closing-keyword scan of the PR body and the 6 commit messages: 0 (control 1).
+- `gh pr merge 587 --merge --match-head-commit b613e447…` → merge **`c251132f`**.
+- Push CI on the merge, run 44010591675: **3/3 success** first try (`ailang-code verify gate`, `go host build + test gate`, `go race gate`; per-SHA poll `ci_mergec251132f.verdict`). **LANDED.**
+
+**Routing evidence:** base=c09e0cdb3c8a3eb25c208dbacedddfb690fe8ca0@2026-11-17T01:39:53Z (Gate 1).
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (doc reviewed at 396).
+- Planner: `opus` via Agent (442,485 tok), resolver `agent-tool opus fail-closed:env-pin` (driver note: codex `gpt-6.1-sol` unusable at preflight, probe rc 75, quota unreadable → opus).
+- Executor: `claude:claude-haiku-5-5` env pin, spawned as Agent `haiku` (54,776 + 70,912 tok), resolver `recipe claude:claude-haiku-5-5 declared:provider-pin` (driver note: codex unusable → haiku).
+- Evaluator: `sonnet` via Agent (97,807 tok), `agent-tool sonnet declared:alias-pin`. **Spawned as required; no role failed to spawn.**
+- Quorum: none (doc reviewed at 396). Metered total: $0.
+- Judge independence: cross-model (opus plan, haiku execution, sonnet judge).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V2 is complete: an operator can type `why <target>` in the World app's address bar and read the same answer the CLI prints, served in-process and read-only; every failure says why and carries the CLI line. Row 243's next phase is V3 (the verb-approval law), which needs a child design and a ledger ask.
+
+**Ruled out:**
+- **A V2c cut:** the plan measured 1,255 against the 1,400 cap, so nothing moved out.
+- **Treating the judge's `Quote` survivor as blocking:** the refusal still carries a CLI line and refuses; only an argument needing quotes would print unquoted. Reproduced and logged for V3's planner.
+- **Re-running the whole `host/daemon` package for the judge's narrow-run survivors:** the controller's `pkgs` leg ran the whole package green on the same SHA; the survivors are test-strength notes, not regressions.
+
+**Retro:**
+- **The real-stack leg is now a named plan gate** (397's instance 1 → applied here): the planner put `TestDemoSeedWhyNamedLinks/real-stack` and `TestCLIAgainstSeToolsDaemon` in §6 as `realstack`, measured at the base, and both the gates and the judge saw them RUN. CI still skips them; that stays a known gap, not a rule change.
+- **Fastest V-sprint shape so far:** planner 61 min → executor 2 runs, 4.7 min total → gates 829 s concurrent with the judge (24 min). The judge's sequencing wait cost nothing because the gates finished first.
+- **Test-heavy plans exceed the design's size estimate** (1,255 vs ≈ 1,135): the overrun was all tests. Instance 1 for "test lines dominate the overrun"; no rule change.
+- **Watermark files for #574/#524 remain absent**, so the self-notices instrument stays rc 2 (unchanged since 371; not this loop's harness).
+
+**Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16 after the Monday 07:00 boundary; the next rotation is Monday 2026-11-23). Weekly external-issue sweep already run this week at 393.
+
+**Next:**
+1. Row 243 **V3** child design (the verb-approval law: key-confirmed mutating verbs in the bar; it will need a ledger ask, e.g. `episode finish` vs A4 §2.6 L1). Designer = rotation (file last-used `claude:claude-opus-5-5`, so next is `codex:gpt-6.1-sol` — check the resolver; codex probed rc 75 this fire), then quorum `--author`. Inputs: the V2b judge's non-blocking notes (the `Quote` survivor, the cosmetic page strings).
