@@ -1,19 +1,20 @@
-# World mission dashboard — iteration 397 (2026-11-17)
+# World mission dashboard — iteration 398 (2026-11-17)
 
-- **Done this fire:** row 243 **V2a LANDED** (PR #585, merge `2d530cbe`; CI 3/3 on head and on the merge, first try). This is the seam for `why` in the World app's address bar.
-  - The CLI's `why` walk now lives in `host/why` behind an injected `Getter` (`Run`, `ParseTarget`, `Head`, `Elide`, `Sum`). V2b's daemon will call the same function in-process.
-  - The CLI keeps a thin front and a compatibility layer. `headState` and `elide` are one-line delegations, so there is one `/v1/head` reader.
-  - Behaviour-neutral: `ailang-worldd why` prints the same bytes with the same exits. A characterisation golden generated at the base pins 11 paths no test drove before. The bar still answers `why` with its CLI line.
-  - 1,299 changed lines of a 1,300 cap. Design §2.2 (`WhyFlags`, VA1) moved to V2b, measured at 111 lines.
-  - Judge (sonnet, own worktree) **PASS 90/100**, 0 blocking. It also ran the real-stack why chains that CI skips (`WORLD_TOOL_AILANG_BIN` unset in CI); they passed.
-- **Next loop work:** the row 243 **V2b** sprint planner (the bar runs `why`; ≈ 1,041 lines with §2.2 folded in). After that come V3 (the verb-approval law, with a ledger ask), V4 (host runner and herdr hand-off) and V5.
-- **Attended, for Mark when convenient:** the V1 no-terminal exit run (parent design §10).
+- **Done this fire:** row 243 **V2b LANDED** (PR #587, merge `c251132f`; CI 3/3 on head and 3/3 on the merge). Row 243 **V2 is complete**: you can type `why <target>` in the World app's address bar.
+  - The bar's answer is byte-identical to `ailang-worldd why` (VE1, and a test that compares against the real CLI path rather than `why.Run`). `--json` works too.
+  - It runs in-process through a private mux over the seven `/v1` GET handlers. That is read-only: no new route, no POST, no store write, no new daemon field.
+  - Every failure is a refusal that carries the CLI line, never navigation: the 10 s deadline, a read failure, a cancelled walk, an answer over 1 MiB, and `-`/`--result`/`--expect-store`, which only the terminal can run.
+  - The page now treats every Enter as owning the bar (an empty or third submit supersedes a pending ask), and refusals with a CLI line open the panel. Live Chrome XV2 drives it; QUICKSTART §19 documents it.
+  - 1,255 changed lines of a 1,400 cap, in 5 sub-milestones, each equal to the plan.
+  - Judge (sonnet, own worktree) **PASS 91/100**, 0 blocking. Notes: the CLI line's quoting is unpinned (controller reproduced), and three cosmetic page strings are unpinned.
+- **Next loop work:** row 243 **V3** child design (the verb-approval law for mutating verbs). It will need a ledger ask. Designer = rotation (next after opus is `codex:gpt-6.1-sol`; check the resolver). After V3 come V4 (host runner and herdr hand-off) and V5.
+- **Attended, for Mark when convenient:** the V1 no-terminal exit run (parent design §10), which can now include `why`.
 - **OPEN decisions:** none.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
 - **Routing this fire:**
-  - Planner: opus via Agent (88 min).
-  - Executor: haiku via Agent (6 min, one run, no stop).
-  - Evaluator: sonnet via Agent (53 min).
-  - Codex was over ration and unusable at preflight (probe rc 75). Metered $0.
-- **Instrument notes:** self-notices still return rc 2 (`watermark channel unavailable`), because the #574/#524 watermark files are absent. Dev CI at `2d530cbe` is 3/3 green.
+  - Planner: opus via Agent (61 min).
+  - Executor: haiku via Agent (2 runs, 4.7 min, no stop).
+  - Evaluator: sonnet via Agent (24 min, concurrent with the 14-min gate sweep).
+  - Codex was unusable at preflight (probe rc 75, quota unreadable). Metered $0.
+- **Instrument notes:** self-notices still return rc 2 (`watermark channel unavailable`), because the #574/#524 watermark files are absent. CI never runs the real-stack `why` tests (`WORLD_TOOL_AILANG_BIN` unset); the plan's gates and the judge did, and they passed.
 - **Bookkeeping thread:** #574.

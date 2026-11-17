@@ -1,0 +1,4 @@
+ALL COMPLETE for b613e447d7b66b77157053ccc73fde4dce7614be total=3
+  go race gate (go test -race, own job): success
+  ailang-code verify gate: success
+  go host build + test gate: success
