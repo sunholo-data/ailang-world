@@ -492,19 +492,20 @@
     const need = b && typeof b === 'object' && b.schema === 'world/surface-verb/v1' && b.v === 1 && Object.prototype.hasOwnProperty.call(VERB_NEEDS, b.outcome) ? VERB_NEEDS[b.outcome] : null;
     if (!need || !need.every(k => typeof b[k] === 'string' && b[k] !== '')) return UNREADABLE;
     if (b.outcome === 'address') return { address: true };
-    if (b.outcome === 'refused') return { say: b.reason };
+    if (b.outcome === 'refused') return typeof b.cli === 'string' && b.cli !== '' ? { panel: { head: '$ ' + b.cli, body: b.reason, copy: b.cli } } : { say: b.reason };
     if (b.outcome === 'navigate') return b.href.startsWith('/surface/approve/mr-') || b.href.startsWith('/surface/decide/sha256:') ? { assign: b.href } : { say: 'refused: unexpected target' };
     if (b.outcome === 'terminal') return { panel: { head: '$ ' + b.cli, body: b.reason + '\nAt a terminal: ' + b.cli, copy: b.cli } };
     const shown = [b.text, b.json, b.stderr].filter(x => typeof x === 'string' && x !== '');
-    if (shown.length !== 1 || (b.stderr !== undefined && b.exit !== 1)) return UNREADABLE;
-    return { panel: { head: '$ ' + b.cli, body: b.stderr !== undefined ? b.stderr + 'exit 1' : shown[0], copy: '' } };
+    if (shown.length !== 1 || (b.exit !== undefined && b.exit !== 1 && b.exit !== 3) || (b.stderr !== undefined) !== (b.exit === 1)) return UNREADABLE;
+    return { panel: { head: '$ ' + b.cli, body: shown[0] + (b.exit ? 'exit ' + b.exit : ''), copy: '' } };
   }
   // askVerb asks the route under one budget, across the fetch and the body (io carries fetch, the
   // clock and AbortController). A newer ask supersedes an older one: the older is aborted and its
   // answer dropped, never acted on; the newer answers for the bar.
   let verbJob = null;
+  function dropVerb() { if (verbJob) { verbJob.superseded = true; verbJob.ctl.abort(); } }
   async function askVerb(raw, io) {
-    if (verbJob) { verbJob.superseded = true; verbJob.ctl.abort(); }
+    dropVerb();
     const job = { ctl: new io.AbortController(), superseded: false, late: false };
     verbJob = job;
     const stop = new Promise((_, reject) => job.ctl.signal.addEventListener('abort', () => reject(new Error('aborted'))));
@@ -532,6 +533,28 @@
     if (act.panel) { fx.clear(); return fx.panel(act.panel); }
     fx.say(act.say);
   }
+  // goWith is the bar's Enter over fx (design A4): every Enter owns the bar. An empty line supersedes a pending ask and goes
+  // home; an answer that arrives after a newer Enter is dropped, and the address path re-checks after its own await.
+  let barTurn = 0;
+  async function goWith(raw, fx) {
+    const turn = ++barTurn, current = () => turn === barTurn;
+    if (String(raw == null ? '' : raw).trim() === '') { dropVerb(); return fx.out(); }
+    const act = await fx.ask(raw);
+    if (!current()) return;
+    return verbAct(act, raw, { ...fx.act, address: r => fx.address(r, current) });
+  }
+  // addressGo is the address bar's own path (M4a's grammar), reached only through the route's address answer; after the
+  // index loads it acts only for the current Enter.
+  async function addressGo(raw, current, fx) {
+    let r = addressTarget(raw, null, fx.parse);
+    if (r.error && typeof fx.parse === 'function') {
+      try { r = addressTarget(raw, await fx.loadIndex(), fx.parse); } catch (e) { r = { error: 'the surface index could not be read: ' + e.message }; }
+      if (!current()) return;
+    }
+    if (r.home) return fx.out();
+    if (r.open) return fx.openState(r.open.brane, r.open.at);
+    fx.say(r.error);
+  }
   // verbPanel builds the panel's nodes with textContent only: a report or a reason is never markup.
   function verbPanel(doc, p) {
     const el = doc.createElement('div'), head = doc.createElement('div'), body = doc.createElement('pre');
@@ -545,7 +568,7 @@
 
   if (typeof module !== 'undefined') module.exports = { needsYouHTML, decidedHTML, notifications, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
     adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW },
-    VERB_ROUTE_BUDGET_MS, verbOutcome, askVerb, verbAct, verbPanel };
+    VERB_ROUTE_BUDGET_MS, verbOutcome, askVerb, verbAct, verbPanel, goWith, addressGo };
   if (typeof document === 'undefined') return;
 
   // ================= The page =================
@@ -989,7 +1012,7 @@
   const addrOf = () => F.kind === 'open' ? String(F.id).replace(/:episode:/, ':') : `${String(F.brane).replace(/^([a-z][a-z0-9-]*):brane:/, '$1:')}@${railIdx() + 1}`;
   function renderCrumbs() {
     $('crumbs').innerHTML = crumbsHTML(st.d === 1 && F ? addrOf() : null);
-    $('addr').placeholder = st.d !== 0 ? '' : (T && T.GROUPS[0].id ? 'go to a place — ' + T.GROUPS.map(g => g.id).join(' · ') + ' · ' + T.GROUPS[0].id + ':row-N@1' : 'go to a place — row-189@6 · shared@0ffbb9c') + ' · episode report <episode>';
+    $('addr').placeholder = st.d !== 0 ? '' : (T && T.GROUPS[0].id ? 'go to a place — ' + T.GROUPS.map(g => g.id).join(' · ') + ' · ' + T.GROUPS[0].id + ':row-N@1' : 'go to a place — row-189@6 · shared@0ffbb9c') + ' · episode report <episode> · why <target>';
   }
   let msgT;
   function say(t) { const m = $('hmsg'); m.textContent = t; m.style.opacity = '1'; clearTimeout(msgT); msgT = setTimeout(() => { m.style.opacity = '0'; }, 2600); }
@@ -1263,11 +1286,10 @@
     openState(F.brane, RAIL[k].id);
   }
   // go is the bar's Enter: empty is home (no fetch); anything else asks the verb route first.
-  async function go(raw) {
-    if (String(raw == null ? '' : raw).trim() === '') return out();
-    const act = await askVerb(raw, { fetch: (u, o) => fetch(u, o), AbortController, setTimeout: (f, ms) => setTimeout(f, ms), clearTimeout: t => clearTimeout(t) });
-    return verbAct(act, raw, { address: goAddress, assign: h => location.assign(h), panel: showVerbPanel, say,
-      clear: () => { if ($('addr').value === raw) $('addr').value = ''; } });
+  function go(raw) {
+    return goWith(raw, { out, address: goAddress,
+      ask: q => askVerb(q, { fetch: (u, o) => fetch(u, o), AbortController, setTimeout: (f, ms) => setTimeout(f, ms), clearTimeout: t => clearTimeout(t) }),
+      act: { assign: h => location.assign(h), panel: showVerbPanel, say, clear: () => { if ($('addr').value === raw) $('addr').value = ''; } } });
   }
   function showVerbPanel(p) {
     const old = $('verb'), el = verbPanel(document, p);
@@ -1275,20 +1297,10 @@
     const b = el.querySelector('button');
     if (b) b.addEventListener('click', () => { try { navigator.clipboard.writeText(b.dataset.copy).then(() => say('copied'), () => say('copy it from the panel')); } catch (_) { say('copy it from the panel'); } });
   }
-  // goAddress is the address bar's own path (M4a's grammar), reached only through the route's address answer.
-  async function goAddress(raw) {
-    const parse = SEAMS.parseAddress;
-    let r = addressTarget(raw, null, parse);
-    if (r.error && typeof parse === 'function') {
-      try { r = addressTarget(raw, await loadIndex(), parse); } catch (e) { r = { error: 'the surface index could not be read: ' + e.message }; }
-    }
-    if (r.home) return out();
-    if (r.open) return openState(r.open.brane, r.open.at);
-    say(r.error);
-  }
+  function goAddress(raw, current) { return addressGo(raw, current, { parse: SEAMS.parseAddress, loadIndex, out, openState, say }); }
 
   // ---------- Popovers ----------
-  const KEYROWS = [['← →', 'back · forward a page', '—'], ['⇧← ⇧→', 'previous · next state', '—'], ['↑ ↓', 'lane above · below', 'back in time · toward now'], ['+ −', 'zoom in · out', '—'], ['End', 'back to now', 'most recent'], ['Home', 'the oldest state', 'earliest'], ['Enter', 'open brane', '—'], ['Esc', '—', 'back to timeline'], ['N', 'what needs you', 'what needs you'], ['/', 'address bar', 'address bar'], ['Enter', 'in the bar: a place, episode report E, approve ID', 'the same'], [',', 'appearance', 'appearance'], ['?', 'these keys', 'these keys']];
+  const KEYROWS = [['← →', 'back · forward a page', '—'], ['⇧← ⇧→', 'previous · next state', '—'], ['↑ ↓', 'lane above · below', 'back in time · toward now'], ['+ −', 'zoom in · out', '—'], ['End', 'back to now', 'most recent'], ['Home', 'the oldest state', 'earliest'], ['Enter', 'open brane', '—'], ['Esc', '—', 'back to timeline'], ['N', 'what needs you', 'what needs you'], ['/', 'address bar', 'address bar'], ['Enter', 'in the bar: a place, episode report E, why T, approve ID', 'the same'], [',', 'appearance', 'appearance'], ['?', 'these keys', 'these keys']];
   function renderKeys() {
     $('keys').innerHTML = `<div class="kgrid"><span></span><span style="font-size:12px;font-weight:700;color:${st.d === 0 ? 'var(--text)' : 'var(--faint)'}">Timeline</span><span style="font-size:12px;font-weight:700;color:${st.d === 1 ? 'var(--text)' : 'var(--faint)'}">Brane</span>` +
       KEYROWS.map(([k, a, b]) => `<span><span class="kbd">${k}</span></span><span>${a}</span><span>${b}</span>`).join('') +
