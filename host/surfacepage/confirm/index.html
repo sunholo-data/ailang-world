@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AILANG World: confirm an episode finish</title>
+<style>
+body { font: 16px/1.5 system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; color: #1d1d1f; }
+h1 { font-size: 1.4rem; }
+h2 { font-size: 1.05rem; margin: 1.2rem 0 0.3rem; }
+#what, #status { white-space: pre-wrap; }
+#what[data-error] { color: #b00020; font-weight: 600; }
+pre { font: 13px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; background: #f5f5f7; padding: 0.6rem; margin: 0; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.15rem 1rem; margin: 0; }
+dt { color: #555; }
+dd { margin: 0; font: 13px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
+#sshline { font: 13px ui-monospace, monospace; overflow-wrap: anywhere; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body data-state="loading">
+<h1>Confirm an episode finish</h1>
+<p id="what">Reading the request…</p>
+<div id="shown" hidden>
+<h2>The command</h2>
+<pre id="argv"></pre>
+<h2>The terminal's prompt</h2>
+<pre id="prompt"></pre>
+<h2>Open this pull request?</h2>
+<p id="status"></p>
+<div id="controls" hidden>
+<p><a id="save">Save the message</a></p>
+<p id="sshline"></p>
+</div>
+<h2>What your key signs</h2>
+<dl id="signed"></dl>
+</div>
+<script src="/surface/confirm.js"></script>
+</body>
+</html>
