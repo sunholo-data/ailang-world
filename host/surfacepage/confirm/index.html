@@ -8,7 +8,7 @@
 body { font: 16px/1.5 system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; color: #1d1d1f; }
 h1 { font-size: 1.4rem; }
 h2 { font-size: 1.05rem; margin: 1.2rem 0 0.3rem; }
-#what, #status { white-space: pre-wrap; }
+#what, #status, #answer { white-space: pre-wrap; }
 #what[data-error] { color: #b00020; font-weight: 600; }
 pre { font: 13px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; background: #f5f5f7; padding: 0.6rem; margin: 0; }
 dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.15rem 1rem; margin: 0; }
@@ -28,9 +28,13 @@ dd { margin: 0; font: 13px ui-monospace, monospace; white-space: pre-wrap; overf
 <pre id="prompt"></pre>
 <h2>Open this pull request?</h2>
 <p id="status"></p>
+<p id="answer"></p>
 <div id="controls" hidden>
+<p><button id="go" hidden type="button" disabled>Approve with your passkey</button></p>
 <p><a id="save">Save the message</a></p>
 <p id="sshline"></p>
+<p><label for="sig">Paste the signature</label><br><textarea id="sig"></textarea></p>
+<p><button id="post-sig" type="button" disabled>Confirm with this signature</button></p>
 </div>
 <h2>What your key signs</h2>
 <dl id="signed"></dl>

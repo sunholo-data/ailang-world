@@ -1,0 +1,265 @@
+{
+  "sprint_id": "w-world-address-bar-verbs-v3s4",
+  "design_doc": "design_docs/planned/w-world-address-bar-verbs-v3.md",
+  "design_revision": "r2 (quorum r1/r2 BLOCKED; controller carve-out r2; independent audit PASS 87, iteration 399); not reopened",
+  "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v3s4-sprint-plan.md",
+  "previous_sprint": "row 243 V3 S3 (iteration 402, PR #595, merge c9e997a9, judge PASS 92); closest analogue: row 201 A4 POST /surface/decide/{ref} (surface_decide.go, surface_decide_key.go, RD13 (a) failWorldWrites, H-LOCK TestDecideConcurrentPOSTsDecideOnce)",
+  "base_commit": "430668f86d4bdfb226f92ec39de99440abbbb397",
+  "design_measured_at": "994ba123 (every S4 cite re-measured at 430668f8: no code moved; ParseApproveBody :197 -> :214, the /surface routes :1139-1148 -> :1141-1153; plan 1.2 C1-C2)",
+  "queue_row": 243,
+  "iteration": 403,
+  "phase": "V3",
+  "sprint": "S4 (the POST)",
+  "sprint_number": 4,
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter403-row243-v3s4",
+  "branch": "sprint/world-iter403-row243-v3s4",
+  "authority": [
+    "D-WORLD-118 = A (verified by the controller at iteration 400, verdict=attended, flip 72007b37; no OPEN row at iteration 403): S4 routable; F6/DraftOnly/B +15 never built (CX17 confirms a ready PR)",
+    "D-WORLD-109 = A (t.TempDir() stores, approvaltest keys, no real store/key/tty/mint/publish, no listener beyond httptest/ServeHTTP; node stubs navigator.credentials and fetch)",
+    "D-WORLD-107 = A; D-WORLD-89 R1-R5: the finish approval decided by a key under AM7; L1/L2 unchanged (CX18, T12)"
+  ],
+  "behaviour": "POST /surface/confirm/{id} (host/daemon/surface_confirm.go): C0-C6 guards (R2 = approvalRoute first), then under humanMu within commitBudget C7-C12 on a read-only handle (each refusal writes nothing), C13 non-waiting writer, C14 broker.RecordOperatorApproval(scope, operator:episode-finish, signed.ApprovedBy(), now) unchanged, C15 ConsumeVerbRequest(decision) in one transaction, writer held across C14-C15; 200 = surfacepage.Confirmed (NEW). One route registered (M10d). confirm.js submit half: passkey (challenge = message hash, allowCredentials from the origin group, UV required, 240 s abort) and SSHSIG paste posting ParseApproveBody grammar; answer then re-read. Judge-402 note 1 pinned (test-only); audit note 3 daemon half. No CLI, schema, bar, Needs-you, .ail or CSP change.",
+  "cut": {
+    "cap_loc": 1400,
+    "measure": "git diff -M --numstat 430668f8 HEAD -- cmd host docs (insertions + deletions); the same with no path filter",
+    "design_raw_s4": 945,
+    "m10_compiled": 916,
+    "m11_compiled": 181,
+    "measured": 1097,
+    "ratio": 1.16,
+    "margin": 303,
+    "fired": "no (S4-D1: M10 compiled first = 916; M11 = 181; total 1,097 <= 1,400; the design cut M11 -> S6 measured and not taken)",
+    "moved_out": {}
+  },
+  "planner_decisions": {
+    "S4-D1_no_cut": "M10 916 first, M11 181, total 1,097",
+    "S4-D2_registered_last": "M10a-M10c ship the handler unregistered, tested through approvalRoute(handleSurfaceConfirm) with the path value set; M10d registers the POST and switches the tests to the mux; M11 the page",
+    "S4-D3_cx_ids": "the design's ids kept, no CX16: CX0-CX6 Guards, CX7-CX13 RefusesBeforeAnyWrite, CX14 = CX20's first half, CX15 RefusedAtC15 + ConsumeRefusalOperands, CX17 Confirms, CX18 writer sites + A4 L1 unedited, CX19 HoldsHumanMu, CX20, CX21",
+    "S4-D4_r2_first": "approvalRoute answers 421 before C0, as A3a/A4",
+    "S4-D5_v8_at_c7": "the read-only VerbRequest refuses a v8 store first: 503 Restart naming verb requests (confirmStoreError)",
+    "S4-D6_500_text": "C14/C15 store failures answer 500 Internal with the design's fixed text; detail to d.errLog only",
+    "S4-D7_seams": "judgeVerbSSH/judgeVerbAssertion (C12 needs a verified confirmation of other bytes; the judge store class) and consumeVerbRequest (events between C14 and C15 need the held writer); restored in t.Cleanup",
+    "S4-D8_cx19": "TryLock probes at the clock read, C11 and C15 (deterministic) + H-LOCK eight concurrent POSTs; the typed approve phase takes the same d.humanMu (episode_finish.go:158)",
+    "S4-D9_window_table": "the design's four rows + audit note 3's (superseded between C14 and C15: 409 naming the episode, one inert orphan, row superseded) + C15's refusals",
+    "S4-D10_judge402_note1": "test-only: TestVerbRequestExpiryBoundary (list and cap at expires_at == now) + CX8 expired at expires_at; no inconsistency measured",
+    "S4-D11_judge402_note2": "documented residual",
+    "S4-D12_page": "mirrors decide.js: b64u/assertionJSON copied, net(url, init), #answer kept across the re-read, controls back only for a pending card",
+    "S4-D13_timing": "no sleeps: synchronous ServeHTTP, WaitGroup, node until() on a 10 s wall-clock deadline, the 240 s timer fired by hand"
+  },
+  "scope": [
+    "host/daemon/surface_confirm.go (NEW)",
+    "host/daemon/daemon.go (one POST registration)",
+    "host/surfacepage/confirm_model.go (ConfirmedJSON, Confirmed)",
+    "host/surfacepage/confirm/confirm.js, index.html (submit half)",
+    "tests: host/daemon/surface_confirm_test.go, surface_confirm_write_test.go (NEW); host/store/verb_requests_bound_test.go (NEW); host/surfacepage/confirm_confirmed_test.go (NEW); edited: surface_approve_post_guard_test.go, surface_confirm_read_test.go, confirm_script_test.go"
+  ],
+  "executor_lane": "as routed by the controller; Run 1: M10a, M10b, M10c, M10d; Run 2: M11; apply patches, never retype",
+  "executor_form": "every sub-milestone is a unified diff in the plan's Appendix P, applied in order with /usr/bin/patch -p1 -E after a --dry-run (no deletion); acceptance = the plan's accept.sh parts (fast/daemon/chrome), one 600 s call each; cumulative snapshots (DELETED empty)",
+  "estimate_loc": {
+    "production": 311,
+    "test": 786,
+    "docs": 0,
+    "total_cumulative": 1097,
+    "cmd_host_only": 1097
+  },
+  "milestones": [
+    {
+      "id": "M10a",
+      "title": "handler (unregistered) + Confirmed + fourth writer site + CX0-CX6",
+      "production": 232,
+      "test": 201,
+      "expected_cumulative_numstat": 433,
+      "run": 1,
+      "accept_parts": [
+        "fast",
+        "daemon"
+      ]
+    },
+    {
+      "id": "M10b",
+      "title": "CX7-CX13 + judge-402 note 1 pins",
+      "production": 0,
+      "test": 172,
+      "expected_cumulative_numstat": 605,
+      "run": 1,
+      "accept_parts": [
+        "fast"
+      ]
+    },
+    {
+      "id": "M10c",
+      "title": "CX14-CX21, audit note 3, C15 mapping",
+      "production": 0,
+      "test": 312,
+      "expected_cumulative_numstat": 917,
+      "run": 1,
+      "accept_parts": [
+        "fast"
+      ]
+    },
+    {
+      "id": "M10d",
+      "title": "POST /surface/confirm/{id} registered; route table; tests through the mux",
+      "production": 3,
+      "test": 26,
+      "expected_cumulative_numstat": 916,
+      "run": 1,
+      "accept_parts": [
+        "fast",
+        "daemon"
+      ]
+    },
+    {
+      "id": "M11",
+      "title": "confirm.js submit half, CP8-CP10",
+      "production": 76,
+      "test": 105,
+      "expected_cumulative_numstat": 1097,
+      "run": 2,
+      "accept_parts": [
+        "fast",
+        "chrome"
+      ]
+    }
+  ],
+  "expected_snapshots": {
+    "M10a": "5/0/5",
+    "M10b": "6/0/6",
+    "M10c": "7/0/7",
+    "M10d": "9/0/9",
+    "M11": "12/0/12"
+  },
+  "design_premises_found_false": [
+    "F1 CX19 \"surface_decide_race_test.go shape\": that file is the operands test; H-LOCK is in surface_decide_key_retry_test.go:106 (both shapes used)",
+    "F2 C13 \"below v9 -> 503\": C7 read refuses first (503 Restart, nothing written)",
+    "F3 cites moved: ParseApproveBody :214, routes :1141-1153",
+    "F4 CX21 CLI rig: no CLI before S5 (daemon half proven; CLI half -> S5)",
+    "F5 C14 failure \"no decision\": RecordOperatorApproval writes the request object and head first; CX20 asserts 0 decisions and the credentials store unchanged"
+  ],
+  "existing_tests_edited": [
+    "host/daemon/surface_approve_post_guard_test.go (TestDaemonCredentialWriterSites: + handleSurfaceConfirm, AM8)",
+    "host/daemon/surface_confirm_read_test.go (TestConfirmRoutesRegistered: + POST /surface/confirm/{id}; 405 loop skips POST on the card path)",
+    "host/surfacepage/confirm_script_test.go (stand-in DOM events, navigator; sections passkey/answers/sshsig)"
+  ],
+  "existing_tests_deleted": [],
+  "files_outside_design_section_7": [
+    "host/store/verb_requests_bound_test.go",
+    "host/surfacepage/confirm_confirmed_test.go"
+  ],
+  "not_touched": [
+    "tools/launchd/*",
+    "skills",
+    "world/*.ail",
+    "packages/",
+    "scripts/",
+    "cmd/",
+    "host/store, host/broker, host/approval, host/authority production",
+    "surface_page.go (surfaceCSP)",
+    "approvalRoute",
+    "/v1 table",
+    "approve.js, decide.js, app.js"
+  ],
+  "ci_change": "none",
+  "sprint_gates": "plan 6 gates.sh: touched-package derivation (host/daemon host/store host/surfacepage), status, verify_ail, gofmt, build, vet, fence, pkgs (3 packages whole), race (store + surfacepage whole, daemon approval-surface subset), race3 (8 new daemon tests + boundary pin), node (12 harnesses), inv, SURFACE_POSTS (4), chrome (17), verify_go; ALL_DONE.<sha> with FAILS",
+  "base_gates": [
+    "TOUCHED_PACKAGES: ",
+    "LEG status rc=0 0s",
+    "LEG verify_ail rc=0 163s",
+    "LEG gofmt rc=0 1s",
+    "LEG build rc=0 23s",
+    "LEG vet rc=0 7s",
+    "LEG fence rc=0 40s",
+    "LEG pkgs rc=1 555s",
+    "LEG race rc=1 158s",
+    "LEG node rc=0 7s",
+    "LEG inv rc=0 82s",
+    "named PASS: 60",
+    "SURFACE_POSTS: 2 mux.HandleFunc(\"POST /surface/approve/{id}\" mux.HandleFunc(\"POST /surface/decide/{ref}\" ",
+    "LEG chrome rc=0 131s",
+    "LEG verify_go SKIPPED (GATES_SKIP_VERIFY_GO=1)",
+    "GATES_DONE 1169s FAILS: pkgs race"
+  ],
+  "final_gates_planner": [
+    "TOUCHED_PACKAGES: host/daemon host/store host/surfacepage ",
+    "LEG status rc=0 0s",
+    "LEG verify_ail rc=0 280s",
+    "LEG gofmt rc=0 2s",
+    "LEG build rc=0 20s",
+    "LEG vet rc=0 6s",
+    "LEG fence rc=0 37s",
+    "LEG pkgs rc=0 303s",
+    "LEG race rc=0 97s",
+    "LEG race3 rc=0 19s",
+    "LEG node rc=0 4s",
+    "LEG inv rc=0 33s",
+    "named PASS: 70",
+    "SURFACE_POSTS: 3 mux.HandleFunc(\"POST /surface/approve/{id}\" mux.HandleFunc(\"POST /surface/decide/{ref}\" mux.HandleFunc(\"POST /surface/confirm/{id}\" ",
+    "LEG chrome rc=0 60s",
+    "LEG verify_go SKIPPED (GATES_SKIP_VERIFY_GO=1)",
+    "GATES_DONE 862s FAILS: none"
+  ],
+  "acceptance_planner": [
+    "M10a fast rc=0 72s ACCEPT_OK M10a fast",
+    "M10b fast rc=0 61s ACCEPT_OK M10b fast",
+    "M10c fast rc=0 44s ACCEPT_OK M10c fast",
+    "M10d fast rc=0 26s ACCEPT_OK M10d fast",
+    "M11 fast rc=0 46s ACCEPT_OK M11 fast",
+    "M11 chrome rc=0 57s ACCEPT_OK M11 chrome",
+    "M10a daemon rc=0 469s ACCEPT_OK M10a daemon",
+    "M10d daemon rc=0 645s ACCEPT_OK M10d daemon"
+  ],
+  "race_added_seconds_host_daemon": 2.1,
+  "mutants": {
+    "ledger": "/Users/voightkampff/.ailang/state/world-iter403/plan-scratch/logs/mutant_ledger.tsv",
+    "summary": "150 rows (3 `CTL`, 4 `E`, 141 `K`, 2 `R`); 154 ledger lines (runs R1, R2, R3); 150 of 150 rows run; the last line of each row behaves as its class says for **150 of 150**. Table ids = ledger ids (`tools/mktable.py` fills §4 from the ledger's last line per id); ledger `$HOME/.ailang/state/world-iter403/plan-scratch/logs/mutant_ledger.tsv`"
+  },
+  "roundtrip": [
+    "CMP_EQUAL M10a",
+    "NUMSTAT M10a 433 unfiltered=433",
+    "CMP_EQUAL M10b",
+    "NUMSTAT M10b 605 unfiltered=605",
+    "CMP_EQUAL M10c",
+    "NUMSTAT M10c 917 unfiltered=917",
+    "CMP_EQUAL M10d",
+    "NUMSTAT M10d 916 unfiltered=916",
+    "CMP_EQUAL M11",
+    "NUMSTAT M11 1097 unfiltered=1097",
+    "ROUNDTRIP_IDENTICAL_TO_STAGE_TREE"
+  ],
+  "executor_directives": [
+    "no git writes",
+    "patch -p1 -E is the only writer",
+    "never nohup, never background a test leg; 600000 ms timeout on long Bash calls",
+    "cumulative snapshots to $HOME/.ailang/state/world-iter403/snap/<M>/ with STATUS, DELETED (empty), MANIFEST.sha256",
+    "expected numstat after commit: M10a 433, M10b 605, M10c 917, M10d 916, M11 1097",
+    "commit-time test command: accept.sh <M> fast (M11: fast && chrome)",
+    "accept.sh exports AILANG_BIN and WORLD_EXEC_NODE; M11 chrome part sets WORLD_CHROME and WORLD_REQUIRE_PASSKEY_BROWSER=1"
+  ],
+  "acceptance_criteria_ref": "plan section 9 (16 criteria)",
+  "mutant_counts": {
+    "rows": 150,
+    "CTL": 3,
+    "E": 4,
+    "K": 141,
+    "R": 2,
+    "as_expected": 150,
+    "ledger_lines": 154,
+    "runs": [
+      "R1",
+      "R2",
+      "R3"
+    ]
+  },
+  "operator_after_sprint": "a pending verb request (none exists until S5 adds the CLI flag) can be confirmed on /surface/confirm/<id> with an enrolled passkey or SSH key; the daemon records the finish approval decided by that key and names it on the row; nothing yet waits for it (S5)",
+  "residuals": [
+    "S1 App. C note 4 (CF12) and note 5 / gemini r2 -> S5",
+    "CX21 CLI half -> S5",
+    "judge-402 note 2 (day-expired same-episode request superseded, not pruned) -> documented",
+    "S3 1.4 F1 (DDL accepts superseded + decision_ref) -> later schema",
+    "design RV1-RV9"
+  ],
+  "next": [
+    "S5: CLI flag --confirm-on-surface (PutVerbRequest, the poll, RecheckVerb, CF7 read-back of the decision S4 records), the bar, approve vr-",
+    "S6: Needs you from requests.json confirmations; XC2 (virtual authenticator through the submit half), XC3"
+  ]
+}

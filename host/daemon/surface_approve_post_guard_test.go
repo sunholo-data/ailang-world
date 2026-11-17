@@ -126,9 +126,9 @@ func TestApprovePOSTNoSessionNoCookie(t *testing.T) {
 	}
 }
 
-// RT12: the daemon's production code opens the credentials writer at exactly two sites:
-// ensureCredentialsStore's upgrade at serve start and the POST's record. Control: the read-only
-// opens are found by the same walk.
+// RT12: the daemon's production code opens the credentials writer at exactly these sites:
+// ensureCredentialsStore's upgrade at serve start, A3a's record, A4's key arm and V3's
+// confirmation (row 243 AM8). Control: the read-only opens are found by the same walk.
 func TestDaemonCredentialWriterSites(t *testing.T) {
 	files, err := filepath.Glob("*.go")
 	if err != nil {
@@ -165,7 +165,7 @@ func TestDaemonCredentialWriterSites(t *testing.T) {
 			})
 		}
 	}
-	if want := map[string]string{"ensureCredentialsStore": "UpgradeCredentials", "handleSurfaceApprove": "OpenCredentials", "keyArm": "OpenCredentials"}; !reflect.DeepEqual(sites, want) || readOnly < 5 {
+	if want := map[string]string{"ensureCredentialsStore": "UpgradeCredentials", "handleSurfaceApprove": "OpenCredentials", "keyArm": "OpenCredentials", "handleSurfaceConfirm": "OpenCredentials"}; !reflect.DeepEqual(sites, want) || readOnly < 5 {
 		t.Fatalf("writer sites %v (read-only opens %d), want exactly %v and at least 5 read-only opens", sites, readOnly, want)
 	}
 }

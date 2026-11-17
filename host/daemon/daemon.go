@@ -1103,7 +1103,7 @@ func releaseFromVersion(version string) string {
 // GET /surface/approve/{id} and its approve.js), each behind approvalRoute's Host check, and
 // row 201 A4's decision routes GET /surface/decisions/{ref} and POST /surface/decide/{ref}, and
 // row 243 V3's confirmation card GET /surface/confirm/{id}, its confirm.js and its data GET
-// /surface/confirmations/{id} (read-only; no confirmation POST before sprint 4).
+// /surface/confirmations/{id}, and its one write, POST /surface/confirm/{id} (sprint 4).
 // The registry pattern deliberately uses a multi-segment wildcard: registry semantic IDs
 // such as "world/epoch-registry/v1" contain slashes.
 func (d *Daemon) Handler() http.Handler {
@@ -1148,6 +1148,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/decide/{ref}", d.approvalRoute(d.handleSurfaceDecidePage))
 	mux.HandleFunc("GET /surface/decide.js", d.approvalRoute(d.handleSurfaceDecideScript))
 	mux.HandleFunc("GET /surface/confirm/{id}", d.approvalRoute(d.handleSurfaceConfirmPage))
+	mux.HandleFunc("POST /surface/confirm/{id}", d.approvalRoute(d.handleSurfaceConfirm))
 	mux.HandleFunc("GET /surface/confirm.js", d.approvalRoute(d.handleSurfaceConfirmScript))
 	mux.HandleFunc("GET /surface/confirmations/{id}", d.approvalRoute(d.handleSurfaceConfirmation))
 	mux.HandleFunc("GET /surface/verb.json", d.approvalRoute(d.handleSurfaceVerb)) // row 243 V1: the bar's verbs, read-only
