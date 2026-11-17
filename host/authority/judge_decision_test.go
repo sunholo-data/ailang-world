@@ -39,7 +39,7 @@ func TestJudgeDecisionSSH(t *testing.T) {
 		field    string
 	}{
 		{name: "JD-parse", artifact: []byte("not a signature\n"), in: jdIn, step: JudgeStepParse, cause: approval.ErrArmor},
-		{name: "JD-store-v4", setup: []string{`DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `DROP TABLE approvers`, `PRAGMA user_version = 4`},
+		{name: "JD-store-v4", setup: []string{`DROP TABLE verb_requests`, `DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `DROP TABLE approvers`, `PRAGMA user_version = 4`},
 			artifact: good, in: jdIn, step: JudgeStepStore},
 		{name: "JD-unknown-key", artifact: jdSign(t, stranger, approval.DecisionNamespace, jdIn), in: jdIn, step: JudgeStepUnknownKey, cause: ErrNotEnrolled,
 			field: stranger.PublicKey().Fingerprint()},

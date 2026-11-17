@@ -110,6 +110,15 @@ func (d *Daemon) handleSurfaceRequests(w http.ResponseWriter, r *http.Request, _
 	if out.Decisions == nil {
 		out.Decisions = []surfacepage.PendingDecision{}
 	}
+	if err := d.readConfirmations(ctx, now, &out); isOlderStore(err) { // row 243 V3 §2.5: the verb requests
+		out.Confirmations, out.ConfirmationsUnavailable = nil, "the credentials store predates verb requests: restart `ailang-worldd serve` with this build once"
+	} else if err != nil {
+		d.writeInternalErrorLog(r, err)
+		out.Confirmations, out.ConfirmationsUnavailable = nil, "the verb requests could not be read"
+	}
+	if out.Confirmations == nil {
+		out.Confirmations = []surfacepage.PendingConfirmation{}
+	}
 	writeApprovalJSON(w, http.StatusOK, out)
 }
 

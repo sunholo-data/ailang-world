@@ -111,3 +111,23 @@ CREATE TABLE IF NOT EXISTS key_decisions (
     decided_at    INTEGER NOT NULL,
     decision_ref  TEXT CHECK (decision_ref IS NULL OR (length(decision_ref) = 71 AND decision_ref GLOB 'sha256:*'))
 );
+
+-- Verb requests (version 9, row 243 V3). One stored request per `episode finish
+-- --confirm-on-surface`; inert until a verified key confirms it on the surface. The authority is
+-- the world store's finish approval (decision_ref), never this row.
+CREATE TABLE IF NOT EXISTS verb_requests (
+    request_id   TEXT PRIMARY KEY CHECK (length(request_id) = 19 AND request_id GLOB 'vr-[0-9a-f]*'),
+    request      BLOB NOT NULL CHECK (length(request) BETWEEN 1 AND 131072),
+    digest       TEXT NOT NULL CHECK (length(digest) = 64),
+    challenge    TEXT NOT NULL CHECK (length(challenge) = 64),
+    episode_id   TEXT NOT NULL CHECK (episode_id <> ''),
+    created_at   INTEGER NOT NULL,
+    expires_at   INTEGER NOT NULL CHECK (expires_at > created_at),
+    consumed_at  INTEGER,
+    outcome      TEXT CHECK (outcome IS NULL OR outcome IN ('approved', 'superseded')),
+    approved_by  TEXT CHECK (approved_by IS NULL OR approved_by <> ''),
+    artifact     BLOB CHECK (artifact IS NULL OR length(artifact) BETWEEN 1 AND 16384),
+    decision_ref TEXT CHECK (decision_ref IS NULL OR (length(decision_ref) = 71 AND decision_ref GLOB 'sha256:*')),
+    CHECK ((consumed_at IS NULL) = (outcome IS NULL)),
+    CHECK ((outcome IS 'approved') = (approved_by IS NOT NULL AND artifact IS NOT NULL AND decision_ref IS NOT NULL))
+);

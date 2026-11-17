@@ -1,0 +1,296 @@
+{
+  "sprint_id": "w-world-address-bar-verbs-v3s3",
+  "design_doc": "design_docs/planned/w-world-address-bar-verbs-v3.md",
+  "design_revision": "r2 (quorum r1/r2 BLOCKED; controller carve-out r2; independent audit PASS 87, iteration 399); not reopened",
+  "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v3s3-sprint-plan.md",
+  "previous_sprint": "row 243 V3 S2 + S1b (iteration 401, PR #593, merge 2b5cc609, judge PASS 92); analogues: row 201 A4 sprint 2 M4e (credentials schema 8, 3a4026e9, w-world-approvals-by-key-a4-sprint2-plan.md) and A4's decide page routes (surface_decide_page.go)",
+  "base_commit": "9733813cd8ab41313c158f83d3a0d2bc7c7d7d7f",
+  "design_measured_at": "994ba123 (git diff --stat 994ba123 9733813c over every S3 cite: only S2's surface_confirm_unrouted_test.go, which S3 deletes; every cite re-measured, none moved)",
+  "queue_row": 243,
+  "iteration": 402,
+  "phase": "V3",
+  "sprint": "S3 (the store and the read routes)",
+  "sprint_number": 3,
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter402-row243-v3s3",
+  "branch": "sprint/world-iter402-row243-v3s3",
+  "authority": [
+    "D-WORLD-118 = A (verified by the controller at iteration 400, verdict=attended, flip 72007b37; no OPEN row at iteration 402): S3 routable; F6/DraftOnly/'B +15' never built",
+    "D-WORLD-109 = A (t.TempDir() stores, approvaltest keys, no real store opened or migrated, no listener beyond httptest)",
+    "D-WORLD-107 = A; D-WORLD-89 R1-R5 untouched (no POST, no key path reachable)"
+  ],
+  "behaviour": "credentials schema 9 (verb_requests, the design's DDL verbatim; fresh == upgraded from 8), store.PutVerbRequest (supersede per episode, grammar, 16 cap, day-old prune), VerbRequest, PendingVerbRequests, ConsumeVerbRequest (one transaction: refusals in Admit order, useApprover, usePasskey, one UPDATE of five columns incl. decision_ref; every refusal writes nothing), OlderCredentialsStoreError{Feature: verb requests, Need: 9}; broker.FinishConfirmRefusal F1-F5 (pure); three GET routes behind approvalRoute (GET /surface/confirm/{id}, GET /surface/confirm.js, GET /surface/confirmations/{id} = surfacepage.ConfirmationCard of the row) and requests.json's confirmations + confirmationsUnavailable. No POST, no CLI change, no bar, no .ail, surfaceCSP unchanged, no new daemon writer. surface_confirm_unrouted_test.go deleted in M9a.",
+  "cut": {
+    "cap_loc": 1400,
+    "measure": "git diff -M --numstat <base> HEAD -- cmd host docs (insertions + deletions); the same with no path filter",
+    "design_raw_s3": 980,
+    "m7_first_compile": 836,
+    "m8": 108,
+    "m9_first_compile": 464,
+    "first_full_compile": 1408,
+    "measured": 1391,
+    "ratio": 1.42,
+    "margin": 9,
+    "fired": "no (S3-D1: trimmed by measurement 1,408 -> 1,387, mutant-driven test rows -> 1,391; the S3a=M7+M8 (913) / S3b=M9 (478) cut measured and not taken)",
+    "moved_out": {}
+  },
+  "planner_decisions": {
+    "S3-D1_no_cut": "M7 836 first; total 1,408 first compile; trimmed comments + one duplicate test; final 1,391 <= 1,400",
+    "S3-D2_five_submilestones": "M7a prod + forced test edits (377), M7b CS1-CS7 (428), M8 VT2 (108), M9a routes + CR1/CR3/CR4 + unrouted test deleted (322), M9b requests.json + CR2 (156)",
+    "S3-D3_audit_note_1": "three GETs (design 2.5); the fourth registration is S4's POST; proven by TestConfirmRoutesRegistered",
+    "S3-D4_audit_note_2": "four CR rows by measurement: CR1 TestConfirmationCardServed, CR2 TestRequestsJSONConfirmations, CR3 TestConfirmPageAssetsServed, CR4 TestConfirmRoutesRegistered",
+    "S3-D5_audit_note_3": "store half pinned both orders: put-then-consume -> ErrVerbRequestSuperseded, nothing written (CS6 superseded); consume-then-put -> approved row unchanged (CS6 confirm-*; PUT-SUPERSEDE-PENDING). S4: 409 mapping, orphaned decision (W62), the missing window-table CX row",
+    "S3-D6_cr1_contract": "served body == json.Marshal(surfacepage.ConfirmationCard(hand-built ConfirmationInput of the stored row)) in three states; no hash, no artifact",
+    "S3-D7_statuses": "confirmations/{id}: 400 bad id, 503 Restart below 9, 404 unknown, 500 unreadable; requests.json: [] + confirmationsUnavailable (restart) / 'could not be read'",
+    "S3-D8_summary_in_daemon": "pendingConfirmation in host/daemon (surfacepage cannot import broker): digest, DecodeVerb+Validate, ParseFinishApprovalScope, else {id, episode, repository, head, sha, draft, expires}",
+    "S3-D9_consume_order": "grammar (ErrBadVerbRequest) then one tx: unknown, superseded, consumed (names approver), clock, expired, digest (param and bytes), useApprover, usePasskey, one UPDATE",
+    "S3-D10_size_constant": "store.MaxVerbRequestBytes == approval.MaxVerbRequestBytes asserted in CS1",
+    "S3-D11_fixtures": "approval.CanonicalVerb bytes; FinishPromptText/FormatFinishApprovalScope; never hand-typed JSON",
+    "S3-D12_timing": "no S3 test waits on async work; race3 leg = -race -count=3 over the new store tests"
+  },
+  "scope": [
+    "host/store/credentials.go, credentials_schema.sql (v9)",
+    "host/store/verb_requests.go (NEW)",
+    "host/broker/finish_confirm.go (NEW)",
+    "host/daemon/daemon.go (3 GET registrations)",
+    "host/daemon/surface_confirm_read.go (NEW)",
+    "host/daemon/surface_approve.go (requests.json)",
+    "host/surfacepage/approve_model.go (PendingConfirmation, 2 fields)",
+    "tests: host/store/verb_requests_test.go, host/broker/finish_confirm_test.go, host/daemon/surface_confirm_read_test.go (NEW); 18 pre-existing test files edited; host/daemon/surface_confirm_unrouted_test.go deleted"
+  ],
+  "executor_lane": "as routed by the controller; Run 1: M7a, M7b, M8; Run 2: M9a, M9b; apply patches, never retype",
+  "executor_form": "every sub-milestone is a unified diff in the plan's Appendix P, applied in order with /usr/bin/patch -p1 -E after a --dry-run (M9a deletes a file); acceptance = the plan's accept.sh parts (fast/daemon/cmd), one 600 s call each; cumulative snapshots with DELETED",
+  "estimate_loc": {
+    "production": 526,
+    "test": 865,
+    "docs": 0,
+    "total_cumulative": 1391,
+    "cmd_host_only": 1391
+  },
+  "milestones": [
+    {
+      "id": "M7a",
+      "title": "schema 9 + verb_requests.go + forced pre-existing test edits",
+      "production": 325,
+      "test": 52,
+      "expected_cumulative_numstat": 377,
+      "run": 1,
+      "accept_parts": [
+        "fast",
+        "daemon",
+        "cmd"
+      ]
+    },
+    {
+      "id": "M7b",
+      "title": "CS1-CS7",
+      "production": 0,
+      "test": 428,
+      "expected_cumulative_numstat": 805,
+      "run": 1,
+      "accept_parts": [
+        "fast"
+      ]
+    },
+    {
+      "id": "M8",
+      "title": "FinishConfirmRefusal F1-F5, VT2",
+      "production": 41,
+      "test": 67,
+      "expected_cumulative_numstat": 913,
+      "run": 1,
+      "accept_parts": [
+        "fast"
+      ]
+    },
+    {
+      "id": "M9a",
+      "title": "three GET routes, CR1/CR3/CR4, unrouted test deleted",
+      "production": 86,
+      "test": 236,
+      "expected_cumulative_numstat": 1235,
+      "run": 2,
+      "accept_parts": [
+        "fast",
+        "daemon"
+      ]
+    },
+    {
+      "id": "M9b",
+      "title": "requests.json confirmations, CR2",
+      "production": 74,
+      "test": 82,
+      "expected_cumulative_numstat": 1391,
+      "run": 2,
+      "accept_parts": [
+        "fast",
+        "daemon"
+      ]
+    }
+  ],
+  "expected_snapshots": {
+    "M7a": "21/0/21",
+    "M7b": "22/0/22",
+    "M8": "24/0/24",
+    "M9a": "28/1/27",
+    "M9b": "30/1/29"
+  },
+  "design_premises_found_false": [
+    "F1 CS5 'decision_ref on a superseded row refused': the design DDL accepts it; DDL kept verbatim, Go is the fence (only ConsumeVerbRequest writes decision_ref, with outcome approved)",
+    "F2 CS7 'constant set to 8': realised as a v10 store under the v9 build (same branch)",
+    "F3 design 7 pre-existing tests: no context root in S3; the bump forces 19 fixture sites in 14 files + 5 store tests",
+    "F4 'four GET registrations' -> three (audit note 1)",
+    "F5 CR1-CR4 vs CR1-CR2 -> four rows (audit note 2)",
+    "F6 + ErrBadVerbRequest",
+    "F7 FinishConfirmRefusal in a new host/broker/finish_confirm.go",
+    "F8 new TestConfirmPageAssetsServed instead of editing TestDecidePageAssets"
+  ],
+  "existing_tests_edited": [
+    "host/store/credentials_test.go",
+    "host/store/approvers_test.go",
+    "host/store/mint_requests_test.go",
+    "host/store/key_decisions_test.go",
+    "cmd/ailang-worldd/{approve_await_refusals,approve_passkey_refusals,approve_passkey,approve_sig,approver_label,approver_passkey,approver_rig}_test.go",
+    "host/authority/{judge_decision_assert,judge_decision,judge,judge_verb}_test.go",
+    "host/daemon/{surface_approve_post,surface_approve_read,surface_decide_key}_test.go"
+  ],
+  "existing_tests_deleted": [
+    "host/daemon/surface_confirm_unrouted_test.go (S2's TestConfirmRoutesNotRegistered; S2 Appendix C)"
+  ],
+  "files_outside_design_section_7": [
+    "host/broker/finish_confirm.go (+ test) (F7)"
+  ],
+  "not_touched": [
+    "cmd/ailang-worldd/* production",
+    "host/surfacepage pages and scripts (confirm/, decide/, approve/, passkey/, app/)",
+    "surface_page.go (surfaceCSP)",
+    "approvalRoute",
+    "/v1",
+    "world/*.ail",
+    "packages/**",
+    "scripts/**",
+    "tools/launchd/*",
+    "cmd/world-publish/*"
+  ],
+  "ci_change": "none",
+  "sprint_gates": "plan 6 gates.sh: touched-package derivation, status, verify_ail, gofmt, build, vet, fence, pkgs (6 packages), race (every touched package), race3, node, inv, chrome, verify_go; ALL_DONE.<sha> with FAILS",
+  "base_gates": [
+    "TOUCHED_PACKAGES: ",
+    "LEG status rc=0 0s",
+    "LEG verify_ail rc=0 206s",
+    "LEG gofmt rc=0 2s",
+    "LEG build rc=0 5s",
+    "LEG vet rc=0 2s",
+    "LEG fence rc=0 2s",
+    "LEG pkgs rc=1 578s",
+    "LEG race rc=1 310s",
+    "LEG node rc=0 21s",
+    "LEG inv rc=0 64s",
+    "named PASS: 55",
+    "LEG chrome rc=1 139s",
+    "NOT PASSED (chrome): TestVerbBarWhyInChrome",
+    "NOT PASSED (chrome): TestSurfaceLiveChrome",
+    "NOT PASSED (chrome): TestSurfaceFollowChrome",
+    "LEG verify_go SKIPPED (GATES_SKIP_VERIFY_GO=1)",
+    "GATES_DONE 1331s FAILS: pkgs race chrome chrome_missing chrome_missing chrome_missing chrome_skip_or_fail",
+    "note: every base red is a timing failure under load 20-25 at the base (TestConvertedStoreMethodsM5b, TestApproveBySignatureRefusalsBeforeAnyEffect/git-namespace, TestVerbBarWhyInChrome)"
+  ],
+  "final_gates_planner": [
+    "TOUCHED_PACKAGES: cmd/ailang-worldd host/authority host/broker host/daemon host/store host/surfacepage ",
+    "LEG status rc=0 3s",
+    "LEG verify_ail rc=0 132s",
+    "LEG gofmt rc=0 1s",
+    "LEG build rc=0 24s",
+    "LEG vet rc=0 9s",
+    "LEG fence rc=0 38s",
+    "LEG pkgs rc=1 606s",
+    "LEG race rc=0 398s",
+    "LEG race3 rc=0 18s",
+    "LEG node rc=0 9s",
+    "LEG inv rc=0 87s",
+    "named PASS: 65",
+    "LEG chrome rc=0 132s",
+    "LEG verify_go SKIPPED (GATES_SKIP_VERIFY_GO=1)",
+    "GATES_DONE 1462s FAILS: pkgs",
+    "pkgs reds: TestMarketingCaptureInventoryMutation (host/daemon), TestCLIRealSubprocessEpisode (cmd) -- both PASS alone on the same tree",
+    "TREE d6ac82f8ea7b529a2ebb8451aa11e81add5bad7a",
+    "gofmt rc=0 []",
+    "build rc=0",
+    "vet store rc=0",
+    "fence done",
+    "ok  \tgithub.com/sunholo-data/ailang-world/host/store\t11.422s",
+    "ok  \tgithub.com/sunholo-data/ailang-world/host/store\t35.290s",
+    "ok  \tgithub.com/sunholo-data/ailang-world/host/store\t3.410s"
+  ],
+  "acceptance_planner": [
+    "M7a fast rc=0 97s ACCEPT_OK M7a fast",
+    "M7b fast rc=0 76s ACCEPT_OK M7b fast",
+    "M8 fast rc=0 36s ACCEPT_OK M8 fast",
+    "M9a fast rc=0 37s ACCEPT_OK M9a fast",
+    "M9b fast rc=1 102s ACCEPT_RED M9b fast: p ./host/surfacepage/ ./host/store/",
+    "M7a daemon rc=0 694s ACCEPT_OK M7a daemon",
+    "M9a daemon rc=0 632s ACCEPT_OK M9a daemon",
+    "M7a cmd rc=0 525s ACCEPT_OK M7a cmd",
+    "M9b fast rc=0 20s ACCEPT_OK M9b fast",
+    "ACCEPT_ALL_DONE M7a:cmd M9b:fast",
+    "M9b daemon rc=0 582s ACCEPT_OK M9b daemon",
+    "ACCEPT_ALL_DONE M9b:daemon",
+    "--- rerun 19:10:10 on the final stages (M7b's CS3 +2 lines; M7a, M8, M9a, M9b patches byte-identical)",
+    "M7b fast rc=0 32s ACCEPT_OK M7b fast",
+    "M9b fast rc=0 19s ACCEPT_OK M9b fast",
+    "ACCEPT_ALL_DONE M7b:fast M9b:fast"
+  ],
+  "mutants": {
+    "ledger": "/Users/voightkampff/.ailang/state/world-iter402/plan-scratch/logs/mutant_ledger.tsv",
+    "summary": "176 rows (3 `CTL`, 5 `E`, 166 `K`, 2 `R`); 276 ledger lines (runs R1, R2, R3, R4); 176 of 176 rows run; the last line of each row behaves as its class says for **176 of 176**. Table ids = ledger ids (`tools/mktable.py` fills §4 from the ledger's last line per id); ledger `$HOME/.ailang/state/world-iter402/plan-scratch/logs/mutant_ledger.tsv`"
+  },
+  "roundtrip": [
+    "CMP_EQUAL M7a",
+    "NUMSTAT M7a 377 unfiltered=377",
+    "CMP_EQUAL M7b",
+    "NUMSTAT M7b 805 unfiltered=805",
+    "CMP_EQUAL M8",
+    "NUMSTAT M8 913 unfiltered=913",
+    "CMP_EQUAL M9a",
+    "NUMSTAT M9a 1235 unfiltered=1235",
+    "CMP_EQUAL M9b",
+    "NUMSTAT M9b 1391 unfiltered=1391",
+    "DELETED_OK host/daemon/surface_confirm_unrouted_test.go",
+    "ROUNDTRIP_IDENTICAL_TO_STAGE_TREE"
+  ],
+  "executor_directives": [
+    "no git writes",
+    "patch -p1 -E is the only writer (incl. M9a's deletion)",
+    "never nohup, never background a test leg; 600000 ms timeout on long Bash calls",
+    "cumulative snapshots to $HOME/.ailang/state/world-iter402/snap/<M>/ with STATUS, DELETED, MANIFEST.sha256",
+    "expected numstat after commit: M7a 377, M7b 805, M8 913, M9a 1235, M9b 1391",
+    "accept.sh exports AILANG_BIN and WORLD_EXEC_NODE; no S3 sub-milestone runs Chrome"
+  ],
+  "acceptance_criteria_ref": "plan 9 (16 criteria)",
+  "mutant_counts": {
+    "rows": 176,
+    "CTL": 3,
+    "K": 166,
+    "R": 2,
+    "E": 5,
+    "as_expected": 176,
+    "ledger_lines": 276,
+    "runs": [
+      "R1 (83 rows, stopped)",
+      "R2 (all)",
+      "R3 (4 recompiled)",
+      "R4 (CS3 rows)"
+    ]
+  },
+  "operator_after_sprint": "the next `serve` of a build with S3 upgrades the credentials store to schema 9 (one-way; older binaries refuse it); the card's page and data are served read-only; nothing can create or confirm a verb request yet (no CLI flag, no POST)",
+  "residuals": [
+    "design RV1-RV9 unchanged",
+    "S1 audit notes 4-5 -> S5; CX15->CX17 gap -> S4",
+    "audit note 3 daemon half -> S4",
+    "F1 DDL gap (superseded row with decision_ref) -> controller, later schema"
+  ],
+  "next": [
+    "S4: POST /surface/confirm/{id} (C0-C15), ConsumeVerbRequest at C15, FinishConfirmRefusal at C10, the route test's POST, confirm.js submit half, CX20/CX21 + the C14/C15 supersession row",
+    "S5: CLI flag (PutVerbRequest, the poll, RecheckVerb)",
+    "S6: Needs you from requests.json confirmations, XC2/XC3"
+  ]
+}

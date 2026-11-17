@@ -140,7 +140,7 @@ func TestDecidePOSTSSHSIGRefusals(t *testing.T) {
 			t.Fatalf("%s: evidence was recorded", tc.name)
 		}
 	}
-	for _, drop := range [][]string{{`DROP TABLE key_decisions`, `PRAGMA user_version = 7`}, // v7: the writer's K1, then v4: the judge's store step
+	for _, drop := range [][]string{{`DROP TABLE verb_requests`, `DROP TABLE key_decisions`, `PRAGMA user_version = 7`}, // v7: the writer's K1, then v4: the judge's store step
 		{`DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `DROP TABLE approvers`, `PRAGMA user_version = 4`}} {
 		setVersion(t, r.d.credentialsPath, drop...)
 		requireRefusal(t, drop[len(drop)-1], r.postKey(q, good), 503, "Restart")

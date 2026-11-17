@@ -17,8 +17,8 @@ import (
 
 var vjIn = VerbJudgeInput{Digest: [32]byte{0x76, 1}, Challenge: [32]byte{0x76, 2}, BytesDigest: [32]byte{0x76, 1}, CreatedAt: 1000, ExpiresAt: 1600, Now: 1010}
 
-const vjDropV4 = `DROP TABLE key_decisions; DROP TABLE surface_approvals; DROP TABLE webauthn_credentials; DROP TABLE approvers; PRAGMA user_version = 4`
-const vjDropV5 = `DROP TABLE key_decisions; DROP TABLE surface_approvals; DROP TABLE webauthn_credentials; PRAGMA user_version = 5`
+const vjDropV4 = `DROP TABLE verb_requests; DROP TABLE key_decisions; DROP TABLE surface_approvals; DROP TABLE webauthn_credentials; DROP TABLE approvers; PRAGMA user_version = 4`
+const vjDropV5 = `DROP TABLE verb_requests; DROP TABLE key_decisions; DROP TABLE surface_approvals; DROP TABLE webauthn_credentials; PRAGMA user_version = 5`
 
 // vjSign and vjAssert are a confirmation of in's request by s or pk.
 func vjSign(t *testing.T, s *approvaltest.Signer, namespace string, in VerbJudgeInput) []byte {
