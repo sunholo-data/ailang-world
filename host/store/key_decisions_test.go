@@ -85,11 +85,11 @@ func TestCredentialsSchema8KeyDecisions(t *testing.T) {
 		}
 	}
 	_ = v7.Close()
-	if upgraded, err := UpgradeCredentials(path); err != nil || !upgraded || userVersion(t, path) != 8 {
+	if upgraded, err := UpgradeCredentials(path); err != nil || !upgraded || userVersion(t, path) != credentialsSchemaVersion {
 		t.Fatalf("UpgradeCredentials: %v %v, version %d", upgraded, err, userVersion(t, path))
 	}
 	up := tableDDL(t, rawDB(t, path))
-	requireExactTableNames(t, "upgraded v7 store", up, credentialsTables(8))
+	requireExactTableNames(t, "upgraded v7 store", up, credentialsTables(credentialsSchemaVersion))
 	if normalizeDDL(up["key_decisions"]) != normalizeDDL(canonicalKeyDecisionsDDL) {
 		t.Fatalf("upgraded key_decisions DDL: %s", up["key_decisions"])
 	}

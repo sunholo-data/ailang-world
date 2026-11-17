@@ -40,7 +40,7 @@ func TestJudgeDecisionAssertion(t *testing.T) {
 		approver string
 	}{
 		{name: "JD-parse", artifact: []byte("{}"), step: JudgeStepParse, cause: approval.ErrPasskeyResponse},
-		{name: "JD-store-v5", setup: []string{`DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`},
+		{name: "JD-store-v5", setup: []string{`DROP TABLE verb_requests`, `DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`},
 			artifact: jdAssert(t, jgPasskey, jdIn, 2), step: JudgeStepStore},
 		{name: "JD-unknown-key", artifact: jdAssert(t, stranger, jdIn, 2), step: JudgeStepUnknownKey, cause: ErrNotEnrolled, rawID: stranger.CredentialID()},
 		{name: "JD-stored-key", setup: []string{`UPDATE approvers SET public_key = X'00' WHERE name = 'mark-mac'`}, artifact: jdAssert(t, jgPasskey, jdIn, 2),
