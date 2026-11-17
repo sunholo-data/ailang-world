@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 400 | 2026-11-17 | row 243 V3 sprint 1 LANDED (PR #591, merge `b0817474`): the verb-confirmation law — `world/verb-request/v1`, the `world-verb/v1` message, `ConfirmB... |
 | 399 | 2026-11-17 | row 243 V3 design DONE (`w-world-address-bar-verbs-v3.md` r2): `episode finish --confirm-on-surface` — an enrolled key on `/surface/confirm/<id>` r... |
 | 398 | 2026-11-17 | row 243 V2b sprint LANDED (PR #587, merge `c251132f`): `why <target>` answered in the World app's address bar — in-process through a private mux ov... |
 | 397 | 2026-11-17 | row 243 V2a sprint LANDED (PR #585, merge `2d530cbe`): the `why` walk moves to `host/why` behind a `Getter` (`Run`, `ParseTarget`, `Head`, `Elide`,... |

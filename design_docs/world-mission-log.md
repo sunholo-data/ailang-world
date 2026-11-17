@@ -9,68 +9,6 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 380 — 2026-11-11 — row 201 A2 sprint 2 built: the WebAuthn assertion law, credentials schema 6 with the passkey store, the consume that binds the passkey and advances its counter in the mint's transaction, and authority's `webauthn:<name>`; judge PASS 93 [PRODUCT]
-
-**Pick:** row 201 `w-world-approvals-by-key`, parent milestone A2, sprint 2, the route iteration 379 named. D-WORLD-109 = A applies: test keys and temp stores only.
-- **Re-measured at pick** (`origin/dev` `3b77c294`):
-  - No open PR from this account; no `iter380` worktree; no `A2 sprint 2` commit on `origin/dev`.
-  - The A2 child design r2 has a quorum artifact (`mc_quorum_gate2 w-world-approvals-by-key-a2` rc 0), so no pick-time quorum was owed and no designer ran.
-- **Ledger:** valid (100 rows). OPEN: D-WORLD-105 only.
-- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows are not routable:
-  - Row 150's attended A1: 0 subjects since 2026-11-07 matching `row ?150|A1\b` (control `A1b`: 20).
-  - Row 151's row-188 N2d/N4a: 0 since 2026-10-01 (control N2c: 1).
-
-**Gate 0:**
-- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
-- Directives: 0 allowlisted on #524, out of 12 comments. The issue-scoped watermark is absent, so all comments were read. A hand read of #524 found no `FAILED to complete` notice.
-- Self-notices: rc 2, an instrument failure and not a verdict; no `-last-seen` file exists for 524 or 449 (same as 371–379).
-- The `mission-world` inbox has 0 unread.
-- Skill drift: none. SKILL.md and all 13 resource files at the resolved symlink target match the driver clone's `origin/dev`.
-- Dev at `3b77c294` (record 379): `checks=3`, all success. Local dev equal to origin.
-
-**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus`, 93.8 min, 478,824 tok. Committed `75cb07e9`.
-- **Sprint 2 = M3b1–M3b3, M4a–M4c, M5a–M5b = 1,843 lines** (`-- cmd host`, cap 2,000). The design's §9 sprint-2 fallback was priced as a measurement and did not need to fire: M3b measured 890 (sprint 1 estimated 450), M4 648, the consume 239, and A6 + AU3 only 66, so they stay. Appendix C moves nothing to sprint 3.
-- Mutants: 139, each run against its named test and its package; 135 killed, 4 named equivalents (decoded inputs that cannot alias). Two tests strengthened after the first pass found gaps.
-- Round trip: the patches extracted from the plan file, applied to a fresh export of `3b77c294`, reproduce the mutant tree byte for byte. **The controller re-did it** (its own export and awk): `diff -rq cmd host` empty.
-- **Premises found false or incomplete:** P1 the size estimates; P2 schema 6 broke four `cmd/ailang-worldd` test fixtures that rebuild a v4 store by dropping `approvers` only (they now also drop `webauthn_credentials`; test-only, in M4a), though the design said sprint 2 touches no `cmd/` file; P3 `EnrolPasskey`'s validation is ten checks, not nine (S1–S10); P4 the `user_version 6` check compared the store with the constant itself and could never fail (now the literal 6); P5 the test authenticator's `name` parameter dropped (the recordings carry no user).
-- **Carry-forwards from 379's judge:** aliasing pinned (`TestNewPasskeyApproverDoesNotAliasItsInput`, PA4); `SOURCE.txt` names the `chrome-*.json` files and XW0 checks the names; zero challenge / `Now` measured accepted by the law and left as the caller's job (`EnrolPasskey` refuses `EnrolledAt <= 0`; sprint 3's random challenge owns the challenge).
-- A harness trap the planner found: any gate started under `nohup` reds `scripts/marketingcheck`'s `shell-hup` test (3/3). The plan forbids `nohup`.
-
-**Executor:** env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`. Four runs of two sub-milestones (1.5, 5.0, 1.3 and 1.4 min). No hand edits, no git writes, no stop condition. The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`: M3b1 `8c68004c` → 345, M3b2 `5a1c9383` → 672, M3b3 `6a2984c2` → 890, M4a `0f0319d9` → 1,027, M4b `5ca2f4dc` → 1,300, M4c `17039568` → 1,538, M5a `19039a40` → 1,777, M5b `1fe7c86d` → 1,843. Every value equals the plan's, and the final `cmd`/`host` tree is `diff -r`-identical to the planner's mutant tree.
-
-**Controller gates:** plan §6 as one bash script at `1fe7c86d`, BEFORE the judge: **rc 0.** `verify_ail.sh` (16 identities, 40 named tests, 503 se-tools tests); gofmt; build + vet; the compile fence; touched packages (6 ok); `-race` on `host/approval/...`, `host/store`, `host/authority` (0 DATA RACE); 22 named inventories and reflective tests with `-v` (22 PASS, 0 SKIP/FAIL); `VERIFY_GO_LEGS=plain verify_go.sh` (62 ok, 0 FAIL; its two DATA RACE lines are the race control). Details in `verification/world-iter380/controller-gates.md`.
-
-**Judge:** sonnet via the Agent tool, on its own worktree at `1fe7c86d` (generator ≠ judge). **Round 1: PASS 93/100, zero blocking** (correctness 28, tests 29, security 19, standards 9, scope 8).
-- 66 of its own diff-anchored mutants (every conjunct of the W7/W8/W12/W13 flag refusals, the counter law's four forms, S1–S10, the lookups, C13–C18, `usePasskey`, A6), must-die control killed, must-live control survived; 48 plan rows sampled across all 8 sub-milestones, no unexpected survivor.
-- Three of its mutants (P1, C17, A6-count) did not compile on the first run; it re-ran them compiling and reported them killed, but the re-runs are not in its `mutants.txt`. **The controller reproduced all three** with `-vet=off`: killed by `TestApproveByAssertionOrder`, `TestPasskeyConsumeChecksTheRowInTheTransaction` and `TestMintForRequestDerivesPasskeyUse`.
-- Non-vacuity: M3b1, M4b and M5a's new tests do not exist at the parent commits.
-- Non-blocking: N2, `ApproveByAssertion` does not guard a zero-valued `Passkey.Key`. The controller read `COSEKey.verify`: its default arm returns `ErrCOSEAlg`, so it fails closed. Logged, not filed (D-WORLD-109 (2)).
-
-**Gate 3b:** PR #548, head `1fe7c86d`: 3/3 success on the first run. Mergeable CLEAN. The auto-close keyword scan of the PR body read 0 (control 1). Merged by merge commit **`3e55451f`** (`--match-head-commit`). Push checks on the merge: 3/3 success (run 42952060607).
-
-**Routing evidence:** base=3b77c294000ca40c2fe77e312ae0e8ce0f71a030@2026-11-11T00:50:05Z.
-- Controller: `claude-opus-5-5` (tok: not reported).
-- Designer: not spawned (the A2 r2 doc covers sprint 2). Quorum: not re-run (artifact present, doc unchanged).
-- Planner: `opus` via Agent (478,824 tok).
-- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (46,214 + 49,619 + 40,775 + 44,161 tok).
-- Evaluator: `sonnet` via Agent (73,582 tok).
-- The driver noted codex unusable at preflight (probe rc 75); no role needed it.
-- Metered total: $0.00. Details in `verification/world-iter380/routing.md`.
-
-**Progress:** 1.0 clauses 1–7 MET; goal unmoved. World can now verify a passkey *assertion* (an approval) as well as a registration, store enrolled passkeys in credentials schema 6, and consume a mint approved by a passkey: the consume re-reads the passkey row inside the mint's transaction, binds the credential ID, refuses a counter that does not strictly advance (both zero allowed), and records `approved_by = webauthn:<name>`, derived by authority from the verified approval. No CLI or route builds a passkey approval yet; that is sprint 3.
-
-**Ruled out:**
-- **Cutting AU3/A6 to sprint 3 pre-emptively** (sprint 1's plan said to apply the fallback early): measured at 66 lines with 157 lines of margin; moving them would leave the store accepting a passkey consume no caller builds.
-- **Banking the judge's "re-ran and killed" for its three compile-error mutants:** the re-runs were not on disk; the controller reproduced them instead.
-- **Treating N2 as a gap:** a zero `COSEKey` reaches `verify`'s default arm and is refused.
-
-**Retro:**
-- **The planner-ships-patches route held for an eight-patch sprint across three packages:** zero executor deviations, numstat equal at every step, and the controller's own round trip matched. Fourth consecutive sprint on this route.
-- **A judge's narrative claim about a re-run is not evidence until it is on disk.** Its `mutants.txt` recorded `COMPILEERR` for three mutants its report called killed. Next evaluator directive: every mutant re-run must append its own line to the mutant file.
-- **A design's "touches no file in X" is a claim the planner should measure:** schema 6 reached `cmd/` through test fixtures that rebuild an older schema by dropping tables.
-
-**Next:** row 201 A2 **sprint 3**: M6 (the CLI: `approver enroll --format webauthn`, `approve --webauthn-link`/`--webauthn-assertion`, list/revoke show passkeys) and M7 (the static `/surface/passkey` ceremony page, the Chrome driver and `generate.sh`, QUICKSTART §16), from the A2 doc without re-design; the design's sprint-3 fallback makes M7 its own fourth sprint if needed. Consider sprint 3 refusing an all-zero challenge in its random-challenge step. Then Mark's attended real-passkey exit run (§10), A3–A4, then row 243.
-
 ## 381 — 2026-11-11 — row 201 A2 sprint 3 built: the passkey operator CLI (`approver enroll --format webauthn` with the enrolment-code fence, list/revoke labels, `approve --webauthn-link`/`--webauthn-assertion`); the design's sprint-3 fallback fired, so the ceremony page is sprint 4; judge PASS 92 [PRODUCT]
 
 **Pick:** row 201 `w-world-approvals-by-key`, parent milestone A2, sprint 3, the route iteration 380 named. D-WORLD-109 = A applies: test keys and temp stores only.
@@ -1796,3 +1734,104 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 
 **Next:**
 1. Row 243 **V3 sprint 1** planner (the pure law: the verb request, the `world-verb/v1` message, the two key laws, `CheckConfirmation`/`RecheckVerb`, `FinishPromptText`; ≈ 935 raw). Sprints 1–2 need no answer; S3–S6 wait for **D-WORLD-118**. Feed the planner the audit's five notes and design §6's planner obligations.
+
+## 400 — 2026-11-17 — row 243 V3 sprint 1 LANDED (PR #591, merge `b0817474`): the verb-confirmation law — `world/verb-request/v1`, the `world-verb/v1` message, `ConfirmBySignature`/`ConfirmByAssertion`/`SignedVerb`, `CheckConfirmation`, and the finish prompt's text moved to `host/broker` (byte-identical); judges cut to S1b; judge PASS 94 [PRODUCT]
+
+**Pick:** row 243 V3 sprint 1, the planner step named as Next in record 399. That was also the queue head.
+- **Attended ruling at Gate 0:** **D-WORLD-118 = A** (Mark, attended 2026-11-17, `72007b37`, merged as #590 → `d3b0a813`). Provenance: `mission_ledger_provenance.sh --id D-WORLD-118` → `verdict=attended`, flip `72007b37`, creation `4ef4abf8`. A key may confirm any finish, draft or ready, and V3 is built as designed, credentials schema 9 included. **V3 sprints 3–6 are now loop-routable.** The B-only branches (F6, `DraftOnly`) are not built.
+- **Re-measured at pick** (`origin/dev` `d3b0a813`):
+  - None of the sprint-1 symbols existed (`world-verb/v1`, `CheckConfirmation`, `RecheckVerb`, `FinishPromptText`, `verb-request/v1`: 0 hits in `host cmd internal`). Control: `AdmitWhy` was found.
+  - No open fleet PR. The checked quorum reader returned rc 0 (reviewed), so no pick-time quorum was owed.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 are still not routable. Row 243 serves D-WORLD-94 and moves no clause.
+- **Ledger at pick:** valid, 105 rows, no OPEN row.
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
+- Directives: 0 allowlisted on #574 (8 comments). The watermark file is absent, so every comment was read, and there was nothing to `--mark`.
+- Self-notices: rc 2, `watermark channel unavailable`. This is an instrument failure, not a verdict, as in 371–399.
+- Inbox: no unread message for `mission-world` (`messages list -unread -inbox mission-world`; control: the read list returns rows).
+- Skill drift: none. `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target `cmp` equal to the driver clone's `origin/dev`.
+- Dev CI at `d3b0a813` was pending at Gate 1 and was 3/3 success by Gate 4.
+
+**Planner** (Agent `opus`, 56.7 min, 373,966 tok; resolver `agent-tool opus fail-closed:env-pin`; `derive-planner-lane` → `opus fail-closed:env-pin`). It wrote `w-world-address-bar-verbs-v3s1-sprint-plan.md` (2,325 lines) and its JSON, committed as `a71f2296`.
+- **Cut, by measurement:** S1 compiled to **1,626** lines (design ≈ 935) against the 1,400 cap, so it kept **M1 + M3 = 1,300**. The M2 judges (`JudgeVerbSSH`, `JudgeVerbAssertion`, `RecheckVerb`, VJ1) move to a new **S1b, 326 lines, compiled and green on top of M3** (`plan-scratch/patches/S1b-M2.patch`).
+  - M3 stays in S1 because S2's card test (XC1) and S3's F5 need `FinishPromptText`.
+  - The judges' first caller is S4.
+- **Seven §1.4 premises found false or incomplete:**
+  - The size.
+  - §6 still lists VT2 under S1. It is leftover r0 text: §2.3 [r1] and §8 put `FinishConfirmRefusal` in S3. Not built here.
+  - `displayCommitter` "3 callers": it is the definition plus 2 callers.
+  - The existing m2/m3 tests prove only the question and one committer line. A base-generated golden was added.
+  - The recorded Chrome fixtures cover only mint→verb; the reverse direction uses `approvaltest` keys.
+  - `Validate` checks UTF-8 but not NUL, as designed; noted for S2's card.
+  - A format-constant choice with identical behaviour.
+- **Mutants:** 115 ledger rows (109 mutants, 3 controls, 3 rewritten non-compiling rows); 105 killed, 3 named equivalents.
+- **Controller round trip:** byte-identical. I extracted the four patches from the plan, applied them to a fresh `git archive d3b0a813`, and `diff -r` against the planner's `work` and `final-tree` was silent. Control: 12 files differ from base, which matches the plan's 12.
+
+**Executor** (env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku` as in 374–399; one foreground run, 3.1 min, 59,154 tok).
+- M1a → M1b → M1c → M3: every `--dry-run` was clean and every acceptance `ACCEPT_OK`. I re-grepped each log: PASS 121/125/129/74, 0 `--- FAIL`, 0 `--- SKIP`, 0 `^FAIL`.
+- Snapshots matched §7 (STATUS/MANIFEST 2/4/6/12, DELETED empty).
+- I committed each snapshot with `commit_ms.sh`, which runs gofmt/build/vet/test before each commit:
+  - M1a `b1573c64` 387
+  - M1b `1e182629` 849
+  - M1c `011f6716` 1,034
+  - M3 `b4033af7` 1,300
+- Each numstat equals the plan's. The final tree passes the M3 `MANIFEST.sha256` (0 mismatches) and the worktree is clean.
+
+**Controller gates** (plan §6 `gates.sh` on `b4033af7`, 965 s, run while the judge read):
+- rc 0: status, `verify_ail`, gofmt, build, vet, fence, pkgs (253 s), race, **prompt** (the 13 existing finish/preset prompt tests by name, unedited, plus VT1) and **inv** (47 named passes).
+- **`verify_go` rc 1** on two untouched-area tests:
+  - `host/daemon` `TestWorkspaceExecConfiguredBindsTheEpisodeHandler`: a 5 s exec timeout on `/bin/sh -c 'pwd -P'`.
+  - `host/verifygate` `TestMissionConfigDefaultFlowIntegration/invalid_ledger`, which is on the known list.
+  - Load average was about 16 with the judge running at the same time. Each **passed alone on the same head** (0.86 s; 18 s). The sprint touches neither package.
+
+**Evaluator** (Agent `sonnet`, 29.8 min, 97,223 tok; `agent-tool sonnet declared:alias-pin`; its own worktree `.wt-world-iter400-row243-v3s1-eval`): **PASS 94/100**, 0 blocking.
+- Scores: correctness 28/30, tests 27/30, security 19/20, standards 10/10, scope 10/10.
+- **Its own mutants:** a 132-row ledger, all `J-` ids, 0 shared with the plan's.
+  - The must-die control (`VerbNamespace` set to the mint namespace) was killed; the must-live comment-only control survived.
+  - Static-only kills were re-run with the static test excluded.
+  - Two survivors: `J-W15-OR`, an equivalent redundant operand copied from the mint law's W15; and `J-CC-DEFAULT`, an error-message format.
+- **Other checks:**
+  - Law order was checked against `signed.go`/`passkey_assert.go`/`decision_signed.go`. `CheckConfirmation` = law − P1 − W15, and its message is built only from the caller's inputs.
+  - Domain separation holds both ways. The namespaces `world-approval@`/`world-decision@`/`world-verb@sunholo` and the prefixes are disjoint.
+  - The golden was regenerated from the base's own `finishPrompt` in a throwaway worktree.
+  - No pre-existing `_test.go` was modified (`--diff-filter=M` empty).
+  - M1b is green on its own.
+  - It judged the M2 cut sound.
+- **Reproduced first-party before banking:** the must-die mutant in the judge's worktree is killed by `TestVerbDomainSeparation` and `TestCheckConfirmation` with `TestVerbMessageLayout` skipped. After restoring, the tree is clean and the tests pass.
+- **Non-blocking:**
+  1. Prompt-line byte-identity rests on the base-generated golden alone. The existing finish tests catch only the question, the committer and the protected lines.
+  2. `VerbPrefix` and the 0x00 separator are pinned only by the layout test, which is inherent because sign and verify share one function.
+  3. The two survivors above.
+  4. The `verify_go` timing reds above.
+  5. `Validate` does not refuse NUL and does not constrain `Committer`/`Protected`, as designed.
+
+**Gate 3b:** PR #591 head `b4033af7`: CI 3/3 success (verify, go host build + test, race). Merged with `--match-head-commit` → **`b0817474`** (tree byte-identical to the head). **Merge push CI attempt 1: 2/3.** The race job (run 44074508663) went red on store-deadline and timeout tests in untouched code: `cmd/ailang-worldd` `TestApproveRefusesReplay` (`put mint request: begin: context deadline exceeded`) and `TestDemoProofWrongKeyCannotProve` (proof commit uncertain), `host/daemon` `TestHumanApproveIsSerializedAcrossEpisodes/together`, and an 8 m package timeout panic. Its two `DATA RACE` lines are the gate's positive control. Negative control: the same tree's race job was green on the PR head, and the last 11 dev merges' race gates were all success. `gh run rerun --failed` (the row-254 timing-class precedent, 382/398) → **attempt 2: 3/3 success** (`ci_merge_b0817474_attempt2.verdict`).
+
+**Routing evidence:** base=b0817474f853cd7ce859974e1abff49bf210a77b@2026-11-17T11:29:54Z (Gate 4). The Gate-1 base was d3b0a8139bdecc36f8d083f4b701aef822340b27@2026-11-17T09:39:57Z, and the worktree base snap agreed with it (no drift).
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (doc reviewed at 399).
+- Planner: `opus` via Agent (373,966 tok). Driver note: codex `gpt-6.1-sol` unusable at preflight (probe rc 75, quota unreadable) → opus.
+- Executor: `claude:claude-haiku-5-5` env pin, spawned as Agent `haiku` (59,154 tok); resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`. Driver note: codex unusable → haiku.
+- Evaluator: `sonnet` via Agent (97,223 tok), `agent-tool sonnet declared:alias-pin`. **Spawned as required; no role failed to spawn.**
+- Quorum: none (the doc was reviewed at 399). Metered total: $0.
+- Judge independence: cross-model (opus plan, haiku execution, sonnet judge).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V3 has its law: the code that will judge a key's confirmation of a finish prompt exists and is proven, and the prompt itself now lives where the card and the store can render it byte-identically.
+
+**Ruled out:**
+- **Building M2 (the judges) in S1:** S1 compiled to 1,626 > 1,400. M1 + M2 (1,360, margin 40) would have delayed M3, which S2 and S3 need sooner.
+- **VT2 (`FinishConfirmRefusal`) in S1:** §6's listing is stale r0 text; §2.3 [r1] and §8 place it in S3.
+- **The B-only branches (F6, `DraftOnly`):** D-WORLD-118 = A.
+- **Treating the `verify_go` reds as sprint regressions:** neither package is touched, and both tests passed alone on the same head.
+
+**Retro:**
+- **Instance 2 of "test lines dominate the size overrun"** (398: 1,255 vs ≈ 1,135; 400: 1,626 vs ≈ 935 compiled). The design's raw estimates undercount tests by about 1.7× on law sprints. No rule change yet. If a third instance comes, the designer directive should size tests from the analogous landed sprint's measured test/prod ratio.
+- **Instance 2 of "an untouched-area exec-timeout test reds verify_go while the judge runs concurrently"**: `TestWorkspaceExecConfiguredBindsTheEpisodeHandler` is new to the flake list. It passed alone in 0.86 s. Added to the next directives' known list.
+- The 398 fire shape held: planner 57 min → round trip → executor 3 min → gates concurrent with the judge (30 min).
+
+**Gate 5 bookkeeping:** rotation not due (#574 was opened 2026-11-16, after the Monday 07:00 boundary; the next rotation is Monday 2026-11-23). The weekly external-issue sweep already ran this week at 393.
+
+**Next:**
+1. Row 243 **V3 sprint 2** planner: the card page against fixtures (≈ 825 raw: M0 V2b pins, M4 `ConfirmationInput`/`ConfirmationCard`, M5 page + `confirm.js`, M6 XC1). Fold S1b's compiled judges (326 lines, `world-iter400/plan-scratch/patches/S1b-M2.patch`) in only if the compiled total is ≤ 1,400; otherwise S1b runs first as its own small sprint. Carry S1's Appendix C (NUL in `Validate` → the card; audit notes 1–5 to S3/S5).
+2. Then S3 (credentials schema 9 + read routes), which is now routable under D-WORLD-118 = A.
