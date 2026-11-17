@@ -1,6 +1,6 @@
 # w-world-address-bar-verbs-v3: confirm `episode finish` with an enrolled key on the surface
 
-- **Status**: Planned **r1**. Designed in iteration 399, 2026-11-17. r0 (`674fd735`) was
+- **Status**: Planned **r2** (controller carve-out over r1 `52b7d85a`, §16; changed text marked **[r2]**). Designed in iteration 399, 2026-11-17. r0 (`674fd735`) was
   **BLOCKED** at quorum round 1 (gemini-4-argon PASS; oc-glm-5-3 and oc-kimi-k3 REJECT; gpt6-1-sol
   absent on quota). r1 applies the three fixes the controller listed and nothing else; changed text
   is marked **[r1]**; §15 records each objection and its disposition. Child of
@@ -358,6 +358,8 @@ CREATE TABLE IF NOT EXISTS verb_requests (
 );
 ```
 
+**[r2]** `decision_ref`'s CHECK classes the prefix and length only (SQLite `GLOB 'sha256:*'` does not constrain the 64 characters to lowercase hex), exactly as the existing `request_id GLOB 'mr-[0-9a-f]*'` CHECKs class only the charset's first character (W18); the real fence is the Go-side grammar check `ConsumeVerbRequest` runs on the ref before the write (C15), pinned by CS-tests, so the CHECK is a backstop, not the parser.
+
 `credentialsSchemaVersion = 9` (`credentials.go:44`); `upgradeCredentials` gains `if version < 9`
 (after `:375`); the canonical-DDL test compares fresh and upgraded column for column, the A2/A3
 pattern. `host/store/verb_requests.go` (NEW):
@@ -465,7 +467,7 @@ has not moved when a retry arrives and the plain W15 law admits the same artifac
 |---|---|---|---|---|
 | before C14 (incl. C13 busy) | nothing written | 503 or 500 on the card; state `pending`, controls back | approve again, or the page re-POSTs the same body → 200 | CX20 |
 | C14 fails | no decision; row pending | 500 "the confirmation did not complete; approve again" | as above | CX20 |
-| after C14, C15 fails or the daemon dies | one finish approval in the world store that no row names; the row **pending** | 500, or the card unreachable until restart; then `pending` | the same body (or a fresh gesture) → 200: a second decision, the row names it; the first is inert (RV1) | CX21 |
+| after C14, C15 fails or the daemon dies | one finish approval in the world store that no row names; the row **pending** | 500, or the card unreachable until restart; then `pending` | the same body (or a fresh gesture) → 200: a second decision, the row names it; the first is inert (RV1; **[r2]** W62: the approve phase writes only the request and decision objects, and `finishMode`/`finishReusableApproval` read the episode-finish record, which only the record phase writes) | CX21 |
 | after C15 | done; the 200 may be lost | the card re-reads `approved` | none needed | CX17 |
 
 After a C14 that **succeeded**, a retry in the same Unix second builds the same request object (its
@@ -526,7 +528,7 @@ instead of a typed y; waits up to 10 minutes; the terminal is still required".
      A confirmation no key gave, or a signature over other bytes, fails here (CF6).
    - **(b) the daemon recorded exactly this scope.** Through the existing
      `worldReader{ctx: ctx, c: c}.object(ref)` (`why_cli.go:212`; the construction of
-     `episode_report.go:135`; finish holds `ctx` and `c`, `episode_finish.go:96`, `:102`) — that is
+     `episode_report.go:135`; finish holds `ctx` and `c`, `episode_finish.go:96`, `:102`; **[r2]** the types join: `worldReader.c` is `*client` and `why()` wraps it with `clientGetter`, `why_cli.go:181-190`, W63; `finishClient = newClient` → `*client`, `episode_finish.go:52`, `cli.go:31`, W64; `episode report` uses `newClient` too, W65) — that is
      `why.Reader.Object`, `r.GetJSON("/v1/objects/"+url.PathEscape(ref)+"?payload=true", &o)`
      (`host/why/why.go:142-145`), over `GET /v1/objects/{ref}` (`daemon.go:1113`; no credential,
      W55), returning the raw `Payload []byte` (`why.go:66-70`, W56) — the CLI reads the decision
@@ -588,7 +590,7 @@ of which the card can complete before the request expires **[r1]**.
 | expiry (+ grace) | §2.7 5 | "no confirmation … by <t>"; commit kept | CF4 |
 | a poll read fails | §2.7 5 | "cannot read request <id>"; commit kept | CF4 |
 | Ctrl-C | process ends | request pending until expiry or supersession | RV1 |
-| re-run after any refusal | `resume`, new request | same prompt bytes, new id; old one superseded | CF10 |
+| re-run after any refusal (**[r2]** including one after a successful C14: an orphaned decision is not a finish record, W62) | `resume`, new request | same prompt bytes, new id; old one superseded | CF10 |
 | the typed path (no flag) | unchanged | today's prompt and `y` | all existing finish tests, unedited |
 
 **P5 — `POST /surface/confirm/{id}`**: each row of §2.6's table is one branch; each has its own
@@ -642,7 +644,7 @@ CLI `approve vr-…` → the card pointer (CB4). **P2/P3** (read routes) are §2
 | T9 TOCTOU between confirmation and dispatch | **[r1]** the CLI re-verifies the stored artifact over its own digest, challenge and expiry against the enrolled key (CF6), then re-reads the world decision and requires `scope == scopeText` (CF7); then the existing F6 re-check of HEAD, remote, title and body (`:423-430`); the record route re-checks the scope (`host/daemon/episode_finish.go:186-195`) |
 | T9b **[r1]** a daemon (bug or compromise) records a confirmation no key gave | CF6: the CLI's own re-check fails, nothing is pushed. Residual trust: the credentials store's enrolled keys (R3) and the daemon's counter check (§2.7 step 6) |
 | T10 daemon restart | the request and the consume are SQLite rows; no in-memory state carries single use; a cut POST leaves one of §2.6's window states, each completed by a retry **[r1]** |
-| T11 revocation or a cloned passkey between judge and consume | `useApprover` and `usePasskey` inside C14's transaction (CS6) |
+| T11 revocation or a cloned passkey between judge and consume | `useApprover` and `usePasskey` inside **[r2]** C15's transaction (CS6) |
 | T12 a key-confirmed finish approval used as a publish stamp | the finish scope never parses as a publish scope, and L2 refuses `ssh:`/`webauthn:` at publish (`approve.go:579`) |
 | T13 an agent writes a verb request | it needs the credentials store's write, the same fence as the operator proof (A4 RK4); the human still sees the request on the card and must sign it; no session reaches the POST (C0) |
 | T14 request flooding | 16 pending per store, 128 KiB per request, one pending per episode (supersede) (CS3–CS4) |
@@ -859,7 +861,12 @@ B, change nothing from a page, touch no store schema, and are removed under C.
 
 - **RV1 Ctrl-C leaves a pending request.** It can still be confirmed until its expiry; the daemon then
   records an approval no CLI uses. It is inert: `finishReusableApproval` reuses only a recorded finish
-  (`episode_finish_resume.go:119`, W11), the scope expires ≤ 15 minutes after creation, and the next run
+  (`episode_finish_resume.go:119`, W11) — **[r2]** the traced truth (W62): the operator route's approve
+  phase writes only `RecordOperatorApproval`'s request and decision (`host/daemon/episode_finish.go:166-178`)
+  and no episode-finish record; `finishMode` returns `resume-dispatch` only for a record whose commit is
+  HEAD and whose outcome is `push-failed`/`pr-failed`/`ambiguous` (`episode_finish_resume.go:19-42`), and
+  `finishReusableApproval` reads `record.Approval` and refuses a scope with `ExpiresAt < now+300` (`:122`),
+  so reuse is time-bounded and an orphaned decision is never reused — the scope expires ≤ 15 minutes after creation, and the next run
   supersedes the request. A SIGINT handler that marks it cancelled is not designed.
 - **RV2 [r1] the two stores are not written atomically.** World first, then one credentials transaction
   (§2.6): every crash window leaves the request pending and completable by a retry of the same body or a
@@ -970,6 +977,10 @@ W61 shows `cmd/` and `host/` are byte-identical to `994ba123`, so every row desc
 | W59 **[r1]** | an identical decision answers its existing ref; another is refused | `sed -n 219,226p host/broker/approve.go` | `// same decision again (the same verb, decider and time: byte-identical, so the same object) answers its existing ref`; `} else if decided && bytes.Equal(existing.Payload, payload) { return existing.Hash, nil } else if decided { return …, ErrApprovalAlreadyDecided` |
 | W60 **[r1]** | A4's assertion law runs W1–W14 without W15 | `sed -n 79,84p host/approval/decision_signed.go` | `func DecideByAssertion(…)`; `checkApprover(…) // P2-P5, P3w`; `h, hErr := DecisionMessageHash(…)`; `ad, err := assertionSteps(in.Response, in.Approver, h, hErr) // W1-W14` |
 | W61 **[r1]** | cmd/host unchanged at the r0 commit (negative, with control) | `git diff --stat 994ba123 HEAD -- cmd host \| tail -1`; control `… -- design_docs \| tail -1` | *(empty)*; control `1 file changed, 862 insertions(+)` |
+| W62 **[r2]** | the approve phase writes no finish record; mode and reuse read only the record (traced for the C14-ok/C15-fail state) | `sed -n 166,178p host/daemon/episode_finish.go`; `sed -n 19,42p cmd/ailang-worldd/episode_finish_resume.go`; `sed -n 118,129p …` | `if input.Phase == "approve" { … RecordOperatorApproval(ctx, d.store, input.Scope, "operator:episode-finish", "operator:terminal", now) … writeJSON(w, …, FinishApproval{request, decision}); return }` (no record write); `case "push-failed", "pr-failed", "ambiguous": return "resume-dispatch"` only when `record != nil && record.Commit == head`; `old.ExpiresAt < now+300 \|\| … record.Approval == "" → return old, false` |
+| W63 **[r2]** | `worldReader`'s client field and how it builds a `why.Reader` | `grep -n 'type worldReader struct' -A4 cmd/ailang-worldd/why_cli.go`; `sed -n 188,190p …` | `181: type worldReader struct { ctx context.Context; c *client; healthCache *healthInfo }`; `188-189: func (r worldReader) why() why.Reader { return why.Reader{Ctx: r.ctx, Get: clientGetter(r.c), HealthCache: r.healthCache} }` |
+| W64 **[r2]** | finish's `c` is the same `*client` | `grep -n 'finishClient' cmd/ailang-worldd/episode_finish.go \| head -1`; `sed -n 31,33p cmd/ailang-worldd/cli.go` | `52: var finishClient = newClient`; `31: func newClient(base string) *client {` |
+| W65 **[r2]** | `episode report`'s `c` comes from the same constructor | `grep -n 'newClient' cmd/ailang-worldd/episode_report.go` | `84: reportOnce(ctx, newClient(base), …)`; `88: reportFollow(ctx, newClient(base), …)`; and `135: (worldReader{ctx: ctx, c: c}).health()` with `c *client` (`:124`) |
 
 ## 15. Quorum r1 (BLOCKED on r0 `674fd735`) → r1 changes
 
@@ -982,4 +993,17 @@ fixes below and nothing else.
 | oc-glm-5-3 (REJECT) | schema 9 landed in sprint 2, not gated on D-WORLD-118, while C "removed sprints 1–3" with no disposition for stores already at v9; the newer-store direction had no W-row | **Accepted; option (ii).** The newer-store refusal exists (W53) and `serve` upgrades at start (W54), so reverting the constant would strand a real store. r1 moves schema 9 and every store read into sprint 3, gated on A/B; sprints 1–2 (the law, the page against fixtures, ≈ 1,760 raw) touch no schema; under C only code is removed; a later reversal would be (i)'s v10 drop, never a revert; version skew stated (§2.4, §8, §10, §11 RV7; CS7) |
 | oc-kimi-k3 (REJECT) | "what opens is what was approved" rested on an uncited read-back from the same daemon that wrote the record; "A4's own bound (A4 §2.7)" cited design text | **Accepted.** W55–W57 cite the route, handler, payload branch, `isProtected`, `why.Reader.Object`, `worldReader.object` and A4's writer hold in code; §2.6 now cites that code. Substantively, the CLI now re-verifies the stored artifact over **its own** digest, challenge and expiry against the enrolled key (`CheckConfirmation`/`RecheckVerb`, §2.3, §2.7 step 6(a), CF6, VL8) before the read-back; the remaining trust (enrolled keys; the daemon's counter check) is stated (§2.7, T9b) |
 | gemini-4-argon (PASS, concern) | r0's C14–C16 write two stores non-atomically; a crash left the request consumed with no decision | **Accepted.** Writes reordered: world first (C14), then consume and link in one credentials transaction (C15); no state is consumed without a decision; every window is completed by a retry of the same body before expiry, as A4's RD13(a) (W58) but without A4's deferred W15; the same-second retry is traced (W59); window table in §2.6; CX20, CX21 |
+
+## 16. Quorum r2 (BLOCKED on r1 `52b7d85a`) → controller carve-out r2
+
+gemini-4-argon PASS; oc-glm-5-3 REJECT; oc-kimi-k3 REJECT; gpt6-1-sol absent (quota, second round). Neither
+reject disputes the design's direction; each carries a concrete reviewer-authored fix. Under the
+narrow-refinement carve-out the controller measured each premise at `994ba123` (W62–W65) and applied
+the reviewers' fixes, choosing between their stated branches by measurement and adding nothing else.
+
+| reviewer | objection | disposition |
+|---|---|---|
+| oc-glm-5-3 (REJECT) | "inert" (§2.6 window table, RV1) asserted, not measured; feared a re-run after C14-ok/C15-fail lands in `resume-dispatch` and dispatches under the orphan; §2.9 P1's re-run row; whether reuse enforces `ExpiresAt` | **Fix applied, the reviewer's "rewrite the claim to the traced truth" branch.** W62 measures it: the approve phase writes no finish record, `finishMode`'s `resume-dispatch` needs a record at HEAD with a failed-dispatch outcome, and `finishReusableApproval` reads only `record.Approval` and refuses `ExpiresAt < now+300`. So the reuse the reviewer feared cannot occur and "inert" holds; RV1, the window-table row and §2.9 P1's row now cite W62 (no split is needed: the post-C14 state selects the same mode as a plain refusal). Reuse is time-bounded, so no new residual |
+| oc-kimi-k3 (REJECT) | the read-back seam's conjunction unmeasured (`finishClient`'s type vs `worldReader.c`, `why()`'s construction, `episode_report`'s `c`); T11 cites C14 for C15's transaction; `decision_ref GLOB 'sha256:*'` does not enforce hex | **Fixes applied.** W63–W65: `worldReader.c` is `*client`, `why()` builds `why.Reader` from it via `clientGetter`, `finishClient = newClient` returns `*client`, and `episode report` uses `newClient` too — the seam holds, "no new client helper" stands, S5 unchanged. T11 now reads C15. §2.4 states why the CHECK classes prefix and length only (the existing `mr-` CHECKs do the same, W18) and that `ConsumeVerbRequest`'s Go grammar check is the real fence |
+| gemini-4-argon (PASS, concern) | `CheckConfirmation` re-runs `checkApprover` at the CLI's poll time, so a revocation in the ≈ 1 s window after C15 makes the CLI refuse a validly recorded approval | **Not applied (a pass; the failure is fail-safe: the CLI refuses, keeps the commit, and a re-run asks afresh).** Recorded here as a planner input for S5's CF tests |
 
