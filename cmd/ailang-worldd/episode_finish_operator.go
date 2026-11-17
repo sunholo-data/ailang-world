@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
@@ -156,17 +155,5 @@ func finishPrompt(tty io.Writer, scope broker.FinishApprovalScope, title, body s
 	if len(committer) > 0 {
 		identity = committer[0]
 	}
-	fmt.Fprintf(tty, "committer: %s\n", displayCommitter(identity))
-	lines := strings.Split(body, "\n")
-	preview := strings.Join(lines[:min(6, len(lines))], "\n")
-	state := "draft"
-	if !scope.Draft {
-		state = "ready"
-	}
-	label := "ailang-world"
-	if scope.CreateLabel {
-		label += " (will be created)"
-	}
-	fmt.Fprintf(tty, "repository: %s\nbranch: %s\nsha: %s\nbase: %s\ntitle: %s\nbody (%d bytes), first lines:\n%s\nlabel: %s\n%s\nprotected paths changed: %s\nOpen this pull request? [y/N] ",
-		scope.Repository, scope.Head, scope.SHA, scope.Base, title, len(body), preview, label, state, strings.Join(protected, ", "))
+	fmt.Fprint(tty, broker.FinishPromptText(scope, title, body, protected, identity)+"Open this pull request? [y/N] ")
 }

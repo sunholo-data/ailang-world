@@ -1,0 +1,67 @@
+[
+  {
+    "Name": "draft, existing label, no protected path, repository committer",
+    "Scope": {
+      "Repository": "sunholo-data/ailang-world",
+      "Remote": "origin",
+      "Head": "world/w1",
+      "SHA": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "Base": "dev",
+      "TitleSHA256": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "BodySHA256": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+      "Draft": true,
+      "CreateLabel": false,
+      "ExpiresAt": 1700000900
+    },
+    "Title": "Row 243: the law",
+    "Body": "## Episode w1\n\nline 3\nline 4\nline 5\nline 6\nline 7 (not shown)\nline 8\n",
+    "Protected": null,
+    "Committer": "",
+    "Prompt": "committer: (repository git config)\nrepository: sunholo-data/ailang-world\nbranch: world/w1\nsha: a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1\nbase: dev\ntitle: Row 243: the law\nbody (69 bytes), first lines:\n## Episode w1\n\nline 3\nline 4\nline 5\nline 6\nlabel: ailang-world\ndraft\nprotected paths changed: \nOpen this pull request? [y/N] "
+  },
+  {
+    "Name": "ready, label created, two protected paths, pinned committer",
+    "Scope": {
+      "Repository": "sunholo-data/ailang-world",
+      "Remote": "origin",
+      "Head": "world/w2",
+      "SHA": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "Base": "main",
+      "TitleSHA256": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "BodySHA256": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+      "Draft": false,
+      "CreateLabel": true,
+      "ExpiresAt": 1700000900
+    },
+    "Title": "Tidy \u003cb\u003e \u0026 \"quote\"",
+    "Body": "one\ntwo\nthree",
+    "Protected": [
+      "cmd/ailang-worldd/main.go",
+      "go.mod"
+    ],
+    "Committer": "World Bot \u003cbot@example.invalid\u003e",
+    "Prompt": "committer: World Bot \u003cbot@example.invalid\u003e\nrepository: sunholo-data/ailang-world\nbranch: world/w2\nsha: a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1\nbase: main\ntitle: Tidy \u003cb\u003e \u0026 \"quote\"\nbody (13 bytes), first lines:\none\ntwo\nthree\nlabel: ailang-world (will be created)\nready\nprotected paths changed: cmd/ailang-worldd/main.go, go.mod\nOpen this pull request? [y/N] "
+  },
+  {
+    "Name": "draft, label created, one protected path, empty body",
+    "Scope": {
+      "Repository": "sunholo-data/ailang-world",
+      "Remote": "origin",
+      "Head": "world/w1",
+      "SHA": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+      "Base": "dev",
+      "TitleSHA256": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+      "BodySHA256": "c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3",
+      "Draft": true,
+      "CreateLabel": true,
+      "ExpiresAt": 1700000900
+    },
+    "Title": "Café — naïve",
+    "Body": "",
+    "Protected": [
+      "docs/QUICKSTART.md"
+    ],
+    "Committer": "",
+    "Prompt": "committer: (repository git config)\nrepository: sunholo-data/ailang-world\nbranch: world/w1\nsha: a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1\nbase: dev\ntitle: Café — naïve\nbody (0 bytes), first lines:\n\nlabel: ailang-world (will be created)\ndraft\nprotected paths changed: docs/QUICKSTART.md\nOpen this pull request? [y/N] "
+  }
+]
