@@ -12,10 +12,10 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/verbs"
 	"github.com/sunholo-data/ailang-world/host/why"
 )
 
@@ -98,31 +98,24 @@ func trimOneNewline(b []byte) []byte {
 }
 
 func runWhy(addr string, args []string, stdin io.Reader, stdout, stderr io.Writer) int {
-	target := ""
-	if len(args) > 0 && (!strings.HasPrefix(args[0], "-") || args[0] == "-") {
-		target, args = args[0], args[1:]
-	}
+	target, args := verbs.WhyLeadingTarget(args)
 	fs := flag.NewFlagSet("ailang-worldd why", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	fs.Usage = func() {}
-	expectStore := fs.String("expect-store", "", "refuse unless the daemon serves this store (World-Provenance store= path)")
-	resultFile := fs.String("result", "", "a 'call --json-out' output file")
-	scan := fs.Int("scan", whyScanDefault, "entries to scan back from head (max 5000)")
-	asJSON := fs.Bool("json", false, "print the chain as JSON")
+	a := verbs.WhyFlags(fs)
 	if code, done := parseVerbFlags(fs, args, whyHelp, stdout, stderr); done {
 		return code
 	}
-	if fs.NArg() > 0 {
-		if target != "" || fs.NArg() > 1 {
-			fmt.Fprintf(stderr, "ailang-worldd why: unexpected argument %q\n", fs.Arg(fs.NArg()-1))
-			return exitUsage
-		}
-		target = fs.Arg(0)
+	target, err := verbs.WhyTrailingTarget(fs, target)
+	if err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd why: %v\n", err)
+		return exitUsage
 	}
-	if *scan < 1 || *scan > whyScanMax {
+	if !verbs.WhyScanOK(*a.Scan) {
 		fmt.Fprintf(stderr, "ailang-worldd why: --scan must be 1..%d\n", whyScanMax)
 		return exitUsage
 	}
+	expectStore, resultFile, scan, asJSON := a.ExpectStore, a.Result, a.Scan, a.JSON
 	t, err := parseWhyTarget(target, *resultFile, stdin)
 	if err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd why: %v\n%s", err, whyHelp)

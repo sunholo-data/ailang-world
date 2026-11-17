@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sunholo-data/ailang-world/host/verbs"
 	"github.com/sunholo-data/ailang-world/host/why"
 )
 
@@ -124,7 +125,8 @@ func TestWhyRunGetterClasses(t *testing.T) {
 // VW4: the moved constants, as literals, so a change on both sides still fails.
 func TestWhyConstantsMatchTheCLI(t *testing.T) {
 	if why.MaxResponseBytes != maxClientResponseBytes || maxClientResponseBytes != 8388608 ||
-		whyScanDefault != 500 || whyScanMax != 5000 || logPageMax != 500 || why.ElideAt != 160 {
+		whyScanDefault != 500 || whyScanMax != 5000 || logPageMax != 500 || why.ElideAt != 160 ||
+		verbs.WhyScanDefault != why.ScanDefault || verbs.WhyScanMax != why.ScanMax {
 		t.Fatalf("constants drifted: %d %d %d %d %d", why.MaxResponseBytes, whyScanDefault, whyScanMax, logPageMax, why.ElideAt)
 	}
 }
