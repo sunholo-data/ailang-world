@@ -104,16 +104,18 @@ function makeDoc() {
 const answer = (status, body) => () => Promise.resolve({ status, text: async () => (typeof body === 'string' ? body : JSON.stringify(body)) });
 const hang = (init) => new Promise((_, reject) => init.signal.addEventListener('abort', () => reject(new DOMException('The operation was aborted.', 'AbortError'))));
 
-// open runs confirm.js at path against fetch; fire runs the page's pending timers once it has asked.
+// open runs confirm.js at path against fetch and waits, on the wall clock (at most 10 s), until the page leaves
+// 'loading': its SHA-256 digests resolve off the event loop, so no count of ticks bounds them (iteration 401 M7);
+// fire runs the page's stubbed timers once, as soon as it has asked (its fetch made and its abort timer set).
 async function open(path, fetch, fire) {
   const doc = makeDoc(), timers = [], blobs = [], fetches = [];
   vm.runInNewContext(SRC, { document: doc, location: { pathname: path, origin: 'http://localhost:1' }, crypto: globalThis.crypto, TextEncoder, TextDecoder, atob, btoa, Blob, AbortController, console,
     URL: { createObjectURL: (b) => { blobs.push(b); return 'blob:http://localhost:1/' + blobs.length; } },
     setTimeout: (f, ms) => timers.push({ f, ms, cleared: false }), clearTimeout: (n) => { if (timers[n - 1]) timers[n - 1].cleared = true; },
     fetch: (url, init) => { fetches.push({ url, init }); return fetch(init); } });
-  for (let i = 0; i < 400 && doc.body.dataset.state === 'loading'; i++) {
-    if (fire && i === 20) for (const t of timers) if (!t.cleared) t.f();
-    await new Promise((r) => setImmediate(r));
+  for (const end = Date.now() + 10000; doc.body.dataset.state === 'loading' && Date.now() < end;) {
+    if (fire && fetches.length && timers.length) { fire = false; for (const t of timers) if (!t.cleared) t.f(); }
+    await new Promise((r) => setTimeout(r, 2)); // node's own timer: the page's are the stubs above
   }
   const $ = (id) => doc.getElementById(id);
   return { doc, $, timers, blobs, fetches, state: doc.body.dataset.state, what: $('what').textContent };
