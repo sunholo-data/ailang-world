@@ -69,8 +69,8 @@ func (a approvalRig) readVerb(id string) (row store.VerbRequestRow) {
 	return row
 }
 
-// The route table: exactly three GETs under /surface/confirm, each behind approvalRoute, and no
-// POST (sprint 4's); other methods 405 with no CORS header; a foreign Host 421; other names 404.
+// The route table: exactly three GETs and the one POST (sprint 4) under /surface/confirm, each behind
+// approvalRoute; other methods 405 with no CORS header; a foreign Host 421; other names 404.
 func TestConfirmRoutesRegistered(t *testing.T) {
 	src, err := os.ReadFile("daemon.go")
 	if err != nil {
@@ -85,7 +85,7 @@ func TestConfirmRoutesRegistered(t *testing.T) {
 		got = append(got, m[1])
 	}
 	sort.Strings(got)
-	if want := []string{"GET /surface/confirm.js", "GET /surface/confirm/{id}", "GET /surface/confirmations/{id}"}; !reflect.DeepEqual(got, want) {
+	if want := []string{"GET /surface/confirm.js", "GET /surface/confirm/{id}", "GET /surface/confirmations/{id}", "POST /surface/confirm/{id}"}; !reflect.DeepEqual(got, want) {
 		t.Fatalf("confirmation routes %v, want %v", got, want)
 	}
 	a := newApprovalRig(t)
@@ -93,6 +93,9 @@ func TestConfirmRoutesRegistered(t *testing.T) {
 	for _, target := range []string{"/surface/confirm/" + id, "/surface/confirm.js", "/surface/confirmations/" + id} {
 		requireRefusal(t, "foreign "+target, a.serve("GET", target, "rebind.example:7644", nil), 421, "MisdirectedRequest")
 		for _, method := range []string{"POST", "PUT", "DELETE", "OPTIONS"} {
+			if method == "POST" && target == "/surface/confirm/"+id {
+				continue // the confirmation (surface_confirm_test.go)
+			}
 			rec := a.serve(method, target, apLoopback, nil, "Origin", "http://localhost:7644", "Access-Control-Request-Method", "POST")
 			if rec.Code != 405 || rec.Header().Get("Access-Control-Allow-Origin") != "" {
 				t.Errorf("%s %s = %d, want 405 with no CORS header", method, target, rec.Code)

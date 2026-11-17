@@ -6,13 +6,10 @@ package daemon
 // the stores before it (nothing written). Stores and keys are tests' (D-WORLD-109).
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"encoding/hex"
 	"fmt"
-	"net"
-	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
@@ -68,20 +65,10 @@ func confirmPasskey(t *testing.T, pk *approvaltest.Passkey, row store.VerbReques
 }
 
 // confirmAt POSTs body to /surface/confirm/<id> with Host host, as the card would (loopback Origin,
-// same-origin, JSON); hdr pairs override those headers. Until M10d registers the route, the request
-// reaches the handler through approvalRoute, as the mux will route it.
+// same-origin, JSON); hdr pairs override those headers.
 func (a approvalRig) confirmAt(host, id string, body []byte, hdr ...string) *httptest.ResponseRecorder {
 	a.t.Helper()
-	req := httptest.NewRequest("POST", "/surface/confirm/"+id, bytes.NewReader(body))
-	req = req.WithContext(context.WithValue(req.Context(), http.LocalAddrContextKey, net.Addr(&net.TCPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 7644})))
-	req.Host = host
-	req.SetPathValue("id", id)
-	for h, i := append([]string{"Origin", apOrigin, "Sec-Fetch-Site", "same-origin", "Content-Type", "application/json"}, hdr...), 0; i+1 < len(h); i += 2 {
-		req.Header.Set(h[i], h[i+1])
-	}
-	rec := httptest.NewRecorder()
-	a.d.approvalRoute(a.d.handleSurfaceConfirm).ServeHTTP(rec, req)
-	return rec
+	return a.serve("POST", "/surface/confirm/"+id, host, body, append([]string{"Origin", apOrigin, "Sec-Fetch-Site", "same-origin", "Content-Type", "application/json"}, hdr...)...)
 }
 
 // confirm is confirmAt on the loopback Host.
