@@ -17,7 +17,8 @@ import (
 )
 
 // XV1: `episode report w1` typed into #addr shows the CLI's own bytes in the verb panel and clears the
-// bar; `why` shows its CLI line; `log` is refused in the header with its line, the bar and the place kept.
+// bar; `why` and `log` are refused in the panel with their CLI lines (V2b A3); `world a b c`, a refusal
+// with no CLI line, is said in the header, the bar and the place kept.
 func TestVerbBarEpisodeReportInChrome(t *testing.T) {
 	b := startPasskeyBrowser(t)
 	b.do(t, nil, "tab", map[string]any{})
@@ -63,16 +64,20 @@ func TestVerbBarEpisodeReportInChrome(t *testing.T) {
 		t.Fatalf("after episode report: %+v", state)
 	}
 	enter("why")
-	if got := panel("At a terminal: ailang-worldd why"); !strings.HasPrefix(got, "why reads World") {
+	if got := panel("a target is required"); got != "ailang-worldd why: a target is required" {
 		t.Fatalf("why shows %q", got)
 	}
 	read()
 	before := state.Location
-	b.do(t, nil, "waitFor", map[string]any{"expression": `(document.getElementById('verb').remove(), 1)`})
 	enter("log")
-	b.do(t, nil, "waitFor", map[string]any{"expression": `document.getElementById('hmsg').textContent.includes('at a terminal: ailang-worldd log')`})
-	if read(); state.Verb || state.Addr != "log" || state.Location != before {
-		t.Fatalf("after log: %+v (was at %s)", state, before)
+	if got := panel("ailang-worldd log"); got != "log is a CLI command the app does not run; at a terminal: ailang-worldd log" {
+		t.Fatalf("log shows %q", got)
+	}
+	b.do(t, nil, "waitFor", map[string]any{"expression": `(document.getElementById('verb').remove(), 1)`})
+	enter("world a b c")
+	b.do(t, nil, "waitFor", map[string]any{"expression": `document.getElementById('hmsg').textContent.includes('unknown address: try')`})
+	if read(); state.Verb || state.Addr != "world a b c" || state.Location != before {
+		t.Fatalf("after world a b c: %+v (was at %s)", state, before)
 	}
 	b.do(t, nil, "openCard", map[string]any{"url": "about:blank", "raw": true}) // ends the page's live stream before the server closes
 }

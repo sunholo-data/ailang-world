@@ -33,7 +33,7 @@ type verbAnswer struct {
 }
 
 // handleSurfaceVerb is GET /surface/verb.json?q=<line>, behind approvalRoute: the bar's line through
-// host/verbs' one grammar. It reads (episode report, the /v1 route's own builder) and writes nothing:
+// host/verbs' one grammar. It reads (episode report, the /v1 route's own builder; why, host/why's walk) and writes nothing:
 // no store write, no credentials store, no process. An operator's typo is a 200 refusal.
 func (d *Daemon) handleSurfaceVerb(w http.ResponseWriter, r *http.Request, _ []string) {
 	query := r.URL.Query()
@@ -42,7 +42,7 @@ func (d *Daemon) handleSurfaceVerb(w http.ResponseWriter, r *http.Request, _ []s
 		return
 	}
 	a := verbAnswer{V: 1, Schema: VerbSchema, Q: query.Get("q"), Argv: []string{}, Class: string(verbs.Refused), Outcome: "refused"}
-	defer func() { writeApprovalJSON(w, http.StatusOK, a) }()
+	defer func() { capVerbAnswer(&a); writeApprovalJSON(w, http.StatusOK, a) }()
 	argv, err := verbs.Split(a.Q) // its first check is the 1,024-byte bound: no oversized line is tokenized
 	if err != nil {
 		a.Reason = err.Error()
@@ -55,6 +55,8 @@ func (d *Daemon) handleSurfaceVerb(w http.ResponseWriter, r *http.Request, _ []s
 		a.Outcome = "address"
 	case v.Words == "episode report":
 		d.verbEpisodeReport(r, args, &a)
+	case v.Words == "why":
+		d.verbWhy(r, args, &a)
 	case v.Class == verbs.Navigate:
 		if a.Href, a.Reason = verbs.ApproveTarget(args); a.Href != "" {
 			a.Outcome = "navigate"

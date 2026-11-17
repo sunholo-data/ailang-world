@@ -101,7 +101,7 @@ func TestSurfaceVerbBoundsAndErrors(t *testing.T) {
 	if v, _ := verbGet(a, over); v.Outcome != "refused" || v.Reason != verbs.ErrTooLong.Error() || len(v.Argv) != 0 || v.Class != "refused" {
 		t.Errorf("1,025 bytes = %+v", *v)
 	}
-	if v, _ := verbGet(a, over[:verbs.MaxLine]); v.Outcome != "terminal" || len(v.Argv) != 2 {
+	if v, _ := verbGet(a, over[:verbs.MaxLine]); v.Outcome != "refused" || v.Reason == verbs.ErrTooLong.Error() || len(v.Argv) != 2 {
 		t.Errorf("1,024 bytes = %+v", *v)
 	}
 	if v, _ := verbGet(a, `why "a`); v.Outcome != "refused" || v.Reason != verbs.ErrUnclosed.Error() {
@@ -176,7 +176,7 @@ func TestSurfaceVerbIsReadOnly(t *testing.T) {
 		}
 		return true
 	})
-	if want := map[string]bool{"readCtx": true, "episodeReport": true, "writeInternalErrorLog": true, "verbEpisodeReport": true, "readDeadline": true}; !reflect.DeepEqual(calls, want) {
+	if want := map[string]bool{"readCtx": true, "episodeReport": true, "writeInternalErrorLog": true, "verbEpisodeReport": true, "readDeadline": true, "verbWhy": true}; !reflect.DeepEqual(calls, want) {
 		t.Errorf("surface_verb.go reaches d.%v, want exactly %v", calls, want)
 	}
 	for _, id := range []string{"mr-0123456789abcdef", "mr-0123456789ABCDEF", "mr-0123456789abcde", "mr-0123456789abcdef0", "xr-0123456789abcdef", "mr-012345678 abcdef"} {

@@ -10,7 +10,7 @@ type Class string
 
 const (
 	Address  Class = "address"  // navigation: the page's own parseAddress path
-	Read     Class = "read"     // reads World: episode report runs; why answers terminal (V2)
+	Read     Class = "read"     // reads World: episode report and why run
 	Navigate Class = "navigate" // approve opens row 201's card
 	Mutate   Class = "mutate"   // changes World: terminal (V3/V4)
 	Host     Class = "host"     // needs a host process: terminal (V4)
@@ -97,7 +97,7 @@ func Lookup(argv []string) (Verb, []string) {
 	}
 	switch { // 4: the one-word rows
 	case first == "why":
-		return Verb{Words: "why", Class: Read, CLI: cli, Reason: "why reads World, but its walk runs in the CLI. The app cannot run it yet."}, argv[1:]
+		return Verb{Words: "why", Class: Read, CLI: cli}, argv[1:]
 	case first == "approve":
 		return Verb{Words: "approve", Class: Navigate, CLI: cli}, argv[1:]
 	case member(NeverWords, first):
