@@ -9,74 +9,6 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 382 — 2026-11-11 — row 201 A2 sprint 4 built: the passkey ceremony page under the unchanged surfaceCSP, live-Chrome XB1/XB2 on a CDP virtual authenticator, `generate.sh` made real, QUICKSTART §16 (attended — pending); judge PASS 91; NOT LANDED — the CI host job is red on a runner apt-mirror DNS outage that a `dev` control reproduces [PRODUCT]
-
-**Pick:** row 201 `w-world-approvals-by-key`, parent milestone A2, sprint 4 — M7 from the sprint-3 plan's Appendix C, the route iteration 381 named. D-WORLD-109 = A applies: test keys, temp stores and a CDP virtual authenticator only.
-- **Re-measured at pick** (`origin/dev` `27ce163e`): no open PR from this account; no `iter382` worktree; no `A2 sprint 4`/M7 commit on `origin/dev`; `/surface/passkey` not served at HEAD (`generate.sh` still the sprint-1 stub).
-- The A2 child design r2 has a quorum artifact (`mc_quorum_gate2 w-world-approvals-by-key-a2` rc 0), so no pick-time quorum was owed and no designer ran.
-- **Ledger:** valid (100 rows). OPEN: D-WORLD-105 only.
-- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 not routable (unchanged since 381).
-- **Orphans:** iteration 381's fire exited rc=143 after its record landed (the driver's own notice on #524 says so; record #551 is on `origin/dev`), so nothing was orphaned. **Iteration 381's record PR #551 was red once on `TestMarketingCaptureFakeChromeSixShots/inventory` (row 247 class, 120 s ctx) and green on one `rerun --failed`**; that is not in log 381 and is recorded here as 381 asked.
-
-**Gate 0:**
-- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
-- Directives: 0 allowlisted on #524, out of 15 comments. The issue-scoped watermark is absent, so all comments were read.
-- Self-notices: rc 2, an instrument failure and not a verdict; no `-last-seen` file exists for 524 or 449 (same as 371–381). The one driver notice since 381 is its `rc=143 after landing its record` note.
-- Inbox: no unread `mission-world` message addressed to this loop (the two newest are this mission's own 381 fyi and rc=143 notes).
-- Skill drift: none. SKILL.md and all 13 resource files at the resolved symlink target match the driver clone's `origin/dev`.
-- Dev at `27ce163e` (record 381): `checks=3`, all success. Local `dev` was 12 behind origin (records merged via GitHub); state read from origin.
-- Weekly issue sweep: not owed (not the first fire after Monday's rotation).
-
-**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus`, 218 min, 479,457 tok. Committed `d688d22d` on the sprint branch.
-- Seven sub-milestones M7a–M7g, **1,054 lines** `-- cmd host` (production ≈ 206, the rest tests and the CDP driver); the 2,000 cap held with 946 to spare, nothing narrowed. M7e is 327 lines (over the ~250 aim) because the routes may not land without both browser tests.
-- Both optional carry-forwards taken in M7a: WN2a refuses a `--name` outside `approval.ApproverNamePattern` before any link, and CW7 pins the next-step line's `--db … --credentials-db …` order.
-- Mutants: 69 (64 killed by the named test and the package's passkey tests, 5 named equivalents); a 251-line per-run ledger.
-- **Premises found false:** P1 the design puts XB1/XB2 in `host/daemon`, but `ceremonyLink` is in `package main`, so the browser tests and driver live in `cmd/ailang-worldd` while the page is still served through `daemon.New(...).Handler()`; P2 `generate.sh` cannot reproduce the committed fixtures byte-for-byte (new keys each run), so it writes only into an empty directory it is given and its output passes the fixture law; P3 Chrome's virtual authenticator always picks ES256, so EdDSA through the page is a named equivalent. Six browser races were fixed in the driver/test, none by loosening an assertion (e.g. virtual time is now paused before the click so the abort lands at exactly 240000 ms under load; a UV-false authenticator replaces `setUserVerified(false)`).
-- **Controller decisions on the planner's asks:** (1) page/JS mutants run against the package's passkey tests rather than the whole `cmd/ailang-worldd` — accepted on the planner's C22 grep and the judge's independent check that only those tests reach the page bytes; (2) `-timeout 20m` on whole-package runs — accepted; (3) `TestWorldContextAndStatusline` added to the known load-sensitive list — accepted.
-- Round trip: **the controller re-did it** (its own `git archive 27ce163e` → the 7 patches awk-extracted from the plan → `patch -p1`): `diff -rq` against the planner's mutant tree empty for `cmd`, `host`, `docs`.
-
-**Executor:** env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`. Two runs (M7a–M7d 7.5 min, M7e–M7g 7.8 min), merging the plan's four runs to save wall clock. No hand edits, no git writes, no stop condition, no timing re-run. It reported the pre-existing env-gated skips in whole-package `-v` runs (14 in `cmd/ailang-worldd`, ~30 in `host/daemon`) rather than treating them as M7 skips; each is unchanged at the base. The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`: M7a `e4734707` → 11, M7b `a7f45088` → 195, M7c `30c5debe` → 367, M7d `c1483836` → 597, M7e `17c21dae` → 924, M7f `e8077ba6` → 1,054, M7g `e07b7bad` → 1,054. Every value equals the plan's, and the final `cmd`/`host`/`docs` tree is `diff -rq`-identical to the planner's.
-
-**Controller gates:** plan §6 as one bash script at `e07b7bad`.
-- Pre-commit script **green** (`PRE_COMMIT_GATES_GREEN`): verify_ail, gofmt, build, vet, compile fence, touched packages, `-race` legs, 29 named inventories/help/quickstart tests `--- PASS` (0 SKIP/FAIL), and **XB1+XB2 required ×3 in a row: 9, 13, 15 s** (headless Chrome 157, temp profile, CDP virtual authenticator).
-- `VERIFY_GO_LEGS=plain verify_go.sh`: rc 1, **run concurrently with the judge's mutants** (the slot clock forced the overlap), on three package-level `test timed out after 10m0s` panics (host/broker, host/daemon, host/verifygate). Re-run alone with `-timeout 20m`: host/daemon rc 0 (381 s), host/broker rc 0 (256 s), host/verifygate red once on `TestMissionConfigDefaultFlowIntegration/valid_ledger` (plan's known list) and green alone. Details in `verification/world-iter382/controller-gates.md`.
-
-**Judge:** sonnet via the Agent tool, on its own worktree at `e07b7bad` (generator ≠ judge). **Round 1: PASS 91/100, zero blocking** (correctness 28, tests 27, security 19, standards 9, scope 8).
-- A 46-line mutant ledger (`verification/world-iter382/judge-mutants.tsv`): 38 of its own diff-anchored mutants across page checks (version, each op, origin, rp, base64url, JSON, timer, late result, expiry, abort signal, button disable, save-after-failure, code label/order, UV), routes/headers, WN2a and `generate.sh`; 34 killed, must-die control killed, must-live control survived. XB1/XB2 required twice (XB1 6.4/3.3 s, XB2 4.1/4.0 s).
-- Non-vacuity per milestone: removing M7e's route registrations fails PG1 and XB1/XB2; page mutants kill XB1/XB2; removing WN2a fails CW1's arm; each `generate.sh` refusal removal fails `TestPasskeyFixtureGeneratorRefuses`. It confirmed XB1 drives the CLI's own printed links into the real enrol and `--webauthn-assertion` paths.
-- Non-blocking, all fail closed or cosmetic: `J-allow-empty` survives (the virtual authenticator holds one credential, so the allow list is unexercised — a second enrolled credential in XB1 would kill it); **`R-csp` survives** (PG1 compares the header with the `surfaceCSP` identifier, so no test pins the CSP's value); `J-blob-type` (saved MIME type unasserted); `H-go-enabled` (redundant initial `disabled`). Logged, not filed (D-WORLD-109 (2)).
-- **The controller reproduced one kill and one survivor:** `if false && …` on WN2a fails `TestPasskeyEnrollFlagRules`; adding `blob:` to `surfaceCSP`'s `style-src` leaves `TestPasskeyPageRoutes` and every host/daemon CSP/surface test green.
-
-**Gate 3b:** PR #552, head `e07b7bad`, MERGEABLE/CLEAN.
-- Attempt 1: 1/3 — the race job red on `scripts/marketingcheck` `TestMarketingSupervisorFakeDaemonCleanup/shell-hup` (row 254/258 class; this sprint touches no `scripts/`), and the host job red at `apt-get install -y -qq bubblewrap socat ripgrep` (`Temporary failure resolving 'azure.archive.ubuntu.com'`, exit 100) before any Go test.
-- Attempts 2, 3 and 4 (`gh run rerun --failed`): the race job green from attempt 2; the host job red every time at the same apt step, 7 DNS-failure lines each.
-- **Negative control:** a `workflow_dispatch` of CI on `dev` `27ce163e` (all 3 green at 10:34Z) failed its host job at the same step (`Row 140 srt confinement matrix`, apt DNS failures, the step timed out at 8 min). GitHub's status API read "All Systems Operational". So the red is a runner-mirror outage, inherited, not this sprint.
-- **Not merged** (`dev` has no branch protection, so the merge button works; merging over a red is forcing a guardrail). This record is committed on PR #552's branch so the next fire finds it there (Gate 1's blocked-PR rule).
-
-**Routing evidence:** base=27ce163eb1ae8af55151ea6548591c15a3126835@2026-11-11T10:54:18Z.
-- Controller: `claude-opus-5-5` (tok: not reported).
-- Designer: not spawned (the A2 r2 doc covers sprint 4). Quorum: not re-run (artifact present, doc unchanged).
-- Planner: `opus` via Agent (479,457 tok).
-- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (69,540 + 51,236 tok).
-- Evaluator: `sonnet` via Agent (77,943 tok).
-- The driver noted codex unusable at preflight (probe rc 75); no role needed it.
-- Metered total: $0.00.
-
-**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Once PR #552 merges, A2 is code-complete: an operator can enrol a passkey from the printed link in any browser on `localhost`/`*.ts.net`, and approve a pending request with it, with no World terminal prompt. The page itself is now proven end to end on a virtual authenticator; Mark's attended run on a real passkey (§10, QUICKSTART §16) is what remains of A2.
-
-**Ruled out:**
-- **Treating the host-job red as this sprint's:** it fails at an apt install before any Go test, 4 of 4 times, and the same step fails on `dev` `27ce163e`, which was green this morning.
-- **Merging over it:** `dev` is unprotected, but an item is not LANDED until remote CI passes on its merge.
-- **Treating the `verify_go` timeouts as regressions:** all three were package-level 10-minute timeouts under concurrent judge load; each package is green alone (verifygate after one known-list re-run); two of the three import nothing touched.
-- **Filing the judge's four survivors as rows:** D-WORLD-109 (2) — logged here.
-
-**Retro:**
-- **The planner-ships-patches route held a sixth consecutive sprint:** zero executor deviations, numstat equal at every step, the controller's round trip matched. Two executor runs of 3–4 sub-milestones each were as clean as four runs of two.
-- **The planner over-ran its stated budget by 1.8×** (218 min against ~120). It spent the time repeating mutant runs after load-driven test fixes and a Go build cache another session trimmed mid-run; with a 6 h slot that left ~2 h for execute, gate, judge, CI and record, which forced the gate sweep to overlap the judge and produced three false timeouts. If the next sprint carries browser mutants, give the planner a hard mid-run checkpoint (e.g. ship the patches first, mutants second).
-- **An outage that hits a pre-test install step is invisible to every local gate**, and repeated `rerun --failed` cannot clear it. The `dev` dispatch control is what turned "CI is flaky" into "CI is down at this step for every commit" in one run.
-
-**Next:** land PR #552: `gh run rerun --failed` on its newest head until all 3 checks pass (the predicate is the host job's apt step completing), then merge `--match-head-commit` and confirm 3/3 push checks on the merge. Then Mark's attended real-passkey exit run (A2 §10, QUICKSTART §16). Then row 201 A3 (the surface flow) needs a new child design: the rotation file's last-used designer is `claude:claude-opus-5-5`, so the next entry is `codex:gpt-6.1-sol` if its lane is usable. Consider pinning `surfaceCSP`'s value in a test (judge R-csp) in that sprint.
-
 ## 383 — 2026-11-11 — row 201 A3 child design r2 (`w-world-approvals-by-key-a3.md`): quorum blocked twice, controller carve-out, independent audit VALID 84; D-WORLD-114 filed on its two amendments to the parent; row 201 A2 sprint 4 LANDED (PR #552, merge `88ff1565`) once the CI runner apt outage cleared on attempt 8 [PRODUCT]
 
 **Pick:** carry-over first: land PR #552 by iteration 382's predicate. While the outage persisted, ci-health's rule for a provider-side red applied: do not fix-forward or revert, and pick routable work that needs no landing gate. That was row 201 A3's child design, which the charter's Next names after Mark's attended A2 exit run (attended, not loop work). The outage cleared on attempt 8, and #552 landed in the same fire.
@@ -1876,3 +1808,61 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 - **New, instance 1: "the plan's gate script omits a package the sprint touches"** (no earlier instance found by grep of log + archive): here, `host/authority`. The controller should diff the gate script's package list against `git diff --name-only` before running it. Applied this iteration by hand.
 - **Controller instrument slip:** a commit-time test for a Chrome-gated test must carry the plan's exact env (`WORLD_CHROME`). `commit_ms.sh` refused correctly. The danger was the next cumulative snapshot silently absorbing the refused milestone. The rule: after any `commit_ms.sh` refusal, stop the chain and do not commit the next snapshot.
 - **Size accounting:** compute a fix's numstat after the commit, by the base-relative unit, never as the sum of the fix's own +/−. Here that gave 1,382, not 1,390.
+
+## 402 — 2026-11-17 — row 243 V3 sprint 3 LANDED (PR #595, merge `c9e997a9`): credentials schema 9 `verb_requests` (put/supersede/cap/prune, one-transaction consume whose refusals write nothing), `broker.FinishConfirmRefusal` F1–F5, and the three confirm GETs (page, script, card JSON) plus `requests.json` `confirmations`; no POST, no CLI change; 1,391 lines; judge PASS 92 [PRODUCT]
+
+**Pick:** row 243 V3 sprint 3, the planner step named as Next in record 401. That was also the queue head.
+- **Re-measured at pick** (`origin/dev` `9733813c`): no open fleet PR and no stale worktree for row 243 V3 S3; `mission_decisions.sh --open` → no OPEN row (D-WORLD-118 = A since 400). The design was quorum-reviewed at 399, so no pick-time quorum was owed.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 still wait on attended steps, unchanged since 401 (no directive or attended commit since). Row 243 serves D-WORLD-94 and moves no clause.
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
+- Directives: 0 allowlisted on #574 (10 comments). The watermark file is absent, so every comment was read, and there was nothing to `--mark`.
+- Self-notices: **rc 2** (`watermark channel unavailable`: both watermark files, #574 and #524, are absent) — an instrument failure, not a verdict; same gap as 371–401.
+- Inbox: no unread message for `mission-world` (`messages list -unread -inbox mission-world`).
+- Skill drift: none. `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target `cmp` equal to the driver clone's `origin/dev` (per-file verdicts printed).
+- Dev CI at `9733813c`: 3/3 success (`check-runs` total 3).
+
+**Planner** (Agent `opus`, 92 min, 455,957 tok; resolver `agent-tool opus fail-closed:env-pin`; `derive-planner-lane` → `opus fail-closed:env-pin`). It wrote `w-world-address-bar-verbs-v3s3-sprint-plan.md` and its JSON, committed as `685bc668`.
+- **No cut:** M7 compiled first at 836; the first full compile was 1,408; trimming comments and one duplicate test brought it to 1,387, and two tests added after the mutant runs to 1,391 (margin 9). The measured alternative (S3a = M7 + M8 at 913, S3b = M9 at 478) was not needed.
+- Sub-milestones: M7a 377 · M7b 805 · M8 913 · M9a 1,235 · M9b 1,391.
+- **Mutants:** 176 rows (166 killed, 2 route-table, 3 controls, 5 named equivalents), 276 ledger lines over runs R1–R4. R1 found a redundant digest-hex check (removed); R2's survivor (prune pending rows only) got a 2-line test.
+- **§1.4 premises found false:** F1 the design's DDL does not refuse a `decision_ref` on a `superseded` row (kept verbatim; inert — only consume writes it; the actual behaviour is pinned); F2 CS7's "constant set to 8" cannot be built in one binary, so a v10 store under the v9 build exercises the same branch; F3 the bump forces 19 fixture edits in 14 files plus 5 store-test edits outside design §7; F4–F5 audit notes 1–2 (three GETs, not four; CR1–CR4); F6–F8 a new `ErrBadVerbRequest`, a new `finish_confirm.go`, a new assets test.
+- **Audit note 3 (raced supersession):** S3 pins the store half both ways (put-then-consume refuses `ErrVerbRequestSuperseded` and writes nothing; consume-then-put leaves the approved row). The 409 mapping and the window-table row are S4's.
+- **Controller round trip:** byte-identical. I extracted the five patches from the plan, applied them to a fresh `git archive 9733813c` and ran `diff -r` against the planner's final tree: only `.git` differed. The plan's §6 touched-package list equals my own derivation from the diff (6 packages) — iteration 401's gate-script gap did not recur.
+
+**Executor** (env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku` as in 374–401; one foreground run, 18 min, 53,490 tok).
+- M7a → M7b → M8 → M9a → M9b: every `--dry-run` clean, all nine acceptance parts `ACCEPT_OK`. I re-grepped each log: 0 `--- FAIL`, 0 `--- SKIP`, 0 `^FAIL`. Snapshots matched §7 (21/22/24/28/30 STATUS lines; DELETED 1 from M9a). The executor's tree was byte-identical to the planner's final tree.
+- Commits by `commit_ms.sh` (gofmt/build/vet + the part's `fast` acceptance before each; no refusal): M7a `a4d9f852` 377 · M7b `4424ec73` 805 · M8 `cd0d91d4` 913 · M9a `d614fe3d` 1,235 · M9b `21fa7d54` 1,391 — each equal to the plan.
+
+**Controller gates** (plan §6 `gates.sh` on `21fa7d54`, 887 s, concurrent with the judge's reading phase):
+- rc 0: status, `verify_ail`, gofmt, build, vet, fence, pkgs (281 s), race, **race3** (`-race -count=3` over the new store tests), node, **inv** (65 named passes; `TestConfirmRoutesNotRegistered` gone), chrome.
+- **`verify_go` rc 1** on one untouched-area test: `host/verifygate` `TestMissionConfigDefaultFlowIntegration/valid_ledger` (fixture timeout, on the known load-sensitive list). It **passed alone on the same head** (controller 7.8 s; judge 8.0 s).
+
+**Evaluator** (Agent `sonnet`, 26 min, 107,905 tok; resolver `agent-tool sonnet declared:alias-pin`; its own worktree `.wt-world-iter402-row243-v3s3-eval`). **PASS 92/100**, 0 blocking (correctness 28, tests 27, security 19, standards 9, scope 9).
+- 55 ledger runs: 48 killed (all by behavioural tests), 6 survived, 1 compile error (re-written). 41 of its ids are not in the plan's ledger (`comm -23`). Must-die `J-CTL-DIE-F` killed; must-live `J-LIVE-UPGRADE-BOUND` and `J-LIVE-CONSUME-AND-NULL` survived (equivalent). 12 plan rows reproduced; `P-LIST-LIVE` killed in the daemon package as the plan says.
+- Pre-existing test edits: all 18 are what the bump forces; no assertion weakened. M7a and M9a green on their own.
+- **Non-blocking (logged, not filed — D-WORLD-109):** (1) no test pins the exact-expiry-second boundary of the pending list (`J-LIST-EXPIRY-BOUND`, `>`→`>=`) or of the cap count (`J-PUT-COUNT-BOUND`); the code is consistent with consume's `now >= ExpiresAt`. **The controller reproduced the list survivor** (store rc 0 and daemon `^(TestConfirm|TestRequestsJSON)` rc 0 with the mutant applied). (2) A day-expired request of the same episode is superseded rather than pruned on the next put (harmless, one row per episode, undocumented in §2.4). (3) F1 confirmed and accepted.
+
+**Gate 3b:** PR [#595](https://github.com/sunholo-data/ailang-world/pull/595) head `21fa7d54`: **3/3 success on attempt 1** (`ci_pr595_head21fa7d54_s2.verdict`, the second 540 s segment). `mergeable` MERGEABLE/CLEAN on the head. Merged with `--match-head-commit` → **`c9e997a9`**, tree byte-identical to the head. Merge push CI: **3/3 success on attempt 1** (`ci_merge_c9e997a9_s2.verdict`, second segment).
+
+**Routing evidence:** base=c9e997a9c3bf8197356d6af70f6e03c345a9fdf3@2026-11-17T20:20:05Z (Gate 4). The Gate-1 base was 9733813cd8ab41313c158f83d3a0d2bc7c7d7d7f@2026-11-17T17:40:24Z, and the sprint worktree was cut from it (no drift).
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (doc reviewed at 399).
+- Planner: `opus` via Agent (455,957 tok). Driver note: codex `gpt-6.1-sol` unusable at preflight (probe rc 75, quota unreadable) → opus.
+- Executor: `claude:claude-haiku-5-5` env pin, spawned as Agent `haiku` (53,490 tok); resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`. Driver note: codex unusable → haiku.
+- Evaluator: `sonnet` via Agent (107,905 tok), `agent-tool sonnet declared:alias-pin`. **Spawned as required; no role failed to spawn.**
+- Quorum: none. Metered total: $0.
+- Judge independence: cross-model (opus plan, haiku execution, sonnet judge).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V3 is at 3 of 6 sprints. A confirmation request can now be stored and its card read on the surface; nothing can approve one until sprint 4's POST.
+
+**Ruled out:**
+- **Cutting S3 into S3a/S3b:** measured 1,391 ≤ 1,400 with every part proven; the cut (913 / 478) was costed and not needed.
+- **Treating the `verify_go` red as a regression:** untouched `host/verifygate`, listed load-sensitive, green alone on the same head (two independent re-runs).
+- **Fixing the expiry-second boundary in this PR:** a 9-line margin and a non-blocking, display-only one-second skew; carried to S4's planner, whose consume/POST work touches the same rows.
+
+**Retro:**
+- **Held, instance 2 of the planner-directive rules earned at 401:** the gate script derived its touched-package list from the diff and FAILED on a mismatch (it matched); the commit-time commands carried their env, and `commit_ms.sh` refused nothing. Both 401 slips were closed by putting the rule into the directive, not into the controller's memory.
+- **New, instance 1: "a boundary on a time comparison is a mutant nobody enumerates."** Both survivors are `>` vs `>=` on `expires_at` in SQL strings. The planner's diff-anchored enumeration took each SQL predicate as one mutant (removing it), not its comparison operator. For S4: enumerate every time comparison's operator (`>`/`>=`, `<`/`<=`) as its own mutant, with an exact-boundary test row. Recorded; added to the next planner directive.
+- **Shape that worked (third time):** planner opus → controller round trip → executor haiku → commit_ms per snapshot → gates in background concurrent with a judge that waits on `ALL_DONE.<sha>`. 2 h 40 min to merge.

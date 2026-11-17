@@ -1,26 +1,31 @@
-# World mission dashboard — iteration 401 (2026-11-17)
+# World mission dashboard — iteration 402 (2026-11-17)
 
-- **Done this fire:** row 243 **V3 sprint 2 LANDED, with S1b folded in** (PR #593, merge `2b5cc609`; judge sonnet **PASS 92**, 0 blocking, on both rounds). This is the confirmation card that a key will use to confirm `episode finish`'s pull-request prompt:
-  - `surfacepage.ConfirmationCard`: the card's data. It carries the request's canonical bytes, their digest and the raw challenge, and never a precomputed message hash or the artifact.
-  - The embedded `/surface/confirm` page and `confirm.js`:
-    - It checks the bytes against the digest before showing anything.
-    - It shows only the fields `VerbRequest` defines, and only as text.
-    - It builds the 86-byte `world-verb/v1` message itself and offers *Save the message* plus the `ssh-keygen -Y sign -n world-verb@sunholo` line.
-    - Any refusal, and any state other than pending, shows no controls.
-  - The page is proven under node in CI (CP1–CP6) and in live Chrome (XC1, zero CSP violations).
-  - The verb judges (`JudgeVerbSSH`, `JudgeVerbAssertion`, `RecheckVerb`) are now built, ahead of sprints 4–5 that call them.
-  - Nothing changes for you yet: no route, store, schema or daemon change. The page is not reachable until sprint 3.
-- **CI caught a real defect after the judge's PASS:** S2's own node test harness waited a fixed number of event-loop ticks while the page waits on two off-loop SHA-256 digests. The planner reproduced the failure with an injected 3 ms delay and fixed it test-only (M7). The judge re-reproduced it with its own instrument.
-- **Next loop work:** row 243 V3 sprint 3 planner: credentials schema 9 (`verb_requests`), `FinishConfirmRefusal`, and the read routes.
+- **Done this fire:** row 243 **V3 sprint 3 LANDED** (PR #595, merge `c9e997a9`; head and merge CI 3/3 on the first attempt; judge sonnet **PASS 92**, 0 blocking). A request to confirm `episode finish` now has a home in the store, and its card can be read on the surface.
+  - **Credentials schema 9** adds a `verb_requests` table. A v8 store upgrades in its existing upgrade transaction; the change is a new table only.
+    - A newer store is refused.
+    - On a v8 store, verb requests are refused with a "restart with the newer daemon" error, and everything else keeps working.
+  - **Store rules:**
+    - A new request for an episode supersedes that episode's older one.
+    - There are at most 16 live requests, and requests more than a day past expiry are pruned.
+    - Consuming a request is one transaction. Every refusal writes nothing.
+  - **Three read-only routes:** `/surface/confirm/<id>` (the page), `/surface/confirm.js`, and `/surface/confirmations/<id>`. The last returns the card's data, which never includes the message hash or the artifact.
+  - `requests.json` lists pending confirmations. Unreadable ones are listed as refused, not hidden.
+  - `FinishConfirmRefusal` gives the CLI's refusal texts.
+  - **Nothing can approve a request yet:** there is no POST and no CLI change. Those are sprints 4 and 5.
+  - Size: 1,391 of 1,400 lines.
+- **Next loop work:** row 243 V3 sprint 4 planner:
+  - the POST that records a key's confirmation;
+  - the submit half of the page;
+  - the raced-supersession 409;
+  - the exact-expiry-second test the judge asked for.
 - **Attended, for Mark when convenient:** the V1/V2 no-terminal check (QUICKSTART §19). No OPEN decision.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
 - **Routing this fire:**
-  - Planner: opus via Agent (86 min, plus a 4-min M7 resume).
-  - Executor: haiku via Agent (3 min).
-  - Evaluator: sonnet via Agent (24 min r1, 2 min r2, its own worktree).
+  - Planner: opus via Agent (92 min).
+  - Executor: haiku via Agent (18 min).
+  - Evaluator: sonnet via Agent (26 min, in its own worktree).
   - Codex is over ration (probe rc 75). Metered $0.
 - **Instrument notes:**
-  - Self-notices still read no watermark (the #574/#524 files are absent).
-  - `verify_go` was red on one untouched `host/broker` timing test under load; it was green alone.
-  - A known `scripts/marketingcheck` supervisor flake needed one re-run.
+  - Self-notices still read no watermark (rc 2; the #574/#524 files are absent).
+  - `verify_go` was red on one untouched `host/verifygate` test under load (`TestMissionConfigDefaultFlowIntegration`); it was green alone.
 - **Bookkeeping thread:** #574.

@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 402 | 2026-11-17 | row 243 V3 sprint 3 LANDED (PR #595, merge `c9e997a9`): credentials schema 9 `verb_requests` (put/supersede/cap/prune, one-transaction consume whos... |
 | 401 | 2026-11-17 | row 243 V3 sprint 2 LANDED with S1b folded in (PR #593, merge `2b5cc609`): the confirmation card — `ConfirmationCard`, the embedded `/surface/confi... |
 | 400 | 2026-11-17 | row 243 V3 sprint 1 LANDED (PR #591, merge `b0817474`): the verb-confirmation law — `world/verb-request/v1`, the `world-verb/v1` message, `ConfirmB... |
 | 399 | 2026-11-17 | row 243 V3 design DONE (`w-world-address-bar-verbs-v3.md` r2): `episode finish --confirm-on-surface` — an enrolled key on `/surface/confirm/<id>` r... |
