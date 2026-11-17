@@ -83,6 +83,7 @@ func TestAdmitWhy(t *testing.T) {
 		{"-", "", 0, false, "why - is not run from the app: the app has no stdin" + at + "-"},
 		{"- --scan 3", "", 0, false, "why - is not run from the app: the app has no stdin" + at + "- --scan 3"},
 		{"--result f", "", 0, false, "--result is not run from the app: the app reads no file on the daemon's host" + at + "--result f"},
+		{"--result 'a b'", "", 0, false, "--result is not run from the app: the app reads no file on the daemon's host" + at + "--result 'a b'"}, // VB8: Quote's form, not a plain join
 		{"--expect-store p head", "", 0, false, "--expect-store is not run from the app: the app reads its own daemon's store" + at + "--expect-store p head"},
 		{"- --result f --expect-store p", "", 0, false, "--result is not run from the app: the app reads no file on the daemon's host" + at + "- --result f --expect-store p"},
 		{"- --expect-store p", "", 0, false, "--expect-store is not run from the app: the app reads its own daemon's store" + at + "- --expect-store p"},
