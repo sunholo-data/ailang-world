@@ -2305,3 +2305,78 @@ index 0000000..9136e5d
 +}
 ````
 
+
+---
+
+## M7 (iteration 401 CI fix) — the node harness waits on the wall clock · 0 prod + 10 test
+
+- **Failure.** PR #593 at head `1b20f08a` (judge PASS 92) went red in CI's "go host build + test gate":
+  `--- FAIL: TestConfirmPageMessage (0.08s)` (`'loading' !== 'ready'`, harness.js:130) and `--- FAIL:
+  TestConfirmPageStates (0.11s)` (`approved: 'loading'`, expected `'closed'`, harness.js:153); `…FailsClosed` and
+  `…RendersText` passed (`world-iter401/ci_head_fail.txt`). Local node v26.13.0 was green throughout (§1.2 C13, C14,
+  C17).
+- **Cause (confirmed).** `open()` in `confirm_script_test.go` waited at most **400 `setImmediate` ticks** for the page
+  to leave `loading`. `crypto.subtle.digest` resolves off the event loop (node's thread pool), and a page reaches
+  `ready`/`closed` only after **two** digests (the bytes' and the message's); 400 ticks pass in a few milliseconds
+  (the CI failures took 0.08 s in all), so a slower or busier runner ran out of ticks first. The harness's wait was a
+  tick-count wait; that is a timing assumption, not a bound. Evidence, by injecting a delay into the page's
+  `crypto.subtle.digest` (a scratch-only instrument, `m7/inject.py`: every digest resolves after
+  `CONFIRM_DIGEST_DELAY_MS`), `logs/m7_repro.txt`:
+
+  | tree | delay | `…FailsClosed` | `…RendersText` | `…Message` | `…States` |
+  |---|---|---|---|---|---|
+  | `1b20f08a` | 0 ms / 1 ms | PASS | PASS | PASS | PASS |
+  | `1b20f08a` | **3 ms** | PASS | PASS | **FAIL `'loading' !== 'ready'`** | **FAIL `'loading'`** — exactly CI's pattern |
+  | `1b20f08a` | 50 ms / 200 ms | FAIL `'loading'` | FAIL `'loading'` | FAIL | FAIL |
+  | **+ M7** | 0 / 50 / 200 ms | PASS | PASS | PASS | PASS (200 ms: 2.6 / 1.3 / 0.9 / 2.1 s) |
+
+- **Fix (test-only).** `open()` polls with node's own `setTimeout(…, 2)` until the page leaves `loading` or a
+  **10 s wall-clock deadline** passes; the slow/abort path (`fire`) runs the page's stubbed timers **once, as soon as the
+  page has made its fetch and set its abort timer**, not at a fixed tick index. No assertion changed; no production
+  file changed. The other `setImmediate` waits in the package (`script_test.go:417` `flush`, `app_verb_test.go:169`)
+  are pre-existing, not S2's, and wait only on in-loop promise chains (no digest, no thread pool): left alone.
+- **Proof on the fixed tree** (a fresh `git archive 1b20f08a`, M7 applied with `/usr/bin/patch -p1 -E` after a
+  `--dry-run`; `AILANG_BIN`, `WORLD_EXEC_NODE` set): `go test -count=3 ./host/surfacepage/` → `ok … 3.077s`; the
+  plan's node leg (9 tests) → **9 `--- PASS`**, 0 SKIP/FAIL; gofmt clean, `go vet ./host/surfacepage/` and the
+  `go test -run '^$'` fence clean. `1b20f08a`'s `host`/`cmd` are byte-identical to the plan's stage `S1b` (`diff -r`).
+- **Mutants re-checked** on the M7 tree (`MUT_REF=s2m7 tools/mutate.py R4-M7`, 20 rows appended to the ledger): `CTL-S`
+  PASS; `J-DIGEST-CHECK`, `J-MSG-SWAP`, `J-MSG-DIGEST-AT`, `J-MSG-PREFIX`, `J-MSG-EXPIRY`, `J-BLOB`, `J-NAMESPACE`,
+  `J-READY`, `J-CONTROLS` (`…Message`); `J-ABORT`, `J-NET-MS`, `J-CLEAR`, `J-SIGNAL`, `J-NON2XX`, `J-UTF8-FATAL`
+  (`…FailsClosed`); `J-STATE-CHECK`, `J-CLOSED-RETURN`, `J-CLOSED-FALLBACK`, `J-APPROVED-BY` (`…States`) — **19 of 19
+  killed** by their named test and by `suite-nostatic` (`logs/m7_mutants.txt`).
+- **Size.** M7 = **10** changed lines (`6 4 host/surfacepage/confirm_script_test.go`); **1,380 + 10 = 1,390 ≤ 1,400**
+  (margin 10). Nothing leaves.
+- **Apply** exactly as §2 with `M=M7` on top of `1b20f08a`; acceptance: `accept.sh`'s `M5b` arm. Patch
+  `plan-scratch/patches/M7.patch`, sha256 prefix `3a9b6cc3956f552e`.
+
+### Patch M7 — the node harness's wall-clock wait (iteration 401 CI fix)
+
+````diff M7
+diff --git a/host/surfacepage/confirm_script_test.go b/host/surfacepage/confirm_script_test.go
+index 64c21bd..bac1dfe 100644
+--- a/host/surfacepage/confirm_script_test.go
++++ b/host/surfacepage/confirm_script_test.go
+@@ -104,16 +104,18 @@ function makeDoc() {
+ const answer = (status, body) => () => Promise.resolve({ status, text: async () => (typeof body === 'string' ? body : JSON.stringify(body)) });
+ const hang = (init) => new Promise((_, reject) => init.signal.addEventListener('abort', () => reject(new DOMException('The operation was aborted.', 'AbortError'))));
+ 
+-// open runs confirm.js at path against fetch; fire runs the page's pending timers once it has asked.
++// open runs confirm.js at path against fetch and waits, on the wall clock (at most 10 s), until the page leaves
++// 'loading': its SHA-256 digests resolve off the event loop, so no count of ticks bounds them (iteration 401 M7);
++// fire runs the page's stubbed timers once, as soon as it has asked (its fetch made and its abort timer set).
+ async function open(path, fetch, fire) {
+   const doc = makeDoc(), timers = [], blobs = [], fetches = [];
+   vm.runInNewContext(SRC, { document: doc, location: { pathname: path, origin: 'http://localhost:1' }, crypto: globalThis.crypto, TextEncoder, TextDecoder, atob, btoa, Blob, AbortController, console,
+     URL: { createObjectURL: (b) => { blobs.push(b); return 'blob:http://localhost:1/' + blobs.length; } },
+     setTimeout: (f, ms) => timers.push({ f, ms, cleared: false }), clearTimeout: (n) => { if (timers[n - 1]) timers[n - 1].cleared = true; },
+     fetch: (url, init) => { fetches.push({ url, init }); return fetch(init); } });
+-  for (let i = 0; i < 400 && doc.body.dataset.state === 'loading'; i++) {
+-    if (fire && i === 20) for (const t of timers) if (!t.cleared) t.f();
+-    await new Promise((r) => setImmediate(r));
++  for (const end = Date.now() + 10000; doc.body.dataset.state === 'loading' && Date.now() < end;) {
++    if (fire && fetches.length && timers.length) { fire = false; for (const t of timers) if (!t.cleared) t.f(); }
++    await new Promise((r) => setTimeout(r, 2)); // node's own timer: the page's are the stubs above
+   }
+   const $ = (id) => doc.getElementById(id);
+   return { doc, $, timers, blobs, fetches, state: doc.body.dataset.state, what: $('what').textContent };
+````
