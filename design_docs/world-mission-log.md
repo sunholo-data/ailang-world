@@ -9,91 +9,6 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 379 — 2026-11-10 — row 201 A2 sprint 1 built: the pure WebAuthn verification law (CBOR, COSE, authData, clientData, origin, registration law, 128-bit enrolment code), from a new child design passed by quorum r2 and the carve-out; judge PASS 93 [PRODUCT]
-
-**Pick:** row 201 `w-world-approvals-by-key`, parent milestone A2 (WebAuthn/passkeys), the route iteration 378 named. D-WORLD-109 = A applies: test keys, temp stores and Chrome's virtual authenticator only.
-- **Re-measured at pick** (`origin/dev` `98374909`):
-  - No open PR from this account; no `iter379` worktree; the index has no WebAuthn/passkey entry.
-  - No child design for A2 existed (`design_docs/planned/` held only the a0a1 and a1b children).
-  - `mc_quorum_gate2 w-world-approvals-by-key-a2` rc 1 (no artifact), so the quorum was owed.
-- **Ledger:** valid (100 rows). OPEN: D-WORLD-105 only.
-- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows are not routable:
-  - Row 150's attended A1: 0 subjects since 2026-11-07 matching `row ?150|A1\b` (control `A1b`: 20).
-  - Row 151's row-188 N2d/N4a: 0 since 2026-10-01 (control N2c: 1).
-
-**Gate 0:**
-- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
-- Directives: 0 allowlisted on #524, out of 11 comments. The issue-scoped watermark is absent, so all comments were read.
-- Self-notices: rc 2, an instrument failure and not a verdict; no `-last-seen` file exists for 524 or 449 (same as 371–378).
-- The `mission-world` inbox has 0 unread.
-- Skill drift: none. SKILL.md and all 13 resource files at the resolved symlink target match the driver clone's `origin/dev`.
-- Dev at `98374909`: `checks=3`, all success. Local dev equal to origin.
-- PR #545 (`fix/json-int-accessors`, se-tools `asNumber`) merged after record 378, outside the loop; it does not touch row 201's files.
-
-**Design** (`w-world-approvals-by-key-a2.md`, a child of the attended parent). Resolver `recipe claude:claude-opus-5-5 declared:provider-pin`; spawned as Agent `opus` (precedent). Rotation file reads `claude:claude-opus-5-5`; the resolver's answer was followed.
-- **r0** (22.6 min, 1,328 lines): three sprints. Challenge = SHA-256 of A0's 90-byte message (`approval.MessageHash`, already pinned); rpID = the origin's host, only `localhost` or `*.ts.net`; ES256 and EdDSA only; credentials schema 6 `webauthn_credentials`; the browser result reaches the CLI as a file, so A2 adds no write route; one static `/surface/passkey` page. The designer drove a headless Chrome 157 virtual authenticator (test key) and verified both algorithms with the standard library. It measured K8-ERRCODE wider than reported (`approver.go:449` and `:455`).
-- **Quorum r1 BLOCKED 3/3** ($0.4386; author Anthropic benched; seats oc-kimi-k3, gpt6-1-sol, gemini-4-argon; absent none). The controller measured each premise first (rule 3f); all three real:
-  - gpt: the 40-bit enrolment code derives only from the registration file (doc lines 511–521), so a read-then-substitute attacker can grind a collision; "guess blind" was false.
-  - gemini: the `blob:` save under `surfaceCSP` was UNVERIFIED with a fallback (line 833).
-  - kimi: no Verification Log row read the parent's or the ledger's ruling text; the 16-byte credential-ID floor was UNVERIFIED.
-- **r1** (4.8 min, designer resumed by SendMessage): a 128-bit public fingerprint (26 base32 characters, read-then-substitute attacker modelled, CW5 rewritten); V31 measured the `blob:` download in Chrome under the exact CSP (completed, byte-equal, zero violations, with a violation-detecting control); V32–V34 quote the parent, the ledger and L3 §4 (the 16-byte floor is an authenticator rule; floor dropped to 1–1023).
-- **Quorum r2 BLOCKED 2/3** ($0.5997; gemini PASS). Both premises measured real:
-  - kimi: explicit default ports were accepted and stored, but `location.origin` elides them. Measured V36: Chrome 157 and Node's WHATWG URL both serialise `https://x.ts.net:443/` → `https://x.ts.net` (control `:7644` kept).
-  - gpt: only WebAuthn's `timeout` hint bounded the browser wait; no AbortController.
-  - Per round: r1 = enrolment code + CSP save + authority/floor; r2 = origin default port + ceremony abort. Different surfaces each round, no SPLIT signal.
-- **r2, controller narrow-refinement carve-out** (ratified; precedents 372, 373, 375): both fixes applied verbatim (default-port rule + OR1 arms; the AbortController paragraph + XB2). One named adaptation: V36 measures Chrome's URL serializer via `new URL(...).origin`, not `location.origin` on a served `:443` page (needs TLS on 443).
-- Fable/designer diet: one doc, r0 + one protocol-mandated revision. Held.
-
-**Plan:** `derive-planner-lane.sh` → `opus fail-closed:env-pin`; Agent `opus`, 58 min, 445,890 tok. Committed `3eaf2910`.
-- **Sprint 1 = M0, M1, M2, M3a = 1,958 lines** (cap 2,000). The design's §9 fallback cut fired on both clauses: the fixtures are the iteration-379 Chrome recording with `generate.sh` stubbed until M7, and the assertion half (M3b: `ApproveByAssertion`, `PasskeyUse`, `approvaltest.Passkey`, PA1–PA4, RC1, TP1, XW1/XW2) moves to the head of sprint 2 (Appendix C).
-- Mutants: 197 on the planner's final tree, 184 killed, 13 named equivalents; base controls MUT-K8A/K8B/SG1 survive at base (confirms V3/V4).
-- Round trip: the patches extracted from the plan file, applied to a fresh export of `03d78b6a`, reproduce the mutant tree byte for byte.
-- **Premises found false or incomplete:** P2 the probe kept only `assertion2`'s authData; P3 PE5's rename turns `approver_enroll_test.go:230` red in sprint 1 (edited in M3a); P4 AD1 cannot import `approvaltest` (cycle), so it edits Chrome's bytes; P5 1,958 vs the design's ~1,800; P7 a failed `json.Decoder` keeps returning `More()` true (a draft hung; every token error is now refused and pinned).
-- A new load-sensitive test was noted: `TestMissionConfigDefaultFlowIntegration/invalid_ledger` (10 s fixture deadline, 7.3 s alone).
-
-**Executor:** env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`. Two runs (M0+M1, M2+M3a; 1.7 and 0.7 min). No hand edits, no git writes. The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`: M0 `897e6ce0` → 75, M1 `720824bc` → 905, M2 `86cedeae` → 1,510, M3a `ca2605d7` → 1,958. Every value equals the plan's, and the final `cmd`/`host` tree is `diff -r`-identical to the planner's round-trip tree.
-
-**Controller gates:** plan §6 as one bash script at `ca2605d7`, BEFORE the judge: **rc 0.** `verify_ail.sh` (16 identities, 40 named tests, 503 se-tools tests); gofmt; build + vet; the compile fence; touched packages; `-race` on `host/approval/...`, `host/sshsign` and the cmd revoke/enrol tests (0 DATA RACE); the 16 named repo-wide inventories with `-v` (16 PASS, 0 SKIP/FAIL); `VERIFY_GO_LEGS=plain verify_go.sh` (62 ok, 0 FAIL). Details in `verification/world-iter379/controller-gates.md`.
-
-**Judge:** sonnet via the Agent tool, on its own worktree at `ca2605d7` (generator ≠ judge). **Round 1: PASS 91/100, zero blocking** (correctness 28, tests 26, security 18, standards 9, scope 10).
-- 77 mutants: 44 from plan §4 (all killed) and its own anchored to the diff; must-die control killed, must-live survived. Per-milestone non-vacuity held for M0, M1, M2 and M3a.
-- **Survivor UV-OR-BE** (`if !ad.UV && !ad.BE`, `passkey.go:96`): the only no-UV arm cleared UV on Chrome's BE=0 flags. **The controller reproduced it** (mutant rc 0), then pinned UV and UP in every backup state with test-only commit `5a4b1224` (three arms) and proved the arms kill `!UV && !BE`, `!UV && !BS` and `!UP && !BE`, production restored byte-identical. UV-required is D-WORLD-89 R2, so this was closed now rather than carried.
-- **Round 2** (judge resumed by SendMessage, at `5a4b1224`): confirmed, six UV/UP variants killed, **PASS 93/100**.
-- Non-blocking, carried to sprint 2: `Passkey.Key`/`CredentialID` aliasing not pinned (copies today); `SOURCE.txt` names `es256.json`/`eddsa.json` while the files are `chrome-*.json`; `RegistrationInput.Challenge` zero/`Now` unchecked (caller's job). No Ed25519 point check (design-optional).
-
-**Gate 3b:** PR #546, head `5a4b1224`.
-- `pull_request` run 42917909921 attempt 1: `go host build + test gate` **FAIL** on `TestSeedRestartIgnoresASurvivingOldCopy/survivor` (`host/broker/exec_seed_test.go:656`, "the old staging dir survived the restart"). The sprint does not touch `host/broker` (`git diff --quiet 98374909 HEAD -- host/broker`, control: 18 approval files changed). It passed **10/10** locally at the sprint head, and it has 0 mentions in the charter, log and archive: **instance 1** of a CI flake, logged here and not filed as a row (D-WORLD-109 (2)). The job was re-run once (attempt 2): 3/3 success.
-- **Instance 2, same iteration:** the record PR #547 (docs only, code identical to the green merge `d5d90e49`) went red in the `go race gate` job on the same `TestSeedRestartIgnoresASurvivingOldCopy/survivor` (`host/broker` FAIL at 298 s under `-race`; the two `DATA RACE` lines in that log are the known-positive race control `w-race-gate-blindspot/racecontrol`). Two CI instances in one evening, 0 local reds in 10.
-- **Instance 3:** record PR #547 head `ed3700ee`, `go host build + test gate`, the same subtest. Locally at `d5d90e49`: 20/20 under `-race` and 30/30 at `-cpu 1,2` (0 reds in 60 local runs in all). At the third instance it becomes a row (D-WORLD-109 (2)): **row 259 `w-broker-seed-restart-survivor-ci-flake`**, filed below the release rows and row 201 under rule (d), with the three instances named and a mechanism hypothesis marked unmeasured. `host/broker`'s test binary links `host/approval` and `host/sshsign` (the AC10 census), but the seed test exercises neither, and the same code was green on the merge.
-- The auto-close keyword scan of the PR body read 0 (control 1).
-- Merged by merge commit **`d5d90e49`** (`--match-head-commit`). Push checks on the merge: 3/3 success.
-
-**Routing evidence:** base=98374909268b9eab35382c5bf1779a3784edbf5b@2026-11-10T20:50:02Z.
-- Controller: `claude-opus-5-5` (tok: not reported).
-- Designer: `claude:claude-opus-5-5` via Agent `opus` (320,153 + 365,888 tok); r2 by controller carve-out.
-- Quorum: r1 $0.4386 (108,047 in / 7,393 out), r2 $0.5997 (124,095 in / 14,972 out); absent_reviewers [] both rounds.
-- Planner: `opus` via Agent (445,890 tok).
-- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (39,424 + 37,756 tok).
-- Evaluator: `sonnet` via Agent (102,582 + 106,877 tok).
-- The driver noted codex unusable at preflight (probe rc 75); no role needed it.
-- Metered total: $1.04 (quorum only). Details in `verification/world-iter379/routing.md`.
-
-**Progress:** 1.0 clauses 1–7 MET; goal unmoved. World can now verify a passkey registration with the standard library alone: a Chrome passkey's registration is parsed (bounded CBOR, COSE ES256/EdDSA), bound to the challenge, origin and rpID, required to carry user presence and user verification, and turned into an approver with a 128-bit enrolment code the operator will compare at the terminal. Nothing is reachable from a store, CLI or route yet; that is sprints 2 and 3.
-
-**Ruled out:**
-- **Forwarding the quorum's objections unmeasured:** each of the five was measured first; all were real.
-- **Treating the 40-bit code as adequate because comparison is constant-time:** constant time does not stop an offline second-preimage search over a public input.
-- **Carrying UV-OR-BE forward as a non-blocking note:** UV-required is a ruled property, and the pin cost one test-only commit plus a judge resume.
-- **Attributing the CI red to the sprint:** untouched package, 10/10 locally, first instance; a re-run of the same job went green.
-- **Accepting the judge's 906/1,511 numstat as a plan mismatch:** it counted `.gitattributes`; the plan's unit (`-- cmd host`) reads 905/1,510.
-
-**Retro:**
-- **Two quorum rounds of real objections on a fresh security design is the norm, not an outlier** (373, 375 and now 379 all went r0 → r1 → carve-out r2). The designer directive could pre-empt the recurring classes: secrecy claims about values derived from attacker-readable inputs, and browser/CSP premises left UNVERIFIED when a probe harness is already running.
-- **The judge's best finding was a flag-state coverage gap** — a refusal tested in one combination of independent bits. Next planner directive: for every boolean-flag refusal, an arm with each other flag set.
-- **A judge's numstat can differ by unit, not by error.** State the numstat path filter in the evaluator directive.
-
-**Next:** row 201 A2 **sprint 2**: M3b (the assertion law, plan Appendix C) at its head, then M4 (credentials schema 6, `webauthn_credentials`) and M5 (the consume counter and authority), from the A2 doc without re-design. The planner must apply §9's sprint-2 fallback early (it grows by about 450 lines). Carry the judge's aliasing pins, the `SOURCE.txt` names and the zero-challenge check. Then A2 sprint 3 (M6 CLI, M7 ceremony page + QUICKSTART §16; Mark's real-passkey exit run is attended, §10), then A3–A4, then row 243.
-
 ## 380 — 2026-11-11 — row 201 A2 sprint 2 built: the WebAuthn assertion law, credentials schema 6 with the passkey store, the consume that binds the passkey and advances its counter in the mint's transaction, and authority's `webauthn:<name>`; judge PASS 93 [PRODUCT]
 
 **Pick:** row 201 `w-world-approvals-by-key`, parent milestone A2, sprint 2, the route iteration 379 named. D-WORLD-109 = A applies: test keys and temp stores only.
@@ -1807,3 +1722,77 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 
 **Next:**
 1. Row 243 **V3** child design (the verb-approval law: key-confirmed mutating verbs in the bar; it will need a ledger ask, e.g. `episode finish` vs A4 §2.6 L1). Designer = rotation (file last-used `claude:claude-opus-5-5`, so next is `codex:gpt-6.1-sol` — check the resolver; codex probed rc 75 this fire), then quorum `--author`. Inputs: the V2b judge's non-blocking notes (the `Quote` survivor, the cosmetic page strings).
+
+## 399 — 2026-11-17 — row 243 V3 design DONE (`w-world-address-bar-verbs-v3.md` r2): `episode finish --confirm-on-surface` — an enrolled key on `/surface/confirm/<id>` replaces the PR prompt's typed `y`; commit-then-approve; six sprints, schema 9 gated behind the new ask D-WORLD-118; quorum r1/r2 blocked, controller carve-out r2, independent audit PASS 87 [PRODUCT]
+
+**Pick:** row 243 V3 child design. This was record 398's Next and the queue head (D-WORLD-109 = A). Record 398 had landed (#588 → `994ba123`), so there was no carry-over PR.
+- **Re-measured at pick** (`origin/dev` `994ba123`): no `-v3` doc, branch or worktree existed (`ls design_docs/planned | grep verbs` shows v1/v2 only). No open PR from the fleet account. The last five slot verdicts were all `COMPLETED rc=0`, so there was no orphaned fire.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 are not routable (unchanged). Row 243 moves no clause (clause 5, operator surface, is MET); it serves D-WORLD-94.
+- **Ledger at pick:** valid, 104 rows, no OPEN row.
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent (`mission-world.disabled`).
+- Directives: 0 allowlisted on #574 (7 comments). The issue-scoped watermark file is absent, so every comment was read; nothing to `--mark`.
+- Self-notices: rc 2, `watermark channel unavailable` (instrument failure, not a verdict, as 371–398).
+- Inbox: `mission-world` has no unread message.
+- Skill drift: none. `SKILL.md` and all 13 `resources/*.md`, at both the resolved symlink target and the pin worktree, `cmp` equal to the driver clone's `origin/dev` (28 of 28).
+- Main checkout: local `dev` = `origin/dev` = `994ba123`, clean except untracked worktree dirs. Dev CI at `994ba123`: 3/3 success (`checks=3`).
+
+**Designer** (resolver `recipe claude:claude-opus-5-5 declared:provider-pin`, spawned as Agent `opus` per the operator's standing request, as 372–398). The rotation file reads `claude:claude-opus-5-5`; the next entry, codex, is over ration (`MISSION_OVER_RATION=codex`), so I followed the resolver. Worktree `.wt-world-iter399-row243-v3`, branch `design/world-iter399-row243-v3`. The directive carried 394's and 396's retro rules (trace every input and failure class; cite every named symbol at HEAD or mark it NEW).
+- **r0** (20.9 min, 345,943 tok; `674fd735`): 862 lines, 52 W-rows. Seven of the parent's V3 premises measured; four false or incomplete:
+  - `episode start` does not need the mode: mints are already key-approvable (`--request`, the A3a card, `approve --await`, R1); the gap is launch presets (`episode.go:249`), which is V4's.
+  - Finish has a second `y` per unsandboxed check (`episode_finish.go:270`); surface mode refuses before any check runs when the preset has one.
+  - "A4's judges" are bound to A4's decision message; V3 takes A3a's stored-request shape under a new message.
+  - "The exact prompt bytes" show only six body lines; the subject also binds scope, title, full body, committer and protected paths.
+  - Q3 decided: **commit-then-approve.** A preview can never equal the real prompt: the commit sha depends on the clock, the body embeds it, and `--dry-run` itself records outcomes and commits (W7–W9).
+  - Holds: credentials schema 8 → 9 (`credentials.go:44`; I reproduced it before the quorum, with the `key_decisions` control).
+- **r1** (SendMessage resume, 8.8 min; `52b7d85a`): 985 lines, W53–W61. Answered round 1 with the controller's measurements: schema 9 and every store read moved behind D-WORLD-118; the CLI re-verifies the signature over its own bytes before it reads the decision back; the two-store write reordered (world first, then one credentials transaction).
+- **Designer diet:** one doc, r0 plus one protocol-mandated revision. Held.
+
+**Quorum** (`--author claude:claude-opus-5-5`; seated `codex:gpt-6.1-sol`, gemini-4-argon, oc-glm-5-3; reserve oc-kimi-k3; claude-sonnet-5 sits out):
+- **r1 BLOCKED** ($0.4355; artifact `…v3-2026-11-17T06-03-31Z.json`). `codex:gpt-6.1-sol` ABSENT (quota) → the reserve took the seat.
+  - gemini-4-argon **pass** (concern: the two-store write was not atomic).
+  - oc-glm-5-3 **reject:** schema 9 landed before the answer, and the C branch had no disposition for stores already at v9. **Measured first:** the newer-store refusal already exists (`credentials.go:341-342`), so reverting the constant would strand a real store. The objection was real.
+  - oc-kimi-k3 **reject:** the read-back (`GET /v1/objects/{ref}?payload=true`) and A4's writer hold were cited without W-rows. **Measured first:** route `daemon.go:1113`, payload branch `handlers.go:508-510`, `why.Reader.Object` returns raw `Payload []byte` (`why.go:66-70`, `:142`); A4 holds its writer across the world write (`surface_decide_key.go:66→90`, `surface_decide.go:211`). Premise true, rows missing.
+- **r2 BLOCKED** ($0.5409; `…T06-19-11Z.json`). Sol absent (quota) again.
+  - gemini-4-argon **pass** (concern: a revocation in the ≈ 1 s after C15 makes the CLI refuse a validly recorded approval; fail-safe).
+  - oc-glm-5-3 **reject:** "the orphaned C14 approval is inert" was unmeasured; it feared a re-run lands in `resume-dispatch` and dispatches under it. **Measured: false.** The approve phase writes only the request and decision (`host/daemon/episode_finish.go:166-178`), `resume-dispatch` needs an episode-finish record at HEAD with a failed-dispatch outcome (`episode_finish_resume.go:19-42`), and reuse reads `record.Approval` and refuses `ExpiresAt < now+300` (`:122`).
+  - oc-kimi-k3 **reject:** the read-back seam's types were measured piecewise, not joined; T11 cited C14 for C15; `decision_ref`'s CHECK does not enforce hex. **Measured:** `worldReader.c` is `*client` (`why_cli.go:181-190`), `finishClient = newClient` → `*client` (`episode_finish.go:52`, `cli.go:31`), `episode report` uses `newClient` (`:84`). The seam holds.
+- **Controller carve-out r2** (`e81921c6`, `a4a9b2c1`): both remaining rejects kept the direction and carried concrete fixes. I applied them, choosing glm's "rewrite to the traced truth" branch by measurement, and added W62–W65 and §16. The audit caught one missed reviewer fix (gemini's "T2 and T11 C14→C15"; I had done T11 only), applied as `a4a9b2c1`.
+- Objection surfaces by round: r1 on the store schema and an uncited read path; r2 on the r1 fixes' own new claims (the orphan, the seam). The 388/394 shape again: a fix that adds a path draws the next round's objections. Total $0.9764.
+
+**Evaluator** (Agent `sonnet`, 1.8 min, 107,865 tok; resolver `agent-tool sonnet declared:alias-pin`; generator ≠ judge — opus designer, sonnet judge, cross-vendor quorum): **PASS 87/100**, 0 blocking (premises 29/30, carve-out 15/20, ask safety 18/20, soundness 17/20, plannability 8/10).
+- Re-ran 34 W-rows (W53–W65 and 21 older ones): all reproduced. Three un-rowed §2 citations checked true.
+- Carve-out hunk by hunk: every hunk traced to a reviewer's text except "pinned by CS-tests" (harmless controller words) and the missed T2 fix (now applied). The traced truth for glm holds at HEAD.
+- The default while D-WORLD-118 is open is safe: sprints 1–2 register no route, read no store and change no schema.
+- **Non-blocking, logged here (not filed, per D-WORLD-109), for the S1/S3 planners:** (1) §8 S3 says "the four GET registrations" but §2.5 defines three (the fourth is S4's POST). (2) §2.9 P6 says CR1–CR4; §6 names CR1–CR2, and the test list jumps CX15 → CX17. (3) A raced supersession between C14 and C15 is covered by "C15 fails" but has no window-table row (inert per W62). (4) The `resume-dispatch` reuse path after a surface-confirmed approval whose push failed skips CF6/CF7, matching the typed path's authority; CF12 should say so. (5) gemini r2's revocation-window concern.
+
+**Gate 3b:** see the record PR below (design + record in one docs PR, as 394/396).
+
+**Routing evidence:** base=994ba12358dc50246db2862d78f66d64e03b29f4@2026-11-17T06:27:09Z (Gate 4).
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: `claude:claude-opus-5-5` via Agent `opus` (r0 345,943 tok; r1 resume 442,286 tok as reported). Resolver `recipe claude:claude-opus-5-5 declared:provider-pin`.
+- Planner and executor: not spawned (design-only fire, 388/394/396 precedent). Driver note: codex unusable at preflight for planner and executor (probe rc 75, quota unreadable) → opus / haiku.
+- Evaluator: `sonnet` via Agent (107,865 tok), `agent-tool sonnet declared:alias-pin`. **Spawned as required; no role failed to spawn.**
+- Quorum: gemini-4-argon, oc-glm-5-3, oc-kimi-k3 (reserve); `codex:gpt-6.1-sol` absent on quota both rounds. Metered total: $0.9764 (quorum only).
+- Judge independence: cross-model (opus designer, sonnet judge) and a cross-vendor quorum (Google, Z-AI, Moonshot).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V3 is designed: how a finish's PR prompt can be confirmed with an enrolled key on the World app instead of a typed `y`, and the ask that decides whether it may be.
+
+**Ruled out:**
+- **Preview-bound approval (the parent's Q3 default):** measured impossible — the sha depends on the clock and `--dry-run` commits (W7–W9).
+- **`episode start` in V3:** mints are already key-approvable under R1; its gap is V4's launch-preset runner.
+- **glm r2's feared reuse of an orphaned approval:** measured false (W62); no residual needed.
+- **A third designer run or a park:** both r2 rejects kept the direction with concrete fixes, so the carve-out applied.
+- **Re-running the absent `codex:gpt-6.1-sol` seat:** its absence was quota (capacity), not budget; the reserve seat filled it, so the quorum ran at three present reviewers both rounds.
+
+**Retro:**
+- **Instance 2 of "the controller's carve-out misses a reviewer fix the audit catches"** (394's audit caught an added sentence; here a missed T2). The audit is doing its job. No rule change; next carve-out: grep the doc for every identifier each `proposed_fix` names before committing.
+- **Instance 3 of "a fix that adds a path draws the next round"** (388, 394, 399). 394's directive rule (trace every new path's input and failure classes) held for r0, but r1's new paths (the CLI re-check, the reorder) brought new unmeasured claims. Next designer revision directive: every r1 claim about existing behaviour gets a W-row before the doc is returned, with the controller's own measurements as the template.
+- **Pass-concerns are worth reading:** gemini's r1 concern (the non-atomic write) was real and cheap to fix in the same revision.
+- **`design-quorum` now requires `--controller-note` with `--controller-verdict`** (rc 2, first call, $0). Instance 1; noted for the next fire.
+
+**Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16, after the Monday 07:00 boundary; next rotation Monday 2026-11-23). The weekly external-issue sweep already ran this week at 393.
+
+**Next:**
+1. Row 243 **V3 sprint 1** planner (the pure law: the verb request, the `world-verb/v1` message, the two key laws, `CheckConfirmation`/`RecheckVerb`, `FinishPromptText`; ≈ 935 raw). Sprints 1–2 need no answer; S3–S6 wait for **D-WORLD-118**. Feed the planner the audit's five notes and design §6's planner obligations.
