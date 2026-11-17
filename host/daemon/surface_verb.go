@@ -42,7 +42,7 @@ func (d *Daemon) handleSurfaceVerb(w http.ResponseWriter, r *http.Request, _ []s
 		return
 	}
 	a := verbAnswer{V: 1, Schema: VerbSchema, Q: query.Get("q"), Argv: []string{}, Class: string(verbs.Refused), Outcome: "refused"}
-	defer func() { writeApprovalJSON(w, http.StatusOK, a) }()
+	defer func() { capVerbAnswer(&a); writeApprovalJSON(w, http.StatusOK, a) }()
 	argv, err := verbs.Split(a.Q) // its first check is the 1,024-byte bound: no oversized line is tokenized
 	if err != nil {
 		a.Reason = err.Error()
