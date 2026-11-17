@@ -303,6 +303,10 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	errs["RecordKeyDecision"] = c.RecordKeyDecision(ctx, KeyDecisionRow{}, ApproverUse{}, 1000)
 	errs["LandKeyDecision"] = c.LandKeyDecision(ctx, "x", "y")
 	_, _, errs["KeyDecision"] = c.KeyDecision(ctx, "x")
+	errs["PutVerbRequest"] = c.PutVerbRequest(ctx, VerbRequestRow{}, 1000)
+	_, _, errs["VerbRequest"] = c.VerbRequest(ctx, "x")
+	_, errs["PendingVerbRequests"] = c.PendingVerbRequests(ctx, 1000, 0)
+	errs["ConsumeVerbRequest"] = c.ConsumeVerbRequest(ctx, "x", "y", ApproverUse{}, "", nil, "", 1000)
 	for name, err := range errs {
 		if !errors.Is(err, ErrNoDeadline) {
 			t.Errorf("%s(Background) = %v, want ErrNoDeadline", name, err)
