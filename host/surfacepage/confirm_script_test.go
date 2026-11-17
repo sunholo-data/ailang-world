@@ -66,6 +66,19 @@ func TestConfirmPageMessage(t *testing.T) { runConfirmHarness(t, "message") }
 // CP5: an approved, superseded, expired or unknown state shows that state and the fields, and no controls.
 func TestConfirmPageStates(t *testing.T) { runConfirmHarness(t, "states") }
 
+// CP8 (sprint 4): Approve with your passkey asks navigator.credentials.get for the message hash as the
+// challenge, the origin's group's rp and credentials, UV required, A2's 240 s abort; POSTs the
+// assertion file with the card's digest; shows the answer and reads the card again. No group for the
+// origin: no passkey button. An aborted or failed ceremony sends nothing and the controls return.
+func TestConfirmPageSubmitsAPasskey(t *testing.T) { runConfirmHarness(t, "passkey") }
+
+// CP9 (sprint 4): a refusal (422, 409, 500) or a lost POST is shown as not confirmed, never as a
+// confirmation, and the card is read again: still pending, the controls are back.
+func TestConfirmPageShowsRefusals(t *testing.T) { runConfirmHarness(t, "answers") }
+
+// CP10 (sprint 4): the pasted SSH signature is POSTed in ParseApproveBody's grammar, {v, digest, sshsig}.
+func TestConfirmPageSubmitsAnSSHSIG(t *testing.T) { runConfirmHarness(t, "sshsig") }
+
 const confirmHarness = `
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -81,7 +94,9 @@ const withBytes = (card, b) => Object.assign({}, card, { request: Buffer.from(b)
 
 // A stand-in DOM: index.html's elements by id (with their hidden attribute), and created ones.
 class El {
-  constructor(doc, tag, id, hidden) { Object.assign(this, { doc, tagName: tag, id: id || '', hidden: !!hidden, dataset: {}, attrs: {}, kids: [], text: '' }); }
+  constructor(doc, tag, id, hidden) { Object.assign(this, { doc, tagName: tag, id: id || '', hidden: !!hidden, dataset: {}, attrs: {}, kids: [], text: '', on: {} }); }
+  addEventListener(t, f) { (this.on[t] = this.on[t] || []).push(f); }
+  click() { if (!this.disabled && !this.hidden) for (const f of this.on.click || []) f(); }
   set textContent(v) { this.text = String(v); this.kids = []; }
   get textContent() { return this.text + this.kids.map((k) => k.textContent).join(''); }
   set innerHTML(v) { this.doc.sinks.push(String(v)); }
@@ -107,9 +122,9 @@ const hang = (init) => new Promise((_, reject) => init.signal.addEventListener('
 // open runs confirm.js at path against fetch and waits, on the wall clock (at most 10 s), until the page leaves
 // 'loading': its SHA-256 digests resolve off the event loop, so no count of ticks bounds them (iteration 401 M7);
 // fire runs the page's stubbed timers once, as soon as it has asked (its fetch made and its abort timer set).
-async function open(path, fetch, fire) {
+async function open(path, fetch, fire, navigator) {
   const doc = makeDoc(), timers = [], blobs = [], fetches = [];
-  vm.runInNewContext(SRC, { document: doc, location: { pathname: path, origin: 'http://localhost:1' }, crypto: globalThis.crypto, TextEncoder, TextDecoder, atob, btoa, Blob, AbortController, console,
+  vm.runInNewContext(SRC, { document: doc, location: { pathname: path, origin: 'http://localhost:1' }, crypto: globalThis.crypto, TextEncoder, TextDecoder, atob, btoa, Blob, AbortController, console, navigator,
     URL: { createObjectURL: (b) => { blobs.push(b); return 'blob:http://localhost:1/' + blobs.length; } },
     setTimeout: (f, ms) => timers.push({ f, ms, cleared: false }), clearTimeout: (n) => { if (timers[n - 1]) timers[n - 1].cleared = true; },
     fetch: (url, init) => { fetches.push({ url, init }); return fetch(init); } });
@@ -121,6 +136,18 @@ async function open(path, fetch, fire) {
   return { doc, $, timers, blobs, fetches, state: doc.body.dataset.state, what: $('what').textContent };
 }
 const card = (c) => '/surface/confirm/' + c.id;
+// until waits, on the wall clock (at most 10 s), for ok() after a click: the page's work is promises.
+async function until(ok, name) {
+  for (const end = Date.now() + 10000; !ok();) {
+    assert(Date.now() < end, 'timed out: ' + name);
+    await new Promise((r) => setTimeout(r, 2));
+  }
+}
+// daemon answers the card's GETs with cards in turn (the last repeats) and its POSTs with post.
+const daemon = (cards, post) => (init) => (init.method === 'POST' ? post(init) : answer(200, cards.length > 1 ? cards.shift() : cards[0])());
+const posts = (p) => p.fetches.filter((f) => f.init.method === 'POST');
+const CRED = { id: 'Bwc', rawId: new Uint8Array([7, 7]).buffer, type: 'public-key',
+  response: { clientDataJSON: Buffer.from('cd'), authenticatorData: Buffer.from('ad'), signature: Buffer.from('sg'), userHandle: null } };
 // refused asserts a fail-closed page: state, the reason, nothing shown, no controls, no message made.
 function refused(p, state, reason, name) {
   assert.equal(p.state, state, name + ': ' + p.what);
@@ -226,6 +253,78 @@ const sections = {
       assert(!p.$('shown').hidden && p.$('f-title').textContent === reqOf(c).title, c.state);
     }
     assert.deepEqual([G['draft-approved'].card.state, G['draft-superseded'].card.state, G['draft-expired'].card.state], ['approved', 'superseded', 'expired']);
+  },
+  async passkey() {
+    const g = G.draft, c = g.card, approved = G['draft-approved'].card, asks = [];
+    const nav = { credentials: { get: (o) => { asks.push(o); return Promise.resolve(CRED); } } };
+    const ok = { v: 1, confirmed: true, request: c.id, approvedBy: 'webauthn:mark', decision: 'sha256:' + '5e'.repeat(32), next: 'the waiting episode finish opens the pull request' };
+    const p = await open(card(c), daemon([c, approved], answer(200, ok)), false, nav);
+    assert(p.state === 'ready' && !p.$('go').hidden && !p.$('go').disabled, p.what);
+    p.$('go').click();
+    await until(() => p.state === 'closed' || p.doc.body.dataset.state === 'closed', 'passkey');
+    assert.equal(asks.length, 1);
+    const pk = asks[0].publicKey;
+    assert.equal(Buffer.from(pk.challenge).toString('hex'), g.hash); // the message hash, never the mint hash
+    assert.deepEqual([pk.rpId, pk.userVerification, pk.timeout, pk.allowCredentials.length, pk.allowCredentials[0].type, Buffer.from(pk.allowCredentials[0].id).toString('hex')],
+      ['localhost', 'required', 240000, 1, 'public-key', '0707']);
+    assert(asks[0].signal && p.timers.some((t) => t.ms === 240000 && t.cleared), 'the ceremony\'s abort timer is cleared');
+    const sent = posts(p);
+    assert.equal(sent.length, 1);
+    assert.equal(sent[0].url, '/surface/confirm/' + c.id);
+    assert.equal(sent[0].init.headers['Content-Type'], 'application/json');
+    assert.deepEqual(JSON.parse(sent[0].init.body), { v: 1, digest: c.digest, webauthn: { id: 'Bwc', rawId: 'Bwc', type: 'public-key',
+      response: { clientDataJSON: 'Y2Q', authenticatorData: 'YWQ', signature: 'c2c', userHandle: null } } });
+    assert.equal(p.$('answer').textContent, 'Confirmed by webauthn:mark: decision sha256:' + '5e'.repeat(32) + '; the waiting episode finish opens the pull request.');
+    assert(p.$('controls').hidden && p.fetches.length === 3 && p.$('status').textContent.startsWith('Already confirmed by webauthn:mark-mac'), p.$('status').textContent);
+    const elsewhere = [{ origin: 'https://other.tail0.ts.net', rp: 'other.tail0.ts.net', allow: ['Bwc'] }]; // a group for another origin only
+    const none = await open(card(c), answer(200, Object.assign({}, c, { passkeys: elsewhere })), false, nav);
+    assert(none.state === 'ready' && none.$('go').hidden && none.$('go').disabled && !none.$('post-sig').disabled);
+    for (const [name, get, fire] of [['aborted at 240 s', (o) => new Promise((_, reject) => o.signal.addEventListener('abort', () => reject(new DOMException('The operation was aborted.', 'AbortError')))), true],
+      ['refused by the browser', () => Promise.reject(new DOMException('The operation is not allowed.', 'NotAllowedError')), false]]) {
+      const q = await open(card(c), daemon([c], answer(500, {})), false, { credentials: { get } });
+      q.$('go').click();
+      if (fire) {
+        await until(() => q.timers.some((t) => t.ms === 240000), name + ' timer');
+        assert(q.doc.body.dataset.state === 'waiting' && q.$('go').disabled && q.$('post-sig').disabled, name + ': waiting for the passkey');
+        for (const t of q.timers) if (t.ms === 240000 && !t.cleared) t.f();
+      }
+      await until(() => q.$('answer').textContent !== '' && q.doc.body.dataset.state === 'ready', name);
+      assert(q.$('answer').textContent.startsWith('Not confirmed: the browser made no passkey response ('), q.$('answer').textContent);
+      assert(posts(q).length === 0 && !q.$('controls').hidden && !q.$('go').disabled, name);
+    }
+  },
+  async answers() {
+    const c = G.draft.card;
+    for (const [name, post, text] of [
+      ['422', answer(422, { v: 1, error: 'NotApproved', reason: 'the SSH signature does not confirm request' }), 'Not confirmed (HTTP 422 NotApproved): the SSH signature does not confirm request'],
+      ['409', answer(409, { v: 1, error: 'Conflict', reason: 'the request changed since the card was shown; reload it' }), 'Not confirmed (HTTP 409 Conflict): the request changed since the card was shown; reload it'],
+      ['500', answer(500, { v: 1, error: 'Internal', reason: 'the confirmation did not complete; approve again' }), 'Not confirmed (HTTP 500 Internal): the confirmation did not complete; approve again'],
+      ['200 not confirmed', answer(200, { v: 1, confirmed: false }), 'Not confirmed (HTTP 200 ): no reason given'],
+      ['lost', () => Promise.reject(new TypeError('Failed to fetch')), 'Confirmation outcome unknown: Failed to fetch. Reading the request again.']]) {
+      const p = await open(card(c), daemon([c], post));
+      p.$('sig').value = 'sig';
+      p.$('post-sig').click();
+      await until(() => posts(p).length === 1 && p.$('answer').textContent !== '' && p.doc.body.dataset.state === 'ready', name);
+      assert.equal(p.$('answer').textContent, text, name);
+      assert(!p.$('controls').hidden && !p.$('post-sig').disabled && p.fetches.length === 3, name);
+    }
+  },
+  async sshsig() {
+    const c = G.draft.card, approved = G['draft-approved'].card;
+    let release;
+    const held = new Promise((r) => { release = r; });
+    const p = await open(card(c), daemon([c, approved], () => held.then(answer(200, { v: 1, confirmed: true, request: c.id, approvedBy: 'ssh:mark', decision: 'sha256:' + '6f'.repeat(32), next: 'n' }))));
+    const armored = '-----BEGIN SSH SIGNATURE-----\nU1NIU0lH\n-----END SSH SIGNATURE-----\n';
+    p.$('sig').value = armored;
+    p.$('post-sig').click();
+    await until(() => posts(p).length === 1, 'sshsig sent');
+    assert(p.doc.body.dataset.state === 'posting' && p.$('post-sig').disabled && p.$('go').disabled, 'no second submit while one is in flight');
+    release();
+    await until(() => p.doc.body.dataset.state === 'closed', 'sshsig');
+    const sent = posts(p);
+    assert(sent.length === 1 && sent[0].url === '/surface/confirm/' + c.id && sent[0].init.credentials === 'omit');
+    assert.deepEqual(JSON.parse(sent[0].init.body), { v: 1, digest: c.digest, sshsig: armored });
+    assert.equal(p.$('answer').textContent, 'Confirmed by ssh:mark: decision sha256:' + '6f'.repeat(32) + '; n.');
   },
 };
 const which = process.argv[2];
