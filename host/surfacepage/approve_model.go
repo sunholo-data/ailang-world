@@ -70,6 +70,23 @@ type RequestsJSON struct {
 	// Decisions are the pending Human.Approve requests a decision card decides (row 201 A4 §2.8).
 	Decisions          []PendingDecision `json:"decisions"`
 	DecisionsTruncated bool              `json:"decisionsTruncated"`
+	// Confirmations are the pending verb requests a confirmation card confirms (row 243 V3 §2.5);
+	// below credentials schema 9, ConfirmationsUnavailable says why there are none.
+	Confirmations            []PendingConfirmation `json:"confirmations"`
+	ConfirmationsUnavailable string                `json:"confirmationsUnavailable"`
+}
+
+// PendingConfirmation is one pending verb request: a summary decoded from its stored bytes, or,
+// when they do not hash to the digest or do not decode, Refused and no summary (never hidden).
+type PendingConfirmation struct {
+	ID         string `json:"id"`
+	Episode    string `json:"episode,omitempty"`
+	Repository string `json:"repository,omitempty"`
+	Head       string `json:"head,omitempty"`
+	SHA        string `json:"sha,omitempty"`
+	Draft      *bool  `json:"draft,omitempty"`
+	Expires    int64  `json:"expires"`
+	Refused    string `json:"refused,omitempty"`
 }
 
 // hex32 decodes 64 hex characters.

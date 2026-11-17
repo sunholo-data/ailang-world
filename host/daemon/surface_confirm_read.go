@@ -5,8 +5,13 @@ package daemon
 // card's are; the data is surfacepage.ConfirmationCard of the row. Nothing here writes (POST: sprint 4).
 
 import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 
+	"github.com/sunholo-data/ailang-world/host/approval"
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/surfacepage"
 )
@@ -76,4 +81,47 @@ func (d *Daemon) handleSurfaceConfirmation(w http.ResponseWriter, r *http.Reques
 func confirmationInput(row store.VerbRequestRow, now int64) surfacepage.ConfirmationInput {
 	return surfacepage.ConfirmationInput{ID: row.RequestID, Request: row.Request, Digest: row.Digest, Challenge: row.Challenge, Created: row.CreatedAt,
 		Expires: row.ExpiresAt, Now: now, Outcome: row.Outcome, ApprovedBy: row.ApprovedBy, Decision: row.DecisionRef}
+}
+
+// readConfirmations fills out.Confirmations with the live, pending verb requests on one read-only
+// handle: a summary decoded from the stored bytes, or Refused and no summary.
+func (d *Daemon) readConfirmations(ctx context.Context, now int64, out *surfacepage.RequestsJSON) error {
+	ro, err := store.OpenCredentialsReadOnly(d.credentialsPath)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = ro.Close() }()
+	rows, err := ro.PendingVerbRequests(ctx, now, store.MaxPendingVerbRequests)
+	if err != nil {
+		return err
+	}
+	for _, row := range rows {
+		out.Confirmations = append(out.Confirmations, pendingConfirmation(row))
+	}
+	return nil
+}
+
+// pendingConfirmation summarises row, or refuses it when its bytes do not hash to its digest, do
+// not decode as a valid world/verb-request/v1, or carry no finish approval scope.
+func pendingConfirmation(row store.VerbRequestRow) surfacepage.PendingConfirmation {
+	p := surfacepage.PendingConfirmation{ID: row.RequestID, Expires: row.ExpiresAt}
+	if sum := sha256.Sum256(row.Request); hex.EncodeToString(sum[:]) != row.Digest {
+		p.Refused = "the stored request does not match its digest"
+		return p
+	}
+	r, err := approval.DecodeVerb(row.Request)
+	if err == nil {
+		err = r.Validate()
+	}
+	if err != nil {
+		p.Refused = "the stored request is not a valid verb request: " + err.Error()
+		return p
+	}
+	s, err := broker.ParseFinishApprovalScope(r.Scope)
+	if err != nil {
+		p.Refused = "the stored request's scope is not a finish approval"
+		return p
+	}
+	p.Episode, p.Repository, p.Head, p.SHA, p.Draft = r.Episode, s.Repository, s.Head, s.SHA, &s.Draft
+	return p
 }

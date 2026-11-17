@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -200,4 +201,85 @@ func TestConfirmationCardServed(t *testing.T) {
 		t.Fatal(err)
 	}
 	requireRefusal(t, "no store", a.serve("GET", "/surface/confirmations/"+row.RequestID, apLoopback, nil), 500, "Internal")
+}
+
+// CR2: requests.json's confirmations are the live pending verb requests, newest first, each
+// summarised from its stored bytes; a row whose bytes do not hash to its digest, or do not decode,
+// is listed refused with no summary; approved, superseded and expired rows are not listed; below
+// schema 9 the list is empty with confirmationsUnavailable and the other lists intact.
+func TestRequestsJSONConfirmations(t *testing.T) {
+	a := newApprovalRig(t)
+	mint := a.putRequest("mr-00000000000000b1", "w201b", apT0-30)
+	a.putVerb("vr-00000000000000a0", "wold", apT0-700, true) // expired at apT0-100
+	sup := a.putVerb("vr-00000000000000a1", "w1", apT0-60, true)
+	ready := a.putVerb("vr-00000000000000a2", "w2", apT0-50, false)
+	done := a.putVerb("vr-00000000000000a3", "w3", apT0-45, true)
+	draft := a.putVerb("vr-00000000000000a4", "w1", apT0-40, true) // supersedes sup
+	undecodable := a.putVerbBytes("vr-00000000000000a5", "w5", apT0-30, []byte(`{"schema":"world/verb-request/v1"}`))
+	edited := a.putVerb("vr-00000000000000a6", "w6", apT0-20, true)
+	setVerbColumn(t, a.d.credentialsPath, edited.RequestID, "request", append(edited.Request, ' '))
+	start, noScope := verbFixture(apT0-15, "w7", true), verbFixture(apT0-12, "w8", true)
+	start.Verb, noScope.Scope = "episode start", "github-pr:o/r#x" // each decodes; Validate, then the scope parse, refuses
+	invalid, unscoped := a.putVerbBytes("vr-00000000000000a7", "w7", apT0-15, canonVerb(t, start)), a.putVerbBytes("vr-00000000000000a8", "w8", apT0-12, canonVerb(t, noScope))
+	a.write(func(ctx context.Context, c *store.Credentials) error {
+		if err := c.EnrolApprover(ctx, store.ApproverRow{Name: "m", Format: "ssh", PublicKey: []byte("k"), EnrolledAt: apT0 - 100}); err != nil {
+			return err
+		}
+		return c.ConsumeVerbRequest(ctx, done.RequestID, done.Digest, store.ApproverUse{Name: "m", Format: "ssh", PublicKey: []byte("k")}, "ssh:m", []byte("sig"), "sha256:"+strings.Repeat("d4", 32), apT0-10)
+	})
+	get := func() (surfacepage.RequestsJSON, string) {
+		rec := a.serve("GET", "/surface/requests.json", apLoopback, nil)
+		var out surfacepage.RequestsJSON
+		if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil || rec.Code != 200 {
+			t.Fatalf("requests.json = %d %v", rec.Code, err)
+		}
+		return out, rec.Body.String()
+	}
+	out, body := get()
+	yes, no := true, false
+	want := []surfacepage.PendingConfirmation{
+		{ID: unscoped.RequestID, Expires: apT0 + 588, Refused: "the stored request's scope is not a finish approval"},
+		{ID: invalid.RequestID, Expires: apT0 + 585, Refused: `the stored request is not a valid verb request: approval: bad verb request: verb is "episode start", want "episode finish"`},
+		{ID: edited.RequestID, Expires: apT0 + 580, Refused: "the stored request does not match its digest"},
+		{ID: undecodable.RequestID, Expires: apT0 + 570, Refused: out.Confirmations[3].Refused},
+		{ID: draft.RequestID, Episode: "w1", Repository: "sunholo-data/ailang-world", Head: "world/w1", SHA: strings.Repeat("0a", 20), Draft: &yes, Expires: apT0 + 560},
+		{ID: ready.RequestID, Episode: "w2", Repository: "sunholo-data/ailang-world", Head: "world/w2", SHA: strings.Repeat("0a", 20), Draft: &no, Expires: apT0 + 550},
+	}
+	if !reflect.DeepEqual(out.Confirmations, want) || out.ConfirmationsUnavailable != "" || !strings.HasPrefix(want[3].Refused, "the stored request is not a valid verb request: ") {
+		t.Fatalf("confirmations = %s", body)
+	}
+	if len(out.Pending) != 1 || out.Pending[0].ID != mint.RequestID || out.Unavailable != "" {
+		t.Fatalf("pending = %+v", out.Pending)
+	}
+	for _, leak := range []string{sup.RequestID, done.RequestID, draft.Challenge, draft.Digest, `"request"`, `"challenge"`, "sig"} {
+		if strings.Contains(body, leak) {
+			t.Errorf("requests.json carries %q", leak)
+		}
+	}
+	setVersion(t, a.d.credentialsPath, `DROP TABLE verb_requests`, `PRAGMA user_version = 8`)
+	out, body = get()
+	if len(out.Pending) != 1 || out.Unavailable != "" || !strings.Contains(body, `"confirmations":[],"confirmationsUnavailable":"the credentials store predates verb requests: restart`) {
+		t.Fatalf("a schema-8 store: %s", body)
+	}
+	if err := os.Remove(a.d.credentialsPath); err != nil {
+		t.Fatal(err)
+	}
+	if _, body = get(); !strings.Contains(body, `"confirmations":[],"confirmationsUnavailable":"the verb requests could not be read"`) {
+		t.Fatalf("a missing store: %s", body)
+	}
+}
+
+// setVerbColumn sets one column of verb request id straight in the credentials file (a hand edit).
+func setVerbColumn(t *testing.T, path, id, column string, v any) {
+	t.Helper()
+	db, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = db.Close() }()
+	if res, err := db.Exec(`UPDATE verb_requests SET `+column+` = ? WHERE request_id = ?`, v, id); err != nil {
+		t.Fatal(err)
+	} else if n, _ := res.RowsAffected(); n != 1 {
+		t.Fatalf("%d rows updated", n)
+	}
 }
