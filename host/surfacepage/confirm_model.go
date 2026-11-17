@@ -70,3 +70,20 @@ func confirmationState(in ConfirmationInput) string {
 	}
 	return ConfirmationPending
 }
+
+// ConfirmedJSON is POST /surface/confirm/{id}'s success (design §2.6): the world store's finish
+// approval, decided by the key, is named by the request.
+type ConfirmedJSON struct {
+	V          int    `json:"v"`
+	Confirmed  bool   `json:"confirmed"`
+	Request    string `json:"request"`
+	ApprovedBy string `json:"approvedBy"`
+	Decision   string `json:"decision"`
+	Next       string `json:"next"`
+}
+
+// Confirmed is the success body for request id confirmed by approvedBy with decision.
+func Confirmed(id, approvedBy, decision string) ConfirmedJSON {
+	return ConfirmedJSON{V: 1, Confirmed: true, Request: id, ApprovedBy: approvedBy, Decision: decision,
+		Next: "the waiting episode finish opens the pull request"}
+}
