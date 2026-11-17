@@ -1,0 +1,257 @@
+{
+  "sprint_id": "w-world-address-bar-verbs-v3s2",
+  "design_doc": "design_docs/planned/w-world-address-bar-verbs-v3.md",
+  "design_revision": "r2 (quorum r1/r2 BLOCKED; controller carve-out r2; independent audit PASS 87, iteration 399); not reopened",
+  "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v3s2-sprint-plan.md",
+  "previous_sprint": "row 243 V3 S1 (iteration 400, PR #591, merge b0817474, judge PASS 94); page analogues: row 201 A3a approve page, A4 decide page (w-world-approvals-by-key-a4-sprint4-plan.md)",
+  "base_commit": "07d7c90e5979893154d2244037bedeffd42386fe",
+  "design_measured_at": "994ba123 (git diff --stat 994ba123 07d7c90e over every S2 cite: empty; every cite re-measured, none moved)",
+  "queue_row": 243,
+  "iteration": 401,
+  "phase": "V3",
+  "sprint": "S2 (the card page, against fixtures) + S1b (the judges) folded",
+  "sprint_number": 2,
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter401-row243-v3s2",
+  "branch": "sprint/world-iter401-row243-v3s2",
+  "authority": [
+    "D-WORLD-107 = A",
+    "D-WORLD-109 = A (temp dirs, approvaltest keys, headless Chrome on a temp profile against loopback httptest only)",
+    "D-WORLD-118 = A (verified by the controller at iteration 400, verdict=attended, flip 72007b37): S2 independent of it; F6/DraftOnly never built",
+    "D-WORLD-89 R1-R5 untouched (no route, no POST, no key path reachable)"
+  ],
+  "behaviour": "host/surfacepage gains ConfirmationInput, Confirmation and ConfirmationCard (design 2.5 data JSON: bytes base64url, digest, raw challenge, times, state; never a message hash, never an artifact) and the embedded confirm/{index.html,confirm.js} (10 s aborted GET, digest check, CONFIRM_FIELDS table, textContent render, the 86-byte world-verb/v1 message and hash built in the page, Save the message + ssh-keygen -Y sign -n world-verb@sunholo line, no controls unless pending). No route registered, no store read or write, no schema, no daemon or CLI change, surfaceCSP unchanged, no .ail. M0: VB8 (TestAdmitWhy quoting row) and VP12 (the three address hints). S1b: JudgeVerbSSH, JudgeVerbAssertion, RecheckVerb (VJ1), patch byte-identical to iteration 400.",
+  "cut": {
+    "cap_loc": 1400,
+    "measure": "git diff -M --numstat <base> HEAD -- cmd host docs (insertions + deletions); the same with no path filter",
+    "design_raw_s2": 825,
+    "compiled_s2": 1051,
+    "ratio": 1.27,
+    "s1b_measured_iter400_patch": 326,
+    "s1b_with_vj1_fixes": 329,
+    "measured": 1380,
+    "margin": 20,
+    "fired": "no",
+    "s1b_folded": "yes (1,051 + 326 = 1,377 <= 1,400; 1,380 with three VJ1 test lines killing two R2 survivors)",
+    "moved_out": {}
+  },
+  "planner_decisions": {
+    "S2-D1_s1b_folded_last": "1,051 + 326 = 1,377 <= 1,400; last so a red S1b cannot block the card; iteration 400 patch (775b927ad56aa4c0) applies cleanly to 07d7c90e; +3 VJ1 test lines kill JV-ADMIT-BYTES and JV-RCK-NOW; 22 VJ1 mutants run; inv names its tests",
+    "S2-D2_wire_type": "type Confirmation (design names the function ConfirmationCard; one identifier cannot be both)",
+    "S2-D3_state": "Outcome if any, else expired when Now >= Expires (Admit, admit.go:51), else pending; approvedBy/decision only when approved",
+    "S2-D4_node_and_chrome": "CP1-CP6 run the embedded confirm.js under node in a vm with a stand-in DOM from index.html (CI-run via WORLD_EXEC_NODE); XC1 in live Chrome",
+    "S2-D5_golden": "testdata/confirm-card.golden.jsonl written by TestConfirmCardGolden (WORLD_UPDATE_CONFIRM_GOLDEN=1 go test ./host/surfacepage/ -run '^TestConfirmCardGolden$') from CanonicalVerb, FinishPromptText, FormatFinishApprovalScope, VerbMessage, VerbMessageHash, verbs.Quote",
+    "S2-D6_xc1_headers": "XC1 serves the card under the headers the real daemon gives GET /surface/passkey.js (setSurfaceHeaders -> surfaceCSP); expected prompt = broker.FinishPromptText (control: = finishPrompt bytes before its question)",
+    "S2-D7_no_route_test": "TestConfirmRoutesNotRegistered (host/daemon): Handler body has no /surface/confirm; three paths 404 through the real Handler; control 200; S3 deletes it",
+    "S2-D8_vp12_string_pin": "the two app.js strings sit in its DOM half; node evaluates them from source in a vm; class S",
+    "S2-D9_s4_seam": "#controls, net(), m and h built in load(), CLOSED table",
+    "S2-D10_nul_rows": "hostile fixture: NUL in title and body (+ multibyte), both Validate; text after NUL shown"
+  },
+  "scope": [
+    "host/surfacepage/confirm_model.go (NEW)",
+    "host/surfacepage/confirm.go (NEW)",
+    "host/surfacepage/confirm/index.html (NEW)",
+    "host/surfacepage/confirm/confirm.js (NEW)",
+    "host/authority/judge_verb.go (NEW, S1b)",
+    "tests: host/surfacepage/{app_hints,confirm_model,confirm_page,confirm_script}_test.go, testdata/confirm-card.golden.jsonl, host/daemon/surface_confirm_unrouted_test.go, cmd/ailang-worldd/confirm_page_chrome_test.go, host/authority/judge_verb_test.go (NEW); host/verbs/why_admit_test.go (+1 row)"
+  ],
+  "executor_lane": "as routed by the controller; one run: M0, M4, M5a, M5b, M6, S1b; apply patches, never retype",
+  "executor_form": "every sub-milestone is a unified diff in the plan's Appendix P, applied in order with /usr/bin/patch -p1 -E after a --dry-run; acceptance = the plan's accept.sh arm; cumulative snapshots",
+  "estimate_loc": {
+    "production": 429,
+    "test": 951,
+    "docs": 0,
+    "total_cumulative": 1380,
+    "cmd_host_only": 1380
+  },
+  "milestones": [
+    {
+      "id": "M0",
+      "title": "V2b pins: VB8, VP12",
+      "production": 0,
+      "test": 68,
+      "expected_cumulative_numstat": 68,
+      "run": 1
+    },
+    {
+      "id": "M4",
+      "title": "ConfirmationInput/Confirmation/ConfirmationCard; CP0",
+      "production": 72,
+      "test": 153,
+      "expected_cumulative_numstat": 293,
+      "run": 1
+    },
+    {
+      "id": "M5a",
+      "title": "page + confirm.js + embeds; CP2 Go half; generated golden; no-route test",
+      "production": 228,
+      "test": 190,
+      "expected_cumulative_numstat": 711,
+      "run": 1
+    },
+    {
+      "id": "M5b",
+      "title": "confirm.js under node; CP1-CP6",
+      "production": 0,
+      "test": 231,
+      "expected_cumulative_numstat": 942,
+      "run": 1
+    },
+    {
+      "id": "M6",
+      "title": "XC1 live Chrome",
+      "production": 0,
+      "test": 109,
+      "expected_cumulative_numstat": 1051,
+      "run": 1
+    },
+    {
+      "id": "S1b",
+      "title": "the judges JudgeVerbSSH/JudgeVerbAssertion/RecheckVerb; VJ1 (+3 test lines)",
+      "production": 129,
+      "test": 200,
+      "expected_cumulative_numstat": 1380,
+      "run": 1
+    }
+  ],
+  "expected_snapshots": {
+    "M0": "2/0/2",
+    "M4": "4/0/4",
+    "M5a": "10/0/10",
+    "M5b": "11/0/11",
+    "M6": "12/0/12",
+    "S1b": "14/0/14"
+  },
+  "design_premises_found_false": [
+    "F1 CP2 \"as A4 PD1\": PD1 reads the served wire via a route+store; S2 reads approval.VerbRequest tags by reflection",
+    "F2 card behaviour \"Chrome driver\": A4 page has no CI-run behavioural test; S2 runs CP1-CP6 under node",
+    "F3 ConfirmationCard names both function and type: type is Confirmation",
+    "F4 VP12 \"node for the two app.js strings\": strings are in the DOM half; evaluated from source; class S",
+    "F5 \"unchanged surfaceCSP\": no S2 route applies headers; XC1 copies the daemon's own at run time",
+    "F6 design 7 file list: five new test files outside it (app_hints, confirm_script, golden, surface_confirm_unrouted, confirm_page_chrome)"
+  ],
+  "existing_tests_edited": [
+    "host/verbs/why_admit_test.go (+1 row, VB8)"
+  ],
+  "files_outside_design_section_7": [
+    "host/surfacepage/app_hints_test.go",
+    "host/surfacepage/confirm_script_test.go",
+    "host/surfacepage/testdata/confirm-card.golden.jsonl",
+    "host/daemon/surface_confirm_unrouted_test.go",
+    "cmd/ailang-worldd/confirm_page_chrome_test.go"
+  ],
+  "not_touched": [
+    "host/daemon/* production (daemon.go, surface_page.go: no route, CSP unchanged)",
+    "host/store/*",
+    "cmd/ailang-worldd/* production",
+    "host/surfacepage/app/*",
+    "approve.js",
+    "decide.js",
+    "world/*.ail",
+    "packages/**",
+    "scripts/**",
+    "tools/launchd/*",
+    "cmd/world-publish/*"
+  ],
+  "ci_change": "none (CI already sets WORLD_EXEC_NODE; the new node tests run in verify_go)",
+  "sprint_gates": "plan §6 gates.sh: status, verify_ail, gofmt, build, vet, fence (go test -run '^$' ./...), pkgs, race, node, inv, chrome, verify_go; ALL_DONE.<sha> with FAILS",
+  "base_gates": [
+    "LEG status rc=0 0s",
+    "LEG verify_ail rc=0 71s",
+    "LEG gofmt rc=0 0s",
+    "LEG build rc=0 5s",
+    "LEG vet rc=0 3s",
+    "LEG fence rc=0 25s",
+    "LEG pkgs rc=0 309s",
+    "LEG race rc=0 20s",
+    "LEG node rc=0 1s",
+    "LEG inv rc=0 19s",
+    "named PASS: 37",
+    "LEG chrome rc=0 45s",
+    "LEG verify_go SKIPPED (GATES_SKIP_VERIFY_GO=1)",
+    "GATES_DONE 499s FAILS: none"
+  ],
+  "final_gates_planner": [
+    "LEG status rc=0 0s",
+    "LEG verify_ail rc=0 64s",
+    "LEG gofmt rc=0 1s",
+    "LEG build rc=0 6s",
+    "LEG vet rc=0 4s",
+    "LEG fence rc=0 38s",
+    "LEG pkgs rc=0 301s",
+    "LEG race rc=0 16s",
+    "LEG node rc=0 4s",
+    "LEG inv rc=0 17s",
+    "named PASS: 43",
+    "LEG chrome rc=0 54s",
+    "LEG verify_go rc=1 662s",
+    "GATES_DONE 1167s FAILS: verify_go"
+  ],
+  "acceptance_planner": [
+    "M0 rc=0 ACCEPT_OK M0",
+    "M4 rc=0 ACCEPT_OK M4",
+    "M5a rc=0 ACCEPT_OK M5a",
+    "M5b rc=0 ACCEPT_OK M5b",
+    "M6 rc=0 ACCEPT_OK M6",
+    "S1b rc=0 ACCEPT_OK S1b",
+    "ACCEPT_ALL_DONE",
+    "--- rerun 14:36:04 on the final stages",
+    "M0 rc=0 ACCEPT_OK M0",
+    "M4 rc=0 ACCEPT_OK M4",
+    "M5a rc=0 ACCEPT_OK M5a",
+    "M5b rc=0 ACCEPT_OK M5b",
+    "M6 rc=0 ACCEPT_OK M6",
+    "S1b rc=0 ACCEPT_OK S1b",
+    "ACCEPT_ALL_DONE_RERUN"
+  ],
+  "mutants": {
+    "ledger": "/Users/voightkampff/.ailang/state/world-iter401/plan-scratch/logs/mutant_ledger.tsv",
+    "rows": 145,
+    "summary": "145 rows (3 `CTL`, 138 `K`, 3 `S`, 1 `X`); 305 ledger lines (runs R1, R2, R3); 145 of 145 rows run; the last line of each row behaves as its class says for **145 of 145**. Table ids = ledger ids (`tools/mktable.py` fills §4 from the ledger's last line per id); ledger `$HOME/.ailang/state/world-iter401/plan-scratch/logs/mutant_ledger.tsv`",
+    "r2_survivors_fixed": [
+      "J-QUOTE-SAFE (fixture argv)",
+      "CC-REQUEST-ENC (named test row)",
+      "J-SHOWN (named test re-pointed)",
+      "JV-ADMIT-BYTES (S1b test row)",
+      "JV-RCK-NOW (S1b control)"
+    ],
+    "equivalents": []
+  },
+  "final_gates_note": "`tools/gates.sh <final-tree> final-gates final 80dd837e` (`final-tree` = the round-trip tree, every stage committed, byte-identical to the stage tree; run beside nothing else after the mutant runs; load 6–29 from other sessions): `status` 0; **`verify_ail` rc 0** (`✓ verify gate PASSED: 16 required identities verified, 40 named tests pass, 503 se-tools named tests pass` — the base's line, byte for byte); `gofmt`, `build`, `vet`, `fence` rc 0; **`pkgs` rc 0** (`host/verbs`, `host/surfacepage` 1.3 s, `host/daemon` 300.1 s, `cmd/ailang-worldd` 152.3 s); **`race` rc 0**; **`node` rc 0: 9 named `--- PASS`** (the base's 4 + `TestAddressHintsArePinned` + the four CP harnesses), none SKIP; **`inv` rc 0: 43 named `--- PASS`** (the base's 37 + `TestConfirmRoutesNotRegistered` + the five new `host/surfacepage` tests), 0 SKIP, 0 FAIL, none missing; **`chrome` rc 0: 17 `--- PASS`** (V2b's 14 + the two `host/daemon` drills + **XC1 `TestConfirmPageShowsTheFinishPromptInChrome (1.66s)`**); **`verify_go` rc 1** — 63 packages `ok`, the one red **`host/verifygate` `panic: test timed out after 10m0s`** (running `TestExecGateArmsAreLoadBearing/sketch_tests`, `TestSeToolsGateArmsAreLoadBearing/plan-bytes`; a package S2 does not touch — no `.ail`, no doc, no gate input changes — and red in iteration 400's controller gate run too (`world-iter400/gates/verify_go.txt`: `--- FAIL: TestMissionConfigDefaultFlowIntegration`, `FAIL host/verifygate 458.268s`, `GATES_DONE 965s FAILS: verify_go`), on the directive's load-sensitive list); re-run alone on the final tree (`logs/verifygate_alone.txt`, load ≈ 20): `FAIL host/verifygate 514.9s` with only **`TestMissionConfigDefaultFlowIntegration`** red (its `valid_ledger`/`invalid_ledger` 10 s arms; the directive's list), and that test alone is **red at the base too** (`--- FAIL … (19.17s)` on `base-tree`) and **green on the final tree** the next minute (`ok host/verifygate 19.3s`, `logs/mission_config_flow_base_vs_final.txt`) — load-sensitive, not S2's; **`GATES_DONE 1167s FAILS: verify_go`**; `ALL_DONE.80dd837e…` written (`plan-scratch/final-gates/`)",
+  "roundtrip": [
+    "CMP_EQUAL M0",
+    "NUMSTAT M0 68",
+    "CMP_EQUAL M4",
+    "NUMSTAT M4 293",
+    "CMP_EQUAL M5a",
+    "NUMSTAT M5a 711",
+    "CMP_EQUAL M5b",
+    "NUMSTAT M5b 942",
+    "CMP_EQUAL M6",
+    "NUMSTAT M6 1051",
+    "CMP_EQUAL S1b",
+    "NUMSTAT S1b 1380",
+    "ROUNDTRIP_IDENTICAL_TO_STAGE_TREE"
+  ],
+  "executor_directives": [
+    "no git writes",
+    "patch -p1 -E is the only writer",
+    "never nohup, never background a test leg; 600000 ms timeout on long Bash calls",
+    "never set WORLD_UPDATE_CONFIRM_GOLDEN",
+    "cumulative snapshots to $HOME/.ailang/state/world-iter401/snap/<M>/ with STATUS, DELETED, MANIFEST.sha256",
+    "expected numstat after commit: M0 68, M4 293, M5a 711, M5b 942, M6 1051, S1b 1380",
+    "export AILANG_BIN and WORLD_EXEC_NODE"
+  ],
+  "acceptance_criteria_ref": "plan §9 (14 criteria)",
+  "operator_after_sprint": "nothing new at the terminal or in the app: no route serves the card yet; the CLI is byte-identical",
+  "residuals": [
+    "design RV1-RV9 unchanged",
+    "S1 audit notes 1-3 (S3, S3/S4), 4-5 (S5) routed unchanged",
+    "VT2 FinishConfirmRefusal F1-F5 -> S3 M8"
+  ],
+  "next": [
+    "S3: store + read routes (ConfirmationCard for GET /surface/confirmations/{id}; ConfirmPage/ConfirmScript routes; delete TestConfirmRoutesNotRegistered)",
+    "S4: submit half of confirm.js in #controls; S1b judges for C11",
+    "S5: CLI flag (RecheckVerb for CF6)",
+    "S6: Needs you, XC2/XC3"
+  ]
+}
