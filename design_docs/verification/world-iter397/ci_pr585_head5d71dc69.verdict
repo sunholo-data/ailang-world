@@ -1,0 +1,4 @@
+ALL COMPLETE for 5d71dc692387af0d7b95632e6f45e66ea647f577 total=3
+  go host build + test gate: success
+  go race gate (go test -race, own job): success
+  ailang-code verify gate: success
