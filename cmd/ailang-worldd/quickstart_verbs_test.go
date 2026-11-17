@@ -25,8 +25,8 @@ func TestQuickstartSection19MatchesTheBar(t *testing.T) {
 	section := guide[s19:]
 	_, block, _ := strings.Cut(section, "```text\n")
 	block, _, _ = strings.Cut(block, "```")
-	want := map[string]verbs.Class{"episode report": verbs.Read, "approve": verbs.Navigate, "episode finish": verbs.Mutate, "": verbs.Address}
-	seen := map[verbs.Class]bool{}
+	want := map[string]verbs.Class{"episode report": verbs.Read, "why": verbs.Read, "approve": verbs.Navigate, "episode finish": verbs.Mutate, "": verbs.Address}
+	seen := map[string]bool{}
 	for _, line := range strings.Split(strings.TrimSpace(block), "\n") {
 		argv, err := verbs.Split(line)
 		if err != nil {
@@ -36,7 +36,7 @@ func TestQuickstartSection19MatchesTheBar(t *testing.T) {
 		if c, ok := want[v.Words]; !ok || c != v.Class {
 			t.Errorf("§19 line %q is %q %s, which §19 does not describe", line, v.Words, v.Class)
 		}
-		seen[v.Class] = true
+		seen[v.Words] = true
 	}
 	if len(seen) != len(want) {
 		t.Errorf("§19's lines cover %v, want each of %v", seen, want)
