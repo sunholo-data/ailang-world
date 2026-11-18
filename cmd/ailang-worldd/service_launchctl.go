@@ -23,12 +23,31 @@ type serviceController interface {
 }
 type systemServiceController struct{}
 
+// serviceExitTimeout is the plist's ExitTimeOut (renderServicePlist): how long
+// launchd waits after SIGTERM before it SIGKILLs the daemon.
+const serviceExitTimeout = 30 * time.Second
+
+// launchctlBudget is how long one launchctl verb may run. kickstart -k and bootout
+// stop the running daemon and wait for it to exit: its shutdown drain (about 10 s),
+// at most ExitTimeOut before launchd kills it. Their budget covers that wait plus a
+// margin. Under the old flat 2 s budget, the first real `service upgrade`
+// (attended 2026-11-18) had launchctl killed mid-kickstart ("signal: killed"),
+// and the rollback's kickstart was killed the same way, which left the service
+// stopped. Every other verb answers at once and keeps 2 s.
+func launchctlBudget(verb string) time.Duration {
+	switch verb {
+	case "kickstart", "bootout":
+		return serviceExitTimeout + 15*time.Second
+	}
+	return 2 * time.Second
+}
+
 // command runs launchctl through toolprobe, the AC10-driven subprocess site that
 // scrubs the registry credential (a direct exec here failed the AC10 census).
 // launchctl reports "Could not find service" on stderr, which a non-zero exit
 // carries in its *exec.ExitError; it is joined to stdout as CombinedOutput did.
 func (systemServiceController) command(args ...string) (string, error) {
-	ctx, cancel := budgetContext(2 * time.Second)
+	ctx, cancel := budgetContext(launchctlBudget(args[0]))
 	defer cancel()
 	out, err := toolprobe.OutputEnv(ctx, "/bin/launchctl", "", []string{"PATH=/usr/bin:/bin:/usr/sbin:/sbin"}, args...)
 	var exit *exec.ExitError
