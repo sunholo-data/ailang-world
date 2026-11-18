@@ -76,7 +76,7 @@ func (d *Daemon) handleSurface(w http.ResponseWriter, r *http.Request) {
 	}
 	setSurfaceHeaders(w)
 	w.WriteHeader(status)
-	_, _ = w.Write(surfacepage.AppShell)
+	_, _ = w.Write(surfacepage.ShellWithDraftCatalog(d.cfg.SurfaceDraftCatalog))
 }
 
 // handleSurfaceStatic serves the server-rendered timeline, or with brane and

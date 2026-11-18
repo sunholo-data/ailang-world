@@ -64,7 +64,8 @@
   function blendXS(LX, u) { const k = Math.min(LX.length - 2, Math.floor(u)), f = u - k; return LX[k].map((x, i) => x + (LX[k + 1][i] - x) * f); }
 
   // ---------- Canvas geometry (1600 × 936 design canvas, scaled to the window) ----------
-  const PL = 262, PR = 1262, PW = PR - PL, TICK_T = 768, MINI_T = 818, MINI_H = 36, LEGEND_T = 892;
+  let PL = 262, PR = 1262, PW = PR - PL;
+  const TICK_T = 768, MINI_T = 818, MINI_H = 36, LEGEND_T = 892;
 
   // ---------- Model: world/surface-model/v1 adapted to the timeline's lookups ----------
   function adaptModel(D) {
@@ -585,16 +586,18 @@
   // ================= The page =================
   const $ = id => document.getElementById(id);
   const SEAMS = window.WorldSurface || {};
-  const phoneWidth = window.matchMedia('(max-width: 600px)');
   let T = null, D = null, LANES = {}, N = {}, parents = {}, kids = {}, SH = [], NS = 0, SIDX = {}, TT = [], LX = [], MAXU = LEVELS.length - 1;
   let STEPS = [], TNOW = 0, NOW_D = new Date(), quiet = [], LY = {}, ROWS = [], MXS = [], XS = [];
   let nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, isBreak, lastStep, lastState;
   function setModel(m) {
     T = adaptModel(m);
     ({ D, LANES, N, parents, kids, SH, NS, SIDX, TT, LX, MAXU, STEPS, TNOW, NOW_D, quiet, LY, ROWS, nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, isBreak, lastStep, lastState } = T);
+    measureMini();
+    XS = LX[1].slice();
+  }
+  function measureMini() {
     const a = LX[3][0], z = LX[3][NS];
     MXS = LX[3].map(x => 8 + (x - a) / ((z - a) || 1) * (PW - 16));
-    XS = LX[1].slice();
   }
   // The open stack (world/surface-stack/v1), when a brane is open.
   let S = null, F = null, RAIL = [], READS = new Map();
@@ -619,10 +622,22 @@
   const levelName = () => LEVELS[Math.round(view.u)].name;
 
   // ---------- Zoom/fit ----------
+  const narrow = window.matchMedia('(max-width: 700px)');
   let scale = 1;
   function fit() {
     const stg = $('stage'), w = stg.clientWidth, h = stg.clientHeight;
-    scale = Math.min(w / 1600, h / 936, 1.25);
+    const right = narrow.matches ? w : 1262;
+    const left = narrow.matches ? Math.min(128, Math.round(w * 0.32)) : 262;
+    if (right !== PR || left !== PL) {
+      const pinned = T && atNow();
+      PL = left; PR = right; PW = Math.max(1, PR - PL);
+      if (T) {
+        measureMini();
+        renderTimeline(true);
+        if (pinned) goNow(false); else applyView();
+      }
+    }
+    scale = narrow.matches ? 1 : Math.min(w / 1600, h / 936, 1.25);
     const bx = Math.max(0, (w - 1600 * scale) / 2);
     $('tl').style.transform = `scale(${scale})`;
     $('br').style.transform = `translate(${bx}px, 0) scale(${scale})`;
@@ -702,7 +717,7 @@
     h += `<div class="pedge" style="left:${PL - 1}px;top:96px;height:${TICK_T + 36 - 96}px"></div><div class="pedge" style="left:${PR}px;top:96px;height:${TICK_T + 36 - 96}px"></div>`;
     h += `<div class="plot" id="plot" style="left:${PL}px;top:0;width:${PW}px;height:${TICK_T + 40}px"><div class="world" id="world"></div></div>`;
     h += `<div class="tlbar" style="left:${PL}px;top:62px;width:${PW}px">
-      <span class="range" id="range"></span><span style="flex:1"></span>
+      <button type="button" class="phone-view" id="phone-activity">Activity</button><span class="range" id="range"></span><span style="flex:1"></span>
       <span class="ctl">
         <button type="button" class="cb" id="pg-back" aria-label="Back in time" data-tip="k:← back a page · drag or scroll to pan">‹</button>
         <button type="button" class="cb" id="pg-fwd" aria-label="Forward in time" data-tip="k:→ forward a page">›</button>
@@ -751,16 +766,18 @@
     const running = ne.open ? openRunningHTML(ne.open) : ne.sessionsUnavailable ? `<div class="nsec"><div class="nh">Running</div><div class="nl sub">${esc(ne.sessionsUnavailable)}</div></div>`
       : `<div class="nsec"><div class="nh">Running · ${sess.length}</div>
         ${run ? `<div class="nl"><b>${esc(run.episode)}</b>${runLane ? ` · ${esc(nameOf(runLane))}` : ''}</div><div class="nl sub">started ${esc(run.started)}</div>` : '<div class="nl sub">Nothing running</div>'}</div>`;
+    const activity = running + needsYouHTML(REQS, REQS ? REQS.now : 0, notifyPermission());
     return `<div class="now" data-now style="left:${PR + 22}px;top:56px">
+      <button type="button" class="phone-view" id="activity-back">← Timeline</button>
       <div><div style="font-size:12px;font-weight:600;color:var(--sub)">Now</div><div style="font-size:15px;font-weight:700">${DOW[now.getUTCDay()]} ${dayOf(D.now)} · ${hm(D.now)}</div></div>
       <div style="display:flex;gap:9px;align-items:center"><span style="width:9px;height:9px;border-radius:5px;background:${healthy ? 'var(--okDot)' : 'var(--you)'};flex:none"></span><span style="font-weight:700;color:var(--ok)">${healthy ? 'Healthy' : esc(ne.health)}</span><span style="font-size:12.5px;color:var(--sub)">checked ${esc(ne.checked)}</span></div>
+      ${narrow.matches ? activity : ''}
       ${serviceLineHTML(ne.service)}
       <div class="nl sub" data-live>${esc(liveStatus(live))}</div>
       ${poll.note ? `<div class="nl sub" data-poll style="color:var(--you)">${esc(poll.note)}</div>` : ''}
       ${sourcesHTML(D.repos)}
       ${today}
-      ${running}
-      ${phoneWidth.matches ? '' : queueHTML()}
+      ${narrow.matches ? '' : activity}
       ${decidedHTML(REQS, decidedAll)}
     </div>`;
   }
@@ -1016,6 +1033,12 @@
     $('front').innerHTML = frontHTML(S, T);
     $('front').dataset.front = F.id;
     $('front').setAttribute('aria-label', cleanTitle(F.title) || F.label);
+    const pos = railIdx();
+    if (!$('phone-step-nav')) {
+      $('br').insertAdjacentHTML('afterbegin', '<nav id="phone-step-nav" class="phone-view" aria-label="State navigation"><button type="button" id="phone-back">← Timeline</button><button type="button" id="phone-earlier">Earlier</button><button type="button" id="phone-later">Later</button></nav>');
+    }
+    $('phone-earlier').disabled = pos === 0;
+    $('phone-later').disabled = pos >= RAIL.length - 1;
     placeBars(animate);
     $('rail').innerHTML = railHTML(S);
   }
@@ -1041,22 +1064,8 @@
   // decidedAll is the decision list's "show all".
   let REQS = null, decidedAll = false, seenIds = null;
   const notifyPermission = () => typeof Notification === 'undefined' ? '' : Notification.permission;
-  const queueHTML = () => needsYouHTML(REQS, REQS ? REQS.now : 0, notifyPermission());
-  let paintedMobileQueue = '';
-  function repaintMobileNeeds() {
-    const html = phoneWidth.matches ? queueHTML() : '';
-    if (html === paintedMobileQueue) return;
-    const list = $('mobile-needs'), active = document.activeElement;
-    const activeId = list.contains(active) ? active.id : '';
-    list.innerHTML = html;
-    paintedMobileQueue = html;
-    if (activeId) list.querySelectorAll('[id]').forEach(el => {
-      if (el.id === activeId) el.focus({preventScroll: true});
-    });
-  }
   async function loadRequests() {
     try { REQS = (await getJSON('/surface/requests.json')).body; } catch (_) { REQS = null; }
-    repaintMobileNeeds();
     const n = notifications(REQS, seenIds, notifyPermission());
     seenIds = n.seen;
     n.notes.forEach(x => { const note = new Notification(x.title, { body: x.body, tag: x.tag }); note.onclick = () => { window.focus(); location.assign(x.href); }; });
@@ -1109,8 +1118,10 @@
   // repaintNow redraws the now card alone: a status change is visible even when the graph did not change.
   function repaintNow() {
     const el = document.querySelector('[data-now]');
-    if (el && T) el.outerHTML = nowCard();
-    repaintMobileNeeds();
+    if (!el || !T) return;
+    const focused = el.contains(document.activeElement) && document.activeElement.id;
+    el.outerHTML = nowCard();
+    if (focused) $(focused)?.focus({ preventScroll: true });
   }
   // schedulePoll: follow mode polls the model every 15 s while the page is visible, independently of AG-UI.
   function schedulePoll(delay) {
@@ -1293,6 +1304,7 @@
     if (!was && T) { const sx = screenX(F.id), d = DISP[REP[F.id]]; setOrigin(sx != null ? Math.max(PL, Math.min(PR, sx)) : PL, d ? d.y : LY[T.GROUPS[0].shared]); }
     st.d = 1; st.focus = F.id; $('tip').hidden = true;
     renderBrane(was);
+    if (narrow.matches) $('L1').scrollTop = 0;
     $('root').classList.add('zoomed'); setView('brane');
     renderCrumbs(); follow(appPath(F.brane, F.id)); $('root').focus({ preventScroll: true });
     return true;
@@ -1456,6 +1468,17 @@
   let suppressClick = false;
   $('stage').addEventListener('click', e => {
     if (suppressClick) { suppressClick = false; e.stopPropagation(); return; }
+    if (e.target.closest('#phone-back')) return out();
+    if (e.target.closest('#phone-earlier')) return openRail(railIdx() - 1);
+    if (e.target.closest('#phone-later')) return openRail(railIdx() + 1);
+    if (e.target.closest('#phone-activity')) {
+      $('activity-back').focus({preventScroll:true});
+      return $('tl').querySelector('[data-now]').scrollIntoView({block:'start'});
+    }
+    if (e.target.closest('#activity-back')) {
+      $('L0').scrollTop = 0;
+      return $('phone-activity').focus({preventScroll:true});
+    }
     const n = e.target.closest('#tl .node');
     if (n) return open(n.dataset.id);
     const qb = e.target.closest('[data-quiet]');
@@ -1516,7 +1539,7 @@
   // Scroll / trackpad: sideways (or plain wheel) pans; ⌘/Ctrl-wheel and pinch zoom around the pointer.
   let wq = null;
   $('stage').addEventListener('wheel', e => {
-    if (phoneWidth.matches || !T || st.d !== 0) return;
+    if (!T || st.d !== 0 || narrow.matches) return;
     e.preventDefault();
     const r = $('tl').getBoundingClientRect(), ax = Math.max(PL, Math.min(PR, (e.clientX - r.left) / scale));
     const unit = e.deltaMode === 1 ? 16 : 1;
@@ -1552,10 +1575,10 @@
   });
   const onRow = row => Object.keys(DISP).filter(id => DISP[id].row === row).sort((a, b) => DISP[a].x - DISP[b].x);
   document.addEventListener('keydown', e => {
-    if (e.target && e.target.tagName === 'INPUT') return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.closest?.('#episode-draft, #compose-btn'))) return;
     const k = e.key; let done = true;
     if (k === 'Enter' && e.target && e.target.id === 'home') return;   // the link's own activation: its click goes home
-    if (k === 'Enter' && e.target && e.target.closest && e.target.closest('[data-now], #mobile-needs')) return;   // queue links and buttons activate themselves
+    if (k === 'Enter' && e.target && e.target.closest && e.target.closest('[data-now]')) return;   // the now card's links and buttons activate themselves
     if (k === '?') toggle('keys');
     else if (k === ',') toggle('look');
     else if (k === '/') $('addr').focus();
@@ -1565,7 +1588,8 @@
     else if (st.d === 1 && k === 'ArrowDown') openRail(railIdx() + 1);
     else if (st.d === 1 && k === 'Home') openRail(0);
     else if (st.d === 1 && k === 'End') openRail(RAIL.length - 1);
-    else if (!T || (phoneWidth.matches && st.d === 0)) done = false;
+    else if (!T) done = false;
+    else if (k === 'Enter' && e.target.closest?.('.phone-view, .lhead, .rrow, .node, .cb')) done = false;
     else if (st.d === 0 && k === 'Enter') { if (st.focus) open(REP[st.focus] && isCluster(REP[st.focus]) ? REP[st.focus] : st.focus); }
     else if (st.d === 0 && (k === '+' || k === '=')) zoomStep(-1);
     else if (st.d === 0 && (k === '-' || k === '_')) zoomStep(1);
@@ -1587,7 +1611,6 @@
     if (done) e.preventDefault();
   });
   window.addEventListener('resize', fit);
-  phoneWidth.addEventListener('change', repaintNow);
 
   // Exposed for the screenshot driver.
   window.World = { open: label => { const n = Object.values(N).find(x => x.id === label || x.episode === label || x.label === label) || (T && N[T.aliasOf[label]]); if (n) open(n.id); return !!n; }, out: () => out(), rail: k => openRail(k),

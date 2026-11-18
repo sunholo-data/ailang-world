@@ -3,6 +3,7 @@ package surfacepage
 import (
 	"bytes"
 	_ "embed"
+	"html"
 )
 
 // Row 188 N2b: the surface app, the approved v3 working copy
@@ -13,7 +14,12 @@ import (
 // AppScript is /surface/app.js: the app, with its pure part exported for node.
 //
 //go:embed app/app.js
-var AppScript []byte
+var timelineScript []byte
+
+//go:embed app/composer.js
+var composerScript []byte
+
+var AppScript = bytes.Join([][]byte{timelineScript, composerScript}, []byte("\n"))
 
 // AppStyle is /surface/app.css: the working copy's stylesheet, its fonts
 // self-hosted under /surface/fonts/.
@@ -43,4 +49,13 @@ func inlineStyle(index, css []byte) []byte {
 	}
 	style := append(append([]byte("<style>\n"), css...), "</style>"...)
 	return bytes.Replace(index, []byte(AppStylesheetLink), style, 1)
+}
+
+// ShellWithDraftCatalog embeds only the presets explicitly exposed by the operator.
+func ShellWithDraftCatalog(catalog []byte) []byte {
+	if len(catalog) == 0 {
+		return AppShell
+	}
+	return bytes.Replace(AppShell, []byte(`id="episode-draft" data-catalog=""`),
+		[]byte(`id="episode-draft" data-catalog="`+html.EscapeString(string(catalog))+`"`), 1)
 }

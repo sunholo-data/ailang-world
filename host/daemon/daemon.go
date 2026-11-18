@@ -215,6 +215,7 @@ func isLoopbackHost(host string) bool {
 // Config is the resolved `ailang-worldd serve` configuration. It mirrors the
 // sketch's DaemonConfig plus the optional interpreter to archive at startup.
 type Config struct {
+	SurfaceDraftCatalog json.RawMessage // opt-in preset snapshot for the read-only composer
 	// DBPath is the world store database. The daemon takes SOLE writer
 	// authority over it for the lifetime of the process (Decision 2).
 	DBPath string
