@@ -493,7 +493,7 @@
     if (!need || !need.every(k => typeof b[k] === 'string' && b[k] !== '')) return UNREADABLE;
     if (b.outcome === 'address') return { address: true };
     if (b.outcome === 'refused') return typeof b.cli === 'string' && b.cli !== '' ? { panel: { head: '$ ' + b.cli, body: b.reason, copy: b.cli } } : { say: b.reason };
-    if (b.outcome === 'navigate') return b.href.startsWith('/surface/approve/mr-') || b.href.startsWith('/surface/decide/sha256:') ? { assign: b.href } : { say: 'refused: unexpected target' };
+    if (b.outcome === 'navigate') return b.href.startsWith('/surface/approve/mr-') || b.href.startsWith('/surface/decide/sha256:') || b.href.startsWith('/surface/confirm/vr-') ? { assign: b.href } : { say: 'refused: unexpected target' };
     if (b.outcome === 'terminal') return { panel: { head: '$ ' + b.cli, body: b.reason + '\nAt a terminal: ' + b.cli, copy: b.cli } };
     const shown = [b.text, b.json, b.stderr].filter(x => typeof x === 'string' && x !== '');
     if (shown.length !== 1 || (b.exit !== undefined && b.exit !== 1 && b.exit !== 3) || (b.stderr !== undefined) !== (b.exit === 1)) return UNREADABLE;

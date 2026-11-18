@@ -1,0 +1,199 @@
+{
+  "sprint_id": "w-world-address-bar-verbs-v3s5",
+  "design_doc": "design_docs/planned/w-world-address-bar-verbs-v3.md",
+  "design_revision": "r2 (quorum r1/r2 BLOCKED; controller carve-out r2; independent audit PASS 87, iteration 399); not reopened",
+  "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v3s5-sprint-plan.md",
+  "previous_sprint": "row 243 V3 S4 (iteration 403, PR #597, merge 00fa924f, judge PASS 91); closest analogues: the typed finish rig (newFinishFixture, m3Fixture), createMintRequest + awaitSurfaceApproval/pollSurfaceApproval with awaitEnv's fake clock, the A3 e2e real daemon (approve_surface_sshsig_e2e_test.go)",
+  "base_commit": "18c3d13231b39c7e2b0b437a964bce660d6739ec",
+  "design_measured_at": "994ba123 (every S5 cite re-measured at 18c3d132: none of the cited code moved; daemon.go GET /v1/objects/{ref} :1113 -> :1115; plan 1.2 C1-C2)",
+  "queue_row": 243,
+  "iteration": 404,
+  "phase": "V3",
+  "sprint": "S5 (the CLI and the bar)",
+  "sprint_number": 5,
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter404-row243-v3s5",
+  "branch": "sprint/world-iter404-row243-v3s5",
+  "authority": [
+    "D-WORLD-118 = A (controller at iteration 404: no OPEN row; --check valid, 105 rows; A since iteration 400, attended): S5 routable; F6/DraftOnly/B +15 never built",
+    "D-WORLD-109 = A (t.TempDir() stores, approvaltest keys, the rig's countingTerminal never /dev/tty, fakeFinishDispatch as gh, daemon.New served by Handler().ServeHTTP on a loopback request; no listener, real key, mint or publish)",
+    "D-WORLD-107 = A; D-WORLD-89 R1-R5; AM5 (the bar's finish reason, approve vr-)"
+  ],
+  "behaviour": "episode finish ... --confirm-on-surface (cmd/ailang-worldd/episode_finish_surface.go): refusal 1 with --dry-run (after F1), refusal 2 for an unsandboxed pinned check (before the check loop); after the commit, instead of the typed y: a world/verb-request/v1 from broker.FinishPromptText of the typed prompt's fields and canonicalFinishArgv, vr- + 8 random bytes, a 32-byte challenge, expires = now + 600, put under its own 3 s root (non-waiting writer), the prompt to the tty, the card links to stdout, a poll per awaitPollInterval through env.after until expires_at + verbLandGrace (10 s) never reading the tty, re-check (a) over its own digest/challenge/expiry (RecheckVerb, ApprovedBy), read-back (b) through worldReader.object; then the unchanged flow from finishStep(approve). The bar: finish reason names --confirm-on-surface; approve vr-<16 hex> navigates to /surface/confirm/<id>; app.js allowlist + /surface/confirm/vr-; CLI approve vr- -> exitUsage pointer. QUICKSTART 20 + CQ1. No schema, daemon route, .ail, Needs-you or CSP change.",
+  "cut": {
+    "cap_loc": 1400,
+    "measure": "git diff -M --numstat 18c3d132 HEAD -- cmd host docs (insertions + deletions); the same with no path filter (app.js and the golden are under host/)",
+    "design_raw_s5": 910,
+    "m12_compiled": 1277,
+    "m13_compiled": 59,
+    "m14_compiled": 62,
+    "measured": 1398,
+    "ratio": 1.54,
+    "margin": 2,
+    "fired": "no (S5-D1: M12 compiled first = 1,277; M13 = 59; M14 = 62; total 1,398 <= 1,400; the design cut M13 -> S6 measured and not taken; CQ1 'stays (S7)' read as the charter's QUICKSTART guardrail, S5-D3)",
+    "moved_out": {}
+  },
+  "planner_decisions": {
+    "S5-D1_no_cut": "M12 1,277 first, M13 59, M14 62, total 1,398 (margin 2)",
+    "S5-D2_flag_last": "M12a/M12b ship episode_finish_surface.go with no caller; M12c registers the flag with the rig that proves the whole path",
+    "S5-D3_cq1_s7": "S7 = the charter's QUICKSTART guardrail (executed-verbatim), not a sprint: CQ1 = TestQuickstartSection20MatchesTheFinishFlag, the quickstart_verbs_test.go pattern",
+    "S5-D4_rig": "the finish fixture (f.serve for report/session/commit/mcp/finish) + daemon.New over the rig's stores for /v1/objects/ and the card's POST; the fake clock restarts at the wall clock each run",
+    "S5-D5_argv": "fs.Visit lexical; --name for a true bool; --name value; --allow-failing per value in order; a bool set false omitted",
+    "S5-D6_links_first": "the links are read before the put, so no stored request is unshown",
+    "S5-D7_exit": "every refusal: fail(...) exit 1, commit kept, steps(sha); internal errors too",
+    "S5-D8_recheck_layers": "row digest/challenge/expiry == own, then RecheckVerb over own values, then ApprovedBy; Q-ROW-VALUES equivalent under the guard, Q-ROW-VALUES-NOEQ killed",
+    "S5-D9_cf12_safe": "resume-dispatch reuse skips CF6/CF7: the approval was re-checked and read back before the first dispatch, the record phase re-read it (finishDecisionScope), reuse is the unchanged typed branch (ExpiresAt >= now+300), F6 still runs",
+    "S5-D10_note5": "revocation after C15 -> the CLI refuses (fail-safe), unit + rig; re-run asks afresh (CF10)",
+    "S5-D11_jnow": "TestConfirmPOSTRecordsAtItsClock (new file) + CF3 read-back decision.now == row.consumed_at",
+    "S5-D12_judge403_2_4": "not taken (margin 2): Appendix C residuals",
+    "S5-D13_cf11": "CF11 = P1's last row: the typed path unchanged (every TestEpisodeFinish*, unedited)",
+    "S5-D14_timing": "fake clock everywhere; 20 s wall deadline on unit waits; one bounded nextWallSecond (<= 1 s) in DispatchesTheNamedDecision (daemon clock is the wall clock)",
+    "S5-D15_mutant_suite": "named row + suite-nostatic (behavioural subset of the package, 24 s for cmd); the whole cmd package per mutant (109 s) not affordable"
+  },
+  "scope": [
+    "cmd/ailang-worldd/episode_finish_surface.go (NEW)",
+    "cmd/ailang-worldd/episode_finish.go (flag, help, two refusals, the prompt hook)",
+    "cmd/ailang-worldd/approve.go (approve vr- arm)",
+    "host/verbs/lookup.go (finish reason, ApproveTarget vr-)",
+    "host/surfacepage/app/app.js (allowlist + /surface/confirm/vr-)",
+    "docs/QUICKSTART.md (section 20)",
+    "tests: cmd/ailang-worldd/episode_finish_surface_test.go, episode_finish_surface_rig_test.go, approve_verb_request_test.go, quickstart_finish_surface_test.go (NEW); host/daemon/surface_confirm_now_test.go (NEW); host/store/context_roots_test.go, host/verbs/lookup_test.go, host/surfacepage/testdata/verb-route.golden.json, host/daemon/surface_verb_outcomes_test.go, host/surfacepage/app_verb_test.go (edited)"
+  ],
+  "executor_lane": "as routed by the controller; Run 1: M12a, M12b, M12c; Run 2: M13, M14; apply patches, never retype",
+  "executor_form": "every sub-milestone is a unified diff in the plan's Appendix P, applied in order with /usr/bin/patch -p1 -E after a --dry-run (no deletion); acceptance via the plan's accept.sh; cumulative snapshots per plan section 7",
+  "estimate_loc": {
+    "production": 323,
+    "test": 1063,
+    "docs": 12,
+    "total_cumulative": 1398,
+    "cmd_host_docs_only": 1398
+  },
+  "milestones": [
+    {
+      "id": "M12a",
+      "title": "episode_finish_surface.go (no caller) + CF14, request fields, CF9, link rule, CF8 + two context roots",
+      "production": 283,
+      "test": 257,
+      "expected_cumulative_numstat": 540,
+      "run": 1,
+      "accept_parts": [
+        "fast"
+      ]
+    },
+    {
+      "id": "M12b",
+      "title": "CF4/CF5 wait, CF6 re-check, CF7 read-back, the unrecorded decision + judge-403 note 1 daemon pin",
+      "production": 0,
+      "test": 275,
+      "expected_cumulative_numstat": 815,
+      "run": 1,
+      "accept_parts": [
+        "fast",
+        "daemon"
+      ]
+    },
+    {
+      "id": "M12c",
+      "title": "--confirm-on-surface registered: help, refusals 1-2, prompt hook + the rig (CF1-CF3, CF5, CF6, CF10, CF12, CF13, CX21 CLI half)",
+      "production": 22,
+      "test": 440,
+      "expected_cumulative_numstat": 1277,
+      "run": 1,
+      "accept_parts": [
+        "fast",
+        "cmd"
+      ]
+    },
+    {
+      "id": "M13",
+      "title": "the bar's finish reason, approve vr- (bar + CLI), app.js allowlist, golden regenerated (CB1-CB4)",
+      "production": 18,
+      "test": 41,
+      "expected_cumulative_numstat": 1336,
+      "run": 2,
+      "accept_parts": [
+        "fast",
+        "daemon"
+      ]
+    },
+    {
+      "id": "M14",
+      "title": "QUICKSTART section 20 + CQ1",
+      "production": 0,
+      "test": 50,
+      "docs": 12,
+      "expected_cumulative_numstat": 1398,
+      "run": 2,
+      "accept_parts": [
+        "fast",
+        "docs",
+        "cmd"
+      ]
+    }
+  ],
+  "expected_snapshots": {
+    "M12a": "3/0/3",
+    "M12b": "4/0/4",
+    "M12c": "6/0/6",
+    "M13": "14/0/14",
+    "M14": "16/0/16"
+  },
+  "design_premises_found_false": [
+    "F1 'the finish rig with a real loopback daemon': the finish rig's daemon is memoryDaemon(f.serve); S5 adds daemon.New for /v1/objects/ and the POST",
+    "F3 'a second later' (W59) in a CLI rig: the daemon's clock is not injectable from cmd/; one bounded nextWallSecond",
+    "F4 daemon.go GET /v1/objects/{ref} :1113 -> :1115",
+    "F6 the golden's generator has no vr- query: two pre-existing tests outside design 7 edited (surface_verb_outcomes_test.go, app_verb_test.go)",
+    "F7 the CLI's 128 KiB check is Validate's V10",
+    "F8 no test enumerates the CLI's credentials-writer sites (only the daemon's)"
+  ],
+  "existing_tests_edited": [
+    "host/store/context_roots_test.go (+ putFinishVerbRequest, pollVerbRequest roots; design 7)",
+    "host/verbs/lookup_test.go (finish and start reasons exact; vr- ApproveTarget rows; design 7)",
+    "host/surfacepage/testdata/verb-route.golden.json (regenerated: + approve vr- row, finish reason; design 7)",
+    "host/daemon/surface_verb_outcomes_test.go (+ approve vr- case and golden query; F6)",
+    "host/surfacepage/app_verb_test.go (+ vr- navigate, /surface/confirm/x and /surface/confirm/mr- refused; F6)"
+  ],
+  "existing_tests_deleted": [],
+  "files_outside_design_section_7": [
+    "host/daemon/surface_confirm_now_test.go",
+    "cmd/ailang-worldd/approve_verb_request_test.go",
+    "cmd/ailang-worldd/quickstart_finish_surface_test.go"
+  ],
+  "not_touched": [
+    "tools/launchd/*",
+    "skills",
+    "world/*.ail",
+    "packages/",
+    "scripts/",
+    "cmd/world-publish/*",
+    "host/store, host/broker, host/approval, host/authority, host/daemon production files",
+    "confirm.js, approve.js, decide.js",
+    "every pre-existing episode_finish*_test.go"
+  ],
+  "carried_items": {
+    "cx21_cli_half": "TestFinishConfirmOnSurfaceDispatchesTheNamedDecision",
+    "judge403_note1_jnow_c14": "TestConfirmPOSTRecordsAtItsClock + TestFinishConfirmOnSurfaceOpensThePR (decision.now == row.consumed_at); reproduced surviving S4's tests",
+    "s1_note4_cf12": "TestFinishConfirmOnSurfaceResumeReusesTheApproval + S5-D9",
+    "s1_note5_revocation_window": "TestPollVerbRequestRechecks (revoked since) + TestFinishConfirmOnSurfaceKeepsTheCommit (rig)",
+    "judge403_notes_2_4": "not taken; Appendix C"
+  },
+  "mutants": {
+    "total": 118,
+    "killed": 111,
+    "equivalent": 7,
+    "not_a_mutant": 5,
+    "controls": 1,
+    "survived": []
+  },
+  "mutant_ledger": "/Users/voightkampff/.ailang/state/world-iter404/plan-scratch/mutants/ledger.txt",
+  "race_added_seconds": {
+    "cmd/ailang-worldd": 4.5,
+    "host/daemon": 0.11
+  },
+  "gates_script": "plan section 6 (gates.sh); base run FAILS: none (782 s)",
+  "verification": {
+    "roundtrip": "plan 1.2 C16",
+    "snapshots": "plan 1.2 C15",
+    "accept": "plan 1.2 C14",
+    "final_gates": "plan 1.2 C17"
+  }
+}

@@ -118,12 +118,12 @@ async function run(raw, fetchImpl) {
     assert.deepEqual(log, [['clear'], ['panel', act.panel]], q);
   }
   // Navigate: the two card prefixes (VP5's must-live).
-  for (const [q, href] of [[MR, '/surface/approve/mr-0123456789abcdef'], [REF, '/surface/decide/sha256:' + 'ab'.repeat(32)]]) {
+  for (const [q, href] of [[MR, '/surface/approve/mr-0123456789abcdef'], [REF, '/surface/decide/sha256:' + 'ab'.repeat(32)], ['approve vr-0123456789abcdef', '/surface/confirm/vr-0123456789abcdef']]) {
     const { act, log } = await run(q, golden(q));
     assert.equal(B(q).href, href); assert.deepEqual(act, { assign: href }); assert.deepEqual(log, [['clear'], ['assign', href]]);
   }
   // VP5: any other target is refused.
-  for (const href of ['https://evil/x', '/surface/model.json', '//evil/surface/approve/mr-']) {
+  for (const href of ['https://evil/x', '/surface/model.json', '//evil/surface/approve/mr-', '/surface/confirm/x', '/surface/confirm/mr-0123456789abcdef']) {
     const { log } = await run(MR, reply(200, JSON.stringify({ ...B(MR), href })));
     assert.deepEqual(log, [['say', 'refused: unexpected target']], href);
   }
