@@ -1533,7 +1533,7 @@
   });
   const onRow = row => Object.keys(DISP).filter(id => DISP[id].row === row).sort((a, b) => DISP[a].x - DISP[b].x);
   document.addEventListener('keydown', e => {
-    if (e.target && e.target.tagName === 'INPUT') return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.closest?.('#episode-draft, #compose-btn'))) return;
     const k = e.key; let done = true;
     if (k === 'Enter' && e.target && e.target.id === 'home') return;   // the link's own activation: its click goes home
     if (k === 'Enter' && e.target && e.target.closest && e.target.closest('[data-now]')) return;   // the now card's links and buttons activate themselves

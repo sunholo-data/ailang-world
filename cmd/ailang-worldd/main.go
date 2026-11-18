@@ -530,6 +530,11 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 	examplesDir := fs.String("examples-dir", "", "AILANG examples corpus for examples-search (default ~/.ailang/examples when it exists)")
 	surfaceIndex := fs.String("surface-index", "", "generated surface index outside --workspace-root (optional; may be built later)")
 	surfaceFollow := fs.String("surface-follow", "", "follow config outside --workspace-root; mutually exclusive with --surface-index")
+	var surfacePresets []string
+	fs.Func("surface-preset", "preset file to expose for read-only episode drafting (repeatable)", func(path string) error {
+		surfacePresets = append(surfacePresets, path)
+		return nil
+	})
 	var surfaceOrigins []string
 	fs.Func("surface-origin", "an origin the approval routes also answer at, https://<host>.ts.net[:port] (repeatable)", func(v string) error {
 		if _, err := approval.ParseCeremonyOrigin(v); err != nil {
@@ -639,6 +644,13 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		ExecNode: *execNode, ExecMaxOutputBytes: execMaxOutput,
 		WorkspaceModuleRoot: moduleRoot, WorkspaceEpisodeModuleRoots: episodeModuleRoots, WorkspacePackageCache: *packageCache,
 		ProofKeyFile: *proofKeyFile, ProofRequiredIdentities: proofIdentities}
+	if len(surfacePresets) > 0 {
+		cfg.SurfaceDraftCatalog, err = surfaceDraftCatalog(ctx, surfacePresets, cfg.ExecProfilesDir, cfg.WorkspaceRoot)
+		if err != nil {
+			fmt.Fprintln(stderr, "ailang-worldd serve: --surface-preset:", err)
+			return exitUsage
+		}
+	}
 	return serveResult(runDaemon(ctx, cfg, stdout), stderr)
 }
 

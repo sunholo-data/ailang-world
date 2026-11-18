@@ -297,3 +297,45 @@ a.brand:focus-visible { outline: 2px solid var(--hCtl); outline-offset: 2px; }
 /* v3 sets user-select: none on body, so ids, hashes and paths could not be copied. Controls stay unselectable. */
 body { user-select: text; -webkit-user-select: text; }
 button { user-select: none; -webkit-user-select: none; }
+
+/* A composition layer over the selected timeline or brane. */
+#compose-btn[hidden], #episode-draft [hidden] { display:none; }
+#compose-btn { white-space:nowrap; }
+#episode-draft { box-sizing:border-box; padding:0; width:min(1040px,94vw); height:min(800px,92dvh); max-width:100%; max-height:100%; color:var(--text); background:var(--bg); border:1px solid var(--ctl); border-radius:var(--r); font:16px/1.5 var(--font); }
+#episode-draft[open] { display:flex; flex-direction:column; }
+#episode-draft::backdrop { background:rgba(36,53,67,.24); }
+.draft-bar { display:flex; justify-content:space-between; align-items:center; padding:8px 18px; background:var(--hBar); color:var(--hText); }
+#episode-draft button { cursor:pointer; font:inherit; min-height:44px; padding:6px 14px; border:1px solid var(--ctl); border-radius:var(--r); color:var(--text); background:var(--bg); }
+.draft-scroll { padding:clamp(16px,3.5vw,44px); overflow:auto; overscroll-behavior:contain; }
+#draft-title { font-size:clamp(30px,3.8vw,48px); letter-spacing:-.045em; line-height:1.1; margin:0 0 24px; }
+.draft-grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); gap:32px; }
+.draft-boundary { border-top:3px solid var(--ran); background:var(--panel); padding:16px; }
+#episode-draft h2 { font-size:21px; margin:0 0 12px; overflow-wrap:anywhere; white-space:pre-wrap; }
+#episode-draft fieldset { margin:18px 0; padding:0; border:0; min-width:0; }
+#episode-draft legend,#episode-draft label[for] { display:block; font-weight:650; margin:10px 0 5px; }
+#episode-draft fieldset label { display:flex; align-items:center; gap:10px; padding:9px; cursor:pointer; min-height:48px; border-bottom:1px solid var(--line); }
+#episode-draft fieldset label:has(:checked) { background:var(--sel); box-shadow:inset 3px 0 var(--ctl); }
+#episode-draft input[type=radio] { accent-color:var(--ran); }
+#episode-draft small { display:block; color:var(--sub); }
+#episode-draft textarea,#episode-draft input:not([type=radio]) { width:100%; font:inherit; color:inherit; background:var(--bg); border:1px solid var(--ctl); border-radius:3px; padding:9px; }
+#episode-draft textarea { resize:vertical; }
+#episode-draft summary { cursor:pointer; padding:8px 0; }
+#episode-draft li,#episode-draft dd { overflow-wrap:anywhere; }
+#episode-draft .draft-primary { margin-top:20px; background:var(--cardBar); color:var(--cardBarText); }
+.draft-caution { padding:10px; border-left:3px solid var(--you); background:var(--youWash); }
+#draft-review dl { display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px 16px; }
+#draft-review dd { margin:0; }
+@media(max-width:700px){
+  #episode-draft { width:100%; height:100dvh; margin:0; border:0; }
+  .draft-grid { grid-template-columns:1fr; gap:12px; }
+  .hdr:has(#compose-btn:not([hidden])) { height:auto;flex-wrap:wrap;gap:6px;padding:6px 10px; }
+  .hdr:has(#compose-btn:not([hidden])) .addr { order:2;flex-basis:100%; }
+}
+.draft-lineage { display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 24px;padding:14px 0;border-block:1px solid var(--laneEdge);font:13px var(--mono); }
+.draft-base,.draft-child { display:inline-flex;align-items:center;gap:8px; }
+.draft-base i { width:14px;height:14px;border:2px solid var(--edge);border-radius:50%; }
+.draft-fork { width:34px;height:10px;border-bottom:2px solid var(--read);transform:skewY(-14deg); }
+.draft-child i { width:11px;height:11px;border:2px dashed var(--read);transform:rotate(45deg); }
+.draft-permissions { display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px 14px;margin:8px 0; }
+.draft-permissions dt { color:var(--sub); }
+.draft-permissions dd { margin:0; }

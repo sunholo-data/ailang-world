@@ -67,6 +67,7 @@
       <input id="addr" type="text" aria-label="Go to an address" spellcheck="false" autocomplete="off" placeholder="row-189@6 · shared@0ffbb9c · back · episode report &lt;episode&gt; · why &lt;target&gt;">
     </label>
     <span class="hmsg" id="hmsg"></span>
+    <button type="button" class="hbtn" id="compose-btn" hidden>New episode</button>
     <button type="button" class="hbtn mono" id="keys-btn" aria-label="Keyboard shortcuts" aria-keyshortcuts="?">?</button>
     <button type="button" class="hbtn" id="look-btn" aria-label="Appearance" aria-keyshortcuts=","><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"></circle><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M5.5 18.5l1.8-1.8M16.7 7.3l1.8-1.8"></path></svg></button>
   </header>
@@ -78,6 +79,28 @@
     <div class="tip" id="tip" hidden></div>
   </main>
 </div>
+<dialog id="episode-draft" data-catalog="" aria-labelledby="draft-title">
+  <header class="draft-bar"><span>World / Episodes</span><button type="button" id="draft-close">Close</button></header>
+  <div class="draft-scroll">
+    <h1 id="draft-title" tabindex="-1">New episode</h1>
+    <div class="draft-lineage" aria-label="Proposed branch"><span class="draft-base"><i aria-hidden="true"></i><span id="draft-parent"></span></span><span class="draft-fork" aria-hidden="true"></span><span class="draft-child"><i aria-hidden="true"></i>New episode</span></div>
+    <form id="draft-form">
+      <div class="draft-grid"><section>
+        <label for="draft-task">What should the agent accomplish?</label>
+        <textarea id="draft-task" required maxlength="8000" rows="5" placeholder="Describe the outcome and how you’ll know it’s ready."></textarea>
+        <fieldset><legend>Repository and base</legend><div id="draft-repos"></div></fieldset>
+        <fieldset><legend>Authority preset</legend><div id="draft-presets"></div></fieldset>
+      </section><section class="draft-boundary">
+        <h2>Agent authority</h2><div id="draft-authority"></div>
+        <fieldset><legend>Agent host</legend><div id="draft-hosts"></div></fieldset>
+        <label for="draft-model">Model override</label><input id="draft-model" maxlength="128" placeholder="Host default">
+        <label for="draft-ttl">Session lifetime in minutes</label><input id="draft-ttl" type="number" step="any" min="0.0166666666" required>
+      </section></div>
+      <button type="submit" class="draft-primary">Review episode</button>
+    </form>
+    <section id="draft-review" hidden></section>
+  </div>
+</dialog>
 <script src="/surface/surface.js" defer></script>
 <script src="/surface/app.js" defer></script>
 </body>
