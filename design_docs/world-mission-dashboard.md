@@ -1,27 +1,26 @@
-# World mission dashboard — iteration 403 (2026-11-18)
+# World mission dashboard — iteration 404 (2026-11-18)
 
-- **Done this fire:** row 243 **V3 sprint 4 LANDED** (PR #597, merge `00fa924f`; head and merge CI 3/3 on the first attempt; judge sonnet **PASS 91**, 0 blocking). An enrolled key can now confirm a stored `episode finish` request on the surface.
-  - **`POST /surface/confirm/<id>`** checks, in the design's order: headers, id, Host, Origin, size and a strict body; then the request's state, its digest, the finish refusals, the key's signature or passkey, and the binding.
-    - Nothing is written until every check passes.
-    - Then it records the finish approval in the world store and consumes the request (naming that approval) in one credentials transaction.
-  - **Failure windows are tested:** a failed world write or a failed consume answers 500 and the same body retried succeeds; a replay is refused (409); a request superseded mid-way is refused with one harmless orphaned decision.
-  - **The confirm page can submit:** a passkey (challenge = the message hash) or a pasted SSH signature; refusals are never shown as success, and the card is re-read after each answer.
-  - The exact-expiry-second test the 402 judge asked for is in.
-  - One new route; CSP unchanged; no CLI, schema or `.ail` change. Size: 1,097 of 1,400 lines.
-- **Next loop work:** row 243 V3 sprint 5 planner:
-  - `episode finish --confirm-on-surface`: the CLI creates the request, waits, re-checks and reads back the decision;
-  - the bar's `approve vr-…`;
-  - QUICKSTART §20;
-  - pin the timestamp of the confirmation's world decision (the judge's one surviving mutant).
+- **Done this fire:** row 243 **V3 sprint 5 LANDED** (PR #599, merge `48b8b6b6`; head and merge CI 3/3 on the first attempt; judge sonnet **PASS 91**, 0 blocking). `episode finish` can now wait for a key on the World card instead of a typed `y`.
+  - **`ailang-worldd episode finish … --confirm-on-surface`** stores a confirmation request, prints the card links, and waits (10 min + 10 s grace) without ever reading the terminal.
+    - Refused with `--dry-run`, and refused for an unsandboxed pinned check before any check runs.
+  - **Before it pushes, the CLI checks the confirmation itself:** the signature must be over its own request (digest, challenge, expiry) by an enrolled key, and the daemon's decision must approve exactly this scope.
+    - Every refusal keeps the commit and opens no pull request.
+  - **The bar:** `approve vr-<id>` opens the confirmation card; the CLI's `approve vr-…` points at the card; the finish reason explains `--confirm-on-surface`.
+  - QUICKSTART §20 documents it and a test runs it. The 403 judge's surviving mutant (the decision's timestamp) is now pinned.
+  - No route, schema or `.ail` change. Size: 1,398 of 1,400 lines.
+- **Next loop work:** row 243 V3 sprint 6 planner (the last V3 sprint):
+  - the *Needs you* line and link for pending confirmations;
+  - live-browser end-to-end runs: a seeded confirmation (XC2), and the real CLI waiting while the page confirms with a virtual authenticator (XC3);
+  - the 404 judge's small survivors (the `vr-` argument count, the page allowlist's exact prefix).
 - **Attended, for Mark when convenient:** the V1/V2 no-terminal check (QUICKSTART §19). No OPEN decision.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
 - **Routing this fire:**
-  - Planner: opus via Agent (65 min).
-  - Executor: haiku via Agent (12 min).
-  - Evaluator: sonnet via Agent (30 min, in its own worktree).
+  - Planner: opus via Agent (90 min).
+  - Executor: haiku via Agent (23 min).
+  - Evaluator: sonnet via Agent (52 min, in its own worktree).
   - Codex unusable at preflight (probe rc 75). Metered $0.
 - **Instrument notes:**
   - Self-notices still read no watermark (rc 2; the #574/#524 files are absent).
-  - `verify_go` was fully green this sprint (no load-sensitive red).
-  - 402's slot was reaped at Gate 5 after its report, message and memory had all landed — nothing lost.
+  - `TestSeToolsRunBenchmarkTasksEndToEnd` (host/daemon) is flaky at the base too: a stray `GET` reaches its mock, 1 of 3 runs alone. Not this sprint; CI was green.
+  - 403's slot was reaped at Gate 5 (second in a row) after its report and record had landed — nothing lost.
 - **Bookkeeping thread:** #574.
