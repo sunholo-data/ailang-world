@@ -1,21 +1,22 @@
-# World mission dashboard — iteration 408 (2026-11-18)
+# World mission dashboard — iteration 409 (2026-11-18)
 
-- **Done this fire:** row 243 **V4 sprint 2 LANDED** — PR #609, merge `cee5174c`, head and merge CI 3/3. 1,394 lines. Independent judge sonnet **PASS 92**, 0 blocking.
-  - **What it adds:** the exact thing a key holder will sign to approve an operator action: a closed `world/operator-action/v1` envelope, a strict decoder, and a 97-byte signed message under its own SSHSIG namespace.
-  - **The key law:** `ConfirmOperatorAction` (for the daemon) and `CheckOperatorAction` (for the runner) judge an SSH-key or passkey approval of that action. Each check is independent: user verification, origin, namespace, enrollment, revocation, the passkey counter, the challenge, expiry and every bound field.
-  - **Your answers still gate it:** nothing answer-dependent is built, and D-WORLD-119/120 stay open.
-  - **Not wired:** no route, page, schema or `.ail` change; nothing in production calls it yet.
-  - **Parked by size:** the `host/authority` adapters (260 lines) are a compiled patch for a short S2b. The judge says they must land before anything calls the law.
-- **DECISIONS FOR MARK (still open, unchanged from 406):**
-  - **D-WORLD-119:** may the app start and launch a confined episode through the runner after a key approval? Recommendation A. Default: only S1–S2 get built.
-  - **D-WORLD-120:** may finish run without a terminal (key for local prep, then key for the exact PR)? Recommendation A. Default: finish keeps needing a terminal.
-- **Next loop work:** row 243 **V4 sprint 2b**: the parked authority adapters and two judge pins. It needs no answer. After S2b, V4 waits on D-WORLD-119.
+- **Done this fire:** row 243 **V4 sprint 2b LANDED**. PR #611 merged at `07b30a5e`, with head and merge CI 3/3 green on the first run. 526 lines. The independent judge (sonnet) gave **PASS 92** with 0 blocking findings.
+  - **What it adds:** the two judges in `host/authority` that turn an operator approval into a verified proof. One is for the daemon confirming an approval, one is for the runner rechecking it.
+  - **How they decide whose key it is:** both read the approving key from the credentials store, never from whoever calls them.
+  - **Nothing else can mint a proof:** outside that package, code cannot construct a verified proof.
+  - **Last sprint's open judge notes are closed:** the aliasing bug is pinned, and the runner's lifetime check is pinned to what the design says.
+  - **Not wired yet:** no route, page, schema or `.ail` change, and nothing in production calls the judges.
+- **DECISIONS FOR MARK (still open, unchanged from 406). These now block all loop work on row 243:**
+  - **D-WORLD-119:** may the app start and launch a confined episode through the runner after a key approval? Recommendation A. Every remaining V4 sprint (S3–S12) waits on this.
+  - **D-WORLD-120:** may finish run without a terminal (key for local prep, then key for the exact PR)? Recommendation A. S9–S11 also wait on this.
+- **Next loop work:** none that needs no answer. If D-WORLD-119 is answered A or B, the next sprint is **V4 sprint 3** (schema 10 for operator actions, receipts and CAS). Unanswered, the next fire files a rule-(d) block report.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
 - **Routing this fire:**
-  - Planner: opus via Agent (37 min). Executor: haiku via Agent (2 min). Judge: sonnet via Agent (15 min), own worktree.
-  - Gates took 630 s and every leg was green except `verify_go`. Its red was a 10 s deadline in an untouched package under load, and it passed alone. Metered $0.
+  - Planner: opus via Agent (28 min). Executor: haiku via Agent (1 min). Judge: sonnet via Agent (13 min), in its own worktree.
+  - Gates took 610 s and ran before the judge's drills. Every leg was green except `verify_go`, whose red was in an untouched package under load and passed alone. Metered $0.
 - **Instrument notes:**
-  - Self-notices still read no watermark (the #574/#524 files are absent).
-  - PR CI went red once on the known `host/broker` flake; the re-run was green.
-  - My own round-trip script had a `set -u` bug that made every comparison read as a mismatch. It is fixed and was re-run with a control.
+  - Self-notices still find no watermark (the #574 and #524 files are absent).
+  - The parked patch from sprint 2 left 13 mutants alive when tested. The new tests kill them all.
+  - The judge's top note was that a `println` survives the writes-nothing test. I reproduced it and carried it to sprint 3.
+  - The `host/daemon` setools stray-GET flake has now failed in three recorded iterations, so it is filed as row 261 under rule (d).
 - **Bookkeeping thread:** #574.
