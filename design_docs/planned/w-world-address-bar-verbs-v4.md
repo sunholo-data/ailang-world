@@ -1,6 +1,6 @@
 # w-world-address-bar-verbs-v4 — start and finish an episode from the World app
 
-- **Status** Planned r0. Designed in iteration 406, 2026-11-18, queue row 243, parent phase V4.
+- **Status** Planned **r1** (quorum r1 BLOCKED 1/3 on r0 `5d5a50d6`; r1 applies the reviewers' fixes and the controller's E2 measurement; changed text marked **[r1]**). Designed in iteration 406, 2026-11-18, queue row 243, parent phase V4.
 - **Parent** [w-world-address-bar-verbs](w-world-address-bar-verbs.md), with [V3](w-world-address-bar-verbs-v3.md) and [its S6 handoff](w-world-address-bar-verbs-v3s6-sprint-plan.md#appendix-c--after-this-sprint-s6s-close-the-v3-exit).
 - **Authority** D-WORLD-89 R1–R5, D-WORLD-94, D-WORLD-107 = A, D-WORLD-109 = A, D-WORLD-115 = A, D-WORLD-118 = A (W02). Decisions requested in §10.
 - **Designer lane** `codex:gpt-6.2-sol`.
@@ -34,7 +34,7 @@ Start with create-and-launch, then implement finish. A confined browser launch e
 |---|---|---|
 | P1 | Parent Q4 says the daemon spawns nothing | No direct process launch was found in the daemon package, but the daemon brokers workspace execution on the host. Q4's distinction is between brokered tools and operator process supervision (W03). |
 | P2 | Parent §0.3 suggests a small wrapper and interactive hand-off | The service supplies one GUI LaunchAgent for `serve`; the plugin's New World agent action does a typed mint and can select an unconfined fallback. Neither is a durable operator runner (W04, W08). |
-| P3 | RK5 describes the risk as missing `gh` auth in a launchd daemon | The installed job on the Studio is a user LaunchAgent, and its actual PATH cannot find `gh`. An explicit Homebrew PATH finds it, but its clean-env auth probe did not establish usable credentials. Git push auth is a separate preflight (W05–W07, W20). |
+| P3 | RK5 describes the risk as missing `gh` auth in a launchd daemon | **[r1]** The installed Studio job is a user LaunchAgent whose PATH misses `gh` (W05–W07). W07's auth result was **UNINFORMATIVE UNDER SANDBOX**. W33 supersedes it with read-level E2 PASS and an ADMIN permission signal using the Homebrew PATH and HTTPS Keychain helper. Actual write permission and branch rules stay observed outcomes of the attended finish (W20, W33). |
 | P4 | Parent §10 expects the start request prompt with a launch preset | `--request` refuses launch presets, launch and headless. A3's signed mint and the preset mint with a start record enter different functions and transactions (W09–W12). |
 | P5 | V3 §0.4 / Appendix C call for running the CLI and relaxing F1 in surface mode | F1 is still real, now at lines 89–94. Dropping F1 or adding the flag alone would let the application run checks and commit before the first key, and would allow reuse of a finish approval from a recorded dispatch failure. Use a private checked entry and a separate preparation proof (W16–W18). |
 | P6 | Appendix C describes the V3 card and waiter as the finish hand-off | The approval row records a confirmation, and the waiter rechecks in process. There is no worker claim, checkpoint for the in-progress commit or dispatch, or exact post-timeout PR identity check in that path. Preserve its signature law, add durable ownership and recovery (W15, W17, W19–W21). |
@@ -52,12 +52,12 @@ Start with create-and-launch, then implement finish. A confined browser launch e
 
 | Option | Identity, environment and lifecycle | Learns of work | Reuse and blast radius |
 |---|---|---|---|
-| A. Daemon spawns | Same UID as today's GUI job. The fixed PATH and demonstrated auth gap would still need explicit configuration. Service start/restart/upgrade would own browser, world writer and worker lifetime (W04–W07). | In-process after durable confirmation; still needs a claim and effect journal. | Reuse daemon approvals and launch seams (W03, W14, W15). A malformed dispatch or hung child would share the World writer's process, shutdown and environment. |
+| A. Daemon spawns | **[r1]** Same UID as today's GUI job. The measured PATH gap requires explicit configuration, and the process needs its own auth readiness check (W04–W07, W33). Service start/restart/upgrade would own browser, world writer and worker lifetime. | In-process after durable confirmation; still needs a claim and effect journal. | Reuse daemon approvals and launch seams (W03, W14, W15). A malformed dispatch or hung child would share the World writer's process, shutdown and environment. |
 | **B. Separate user LaunchAgent** | Opt-in through attended `service`. Same UID, independent job, explicit trusted HOME/PATH and per-tool configuration. Launchd restarts it, and paired upgrades drain and fail closed on mismatch. | Poll actions in the local credentials database; heartbeat, claims and result checkpoints use bounded transactions. Browser sees the daemon's read model. | Reuse service plist/controller, status/doctor, credential locking, launch and finish seams (W04, W10, W14–W15, W17, W20). Its UID and GitHub credentials still have Mark's reach. Process separation limits accidental coupling to the serving daemon. |
 | C. herdr plugin owns runner | User UID with herdr's service and pane environment, which requires measurement of HOME, PATH, Git and `gh`. Plugin/server startup or restart would own execution and availability, and CLI/plugin compatibility would join upgrade. | Would need a persistent plugin watcher and the same verified durable claims. Popup and pane tracking supply UI context only (W08, W22). | Reuse pane creation/run and metadata. The existing popup mints interactively and offers fallback; widening that entry point would couple headless work to ambient pane configuration (W08). |
 | D. PIN a manual user process | Same terminal login credentials at start; operator manually supervises and restarts it, and binary skew stays possible. | Could poll the same table. | Useful for a synthetic smoke fixture. A job that requires a terminal to keep the product available misses the requested service behavior. |
 
-Choose **B**. Studio evidence establishes that the GUI service installation model is available, and the inherited PATH is inadequate. Adding Homebrew to PATH still leaves authentication unverified. Gate finish on E2 and launch on E3. Using B with a separate job preserves Q4's process boundary and makes herdr optional for the headless exit.
+**[r1]** Choose **B**. Studio evidence establishes that the GUI service installation model is available, and the inherited PATH misses `gh`. Adding Homebrew to PATH yielded read-level E2 PASS in the controller's LaunchAgent-descended probe (W33). Gate finish on the runner's own E2 readiness check and launch on E3. Using B with a separate job preserves Q4's process boundary and makes herdr optional for the headless exit.
 
 ### 2.2 Lifecycle and configuration
 
@@ -68,6 +68,8 @@ Choose **B**. Studio evidence establishes that the GUI service installation mode
 - NEW heartbeat record in the same private store carries protocol/build, lease generation, readiness per verb and a last-seen time. Poll every 2 s with bounded reads; after 10 s stale, refuse new surface actions. Heartbeat is liveness only. A missed heartbeat cannot release execution ownership or prove a child died. Hold one kernel-backed runner lock per served credentials store and one effect-exclusion lock per episode; terminal start/launch/finish also honor the same per-episode lock for managed episodes and release it while waiting only if the durable phase prohibits conflicting writes.
 - Precompute a small NEW read-only catalogue from configured presets and completed/eligible episodes at boot and on a fixed timer, independent of HTTP requests. Use bounded existing read/health and Git seams. Publish only a redacted, complete, short-lived immutable generation through the credentials store. A browser command never triggers a pre-key subprocess. Snapshot age, claimed runner exclusivity, credential status and software identities are checked again at execution. Serve no arbitrary paths or live shell environment.
 - `doctor` and service status gain a NEW companion diagnostic for absent, stale, schema/build conflict, version ready and auth blockers. Per-verb readiness separates agent runtime from GitHub. Output names a remedy and reports no token, signed artifact or task.
+- **[r1]** Run the runner's E2-equivalent finish readiness check at install and before every finish. If readiness fails at runtime, report finish `blocked: github-auth` and direct the operator to repair the failed PATH, GitHub login or Git credential helper in the attended service-runner setup and re-run readiness. Refuse to claim finish actions. Start and launch remain available.
+- **[r1]** Terminal start/launch/finish acquire the per-episode exclusion lock non-blocking with a NEW ≤5 s bound. On contention they refuse immediately under the existing conflict classification, naming the active action id and the attended service-runner remedy, and never queue or sleep.
 
 ## 3. Durable actions and cryptographic admission
 
@@ -77,9 +79,9 @@ Recommend a **new credentials schema 10** and NEW `operator_actions` table. V3's
 
 - NEW action id `oa-` plus 32 lowercase hex digits, challenge of 32 random bytes, signed request expiry 600 s, exact canonical resolved-intent bytes and digest, phase generation, owner nonce, linked V3 confirmation id if any, enrolled approver identity and artifact, checkpoints and redacted outcome. NEW browser operation id is a random 128-bit value retained across retries. Use a review digest over semantic inputs before assigning an action id or challenge and a separate signature digest over the final envelope. Unique kind/episode/review digest for active actions, unique operation id with exact review-digest equality, and one active action per episode. Different bytes using an existing operation id conflict. Identical independent taps on the same frozen intent link the same active or completed action. Expired and cancelled intents require an explicit fresh review; the dedup keys and permanent effect receipts survive pruning and are never repurposed.
 - Signed schema NEW `world/operator-action/v1`; message NEW `world-operator-action/v1`, NUL, 32-byte canonical digest, 32-byte challenge, big-endian 8-byte expiry; NEW SSHSIG namespace `world-operator-action@sunholo`. Canonical action includes schema, action id, kind, episode and served store identity, command words and admitted options, frozen resolution, and displayed review bytes or their hash reconstructed by both sides. Closed typed object, deterministic field order, reject duplicate/unknown keys, trailing JSON, invalid UTF-8, NUL and over-limit input before canonicalization. Compare using canonical bytes. NEW limit 128 KiB resolved action and a separate 8 KiB UTF-8 task cap.
-- Reuse existing key lookup, SSHSIG, WebAuthn assertion primitives and the card ceremony structure (`host/authority/judge_verb.go:30,44,63,82,107`; `host/daemon/surface_confirm.go:97–207`, W15, W26). NEW typed verified-action proof can originate only in these judges. Preserve UV, exact RP/origin, namespace, enrollment/revocation checks and monotonic passkey use. Signature is over action identity, kind and the exact review, never over the raw page payload alone.
+- **[r1]** Reuse existing key lookup, SSHSIG, WebAuthn assertion primitives and the card ceremony structure (`host/authority/judge_verb.go:30,44,63,82,107`; `host/daemon/surface_confirm.go:97–207`, W15, W26, W36). NEW typed verified-action proof can originate only in these judges. Preserve UV, exact RP/origin, namespace, enrollment/revocation checks and monotonic passkey use. Signature is over action identity, kind and the exact review, never over the raw page payload alone.
 - Daemon verifies, then atomically changes requested → confirmed and advances approver use/counter with CAS on id, digest, generation and unexpired state. A duplicate confirmed gesture returns the existing action link using a fresh read, with zero second counter update and zero second claim. Runner derives its own bytes from frozen values and revalidation, recomputes the signed message, judges the stored artifact against the current key and compares the approver identity before any effect. Recheck expiry and revocation again at each new effect boundary. If checks exhaust the preparation authorization before commit, stop with their receipts. Reauthorization can approve a successor with identical worktree and check inputs and explicitly carried receipts. No second check run is implicit. The transaction that mints start rechecks proof, approver and owner with a fresh clock. A counter already advanced at confirmation is the expected observation, never advanced a second time.
-- Claim by transactional compare-and-swap from confirmed to claimed, with matching current runner generation, same digest, fresh approval and no owned active action for the episode; exactly one affected row is required. All subsequent writes CAS the action/step version and owner. Two runners are also excluded by the kernel lock. Recovery takes that lock and verifies that any recorded child or reservation is quiescent before changing owner; a lost lock or lease never authorizes a second child. A live matching child is observed, an unprovable child is uncertain.
+- **[r1]** Claim by transactional compare-and-swap from confirmed to claimed, with matching current runner generation, same digest, fresh approval and no owned active action for the episode. Finish claim also requires a passing runner E2-equivalent check before the CAS (§2.2). Exactly one affected row is required. All subsequent writes CAS the action/step version and owner. Two runners are also excluded by the kernel lock. Recovery takes that lock and verifies that any recorded child or reservation is quiescent before changing owner; a lost lock or lease never authorizes a second child. A live matching child is observed, an unprovable child is uncertain.
 - Daemon routes create and confirm requests, read stable status and expire untouched work logically. Runner claims, verifies, dispatches, renews liveness, checkpoints and reconciles. Browser tab close is a read disconnect. No cancellation on disconnect and no unsigned cancel/deny. NEW attended service cancel marks an unstarted action cancelled by CAS; an in-flight effect first goes through bounded stop/reconciliation. Cancellation never deletes a worktree, commit or PR. Once a prep/launch dispatch is accepted, its signed expiry limits **new** effects, not the execution of an already-authorized bounded child or observation/writeback of its outcome.
 
 ### 3.2 States and restart
@@ -140,13 +142,12 @@ Option 1 is drive the existing A3 mint request and run CLI launch afterwards. Th
 Options are broad tty removal, a service pseudo-tty, and a narrow internal capability. Choose the narrow capability. A pseudo-tty satisfies a transport predicate while adding no key proof, and broad removal would allow V3's pre-approval local effects from CI (W16–W18).
 
 1. NEW surface prep action signs the reviewed source report/base, episode, preset and exact worktree input manifest: expected branch/HEAD, pinned remote and target, changed path digests including untracked file contents, checks, check provenance, protected/unattributed paths, planned draft readiness and local commit intent. Read-only preview comes from the runner's periodic snapshot. Stale manifest or active agent causes a refusal. Reject symlinks or special files in dirty inputs for this slice and cap preview costs. Pin or filter Git hooks, helpers, filters and config to the approved execution boundary so a staged path cannot pick a program from browser or episode data. Detect unexpected check-generated changes before signing the PR card.
-2. Runner verifies prep proof before opening the NEW private internal entry of `runEpisodeFinishWith` (`episode_finish.go:63`, W16). F1 remains first on all public invocations, including the flag, and typed mode still reads the terminal. Internal entry requires a claimed, current, locally verified finish-prep capability and a surface-only mode. No public flag or env bypass. Supply safe structured progress output and no tty reader. Do the sandboxed checks and commit, applying §3.3. Probe `seam.Prepare` / Git auth as the runner **before** mutation in V4, even on resume. No unsupported flags and no unsandboxed checks in any runner mode.
+2. **[r1]** Runner verifies prep proof before opening the NEW private internal entry of `runEpisodeFinishWith` (`cmd/ailang-worldd/episode_finish.go:63`, W16, W37). F1 remains first on all public invocations, including the flag, and typed mode still reads the terminal. Internal entry requires a claimed, current, locally verified finish-prep capability and a surface-only mode. No public flag or env bypass. Supply safe structured progress output and no tty reader. Do the sandboxed checks and commit, applying §3.3. Probe `seam.Prepare` / Git auth as the runner **before** mutation in V4, even on resume. No unsupported flags and no unsandboxed checks in any runner mode.
 3. At the V3 prompt, issue the real canonical `VerbRequest` from actual commit/body and canonical argv using the existing helper (W15–W18). Persist its reserved id/challenge/expiry and exact bytes before issuance. Suspend on the durable `awaiting PR confirmation` state. Daemon still owns V3 key verification and world decision/credential consume. When a V3 row is linked to an action, a NEW callback verifies that the action is live, in the awaiting phase and generation, under the same confirmation/cancellation arbitration. Check again during credentials consume. Standalone V3 cards have no linked action check. If approval fails to land the card is retriable at its V3 boundary before expiry. Runner restarts from its own checkpoint, never takes expected bytes from the row being verified.
-4. Use `pollVerbRequest`, `authority.RecheckVerb` and `readBackFinishDecision` (W15/W18) with the runner's own bytes. Verify generation, approval timestamps, exact V3 id and key, decision scope and expiry; recheck F6 and all pinned dispatch data immediately before external effects. Hold the episode mutex or atomic reservation across local revalidation and write. Do not import reusable typed or another action's V3 approval from `finishReusableApproval` (W19). Keep the 610 s observation bound, with actual key authorization ending at the approval deadline. NEW write admission uses the earlier applicable deadline, never grace to authorize a new remote write. A confirmed V3 action can dispatch after the preparation proof expires only for the exact durable commit, as authorized by the independent V3 proof. An in-flight remote request can still be reconciled after expiry.
+4. **[r1]** Use `pollVerbRequest`, `authority.RecheckVerb` and `readBackFinishDecision` (W15/W18) with the runner's own bytes. Verify generation, approval timestamps, exact V3 id and key, decision scope and expiry; recheck F6 and all pinned dispatch data immediately before external effects. Hold the NEW per-episode exclusion lock (§2.2) or atomic reservation across local revalidation and write. Do not import reusable typed or another action's V3 approval from `finishReusableApproval` (W19). Keep the 610 s observation bound, with actual key authorization ending at the approval deadline. NEW write admission uses the earlier applicable deadline, never grace to authorize a new remote write. A confirmed V3 action can dispatch after the preparation proof expires only for the exact durable commit, as authorized by the independent V3 proof. An in-flight remote request can still be reconciled after expiry.
 5. Reuse typed Git/GitHub operations through the dispatch seam, adding checkpoints and exact read-only verification for the runner. A V3 CLI operation or external actor that has already created a mismatched PR blocks this action. Reconcile before any retry, require a fresh key to authorize a later permitted write, and leave uncertain outcomes locked out when prior execution cannot be excluded. Finish retains the commit for expired or declined remote approval. Expose one result including PR URL, record and credential cleanup status.
-
-7. The current record route validates approval expiry and writes the used head before the episode head (W28). Runner recovery therefore needs NEW private `record-observed` admission on the operator-proof route. Use the existing decision scope read and a NEW durable verified dispatch receipt binding action, exact PR, proof and start times. The daemon checks the recorded outbound reservation began under a live key and validates the same receipt against scope/episode. Its NEW store helper uses one durable transaction for both registry heads, following the store primitives in W28. The handler is reachable only with an operator proof plus matching runner receipt. It allows post-expiry recording of already-issued effects, then reuses exact-record/credential read-back. It may repair a prior matching used-head-only state by CAS if no newer episode head intervened. A mismatching head blocks with the PR link and attended reconciliation.
-6. Mark's attended exit exercises start, launch, `episode report <ep>`, finish prep, V3 PR approval and the PR link from one browser. The review includes explicit check outcomes and protected changes. V4 opens a PR; merge, changing ready state on an existing PR and GitHub review actions are separate authority.
+6. **[r1]** The current record route validates approval expiry and writes the used head before the episode head (W28). Runner recovery therefore needs NEW private `record-observed` admission on the operator-proof route. Use the existing decision scope read and a NEW durable verified dispatch receipt binding action, exact PR, proof and start times. The daemon checks the recorded outbound reservation began under a live key and validates the same receipt against scope/episode. Its NEW store helper uses one durable transaction for both registry heads, following the store primitives in W28. The handler is reachable only with an operator proof plus matching runner receipt. It allows post-expiry recording of already-issued effects, then reuses exact-record/credential read-back. It may repair a prior matching used-head-only state by CAS if no newer episode head intervened. A mismatching head blocks with the PR link and attended reconciliation.
+7. **[r1]** Mark's attended exit exercises start, launch, `episode report <ep>`, finish prep, V3 PR approval and the PR link from one browser. The review includes explicit check outcomes and protected changes. V4 opens a PR; merge, changing ready state on an existing PR and GitHub review actions are separate authority.
 
 ### 4.4 Interactive hand-off
 
@@ -211,6 +212,7 @@ not count. Refusals assert both their public classification and absence of new e
 | Pending row missing, read-only DB busy, counter CAS lost, writer lock or daemon death | Missing, retry or confirmed result only when durable | `TestOperatorConfirmCrash` split-writes state and counter, or maps store error to success. |
 | Timeout, cancel wins CAS or runner offline between confirm and claim | Expired, cancelled or pending until fresh runner | `TestOperatorClaimBeforeExpiry` ignores each of expiry, cancellation and readiness. |
 | Two runners or stale generation | Exactly one claim and reservation | `TestOperatorClaimRace` drops exclusive lock and separately removes transactional CAS/current-owner comparison. |
+| **[r1]** Terminal command while a runner holds the episode lock | Immediate refusal naming the active action id and attended service-runner remedy under the existing conflict classification, with zero new effect calls | `TestOperatorTerminalExclusion` removes the terminal lock check or substitutes an unbounded acquisition. |
 | Forged DB row / mismatch after claim | Refused, no effects | `TestOperatorRunnerRechecks` trusts row digest, stored approver or daemon status without proof. |
 | Process restart before reserve | Recheck and recover untouched claim | `TestOperatorRecoverUntouched` marks a pristine claim orphaned or skips proof on recovery. |
 | Process restart after reserve / live child / unknown child | Adopt matching child, or uncertain lockout | `TestOperatorRecoverReserved` reruns after heartbeat timeout or ignores birth identity. |
@@ -290,6 +292,7 @@ The runner's new branches below are additional.
 | Upgrade with active child, bad swapped binary or failed paired restart | Drain or stop with receipt, rollback only to schema-compatible pair | `TestOperatorServiceUpgrade` skips drain, erases reservation, or starts incompatible reader. |
 | Correct synthetic installation and stop/uninstall | Only companion lifecycle changes, retain action evidence | `TestOperatorServiceWriteScope` changes base service path or deletes persistent state. |
 | Runner permission/environment/credential fields forged by browser | Refused, no environment changes | `TestOperatorServiceEnvironment` allows browser-sourced vars or logs fake secrets. |
+| **[r1]** Confirmed finish action while the runner's E2-equivalent check is failing | Finish reports `blocked: github-auth` with the remedy. Zero finish claims or effects. Start and launch remain available. | `TestOperatorFinishReadiness` claims a finish action while readiness is failing. |
 | Fresh schema, upgrade from v9, legacy reader and migration failure | Parity with existing rows; incompatible reader refuses; failed tx rolls back | `TestOperatorSchema10` omits a migration, accepts newer store or partially commits DDL. |
 
 ### 5.6 Judge-405 pins and package gates
@@ -326,7 +329,7 @@ new usage surface, plus the repository verification gates (W01).
 | Forgery, revoked enrollment, wrong key type/counter | Independent runner recheck against the current enrolled key; signed ceremony with UV; counter recorded once by daemon and checked atomically | ConfirmAuthenticity, ConfirmRevocationCounter, RunnerRechecks |
 | Replay, stale timestamp, cross-episode/action/argv/preset/store | Domain-separated canonical message, signed identity and random challenge, absolute expiry and CAS; V3 proof linked to one exact frozen action | ConfirmBinding, ConfirmExpiry, ConfirmReplay, FinishOwnBytes |
 | Page tries to act without a key / typed y | Only inert request writes; bounded same-origin POST; guard before effect lock or helper; action state is not authority | BarStartReview, ConfirmProof, FinishNoProof |
-| CSRF, origin reflection, DNS rebinding, cross-site display | `approvalRoute` allowlist (`surface_approve.go:58–85`) plus explicit exact Origin/fetch site/JSON guards (`surface_approve_guard.go:41–64`, W26). No CORS or state-changing GET. Inherit CSP on cards (`surface_page.go:19–23`, W26). | Misdirected, CrossOrigin, FetchSite, MediaType, UnsupportedMethod |
+| CSRF, origin reflection, DNS rebinding, cross-site display | **[r1]** `approvalRoute` allowlist (`surface_approve.go:58–85`) plus explicit exact Origin/fetch site/JSON guards (`surface_approve_guard.go:41–64`, W26, W35). No CORS or state-changing GET. Inherit CSP on cards (`surface_page.go:19–23`, W26). | Misdirected, CrossOrigin, FetchSite, MediaType, UnsupportedMethod |
 | Runner tricked into different argv / shell code | Closed command variants and immutable resolved typed plan, fixed pipe of argument vectors. Interactive wrapper takes only a validated id/ticket. | GrammarOptions, LiteralTask, ConfirmBinding, HerdrHandoff |
 | TOCTOU after approval | Per-episode exclusion, compare immutable bytes and live authorities before each new effect, effect-specific identity and conservative recovery. A same-UID operator remains within the trusted local boundary. | StartChanged, FinishStale, FinishPreDispatchFence, ClaimRace |
 | Malicious child or arbitrary subprocess | Companion user UID has Mark's reach. Keep secrets out of checked-out repo, keep existing sandbox and model confinement, per-tool env allowlist, noninteractive auth and owner-validated absolute binaries. | StartOnce, FinishAuth, FinishWorktreeFence |
@@ -350,12 +353,14 @@ package cannot own an OS process credential, its SQLite transaction or a browser
   helper files if a planned receipt needs them. Keep changes partitioned by package responsibility.
 - `docs/QUICKSTART.md` operator setup/status, start and finish usage, fake examples and an attended
   hook. Update only the affected call paths and their runbook checks.
-- PR **#604**, attended `world/mobile-needs-you`, open/unmerged per operator brief, lists
-  `host/surfacepage/app/{app.js,app.css,index.html}`. Its hunks are unverified. Keep S1 test-only
-  against HEAD; develop the action card as separate assets and fixtures. Touch the shared app shell
-  in S8 only after #604 is resolved and the controller has remeasured the overlap, or after the
-  controller explicitly sequences V4 first. No design dependency on #604 content. Avoid CSS or
-  index-shell changes in V4 unless porting the approved hooks proves necessary.
+- **[r1]** PR **#604**, attended `world/mobile-needs-you`, open/unmerged per operator brief, changes
+  `host/surfacepage/app/{app.css,app.js,index.html}` at head `b9791084e25e16f02f358ddb7624c47d52f3118b`.
+  The merge-base is this design's base `41331b4d`. The measured `app.js` hunks leave S1's pin sites
+  at lines 434, 456–458 and 507 untouched (W34). Keep S1 test-only against HEAD and develop the action
+  card as separate assets and fixtures. Before touching the shared app shell in S8, the controller
+  must re-measure against #604's then-current head or post-merge dev. Keep the sequencing gate
+  of resolving #604 or explicitly sequencing V4 first. No design dependency on #604 content.
+  Avoid CSS or index-shell changes in V4 unless porting the approved hooks proves necessary.
 - The optional herdr release work stays in `cmd` for the adapter and CLI hooks. Any plugin edit must
   fit the same 1,400 total limit including integration paths, with no edits to shared launchd tools.
 
@@ -372,7 +377,7 @@ never hide work in another path. Re-measure staged patches and cut between miles
 |---|---|---:|---|
 | S1 | Judge-405 three independent pins 210; pure admitted CLI-surface subset and parity 410 | 620 → 837 | None. Test-only shell changes and unregistered parser. |
 | S2 | Action canonical envelope / fixtures 360; typed SSHSIG/passkey proof and recheck against fakes 480 | 840 → 1,134 | None. Pure law/adapters against synthetic fixtures. No migrations or served routes. |
-| S3 | Schema 10 and upgrade parity 330; receipt, CAS/expiry/dedup and restart tests 560 | 890 → 1,202 | 119 A/B. |
+| S3 | **[r1]** Schema 10 and upgrade parity 330; receipt, CAS/expiry/dedup, terminal exclusion and restart tests 560 | 890 → 1,202 | 119 A/B. |
 | S4 | Typed runner install and isolated process/status/upgrade seam 520; heartbeat and inert catalogue fixture 360 | 880 → 1,188 | 119 A/B, E1/E3. |
 | S5 | Shared pinned-start read seam and semantic parity 390; atomic minted-start proof, token recovery and cases 510 | 900 → 1,215 | 119 A/B, S3–S4. |
 | S6 | Confined headless launch and process receipt 460; launch/restart, expiry and scrub testing 430 | 890 → 1,202 | 119 A/B, E3, S5. |
@@ -435,9 +440,9 @@ activated by S11 must already have earned both finish gates.
 
 ## 11. Named planner experiments
 
-The Studio observations in W05–W07 and W22 informed Q4. E1–E5 below remain **UNVERIFIED**.
-E1 was denied in this sandbox. E2's first-stage PATH result is measured, but a stored-token error
-with restricted egress cannot establish the real job's credential parity. E3 and E4 require
+**[r1]** The Studio observations in W05–W07, W22 and W33 inform Q4. E2 has a read-level PASS
+on the Studio (W33), which supersedes W07's sandbox auth result. E1, E3, E4 and E5 remain
+**UNVERIFIED**. E1 was denied in this sandbox. E3 and E4 require
 supervisor/process operations outside this designer assignment. E5 requires Mark's chosen preset.
 Run the relevant experiment before planning its gated milestone. A sandbox denial is
 **UNINFORMATIVE UNDER SANDBOX** and requires a capable controlled host, regardless of exit code.
@@ -458,6 +463,9 @@ user. Missing/mismatched UID is a deployment blocker if the probe ran successful
 permission. No elevated identity is needed for the companion. W06 recorded `ps` denied here.
 
 ### E2 — noninteractive GitHub and Git identity (S9/S11)
+
+**[r1]** Status is read-level PASS on the Studio (W33). Re-run as the runner's own readiness
+check at install and before every finish (§2.2).
 
 Set `V4_REMOTE` to the exact operator-approved GitHub remote and `V4_REPO` to its `owner/name`.
 Set `V4_RUNNER_PATH` to the proposed approved PATH and, only for an approved SSH route, set
@@ -645,7 +653,7 @@ The read-only `gh` probe output was filtered before logging.
 
 **Commands.** `/usr/bin/env -i HOME="$HOME" PATH=/usr/bin:/bin:/usr/sbin:/sbin /bin/sh -c 'for x in git gh ssh herdr; do command -v "$x" || printf "%s: missing\\n" "$x"; done'`; for system and Homebrew-prefixed PATH, `/usr/bin/env -i HOME="$HOME" PATH="$runner_path" GH_PROMPT_DISABLED=1 /bin/sh -c 'gh auth status --hostname github.com'`, filtered
 
-**Observed.** System PATH finds `/usr/bin/git`, `/usr/bin/ssh`; misses gh and herdr. Auth probe rc 127 with system PATH, rc 1 with Homebrew PATH; absolute gh invocation printed filtered failed login/stored token invalid markers. Authentication parity is **UNVERIFIED** E2; command output is not proof of invalid rig credentials under unrestricted egress.
+**[r1]** **Observed.** System PATH finds `/usr/bin/git` and `/usr/bin/ssh` and misses gh and herdr. The auth probe returned rc 127 with system PATH and rc 1 with Homebrew PATH. The absolute gh invocation printed filtered failed login/stored token invalid markers. The rc 1 and auth markers were **UNINFORMATIVE UNDER SANDBOX** in the designer's workspace-write sandbox with restricted egress. W33 supersedes this auth reading.
 
 ### W08
 
@@ -791,11 +799,63 @@ The read-only `gh` probe output was filtered before logging.
 
 **Observed.** Phone draft assigns the runner design to row 243 V4, asks for a measured runner and one headless Sol, separates PR creation and merge, and describes #604. Human-agent draft asks for stable context, visible blockers and evidence-backed outcome after disconnect. Local briefs supply product intent; their authority remains unratified.
 
+**[r1]** Controller pin of the untracked attended drafts in the main checkout's `design_docs/planned/`.
+
+| Draft | SHA-256 | Lines |
+|---|---|---:|
+| **[r1]** `w-phone-episode-workflow.md` | `7ab5f7fbdde73902025203616e6542dbd2ef41fa567df3b7180d64d9924442e4` | 46 |
+| **[r1]** `w-human-agent-surface.md` | `d49bf82e32f521fd4958b401f7632ec0c781bab4a5a1745f580c204eee02ca3c` | 66 |
+
 ### W32
 
 **Commands.** `nl -ba F/episode_launch.go | sed -n '44,73p;151,187p;437,467p'`; `nl -ba F/preset.go | sed -n '632,675p'`; `"$HOME/.local/bin/herdr" pane read --help`; `command -v jq`.
 
 **Observed.** `launchMode` defaults to interactive and an explicit headless flag selects the headless branch (:44–68). Launch uses a PID file with `O_EXCL` (:442–447); preflight refuses an existing PID file regardless of liveness (:168–184). Preset check resolves first then lists resolved sandbox/unsandboxed status (:632–661). herdr read takes `<PANE_ID>`. jq is `/usr/bin/jq`.
+
+### W33
+
+**[r1]** **Commands.** Controller on the Studio outside the sandbox, 2026-11-18 ~10:20Z. Ran §11 E2 verbatim under `/usr/bin/env -i` with `V4_REPO=sunholo-data/ailang-world`, `V4_REMOTE` set to this repo's `https://github.com/…` origin, HOME, each PATH below, `GH_PROMPT_DISABLED=1`, `GIT_TERMINAL_PROMPT=0` and BatchMode SSH. `launchctl print gui/501` listed the GUI LaunchAgent `dev.ailang.mission-world` with the controller driver PID. The `ps` ancestry was probe shell ← claude ← `/bin/bash …/mission-control.sh` (that PID) ← launchd PID 1.
+
+**[r1]** **Observed.** `PATH=/usr/bin:/bin:/usr/sbin:/sbin` (W06 installed World job PATH) → E2 rc=2, `gh` missing. `PATH=/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin` → stdout signals `ADMIN`, then `rig-auth-read-ok`, E2 rc=0. `gh auth status` and `gh label list` passed, `viewerPermission` was `ADMIN`, and `git -c credential.interactive=never ls-remote --symref <https origin> HEAD` passed. This repo's Git `credential.helper` is `osxkeychain`. The HTTPS Keychain helper answered non-interactively in that environment.
+
+**[r1]** **Scope.** Read-level evidence with a permission signal for this Studio and this remote. The probe performed zero remote writes. The process descended from a GUI LaunchAgent. E3 still tests the purpose-built runner plist. Write permission and branch rules stay observed outcomes of the attended run.
+
+### W34
+
+**[r1]** **Controller measurement.** PR #604 head `b9791084e25e16f02f358ddb7624c47d52f3118b` shares the merge-base `41331b4d` with this design. Under `host/surfacepage/app/`, `app.css` +29 −0, `app.js` +25 −5 and `index.html` +1 −0. The `app.js` base hunk ranges were `@@ -587,0`, `-762`, `-1042,0`, `-1044,0`, `-1095`, `-1500`, `-1539`, `-1549`, `-1570,0`. None intersects S1's pins at `app.js:434`, `:456–458` or `:507` (W23). Re-measure in S8 per §7.
+
+### W35
+
+**[r1]** **Commands.** `nl -ba host/daemon/surface_approve_guard.go | sed -n '41,64p'`.
+
+**[r1]** **Observed.** Lines 41–49 lowercase Host and match the host:port cut from an allowed origin. The remaining guard predicates appear in the numbered output.
+```text
+    41	func allowedApprovalHost(host string, o []string) bool {
+    53	func allowedApprovalOrigin(origin string, o []string) bool { return slices.Contains(o, origin) }
+    57	func sameOriginFetch(site string) bool { return site == "" || site == "same-origin" }
+    62		mt, _, err := mime.ParseMediaType(contentType)
+    63		return err == nil && mt == "application/json"
+```
+
+### W36
+
+**[r1]** **Commands.** `nl -ba host/authority/judge_verb.go | sed -n '28,46p'`.
+
+**[r1]** **Observed.** Lines 30 and 44 define `sshApprover` and `passkeyApprover`. Lines 33 and 36 return `JudgeStepStore` and `JudgeStepUnknownKey`, and lines 38–39 return the enrolled SSH approver and its timestamps. The selected output shows both key lookups.
+```text
+    31		enrolled, ok, err := ro.ApproverByKey(ctx, sig.PublicKey.Blob)
+    45		a, p, ok, err := ro.PasskeyByCredentialID(ctx, resp.RawID)
+```
+
+### W37
+
+**[r1]** **Commands.** `nl -ba cmd/ailang-worldd/episode_finish.go | sed -n '60,66p'`.
+
+**[r1]** **Observed.** Line 60 calls the function declared at line 63. Lines 64–66 set up the finish flag set.
+```text
+    60		return runEpisodeFinishWith(args, stdout, stderr, env, commitOneObject)
+    63	func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEnv, record outcomeCommitter) (code int) {
+```
 
 ### Reproduction notes
 
@@ -803,3 +863,18 @@ W02's positive ID check is on ledger rows
 rather than references elsewhere in the charter. Filtered runtime probes record command results,
 not results inferred from the local interactive environment. Any runtime test or mutation
 described elsewhere in this design is a planner/build gate and has no KILLED/SURVIVED verdict yet.
+
+## 13. Quorum r1 (BLOCKED on r0 `5d5a50d6`) → r1 changes
+
+**[r1]** Author `codex:gpt-6.2-sol` was benched. All three review seats returned a verdict.
+
+| Reviewer | Verdict | Objection or note | Disposition | Where it landed |
+|---|---|---|---|---|
+| claude-sonnet-5 | REJECT | W07 rc=1 and the clean-env probe left the real LaunchAgent and HTTPS helper path unproven. | **[r1]** Recorded W33 read-level PASS and its scope, superseded the sandbox signal, and gated finish claims on runner readiness with a failure test. | §1 P3, §2.1–§2.2, §3.1, §5.5, §11 E2, §12 W07/W33 |
+| gemini-4-argon | PASS | W31 cites temporary draft copies without stable pins. | **[r1]** Pinned the untracked originals with controller SHA-256 and line counts. | §12 W31 |
+| gemini-4-argon | PASS | The #604 overlap was unverified. | **[r1]** Recorded head, merge-base, file diff and pin overlap. S8 re-measures before app-shell edits. | §7, §12 W34 |
+| oc-glm-5-3 | PASS | Terminal exclusion had no bounded contention behavior. | **[r1]** Specified non-blocking acquisition with a ≤5 s bound, immediate conflict and the active action and remedy. | §2.2 |
+| oc-glm-5-3 | PASS | A terminal-versus-runner contention mutant needed coverage. | **[r1]** Added `TestOperatorTerminalExclusion` to the S3 test milestone. | §5.2, §8 S3 |
+| oc-glm-5-3 | PASS | The episode mutex lacked a NEW tag or source citation. | **[r1]** Named the NEW per-episode exclusion lock and linked its definition. | §4.3 step 4, §2.2 |
+| oc-glm-5-3 | PASS | Three code anchors needed numbered verification output. | **[r1]** Ran all three probes and linked the observed output to the existing citations. | §3.1, §4.3 step 2, §6, §12 W35–W37 |
+| oc-glm-5-3 | PASS | Finish steps ended out of order. | **[r1]** Numbered 1–7 with record-observed before the attended exit. | §4.3 steps 6–7 |
