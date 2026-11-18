@@ -1116,7 +1116,13 @@
   }
   const refreshLive = () => refresh('live');
   // repaintNow redraws the now card alone: a status change is visible even when the graph did not change.
-  function repaintNow() { const el = document.querySelector('[data-now]'); if (el && T) el.outerHTML = nowCard(); }
+  function repaintNow() {
+    const el = document.querySelector('[data-now]');
+    if (!el || !T) return;
+    const focused = el.contains(document.activeElement) && document.activeElement.id;
+    el.outerHTML = nowCard();
+    if (focused) $(focused)?.focus({ preventScroll: true });
+  }
   // schedulePoll: follow mode polls the model every 15 s while the page is visible, independently of AG-UI.
   function schedulePoll(delay) {
     clearTimeout(pollTimer); pollTimer = null;
