@@ -27,6 +27,7 @@ import (
 
 const episodeFinishHelp = `usage: ailang-worldd episode finish <episode> --preset <name> [--presets-dir D]
     [--ready] [--exec-profiles-dir D] [--title <text>] [--allow-failing <check>]... [--include-unattributed] [--dry-run]
+    [--confirm-on-surface]
 
 ATTENDED: requires a controlling terminal before reading files or contacting
 the daemon. Runs the checks pinned at episode start, records each outcome,
@@ -40,6 +41,9 @@ Each unsandboxed check needs its own typed y at that terminal.
   --ready                 open a ready PR (default: draft)
   --exec-profiles-dir D    pinned profile lookup (default: private exec-profiles)
   --dry-run               print git show --stat and body, then reset HEAD
+  --confirm-on-surface    confirm the pull request with an enrolled key on the World
+                          app's card instead of a typed y; waits up to 10 minutes;
+                          the terminal is still required
 
 Without --dry-run, writes <sessions>/<episode>.pr-body.md (0600) and prints
 an exact-byte approval at the terminal. Typed y records approval, pushes and
@@ -67,6 +71,7 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	ready := fs.Bool("ready", false, "open a ready PR")
 	profilesDir := fs.String("exec-profiles-dir", defaultExecProfilesDir(), "private exec profiles")
 	dry := fs.Bool("dry-run", false, "print then reset local commit")
+	onSurface := fs.Bool("confirm-on-surface", false, "confirm the pull request with an enrolled key on the surface")
 	var allowed multiFlag
 	fs.Var(&allowed, "allow-failing", "allow this failing check")
 	pos, err := verbs.ParseInterleaved(fs, args)
@@ -87,6 +92,9 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 		return fail("refusing: no controlling terminal", "finish is an attended act", "run it in a terminal (an agent or CI can't finish an episode)")
 	}
 	defer tty.Close()
+	if *onSurface && *dry { // row 243 V3 §2.7 step 1
+		return fail("--confirm-on-surface cannot be combined with --dry-run", "a dry run opens no pull request", "drop one of them")
+	}
 	if len(pos) != 1 || !workspaceEpisodePattern.MatchString(pos[0]) || *preset == "" {
 		return fail("episode and --preset <name> are required", "finish needs a pinned start record", "ailang-worldd episode finish --help")
 	}
@@ -251,6 +259,11 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 		if err := validateFinishChecks(start.Checks, allowed, wt); err != nil {
 			return fail(err.Error(), "all checks must be valid before any runs", "fix checks in the next episode's preset")
 		}
+		for _, check := range start.Checks { // row 243 V3 §2.7 step 2: before any check runs
+			if *onSurface && check.Unsandboxed {
+				return fail("check "+check.Name+" is unsandboxed: it needs its own typed y", "--confirm-on-surface replaces only the pull request's y", "run finish without --confirm-on-surface")
+			}
+		}
 		profile, err := finishProfile(ctx, start, credentials, *profilesDir)
 		if err != nil {
 			return fail(err.Error(), "finish must use the start profile binding", "restore the pinned exec profile")
@@ -406,6 +419,15 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 		scope, scopeText = reused, rep.Finish.Scope
 		approval.Approval = rep.Finish.Approval
 		fmt.Fprintf(tty, "resuming under approval %s, expires in %d s\n", approval.Approval, scope.ExpiresAt-time.Now().Unix())
+	} else if *onSurface { // row 243 V3 §2.7 step 3: a key on the surface instead of the typed y
+		ref, refusal := finishConfirmOnSurface(ctx, c, env, surfaceFinish{credentials: credentials, addr: p.Addr, ep: ep, sha: sha,
+			argv: canonicalFinishArgv(fs, allowed, ep), scope: scope, scopeText: scopeText, title: actualTitle, body: rendered,
+			committer: pinned.Committer, protected: protected}, tty, stdout)
+		if refusal != "" {
+			return fail(refusal, "the pull request was not confirmed on the surface; commit kept at "+sha, steps(sha))
+		}
+		approval.Approval = ref
+		finishStep("approve")
 	} else {
 		finishPrompt(tty, scope, actualTitle, rendered, protected, pinned.Committer)
 		answer, _ := reader.ReadString('\n')
