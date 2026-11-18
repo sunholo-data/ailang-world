@@ -9,117 +9,6 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 389 — 2026-11-12 — row 201 A4 sprint 1 LANDED (PR #563, merge `338ff821`): the decision message, the pure law D1–D10, complete packet discovery, first-decision-final, the R4 fences L1/L2, and `GET /surface/decisions/{ref}` + `POST /surface/decide/{ref}` (typed arm); the typed CLI moved to sprint 2; judge PASS 88 [PRODUCT]
-
-**Pick:** the A4 sprint-1 planner. This was record 388's Next 2 and the charter's Next loop row. Record 388 had landed (#562 → `9a6b959d`), so there was no carry-over PR. D-WORLD-115 is unanswered, and its default A (keep the decision message with a derived challenge) applies from this iteration, as filed.
-- **Re-measured at pick** (`origin/dev` `9a6b959d`):
-  - There was no A4 sprint-1 plan, branch or worktree, and `gh pr list --author @me --state open` was empty.
-  - `grep -rl "DecideApproval(" cmd host --include="*.go"` → `host/broker/approve.go` (the definition) and 5 `_test.go` files: there is still no production caller (design V3).
-  - `packetScanLimit = 100` (`decisionpacket_validate.go:34`) and `validatePublishApproval` (`approve.go:517`) are as the design measured.
-- **Quorum reader:** rc 0, two iteration-388 artifacts. No quorum was owed at pick.
-- **Ledger:** valid, 102 rows before and after. OPEN: D-WORLD-105 (default C), D-WORLD-114 (default A, applied), D-WORLD-115 (default A, applied from 389).
-- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 are not routable (unchanged).
-- **Orphans:** none.
-
-**Gate 0:**
-- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent. Dev CI 3/3 at `9a6b959d`.
-- Directives: 0 allowlisted on #524 (25 comments). The watermark file is absent, so every comment was read.
-- Self-notices: rc 2, `watermark channel unavailable`. This is an instrument failure, not a verdict, as in 371–388.
-- Inbox: 0 unread for `mission-world`.
-- Skill drift: none. `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target match the driver clone's `origin/dev`.
-- Weekly issue sweep: not owed (#524 was opened Monday).
-
-**Planner** (Agent `opus`, 105 min, 435,275 tok): plan `w-world-approvals-by-key-a4-sprint1-plan.md` with 8 compiled patches in Appendix P.
-- **Size:** 1,985 lines (587 production, 1,398 test) by `git diff --numstat 9a6b959d HEAD -- cmd host`, 15 under the cap.
-- **Cut:** the typed CLI (CD1–CD4, ≈ 400 lines at the design's price) moved to sprint 2's head by design §9's priced fallback. With it the sprint would have been ≈ 2,385. So after this sprint nothing shipped writes the operator proof the POST needs: the route is guarded and has no production caller yet.
-- **Mutants:** 96 rows. 88 were killed by both the named test and the package suite, 3 are named equivalents and 5 are named survivors with reasons. The main survivor class is the `humanMu` lock, which tests that post one request at a time cannot observe. No kill rests on an inventory or static test. Ledger: 104 lines.
-- **Premises found false (plan §1.4):**
-  - **P2:** the design says first-decision-final leaves the existing deciders unaffected. The unedited `TestEpisodeFinishOperatorProofExpiryBoundary` approves the same finish scope twice in the same second and got a 500. The plan's fix is that a byte-identical re-decision returns the existing ref and writes nothing, while any different second decision is refused.
-  - **P3:** `context_thread_test.go`'s store-read census moves from 5/4 to 6/5 (the new decision walk). It is the only edited existing test.
-  - **P8:** the broker's no-redecide check is unreachable through the POST, because the law's D6 refuses first. It has unit coverage only.
-  - The rest: `TestSurfaceAppRoutes` needs no edit (P1); `Discovery` lives in `host/broker` because the coordinator imports the broker (P4); the subject's `passkeys` field and R4d's must-die half move to sprint 2 (P6, P7); an unrelated `DecisionRefusal` already exists in `host/surface` (P9).
-- **N4 / K0 handler order (decision S1-D9):** Host → session/cookie refusal → Origin → `Sec-Fetch-Site` → media type → body → lock → read facts → law D1–D10 → **arm slot** → `DecideApproval` → 200. Sprint 2's key arm fills the arm slot in this order: read-only judge (W15 deferred) → writer → `RecordKeyDecision` with K0 → `DecideApproval` → `LandKeyDecision`. No sprint-1 line moves.
-
-**Controller round trip:** I ran `git archive 9a6b959d`, extracted the 8 patches from the committed plan with §2's awk, and applied them. `diff -rq` against the planner's `work/` tree is empty for `cmd` and `host`; the control (the same diff against the unpatched base) shows 17 differences. The plan was committed (`9ac369fa`) before any sub-milestone commit.
-
-**Executor** (env `recipe claude:claude-haiku-5-5`, spawned as Agent `haiku`, as 374–388), two runs:
-- **Run A (M1a–M2), 3.6 min + 18.3 min resumed, 50,487 + 67,802 tok.** Its first turn hit the Bash tool's default 120 s timeout on M1a's compile fence, moved the acceptance shell into the background, and **ended its turn announcing a wait** (standing rule 7's sub-agent case). The controller checked the artifacts: no log had grown, and the background shell was lost. It then resumed the executor by `SendMessage` with explicit instructions: a 600 s tool timeout, foreground only, no Monitors. The resumed run re-ran every M1a leg in the foreground and finished cleanly.
-- **Run B (M3a–M3d), 8.4 min, 51,374 tok.** Its directive carried the timeout rule from the start, and it ran clean. The whole `host/daemon` leg was `ok` in 343 s.
-- No hand edits, no git writes, no stop condition, and no timing exception.
-
-The controller rebuilt each sub-milestone from its snapshot with `commit_ms.sh`. Cumulative numstat after each commit:
-
-| Sub-milestone | Commit | Numstat |
-|---|---|---|
-| M1a | `678f95e5` | 162 |
-| M1b | `1eb10754` | 508 |
-| M1c | `c929b9b8` | 733 |
-| M2 | `5a3cd887` | 1004 |
-| M3a | `bc0e925c` | 1356 |
-| M3b | `74496cc8` | 1628 |
-| M3c | `b7d512f4` | 1901 |
-| M3d | `4c2cac17` | 1985 |
-
-That equals the plan at every step, and the final committed tree equals the round-trip tree.
-- **Controller instrument slip:** my Run-A commit loop used `declare -A` for per-milestone test commands. macOS bash 3.2 has no associative arrays, so all four commits ran M2's test command as their test gate. Each commit was still gofmt/build/vet-gated, and the executor had run each sub-milestone's exact acceptance. Run B's loop passed each command directly.
-
-**Gates** (controller; the plan §6 script with every leg recording its own rc so one red does not stop the rest; 2,828 s under rig load 40–210):
-- `verify_ail.sh`, gofmt, build, vet and the compile fence: rc 0. `-race` on the touched packages: no `FAIL` and no `DATA RACE`. All **68** named inventory and new tests print `--- PASS`. approval, approvaltest, coordinator and surfacepage are `ok`.
-- **`host/daemon`:** 5 reds. `TestMarketingCaptureInventoryMutation`, `TestSessionSelfGit`, `TestServeStartsWhenTheProbeSpendsTheStartupClock` and `TestRegistryPhaseHasItsOwnClock` are on the known list. `TestWorkspaceProtectedPolicyWiring` is new to the list. All except `TestServeStarts…` (red at the base, per the planner) passed alone (`ok` 11.7 s).
-- **`host/broker`:** `TestProtectedChecker/index-flag` was green alone. `TestExecProtectedCheckTimeout/reserve-after-before` ("returned at/after the original deadline") was **red once alone at the head**, then **green at the base**, then **green twice alone at the head**. It is the known `/reserve` timing family, and the sprint touches no exec code. Recorded as a load flake with all four runs cited.
-- **After commit, `VERIFY_GO_LEGS=plain verify_go.sh`: rc 1 under load.** The evidence-manifest gate passed (64 of 64). `go test ./...` hit **five 10-minute package-timeout panics** (`cmd/ailang-worldd`, `host/broker`, `host/coordinator`, `host/daemon`, `host/verifygate`), and reds in untouched `host/capsule`, `cmd/world-publish`, `host/pkgproj`, `host/store` and `scripts/marketingcheck`. The two reds not on any known list (`host/store` `TestConvertedStoreMethodsM5b`, `host/pkgproj` ×2) were `ok` alone. Clean-runner CI was taken as the gate, as in 381–384.
-
-**Judge** (evaluator `sonnet` via Agent, 49.8 min, 76,719 tok; own worktree; generator ≠ judge): **PASS 88/100, zero blocking** (correctness 27, tests 24, security 19, standards 10, scope 8).
-- It confirmed the 91-byte layout, the law order including D4a/D4b, discovery's bound, sentinel and cursor, L1 and L2, and the POST's guard order, `humanMu` span, derived `decidedBy` and verb-bound proof.
-- **P2 is sound:** the byte-identical comparison covers `requestRef`, verb, `decidedBy` and `now`, so a different decision can never pass.
-- **The CLI cut is honest:** the route is unused but guarded, with no reachable attack surface.
-- **Mutants:** its ledger has 46 lines. 36 compile-checked mutants (+2 COMPILEERR) ran: 29 killed, each by a named behavioural test, and 7 survived. `comm -12` against the plan's ids found 0 shared. The must-die controls (law skipped, proof consumption skipped) were killed, and the must-live control J06 survived.
-- **Non-blocking test gaps** (carried to sprint 2):
-  - **J07:** the L1 effect-substring arm (`Contains` → `HasSuffix` survives).
-  - **J31/J32:** the daemon tests do not pin D1's regex anchor or hex case. Production is correct, but a regression would let `hashref.MustParse` panic on a 65-hex ref.
-  - **J33:** the GET's D4a mapping is untested.
-  - J06, J11 and J38 are equivalent mutants.
-- **Controller-reproduced:** J31 (`{64}$` → `{64}` in `surface_decide.go:29`) gives `go test ./host/daemon/ -run '^(TestDecide|TestDecision)'` rc 0. Restored, worktree clean.
-
-**Gate 3b:**
-- PR #563 head `4c2cac17`, run 43296861559 attempt 1: **3/3 success**. Mergeable CLEAN. Closing-keyword scan: 0 hits over the PR body, title and the 9 commit messages (control fired).
-- `gh pr merge 563 --merge --match-head-commit 4c2cac17…` → merge **`338ff821`** at 20:20:41Z.
-- Push CI on the merge (run 43299366793) attempt 1: **3/3 success**. LANDED.
-
-**Routing evidence:** base=338ff821c49ad10c7b6707df1d6398ec0c5cbe9a@2026-11-12T20:21:03Z.
-- Controller: `claude-opus-5-5` (tok: not reported).
-- Designer: not spawned (A4 r2 covers sprint 1).
-- Planner: `opus` via Agent (435,275 tok), resolver `agent-tool opus fail-closed:env-pin`; derive-planner-lane `opus fail-closed:env-pin`.
-- Executor: `claude:claude-haiku-5-5` via Agent `haiku` (50,487 + 67,802 resumed + 51,374 tok), resolver `recipe claude:claude-haiku-5-5 declared:provider-pin`.
-- Evaluator: `sonnet` via Agent (76,719 tok), `agent-tool sonnet declared:alias-pin`.
-- The driver noted codex unusable at preflight (probe rc 75, quota unreadable).
-- Judge independence: cross-model (opus planner, haiku executor, sonnet judge). Metered total: $0.00.
-
-**Progress:** 1.0 clauses 1–7 MET; the goal is unmoved. Row 201 A4 now has its law on `dev`:
-- A `Human.Approve` decision packet has a pure, reviewed refusal ladder and a complete discovery.
-- A request can be decided at most once.
-- A key-made decision can never authorize a publish.
-- The daemon serves the decision subject and accepts a typed decision behind the A3a guards.
-
-An operator cannot yet decide a packet from a terminal: that is sprint 2's first milestone.
-
-**Ruled out:**
-- **Treating the run-A executor's one-line "I am waiting" return as a result:** the artifacts showed it had not progressed, so it was resumed rather than banked (standing rule 7, sub-agent corollary (a)).
-- **Treating the head's `TestExecProtectedCheckTimeout` red as a regression:** it went green twice alone at the head, the base control passed, and no exec code is touched.
-- **Blocking the landing on the loaded rig's `verify_go` rc 1:** every red was a timeout panic, on a known list, or green alone, and clean-runner CI went 3/3 on head and merge.
-- **Re-design:** none was needed. The planner's premise deviations (P2, P3, P8) were judged sound by the evaluator.
-
-**Retro:**
-- **Sub-agent timeout → background → ended turn:** this is the second time an executor ended its turn on a wait (iteration 385's was a `nohup`). The cause here is mechanical: the Bash tool's default 120 s timeout, not a choice to background. Run B's directive carried "every Go Bash call passes `timeout: 600000`, foreground", and it ran clean. Keep that line in every executor and judge directive (now in the iteration-389 templates).
-- **Controller tooling:** macOS `/bin/bash` is 3.2, with no `declare -A`. Use a function per milestone, or pass commands positionally, as Run B's loop did.
-- **Gates under load:** the plan §6 script's `set -e` stops at the first red package. A per-leg rc variant (`gates_run.sh`, every leg recording its own rc) ran everything in one pass. Keep it.
-- **Protocol shortcut, stated:** the controller did not re-read `resources/verification-protocol.md` (136 KB) in full this fire. It worked from gate 2's recall list and the gates it read (0, 1, 2, 3 route + role-spawn-routing, 3b, 4, 5).
-
-**Next:**
-1. If this record's own PR is still open, land it first (docs only).
-2. Then the **A4 sprint-2 planner** ("the keys"), headed by the typed CLI CD1–CD4 moved from sprint 1, from `w-world-approvals-by-key-a4.md` r2 and the sprint-1 plan's Appendix C, with no re-design. Expect design §9's webauthn fallback cut (sprint 2 would be ≈ 2,200 otherwise). Carry the judge gaps J07, J31/J32 and J33, and the sprint-1 handler order S1-D9 for K0.
-3. Mark's A2 exit run (QUICKSTART §16) and A3a exit run (QUICKSTART §17) are runnable and attended. D-WORLD-114 and D-WORLD-115 stay OPEN for Mark to confirm or veto; both defaults are applied.
-
 ## 390 — 2026-11-12 — row 201 A4 sprint 2 LANDED (PR #566, merge `9ea7b45f`): the typed CLI `approve <request-ref> [--deny]`, credentials schema 8 `key_decisions`, the decision SSHSIG law and judge, the POST's `sshsig` arm and `--sign-with` on a request ref; the webauthn arm and CD6–CD7 moved to sprint 3; judge PASS 88 [PRODUCT]
 
 **Pick:** the A4 sprint-2 planner. It was record 389's Next 2 and the charter's Next loop row. Record 389 had landed (#564 → `8338eebb`), so there was no carry-over PR. D-WORLD-115 is unanswered and its default A still applies.
@@ -1612,5 +1501,59 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 - **Instance 2 of a background gate leg racing the judge** (`verify_go` deadline under load): the 407 run was green, this one was not. Record only; the re-run-alone discipline handled it.
 
 **Next:** row 243 V4 sprint 2b planner: apply and prove the parked `host/authority` adapters (`PARK-authority-judges.patch`: `JudgeOperatorAction`, `RecheckOperatorAction`, `VerifiedOperatorAction` with an unexported constructor), and pin judge-408 notes (2) `X-PK-ALIAS` and (3) the runner's lifetime. It is answer-independent. S3–S8 wait for D-WORLD-119; S9–S11 for D-WORLD-120.
+
+**Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16 09:06Z; next Monday 2026-11-23). The weekly external-issue sweep already ran this week at 393.
+
+## 409 — 2026-11-18 — row 243 V4 sprint 2b LANDED (PR #611, merge `07b30a5e`): the `host/authority` operator-action judges `JudgeOperatorAction`/`RecheckOperatorAction` read the approver from the store and return an unexported-field `VerifiedOperatorAction`; judge-408's `X-PK-ALIAS` killed and the runner lifetime pinned; unregistered; 526 lines; judge PASS 92; V4 now waits on D-WORLD-119 [PRODUCT]
+
+**Pick:** row 243 V4 sprint 2b, the Next named in record 408 and the queue head.
+- **Re-measured at pick** (`origin/dev` `4b1c39e2`): no S2b plan, branch or worktree (`git log origin/dev --grep S2b` → none; `gh pr list --author @me --state open` → none; `git worktree list` → no 409 tree). The parked patch `PARK-authority-judges.patch` was on disk (11,732 B) and `patch -p1 -E --dry-run` applied it cleanly to a fresh worktree at `4b1c39e2`. Quorum reader rc 0 for `w-world-address-bar-verbs-v4`: r1 `blocked` (reject/pass/pass), r2 `proceed` (pass ×3), `absent_reviewers` `[]` in both. `mission_decisions.sh --open` → D-WORLD-119, D-WORLD-120. S2b needs neither (S2 Appendix C: "needs no schema").
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Release rows 150/151 still wait on attended steps. Row 243 serves D-WORLD-94 (D-WORLD-109 = A) and moves no clause.
+- Claim sent to `controlplane` before routing (`inbox_1795038059946_78e064e1`).
+
+**Gate 0:**
+- Stamped first. `gh` is `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent (`mission-world.disabled`).
+- Directives: 0 allowlisted on #574 (18 comments), read from the epoch because the issue-scoped watermark is absent (the mission-scoped `mission-world-last-seen` reads `2026-10-27T09:03:42Z`). Nothing to `--mark`.
+- Self-notices: rc 2 `watermark channel unavailable` (the #574 and #524 files are absent) — an instrument failure, not a verdict; same gap as 371–408.
+- Inbox: no unread message addressed to `mission-world`.
+- Skill drift: none — `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target `cmp` equal to the driver clone's `origin/dev` (pin `d2f2ec238`). My first loop printed DIFF for all 13 because `ls resources/` yields bare names and the `git show` path lacked the prefix — the same slip 408 recorded; re-run with the prefix: all SAME.
+- Dev CI at `4b1c39e2`: 3/3 check-runs green. Main checkout level with `origin/dev`; only untracked files (Mark's drafts, stale scratch), untouched.
+
+**Planner** (Agent `opus`, foreground, 27.6 min, 283,161 tok; resolver `agent-tool opus fail-closed:env-pin`, `derive-planner-lane.sh` → `opus fail-closed:env-pin`; directive `~/.ailang/state/world-iter409/planner-directive.md`, the 408 directive adapted to S2b, handing judge-408 notes (1)–(4) as questions). Plan `w-world-address-bar-verbs-v4s2b-sprint-plan.md` + JSON, committed `1f083c2f`. No cut: 526 lines (116 production, 410 test) in three sub-milestones — M1 the judges (401), M2 judge-408 pins in `host/approval` (469), M3 writes-nothing (526). 61 mutants with whole-package verdicts: 59 killed, 2 named equivalents (`REUSED-SSH-KEY`, `REUSED-PK-CREDID` — the store selects the row by the artifact's own bytes), 0 survived, none resting on the AST test alone.
+- **Premises found false (§1.4):** the parked patch's tests were NOT discriminating — its first mutant pass left **13 whole-package survivors**, which the new `TestOperatorJudgeReadsTheStore` (19 rows, each asserting step, error class and no proof) and `TestOperatorUnjudgedProofBindsNothing` kill. Judge-408 note (4) overstated what a binding row can kill (episode/kind/argv/options bind each other through `Validate`'s O9) — carried to Appendix C. The controller's round-trip script looped M1–M4 while S2b has three milestones.
+- **Judge-408 notes:** (1) closed — neither judge takes an approver; each store-sourced check (unknown key, unknown credential, revoked, enrolled after now, stored format, counter, unreadable store, unparsable stored key, approver name) is its own mutant with a named killer. (2) `X-PK-ALIAS` reproduced SURVIVED at the base, killed by `TestOperatorPasskeyUseIsACopy` (with its accessor twin `PK-USE-ALIAS`). (3) pinned, not added: design §3.1 puts the 600 s bound on the signed request (checked at confirmation) and gives the runner expiry and revocation only; `TestOperatorRunnerRecheckBoundsExpiryNotLifetime` kills `R1-LIFETIME-ADDED`.
+- **Controller round trip (independent):** `ctl_roundtrip.sh` with the loop edited to `M1 M2 M3`; all three stages `diff -r` rc 0 against the planner's `st-M*`; a one-line perturbation made it differ (rc 1), restoring matched (rc 0). The two `.orig` files the export lists are tracked at the base (`design_docs/verification/world-iter362/…`), not patch residue.
+
+**Executor** (Agent `haiku`, foreground, 1.3 min, 43,260 tok; resolver `recipe claude:claude-haiku-5-5 declared:provider-pin` — spawned through the Agent tool's `haiku` pin as in 402–408, no hook denial). M1→M3 in one run, every part `ACCEPT_OK` (PASS 19/21/22, 0 FAIL, 0 SKIP), snapshots 2/0/2, 3/0/3, 4/0/4. Controller checks: each `MANIFEST` `shasum -c` ok; the final tree `cmp`-equal to the planner's `st-M3` on all 4 files. `commit_ms.sh` per snapshot, 0 refusals, numstat 401 / 469 / 526 = plan: `e582b846`, `7f490bd7`, `0e9e8d35`.
+
+**Gates** (plan §6 `gates.sh` on `0e9e8d35`, background, 610 s, run BEFORE the judge touched Go — the judge's directive held it on the `ALL_DONE` file): status, verify_ail, gofmt, build, vet, fence, pkgs, race, inv (44 named PASS) rc 0. `TOUCHED_PACKAGES` = `host/approval host/authority` as planned; routes 47 = base; `UNTOUCHED_VIOLATIONS` none; `PREEXISTING_CHANGED` none; `JUDGE_PRODUCTION_CALLERS` none (control `authority.RecheckVerb` 1); envelope callers outside the judges none (control `approval.CheckConfirmation` 1); `app.js`, `surface_page.go`, `daemon.go`, `credentials.go` unchanged. **`verify_go` rc 1**: the only failing package was `host/daemon` (byte-identical to base, `git diff --quiet`), `TestSeToolsRunBenchmarkTasksEndToEnd` — the mock saw a stray `"GET  "` beside the one POST, the same signature as 337 and 404 — at load average 9.96 → 13.17 (sibling missions). Re-run alone at `0e9e8d35`: PASS (5.5 s).
+
+**Evaluator** (Agent `sonnet`, foreground, 13.3 min, 81,956 tok; resolver `agent-tool sonnet declared:alias-pin`; own worktree `.wt-world-iter409-row243-v4s2b-eval`; directive asked open questions, no controller findings supplied): **PASS 92/100**, 0 blocking (correctness 29/30, tests 27/30, security 19/20, standards 9/10, scope 10/10). Its ledger `~/.ailang/state/world-iter409/judge/mutants.tsv` (34 lines; 31 ids not in the plan's ledger by `comm -23`): 27 killed by named behavioural tests, 2 survived (`ADMIT-DIGEST-SWAP` equivalent — the admit comparison is symmetric; a builtin `println` in a judge), 2 must-live controls survived as intended, must-die `NIL-BINDS` killed. A scratch package outside `host/authority` fails to compile `authority.VerifiedOperatorAction{rechecked: true}` (positive control compiles). `X-PK-ALIAS` survives at the base and is killed at the head. M1 and M2 green alone. Plan's lifetime reading of design §3.1 confirmed. Non-blocking: (1) the writes-nothing helper swaps `os.Stdout`/`os.Stderr` and `log` only, so a builtin `println` (fd 2 direct) survives; (2) the construction test is AST/reflect, but every mutant it kills is also killed behaviourally; (3) S3 must persist the recorded approver exactly as `format:name`. It said itself that it did not sample the plan's §4 rows.
+- **Controller-reproduced before disposing:** (1) in the eval worktree, `println("leak")` inserted at the top of `JudgeOperatorAction` (`git diff --stat` 1 file, `go vet` ok), `go test -count=1 ./host/authority/` → `ok` — the mutant survives; restored, tree clean. Disposition: logged here and carried to S3's planner (an fd-level capture), not filed (D-WORLD-109). **Judge gap closed by the controller:** plan rows `J-RECHECKED`, `R-RECHECKED`, `RECHECKED-SIGNED` re-run in the eval worktree — each KILLED by its named test and by the whole `host/authority` package; a comment-only control SURVIVED; tree clean.
+
+**Gate 3b:** PR #611 head `0e9e8d35`: CI **3/3 green** first time (two 9-minute poll segments). `origin/dev` re-measured just before merging: still `4b1c39e2`; PR `MERGEABLE CLEAN`. Merged with `--match-head-commit` at `07b30a5e`; merge commit CI **3/3 green**. **LANDED.**
+
+**Routing evidence:** base=4b1c39e2a32fa129f2b340f4f9c2b6a312c63e0f@2026-11-18T21:40:24Z (Gate 1; sprint worktree SAME at 21:41:27Z). Gate 4 base 07b30a5ee1f6f45b26a87d9fa16ccae913313192@2026-11-18T22:53:48Z (drift from Gate 1 = this sprint's merge only).
+- Controller: `claude-opus-5-5` (tok: not reported).
+- Designer: not spawned (plan fire; the doc is reviewed). Rotation pointer unchanged at `codex:gpt-6.2-sol` → next design gets `pi:ollama/glm-5.3:cloud`.
+- Planner: `opus` via Agent (283,161 tok). Executor: `haiku` via Agent for the `claude:claude-haiku-5-5` pin (43,260 tok). Evaluator: `sonnet` via Agent (81,956 tok). **Every required role spawned; none failed to spawn.**
+- Judge independence: same vendor, different model and fresh context (opus planner, haiku executor, sonnet judge), as 400–408.
+- Metered: **$0.00** (no quorum, no metered lane).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at 2 of 12 sprints with S2's tail now landed: a verified operator-action proof can come only from the two `host/authority` judges, which read the approver from the store. **Every remaining V4 sprint needs an answer** (design §8: S3–S8 wait for D-WORLD-119 A/B, S9–S11 also for D-WORLD-120, S12 for 119 A), so the loop has no answer-independent V4 work left.
+
+**Ruled out:**
+- **Treating the `verify_go` red as the sprint's:** `host/daemon` is byte-identical to the base; the test passes alone.
+- **Re-running the parked patch as-is:** its own tests left 13 survivors; it landed only after the planner's mutant pass.
+- **Adding the lifetime bound to the runner recheck (judge-408 note 3):** design §3.1 assigns it to confirmation; the runner's input has no creation time. Pinned instead.
+- **A re-quorum at pick:** r2 PROCEED 3/3, no absent seat; nothing changed since.
+
+**Retro:**
+- **Held, a 9th time:** planner opus → controller round trip → executor haiku → commit_ms per snapshot → gates before the judge's drills (this time strictly sequenced via the `ALL_DONE` file) → judge sonnet in its own worktree. Gate 1 → merge CI green ≈ 1 h 20 (21:40Z → 22:58Z).
+- **Instance 3 (third recorded failing iteration: 337, 404, 409) of `TestSeToolsRunBenchmarkTasksEndToEnd`'s stray-GET flake.** Under D-WORLD-109 (2) it becomes its own row: filed as row 261, a 258-class hygiene row under rule (d), as row 259 was.
+- **Instance 2 of the controller's skill-drift loop printing DIFF for every resource file** (408, 409): `ls resources/` returns bare names. The gate's own snippet (gate-1 rule (d)) globs `"$base"/resources/*.md` and is correct; the slip is in my hand-rolled form. Use the gate's snippet verbatim.
+- **A worktree helper returned rc 0 before the checkout existed** (standing rule 7's launcher-vs-work clause): the first `cd` failed; a re-check moments later found it. Polled the artifact thereafter.
+
+**Next:** no answer-independent row 243 work remains. Until Mark answers D-WORLD-119, the next fire has no routable build row (release rows 150/151 are attended; rows 258/259/261 sit under rule (d)) and records a rule-(d) block report. With 119 = A or B, the next loop work is the V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence).
 
 **Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16 09:06Z; next Monday 2026-11-23). The weekly external-issue sweep already ran this week at 393.

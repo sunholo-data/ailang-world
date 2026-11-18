@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 409 | 2026-11-18 | row 243 V4 sprint 2b LANDED (PR #611, merge `07b30a5e`): the `host/authority` operator-action judges `JudgeOperatorAction`/`RecheckOperatorAction` ... |
 | 408 | 2026-11-18 | row 243 V4 sprint 2 LANDED (PR #609, merge `cee5174c`): the `world/operator-action/v1` envelope, its strict decoder, two digests and the 97-byte si... |
 | 407 | 2026-11-18 | row 243 V4 sprint 1 LANDED (PR #606, merge `d0f22aa7`): the judge-405 `app.js` pins and `host/verbs.AdmitOperator`, the pure, unregistered admitted... |
 | 406 | 2026-11-18 | row 243 V4 design DONE (`w-world-address-bar-verbs-v4.md` r1): start and finish an episode from the World app through an opt-in user LaunchAgent ru... |
