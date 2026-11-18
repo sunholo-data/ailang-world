@@ -300,7 +300,11 @@ button { user-select: none; -webkit-user-select: none; }
 
 /* A composition layer over the selected timeline or brane. */
 #compose-btn[hidden], #episode-draft [hidden] { display:none; }
-#compose-btn { white-space:nowrap; }
+#compose-btn { width:auto; gap:7px; padding:0 12px; white-space:nowrap; }
+@media(max-width:850px){
+  #compose-btn { width:44px; padding:0; }
+  #compose-btn span { display:none; }
+}
 #episode-draft { box-sizing:border-box; padding:0; width:min(1040px,94vw); height:min(800px,92dvh); max-width:100%; max-height:100%; color:var(--text); background:var(--bg); border:1px solid var(--ctl); border-radius:var(--r); font:16px/1.5 var(--font); }
 #episode-draft[open] { display:flex; flex-direction:column; }
 #episode-draft::backdrop { background:rgba(36,53,67,.24); }
