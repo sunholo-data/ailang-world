@@ -28,6 +28,10 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/approver_passkey.go|runApproverEnrollPasskey|Background": 3,
 	// Row 201 A3 sprint 1 M3: each approve --await poll's read-only reads and judgement (3 s).
 	"cmd/ailang-worldd/approve_await.go|pollSurfaceApproval|Background": 1,
+	// Row 243 V3 sprint 5 M12: episode finish --confirm-on-surface's put of its verb request (3 s)
+	// and each poll's read-only reads and re-check (3 s).
+	"cmd/ailang-worldd/episode_finish_surface.go|putFinishVerbRequest|Background": 1,
+	"cmd/ailang-worldd/episode_finish_surface.go|pollVerbRequest|Background":      1,
 	// Row 201 A4 sprint 2: approve <request-ref>'s daemon reads before the y/N, and its POST after it (10 s each).
 	"cmd/ailang-worldd/approve_decide.go|runApproveDecide|Background": 1,
 	"cmd/ailang-worldd/approve_decide.go|postDecision|Background":     1,
