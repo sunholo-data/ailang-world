@@ -1,0 +1,187 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s1",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1 (quorum r1 BLOCKED 1/3 -> r2 PROCEED 3/3; independent audit sonnet PASS 81, iteration 406); not reopened",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s1-sprint-plan.md",
+ "previous_sprint": "row 243 V3 S6 (iteration 405, PR #601, merge 0077a7b0, judge PASS 91); V4 design r1 PR #605 -> d92983d5; closest analogues: CP7 TestNeedsYouListsConfirmations + TestSurfaceAppVerbs (node harness over daemon goldens), TestApproveTarget/TestLookup (table rows over Split), EpisodeReportFlags/WhyFlags + TestEpisodeReportFlags (shared flag definitions, VisitAll), TestVerbTableMatchesTheCLISwitch (CLI vs host/verbs parity with controls)",
+ "base_commit": "d92983d59f887905251df5b99e825c299136760f",
+ "design_measured_at": "41331b4d (every S1 cite re-measured at d92983d5: none moved; PR #604 at 65108353 left the pin lines; plan 1.2 C1)",
+ "queue_row": 243,
+ "iteration": 407,
+ "phase": "V4",
+ "sprint": "S1 (the judge-405 pins and the pure admitted CLI-surface subset with CLI parity)",
+ "sprint_number": 1,
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter407-row243-v4s1",
+ "branch": "sprint/world-iter407-row243-v4s1",
+ "authority": [
+  "D-WORLD-119 OPEN and D-WORLD-120 OPEN (controller, iteration 407: --open lists both; --check valid, 107 rows): S1 is answer-independent (design 8 'Waits for: None'; D-WORLD-119 default 'build S1 and S2 against fixtures only'); the answers are a pure input (OperatorPolicy), the zero value admits nothing",
+  "D-WORLD-109 = A (no store opened; the CLI's flag sets read from a --help run under a temp HOME; loadLaunchPreset over t.TempDir(); the gates' Chrome smoke on the driver's temporary profile; no real key, mint or publish)",
+  "D-WORLD-107 = A; D-WORLD-118 = A; D-WORLD-89 R1-R5"
+ ],
+ "behaviour": "No served or CLI behaviour change. NEW pure, unregistered host/verbs AdmitOperator(argv, OperatorPolicy) OperatorAnswer{Class review|usage|terminal|never|other, Intent (set exactly for review), Field, Reason, CLI}: episode start <ep> --preset <p> --launch --headless (119 A/B) or --launch (119 A + E4), episode finish <ep> --preset <p> [--confirm-on-surface] [--ready under 120 A] (with 119 A/B and 120 A/B); everything else refused with its class; the mirror of the CLI's 22 + 9 flags joined to the real flag sets by a nil-by-default seam; the action id ^oa-[0-9a-f]{32}$ defined. Tests: the three judge-405 pins (node, the daemon's goldens) and twelve grammar tests + three CLI joins.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat d92983d5 HEAD -- cmd host docs app (insertions + deletions; the same unfiltered)",
+  "design_raw_s1": 620,
+  "measured": 976,
+  "ratio": 1.57,
+  "margin": 424,
+  "fired": "no (S1-D1)",
+  "moved_out": {}
+ },
+ "planner_decisions": {
+  "S1-D1_no_cut": "976 <= 1,400; every 5.1 grammar/identifier row and all three 5.6 pins in",
+  "S1-D2_four_submilestones": "M1 pins (test) / M2 parser + 6 grammar tests / M3 policy, never, identifier, other-verb tests / M4 seam + 3 CLI joins",
+  "S1-D3_package": "host/verbs (the shared seams; host/daemon and cmd already import it); imports errors flag fmt io regexp only (TestSurfaceVerbIsReadOnly)",
+  "S1-D4_api": "AdmitOperator(argv, OperatorPolicy) OperatorAnswer; classes map onto S7's outcomes without an API change",
+  "S1-D5_policy": "headless iff Start in {A,B}; interactive iff Start==A && HandoffProven; finish iff Start in {A,B} && Finish in {A,B}; --ready iff Finish==A; only exact A/B/C are answers; zero value admits nothing",
+  "S1-D6_classes": "usage: case/arity/missing/undefined/duplicate/headless-without-launch/se-tools/bad bool/help; terminal: unsupported option, explicit false, start without --launch, denied mode; other: Lookup's answer; never: never families + world-publish",
+  "S1-D7_seam": "episodeFlagSetSeen (10 lines, nil in production) instead of a 60-line refactor or an AST read",
+  "S1-D8_stricter": "duplicates and explicit false refused; admitted lines parse as the CLI parses them",
+  "S1-D9_action_id": "OperatorActionIDPattern + ValidOperatorActionID defined, no route, no ApproveTarget arm",
+  "S1-D10_unregistered": "caller search with a positive control in the gates; route count; untouched list; CMD_SEAM_LINES 10 0",
+  "S1-D11_no_new_chrome": "app.js unchanged; the existing Needs-you pair, XC2, XD1 and the bar's report test in the gates' chrome leg",
+  "S1-D12_mutants_whole": "named + WHOLE package; mirror mutants only the CLI join sees also run against cmd/ailang-worldd",
+  "S1-D13_no_docs": "no command, flag, output or route added"
+ },
+ "scope": [
+  "host/surfacepage/app_pins_test.go (NEW)",
+  "host/verbs/operator.go (NEW)",
+  "host/verbs/operator_test.go (NEW)",
+  "host/verbs/operator_policy_test.go (NEW)",
+  "cmd/ailang-worldd/operator_parity_test.go (NEW)",
+  "cmd/ailang-worldd/episode.go (+7, the seam)",
+  "cmd/ailang-worldd/episode_finish.go (+3, the seam)"
+ ],
+ "parser": {
+  "package": "host/verbs",
+  "file": "host/verbs/operator.go",
+  "api": "func AdmitOperator(argv []string, p OperatorPolicy) OperatorAnswer; type OperatorPolicy struct{ Start, Finish Answer; HandoffProven bool }; type OperatorAnswer struct{ Class OperatorClass; Intent *OperatorIntent; Field, Reason, CLI string }; type OperatorIntent struct{ Kind, Episode, Preset string; Headless, ConfirmOnSurface, Ready bool; Argv []string }; EpisodeStartFlags, EpisodeFinishFlags []OperatorFlag{Name, Bool, Admit}; EpisodeIDPattern, OperatorActionIDPattern; MaxPresetName = 51; ValidOperatorActionID",
+  "production_callers": "none (S1-D10)"
+ },
+ "executor_lane": "as routed by the controller; one run: M1, M2, M3, M4; apply patches, never retype; never launch Chrome",
+ "executor_form": "every sub-milestone is a unified diff in the plan's Appendix P, applied in order with /usr/bin/patch -p1 -E after a --dry-run (no deletion); acceptance via the plan's accept.sh; cumulative snapshots per plan section 7",
+ "estimate_loc": {
+  "production": 237,
+  "test": 739,
+  "docs": 0,
+  "total_cumulative": 976,
+  "cmd_host_docs_app_only": 976
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "the judge-405 pins",
+   "production": 0,
+   "test": 127,
+   "expected_cumulative_numstat": 127,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M1 fast"
+  },
+  {
+   "id": "M2",
+   "title": "the admitted subset and its grammar rows",
+   "production": 227,
+   "test": 216,
+   "expected_cumulative_numstat": 570,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M2 fast"
+  },
+  {
+   "id": "M3",
+   "title": "policy, never-dispatch, identifiers, the other verbs",
+   "production": 0,
+   "test": 208,
+   "expected_cumulative_numstat": 778,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M3 fast"
+  },
+  {
+   "id": "M4",
+   "title": "the join to the CLI (seam + parity)",
+   "production": 10,
+   "test": 188,
+   "expected_cumulative_numstat": 976,
+   "accept_parts": [
+    "fast",
+    "cmd1",
+    "cmd2",
+    "cmd3"
+   ],
+   "commit_test": "bash $T/accept.sh $W M4 fast"
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "1/0/1",
+  "M2": "3/0/3",
+  "M3": "4/0/4",
+  "M4": "7/0/7"
+ },
+ "design_premises_found_false": [
+  "F1 the design's 41331b4d line numbers: none moved at d92983d5 (confirmation, not a defect)",
+  "F2 'joined to the CLI's flag definitions': no function returns the CLI's flag sets -> the 10-line seam (S1-D7)",
+  "F3 host/verbs' production imports are pinned pure (TestSurfaceVerbIsReadOnly refused strconv) -> boolWords checked against strconv in the test",
+  "F4 '1-64 ASCII grammar' is ^[a-z0-9][a-z0-9-]{0,63}$",
+  "F5 a case-mismatched verb never reaches the subset: Lookup's answer stands",
+  "F6 --headless without --launch is the CLI's own refusal (usage); start without --launch is the attended mint (terminal)",
+  "F7 the CLI accepts duplicates (last wins); the subset is stricter",
+  "F8 an array element that is null throws in confirmLineHTML/decisionLineHTML (unreachable from the daemon) -> Appendix C, S8",
+  "F9 'one live smoke' needs no new Chrome test: app.js unchanged",
+  "F10 Lookup answers world-publish as an address; the subset answers never"
+ ],
+ "existing_tests_edited": [],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [
+  "cmd/ailang-worldd/episode.go (+7: the episodeFlagSetSeen declaration and call)",
+  "cmd/ailang-worldd/episode_finish.go (+3: the call)"
+ ],
+ "files_outside_design_section_7": [],
+ "not_touched": [
+  "tools/launchd/*",
+  "skills",
+  "world/*.ail",
+  "packages/",
+  "scripts/",
+  "cmd/world-publish/*",
+  "plugins/",
+  "host/surfacepage/app/app.js",
+  "host/daemon/* (production)",
+  "host/store/*",
+  "docs/"
+ ],
+ "judge405_pins": {
+  "J-JS-RE-NL": "TestNeedsYouConfirmationEmbeddedNewline",
+  "J-JS-CS-NOGUARD": "TestNeedsYouConfirmationsNonArray",
+  "J-JS-ALLOW-DECIDE": "TestVerbDecidePrefixBoundary",
+  "reproduced_on_base": "all three SURVIVED host/surfacepage whole at d92983d5 (plan 1.2 C9)",
+  "production_defect": "none (C10)"
+ },
+ "mutants": {
+  "killed": 148,
+  "equivalent": 5,
+  "killed_join_only": 1,
+  "total": 153
+ },
+ "mutant_ledger": "/Users/voightkampff/.ailang/state/world-iter407/plan-scratch/mutants/ledger.txt",
+ "race_added_seconds": {
+  "host/verbs": 0.07,
+  "host/surfacepage": 0.26,
+  "cmd/ailang-worldd": 0.01
+ },
+ "gates_script": "plan section 6 (gates.sh)",
+ "v4_split_view": "agree with V4a (S1-S8, after D-WORLD-119) / V4b (S9-S11, after D-WORLD-120) / herdr child (S12, after E4); S3 reserves finish column names, not DDL (Appendix C)",
+ "controller_decisions_requested": [],
+ "verification": {
+  "roundtrip": "plan 1.2 C16",
+  "snapshots": "plan 1.2 C15",
+  "accept": "plan 1.2 C14",
+  "final_gates": "plan 1.2 C17",
+  "base_gates": "plan 1.1"
+ }
+}
