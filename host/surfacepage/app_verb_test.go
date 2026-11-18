@@ -123,7 +123,8 @@ async function run(raw, fetchImpl) {
     assert.equal(B(q).href, href); assert.deepEqual(act, { assign: href }); assert.deepEqual(log, [['clear'], ['assign', href]]);
   }
   // VP5: any other target is refused.
-  for (const href of ['https://evil/x', '/surface/model.json', '//evil/surface/approve/mr-', '/surface/confirm/x', '/surface/confirm/mr-0123456789abcdef']) {
+  for (const href of ['https://evil/x', '/surface/model.json', '//evil/surface/approve/mr-', '/surface/confirm/x', '/surface/confirm/mr-0123456789abcdef',
+    '//evil/surface/confirm/vr-0123456789abcdef', '/x/surface/confirm/vr-0123456789abcdef', '/surface/confirm/vrx0123456789abcdef', '/surface/confirm/VR-0123456789abcdef']) {
     const { log } = await run(MR, reply(200, JSON.stringify({ ...B(MR), href })));
     assert.deepEqual(log, [['say', 'refused: unexpected target']], href);
   }

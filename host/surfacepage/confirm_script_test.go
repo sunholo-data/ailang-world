@@ -300,6 +300,7 @@ const sections = {
       ['409', answer(409, { v: 1, error: 'Conflict', reason: 'the request changed since the card was shown; reload it' }), 'Not confirmed (HTTP 409 Conflict): the request changed since the card was shown; reload it'],
       ['500', answer(500, { v: 1, error: 'Internal', reason: 'the confirmation did not complete; approve again' }), 'Not confirmed (HTTP 500 Internal): the confirmation did not complete; approve again'],
       ['200 not confirmed', answer(200, { v: 1, confirmed: false }), 'Not confirmed (HTTP 200 ): no reason given'],
+      ['500 that says confirmed', answer(500, { v: 1, confirmed: true, approvedBy: 'ssh:x', decision: 'd', next: 'n', error: 'Internal', reason: 'r' }), 'Not confirmed (HTTP 500 Internal): r'],
       ['lost', () => Promise.reject(new TypeError('Failed to fetch')), 'Confirmation outcome unknown: Failed to fetch. Reading the request again.']]) {
       const p = await open(card(c), daemon([c], post));
       p.$('sig').value = 'sig';
