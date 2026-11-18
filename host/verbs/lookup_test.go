@@ -86,7 +86,8 @@ func TestApproveTarget(t *testing.T) {
 	ref := "sha256:" + strings.Repeat("ab", 32)
 	for args, want := range map[string]string{"mr-0123456789abcdef": "/surface/approve/mr-0123456789abcdef", ref: "/surface/decide/" + ref,
 		"mr-0123456789abcdef --deny": "", "--list": "", "": "", ref + "0": "", "sha256:" + strings.Repeat("AB", 32): "", "mr-0123456789abcdef x": "", "mr-0123456789ABCDEF": "",
-		"vr-0123456789abcdef": "/surface/confirm/vr-0123456789abcdef", "vr-0123": "", "vr-0123456789abcdef0": "", "vr-0123456789ABCDEF": "", "xvr-0123456789abcdef": ""} {
+		"vr-0123456789abcdef": "/surface/confirm/vr-0123456789abcdef", "vr-0123": "", "vr-0123456789abcdef0": "", "vr-0123456789ABCDEF": "", "xvr-0123456789abcdef": "",
+		"vr-0123456789abcdef x": "", "vr-0123456789abcdef --deny": "", "--deny vr-0123456789abcdef": ""} {
 		href, reason := ApproveTarget(strings.Fields(args))
 		if href != want || (href == "") == (reason == "") {
 			t.Errorf("ApproveTarget(%q) = %q, %q", args, href, reason)

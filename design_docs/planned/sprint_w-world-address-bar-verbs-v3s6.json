@@ -1,0 +1,185 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v3s6",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v3.md",
+ "design_revision": "r2 (quorum r1/r2 BLOCKED; controller carve-out r2; independent audit PASS 87, iteration 399); not reopened",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v3s6-sprint-plan.md",
+ "previous_sprint": "row 243 V3 S5 (iteration 404, PR #599, merge 48b8b6b6, judge PASS 91; record #600 -> 539cecd0); closest analogues: TestNeedsYouListsDecisions (node harness), TestSurfaceVerbOutcomes (daemon-written golden), XC1 + XD1 (live Chrome, virtual authenticator), S5's newSurfaceRig + CF3, TestDaemonCredentialWriterSites",
+ "base_commit": "539cecd0d37930fb7ab0021bc4e529d794c653b2",
+ "design_measured_at": "994ba123 (every S6 cite re-measured at 539cecd0: none moved since S5's plan; plan 1.2 C1)",
+ "queue_row": 243,
+ "iteration": 405,
+ "phase": "V3",
+ "sprint": "S6 (the surface end to end) - the last V3 sprint",
+ "sprint_number": 6,
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter405-row243-v3s6",
+ "branch": "sprint/world-iter405-row243-v3s6",
+ "authority": [
+  "D-WORLD-118 = A (controller at iteration 405: no OPEN row; --check valid, 105 rows; A since iteration 400, attended): S6 routable; no B-only branch",
+  "D-WORLD-109 = A (t.TempDir() stores, approvaltest keys, virtualPasskey seeds 93/94 as mark-key, Chrome headless on the driver's temporary profile, daemon.New on an httptest loopback, fakeFinishDispatch as gh, countingTerminal never /dev/tty; no real key, mint or publish)",
+  "D-WORLD-107 = A; D-WORLD-89 R1-R5"
+ ],
+ "behaviour": "app.js Needs you lists each requests.json confirmation after the decisions ('Confirm · episode finish <ep> · <repository> <head>@<sha12> · draft|ready · expires hh:mm', a link to /surface/confirm/<id>); a refused row or a non vr-<16 hex> id shows its reason and no link; confirmationsUnavailable is said; all text through esc(); no notification. Tests: CP7 on the daemon's own answers (golden), XC2 and XC3 in live Chrome with a virtual passkey, the judge-404 survivors, TestCLICredentialWriterSites, judge-403 notes 2-3. No schema, route, .ail, CSP, Go production or docs change.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat 539cecd0 HEAD -- cmd host docs app (insertions + deletions; the same unfiltered)",
+  "design_raw_s6": 355,
+  "measured": 425,
+  "ratio": 1.2,
+  "margin": 975,
+  "fired": "no (S6-D1: every carried item taken in the order 1 -> 3 -> 2; judge-403 note 4 decided, S6-D11)",
+  "moved_out": {}
+ },
+ "planner_decisions": {
+  "S6-D1_no_cut": "425 <= 1,400; all carried items taken; nothing parked",
+  "S6-D2_three_submilestones": "M15 Needs you + CP7 + golden; M16 XC2 + XC3; M17 the carried items",
+  "S6-D3_line": "design 2.5 verbatim; after the decisions; counted; 'Confirm · unavailable: <reason>' after the lines; no notification",
+  "S6-D4_id_check": "linked only when /^vr-[0-9a-f]{16}$/ (store.VerbRequestIDPattern) holds, else refused 'not a confirmation id'; esc() kept on the id (two named equivalents)",
+  "S6-D5_cp7_golden": "the handler's requests.json answers as host/surfacepage/testdata/requests-confirmations.golden.json (WORLD_UPDATE_CONFIRMATIONS_GOLDEN=1)",
+  "S6-D6_xc_in_cmd": "cmd/ailang-worldd/confirm_surface_chrome_test.go (needs package main test helpers); CI sets no WORLD_CHROME -> counted skip; gates chrome leg + M16 commit require PASS",
+  "S6-D7_xc3_onwait": "Chrome plays the card from the CLI's first wait; errors returned, never t.Fatal",
+  "S6-D8_rc_input_now": "killed: a row claiming a later consume cannot admit a key the CLI's own clock has not reached",
+  "S6-D9_await_now_stale": "named test on the injected clock, parks past the deadline, < 1 s; sorts before the rig file",
+  "S6-D10_cli_writer_sites": "TestCLICredentialWriterSites: openCredentialsForSession, launchEpisode, finishRevoke, putFinishVerbRequest; >= 20 read-only (23)",
+  "S6-D11_note4": "not built: a route is a static fact; route-table tests + DAEMON_ROUTES/SURFACE_POSTS are the instruments",
+  "S6-D12_mutants_whole": "named + WHOLE package; static-only kills re-run without the static test",
+  "S6-D13_no_docs": "QUICKSTART 20 already walks the card link; no CLI flag added"
+ },
+ "scope": [
+  "host/surfacepage/app/app.js (needsYouHTML + confirmLineHTML)",
+  "host/daemon/surface_needs_you_golden_test.go (NEW)",
+  "host/surfacepage/testdata/requests-confirmations.golden.json (NEW, generated)",
+  "host/surfacepage/app_confirm_test.go (NEW, CP7)",
+  "cmd/ailang-worldd/confirm_surface_chrome_test.go (NEW, XC2 XC3)",
+  "cmd/ailang-worldd/confirm_surface_clock_test.go (NEW)",
+  "cmd/ailang-worldd/cli_credential_writers_test.go (NEW)",
+  "host/verbs/lookup_test.go",
+  "host/surfacepage/app_verb_test.go",
+  "host/surfacepage/confirm_script_test.go",
+  "host/daemon/surface_confirm_test.go"
+ ],
+ "executor_lane": "as routed by the controller; one run: M15, M16, M17; apply patches, never retype; never launch Chrome",
+ "executor_form": "every sub-milestone is a unified diff in the plan's Appendix P, applied in order with /usr/bin/patch -p1 -E after a --dry-run (no deletion); acceptance via the plan's accept.sh; cumulative snapshots per plan section 7",
+ "estimate_loc": {
+  "production": 17,
+  "test": 407,
+  "golden": 1,
+  "docs": 0,
+  "total_cumulative": 425,
+  "cmd_host_docs_app_only": 425
+ },
+ "milestones": [
+  {
+   "id": "M15",
+   "title": "Needs you lists the finish confirmations; CP7 on the handler's answers (golden)",
+   "production": 17,
+   "test": 140,
+   "expected_cumulative_numstat": 157,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M15 fast"
+  },
+  {
+   "id": "M16",
+   "title": "XC2 + XC3 in live Chrome",
+   "production": 0,
+   "test": 133,
+   "expected_cumulative_numstat": 290,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M16 fast && bash $T/accept.sh $W M16 chrome"
+  },
+  {
+   "id": "M17",
+   "title": "the carried items: judge-404 survivors, TestCLICredentialWriterSites, judge-403 notes 2-3",
+   "production": 0,
+   "test": 135,
+   "expected_cumulative_numstat": 425,
+   "accept_parts": [
+    "fast",
+    "cmd1",
+    "cmd2",
+    "daemon1",
+    "daemon2"
+   ],
+   "commit_test": "bash $T/accept.sh $W M17 fast"
+  }
+ ],
+ "expected_snapshots": {
+  "M15": "4/0/4",
+  "M16": "5/0/5",
+  "M17": "11/0/11"
+ },
+ "design_premises_found_false": [
+  "F1 design 2.5 refused-row rule does not cover a summarised row with a non-confirmation id -> S6-D4",
+  "F2 no landed harness reads daemon-made requests.json -> the verb-route golden pattern",
+  "F3 the driver's cardState reads ids the confirm card lacks -> openCard raw + waitFor + tap",
+  "F4 storeOwn's scope (sfT0+900) is refused by C10 F2 against the wall clock -> scope at now+900",
+  "F5 E-AWAIT-NOW-STALE is killed by S5's named test alone (20 s); the package hang is the rig's -> a named < 1 s test that sorts first",
+  "F6 judge-403 note 2: the code checks status 200; the test did not -> one row",
+  "F7 notes 2-3 land in tests outside design 7",
+  "F8 XC2's decision checked through the CLI's own read-back"
+ ],
+ "existing_tests_edited": [
+  "host/verbs/lookup_test.go (+3 vr- arity rows in one line; design 7)",
+  "host/surfacepage/app_verb_test.go (+4 refused hrefs)",
+  "host/surfacepage/confirm_script_test.go (+1 answers row; judge-403 note 2)",
+  "host/daemon/surface_confirm_test.go (busy reason exact; judge-403 note 3)"
+ ],
+ "existing_tests_deleted": [],
+ "files_outside_design_section_7": [
+  "host/daemon/surface_needs_you_golden_test.go",
+  "host/surfacepage/testdata/requests-confirmations.golden.json",
+  "cmd/ailang-worldd/confirm_surface_clock_test.go",
+  "cmd/ailang-worldd/cli_credential_writers_test.go",
+  "host/surfacepage/confirm_script_test.go",
+  "host/daemon/surface_confirm_test.go"
+ ],
+ "not_touched": [
+  "tools/launchd/*",
+  "skills",
+  "world/*.ail",
+  "packages/",
+  "scripts/",
+  "cmd/world-publish/*",
+  "every Go production file",
+  "confirm.js, approve.js, decide.js",
+  "cmd/ailang-worldd/testdata/passkey_cdp.mjs",
+  "every pre-existing episode_finish*_test.go",
+  "docs/"
+ ],
+ "carried_items": {
+  "judge404_E-LK-VR-LEN": "TestApproveTarget (+ vr- x, vr- --deny, --deny vr-)",
+  "judge404_E-JS-INCLUDES_NODASH": "TestSurfaceAppVerbs (+ //evil and /x prefixes, vrx, VR-)",
+  "judge404_E-RC-INPUT-NOW": "TestPollVerbRequestRechecksAtItsOwnClock",
+  "judge404_E-AWAIT-NOW-STALE": "TestAwaitVerbConfirmationEndsOnItsClock",
+  "s5_F8_cli_writer_sites": "TestCLICredentialWriterSites",
+  "judge403_note2": "TestConfirmPageShowsRefusals (+ 500 that says confirmed)",
+  "judge403_note3": "TestConfirmPOSTRefusesBeforeAnyWrite (busy reason exact)",
+  "judge403_note4": "decided, not built (S6-D11)"
+ },
+ "mutants": {
+  "killed": 47,
+  "equivalent": 2,
+  "controls": 2,
+  "not_a_mutant": 1,
+  "killed_static_only": 1,
+  "total": 49
+ },
+ "mutant_ledger": "/Users/voightkampff/.ailang/state/world-iter405/plan-scratch/mutants/ledger.txt",
+ "race_added_seconds": {
+  "cmd/ailang-worldd": 1.2,
+  "host/daemon": 0.41,
+  "host/surfacepage": 0.32
+ },
+ "gates_script": "plan section 6 (gates.sh)",
+ "v3_exit": "built: S1-S6 (law, card, schema 9, POST, CLI flag, bar, Needs you, live-Chrome proof). Attended: Mark's no-terminal exit episode (parent 10 step 4), never run by the loop. V4: who runs finish without a terminal (F1), launching from the bar, episode start with a launch preset, herdr, per-check confirmation, notifications for confirmations.",
+ "verification": {
+  "roundtrip": "plan 1.2 C16",
+  "snapshots": "plan 1.2 C15",
+  "accept": "plan 1.2 C14",
+  "final_gates": "plan 1.2 C17",
+  "leak": "plan 1.2 C21"
+ }
+}

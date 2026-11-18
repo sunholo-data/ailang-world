@@ -426,16 +426,20 @@
   // then the notification opt-in for this browser's permission (design §2.9).
   // Row 201 A4 (design §2.8): then the pending Human.Approve decisions of the same read, each a link to
   // its decision card; a reserved one names its typed owner and a refused one its reason, with no link.
+  // Row 243 V3 (design §2.5): then the pending finish confirmations, each a link to its card; a refused one
+  // shows its reason with no link; confirmationsUnavailable is said, never hidden.
   function needsYouHTML(r, now, permission) {
     const p = r && Array.isArray(r.pending) ? r.pending : [];
     const ds = r && Array.isArray(r.decisions) ? r.decisions : [];
-    const n = p.length + ds.length;
+    const cs = r && Array.isArray(r.confirmations) ? r.confirmations : [];
+    const n = p.length + ds.length + cs.length;
     const head = `<div class="nh" style="color:${n ? 'var(--youShell)' : 'var(--sub)'}">Needs you · ${n}</div>`;
-    const more = r && r.decisionsTruncated ? '<div class="nl sub">Older approval requests are not listed; decide them at a terminal with ailang-worldd approve &lt;request-ref&gt;</div>' : '';
+    const more = (r && r.confirmationsUnavailable ? `<div class="nl sub">Confirm · unavailable: ${esc(r.confirmationsUnavailable)}</div>` : '')
+      + (r && r.decisionsTruncated ? '<div class="nl sub">Older approval requests are not listed; decide them at a terminal with ailang-worldd approve &lt;request-ref&gt;</div>' : '');
     if (!n) return `<div class="nsec" data-needs>${head}<div class="nl sub">${esc(r && r.unavailable || 'Nothing needs you')}</div>${more}${notifyHTML(permission)}</div>`;
     return `<div class="nsec" data-needs>${head}` + p.map(q => q.refused ? `<div class="nl sub">${esc(q.id)} · refused: ${esc(q.refused)}</div>`
       : `<div class="nl"><a id="needs-${esc(q.id)}" href="/surface/approve/${esc(q.id)}"><b>${esc(q.episode)}</b> · ${esc(q.agent)} · ${q.grants} grant${q.grants === 1 ? '' : 's'} · expires in ${Math.max(0, Math.ceil((q.expires - now) / 60))} min</a>`
-        + (q.recorded ? ` · approved by ${esc(q.recorded)}, waiting for the minter` : '') + '</div>').join('') + ds.map(decisionLineHTML).join('')
+        + (q.recorded ? ` · approved by ${esc(q.recorded)}, waiting for the minter` : '') + '</div>').join('') + ds.map(decisionLineHTML).join('') + cs.map(confirmLineHTML).join('')
       + more + notifyHTML(permission) + '</div>';
   }
   // RESERVED_OWNERS is the typed command that owns a reserved decision (design §2.6 L1).
@@ -446,6 +450,13 @@
     if (x.refusal) return `<div class="nl sub">Decide · ${esc(x.scope)} · refused: ${esc(x.refusal)}</div>`;
     const ref = String(x.request || '').replace(/^sha256:/, '');
     return `<div class="nl"><a id="decide-${esc(ref)}" href="/surface/decide/sha256:${esc(ref)}">Decide · ${esc(x.scope)} · requested by ${esc(x.requester)} · deadline ${hm(new Date(x.deadline * 1000))}</a></div>`;
+  }
+  // confirmLineHTML is one finish confirmation's Needs-you line (row 243 V3 §2.5): a link to its card only for
+  // a summarised row whose id is a confirmation id (store.VerbRequestIDPattern); otherwise its reason, no link.
+  function confirmLineHTML(c) {
+    if (c.refused || !/^vr-[0-9a-f]{16}$/.test(c.id)) return `<div class="nl sub">Confirm · ${esc(c.id)} · refused: ${esc(c.refused || 'not a confirmation id')}</div>`;
+    return `<div class="nl"><a id="confirm-${esc(c.id)}" href="/surface/confirm/${esc(c.id)}">Confirm · episode finish ${esc(c.episode)} · ${esc(c.repository)} ${esc(c.head)}@${esc(String(c.sha || '').slice(0, 12))}`
+      + ` · ${c.draft ? 'draft' : 'ready'} · expires ${hm(new Date(c.expires * 1000))}</a></div>`;
   }
   // notifyHTML is the opt-in: "Notify me" while this browser has not been asked (permission "default"),
   // its answer once it has, and nothing where the browser has no notifications.

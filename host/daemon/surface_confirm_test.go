@@ -275,8 +275,8 @@ func TestConfirmPOSTRefusesBeforeAnyWrite(t *testing.T) {
 	}
 	rec := a.confirm(other.RequestID, otherBody)
 	_ = held.Close()
-	if requireRefusal(t, "C13 busy", rec, 503, "Busy"); rec.Header().Get("Retry-After") != "1" {
-		t.Errorf("C13 Retry-After %q", rec.Header().Get("Retry-After"))
+	if got := requireRefusal(t, "C13 busy", rec, 503, "Busy"); rec.Header().Get("Retry-After") != "1" || got.Reason != "the credentials store is busy (a mint or a session verb is writing it); try again" {
+		t.Errorf("C13 Retry-After %q, reason %q", rec.Header().Get("Retry-After"), got.Reason)
 	}
 	if after := a.confirmState(); after != before {
 		t.Fatalf("C12/C13 wrote:\n%s\n%s", before, after)
