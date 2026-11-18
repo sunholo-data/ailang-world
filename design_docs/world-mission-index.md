@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 407 | 2026-11-18 | row 243 V4 sprint 1 LANDED (PR #606, merge `d0f22aa7`): the judge-405 `app.js` pins and `host/verbs.AdmitOperator`, the pure, unregistered admitted... |
 | 406 | 2026-11-18 | row 243 V4 design DONE (`w-world-address-bar-verbs-v4.md` r1): start and finish an episode from the World app through an opt-in user LaunchAgent ru... |
 | 405 | 2026-11-18 | row 243 V3 sprint 6 LANDED, ROW 243 V3 COMPLETE (PR #601, merge `0077a7b0`): *Needs you* lists the finish confirmations (`app.js`, the only product... |
 | 404 | 2026-11-18 | row 243 V3 sprint 5 LANDED (PR #599, merge `48b8b6b6`): `episode finish --confirm-on-surface` (refusals, the request put, the tty-free wait, the re... |

@@ -1,22 +1,21 @@
-# World mission dashboard — iteration 406 (2026-11-18)
+# World mission dashboard — iteration 407 (2026-11-18)
 
-- **Done this fire:** row 243 **V4 design r1** — [`w-world-address-bar-verbs-v4.md`](planned/w-world-address-bar-verbs-v4.md) (880 lines). Quorum r2 **PROCEED 3/3**; independent audit sonnet **PASS 81**, 0 blocking.
-  - **Who runs it:** an opt-in user LaunchAgent "runner" installed by `service`, running as you with an explicit PATH (the installed World job's PATH has no `gh`). Measured this fire: under that PATH, `gh` and Git over the Keychain helper work non-interactively.
-  - **Order:** start and launch an episode from the browser first (one headless agent), then finish to a PR with two key gestures (local prep, then V3's real PR prompt).
-  - **Durable:** every action is a signed record with one owner; every effect (worktree, mint, launch, commit, push, PR) is reserved before it runs and reconciled after a crash. Nothing is blindly re-run.
-  - **Out:** merge, per-check confirmation of unsandboxed checks, notifications.
-  - **Size:** 12 sprints, about 12.7k changed lines. The parent estimated about 2,000.
-- **DECISIONS FOR MARK (new):**
-  - **D-WORLD-119:** may the World app start and launch a confined episode through the runner after a key approval? Recommendation A (headless now, herdr later after its experiment). Default: only S1–S2 (pins, the pure law) get built.
+- **Done this fire:** row 243 **V4 sprint 1 LANDED** — PR #606, merge `d0f22aa7`, head and merge CI 3/3. 976 lines. Independent judge sonnet **PASS 93**, 0 blocking.
+  - **What it adds:** `host/verbs.AdmitOperator` decides, without running anything, whether a bar line is one of the few `episode start … --launch --headless` / `episode finish …` forms the app may later offer to run, and otherwise why not (usage, terminal-only, never, or an ordinary address).
+  - **Tied to the CLI:** parity tests read the CLI's real `episode start`/`finish` flags (through a 10-line test seam that does nothing in production) and fail if either side drifts.
+  - **Your answers are an input:** D-WORLD-119/120 are a policy value; with no answer it admits nothing.
+  - **Also:** three tests pin the `app.js` cases judge-405 found unpinned (`app.js` unchanged).
+  - **Not wired:** no route, page, schema or `.ail` change; nothing in production calls it yet.
+- **Your PR #607 (episode composer)** merged mid-sprint and touched `app.js`; the pins were re-run green on the combined merge commit with node.
+- **DECISIONS FOR MARK (still open, unchanged from 406):**
+  - **D-WORLD-119:** may the app start and launch a confined episode through the runner after a key approval? Recommendation A. Default: only S1–S2 get built.
   - **D-WORLD-120:** may finish run without a terminal (key for local prep, then key for the exact PR)? Recommendation A. Default: finish keeps needing a terminal.
-- **Next loop work:** row 243 **V4 sprint 1** planner — the judge-405 pins and the pure admitted grammar. It needs no answer. The audit recommends splitting the plan into V4a start, V4b finish and herdr.
-- **Attended context used:** your untracked briefs `w-phone-episode-workflow.md` and `w-human-agent-surface.md` (read as product input, not committed). PR #604 merged during the fire.
+- **Next loop work:** row 243 **V4 sprint 2** — the canonical signed action and its key proofs, against fakes. Needs no answer. After S2, the loop waits on D-WORLD-119.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
 - **Routing this fire:**
-  - Designer: `codex:gpt-6.2-sol` (rotation's turn; r0 29 min, r1 11 min).
-  - Evaluator: sonnet via Agent (3.7 min).
-  - Quorum: sonnet, gemini-4-argon, glm-5-3 (OpenAI benched as author). Metered $0.46.
+  - Planner: opus via Agent (59 min). Executor: haiku via Agent (6 min). Judge: sonnet via Agent (30 min), own worktree.
+  - Gates 1,230 s, all legs green incl. `verify_go` and live Chrome. Metered $0.
 - **Instrument notes:**
-  - The designer's sandboxed `gh auth` probe read as a failure; the real probe outside the sandbox passed. Network and launchd probes belong to the controller.
   - Self-notices still read no watermark (the #574/#524 files are absent).
+  - Judge note carried to S7: nothing tests that the parser writes nothing to stderr.
 - **Bookkeeping thread:** #574.
