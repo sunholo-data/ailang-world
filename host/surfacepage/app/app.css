@@ -388,3 +388,6 @@ button { user-select: none; -webkit-user-select: none; }
   #br .rrow,#br button.chip { min-height:44px; }
 }
 @media(max-width:700px) and (hover:none){#tip{display:none}}
+
+.finish-link { display:block; min-height:44px; padding:8px; color:var(--youInk); background:var(--youFill); border-inline-start:3px solid var(--you); overflow-wrap:anywhere; font-weight:600; }
+.finish-link small { display:block; color:var(--sub); font-weight:400; }

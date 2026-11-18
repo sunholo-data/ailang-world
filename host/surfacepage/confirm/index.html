@@ -5,40 +5,96 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AILANG World: confirm an episode finish</title>
 <style>
-body { font: 16px/1.5 system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; color: #1d1d1f; }
-h1 { font-size: 1.4rem; }
-h2 { font-size: 1.05rem; margin: 1.2rem 0 0.3rem; }
-#what, #status, #answer { white-space: pre-wrap; }
-#what[data-error] { color: #b00020; font-weight: 600; }
-pre { font: 13px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; background: #f5f5f7; padding: 0.6rem; margin: 0; }
-dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.15rem 1rem; margin: 0; }
-dt { color: #555; }
-dd { margin: 0; font: 13px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
-#sshline { font: 13px ui-monospace, monospace; overflow-wrap: anywhere; }
+:root { color-scheme: light; font: 100%/1.5 system-ui, sans-serif; background: #f3f5f8; color: #182230; }
+* { box-sizing: border-box; }
+body { max-width: 50rem; margin: auto; padding: 0.75rem clamp(0.75rem, 4vw, 2rem) 2rem; overflow-wrap: anywhere; }
+main { background: #fff; border: 1px solid #d2dbe6; border-radius: 0.8rem; padding: clamp(1rem, 4vw, 2rem); }
+h1 { font-size: clamp(1.45rem, 5vw, 2rem); line-height: 1.2; margin: 0 0 0.35rem; }
+h2 { font-size: 1.125rem; margin: 1.25rem 0 0.5rem; }
+p { margin: 0.5rem 0; }
+a { color: #164899; }
+#back { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 0.5rem; }
+#overview { margin: 0 0 0.85rem; }
+#what, #answer { white-space: pre-wrap; }
+.notice { background: #eef4ff; border-inline-start: 4px solid #3762a1; border-radius: 0.35rem; padding: 0.65rem 0.8rem; }
+#status { display: block; }
+#what:empty, #answer:empty { margin: 0; }
+#what[data-error] { color: #9c1730; }
+dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); gap: 0.4rem 0.8rem; margin: 0; }
+dt { color: #475467; }
+dd { margin: 0; min-width: 0; }
+.exact, pre, #signed dd { white-space: pre-wrap; overflow-wrap: anywhere; }
+pre, code, #signed dd { font: 0.875rem/1.5 ui-monospace, monospace; }
+pre { background: #f3f5f8; padding: 0.65rem; margin: 0.4rem 0 0; border-radius: 0.35rem; }
+#review-protected { margin: 0; padding-inline-start: 1.25rem; }
+details { border-top: 1px solid #d2dbe6; }
+summary { cursor: pointer; min-height: 44px; padding: 0.65rem 0.25rem; font-weight: 600; }
+details[open] { padding-bottom: 0.7rem; }
+#controls { margin: 1rem 0; }
+button { font: inherit; font-weight: 650; padding: 0.65rem 1rem; min-height: 44px; cursor: pointer; background: #164899; color: #fff; border: 1px solid transparent; border-radius: 0.4rem; }
+button:disabled { background: #e4e9f0; color: #475467; cursor: default; }
+#go { margin-bottom: 0.6rem; }
+#save { display: inline-flex; align-items: center; min-height: 44px; }
+textarea { display: block; width: 100%; min-height: 6rem; font: inherit; margin: 0.35rem 0 0.7rem; }
+:focus-visible { outline: 3px solid #164899; outline-offset: 3px; }
 [hidden] { display: none !important; }
+@media (max-width: 32rem) {
+  #review, #signed { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  dd + dt { margin-top: 0.55rem; }
+  button { width: 100%; }
+}
 </style>
 </head>
 <body data-state="loading">
-<h1>Confirm an episode finish</h1>
-<p id="what">Reading the request…</p>
+<nav aria-label="World"><a id="back" href="/surface">← Back to World</a></nav>
+<main>
+<h1>Episode finish confirmation</h1>
+<p id="overview" hidden><strong id="action"></strong> in <span id="repository"></span><br>Episode <span id="episode"></span></p>
+<div class="notice" role="status" aria-atomic="true">
+<strong id="status" tabindex="-1">Reading the request…</strong>
+<p id="what"></p>
+</div>
+<p id="answer" role="status"></p>
 <div id="shown" hidden>
-<h2>The command</h2>
-<pre id="argv"></pre>
-<h2>The terminal's prompt</h2>
-<pre id="prompt"></pre>
-<h2>Open this pull request?</h2>
-<p id="status"></p>
-<p id="answer"></p>
+<h2>Review pull request</h2>
+<dl id="review">
+<dt>Title</dt><dd id="review-title" class="exact" dir="auto"></dd>
+<dt>Head branch</dt><dd id="head" class="exact"></dd>
+<dt>Base branch</dt><dd id="base" class="exact"></dd>
+<dt>PR state</dt><dd id="pr-state"></dd>
+<dt>Label</dt><dd id="label"></dd>
+<dt>Protected paths changed</dt><dd><span id="no-protected" hidden>None</span><ul id="review-protected" hidden></ul></dd>
+</dl>
+<details>
+<summary>Full PR body <span id="f-body-size"></span></summary>
+<pre id="f-body" dir="auto"></pre>
+</details>
 <div id="controls" hidden>
-<p><button id="go" hidden type="button" disabled>Approve with your passkey</button></p>
-<p><a id="save">Save the message</a></p>
-<p id="sshline"></p>
-<p><label for="sig">Paste the signature</label><br><textarea id="sig"></textarea></p>
-<p><button id="post-sig" type="button" disabled>Confirm with this signature</button></p>
+<button id="go" hidden type="button" disabled>Approve with your passkey</button>
+<details>
+<summary>Approve with an SSH signature</summary>
+<a id="save">Download the message to sign</a>
+<p>Sign the downloaded file with your enrolled SSH key.</p>
+<pre id="sshline"></pre>
+<p><label for="sig">Paste the SSH signature</label></p>
+<textarea id="sig" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+<button id="post-sig" type="button" disabled>Approve with this signature</button>
+</details>
 </div>
-<h2>What your key signs</h2>
+<details>
+<summary>Terminal prompt</summary>
+<pre id="prompt" dir="auto"></pre>
+</details>
+<details>
+<summary>Command</summary>
+<pre id="argv"></pre>
+</details>
+<details>
+<summary>Message hash and signed details</summary>
 <dl id="signed"></dl>
+</details>
 </div>
+</main>
 <script src="/surface/confirm.js"></script>
 </body>
 </html>

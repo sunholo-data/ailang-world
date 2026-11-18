@@ -267,7 +267,7 @@
       const [bg, fg, bd] = ACT[a.actor] || ACT.world;
       return `<div class="act"${a.source ? ` data-tip="src:${esc(a.source)}"` : ''}><span class="who" style="background:${bg};color:${fg};border-color:${bd}">${WHO[a.actor] || esc(a.actor)}</span><span class="tx">${esc(a.text)}<span class="tm">${esc(a.rel)}</span></span></div>`;
     }).join('');
-    const decisions = `<div class="col g9"><div class="colh">Decisions</div>${acts || none('None recorded.')}</div>`;
+    const decisions = `<div class="col g9" data-decisions><div class="colh">Decisions</div>${acts || none('None recorded.')}</div>`;
 
     const ck = F.checks || {};
     const v = verdict(ck.graders, ck.rounds, F.firstRoundPass, ck.minutes);
@@ -292,7 +292,7 @@
       : none(o.baseOutsideWindow ? `Built on ${o.base || 'an unrecorded base'}, outside the retained window.` : 'Base not recorded.');
     const inputs = `<div class="col"><div class="colh">Inputs</div>${grid ? `<div class="ingrid">${grid}</div>` : ''}${came}</div>`;
     const outputs = `<div class="col g6"><div class="colh">Outputs</div>${F.pr ? `<div class="prpill">#${F.pr} · waiting for merge</div>` : none('Nothing has landed yet.')}</div>`;
-    const decisions = `<div class="col g9"><div class="colh">Decisions</div>${none('None recorded.')}</div>`;
+    const decisions = `<div class="col g9" data-decisions><div class="colh">Decisions</div>${none('None recorded.')}</div>`;
     const checks = `<div class="col g9"><div class="colh">Checks</div>${none('No checks until it lands.')}</div>`;
     return bar + `<div class="fbody">${head}<div class="cols">${inputs}${outputs}${decisions}${checks}</div></div>`;
   }
@@ -1032,6 +1032,7 @@
     }
     $('front').innerHTML = frontHTML(S, T);
     $('front').dataset.front = F.id;
+    showFinishRequests();
     $('front').setAttribute('aria-label', cleanTitle(F.title) || F.label);
     const pos = railIdx();
     if (!$('phone-step-nav')) {
@@ -1041,6 +1042,27 @@
     $('phone-later').disabled = pos >= RAIL.length - 1;
     placeBars(animate);
     $('rail').innerHTML = railHTML(S);
+  }
+
+  // An episode's pending finishes also belong beside its recorded decisions.
+  // Keep signing at the canonical confirmation origin and return to this stack.
+  function showFinishRequests() {
+    const section = $('front')?.querySelector('[data-decisions]');
+    if (!section || !F) return;
+    let links = section.querySelector('[data-finish-links]');
+    const requests = (REQS?.confirmations || []).filter(c =>
+      F.episode && c.episode === F.episode && !c.refused && /^vr-[0-9a-f]{16}$/.test(c.id));
+    if (!requests.length) { links?.remove(); return; }
+    const html = requests.map(c => {
+      const origin = new URLSearchParams({brane:F.brane, at:F.id});
+      return `<a class="finish-link" href="/surface/confirm/${esc(c.id)}#${esc(origin.toString())}">Review ${c.draft ? 'draft PR' : 'PR'} · ${esc(c.repository)}<small>${esc(c.head)} @ ${esc(String(c.sha).slice(0,8))}</small></a>`;
+    }).join('');
+    if (!links) {
+      links = document.createElement('div');
+      links.dataset.finishLinks = '';
+      section.querySelector('.colh').after(links);
+    }
+    if (links.dataset.content !== html) { links.innerHTML = html; links.dataset.content = html; }
   }
 
   // ---------- Header ----------
@@ -1066,6 +1088,7 @@
   const notifyPermission = () => typeof Notification === 'undefined' ? '' : Notification.permission;
   async function loadRequests() {
     try { REQS = (await getJSON('/surface/requests.json')).body; } catch (_) { REQS = null; }
+    showFinishRequests();
     const n = notifications(REQS, seenIds, notifyPermission());
     seenIds = n.seen;
     n.notes.forEach(x => { const note = new Notification(x.title, { body: x.body, tag: x.tag }); note.onclick = () => { window.focus(); location.assign(x.href); }; });
@@ -1577,6 +1600,7 @@
   document.addEventListener('keydown', e => {
     if (e.target && (e.target.tagName === 'INPUT' || e.target.closest?.('#episode-draft, #compose-btn'))) return;
     const k = e.key; let done = true;
+    if (k === 'Enter' && e.target?.closest?.('[data-finish-links]')) return;
     if (k === 'Enter' && e.target && e.target.id === 'home') return;   // the link's own activation: its click goes home
     if (k === 'Enter' && e.target && e.target.closest && e.target.closest('[data-now]')) return;   // the now card's links and buttons activate themselves
     if (k === '?') toggle('keys');
