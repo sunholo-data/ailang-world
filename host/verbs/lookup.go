@@ -87,9 +87,12 @@ func Lookup(argv []string) (Verb, []string) {
 		switch argv[1] {
 		case "report":
 			return Verb{Words: "episode report", Class: Read, CLI: cli}, argv[2:]
-		case "start", "finish":
-			return Verb{Words: "episode " + argv[1], Class: Mutate, CLI: cli,
-				Reason: "episode " + argv[1] + " changes World. The app cannot run it yet."}, argv[2:]
+		case "start":
+			return Verb{Words: "episode start", Class: Mutate, CLI: cli,
+				Reason: "episode start changes World. The app cannot run it yet."}, argv[2:]
+		case "finish": // row 243 V3 §2.8: still terminal; the reason names the CLI's surface mode
+			return Verb{Words: "episode finish", Class: Mutate, CLI: cli,
+				Reason: "episode finish changes World. The app cannot run it yet; at a terminal, --confirm-on-surface lets you approve its pull request here with your key."}, argv[2:]
 		case "launch":
 			return Verb{Words: "episode launch", Class: Host, CLI: cli,
 				Reason: "episode launch needs a host process. The app cannot run it yet."}, argv[2:]
@@ -119,6 +122,7 @@ func Lookup(argv []string) (Verb, []string) {
 var (
 	mintRequestID = regexp.MustCompile(`^mr-[0-9a-f]{16}$`)
 	decisionRef   = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
+	verbRequestID = regexp.MustCompile(`^vr-[0-9a-f]{16}$`)
 )
 
 // ApproveTarget is approve's navigate arm: one request id or decision ref, no flag, opens its card.
@@ -128,6 +132,9 @@ func ApproveTarget(args []string) (href, reason string) {
 	}
 	if len(args) == 1 && decisionRef.MatchString(args[0]) {
 		return "/surface/decide/" + args[0], ""
+	}
+	if len(args) == 1 && verbRequestID.MatchString(args[0]) { // row 243 V3 §2.8: a finish confirmation's card
+		return "/surface/confirm/" + args[0], ""
 	}
 	return "", "the app opens approve <request-id|request-ref> as its card; any flag or other form runs at a terminal"
 }

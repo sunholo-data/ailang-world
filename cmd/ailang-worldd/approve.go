@@ -225,6 +225,9 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	id := ""
 	if !*list {
 		id = positional[0]
+		if store.VerbRequestIDPattern.MatchString(id) { // row 243 V3 §2.8: the bar's grammar and the CLI's agree on the id
+			return refuse("request %s is a finish confirmation: confirm it on its card, /surface/confirm/%s; the waiting episode finish opens the pull request", id, id)
+		}
 		if decisionRefPattern.MatchString(id) { // row 201 A4: a request ref selects the decision mode (design §2.10)
 			if *await { // CD3
 				return refuse("a request ref is decided at once by the daemon: there is nothing to await")

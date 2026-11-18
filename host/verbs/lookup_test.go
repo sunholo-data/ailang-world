@@ -29,8 +29,8 @@ var lookupCases = []struct {
 	{"episode report w1", "episode report", Read, "", true, []string{"w1"}},
 	{"ailang-worldd episode report w1 --json", "episode report", Read, "", true, []string{"w1", "--json"}},
 	{"approve mr-0123456789abcdef", "approve", Navigate, "", true, []string{"mr-0123456789abcdef"}},
-	{"episode start w1", "episode start", Mutate, "changes World", true, []string{"w1"}},
-	{"episode finish w1 --preset p", "episode finish", Mutate, "changes World", true, []string{"w1", "--preset", "p"}},
+	{"episode start w1", "episode start", Mutate, "episode start changes World. The app cannot run it yet.", true, []string{"w1"}},
+	{"episode finish w1 --preset p", "episode finish", Mutate, "episode finish changes World. The app cannot run it yet; at a terminal, --confirm-on-surface lets you approve its pull request here with your key.", true, []string{"w1", "--preset", "p"}},
 	{"episode launch w1", "episode launch", Host, "needs a host process", true, []string{"w1"}},
 	{"approver enroll --name x", "approver", Never, "approver is never run from the app: enrolling", true, []string{"enroll", "--name", "x"}},
 	{"session frob", "session", Never, "minting and revoking a session", true, []string{"frob"}},
@@ -85,7 +85,8 @@ func TestLookup(t *testing.T) {
 func TestApproveTarget(t *testing.T) {
 	ref := "sha256:" + strings.Repeat("ab", 32)
 	for args, want := range map[string]string{"mr-0123456789abcdef": "/surface/approve/mr-0123456789abcdef", ref: "/surface/decide/" + ref,
-		"mr-0123456789abcdef --deny": "", "--list": "", "": "", ref + "0": "", "sha256:" + strings.Repeat("AB", 32): "", "mr-0123456789abcdef x": "", "mr-0123456789ABCDEF": ""} {
+		"mr-0123456789abcdef --deny": "", "--list": "", "": "", ref + "0": "", "sha256:" + strings.Repeat("AB", 32): "", "mr-0123456789abcdef x": "", "mr-0123456789ABCDEF": "",
+		"vr-0123456789abcdef": "/surface/confirm/vr-0123456789abcdef", "vr-0123": "", "vr-0123456789abcdef0": "", "vr-0123456789ABCDEF": "", "xvr-0123456789abcdef": ""} {
 		href, reason := ApproveTarget(strings.Fields(args))
 		if href != want || (href == "") == (reason == "") {
 			t.Errorf("ApproveTarget(%q) = %q, %q", args, href, reason)

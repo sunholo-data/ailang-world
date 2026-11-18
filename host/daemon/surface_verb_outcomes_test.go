@@ -35,6 +35,7 @@ func TestSurfaceVerbOutcomes(t *testing.T) {
 		{"episode launch w1 --preset p", "terminal", "host", "episode launch", "ailang-worldd episode launch w1 --preset p", "", "needs a host process"},
 		{"approve " + mr, "navigate", "navigate", "approve", "ailang-worldd approve " + mr, "/surface/approve/" + mr, ""},
 		{"ailang-worldd approve " + ref, "navigate", "navigate", "approve", "ailang-worldd approve " + ref, "/surface/decide/" + ref, ""},
+		{"approve vr-0123456789abcdef", "navigate", "navigate", "approve", "ailang-worldd approve vr-0123456789abcdef", "/surface/confirm/vr-0123456789abcdef", ""},
 		{"approve " + mr + " --deny", "refused", "navigate", "approve", "ailang-worldd approve " + mr + " --deny", "", "the app opens approve"},
 		{"approver enroll --name x", "refused", "never", "approver", "ailang-worldd approver enroll --name x", "", "never run from the app"},
 		{"session frob", "refused", "never", "session", "ailang-worldd session frob", "", "never run from the app"},
@@ -75,7 +76,7 @@ func TestSurfaceVerbOutcomes(t *testing.T) {
 	golden := map[string]string{}
 	for _, q := range []string{"row-189@6", "world shared@0ffbb9c", "back", "world why", "why", "log", "world session",
 		"ailang-worldd world get world-1", "episode", "world episode", "world a b c", "episode finish w1 --preset p",
-		"approve mr-0123456789abcdef", "approve " + ref, "episode report nobody", "episode report w1", "episode report w1 --json",
+		"approve mr-0123456789abcdef", "approve " + ref, "approve vr-0123456789abcdef", "episode report nobody", "episode report w1", "episode report w1 --json",
 		strings.Repeat("x", verbs.MaxLine+1), "why 2", "why head --json", "why 9", "why --result f"} {
 		_, raw := verbGet(a, q)
 		golden[q] = raw
