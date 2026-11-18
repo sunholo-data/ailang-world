@@ -1,26 +1,29 @@
-# World mission dashboard — iteration 404 (2026-11-18)
+# World mission dashboard — iteration 405 (2026-11-18)
 
-- **Done this fire:** row 243 **V3 sprint 5 LANDED** (PR #599, merge `48b8b6b6`; head and merge CI 3/3 on the first attempt; judge sonnet **PASS 91**, 0 blocking). `episode finish` can now wait for a key on the World card instead of a typed `y`.
-  - **`ailang-worldd episode finish … --confirm-on-surface`** stores a confirmation request, prints the card links, and waits (10 min + 10 s grace) without ever reading the terminal.
-    - Refused with `--dry-run`, and refused for an unsandboxed pinned check before any check runs.
-  - **Before it pushes, the CLI checks the confirmation itself:** the signature must be over its own request (digest, challenge, expiry) by an enrolled key, and the daemon's decision must approve exactly this scope.
-    - Every refusal keeps the commit and opens no pull request.
-  - **The bar:** `approve vr-<id>` opens the confirmation card; the CLI's `approve vr-…` points at the card; the finish reason explains `--confirm-on-surface`.
-  - QUICKSTART §20 documents it and a test runs it. The 403 judge's surviving mutant (the decision's timestamp) is now pinned.
-  - No route, schema or `.ail` change. Size: 1,398 of 1,400 lines.
-- **Next loop work:** row 243 V3 sprint 6 planner (the last V3 sprint):
-  - the *Needs you* line and link for pending confirmations;
-  - live-browser end-to-end runs: a seeded confirmation (XC2), and the real CLI waiting while the page confirms with a virtual authenticator (XC3);
-  - the 404 judge's small survivors (the `vr-` argument count, the page allowlist's exact prefix).
-- **Attended, for Mark when convenient:** the V1/V2 no-terminal check (QUICKSTART §19). No OPEN decision.
+- **Done this fire:** row 243 **V3 sprint 6 LANDED — row 243 V3 is complete** (PR #601, merge `0077a7b0`; head and merge CI 3/3 on the first attempt; judge sonnet **PASS 91**, 0 blocking).
+  - **The World surface's *Needs you* panel** now lists each pending `episode finish --confirm-on-surface` request, with a link to its confirmation card.
+    - A refused request, or one whose id is not a confirmation id, shows its reason and no link. An older credentials store says confirmations are unavailable instead of hiding them.
+  - **Live-browser proof of the whole path:**
+    - XC2: a test passkey confirms a stored request on a real daemon, and the decision is recorded.
+    - XC3: the real `episode finish --confirm-on-surface` waits, the page confirms in Chrome, and the CLI opens the pull request without reading the terminal.
+  - The 404 judge's small gaps are pinned: the `vr-` argument count and the page allowlist's exact prefix. A new test also lists every place the CLI writes to the credentials store.
+  - Only `app.js` changed in production. Size: 425 of 1,400 lines.
+- **Next loop work:** row 243 **V4 design r0**:
+  - who runs `episode finish` when there is no terminal;
+  - launching it from the address bar;
+  - `episode start` with a launch preset;
+  - the hand-off to herdr;
+  - per-check confirmation of unsandboxed checks.
+  - Designer rotation's next entry: `codex:gpt-6.2-sol`.
+- **Attended, for Mark when convenient:** the no-terminal finish with your own key (QUICKSTART §14–§20, not yet run verbatim). No OPEN decision.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
 - **Routing this fire:**
-  - Planner: opus via Agent (90 min).
-  - Executor: haiku via Agent (23 min).
-  - Evaluator: sonnet via Agent (52 min, in its own worktree).
+  - Planner: opus via Agent (56 min).
+  - Executor: haiku via Agent (12 min).
+  - Evaluator: sonnet via Agent (29 min, in its own worktree).
   - Codex unusable at preflight (probe rc 75). Metered $0.
 - **Instrument notes:**
-  - Self-notices still read no watermark (rc 2; the #574/#524 files are absent).
-  - `TestSeToolsRunBenchmarkTasksEndToEnd` (host/daemon) is flaky at the base too: a stray `GET` reaches its mock, 1 of 3 runs alone. Not this sprint; CI was green.
-  - 403's slot was reaped at Gate 5 (second in a row) after its report and record had landed — nothing lost.
+  - Every gate leg was green this time, including `verify_go` and the live-Chrome leg.
+  - Self-notices still read no watermark (the #574/#524 files are absent).
+  - 403's one-off CI race red on `TestReleaseChangeNotice` is now logged (instance 1). It has not recurred in eight runs since.
 - **Bookkeeping thread:** #574.
