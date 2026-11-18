@@ -1,0 +1,203 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s2",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1 (quorum r1 BLOCKED 1/3 -> r2 PROCEED 3/3; independent audit sonnet PASS 81, iteration 406); not reopened",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s2-sprint-plan.md",
+ "previous_sprint": "row 243 V4 S1 (iteration 407, PR #606, merge d0f22aa7, judge PASS 93; record 8db22168); closest analogues: V3 verb envelope host/approval/verb.go (VerbRequest, CanonicalVerb, DecodeVerb, VerbMessage) and verb law verb_signed.go (SignedVerb, ConfirmBySignature, ConfirmByAssertion, CheckConfirmation) reusing checkApprover (P2-P5) and assertionSteps (W1-W14); host/daemon strictRosterJSON (duplicate-key token walk); host/authority judge_verb.go (store adapters, parked)",
+ "base_commit": "8db22168689f31e19349b075e0199c8d9c940e61",
+ "design_measured_at": "41331b4d (every S2 cite re-measured at 8db22168: none moved; plan 1.2 C1)",
+ "queue_row": 243,
+ "iteration": 408,
+ "phase": "V4",
+ "sprint": "S2 (the canonical operator-action envelope, its strict decoder, two digests and signed message; the pure SSHSIG/passkey confirmation and recheck law with its typed proof)",
+ "sprint_number": 2,
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter408-row243-v4s2",
+ "branch": "sprint/world-iter408-row243-v4s2",
+ "authority": [
+  "D-WORLD-119 OPEN and D-WORLD-120 OPEN (controller, iteration 408: --open lists both; --check valid, 107 rows): S2 is answer-independent (design 8 'Waits for: None'; D-WORLD-119 default 'build S1 and S2 against fixtures only'); nothing is registered or called",
+  "D-WORLD-109 = A (no store opened; approvaltest seeded keys and passkeys only; the golden is the only file a test writes, only under WORLD_UPDATE_OPERATOR_ACTION_GOLDEN=1)",
+  "D-WORLD-107 = A; D-WORLD-118 = A; D-WORLD-89 R1-R5"
+ ],
+ "behaviour": "No served or CLI behaviour change. NEW pure host/approval OperatorAction (world/operator-action/v1: schema, id ^oa-[0-9a-f]{32}$, kind start|finish, episode, store, argv == OperatorArgv(kind, episode, options), options{preset, headless, confirm_on_surface, ready}, resolution 1-64 ascending {name,value}, task 1-8 KiB on a start / empty on a finish, review), CanonicalOperatorAction, DecodeOperatorAction (over-limit, invalid UTF-8, NUL, non-object, duplicate key, trailing refused before decoding, each its own error), OperatorReviewDigest (id blank) and OperatorSignatureDigest (final), OperatorActionMessage (world-operator-action/v1 NUL digest challenge BE64 expiry, 97 bytes) under SSHSIG namespace world-operator-action@sunholo; ConfirmOperatorAction (daemon) and CheckOperatorAction (runner recheck) returning *SignedOperatorAction (unexported fields). Unregistered: no production caller.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat 8db22168 HEAD -- cmd host docs app (insertions + deletions; the same unfiltered)",
+  "design_raw_s2": 840,
+  "measured": 1394,
+  "ratio": 1.66,
+  "margin": 6,
+  "fired": "yes (S2-D1): everything compiled measured 1,654 (1.97x)",
+  "moved_out": {
+   "authority_adapters": {
+    "what": "host/authority JudgeOperatorAction, RecheckOperatorAction (approver-identity compare), VerifiedOperatorAction (judge-only proof, AST + reflect construction test)",
+    "changed_lines": 260,
+    "patch": "$HOME/.ailang/state/world-iter408/plan-scratch/patches/PARK-authority-judges.patch",
+    "state": "compiled, gofmt-clean, vetted, green on this plan's M4 (TestOperatorJudgeBothKeys, TestOperatorRunnerRechecks, TestVerifiedOperatorActionOnlyFromTheJudges PASS)",
+    "owner": "S3 first milestone (or an S2b before S3)"
+   }
+  }
+ },
+ "planner_decisions": {
+  "S2-D1_cut": "1,394 landed <= 1,400; the 260-line host/authority store adapters parked as a compiled patch for S3",
+  "S2-D2_four_submilestones": "M1 envelope + decoder + golden + strict JSON (530) / M2 limits, Validate, digests, bar join (test, 773) / M3 the key law (1,304) / M4 writes-nothing pins (test, 1,394)",
+  "S2-D3_package": "host/approval (checkApprover and assertionSteps are unexported there; TestApprovalImportsOnlyTheStandardLibrary); the store adapter is host/authority's (parked)",
+  "S2-D4_intent": "the envelope carries OperatorIntent's fields; Validate requires argv == OperatorArgv(kind, episode, options); TestOperatorArgvIsTheBarsIntent joins it to verbs.AdmitOperator and verbs.ValidOperatorActionID",
+  "S2-D5_open_fields": "store = the served credentials store's absolute clean path; resolution = 1-64 ascending {name,value} facts S5 names; task 1-8 KiB on a start; review the displayed text",
+  "S2-D6_two_digests": "review digest = SHA-256 of canonical bytes with id blank (S3 dedup key); signature digest = SHA-256 of the final envelope (signed)",
+  "S2-D7_law_order": "confirm: valid action -> P1 Admit -> C1 row digest is this action's -> C2 lifetime <= 600 s -> format -> P2-P5 at now -> SSHSIG under the operator namespace or W1-W14 + W15; recheck: own action -> R1 now >= expiry refused -> P2-P5 at now -> signature -> R2 counter recorded",
+  "S2-D8_s1_survivor": "closed: TestAdmitOperatorWritesNothing kills J407-SETOUTPUT (SURVIVED at the base)",
+  "S2-D9_no_chrome_node_docs": "no page, route, command, flag or output"
+ },
+ "scope": [
+  "host/approval/operator_action.go (NEW, 335)",
+  "host/approval/operator_action_test.go (NEW, 179)",
+  "host/approval/testdata/operator-action.golden.json (NEW, 16, written by the encoder)",
+  "host/approval/operator_action_valid_test.go (NEW, 243)",
+  "host/approval/operator_signed.go (NEW, 164)",
+  "host/approval/operator_signed_test.go (NEW, 367)",
+  "host/approval/operator_silent_test.go (NEW, 55)",
+  "host/verbs/operator_silent_test.go (NEW, 35)"
+ ],
+ "envelope": {
+  "package": "host/approval",
+  "file": "host/approval/operator_action.go",
+  "api": "type OperatorAction struct{Schema, ID, Kind, Episode, Store string; Argv []string; Options OperatorOptions; Resolution []OperatorResolved; Task, Review string}; func (OperatorAction) Validate() error; func OperatorArgv(kind, episode string, o OperatorOptions) []string; func CanonicalOperatorAction(OperatorAction) ([]byte, error); func DecodeOperatorAction([]byte) (OperatorAction, error); func OperatorReviewDigest(OperatorAction) ([32]byte, error); func OperatorSignatureDigest(OperatorAction) ([32]byte, error); func OperatorActionMessage(digest, challenge [32]byte, expiry int64) ([]byte, error); func OperatorActionMessageHash(...) ([32]byte, error); consts OperatorActionSchema, OperatorActionPrefix, OperatorActionNamespace, OperatorActionMessageLen = 97, OperatorActionLifetime = 600 s, MaxOperatorActionBytes = 131072, MaxOperatorTaskBytes = 8192",
+  "golden": "host/approval/testdata/operator-action.golden.json; WORLD_UPDATE_OPERATOR_ACTION_GOLDEN=1 go test ./host/approval/ -run '^TestOperatorActionGolden$'",
+  "production_callers": "none (gates ENVELOPE_PRODUCTION_CALLERS, control approval.CheckConfirmation 1)"
+ },
+ "law": {
+  "package": "host/approval",
+  "file": "host/approval/operator_signed.go",
+  "api": "func ConfirmOperatorAction(OperatorConfirmInput{Action, Admit, Challenge, Artifact, Format, Approver}) (*SignedOperatorAction, error); func CheckOperatorAction(OperatorCheckInput{Action, Challenge, Expiry, Now, Artifact, Format, Approver}) (*SignedOperatorAction, error); (*SignedOperatorAction).Binds(action, challenge, expiry) error / ApprovedBy() string / PasskeyUse() ([]byte, uint32, bool); ErrOperatorLifetime, ErrOperatorCounter",
+  "proof_type": "SignedOperatorAction: unexported fields; only the two laws set ok; nil and zero value bind nothing",
+  "production_callers": "none"
+ },
+ "executor_lane": "as routed by the controller; one run: M1, M2, M3, M4; apply patches, never retype; never launch Chrome; never regenerate the golden",
+ "executor_form": "every sub-milestone is a unified diff in the plan's Appendix P, applied in order with /usr/bin/patch -p1 -E after a --dry-run (all files new; no deletion); acceptance via the plan's accept.sh (one part, fast)",
+ "estimate_loc": {
+  "design_raw": 840,
+  "compiled_landed": 1394,
+  "compiled_all": 1654,
+  "production": 499,
+  "test": 879,
+  "golden": 16
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "the envelope and its strict decoder",
+   "production": 335,
+   "test": 195,
+   "expected_cumulative_numstat": 530,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M1 fast"
+  },
+  {
+   "id": "M2",
+   "title": "limits, validation, digests, the bar join",
+   "production": 0,
+   "test": 243,
+   "expected_cumulative_numstat": 773,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M2 fast"
+  },
+  {
+   "id": "M3",
+   "title": "the key law",
+   "production": 164,
+   "test": 367,
+   "expected_cumulative_numstat": 1304,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M3 fast"
+  },
+  {
+   "id": "M4",
+   "title": "pure entry points write nothing",
+   "production": 0,
+   "test": 90,
+   "expected_cumulative_numstat": 1394,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M4 fast"
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "3/0/3",
+  "M2": "4/0/4",
+  "M3": "6/0/6",
+  "M4": "8/0/8",
+  "format": "STATUS lines / DELETED lines / MANIFEST lines; only host/"
+ },
+ "design_premises_found_false": [
+  "F1 cites moved: none moved",
+  "F2 proof type in host/authority: the law's primitives are unexported in host/approval, so the law and its proof live there; the authority wrapper is the parked adapter",
+  "F3 encoding/json refuses duplicate keys/trailing/invalid UTF-8: it refuses none (and folds key case); token walk + byte checks before decoding, canonical comparison after",
+  "F4 challenge in the envelope: it is in the message and the row, not the canonical action",
+  "F5 W15's (ad!=0 || p!=0) is equivalent to p!=0 (reused, mirrored; W15-ZERO-P equivalent)",
+  "F6 ssh-keygen per test: approvaltest's signer is byte-compared with ssh-keygen -Y sign by TestTestSignerAgreesWithSSHKeygen; that cross-check runs in the inv leg"
+ ],
+ "existing_tests_edited": [],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [],
+ "files_outside_design_section_7": [],
+ "not_touched": [
+  "tools/launchd/*",
+  "skills",
+  "world/*.ail",
+  "packages/",
+  "scripts/",
+  "cmd/ (all)",
+  "plugins/",
+  "host/surfacepage/app/app.js",
+  "host/daemon/surface_page.go",
+  "host/daemon/daemon.go",
+  "host/store/*",
+  "host/authority/*",
+  "every pre-existing file"
+ ],
+ "s1_survivor": {
+  "J407-SETOUTPUT": {
+   "base": "SURVIVED whole host/verbs (reproduced)",
+   "final": "KILLED by TestAdmitOperatorWritesNothing (named and whole)"
+  }
+ },
+ "mutants": {
+  "total": 150,
+  "killed": 146,
+  "named_equivalents": 4,
+  "survivors": 0,
+  "nm": 0,
+  "verdict_source": "named test and WHOLE package of the mutated file; no kill rests on the golden alone",
+  "equivalents": {
+   "ID-DOTALL": "final2 ID-DOTALL host/approval/operator_action.go named[TestOperatorActionValidate]: SURVIVED | whole[./host/approval/]: SURVIVED",
+   "D4-SHAPE-ERR": "final2 D4-SHAPE-ERR host/approval/operator_action.go named[TestOperatorStrictJSON]: SURVIVED | whole[./host/approval/]: SURVIVED",
+   "W15-ZERO-P": "final2 W15-ZERO-P host/approval/operator_signed.go named[TestOperatorConfirmRevocationCounter]: SURVIVED | whole[./host/approval/]: SURVIVED",
+   "PASSKEYUSE-OK": "final2 PASSKEYUSE-OK host/approval/operator_signed.go named[TestOperatorConfirmBothKeys]: SURVIVED | whole[./host/approval/]: SURVIVED"
+  }
+ },
+ "mutant_ledger": "$HOME/.ailang/state/world-iter408/plan-scratch/mutants/ledger.txt (run 1 above '=== run 2'; run 2 = tag final2 on the final M4 stage tree; base-whole J407-SETOUTPUT)",
+ "race_added_seconds": {
+  "host/approval": 0.2,
+  "host/verbs": 0.01,
+  "note": "package race times 1.9 s / 1.3 s (base 1.7 s / 1.7 s); host/daemon and host/broker gain nothing"
+ },
+ "gates_script": "plan section 6 (gates.sh); legs: status verify_ail gofmt build vet fence pkgs race inv + route/untouched/preexisting/caller/unchanged checks + verify_go (controller); no chrome or node leg; TOUCHED_PACKAGES must be 'host/approval host/verbs'",
+ "controller_decisions_requested": [
+  "accept the S2-D1 cut: the 260-line host/authority adapters (compiled patch) become S3's first milestone, or a short answer-independent S2b before S3"
+ ],
+ "verification": {
+  "base_gates": "GATES_DONE 57s FAILS: none (34 named PASS, routes 47, verify_ail PASSED 16/40/503)",
+  "final_gates": "GATES_DONE 65s FAILS: none (51 named PASS, TOUCHED_PACKAGES host/approval host/verbs, routes 47, UNTOUCHED none, PREEXISTING none, callers none (control 1), UNCHANGED app.js/surface_page.go/credentials.go; verify_go controller's)",
+  "accept": "M1 15 / M2 19 / M3 27 / M4 31 named PASS, each ACCEPT_OK",
+  "roundtrip": "CMP_EQUAL x4; NUMSTAT 530/773/1304/1394 (unfiltered equal); diff -r cmd/host vs st-M rc 0 each; ROUNDTRIP_IDENTICAL_TO_STAGE_TREE; SCRIPT_EQUAL accept.sh, gates.sh",
+  "snapshot_rehearsal": "M1 3/0/3, M2 4/0/4, M3 6/0/6, M4 8/0/8, MANIFEST_OK, BLOCK_VERBATIM_BUT_W_M_D",
+  "pinned": "AILANG v0.41.0; go1.26.6 darwin/arm64; /usr/bin/ssh-keygen"
+ }
+}
