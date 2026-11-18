@@ -1,31 +1,27 @@
-# World mission dashboard — iteration 402 (2026-11-17)
+# World mission dashboard — iteration 403 (2026-11-18)
 
-- **Done this fire:** row 243 **V3 sprint 3 LANDED** (PR #595, merge `c9e997a9`; head and merge CI 3/3 on the first attempt; judge sonnet **PASS 92**, 0 blocking). A request to confirm `episode finish` now has a home in the store, and its card can be read on the surface.
-  - **Credentials schema 9** adds a `verb_requests` table. A v8 store upgrades in its existing upgrade transaction; the change is a new table only.
-    - A newer store is refused.
-    - On a v8 store, verb requests are refused with a "restart with the newer daemon" error, and everything else keeps working.
-  - **Store rules:**
-    - A new request for an episode supersedes that episode's older one.
-    - There are at most 16 live requests, and requests more than a day past expiry are pruned.
-    - Consuming a request is one transaction. Every refusal writes nothing.
-  - **Three read-only routes:** `/surface/confirm/<id>` (the page), `/surface/confirm.js`, and `/surface/confirmations/<id>`. The last returns the card's data, which never includes the message hash or the artifact.
-  - `requests.json` lists pending confirmations. Unreadable ones are listed as refused, not hidden.
-  - `FinishConfirmRefusal` gives the CLI's refusal texts.
-  - **Nothing can approve a request yet:** there is no POST and no CLI change. Those are sprints 4 and 5.
-  - Size: 1,391 of 1,400 lines.
-- **Next loop work:** row 243 V3 sprint 4 planner:
-  - the POST that records a key's confirmation;
-  - the submit half of the page;
-  - the raced-supersession 409;
-  - the exact-expiry-second test the judge asked for.
+- **Done this fire:** row 243 **V3 sprint 4 LANDED** (PR #597, merge `00fa924f`; head and merge CI 3/3 on the first attempt; judge sonnet **PASS 91**, 0 blocking). An enrolled key can now confirm a stored `episode finish` request on the surface.
+  - **`POST /surface/confirm/<id>`** checks, in the design's order: headers, id, Host, Origin, size and a strict body; then the request's state, its digest, the finish refusals, the key's signature or passkey, and the binding.
+    - Nothing is written until every check passes.
+    - Then it records the finish approval in the world store and consumes the request (naming that approval) in one credentials transaction.
+  - **Failure windows are tested:** a failed world write or a failed consume answers 500 and the same body retried succeeds; a replay is refused (409); a request superseded mid-way is refused with one harmless orphaned decision.
+  - **The confirm page can submit:** a passkey (challenge = the message hash) or a pasted SSH signature; refusals are never shown as success, and the card is re-read after each answer.
+  - The exact-expiry-second test the 402 judge asked for is in.
+  - One new route; CSP unchanged; no CLI, schema or `.ail` change. Size: 1,097 of 1,400 lines.
+- **Next loop work:** row 243 V3 sprint 5 planner:
+  - `episode finish --confirm-on-surface`: the CLI creates the request, waits, re-checks and reads back the decision;
+  - the bar's `approve vr-…`;
+  - QUICKSTART §20;
+  - pin the timestamp of the confirmation's world decision (the judge's one surviving mutant).
 - **Attended, for Mark when convenient:** the V1/V2 no-terminal check (QUICKSTART §19). No OPEN decision.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
 - **Routing this fire:**
-  - Planner: opus via Agent (92 min).
-  - Executor: haiku via Agent (18 min).
-  - Evaluator: sonnet via Agent (26 min, in its own worktree).
-  - Codex is over ration (probe rc 75). Metered $0.
+  - Planner: opus via Agent (65 min).
+  - Executor: haiku via Agent (12 min).
+  - Evaluator: sonnet via Agent (30 min, in its own worktree).
+  - Codex unusable at preflight (probe rc 75). Metered $0.
 - **Instrument notes:**
   - Self-notices still read no watermark (rc 2; the #574/#524 files are absent).
-  - `verify_go` was red on one untouched `host/verifygate` test under load (`TestMissionConfigDefaultFlowIntegration`); it was green alone.
+  - `verify_go` was fully green this sprint (no load-sensitive red).
+  - 402's slot was reaped at Gate 5 after its report, message and memory had all landed — nothing lost.
 - **Bookkeeping thread:** #574.
