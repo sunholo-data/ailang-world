@@ -585,6 +585,7 @@
   // ================= The page =================
   const $ = id => document.getElementById(id);
   const SEAMS = window.WorldSurface || {};
+  const phoneWidth = window.matchMedia('(max-width: 600px)');
   let T = null, D = null, LANES = {}, N = {}, parents = {}, kids = {}, SH = [], NS = 0, SIDX = {}, TT = [], LX = [], MAXU = LEVELS.length - 1;
   let STEPS = [], TNOW = 0, NOW_D = new Date(), quiet = [], LY = {}, ROWS = [], MXS = [], XS = [];
   let nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, isBreak, lastStep, lastState;
@@ -759,7 +760,7 @@
       ${sourcesHTML(D.repos)}
       ${today}
       ${running}
-      ${needsYouHTML(REQS, REQS ? REQS.now : 0, notifyPermission())}
+      ${phoneWidth.matches ? '' : queueHTML()}
       ${decidedHTML(REQS, decidedAll)}
     </div>`;
   }
@@ -1040,8 +1041,22 @@
   // decidedAll is the decision list's "show all".
   let REQS = null, decidedAll = false, seenIds = null;
   const notifyPermission = () => typeof Notification === 'undefined' ? '' : Notification.permission;
+  const queueHTML = () => needsYouHTML(REQS, REQS ? REQS.now : 0, notifyPermission());
+  let paintedMobileQueue = '';
+  function repaintMobileNeeds() {
+    const html = phoneWidth.matches ? queueHTML() : '';
+    if (html === paintedMobileQueue) return;
+    const list = $('mobile-needs'), active = document.activeElement;
+    const activeId = list.contains(active) ? active.id : '';
+    list.innerHTML = html;
+    paintedMobileQueue = html;
+    if (activeId) list.querySelectorAll('[id]').forEach(el => {
+      if (el.id === activeId) el.focus({preventScroll: true});
+    });
+  }
   async function loadRequests() {
     try { REQS = (await getJSON('/surface/requests.json')).body; } catch (_) { REQS = null; }
+    repaintMobileNeeds();
     const n = notifications(REQS, seenIds, notifyPermission());
     seenIds = n.seen;
     n.notes.forEach(x => { const note = new Notification(x.title, { body: x.body, tag: x.tag }); note.onclick = () => { window.focus(); location.assign(x.href); }; });
@@ -1092,7 +1107,11 @@
   }
   const refreshLive = () => refresh('live');
   // repaintNow redraws the now card alone: a status change is visible even when the graph did not change.
-  function repaintNow() { const el = document.querySelector('[data-now]'); if (el && T) el.outerHTML = nowCard(); }
+  function repaintNow() {
+    const el = document.querySelector('[data-now]');
+    if (el && T) el.outerHTML = nowCard();
+    repaintMobileNeeds();
+  }
   // schedulePoll: follow mode polls the model every 15 s while the page is visible, independently of AG-UI.
   function schedulePoll(delay) {
     clearTimeout(pollTimer); pollTimer = null;
@@ -1497,7 +1516,7 @@
   // Scroll / trackpad: sideways (or plain wheel) pans; ⌘/Ctrl-wheel and pinch zoom around the pointer.
   let wq = null;
   $('stage').addEventListener('wheel', e => {
-    if (!T || st.d !== 0) return;
+    if (phoneWidth.matches || !T || st.d !== 0) return;
     e.preventDefault();
     const r = $('tl').getBoundingClientRect(), ax = Math.max(PL, Math.min(PR, (e.clientX - r.left) / scale));
     const unit = e.deltaMode === 1 ? 16 : 1;
@@ -1536,7 +1555,7 @@
     if (e.target && e.target.tagName === 'INPUT') return;
     const k = e.key; let done = true;
     if (k === 'Enter' && e.target && e.target.id === 'home') return;   // the link's own activation: its click goes home
-    if (k === 'Enter' && e.target && e.target.closest && e.target.closest('[data-now]')) return;   // the now card's links and buttons activate themselves
+    if (k === 'Enter' && e.target && e.target.closest && e.target.closest('[data-now], #mobile-needs')) return;   // queue links and buttons activate themselves
     if (k === '?') toggle('keys');
     else if (k === ',') toggle('look');
     else if (k === '/') $('addr').focus();
@@ -1546,7 +1565,7 @@
     else if (st.d === 1 && k === 'ArrowDown') openRail(railIdx() + 1);
     else if (st.d === 1 && k === 'Home') openRail(0);
     else if (st.d === 1 && k === 'End') openRail(RAIL.length - 1);
-    else if (!T) done = false;
+    else if (!T || (phoneWidth.matches && st.d === 0)) done = false;
     else if (st.d === 0 && k === 'Enter') { if (st.focus) open(REP[st.focus] && isCluster(REP[st.focus]) ? REP[st.focus] : st.focus); }
     else if (st.d === 0 && (k === '+' || k === '=')) zoomStep(-1);
     else if (st.d === 0 && (k === '-' || k === '_')) zoomStep(1);
@@ -1568,6 +1587,7 @@
     if (done) e.preventDefault();
   });
   window.addEventListener('resize', fit);
+  phoneWidth.addEventListener('change', repaintNow);
 
   // Exposed for the screenshot driver.
   window.World = { open: label => { const n = Object.values(N).find(x => x.id === label || x.episode === label || x.label === label) || (T && N[T.aliasOf[label]]); if (n) open(n.id); return !!n; }, out: () => out(), rail: k => openRail(k),

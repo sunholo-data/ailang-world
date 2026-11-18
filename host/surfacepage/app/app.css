@@ -297,3 +297,32 @@ a.brand:focus-visible { outline: 2px solid var(--hCtl); outline-offset: 2px; }
 /* v3 sets user-select: none on body, so ids, hashes and paths could not be copied. Controls stay unselectable. */
 body { user-select: text; -webkit-user-select: text; }
 button { user-select: none; -webkit-user-select: none; }
+
+/* Keep the phone queue outside the scaled graph canvas. */
+#mobile-needs { display: none; }
+@media (max-width: 600px) {
+  .hdr { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; height: auto; padding: 8px 12px; }
+  .brand { grid-column: 1; grid-row: 1; justify-self: start; }
+  #keys-btn { grid-column: 2; grid-row: 1; }
+  #look-btn { grid-column: 3; grid-row: 1; }
+  .addr { grid-column: 1 / -1; grid-row: 2; min-height: 44px; font-size: 16px; }
+  .crumbs, .hmsg { grid-column: 1 / -1; min-width: 0; }
+  .crumbs:empty, .hmsg:empty { display: none; }
+  .crumb { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  #L0 { display: none; }
+  #mobile-needs {
+    display: block; position: absolute; inset: 0; overflow: auto;
+    padding: 16px; background: var(--bg); overflow-wrap: anywhere;
+  }
+  .zoomed #mobile-needs { display: none; }
+  #mobile-needs .nsec { border: 0; padding: 0; gap: 8px; }
+  #mobile-needs .nh { font-size: 20px; }
+  #mobile-needs .nl { font-size: 1rem; }
+  #mobile-needs .nl a, #mobile-needs button {
+    display: block; min-height: 44px; padding: 10px 12px; color: var(--text);
+    background: var(--panel); border: 1px solid var(--ctl); border-radius: var(--r);
+  }
+  #mobile-needs .nl a { text-underline-offset: 3px; }
+  #mobile-needs a:focus-visible { outline: 2px solid var(--you); outline-offset: 2px; }
+}
