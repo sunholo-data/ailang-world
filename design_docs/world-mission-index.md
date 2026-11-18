@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 406 | 2026-11-18 | row 243 V4 design DONE (`w-world-address-bar-verbs-v4.md` r1): start and finish an episode from the World app through an opt-in user LaunchAgent ru... |
 | 405 | 2026-11-18 | row 243 V3 sprint 6 LANDED, ROW 243 V3 COMPLETE (PR #601, merge `0077a7b0`): *Needs you* lists the finish confirmations (`app.js`, the only product... |
 | 404 | 2026-11-18 | row 243 V3 sprint 5 LANDED (PR #599, merge `48b8b6b6`): `episode finish --confirm-on-surface` (refusals, the request put, the tty-free wait, the re... |
 | 403 | 2026-11-18 | row 243 V3 sprint 4 LANDED (PR #597, merge `00fa924f`): `POST /surface/confirm/{id}` (C0–C15 in the design's order; nothing written before C14; the... |
