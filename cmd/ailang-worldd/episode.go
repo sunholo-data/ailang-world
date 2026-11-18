@@ -187,6 +187,10 @@ func runEpisode(addr string, args []string, stdout, stderr io.Writer) int {
 	}
 }
 
+// episodeFlagSetSeen, when set (tests only), is shown each episode start and finish flag set as built,
+// before any parse: row 243 V4 S1's TestOperatorFlagParity holds host/verbs' mirror to them.
+var episodeFlagSetSeen func(fs *flag.FlagSet)
+
 func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	def := defaultWorldPaths()
 	fs := flag.NewFlagSet("ailang-worldd episode start", flag.ContinueOnError)
@@ -215,6 +219,9 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	budget := fs.Int64("budget", 50, "budget of each preset grant")
 	sessionsDir := fs.String("sessions-dir", defaultSessionsDir(), "where the session file and the MCP config are written")
 	addr := fs.String("addr", defaultServiceBind(), "the serving daemon, host:port")
+	if episodeFlagSetSeen != nil {
+		episodeFlagSetSeen(fs)
+	}
 	positional, err := verbs.ParseInterleaved(fs, args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
