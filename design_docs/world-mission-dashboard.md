@@ -1,29 +1,22 @@
-# World mission dashboard — iteration 405 (2026-11-18)
+# World mission dashboard — iteration 406 (2026-11-18)
 
-- **Done this fire:** row 243 **V3 sprint 6 LANDED — row 243 V3 is complete** (PR #601, merge `0077a7b0`; head and merge CI 3/3 on the first attempt; judge sonnet **PASS 91**, 0 blocking).
-  - **The World surface's *Needs you* panel** now lists each pending `episode finish --confirm-on-surface` request, with a link to its confirmation card.
-    - A refused request, or one whose id is not a confirmation id, shows its reason and no link. An older credentials store says confirmations are unavailable instead of hiding them.
-  - **Live-browser proof of the whole path:**
-    - XC2: a test passkey confirms a stored request on a real daemon, and the decision is recorded.
-    - XC3: the real `episode finish --confirm-on-surface` waits, the page confirms in Chrome, and the CLI opens the pull request without reading the terminal.
-  - The 404 judge's small gaps are pinned: the `vr-` argument count and the page allowlist's exact prefix. A new test also lists every place the CLI writes to the credentials store.
-  - Only `app.js` changed in production. Size: 425 of 1,400 lines.
-- **Next loop work:** row 243 **V4 design r0**:
-  - who runs `episode finish` when there is no terminal;
-  - launching it from the address bar;
-  - `episode start` with a launch preset;
-  - the hand-off to herdr;
-  - per-check confirmation of unsandboxed checks.
-  - Designer rotation's next entry: `codex:gpt-6.2-sol`.
-- **Attended, for Mark when convenient:** the no-terminal finish with your own key (QUICKSTART §14–§20, not yet run verbatim). No OPEN decision.
+- **Done this fire:** row 243 **V4 design r1** — [`w-world-address-bar-verbs-v4.md`](planned/w-world-address-bar-verbs-v4.md) (880 lines). Quorum r2 **PROCEED 3/3**; independent audit sonnet **PASS 81**, 0 blocking.
+  - **Who runs it:** an opt-in user LaunchAgent "runner" installed by `service`, running as you with an explicit PATH (the installed World job's PATH has no `gh`). Measured this fire: under that PATH, `gh` and Git over the Keychain helper work non-interactively.
+  - **Order:** start and launch an episode from the browser first (one headless agent), then finish to a PR with two key gestures (local prep, then V3's real PR prompt).
+  - **Durable:** every action is a signed record with one owner; every effect (worktree, mint, launch, commit, push, PR) is reserved before it runs and reconciled after a crash. Nothing is blindly re-run.
+  - **Out:** merge, per-check confirmation of unsandboxed checks, notifications.
+  - **Size:** 12 sprints, about 12.7k changed lines. The parent estimated about 2,000.
+- **DECISIONS FOR MARK (new):**
+  - **D-WORLD-119:** may the World app start and launch a confined episode through the runner after a key approval? Recommendation A (headless now, herdr later after its experiment). Default: only S1–S2 (pins, the pure law) get built.
+  - **D-WORLD-120:** may finish run without a terminal (key for local prep, then key for the exact PR)? Recommendation A. Default: finish keeps needing a terminal.
+- **Next loop work:** row 243 **V4 sprint 1** planner — the judge-405 pins and the pure admitted grammar. It needs no answer. The audit recommends splitting the plan into V4a start, V4b finish and herdr.
+- **Attended context used:** your untracked briefs `w-phone-episode-workflow.md` and `w-human-agent-surface.md` (read as product input, not committed). PR #604 merged during the fire.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
 - **Routing this fire:**
-  - Planner: opus via Agent (56 min).
-  - Executor: haiku via Agent (12 min).
-  - Evaluator: sonnet via Agent (29 min, in its own worktree).
-  - Codex unusable at preflight (probe rc 75). Metered $0.
+  - Designer: `codex:gpt-6.2-sol` (rotation's turn; r0 29 min, r1 11 min).
+  - Evaluator: sonnet via Agent (3.7 min).
+  - Quorum: sonnet, gemini-4-argon, glm-5-3 (OpenAI benched as author). Metered $0.46.
 - **Instrument notes:**
-  - Every gate leg was green this time, including `verify_go` and the live-Chrome leg.
+  - The designer's sandboxed `gh auth` probe read as a failure; the real probe outside the sandbox passed. Network and launchd probes belong to the controller.
   - Self-notices still read no watermark (the #574/#524 files are absent).
-  - 403's one-off CI race red on `TestReleaseChangeNotice` is now logged (instance 1). It has not recurred in eight runs since.
 - **Bookkeeping thread:** #574.
