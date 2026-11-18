@@ -343,3 +343,48 @@ button { user-select: none; -webkit-user-select: none; }
 .draft-permissions { display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px 14px;margin:8px 0; }
 .draft-permissions dt { color:var(--sub); }
 .draft-permissions dd { margin:0; }
+
+.phone-view { display:none; }
+@media (max-width:700px) {
+  .hdr { height:auto; flex-wrap:wrap; gap:6px; padding:6px 10px; }
+  .hdr .addr { order:2; flex-basis:100%; }
+  .hdr .crumbs { min-width:0; flex:1; overflow:hidden; }
+  .layer { overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; }
+  #L1,.zoomed #L0 { visibility:hidden; }
+  .zoomed #L1 { visibility:visible; background:var(--stageBg) !important; }
+  .canvas { width:100%; }
+  #tl [data-void] { inset:48px 16px auto !important; width:auto !important; }
+  #tl .lhead { left:4px; width:calc(min(32%, 128px) - 8px); min-height:48px; }
+  #tl .lhead .goal,#tl .lhead .stat,#tl .lhead .gs,#tl .lhead .mst,#tl .lhead .prog.sub { display:none; }
+  #tl .lhead .nm { white-space:normal; overflow-wrap:anywhere; line-height:1.2; }
+  #tl .tlbar { top:0 !important;left:0 !important;width:100% !important;height:auto;min-height:92px;padding:4px 8px;flex-wrap:wrap;gap:4px;background:var(--bg); }
+  #tl .range { order:2; width:100%; font-size:12px; }
+  #tl .ctl { height:44px; }
+  #tl .cb,.phone-view button,#phone-activity { min-width:44px; min-height:44px; }
+  #tl .zoom .zl { min-width:36px; }
+  #tl .plot { touch-action:pan-y pinch-zoom; }
+  #tl .node { width:44px; height:44px; }
+  #tl .legend { position:relative;inset:auto !important;padding:12px;flex-wrap:wrap;gap:8px; }
+  #tl .now { position:relative; inset:auto !important; margin:880px 8px 0; width:auto; }
+  #tl .quiet-list { width:min(320px,90%); }
+  #tl .mini-lab { left:6px; max-width:28%; }
+  #keys,#look { max-width:calc(100% - 16px); right:8px; max-height:95%; overflow:auto; }
+  .phone-view { display:flex; }
+  #phone-step-nav { position:sticky; top:0; z-index:42; gap:6px; padding:6px; background:var(--bg); border-bottom:1px solid var(--line); }
+  #phone-step-nav button,#activity-back,#phone-activity { align-items:center; font:600 13px var(--font); padding:0 10px; color:var(--text); background:var(--btn); border:1px solid var(--ctl); border-radius:var(--r); }
+  #activity-back { min-height:44px; align-self:flex-start; }
+  #tl [data-needs] a,#tl [data-running] button { display:block;min-height:44px;padding:8px 0; }
+  #phone-step-nav button:disabled { opacity:.45; }
+  #phone-step-nav button:first-child { margin-right:auto; }
+  #br,#br .bstage,#br .front,#br .rail { position:relative; inset:auto; width:100%; height:auto; margin:0; }
+  #br .front { border:0; }
+  #br .strip { display:none; }
+  #br .fbar { height:auto; min-height:44px; flex-wrap:wrap; gap:4px 8px; padding:8px 12px; }
+  #br .cols { grid-template-columns:minmax(0,1fr); }
+  #br .fbody { padding:12px; }
+  #br .head .h,#br .head .outcome,#br .head .can { white-space:normal; overflow-wrap:anywhere; }
+  #br .view,#br .chip { flex-wrap:wrap; }
+  #br .chip { white-space:normal; }
+  #br .rrow,#br button.chip { min-height:44px; }
+}
+@media(max-width:700px) and (hover:none){#tip{display:none}}
