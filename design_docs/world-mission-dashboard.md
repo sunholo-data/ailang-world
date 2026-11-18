@@ -1,21 +1,21 @@
-# World mission dashboard — iteration 407 (2026-11-18)
+# World mission dashboard — iteration 408 (2026-11-18)
 
-- **Done this fire:** row 243 **V4 sprint 1 LANDED** — PR #606, merge `d0f22aa7`, head and merge CI 3/3. 976 lines. Independent judge sonnet **PASS 93**, 0 blocking.
-  - **What it adds:** `host/verbs.AdmitOperator` decides, without running anything, whether a bar line is one of the few `episode start … --launch --headless` / `episode finish …` forms the app may later offer to run, and otherwise why not (usage, terminal-only, never, or an ordinary address).
-  - **Tied to the CLI:** parity tests read the CLI's real `episode start`/`finish` flags (through a 10-line test seam that does nothing in production) and fail if either side drifts.
-  - **Your answers are an input:** D-WORLD-119/120 are a policy value; with no answer it admits nothing.
-  - **Also:** three tests pin the `app.js` cases judge-405 found unpinned (`app.js` unchanged).
+- **Done this fire:** row 243 **V4 sprint 2 LANDED** — PR #609, merge `cee5174c`, head and merge CI 3/3. 1,394 lines. Independent judge sonnet **PASS 92**, 0 blocking.
+  - **What it adds:** the exact thing a key holder will sign to approve an operator action: a closed `world/operator-action/v1` envelope, a strict decoder, and a 97-byte signed message under its own SSHSIG namespace.
+  - **The key law:** `ConfirmOperatorAction` (for the daemon) and `CheckOperatorAction` (for the runner) judge an SSH-key or passkey approval of that action. Each check is independent: user verification, origin, namespace, enrollment, revocation, the passkey counter, the challenge, expiry and every bound field.
+  - **Your answers still gate it:** nothing answer-dependent is built, and D-WORLD-119/120 stay open.
   - **Not wired:** no route, page, schema or `.ail` change; nothing in production calls it yet.
-- **Your PR #607 (episode composer)** merged mid-sprint and touched `app.js`; the pins were re-run green on the combined merge commit with node.
+  - **Parked by size:** the `host/authority` adapters (260 lines) are a compiled patch for a short S2b. The judge says they must land before anything calls the law.
 - **DECISIONS FOR MARK (still open, unchanged from 406):**
   - **D-WORLD-119:** may the app start and launch a confined episode through the runner after a key approval? Recommendation A. Default: only S1–S2 get built.
   - **D-WORLD-120:** may finish run without a terminal (key for local prep, then key for the exact PR)? Recommendation A. Default: finish keeps needing a terminal.
-- **Next loop work:** row 243 **V4 sprint 2** — the canonical signed action and its key proofs, against fakes. Needs no answer. After S2, the loop waits on D-WORLD-119.
+- **Next loop work:** row 243 **V4 sprint 2b**: the parked authority adapters and two judge pins. It needs no answer. After S2b, V4 waits on D-WORLD-119.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
 - **Routing this fire:**
-  - Planner: opus via Agent (59 min). Executor: haiku via Agent (6 min). Judge: sonnet via Agent (30 min), own worktree.
-  - Gates 1,230 s, all legs green incl. `verify_go` and live Chrome. Metered $0.
+  - Planner: opus via Agent (37 min). Executor: haiku via Agent (2 min). Judge: sonnet via Agent (15 min), own worktree.
+  - Gates took 630 s and every leg was green except `verify_go`. Its red was a 10 s deadline in an untouched package under load, and it passed alone. Metered $0.
 - **Instrument notes:**
   - Self-notices still read no watermark (the #574/#524 files are absent).
-  - Judge note carried to S7: nothing tests that the parser writes nothing to stderr.
+  - PR CI went red once on the known `host/broker` flake; the re-run was green.
+  - My own round-trip script had a `set -u` bug that made every comparison read as a mismatch. It is fixed and was re-run with a control.
 - **Bookkeeping thread:** #574.
