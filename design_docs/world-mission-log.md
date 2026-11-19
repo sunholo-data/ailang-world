@@ -1764,3 +1764,13 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 **Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence). Unanswered, another rule-(d) block report. A dev red outranks either way.
 
 **Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16; next boundary Monday 2026-11-23 07:00 local). The weekly external-issue sweep ran this week at 393.
+
+**Judge follow-through (iteration 412):** Agent `sonnet`, fresh foreground read-only context, judged record commit `6ab87ce6`. Verdict **PASS 92/100, zero blocking**. It used 41,583 subagent tokens, 7 tool uses and 34 s. Generator ≠ judge: opus controller, sonnet judge. The directive gave it the files and seven checks, not the controller's numbers.
+- **What it re-measured:** `--open` = 119 and 120, `--check` valid at 107 rows, and 0 changed `| D-WORLD` rows in the 5 commits, which touch only `design_docs/`. That V4 design §8 gates S3–S12 on 119/120 (from the grep hits, not a full read). 3 canonical stamps, 3 intended `-` lines, and the archived 409 stamp `cmp` identical. The row 150/151 counts and controls (0/5, 0/1, 0/109). Dev check-runs 3/3. Inbox `null`. PR #615's branch, CI and files. The ticket (`slots_lost` 2, both message ids, `first_seen` 2026-11-09). `git grep idle-record-barred` at `5c28cb07` = 0. The IDLE RECORD rule text. No closing keyword. The readings file is tracked. Every template section is present.
+- **Non-blocking notes and their disposition:**
+  1. The follow-through was missing at judge time. It is this paragraph.
+  2. That the probe failed on 410 and 411 was carried only by assertion. The controller checked: entry 410 (Designer line and Ruled out) and entry 411 (the same two places) each record the driver's routing note with the codex probe at rc 1. Those are the earlier controllers' readings of their own env, not a re-measure.
+  3. D-FLEET-47 is hedged as "looks like" and is not verified here. No change.
+  4. "Ten days" fits 2026-11-09 → 2026-11-19. No change.
+  5. Gate 3b's CI line is added after the record PR runs.
+- **What it did not check:** the readings file's content, the skill-drift `cmp`, the #524 notices and watermark files, the 410/411 worktrees, the pending fingerprint's contents, the index beyond its new line, and the #574 comment counts.
