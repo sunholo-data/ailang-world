@@ -1,22 +1,14 @@
-# World mission dashboard — iteration 409 (2026-11-18)
+# World mission dashboard — iteration 410 (2026-11-19)
 
-- **Done this fire:** row 243 **V4 sprint 2b LANDED**. PR #611 merged at `07b30a5e`, with head and merge CI 3/3 green on the first run. 526 lines. The independent judge (sonnet) gave **PASS 92** with 0 blocking findings.
-  - **What it adds:** the two judges in `host/authority` that turn an operator approval into a verified proof. One is for the daemon confirming an approval, one is for the runner rechecking it.
-  - **How they decide whose key it is:** both read the approving key from the credentials store, never from whoever calls them.
-  - **Nothing else can mint a proof:** outside that package, code cannot construct a verified proof.
-  - **Last sprint's open judge notes are closed:** the aliasing bug is pinned, and the runner's lifetime check is pinned to what the design says.
-  - **Not wired yet:** no route, page, schema or `.ail` change, and nothing in production calls the judges.
-- **DECISIONS FOR MARK (still open, unchanged from 406). These now block all loop work on row 243:**
-  - **D-WORLD-119:** may the app start and launch a confined episode through the runner after a key approval? Recommendation A. Every remaining V4 sprint (S3–S12) waits on this.
-  - **D-WORLD-120:** may finish run without a terminal (key for local prep, then key for the exact PR)? Recommendation A. S9–S11 also wait on this.
-- **Next loop work:** none that needs no answer. If D-WORLD-119 is answered A or B, the next sprint is **V4 sprint 3** (schema 10 for operator actions, receipts and CAS). Unanswered, the next fire files a rule-(d) block report.
-- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
-- **Routing this fire:**
-  - Planner: opus via Agent (28 min). Executor: haiku via Agent (1 min). Judge: sonnet via Agent (13 min), in its own worktree.
-  - Gates took 610 s and ran before the judge's drills. Every leg was green except `verify_go`, whose red was in an untouched package under load and passed alone. Metered $0.
-- **Instrument notes:**
-  - Self-notices still find no watermark (the #574 and #524 files are absent).
-  - The parked patch from sprint 2 left 13 mutants alive when tested. The new tests kill them all.
-  - The judge's top note was that a `println` survives the writes-nothing test. I reproduced it and carried it to sprint 3.
-  - The `host/daemon` setools stray-GET flake has now failed in three recorded iterations, so it is filed as row 261 under rule (d).
-- **Bookkeeping thread:** #574.
+- **Done this fire:** nothing built. No row can move without an answer from Mark, so this fire is a rule-(d) block report.
+  - Row 243 V4 sprints 3–12 all need **D-WORLD-119** (9–11 also need **D-WORLD-120**). I re-read the design's sprint table this fire to confirm.
+  - Release rows 150 and 151 are not routable. 150 waits on your attended A1. 151 waits on row 188's N2d and N4a, which are not built.
+- **DECISIONS FOR MARK (open, unchanged since iteration 406):**
+  - **D-WORLD-119:** may the app start and launch a confined episode through the runner after a key approval? Recommendation A. Every remaining V4 sprint waits on it.
+  - **D-WORLD-120:** may finish run without a terminal (key for local prep, then key for the exact PR)? Recommendation A. Sprints 9–11 also wait on it.
+- **Next loop work:** with D-WORLD-119 = A or B, **V4 sprint 3** (schema 10 for operator actions, receipts and CAS). Unanswered, another block report.
+- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Goal unmoved.
+- **Escalated this fire:** Gate 0's crash-notice read has returned "no watermark" (rc 2) on every fire since iteration 371. I added World's occurrence to the fleet's ticket `gate0:self-notices-rc2-no-watermark-file` (now 2 filings). Queue row 262. A manual re-read found the two notices it had hidden, and both were already credited.
+- **Routing this fire:** controller opus; designer, planner and executor not needed; judge sonnet via Agent on the record. The codex lane probed rc 1. Metered $0.
+- **Dev CI:** 3/3 green at `f267fac4`. No open PRs.
+- **Bookkeeping thread:** #574 (rotates Monday 2026-11-23).
