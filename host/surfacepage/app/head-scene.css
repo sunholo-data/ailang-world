@@ -171,3 +171,4 @@
   box-shadow: inset 0 0 0 1px var(--text);
 }
 .hc-rear:focus-visible { outline: none; }
+.hc-passing { position: absolute; inset: 0; pointer-events: none; z-index: 1; }

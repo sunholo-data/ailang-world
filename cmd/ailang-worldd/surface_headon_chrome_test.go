@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
 )
@@ -79,4 +80,119 @@ func TestSurfaceHeadOnUsesSameSceneInChrome(t *testing.T) {
 		window.__cspv?.length === 0 && ` + fitsViewport)
 	// Close the live page before the daemon fixture waits on its event stream.
 	b.do(t, nil, "tab", nil)
+}
+
+func TestSurfaceHeadOnTravelsHistoryInChrome(t *testing.T) {
+	b := startPasskeyBrowser(t)
+	origin := rigSurface(t, filepath.Join(t.TempDir(), "credentials.db"))
+	b.do(t, nil, "tab", nil)
+	defer b.do(t, nil, "tab", nil)
+	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface", "raw": true})
+
+	wait := func(expression string) {
+		t.Helper()
+		b.do(t, nil, "waitFor", map[string]any{"expression": expression})
+	}
+	tap := func(id string) {
+		t.Helper()
+		b.do(t, nil, "tap", map[string]any{"id": id})
+	}
+	tapDepth := func(name string) {
+		t.Helper()
+		var id string
+		b.do(t, &id, "waitFor", map[string]any{"expression": fmt.Sprintf(`(() => {
+			const button = [...document.querySelectorAll('button')].find(el =>
+				(el.getAttribute('aria-label') || el.textContent.trim()) === %q &&
+				!el.disabled && el.getAttribute('aria-disabled') !== 'true' && el.getClientRects().length);
+			if (!button) return false;
+			if (!button.id) button.id = 'chrome-depth-' + %q.replaceAll(' ', '-').toLowerCase();
+			return button.id;
+		})()`, name, name)})
+		tap(id)
+	}
+
+	wait(`document.documentElement.dataset.ready === '1' &&
+		(localStorage.setItem('world.appearance', JSON.stringify({motion:'reduced'})), true)`)
+	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface#heads", "raw": true})
+	wait(`document.documentElement.dataset.ready === '1' &&
+		document.querySelector('#root').classList.contains('reduced') &&
+		document.querySelector('#stage')?.dataset.view === 'heads'`)
+	wait(`(() => {
+		window.travelScene = document.querySelector('.hc-scene');
+		window.travelStage = document.querySelector('#stage');
+		window.getTravelStop = () => window.travelScene.dataset.travelState;
+		window.visibleTravelFaces = () => [...window.travelScene.querySelectorAll('a[data-head-state][href]')]
+			.filter(link => link.checkVisibility({visibilityProperty:true, opacityProperty:true}));
+		fetch('/surface/model.json').then(response => response.json()).then(model => {
+			window.travelRanks = new Map(model.lanes.flatMap(lane => lane.states.map(state => [state.id, state.rank])));
+		});
+		return Boolean(window.travelScene);
+	})()`)
+	wait(`window.travelRanks instanceof Map && window.getTravelStop() === '' &&
+		window.visibleTravelFaces().length > 0`)
+
+	assertStop := func(slot, newer string) {
+		t.Helper()
+		wait(fmt.Sprintf(`(() => {
+			const stop = window.getTravelStop();
+			const cutoff = window.travelRanks.get(stop);
+			const faces = window.visibleTravelFaces();
+			const selected = faces.find(link => link.dataset.headState === stop);
+			if (!selected || !Number.isFinite(cutoff) || stop === window[%q] ||
+				(window[%q] && cutoff > window.travelRanks.get(window[%q]))) return false;
+			const bounds = selected.getBoundingClientRect();
+			if (bounds.right <= 0 || bounds.bottom <= 0 || bounds.left >= innerWidth || bounds.top >= innerHeight) return false;
+			const url = new URL(selected.href);
+			if (url.pathname !== '/surface' || url.searchParams.get('at') !== stop ||
+				url.searchParams.get('brane') !== selected.dataset.headLane) return false;
+			if (!faces.every(face => window.travelRanks.get(face.dataset.headState) <= cutoff)) return false;
+			window[%q] = stop;
+			return document.querySelector('.hc-scene') === window.travelScene &&
+				document.querySelector('#stage[data-view="heads"]') === window.travelStage;
+		})()`, newer, newer, newer, slot))
+	}
+
+	tapDepth("Move into history")
+	assertStop("firstDepthStop", "")
+	tapDepth("Move into history")
+	assertStop("secondDepthStop", "firstDepthStop")
+
+	// The browser harness has no physical +/- keys. Dispatch keydowns from a
+	// focused head to exercise the same production keyboard handling.
+	depthKey := func(key string) {
+		t.Helper()
+		wait(fmt.Sprintf(`(() => {
+			const link = window.visibleTravelFaces().find(face => face.dataset.headState === window.getTravelStop());
+			if (!link) return false;
+			link.focus();
+			link.dispatchEvent(new KeyboardEvent('keydown', {key:%q, bubbles:true, cancelable:true}));
+			return true;
+		})()`, key))
+	}
+
+	// Open the selected historical stop by its native link and check the
+	// camera resumes at that stop, with the reverse path still intact.
+	wait(`(() => {
+		const face = window.visibleTravelFaces().find(link => link.dataset.headState === window.secondDepthStop);
+		if (!face) return false;
+		face.focus();
+		return document.activeElement === face;
+	})()`)
+	b.do(t, nil, "key", map[string]any{"key": "Enter"})
+	wait(`document.querySelector('#stage[data-view="brane"]') === window.travelStage &&
+		document.querySelector('#front')?.dataset.front === window.secondDepthStop`)
+	tap("head-angle")
+	wait(`document.querySelector('#stage[data-view="heads"]') === window.travelStage &&
+		window.getTravelStop() === window.secondDepthStop`)
+
+	tapDepth("Move toward present")
+	wait(`window.getTravelStop() === window.firstDepthStop`)
+	depthKey("+")
+	wait(`window.getTravelStop() === window.secondDepthStop`)
+	depthKey("-")
+	wait(`window.getTravelStop() === window.firstDepthStop`)
+	tapDepth("Return to present")
+	wait(`window.getTravelStop() === '' && window.visibleTravelFaces().length > 0 &&
+		document.querySelector('#stage[data-view="heads"]') === window.travelStage &&
+		window.__cspv?.length === 0`)
 }

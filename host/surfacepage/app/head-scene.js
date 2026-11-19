@@ -352,7 +352,7 @@
       for (const id of order) {
         const point = points.get(id);
         const node = model.N[id];
-        if (lips.has(id) && node && visible(point, 150) && (angle < 1 || !rearLinks.has(id))) {
+        if (lips.has(id) && node && visible(point, 150) && (rearLayer.hidden || !rearLinks.has(id))) {
           drawPane(node, point, headsByLane.get(node.lane), paneOpacity * (focus && node.lane !== focus.lane ? .48 : .92), colors);
         }
       }
@@ -401,7 +401,37 @@
       }
     }
 
-    function render(T, next, side, value, focused) {
+    // Keep the departing faces in flight as their real predecessors move forward.
+    function startTravel(next, direction) {
+      const incoming = new Set(next.heads.map(head => head.id));
+      const layer = document.createElement('div');
+      layer.className = 'hc-passing';
+      layer.inert = true;
+      layer.setAttribute('aria-hidden', 'true');
+      space.append(layer);
+      for (const [id, entry] of cards) {
+        if (incoming.has(id)) continue;
+        const el = entry.el;
+        const old = points.get(id), rear = next.points.get(id);
+        if (!old) continue;
+        const visible = old.x > scroll.scrollLeft - 180 && old.x < scroll.scrollLeft + scroll.clientWidth + 180;
+        if (!visible) continue;
+        cards.delete(id);
+        el.removeAttribute('data-head-state');
+        el.removeAttribute('data-head-lane');
+        el.removeAttribute('href');
+        el.tabIndex = -1;
+        layer.append(el);
+        const x = rear ? rear.x - old.x : 0;
+        const y = rear ? rear.y - old.y : direction * 96;
+        el.animate([{translate:'0 0', scale:1, opacity:1}, {translate:x+'px '+y+'px', scale:rear ? .65 : 1.18, opacity:0}],
+          {duration:320, easing:'ease-out', fill:'forwards'}).finished.then(() => el.remove(), () => el.remove());
+      }
+      Promise.allSettled(layer.getAnimations({subtree:true}).map(a => a.finished)).then(() => layer.remove());
+      return {points, heads:headsByID, direction};
+    }
+
+    function render(T, next, side, value, focused, travel) {
       angle = clamp(value, 0, 1);
       scene.hidden = !angle;
       if (!angle || !T || !next) {
@@ -417,7 +447,7 @@
       scene.style.setProperty('--hc-reveal', String(reveal));
       scene.classList.toggle('is-ready', ready);
       scroll.inert = !ready;
-      rearLayer.hidden = angle < 1;
+      rearLayer.hidden = angle < 1 || Boolean(travel);
       if (initialPan && scroll.clientWidth) {
         initialPan = false;
         const requested = headsByID.get(selected) || headsByLane.get(model.N[selected]?.lane);
@@ -432,10 +462,24 @@
       for (const [id, endpoint] of layout.points) {
         const sidePoint = sidePoints?.get(id);
         const start = sidePoint ? {...sidePoint, x: sidePoint.x + scrollX, y: sidePoint.y + scrollY} : endpoint;
-        const point = WorldHeadCamera.turn(start, endpoint, angle, axisX);
+        let point = WorldHeadCamera.turn(start, endpoint, angle, axisX);
+        const head = headsByID.get(id);
+        let faceScale = 1;
+        if (travel) {
+          const past = travel.points.get(id);
+          const origin = past || {x:endpoint.x, y:endpoint.y + 96, scale:endpoint.scale * 1.18};
+          const t = travel.progress;
+          point = {x:origin.x + (endpoint.x-origin.x)*t, y:origin.y + (endpoint.y-origin.y)*t,
+            scale:origin.scale + (endpoint.scale-origin.scale)*t, depth:endpoint.depth};
+          if (head) {
+            const oldHead = travel.heads.get(id);
+            const ratio = oldHead ? oldHead.width/head.width : past ? .58 : 1.18;
+            faceScale = ratio + (1-ratio)*t;
+          }
+        }
         points.set(id, point);
         const entry = cards.get(id);
-        if (entry) entry.el.style.transform = `translate3d(${point.x}px,${point.y}px,0) translate(-50%,-50%) perspective(800px) rotateY(${yaw}deg)`;
+        if (entry) entry.el.style.transform = `translate3d(${point.x}px,${point.y}px,0) translate(-50%,-50%) perspective(800px) rotateY(${yaw}deg) scale(${faceScale})`;
       }
       updateSelection();
       repaint();
@@ -492,20 +536,26 @@
       updateSelection();
       repaint();
     });
-    scroll.addEventListener('scroll', repaint, {passive:true});
-    scroll.addEventListener('wheel', event => {
-      if (event.ctrlKey || event.metaKey || event.shiftKey || event.deltaX ||
-          scroll.scrollWidth <= scroll.clientWidth || scroll.scrollHeight > scroll.clientHeight + 2) return;
-      event.preventDefault();
-      const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? scroll.clientWidth : 1;
-      scroll.scrollLeft += event.deltaY * unit;
-    }, {passive:false});
+    scroll.addEventListener('scroll', () => { repaint(); options.pan?.(); }, {passive:true});
     const resize = new ResizeObserver(repaint);
     resize.observe(scene);
     const appearance = new MutationObserver(repaint);
     appearance.observe(document.documentElement, {attributes:true, attributeFilter:['class', 'data-theme']});
 
-    return {render, focus: focusHead, destroy() {
+    function aim(preferred) {
+      const left = scroll.scrollLeft, right = left + scroll.clientWidth;
+      const current = headsByLane.get(model?.N[preferred]?.lane);
+      if (current && current.x >= left && current.x <= right) return preferred;
+      return layout?.heads.reduce((best, h) => !best || Math.abs(h.x - (left+right)/2) < Math.abs(best.x - (left+right)/2) ? h : best, null)?.id;
+    }
+    function reveal(id, smooth) {
+      const head = headsByLane.get(model?.N[id]?.lane);
+      if (!head) return;
+      const left = scroll.scrollLeft, right = left + scroll.clientWidth;
+      if (head.x - head.width / 2 >= left && head.x + head.width / 2 <= right) return;
+      scroll.scrollTo({left:head.x - scroll.clientWidth / 2, behavior:smooth ? 'smooth' : 'instant'});
+    }
+    return {render, element:scene, startTravel, aim, reveal, focus: focusHead, destroy() {
       if (frame) cancelAnimationFrame(frame);
       resize.disconnect();
       appearance.disconnect();

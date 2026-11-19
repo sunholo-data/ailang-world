@@ -1,0 +1,48 @@
+.hc-travel-active .hc-scroll,
+.hc-travel-active.hc-scroll { touch-action: pan-x pan-y; }
+
+.hc-travel {
+  position: absolute;
+  z-index: 12;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  right: max(12px, env(safe-area-inset-right));
+  display: flex;
+  align-items: stretch;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+  color: var(--text);
+  pointer-events: auto;
+}
+.hc-travel [hidden], .hc-travel[hidden] { display: none; }
+.hc-travel button {
+  flex: none;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 9px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: 600 18px/1 var(--mono);
+  cursor: pointer;
+}
+.hc-travel button:hover:not([aria-disabled="true"]) { background: var(--sel); }
+.hc-travel button:focus-visible { outline-offset: -3px; }
+.hc-travel button[aria-disabled="true"] { color: var(--sub); opacity: .55; cursor: default; }
+.hc-travel .hc-travel-reset {
+  border-inline-end: 1px solid var(--line);
+  font: 650 11px/1 var(--font);
+}
+.hc-travel-label {
+  align-self: center;
+  min-width: 0;
+  max-width: min(50vw, 260px);
+  padding-inline: 10px 3px;
+  color: var(--sub);
+  font: 500 11px/1.25 var(--mono);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

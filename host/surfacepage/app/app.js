@@ -605,6 +605,7 @@
     st.focus = discarded ? parent : id;
     renderTimeline(true);
     applyView();
+    camera.present();
     chooseAngle(true, {instant:true, keyboard:true, anchor:st.focus});
   });
   function setModel(m) {

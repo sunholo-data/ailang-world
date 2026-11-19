@@ -22,6 +22,12 @@ var headDrafts []byte
 //go:embed app/head-camera.js
 var headCamera []byte
 
+//go:embed app/head-travel.js
+var headTravel []byte
+
+//go:embed app/head-travel-input.js
+var headTravelInput []byte
+
 //go:embed app/head-scene.js
 var headScene []byte
 
@@ -31,7 +37,7 @@ var cameraController []byte
 //go:embed app/composer.js
 var composerScript []byte
 
-var AppScript = bytes.Join([][]byte{headDrafts, headCamera, headScene, cameraController, timelineScript, composerScript}, []byte("\n"))
+var AppScript = bytes.Join([][]byte{headDrafts, headCamera, headTravel, headTravelInput, headScene, cameraController, timelineScript, composerScript}, []byte("\n"))
 
 // AppStyle is /surface/app.css: the working copy's stylesheet, its fonts
 // self-hosted under /surface/fonts/.
@@ -45,7 +51,10 @@ var headStyle []byte
 //go:embed app/head-drafts.css
 var headDraftStyle []byte
 
-var AppStyle = bytes.Join([][]byte{timelineStyle, headStyle, headDraftStyle}, []byte("\n"))
+//go:embed app/head-travel.css
+var headTravelStyle []byte
+
+var AppStyle = bytes.Join([][]byte{timelineStyle, headStyle, headDraftStyle, headTravelStyle}, []byte("\n"))
 
 // AppLogo is /surface/ailang-logo.svg, the AILANG mark the shell inlines.
 //
