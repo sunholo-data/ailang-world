@@ -1609,3 +1609,19 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 **Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence). Unanswered, another rule-(d) block report. A dev red outranks either way. The fleet's `harness-resolved` reply for `gate0:self-notices-rc2-no-watermark-file` unparks row 262.
 
 **Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16 09:06Z; next boundary Monday 2026-11-23 07:00 local). The weekly external-issue sweep ran this week at 393.
+
+**Judge follow-through (iteration 410):** Agent `sonnet`, fresh foreground read-only context, judged record commit `8c851a1b`. Verdict **PASS 93/100, zero blocking**. It used 61,775 subagent tokens, 14 tool uses and 48 s. Generator ≠ judge: opus controller, sonnet judge. The directive gave it the files and seven open questions, not the controller's numbers.
+- **What it re-measured:**
+  - `--open` lists D-WORLD-119/120 only. V4 §8 gates every sprint after S2 on 119 or 120. D-WORLD-109 grants rows 201 and 243 only.
+  - No non-test `.go` file names `file.json`. No subject since 2026-10-01 names N2d or N4a.
+  - The 7 commits in `4b1c39e2..origin/dev`.
+  - Both self-notices forms, with exit codes taken directly: rc 2 and rc 1, control 107:4 ok.
+  - Its crediting check: entry 393's orphan line and the driver's `CRASHED at=gate-3 rc=1` at 10:48:12 match the crash notice. Entry 394 matches the transcript notice.
+  - The ticket listing (count 2, `stapledon,world`). `--check` valid at 107 rows. Heading formats. STATUS 407 at the archive's end.
+  - It found no closing keyword in the commit message or the diff.
+- **Non-blocking notes and their disposition:**
+  1. The ticket's evidence says rc 0, not rc 1. Already disclosed above. I did not file a correction: a second filing under the signature would count as a second occurrence.
+  2. The 2026-11-13 14:31 fire (CRASHED at gate-3, 15:20:16 local) is not in the reconciliation. It produced no second notice because the driver's crash comment suppresses identical failures until the rc changes, and entry 393 credits it.
+  3. "Since 371" is inherited from the carried entries; entry 393 confirms it. It did not count the entries itself.
+  4. Its run omitted `--driver-src`, so it printed `signature-source: unchecked`. The verdict was the same.
+- **What it did not check:** dev CI check-runs, skill-drift `cmp`, the codex probe note, the ticket message id, the inbox read, and every other "iteration 409" reference in the charter.
