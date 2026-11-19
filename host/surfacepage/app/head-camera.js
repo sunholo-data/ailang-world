@@ -107,7 +107,7 @@
     return {front, back, top, side, floor, depth, backDepth};
   }
 
-  function measureLane(member, ground, worldHeight, worldWidth, centered) {
+  function measureLane(member, ground, centered, base) {
     const drop = ground.streetY - ground.horizon - ground.eventElevation;
     const times = [...new Set(member.states.map(record => record.z))];
     const byTime = new Map(times.map((z, i) => [z, Math.min(z - (times[i - 1] ?? -Infinity),
@@ -118,15 +118,18 @@
       const {z} = record;
       const pitch = byTime.get(z);
       const length = index ? Math.min(ground.paneDepth, pitch * .18) : ground.blockDepth;
-      const nominal = worldHeight * (index ? ground.paneHeightRatio : 1);
+      const nominal = ground.worldHeight * (index ? ground.paneHeightRatio : 1);
       const height = index ? Math.min(nominal, drop * pitch / (z + pitch) * .58 || nominal) : nominal;
-      const halfWidth = worldWidth / 2 * (index ? ground.paneWidthRatio : 1);
+      const halfWidth = member.worldWidth / 2 * (index ? ground.paneWidthRatio : 1);
       const back = z + length;
       const slot = {record, z, back, halfWidth, height, length, factor:1, offset:0, direction:0,
         top:(drop - height / 2) / back, bottom:(drop + height / 2) / z};
       const peers = slots.filter(peer => verticallyOverlaps(slot, peer));
+      // Keep a companion's bank when earlier slots become heads or leave the cut.
+      const bankIndex = peers.length ? ++companion : index;
+      slot.bankSide = base?.points.get(record.state.id)?.bankSide ?? (bankIndex % 2 ? 1 : -1);
       if (peers.length) {
-        slot.direction = centered && ++companion % 2 === 0 ? -1 : 1;
+        slot.direction = centered ? slot.bankSide : 1;
         for (const peer of peers) {
           if (centered && peer.direction && peer.direction !== slot.direction) continue;
           // Put the whole solid next to its overlapping neighbour. The
@@ -134,6 +137,7 @@
           slot.factor = Math.max(slot.factor, peer.factor * back / peer.z);
           slot.offset = Math.max(slot.offset, (peer.offset + peer.halfWidth + 5) * back / peer.z + halfWidth);
         }
+        if (!slot.offset) slot.direction = 0;
       }
       slots.push(slot);
     }
@@ -167,20 +171,22 @@
     return x;
   }
 
-  function placeLanes(T, members, ground, gutter, previous, worldHeight, nearWidth, viewLane, home) {
+  function placeLanes(T, members, ground, gutter, base, viewLane) {
     const byLane = new Map(members.map(member => [member.lane, member]));
     const shared = (T.GROUPS || []).map(group => byLane.get(group.shared)).filter(Boolean);
-    const center = byLane.get(viewLane) || shared[0] || byLane.get('shared') ||
+    const defaultCenter = shared[0] || byLane.get('shared') ||
       members.find(member => member.states.some(record => record.state.kind === 'shared')) || members[0];
-    ground.centerLane = center?.lane || '';
-    const prior = new Map((previous || home)?.heads.map(head => [head.lane, head]) || []);
-    const placed = [], groupSides = new Map(), bankExtent = new Map();
+    const prior = new Map(base?.heads.map(head => [head.lane, head]) || []);
+    const centerLane = prior.has(viewLane) ? viewLane : base?.ground.centerLane || defaultCenter?.lane || '';
+    const center = byLane.get(centerLane);
+    ground.centerLane = centerLane;
+    const placed = [], groupSides = new Map();
     let reach = 0;
     for (const member of members) {
       const emphasize = member.age >= 2 && member.priority ? 1.1 : 1;
-      const previous = prior.get(member.lane);
-      member.worldWidth = previous ? previous.width * previous.depth : nearWidth * emphasize;
-      measureLane(member, ground, worldHeight, member.worldWidth, member === center);
+      const head = prior.get(member.lane);
+      member.worldWidth = head ? head.width * head.depth : ground.worldWidth * emphasize;
+      measureLane(member, ground, member === center, base);
     }
     function place(member, side, anchor) {
       member.worldX = side * anchor;
@@ -191,15 +197,17 @@
       placed.push(member);
     }
     if (center) place(center, 0, 0);
-    if (home) {
-      const origin = home.heads.find(head => head.lane === viewLane).worldX;
-      const homeX = new Map(home.heads.map(head => [head.lane, head.worldX]));
-      const middle = home.laneOrder.indexOf(viewLane);
-      for (const [side, queue] of [[-1, home.laneOrder.slice(0, middle).reverse()], [1, home.laneOrder.slice(middle + 1)]]) {
+    if (base) {
+      // Move along the same street through every cut. Lanes that have no records
+      // here still define the order and can still be the camera's reference.
+      const origin = prior.get(centerLane)?.worldX ?? 0;
+      const middle = base.laneOrder.indexOf(centerLane);
+      for (const [side, queue] of [[-1, base.laneOrder.slice(0, middle).reverse()], [1, base.laneOrder.slice(middle + 1)]]) {
         let last = 0;
         for (const lane of queue) {
           const member = byLane.get(lane);
-          const anchor = Math.max(last, Math.abs(homeX.get(lane) - origin));
+          if (!member) continue;
+          const anchor = Math.max(last + 1, Math.abs(prior.get(lane).worldX - origin));
           last = bankPosition(member, placed, side, ground, anchor);
           place(member, side, last);
         }
@@ -207,17 +215,13 @@
       return reach;
     }
     const ordered = [...shared.slice(1), ...members.filter(member => member !== center && !shared.includes(member))];
-    if (previous) ordered.sort((a, b) => Math.abs(prior.get(a.lane)?.worldX ?? Infinity) - Math.abs(prior.get(b.lane)?.worldX ?? Infinity));
     for (const [i, member] of ordered.entries()) {
       const repoLane = T.groupOf?.(member.lane)?.shared;
-      const anchor = prior.get(member.lane)?.worldX;
-      const preference = Math.sign(anchor) || groupSides.get(repoLane) || (i % 2 ? -1 : 1);
-      const retained = anchor ? Math.max(Math.abs(anchor), bankExtent.get(preference) || 0) : 0;
-      const preferred = bankPosition(member, placed, preference, ground, retained);
-      const opposite = anchor ? Infinity : bankPosition(member, placed, -preference, ground);
+      const preference = groupSides.get(repoLane) || (i % 2 ? -1 : 1);
+      const preferred = bankPosition(member, placed, preference, ground);
+      const opposite = bankPosition(member, placed, -preference, ground);
       const side = preferred <= opposite + gutter * member.z ? preference : -preference;
       place(member, side, side === preference ? preferred : opposite);
-      bankExtent.set(side, Math.max(bankExtent.get(side) || 0, Math.abs(member.worldX)));
       if (shared.includes(member)) groupSides.set(member.lane, side);
     }
     return reach;
@@ -231,9 +235,8 @@
 
     const time = timeAxis(T, options);
     const members = laneStrips(T, time, options);
-    const baseline = time.stop ? options.base || layout(T, {...options, base:undefined, stop:undefined, viewLane:undefined}) : null;
-    const viewLane = members.some(member => member.lane === options.viewLane) ? options.viewLane : '';
-    const home = viewLane ? (!time.stop && options.base || layout(T, {...options, base:baseline || undefined, viewLane:undefined})) : null;
+    const base = time.stop || options.viewLane
+      ? options.base || layout(T, {...options, stop:undefined, viewLane:undefined}) : null;
     const narrow = viewportWidth < 560;
     const gutter = narrow ? 12 : 34;
     const gap = narrow ? 12 : 28;
@@ -242,9 +245,9 @@
     const near = members.filter(member => member.age < 2).length;
     const occupied = Math.max(1, Math.ceil(near / 2));
     const bankWidth = (viewportWidth - street) / 2 - gutter;
-    const nearWidth = baseline?.ground.worldWidth ??
+    const nearWidth = base?.ground.worldWidth ??
       (narrow ? faceWidth : clamp((bankWidth - (occupied - 1) * gap) / occupied, 172, faceWidth));
-    const nearHeight = baseline?.ground.worldHeight ??
+    const nearHeight = base?.ground.worldHeight ??
       (narrow ? clamp(61 + (viewportWidth - 320) * .16, 61, 82) : clamp(nearWidth * .35, 74, 96));
     const horizon = Math.max(44, viewportHeight * .19);
     const span = Math.max(nearHeight * 3.8, viewportHeight * .50);
@@ -255,7 +258,7 @@
       pitch: faceWidth * .74, blockDepth, paneHeightRatio: .36, paneWidthRatio: .88,
       paneDepth: blockDepth * .37, eventElevation:nearHeight / 2, worldWidth:nearWidth, worldHeight:nearHeight};
     time.yAt = index => project(ground, 0, ground.eventElevation, time.depthAt(index)).y;
-    const reach = placeLanes(T, members, ground, gutter, baseline, nearHeight, nearWidth, viewLane, home);
+    const reach = placeLanes(T, members, ground, gutter, base, options.viewLane);
     const width = reach <= viewportWidth / 2 ? viewportWidth : Math.ceil(2 * (reach + gutter));
     ground.vx = width / 2;
     let height = viewportHeight;
@@ -264,7 +267,7 @@
       for (const [index, slot] of member.slots.entries()) {
         const {state, index:timeIndex} = slot.record;
         const {z} = slot;
-        const point = {...project(ground, slot.worldX, ground.eventElevation, z), worldX:slot.worldX,
+        const point = {...project(ground, slot.worldX, ground.eventElevation, z), worldX:slot.worldX, bankSide:slot.bankSide,
           scale:1/z, depth:z, timeIndex};
         if (!index) {
           heads.push({...point, id:state.id, lane, priority, attention, live, worldX,
@@ -288,7 +291,7 @@
       }
     }
     heads.sort((a, b) => b.priority - a.priority || points.get(a.id).depth - points.get(b.id).depth);
-    const laneOrder = home?.laneOrder || [...heads].sort((a,b) => a.worldX - b.worldX).map(head => head.lane);
+    const laneOrder = base?.laneOrder || [...heads].sort((a,b) => a.worldX - b.worldX).map(head => head.lane);
     return {points, heads, width, height, edges, ground, time, laneOrder,
       travelZ:(time.presentX - time.referenceX) / unitsPerZ};
   }

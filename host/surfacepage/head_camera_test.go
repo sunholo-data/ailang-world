@@ -248,6 +248,58 @@ const branchOnly = layout(adaptModel({...model,lanes:[
 assert.equal(branchOnly.ground.centerLane,'mainbranch');
 assert.equal(branchOnly.laneOrder.indexOf('mainbranch'),1,'a branch-only default permits lane switching on either side');
 
+const history = adaptModel({...model,lanes:[
+  lane('shared',[state('main',20,2,{kind:'shared'})]),
+  lane('left',[state('left-now',21,1),state('left-gap',14,7),state('left-old',3,15)]),
+  lane('road',[state('road-now',22,.5),state('road-tie-2',11,9),state('road-tie-1',10,9),state('road-old',2,16)]),
+  lane('right',[state('right-new',16,5),state('right-old',1,18)]),
+  lane('late',[state('late',19,3)])
+],links:[]});
+const historyOptions = {width:390,height:640};
+const present = layout(history,historyOptions);
+assert.deepEqual(present.laneOrder,['right','left','shared','road','late']);
+for (const center of ['left','shared','road','late']) {
+  for (const stop of ['right-new','left-gap','road-tie-2','road-tie-1','left-old']) {
+    const options = {...historyOptions,stop,viewLane:center};
+    const past = layout(history,{...options,base:present});
+    const automatic = layout(history,options);
+    assert.equal(past.ground.centerLane,center,'the camera keeps its center through gaps');
+    assert.deepEqual(past.laneOrder,present.laneOrder,'cuts retain the present lane order');
+    const positions = scene => [...scene.heads].sort((a,b) => a.worldX - b.worldX).map(h=>[h.lane,h.worldX]);
+    assert.deepEqual(positions(automatic),positions(past),'an omitted base uses the same lane positions');
+    if (center === 'shared') {
+      const defaultView = layout(history,{...historyOptions,base:present,stop});
+      assert.equal(defaultView.ground.centerLane,'shared','the default reference survives cuts without shared records');
+      assert.deepEqual(positions(defaultView),positions(past));
+    }
+    const visible = new Set(past.heads.map(h=>h.lane));
+    assert.deepEqual(positions(past).map(([lane])=>lane),present.laneOrder.filter(lane=>visible.has(lane)));
+    for (const head of past.heads) {
+      assert.equal(Math.sign(head.worldX), Math.sign(present.laneOrder.indexOf(head.lane) - present.laneOrder.indexOf(center)),
+        'cut ' + stop + ' preserves the side of ' + head.lane + ' from ' + center);
+    }
+    checkLaneSilhouettes(past,history);
+  }
+}
+
+const clustered = adaptModel({...model,lanes:[lane('shared',[
+  state('newest',9,1),state('newer-2',8,4),state('newer-1',7,4),state('newer-0',6,4),
+  ...Array.from({length:6},(_,i)=>state('cluster-'+i,i,5))
+])],links:[]});
+const clusterBase = layout(clustered,historyOptions);
+const sideByState = new Map();
+for (const stop of [undefined,'newer-2','newer-1','newer-0','cluster-5','cluster-3','cluster-0']) {
+  const past = layout(clustered,{...historyOptions,base:clusterBase,stop});
+  for (const [id,point] of past.points) {
+    const side = Math.sign(point.worldX);
+    if (!side) continue;
+    if (sideByState.has(id)) assert.equal(side,sideByState.get(id),id+' retains its bank at '+stop);
+    sideByState.set(id,side);
+  }
+  checkLaneSilhouettes(past,clustered);
+}
+assert(sideByState.size >= 5,'the test exercises several companions');
+
 const repoLane = (repo,name,kind,age) => ({
   ...lane(repo+':brane:'+name,Array.from({length:65},(_,i)=>state(repo+name+i,i,age+64-i,{kind}))),repo
 });

@@ -1557,7 +1557,7 @@
   const KEYROWS = [['← →', 'back · forward a page', '—'], ['⇧← ⇧→', 'previous · next state', '—'], ['↑ ↓', 'lane above · below', 'back in time · toward now'], ['+ −', 'zoom in · out', '—'], ['End', 'back to now', 'most recent'], ['Home', 'the oldest state', 'earliest'], ['Enter', 'open brane', '—'], ['Esc', '—', 'back to timeline'], ['N', 'what needs you', 'what needs you'], ['/', 'address bar', 'address bar'], ['Enter', 'in the bar: a place, episode report E, why T, approve ID', 'the same'], [',', 'appearance', 'appearance'], ['?', 'these keys', 'these keys']];
   function renderKeys() {
     if (camera.heads && camera.active && st.d === 0) {
-      const rows = [['← →', 'Move one lane left or right'], ['+ −', 'Move into history or toward the present'],
+      const rows = [['← →', 'Bring the neighboring lane’s latest entry forward'], ['+ −', 'Travel through this lane’s history'],
         ['Enter', 'Open the focused state'], ['Esc', 'Return to Timeline'], ['/', 'Address bar'],
         ['N', 'What needs you'], [',', 'Appearance'], ['?', 'These keys']];
       $('keys').innerHTML = '<div class="kgrid heads-keys"><strong>Heads</strong>' +

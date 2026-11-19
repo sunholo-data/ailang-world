@@ -485,7 +485,8 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 		t.Fatalf("expected equal-time Timeline nodes and a visible time axis: %+v", timeline)
 	}
 	b.do(t, nil, "tap", map[string]any{"id": "head-angle"})
-	wait(`(() => {
+	const setupScene = `(() => {
+		const laneX = el => { const r = el.getBoundingClientRect(); return r.left + r.width / 2; };
 		const stage = document.querySelector('#stage[data-view="heads"]');
 		if (!stage) return false;
 		const axis = stage.querySelector('.hc-time-axis');
@@ -502,8 +503,29 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 			const front = link => link.querySelector('.hc-mini-front') || link;
 			return Math.abs(midpoint(front(first).getBoundingClientRect()) - midpoint(front(second).getBoundingClientRect())) <= 1;
 		};
+		window.lateralStep = (id, key) => {
+			const link = window.paneFor(id);
+			link.focus();
+			if (document.activeElement !== link) return false;
+			link.dispatchEvent(new KeyboardEvent('keydown', {key, bubbles:true, cancelable:true}));
+			return true;
+		};
+		window.centeredAt = (id, lane) => {
+			const face = window.paneFor(id);
+			const scroll = window.timedScene.querySelector('.hc-scroll');
+			const center = scroll.getBoundingClientRect().left + scroll.clientWidth / 2;
+			return face?.matches('a[data-head-state][aria-current="true"]') &&
+				window.timedScene.dataset.viewLane === lane && document.activeElement === face &&
+				Math.abs(laneX(face) - center) <= 1;
+		};
+		window.axisEndsAt = instant => {
+			const ticks = [...window.timedScene.querySelectorAll('.hc-time-axis time[datetime]')]
+				.filter(tick => tick.checkVisibility());
+			return ticks.at(-1)?.dateTime === instant && ticks.every(tick => Date.parse(tick.dateTime) <= Date.parse(instant));
+		};
 		return window.alignedPanes('a-tip', 'b-tip');
-	})()`)
+	})()`
+	wait(setupScene)
 	wait(`(() => {
 		const tip = window.paneFor('a-tip');
 		tip.focus();
@@ -532,20 +554,9 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 			.sort((a, b) => laneX(a) - laneX(b));
 		const first = ordered.indexOf(window.paneFor('a-stop')), second = ordered.indexOf(window.paneFor('b-tie'));
 		if (first < 0 || second < 0 || first === second) return false;
-		window.lateralStep = (id, key) => {
-			const link = window.paneFor(id);
-			link.focus();
-			if (document.activeElement !== link) return false;
-			link.dispatchEvent(new KeyboardEvent('keydown', {key, bubbles:true, cancelable:true}));
-			return true;
-		};
-		window.centeredAt = (id, lane) => {
-			const scroll = window.timedScene.querySelector('.hc-scroll');
-			const center = scroll.getBoundingClientRect().left + scroll.clientWidth / 2;
-			return window.timedScene.dataset.viewLane === lane && window.timedScene.dataset.travelState === 'a-stop' &&
-				window.sameRecordedCut() && window.alignedPanes('a-stop', 'b-tie') &&
-				Math.abs(laneX(window.paneFor(id)) - center) <= 1 && document.activeElement === window.paneFor(id);
-		};
+		window.historicalCenter = (id, lane) => window.centeredAt(id, lane) &&
+			window.timedScene.dataset.travelState === 'a-stop' && window.sameRecordedCut() &&
+			window.alignedPanes('a-stop', 'b-tie') && window.axisEndsAt('2026-10-20T12:00:00.000Z');
 		const stops = ordered.slice(Math.min(first, second), Math.max(first, second) + 1);
 		if (first > second) stops.reverse();
 		return {key:first < second ? 'ArrowRight' : 'ArrowLeft',
@@ -554,7 +565,7 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 	for i := 1; i < len(movement.Stops); i++ {
 		from, to := movement.Stops[i-1], movement.Stops[i]
 		wait(fmt.Sprintf("window.lateralStep(%q, %q)", from.ID, movement.Key))
-		wait(fmt.Sprintf("window.centeredAt(%q, %q)", to.ID, to.Lane))
+		wait(fmt.Sprintf("window.historicalCenter(%q, %q)", to.ID, to.Lane))
 	}
 	reverseKey := "ArrowLeft"
 	if movement.Key == reverseKey {
@@ -563,8 +574,59 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 	for i := len(movement.Stops) - 1; i > 0; i-- {
 		from, to := movement.Stops[i], movement.Stops[i-1]
 		wait(fmt.Sprintf("window.lateralStep(%q, %q)", from.ID, reverseKey))
-		wait(fmt.Sprintf("window.centeredAt(%q, %q)", to.ID, to.Lane))
+		wait(fmt.Sprintf("window.historicalCenter(%q, %q)", to.ID, to.Lane))
 	}
+
+	// Measure the near plane at the historical cut, then launch a fresh
+	// Head-on view from the present with no explicit cutoff.
+	var nearPlane struct {
+		Top, Width, Height float64
+	}
+	b.do(t, &nearPlane, "waitFor", map[string]any{"expression": `(() => {
+		const {top, width, height} = window.paneFor('a-stop').getBoundingClientRect();
+		return {top, width, height};
+	})()`})
+	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface#heads", "raw": true})
+	wait(`document.documentElement.dataset.ready === '1'`)
+	wait(setupScene)
+	var neighbor struct {
+		ID, Lane, Out, Back string
+	}
+	b.do(t, &neighbor, "waitFor", map[string]any{"expression": fmt.Sprintf(`(() => {
+		const scene = window.timedScene;
+		if (scene.dataset.travelState || scene.dataset.viewLane !== 'shared' ||
+			!scene.querySelector('.hc-time-axis').checkVisibility()) return false;
+		const heads = [...scene.querySelectorAll('a[data-head-state]')].sort((a, b) =>
+			a.getBoundingClientRect().left - b.getBoundingClientRect().left);
+		const start = heads.indexOf(window.paneFor('shared-late'));
+		if (start < 0) return false;
+		const side = start > 0 ? -1 : 1;
+		const face = heads[start + side];
+		if (!face || !['a-tip', 'b-tip'].includes(face.dataset.headState)) return false;
+		window.presentFaceHeight = face.getBoundingClientRect().height;
+		window.nearPlane = {top:%f, width:%f, height:%f};
+		window.atNearPlane = id => {
+			const face = window.paneFor(id);
+			if (!face || !face.checkVisibility()) return false;
+			const rect = face.getBoundingClientRect();
+			return ['top', 'width', 'height'].every(edge => Math.abs(rect[edge] - window.nearPlane[edge]) <= 1);
+		};
+		return {id:face.dataset.headState, lane:face.dataset.headLane,
+			out:side < 0 ? 'ArrowLeft' : 'ArrowRight', back:side < 0 ? 'ArrowRight' : 'ArrowLeft'};
+	})()`, nearPlane.Top, nearPlane.Width, nearPlane.Height)})
+	wait(fmt.Sprintf("window.lateralStep('shared-late', %q)", neighbor.Out))
+	wait(fmt.Sprintf(`window.centeredAt(%q, %q) && window.atNearPlane(%q) &&
+		window.paneFor(%q).getBoundingClientRect().height > window.presentFaceHeight + 1 &&
+		window.axisEndsAt('2026-10-20T14:00:00.000Z') && !window.paneFor('shared-late') &&
+		window.alignedPanes('a-tip', 'b-tip')`, neighbor.ID, neighbor.Lane, neighbor.ID, neighbor.ID))
+
+	// A resize or model refresh can settle the flight before its last frame.
+	// The destination must still receive keyboard focus.
+	wait(fmt.Sprintf("window.lateralStep(%q, %q) && window.dispatchEvent(new Event('resize'))", neighbor.ID, neighbor.Back))
+	wait(`window.centeredAt('shared-late', 'shared') && window.atNearPlane('shared-late') &&
+		window.axisEndsAt('2026-10-20T14:30:00.000Z') &&
+		window.paneFor('a-tip').getBoundingClientRect().height < window.nearPlane.height - 1 &&
+		window.alignedPanes('a-tip', 'b-tip')`)
 }
 
 // The stop shares an instant with b-tie despite different wire offsets.
