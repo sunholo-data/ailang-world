@@ -1843,3 +1843,5 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
   3. "Unchanged since iteration 406" was checked only over 412's range. Entries 407–412 each recorded 0 changed ledger rows over their own ranges. No change.
   4. The `PIPESTATUS` slip is disclosed. No change.
 - **What it did not check:** the row 150/151 grep controls, the index beyond its new line, skill drift, the inbox, the 410–412 worktrees, the harness share, and #617's contents.
+
+**Gate 3b (record PR #618):** head `b152bdc9` run 44536677726 attempt 1 read **3/3** (`ailang-code verify gate`, `go host build + test gate`, `go race gate`), first time. The poller was SHA-pinned to the full head, with a 30-minute cap, under `/bin/bash`. This line makes a new head, so the PR is polled again on it before merge. If that head flakes, it is re-run and merged without another commit, and the instance is named in the merge commit body and the Gate-5 report.
