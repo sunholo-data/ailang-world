@@ -40,7 +40,7 @@
     const scratch = document.createElement('template');
     let model, layout, sidePoints, angle = 0, selected = '', hovered = '', frame = 0, silentFocus = false;
     let panAxis, panWidth = 0, panOffset = 0, focusedByUser = '', paintedSelection, paintWidth = 0, paintHeight = 0, pixelRatio = 0;
-    let floorTravel = 0;
+    let floorTravel = 0, cameraX = 0;
     const faceSizes = new Map();
     let points = new Map(), headsByID = new Map(), headsByLane = new Map(), order = [], histories = new Map();
 
@@ -70,7 +70,7 @@
       const ground = layout.ground;
       const reveal = clamp((angle - .94) / .06, 0, 1);
       return reveal && ground && WorldHeadCamera.block
-        ? WorldHeadCamera.block(ground, point, width, height, reveal * (pane ? point.paneDepth ?? ground.paneDepth : ground.blockDepth))
+        ? WorldHeadCamera.block(ground, point, width, height, reveal * (point.blockDepth ?? (pane ? ground.paneDepth : ground.blockDepth)))
         : null;
     }
 
@@ -120,17 +120,19 @@
       const depth = aWeight + bWeight;
       const project = (x, y) => (x * aWeight + y * bWeight) / depth;
       return {
-        point: {x:project(a.x,b.x), y:project(a.y,b.y), depth, scale:1/depth},
+        point: {x:project(a.x,b.x), y:project(a.y,b.y), depth, scale:1/depth,
+          blockDepth:a.blockDepth + t*(b.blockDepth-a.blockDepth)},
         size: {width:project(from.width,to.width), height:project(from.height,to.height)}
       };
     }
 
     // Continue an entering or departing front along its viewing ray. Clip
     // it short of the eye while it fades past the camera.
-    function movedCamera(point, deltaZ, {vx, horizon} = layout.ground) {
+    function movedCamera(point, deltaZ, {vx, horizon}, deltaX) {
       const depth = Math.max(point.depth * .35, point.depth + deltaZ);
       const ratio = point.depth / depth;
-      return {x:vx + (point.x-vx)*ratio, y:horizon + (point.y-horizon)*ratio, depth, scale:1/depth};
+      return {x:vx + (point.x-vx)*ratio + deltaX/depth, y:horizon + (point.y-horizon)*ratio,
+        depth, scale:1/depth, blockDepth:point.blockDepth};
     }
 
     function setTimeAxis() {
@@ -320,7 +322,7 @@
 
     function placeMiniature(entry, point, width, height) {
       const ground = layout.ground;
-      const block = WorldHeadCamera.block(ground, point, width, height, point.paneDepth ?? ground.paneDepth);
+      const block = WorldHeadCamera.block(ground, point, width, height, point.blockDepth ?? ground.paneDepth);
       const outline = vertices => vertices ? 'M' + vertices.map(p => p.x + ',' + p.y).join('L') + 'Z' : '';
       entry.paths[0].setAttribute('d', outline(block.side) + outline(block.top));
       entry.paths[1].setAttribute('d', outline(block.front));
@@ -747,7 +749,7 @@
       const departures = [], sizes = new Map(faceSizes);
       // The destination can have a wider scroll surface. Carry the old
       // screen positions into its coordinates before the first animation frame.
-      const dx = Math.round(next.ground.vx - scroll.clientWidth / 2) - scroll.scrollLeft;
+      const dx = next.ground.vx - layout.ground.vx;
       const origins = dx ? new Map([...points].map(([id,p]) => [id, {...p, x:p.x + dx}])) : points;
       for (const id of rearLinks.keys()) {
         const pane = points.get(id), node = model.N[id];
@@ -763,7 +765,7 @@
         const head = headsByID.get(id);
         const from = sizes.get(id) || head;
         const nextHead = nextByLane.get(head.lane);
-        const end = rear || movedCamera(old, floorTravel - (next.travelZ || 0), next.ground);
+        const end = rear || movedCamera(old, floorTravel - next.travelZ, next.ground, cameraX - next.ground.cameraX);
         const ratio = old.depth / end.depth;
         const to = rear && nextHead ? paneSize(nextHead, rear)
           : {width:from.width * ratio, height:from.height * ratio};
@@ -775,7 +777,7 @@
         layer.append(el);
         departures.push({entry, head, old, end, from, to});
       }
-      return {points:origins, sizes, departures, floorFrom:floorTravel};
+      return {points:origins, sizes, departures, floorFrom:floorTravel, cameraFrom:cameraX};
     }
 
     function render(T, next, side, value, focused, travel) {
@@ -821,6 +823,7 @@
       faceSizes.clear();
       const targetTravel = next.travelZ || 0;
       floorTravel = travel ? travel.floorFrom + (targetTravel - travel.floorFrom) * travel.progress : targetTravel;
+      cameraX = travel ? travel.cameraFrom + (next.ground.cameraX - travel.cameraFrom)*travel.progress : next.ground.cameraX;
       const yaw = 90 * Math.max(0, 1 - angle / .94);
       const scrollX = scroll.scrollLeft, scrollY = scroll.scrollTop;
       const axisX = scrollX + scroll.clientWidth / 2;
@@ -832,7 +835,7 @@
         let displayed = head && {width:head.width, height:head.height};
         if (travel) {
           const past = travel.points.get(id);
-          const origin = past || movedCamera(endpoint, targetTravel - travel.floorFrom);
+          const origin = past || movedCamera(endpoint, targetTravel - travel.floorFrom, next.ground, next.ground.cameraX - travel.cameraFrom);
           const ratio = endpoint.depth / origin.depth;
           const target = displayed || paneSize(headsByLane.get(model.N[id].lane), endpoint);
           const previous = travel.sizes.get(id) || {width:target.width * ratio, height:target.height * ratio};
@@ -840,9 +843,12 @@
           point = pose.point;
           if (head) displayed = pose.size;
         }
-        if (point !== endpoint && endpoint.paneHeight !== undefined) {
-          point.paneHeight = endpoint.paneHeight * endpoint.depth / point.depth;
-          point.paneDepth = endpoint.paneDepth;
+        if (point !== endpoint) {
+          point.blockDepth ??= endpoint.blockDepth;
+          if (endpoint.paneHeight !== undefined) {
+            point.paneHeight = endpoint.paneHeight * endpoint.depth / point.depth;
+            point.paneWidth = endpoint.paneWidth * endpoint.depth / point.depth;
+          }
         }
         points.set(id, point);
         const entry = cards.get(id);

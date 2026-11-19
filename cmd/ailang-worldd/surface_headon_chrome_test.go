@@ -496,13 +496,13 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 		window.timedScene = stage.querySelector('.hc-scene');
 		window.paneFor = id => [...window.timedScene.querySelectorAll('a[data-head-state], a[data-rear-state]')]
 			.find(el => (el.dataset.headState || el.dataset.rearState) === id);
-		window.alignedPanes = (a, b) => {
-			const first = window.paneFor(a), second = window.paneFor(b);
-			if (!first || !second) return false;
-			const midpoint = r => r.top + r.height / 2;
-			const front = link => link.querySelector('.hc-mini-front') || link;
-			return Math.abs(midpoint(front(first).getBoundingClientRect()) - midpoint(front(second).getBoundingClientRect())) <= 1;
+		window.paneTimeY = id => {
+			const pane = window.paneFor(id);
+			if (!pane) return NaN;
+			const rect = (pane.querySelector('.hc-mini-front') || pane).getBoundingClientRect();
+			return rect.top + rect.height / 2;
 		};
+		window.alignedPanes = (a, b) => Math.abs(window.paneTimeY(a) - window.paneTimeY(b)) <= 1;
 		window.lateralStep = (id, key) => {
 			const link = window.paneFor(id);
 			link.focus();
@@ -580,11 +580,10 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 	// Measure the near plane at the historical cut, then launch a fresh
 	// Head-on view from the present with no explicit cutoff.
 	var nearPlane struct {
-		Top, Width, Height float64
+		CenterY, Height float64
 	}
 	b.do(t, &nearPlane, "waitFor", map[string]any{"expression": `(() => {
-		const {top, width, height} = window.paneFor('a-stop').getBoundingClientRect();
-		return {top, width, height};
+		return {centerY:window.paneTimeY('a-stop'), height:window.paneFor('a-stop').getBoundingClientRect().height};
 	})()`})
 	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface#heads", "raw": true})
 	wait(`document.documentElement.dataset.ready === '1'`)
@@ -603,20 +602,21 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 		const side = start > 0 ? -1 : 1;
 		const face = heads[start + side];
 		if (!face || !['a-tip', 'b-tip'].includes(face.dataset.headState)) return false;
-		window.presentFaceHeight = face.getBoundingClientRect().height;
-		window.nearPlane = {top:%f, width:%f, height:%f};
+		window.presentFaceY = window.paneTimeY(face.dataset.headState);
+		window.nearPlaneY = %f;
+		const minHeight = %f / 2;
 		window.atNearPlane = id => {
 			const face = window.paneFor(id);
 			if (!face || !face.checkVisibility()) return false;
-			const rect = face.getBoundingClientRect();
-			return ['top', 'width', 'height'].every(edge => Math.abs(rect[edge] - window.nearPlane[edge]) <= 1);
+			return Math.abs(window.paneTimeY(id) - window.nearPlaneY) <= 1 &&
+				face.getBoundingClientRect().height >= minHeight;
 		};
 		return {id:face.dataset.headState, lane:face.dataset.headLane,
 			out:side < 0 ? 'ArrowLeft' : 'ArrowRight', back:side < 0 ? 'ArrowRight' : 'ArrowLeft'};
-	})()`, nearPlane.Top, nearPlane.Width, nearPlane.Height)})
+	})()`, nearPlane.CenterY, nearPlane.Height)})
 	wait(fmt.Sprintf("window.lateralStep('shared-late', %q)", neighbor.Out))
 	wait(fmt.Sprintf(`window.centeredAt(%q, %q) && window.atNearPlane(%q) &&
-		window.paneFor(%q).getBoundingClientRect().height > window.presentFaceHeight + 1 &&
+		window.paneTimeY(%q) > window.presentFaceY + 1 &&
 		window.axisEndsAt('2026-10-20T14:00:00.000Z') && !window.paneFor('shared-late') &&
 		window.alignedPanes('a-tip', 'b-tip')`, neighbor.ID, neighbor.Lane, neighbor.ID, neighbor.ID))
 
@@ -625,7 +625,7 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 	wait(fmt.Sprintf("window.lateralStep(%q, %q) && window.dispatchEvent(new Event('resize'))", neighbor.ID, neighbor.Back))
 	wait(`window.centeredAt('shared-late', 'shared') && window.atNearPlane('shared-late') &&
 		window.axisEndsAt('2026-10-20T14:30:00.000Z') &&
-		window.paneFor('a-tip').getBoundingClientRect().height < window.nearPlane.height - 1 &&
+		window.paneTimeY('a-tip') < window.nearPlaneY - 1 &&
 		window.alignedPanes('a-tip', 'b-tip')`)
 }
 

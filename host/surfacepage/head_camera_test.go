@@ -62,7 +62,8 @@ function checkLaneSilhouettes(scene, graph) {
     const front = head.id === id;
     const {width,height} = front ? head : paneSize(g,head,p);
     assert(width>0 && height>0, 'even the oldest record has a face');
-    const {front:near,back} = block(g,p,width,height,front ? g.blockDepth : p.paneDepth);
+    assert(p.blockDepth>0, 'even the oldest record has positive extrusion');
+    const {front:near,back} = block(g,p,width,height,p.blockDepth);
     const corners = [...near,...back];
     const xs = corners.map(v=>v.x), ys = corners.map(v=>v.y);
     return {id,corners,l:Math.min(...xs),r:Math.max(...xs),t:Math.min(...ys),b:Math.max(...ys)};
@@ -128,12 +129,12 @@ for (const width of [320, 390, 1300]) {
   const fronts = new Map(scene.heads.map(h=>[h.lane,h]));
   for (const face of scene.heads) {
     const shape = block(ground,face,face.width,face.height);
-    const inferred = block(ground,{x:face.x,y:face.y},face.width,face.height);
-    assert(nearEqual(shape.depth,inferred.depth) && nearEqual(shape.depth,face.depth));
+    assert.equal(shape.depth,face.depth);
     assert(nearEqual(face.scale*face.depth,1));
-    assert(nearEqual(shape.backDepth-shape.depth,ground.blockDepth));
+    assert(nearEqual(shape.backDepth-shape.depth,face.blockDepth));
+    assert(face.blockDepth>0 && face.blockDepth<=ground.blockDepth);
     const groundCenter = project(ground,(face.x-center)*face.depth,0,face.depth);
-    assert(nearEqual(groundCenter.x,face.x) && nearEqual(groundCenter.y,face.y+face.height/2));
+    assert(nearEqual(groundCenter.x,face.x) && nearEqual(groundCenter.y,face.y+ground.eventElevation/face.depth));
     if (face.lane !== ground.centerLane) {
       assert(shape.front.concat(shape.back).every(p=>Math.sign(p.x-center)===Math.sign(face.x-center)),
         'branch silhouette stays on its bank');
@@ -160,7 +161,7 @@ for (const width of [320, 390, 1300]) {
   assert.notEqual(head.shared.y,head.recent.y,'foreground faces stagger in recorded depth');
   assert(ground.streetY>Math.max(...[head.shared,head.recent].map(h=>h.y+h.height/2)), 'the present plane is now, after latest activity');
   for (const face of scene.heads) {
-    assert(nearEqual(face.height*face.depth,head.shared.height*head.shared.depth),'facades share the same world height');
+    assert(face.height>0 && face.height*face.depth<=ground.worldHeight+1e-8,'fitted facades retain a positive height within the world height');
     const relativeWidth = (face.width*face.depth)/(head.shared.width*head.shared.depth);
     assert(relativeWidth>0.99 && relativeWidth<=1.10000001,'far facades retain plausible world widths');
     if (face.lane !== 'shared') {
@@ -257,7 +258,8 @@ const history = adaptModel({...model,lanes:[
 ],links:[]});
 const historyOptions = {width:390,height:640};
 const present = layout(history,historyOptions);
-assert.deepEqual(present.laneOrder,['right','left','shared','road','late']);
+assert.deepEqual(present.laneOrder,[...present.plan.lanes.keys()].sort((a,b)=>
+  present.plan.lanes.get(a).origin-present.plan.lanes.get(b).origin));
 for (const center of ['left','shared','road','late']) {
   for (const stop of ['right-new','left-gap','road-tie-2','road-tie-1','left-old']) {
     const options = {...historyOptions,stop,viewLane:center};
@@ -274,9 +276,9 @@ for (const center of ['left','shared','road','late']) {
     }
     const visible = new Set(past.heads.map(h=>h.lane));
     assert.deepEqual(positions(past).map(([lane])=>lane),present.laneOrder.filter(lane=>visible.has(lane)));
-    for (const head of past.heads) {
-      assert.equal(Math.sign(head.worldX), Math.sign(present.laneOrder.indexOf(head.lane) - present.laneOrder.indexOf(center)),
-        'cut ' + stop + ' preserves the side of ' + head.lane + ' from ' + center);
+    const centered = layout(history,{...historyOptions,base:present,viewLane:center});
+    for (const [id,point] of past.points) {
+      assert.equal(point.worldX,centered.points.get(id).worldX,id+' retains its track at '+stop);
     }
     checkLaneSilhouettes(past,history);
   }
@@ -287,18 +289,89 @@ const clustered = adaptModel({...model,lanes:[lane('shared',[
   ...Array.from({length:6},(_,i)=>state('cluster-'+i,i,5))
 ])],links:[]});
 const clusterBase = layout(clustered,historyOptions);
-const sideByState = new Map();
+let companions = 0;
 for (const stop of [undefined,'newer-2','newer-1','newer-0','cluster-5','cluster-3','cluster-0']) {
   const past = layout(clustered,{...historyOptions,base:clusterBase,stop});
   for (const [id,point] of past.points) {
-    const side = Math.sign(point.worldX);
-    if (!side) continue;
-    if (sideByState.has(id)) assert.equal(side,sideByState.get(id),id+' retains its bank at '+stop);
-    sideByState.set(id,side);
+    assert.equal(point.worldX,clusterBase.points.get(id).worldX,id+' keeps its exact track at '+stop);
+    if (!stop && point.worldX !== 0) companions++;
   }
   checkLaneSilhouettes(past,clustered);
 }
-assert(sideByState.size >= 5,'the test exercises several companions');
+assert(companions >= 5,'the test exercises several companions');
+
+const consecutive = adaptModel({...model,lanes:[
+  lane('shared',[
+    state('merge-old',1,3,{kind:'shared'}),
+    state('merge-paired',2,2,{kind:'shared'}),
+    state('source',10,2),
+    state('merge-new',4,1,{kind:'shared'})
+  ]),
+  lane('branch',[state('step-old',3,3),state('step-paired',5,2),state('step-new',6,1)])
+],links:[{from:'source',to:'merge-paired'}]});
+const primaries = {
+  shared:['merge-old','merge-paired','merge-new'],
+  branch:['step-old','step-paired','step-new']
+};
+for (const width of [320,1280]) {
+  const options = {width,height:640};
+  const base = layout(consecutive,options);
+  for (const viewLane of Object.keys(primaries)) {
+    const present = layout(consecutive,{...options,base,viewLane});
+    const axis = present.plan.lanes.get(viewLane).origin;
+    assert.equal(present.ground.centerLane,viewLane);
+    for (const [key,ids] of Object.entries(primaries)) {
+      const x = (present.plan.lanes.get(key).origin-axis)*present.plan.pitch;
+      for (const id of ids) assert.equal(present.points.get(id).worldX,x,id+' follows its lane axis');
+      const primary = present.points.get(ids.at(-1));
+      if (key === viewLane) assert.equal(primary.x,present.ground.vx);
+    }
+    const merge = present.points.get('merge-paired'), source = present.points.get('source');
+    assert.equal(source.depth,merge.depth);
+    assert.equal(source.y,merge.y);
+    assert(Math.abs(source.worldX-merge.worldX)>0 && Math.abs(source.worldX-merge.worldX)<=present.plan.pitch,
+      'paired source uses the adjacent track');
+    for (const stop of Object.keys(consecutive.N)) {
+      const past = layout(consecutive,{...options,base,viewLane,stop});
+      const head = past.heads.find(h=>h.id===stop);
+      assert(head,stop+' is promoted to a head at its stop');
+      assert.equal(head.depth,1);
+      assert.equal(head.x,past.ground.vx+present.points.get(stop).worldX);
+      assert(head.width>=(stop==='source'?80:122) && head.height>=40,stop+' retains a readable near-plane face');
+      if (viewLane==='shared' && stop==='merge-paired') {
+        const peer = past.points.get('source');
+        assert(Math.abs(peer.x-past.ground.vx)+peer.paneWidth/2 <= width/2,
+          'the nearest pair fits together in the viewport');
+      }
+      const cutoff = consecutive.timeIndex.get(stop);
+      assert.deepEqual([...past.points.keys()].sort(),[...present.points.keys()].filter(
+        id=>consecutive.timeIndex.get(id)<=cutoff).sort());
+      for (const [id,point] of past.points) {
+        assert.equal(point.worldX,present.points.get(id).worldX,id+' keeps its track at '+stop+' from '+viewLane);
+      }
+      if (stop==='merge-paired' || stop==='source') {
+        assert(past.edges.some(e=>e.from==='source' && e.to==='merge-paired'));
+      }
+      checkLaneSilhouettes(past,consecutive);
+    }
+    checkLaneSilhouettes(present,consecutive);
+  }
+}
+
+
+// Four seconds can be a fraction of a Timeline pixel at Weeks zoom.
+// Advancing to that instant must still yield a usable foreground card.
+const dense = adaptModel({...model,lanes:[lane('shared',[12,8,4].map((seconds,i)=>
+  state('fast-'+i,i,seconds/86400,{kind:'shared'})))],links:[]});
+const denseOptions = {width:320,height:640,timeXs:dense.LX[4]};
+const denseBase = layout(dense,denseOptions);
+for (const stop of ['fast-2','fast-1','fast-0']) {
+  const scene = layout(dense,{...denseOptions,base:denseBase,stop});
+  const head = scene.heads[0];
+  assert.equal(head.id,stop);
+  assert(head.height>=44 && head.worldX===0);
+  checkLaneSilhouettes(scene,dense);
+}
 
 const repoLane = (repo,name,kind,age) => ({
   ...lane(repo+':brane:'+name,Array.from({length:65},(_,i)=>state(repo+name+i,i,age+64-i,{kind}))),repo
