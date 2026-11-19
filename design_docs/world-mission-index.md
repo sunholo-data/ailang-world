@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 414 | 2026-11-19 | no pick: rule (d) block report, the fifth in a row and the first not degraded; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); new r... |
 | 413 | 2026-11-19 | no pick: rule (d) block report, the fourth in a row; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); the idle-record ticket's count ... |
 | 412 | 2026-11-19 | no pick: rule (d) block report, the third in a row; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); the idle-record ticket re-filed ... |
 | 411 | 2026-11-19 | no pick: row 262 RESOLVED on the fleet's fix (ailang #2421, `cf540337e`), checked first-party; then a rule (d) block report, row 243 V4 S3–S12 stil... |
