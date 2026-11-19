@@ -1625,3 +1625,82 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
   3. "Since 371" is inherited from the carried entries; entry 393 confirms it. It did not count the entries itself.
   4. Its run omitted `--driver-src`, so it printed `signature-source: unchecked`. The verdict was the same.
 - **What it did not check:** dev CI check-runs, skill-drift `cmp`, the codex probe note, the ticket message id, the inbox read, and every other "iteration 409" reference in the charter.
+
+## 411 — 2026-11-19 — no pick: row 262 RESOLVED on the fleet's fix (ailang #2421, `cf540337e`), checked first-party; then a rule (d) block report, row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); dev green at `2c9bb491` [ADMIN]
+
+**Kind:** no-pick iteration with one bookkeeping unpark. Nothing is loop-routable without an answer from Mark, so standing rule (d) applies. The one change in state since iteration 410 is the fleet's `harness-resolved` reply for row 262. It is checked and recorded here. There is no design, plan, code or product acceptance. The record is the STATUS stamp (408 moved to the archive), the Current route line, queue row 262, this entry, the regenerated index, the dashboard and `verification/world-iter411/gate1-2-readings.txt`. An independent judge reviews the record before merge.
+
+**Pick and why:** row 262's unpark (bookkeeping), then nothing. Clause map at `2c9bb491`: 1.0 clauses 1–7 MET, so there is no UNMET clause and no critical-path row.
+- **What moved since iteration 410's Gate-1 base (`f267fac4`):** only 410's own record. 3 commits: `8c851a1b`, `beee5376`, merge `2c9bb491`. 0 `| D-WORLD` table rows changed.
+- **Ledger:** `--check` valid, 107 rows; `--open` → D-WORLD-119, D-WORLD-120, both unchanged since iteration 406 filed them.
+- **Row 243 (D-WORLD-109 granted scope):** V4 design §8 gates S3–S8 on 119 A/B, S9–S11 also on 120 A/B, and S12 on 119 A. S1, S2 and S2b are landed. No answer-independent V4 sprint is left. Nothing in the 3 commits touches the design.
+- **Row 150** waits on the attended A1. Subjects in `f267fac4..2c9bb491` matching `row ?150|A1|marketing` → **0**; control `record|iteration 410` → **3**.
+- **Row 151** needs row 188's N2d and N4a. Subjects since 2026-10-01 matching `N2d|N4a` → **0**; control `N2c` → **1**. Non-test `.go` files naming `file.json` → **0**; control `surface` → **109**. (Iteration 410 read 92 for the same control from the working tree; this fire reads `git grep` over `origin/dev`, a different scope. It is a control, not a quantity this record relies on.)
+- **Rows 217–219** are on the attended track beside row 188 (D-WORLD-94). **Rows 258, 259, 261** sit under rule (d), below the release rows (D-WORLD-109 (2)).
+- **External predicates:** row 262's (the fleet's reply) flipped this fire, see below. No other routable row waits on an outside party.
+
+**Row 262 — the fleet's reply, checked:**
+- Reply `inbox_1795055723042_70effb63` from `mission-fleet`, category `harness-resolved`, signature `gate0:self-notices-rc2-no-watermark-file`: ailang #2421, merge `cf540337ede442443011db75c4cd9bf2776f7d33`, fleet iteration 123, its judge sonnet PASS 91. It says step 6a now reads the whole of each issue, labelled DEGRADED, when every watermark file is absent, and exits 0 or 1 by hits. A present but unreadable, empty or invalid file is still rc 2.
+- `cf540337e` is an ancestor of `origin/dev` in the driver clone (rc 0) and is this fire's pin (`AILANG_DRIVER_PINNED`, `git -C $MISSION_DRIVER_ROOT rev-parse HEAD`).
+- Same inputs, two scripts (both issue-scoped watermark files absent, as on every fire since 371): the pinned script exits **rc 1**, `crash=1 transcript=1` on #524, control 107:4 ok. The fix's parent (`git show cf540337e^1:scripts/mission_gate0_self_notices.sh`) exits **rc 2**, `watermark channel unavailable`. That is the negative control: the change in reading comes from the fix, not from the inputs.
+- `ailang mission ticket open` no longer lists the signature (0 rows; control 18 open rows).
+- The two notices the read surfaces were credited before: the crash (#524, 2026-11-13T09:48:25Z, rc 1) by entry 393's orphan line, matched by time to the driver's `CRASHED at=gate-3 rc=1` (iteration 410 and its judge both checked this; the URL text itself appears 0 times in the log), and the transcript notice (fire `world-1794807071-53892`, 2 hits) in entry 394. So nothing new died.
+- Row 262 is now `RESOLVED (iter-411)` in place, with the resolution and a later-fires check. The fleet message is acknowledged in the report below.
+
+**Gate 0:**
+- Stamped first (rc 0). Kill switch armed (`mission-world.disabled` absent). `gh` is `sunholo-voight-kampff`. Billing CLEAN. The env was read by name, then specific non-secret values.
+- Directives: 0 allowlisted on #574 (20 comments, read from the epoch because `mission-574-last-seen` is absent). Nothing to `--mark`; no watermark moved.
+- Self-notices (step 6a), prescribed form: rc 1, `A FIRE DIED` on the two credited #524 notices (above). Died-mid-flight traces ran anyway: 0 open PRs on the repo, the iteration-409/410 worktrees have 0 porcelain lines each, no `iter411` branch existed on origin before this record, and the last two slot verdicts are `COMPLETED rc=0`. The transcript notice count is 1 (fire `world-1794807071-53892`, 2 hits), the same one entry 394 reported.
+- Inbox: one unread on `mission-world`, the `harness-resolved` reply above.
+- Skill drift: `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target `cmp` equal to the driver clone's `origin/dev` (14 compared, 0 drift).
+- Dev CI at `2c9bb491`: 3/3 check-runs success. The main checkout was 3 behind (`2c9bb491` not yet pulled) with only the known untracked residue; fast-forwarded with `--ff-only`, nothing else touched.
+
+**Gate 1:** `git rev-parse dev origin/dev` both `2c9bb491…`. Gate-1 base `2c9bb491f52bf42acff7ddd9c4ec57659ec7c42e@2026-11-19T05:40:36Z`. 0 open PRs. Record written in its own worktree (`mission/world-iter411-record` from `2c9bb491`, `mission-worktree.sh add` then `wait` → ready).
+
+**Designer / planner / executor:** not spawned. A no-pick iteration has no doc, plan or code, so the routing table has nothing to send them. No spawn was attempted, so none failed. The driver's routing note says the codex lane probed rc 1 this fire (planner → opus, executor → `claude:claude-haiku-5-5`); neither role was needed.
+
+**Independent evaluator (record):** REQUIRED. `resolve-role-spawn.sh evaluator` → `agent-tool sonnet declared:alias-pin`. Agent `sonnet`, fresh foreground read-only context, judging the record commit before merge. Result in the follow-through below.
+
+**Routing evidence:** base=2c9bb491f52bf42acff7ddd9c4ec57659ec7c42e@2026-11-19T05:42:06Z (Gate 4).
+- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner, executor unused.
+- Evaluator: Agent `sonnet` (tokens in the follow-through). Generator ≠ judge: opus controller, sonnet judge.
+- Quorum: none (no doc). Metered $0.
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at 2 of 12 sprints. Every remaining V4 sprint waits on D-WORLD-119. Row 262 closed.
+
+**Ruled out:**
+- Picking 150, 151, 217–219, 243, 258, 259 or 261: measured reasons above.
+- Treating step 6a's `A FIRE DIED` as a new death: both notices are credited (393, 394), and the traces are clean.
+- Taking the fleet's word for the fix: checked against the parent script on the same inputs instead.
+- Correcting iteration 410's filed evidence (it said rc 0 where the script exits 1): the ticket is resolved, and the error is already disclosed in entry 410.
+- Promoting the idle fingerprint: Gate 5 forbids it when the fire degraded, and this fire's codex probe failed (driver routing note).
+- Re-asking D-WORLD-119/120: both asks are already in the digest, unchanged.
+- Rotating the log: 22 live entries with this one, below ~40. The index is regenerated with `rotate-log --index-only`.
+
+**Retro:**
+1. **The escalation path worked, in one fire.** Iteration 410 filed World's occurrence at about 01:43Z; the fleet's fix merged and its reply arrived by 02:35Z; this fire checked it. A ticket was the right outcome and a local workaround would have been wasted.
+2. **A predicate you stop reading is a predicate you cannot see flip.** The reply was the only change in state since 410. It showed up only because Gate 0 reads the inbox and Gate 2 re-reads external predicates; the queue row itself said nothing.
+3. Shell: the first env print used zsh `${(P)…}` and was refused by the harness; re-run under `bash -c` (memory `controller-shell-is-zsh`). Nothing was written from the refused command.
+- Harness share: this entry closes 1 ticket's row and files none. No skill edit.
+
+**Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence). Unanswered, another rule-(d) block report. A dev red outranks either way.
+
+**Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16 09:06Z; next boundary Monday 2026-11-23 07:00 local). The weekly external-issue sweep ran this week at 393.
+
+**Judge follow-through (iteration 411):** Agent `sonnet`, fresh foreground read-only context, judged record commit `6ff2af6a`. Verdict **PASS 90/100, zero blocking**. It used 51,886 subagent tokens, 10 tool uses and 39 s. Generator ≠ judge: opus controller, sonnet judge. The directive gave it the files and seven open questions, not the controller's numbers.
+- **What it re-measured:**
+  - The reply message, its commit, and that `cf540337e` is the pinned driver's HEAD.
+  - Both step-6a scripts on the prescribed inputs, exit codes taken directly: pinned rc 1 (DEGRADED whole-issue read, `crash=1`, `transcript=1`, control 107:4 ok), parent rc 2 `watermark channel unavailable`. Both issue-scoped watermark files absent.
+  - The credits in entries 393 (crash, matched by time) and 394 (transcript fire).
+  - `--check` valid at 107 rows, `--open` = 119 and 120, 0 changed `| D-WORLD` rows in `f267fac4..2c9bb491`.
+  - V4 §8's sprint gates, rows 150 and 151's stated blockers, and that the D-WORLD-64 exception needs a routable row.
+  - The rotation: 3 stamps left, 408 in the archive, queue rows unchanged, the canonical heading regex.
+  - The commit message (no closing keyword), `check-ignore` on the readings file, dev CI 3/3 and 0 open PRs.
+- **Non-blocking notes and their disposition:**
+  1. The crash credit is by time, not URL, and the time gap is not spelled out here. Entry 410 and its judge matched the notice (09:48:25Z) to the driver's `CRASHED at=gate-3 rc=1` (10:48:12 local), which is the same instant. No change.
+  2. The "until #524 rotates out on 2026-11-23" date. #574 opened 2026-11-16 and the next Monday-07:00 rotation is 2026-11-23, at which point #574 becomes `-prev` and #524 drops out of the read. This is a prediction for later fires, not a measurement.
+  3. "Acknowledged in the report below" was a future action when judged. The fleet message is acked after merge, and the Gate 5 report names it.
+- **What it did not check:** the row 150/151 grep counts, the skill-drift `cmp`, the slot verdicts and worktree porcelain, the ticket-open counts, the full index and dashboard diffs, and the middle of the long stamp text.
+
+**Gate 3b (record PR #614):** head `4fcdfb5a` run 44467497039 attempt 1 read 2/3. `ailang-code verify gate` and `go host build + test gate` passed. `go race gate` failed on `host/broker` `TestSeedRestartIgnoresASurvivingOldCopy/survivor` (`exec_seed_test.go:656`, "the old staging dir survived the restart: <nil>"). The job's two `DATA RACE` warnings are its own known-positive control (`racecontrol/main.go`), as expected. Attribution: the PR changes only `design_docs/` (0 other paths), and the parent `2c9bb491` was 3/3 on the same gate. This is row 259's flake, instance 6, now added to that row. `gh run rerun --failed` → attempt 2 3/3. The instance note is a new head, so the PR is re-polled on it before merge.
+- **Head `9b24ee8c` (the row-259 note) run 44470410757 attempt 1 read 2/3 again, on a different test:** `go race gate`, `cmd/ailang-worldd` `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision` (`episode_finish_surface_rig_test.go:410`, "1 decisions (1 named sha256:36c0…); the record names sha256:36c0…"; the test wants 2 decision objects). The other two jobs passed. The diff changes only `design_docs/`, so this is not from this PR. Attempt 2 went 3/3. **First recorded instance** of this test failing (0 mentions in charter or archive, 1 in the log, iteration 404's carried-items line). Under D-WORLD-109 (2) a single CI red is logged here, not filed as a row; at its third instance it becomes a 258-class row. **Hypothesis (not measured):** `t0` is read before the first POST, so if that POST's decision lands in the next wall second under `-race` load, `nextWallSecond(t0)` returns at once and the retry's decision falls in the same second, has the same content and is stored once. The test came in with row 243 V3 S5 (`ba783c32`, iteration 404). **Landing rule for this record:** this note is a new head, so it is polled again. If that head flakes too, it is re-run and merged without another commit, and the instance is named in the merge commit body and the Gate-5 report on #574.

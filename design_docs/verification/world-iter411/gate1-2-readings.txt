@@ -1,0 +1,72 @@
+# World iteration 411 — Gate 0–2 readings (fire world-1795066769-47393), captured 2026-11-19T05:42:29Z
+
+## origin/dev and Gate-1 base
+2c9bb491f52bf42acff7ddd9c4ec57659ec7c42e
+Gate-1 base: 2c9bb491f52bf42acff7ddd9c4ec57659ec7c42e 2026-11-19T05:40:36Z
+
+## commits since iteration 410's Gate-1 base f267fac4
+2c9bb491 Merge pull request #613 from sunholo-data/mission/world-iter410-record
+beee5376 record: iteration 410 — judge follow-through (sonnet PASS 93, zero blocking)
+8c851a1b record: iteration 410 — no pick, rule (d) block report; self-notices gap on the fleet ticket
+count=3
+ledger lines changed (| D-WORLD table rows) in f267fac4..origin/dev: 0
+
+## ledger
+decision ledger valid: 107 rows
+check rc=0
+D-WORLD-119	OPEN
+D-WORLD-120	OPEN
+
+## dev CI at origin/dev
+checks=3
+  ailang-code verify gate: success
+  go race gate (go test -race, own job): success
+  go host build + test gate: success
+
+## row 150 (attended A1) — subjects in f267fac4..origin/dev
+match row ?150|A1|marketing: 0  control record|iteration 410: 3
+
+## row 151 (needs row 188 N2d/N4a)
+subjects since 2026-10-01 matching N2d|N4a: 0  control N2c: 1
+non-test .go files naming file.json: 0  control 'surface': 109
+
+## Gate 0 directives
+⚠ mission_directives: watermark file /Users/voightkampff/.ailang/state/mission-574-last-seen is absent — reading every allowlisted comment on #574; the first --mark creates it
+mission_directives: #574 — 0 directive(s) from [MarkEdmondson1234] since 1970-01-01T00:00:00Z inclusive, 0 new, 0 already processed (of 20 comments; the rest are public feedback, never directives)
+rc=0
+
+## Gate 0 step 6a self-notices: pinned script (fix cf540337e) vs the fix's parent (negative control)
+### parent cf540337e^1 rc=2
+watermark: /Users/voightkampff/.ailang/state/mission-574-last-seen ABSENT — DEGRADED: single-watermark read (iter-52 rule wants two)
+watermark: /Users/voightkampff/.ailang/state/mission-524-last-seen ABSENT — DEGRADED: single-watermark read (iter-52 rule wants two)
+✗ watermark channel unavailable: no readable watermark among 2 file(s): /Users/voightkampff/.ailang/state/mission-574-last-seen /Users/voightkampff/.ailang/state/mission-524-last-seen
+### pinned rc=1
+watermark: /Users/voightkampff/.ailang/state/mission-574-last-seen ABSENT — DEGRADED: single-watermark read (iter-52 rule wants two)
+watermark: /Users/voightkampff/.ailang/state/mission-524-last-seen ABSENT — DEGRADED: single-watermark read (iter-52 rule wants two)
+watermark: DEGRADED — no watermark file exists among 2 given (/Users/voightkampff/.ailang/state/mission-574-last-seen /Users/voightkampff/.ailang/state/mission-524-last-seen): reading the WHOLE of each issue since 1970-01-01T00:00:00Z; absent is not corrupt 
+crash: issue=524 at=2026-11-13T09:48:25Z rc=1 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/524#issuecomment-6849577904
+transcript: issue=524 at=2026-11-16T09:37:59Z hits=2 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/524#issuecomment-6912778168 fire=world-1794807071-53892
+issue: 574 comments=20 self=20 crash=0 transcript=0 other=20
+issue: 524 comments=47 self=47 crash=1 transcript=1 other=45
+control: issue=107 expect=4 got=4 ok
+verdict: 1 crash notice(s) since 1970-01-01T00:00:00Z on #574,#524 — A FIRE DIED (newest rc=1 at 2026-11-13T09:48:25Z on #524): run Gate 2's died-mid-flight traces (a) open PRs (b) worktrees (c) uncommitted state BEFORE picking, and credit the orphan in the 
+fix ancestor of pin cf540337e: yes
+crediting: crash url text in log: 0 (credited by time, not url: entry 393 orphan line, re-checked by iteration 410 and its judge; control Orphans: 5); transcript fire world-1794807071-53892 in log: 2
+
+## inbox (mission-world, unread)
+inbox_1795055723042_70effb63 mission-fleet harness-resolved [harness-resolved] gate0:self-notices-rc2-no-watermark-file · world
+
+## harness ticket open list (signature present?)
+gate0:self-notices-rc2-no-watermark-file open rows: 0  control any open rows: 18
+
+## died-mid-flight traces
+open PRs on sunholo-data/ailang-world: 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter409-record porcelain=0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter409-row243-v4s2b porcelain=0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter409-row243-v4s2b-eval porcelain=0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter410-record porcelain=0
+2026-11-18T23:30:11Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=6720 stamps=9 controller=claude:claude-opus-5-5
+2026-11-19T02:16:14Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=2283 stamps=9 controller=claude:claude-opus-5-5
+
+## skill drift (resolved symlink target vs driver-clone origin/dev)
+files compared=14 drift=0
