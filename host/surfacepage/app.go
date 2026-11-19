@@ -48,13 +48,16 @@ var timelineStyle []byte
 //go:embed app/head-scene.css
 var headStyle []byte
 
+//go:embed app/head-inspect.css
+var headInspectStyle []byte
+
 //go:embed app/head-drafts.css
 var headDraftStyle []byte
 
 //go:embed app/head-travel.css
 var headTravelStyle []byte
 
-var AppStyle = bytes.Join([][]byte{timelineStyle, headStyle, headDraftStyle, headTravelStyle}, []byte("\n"))
+var AppStyle = bytes.Join([][]byte{timelineStyle, headStyle, headInspectStyle, headDraftStyle, headTravelStyle}, []byte("\n"))
 
 // AppLogo is /surface/ailang-logo.svg, the AILANG mark the shell inlines.
 //

@@ -93,11 +93,40 @@ for (const width of [320, 390, 1300]) {
     }
   }
   const center = scene.width/2;
+  for (const face of scene.heads) {
+    assert(Math.sign(face.returnX) === Math.sign(center-face.x) && face.returnY < 0,
+      'walls turn inward and up toward the sightline');
+    assert(Math.abs(face.x-center) - face.width/2 - Math.abs(face.returnX) > 0,
+      'even the side walls leave the central path open');
+  }
+  const foreground = [head.recent, head.shared].sort((a,b) => a.x-b.x);
+  const [left,right] = foreground;
+  assert(left.x < center && right.x > center);
+  assert(left.width / left.height >= 1.9 && right.width / right.height >= 1.9, 'foreground faces are landscape');
+  assert.notEqual(left.y,right.y,'foreground faces stagger in recorded depth');
+  assert(Math.abs(right.x-right.width/2-(left.x+left.width/2)-scene.ground.street)<1e-9);
+  assert.equal(scene.ground.streetY, Math.max(...foreground.map(h=>h.y+h.height/2)));
   for (const important of ['selected', 'live']) {
     const a = head[important];
     assert(Math.abs(a.x-center) + a.width/2 <= width/2, 'important heads visible on centered load');
   }
 }
+
+for (const width of [320, 390, 1280]) {
+  const single = layout(adaptModel({...model,lanes:[model.lanes[1]],links:[]}),{width,height:620});
+  const only = single.heads[0], center = single.width/2;
+  assert(Math.abs(only.x-center)+only.width/2 <= width/2,'a single foreground face is readable on arrival');
+  assert(Math.abs(only.x-center)-only.width/2 > 0,'a lone lane leaves the through-path open');
+}
+
+const recentLanes = Array.from({length:12},(_, i)=>lane('recent-'+i,[state('new'+i,200+i,.5)]));
+const threeNear = layout(adaptModel({...model,lanes:recentLanes.slice(0,3),links:[]}),{width:1280,height:780});
+assert.equal(threeNear.width,1280,'all three near faces fit in the desktop frame');
+assert(threeNear.heads.every(h=>h.width>=240 && h.width<=250 && h.height>=80 && h.height<=87));
+const busy = layout(adaptModel({...model,lanes:recentLanes,links:[]}),{width:1280,height:780});
+assert(busy.width>1280 && busy.heads.every(h=>h.width>=172),'busy desktop can pan at a readable width');
+const mobile = layout(adaptModel({...model,lanes:recentLanes.slice(0,3),links:[]}),{width:320,height:640});
+assert(mobile.heads.every(h=>h.width===122 && h.height===61),'desktop fitting leaves phone faces alone');
 
 const allOld = layout(adaptModel({...model, lanes:model.lanes.slice(7), links:[]}), {width:320, height:400});
 assert.equal(allOld.heads.filter(h => h.priority).length, 1);

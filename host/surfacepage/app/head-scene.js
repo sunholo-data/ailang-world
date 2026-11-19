@@ -17,22 +17,41 @@
     scene.className = 'hc-scene';
     scene.setAttribute('aria-label', 'Branch heads');
     scene.hidden = true;
-    scene.innerHTML = '<canvas class="hc-graph" aria-hidden="true"></canvas><div class="hc-scroll"><div class="hc-space"><div class="hc-rear-layer" hidden></div></div></div>';
+    scene.innerHTML = '<canvas class="hc-graph" aria-hidden="true"></canvas><div class="hc-scroll"><div class="hc-space"><div class="hc-rear-layer" hidden></div></div></div><canvas class="hc-inspection" aria-hidden="true"></canvas><div class="hc-inspect-tip" aria-hidden="true" hidden></div>';
     container.append(scene);
 
     const scroll = scene.querySelector('.hc-scroll'), space = scene.querySelector('.hc-space'), canvas = scene.querySelector('canvas');
     const ctx = canvas.getContext('2d');
+    const inspection = scene.querySelector('.hc-inspection'), tip = scene.querySelector('.hc-inspect-tip');
+    const inspectionInk = inspection.getContext('2d');
+    const pickable = [];
+    let inspectable = false, pointer = null;
+    const inspected = () => {
+      const id = hovered || focusedByUser;
+      return inspectable && model?.N[id] ? id : '';
+    };
     const rearLayer = space.querySelector('.hc-rear-layer');
     const cards = new Map(), rearLinks = new Map();
     let lips = new Set();
     const stamps = new Map(), paneTitles = new Map(), crossings = new Map();
-    const neighborhood = new Map();
+    const neighborhood = new Map(), incident = new Map();
     const scratch = document.createElement('template');
     let model, layout, sidePoints, angle = 0, selected = '', hovered = '', frame = 0, silentFocus = false;
     let initialPan = true, focusedByUser = '', paintedSelection, paintWidth = 0, paintHeight = 0, pixelRatio = 0;
     let floorPhase = 0;
     const faceScales = new Map();
     let points = new Map(), headsByID = new Map(), headsByLane = new Map(), order = [], histories = new Map();
+
+    // The top and the inward-facing wall are part of the native link's hit area.
+    function facade(el, head, scale = 1) {
+      const dx = (head.returnX || 0) * scale, rise = Math.max(0, -head.returnY || 0) * scale;
+      el.classList.toggle('hc-left-wall', dx < 0);
+      el.style.setProperty('--hc-lane', accent(model.LANES[head.lane]));
+      el.style.setProperty('--hc-rise', rise + 'px');
+      el.style.setProperty('--hc-return', Math.abs(dx) + 'px');
+      el.style.setProperty('--hc-roof-skew', -Math.atan2(dx, rise) + 'rad');
+      el.style.setProperty('--hc-wall-skew', (dx ? Math.atan(-rise / dx) : 0) + 'rad');
+    }
 
     function setLayout(T, next) {
       if (model === T && layout === next) return;
@@ -47,12 +66,17 @@
         if (node && headsByLane.get(node.lane)?.id !== id) histories.get(node.lane)?.push(id);
       }
       neighborhood.clear();
+      incident.clear();
       crossings.clear();
       for (const edge of layout.edges) {
         if (!neighborhood.has(edge.from)) neighborhood.set(edge.from, new Set());
         if (!neighborhood.has(edge.to)) neighborhood.set(edge.to, new Set());
         neighborhood.get(edge.from).add(edge.to);
         neighborhood.get(edge.to).add(edge.from);
+        for (const id of [edge.from, edge.to]) {
+          if (!incident.has(id)) incident.set(id, []);
+          incident.get(id).push(edge);
+        }
         const from = model.N[edge.from]?.lane, to = model.N[edge.to]?.lane;
         if (from !== to) {
           const key = [from, to].sort().join('|');
@@ -103,9 +127,9 @@
         el.classList.toggle('is-middle', !compact && head.height <= 76);
         el.href = statePath(node);
         el.title = label + ' · ' + title;
-        el.style.setProperty('--hc-lane', accent(lane));
         el.style.width = head.width + 'px';
         el.style.height = head.height + 'px';
+        facade(el, head);
         el.style.zIndex = String(layout.heads.length - index);
         if (space.children[index + 1] !== el) {
           const focused = document.activeElement === el;
@@ -194,12 +218,14 @@
         if (!el) {
           el = document.createElement('a');
           el.className = 'hc-rear';
+          el.append(document.createElement('span'));
           el.dataset.rearState = id;
           rearLinks.set(id, el);
         }
         const title = options.title(node) || node.title || node.label || id;
         const label = model.laneTitle?.(node.lane) || node.lane;
-        el.textContent = title;
+        el.firstElementChild.textContent = title;
+        facade(el, headsByLane.get(node.lane), Math.min(.35, width / 560));
         el.title = title;
         el.setAttribute('aria-label', label + ' · ' + title);
         el.href = statePath(node);
@@ -277,10 +303,39 @@
     // Transverse rulings share the scene's horizon. Panning keeps them
     // fixed in world space; passing one state advances them by one interval.
     function drawGround(left, right, opacity, ink) {
-      const {horizon, front, pitch} = layout.ground;
+      const {horizon, front, pitch, street, streetY} = layout.ground;
       const center = layout.width / 2;
       ctx.strokeStyle = ink;
       ctx.lineWidth = 1;
+      // These two ground lines frame the space between the banks of branes.
+      // The street is world geometry, so it stays put when you pan sideways.
+      if (street && streetY > horizon) {
+        const bottom = Math.max(front, layout.height);
+        const nearHalf = street / 2 * (bottom - horizon) / (streetY - horizon);
+        const horizonFade = ctx.createLinearGradient(0, horizon, 0, streetY);
+        horizonFade.addColorStop(0, 'transparent');
+        horizonFade.addColorStop(.43, ink);
+        horizonFade.addColorStop(1, ink);
+        ctx.beginPath();
+        ctx.moveTo(center, horizon);
+        ctx.lineTo(center - nearHalf, bottom);
+        ctx.lineTo(center + nearHalf, bottom);
+        ctx.closePath();
+        ctx.fillStyle = horizonFade;
+        ctx.globalAlpha = opacity * .12;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(center, horizon);
+        ctx.lineTo(center - nearHalf, bottom);
+        ctx.moveTo(center, horizon);
+        ctx.lineTo(center + nearHalf, bottom);
+        ctx.strokeStyle = horizonFade;
+        ctx.globalAlpha = opacity * .62;
+        ctx.lineWidth = 1.25;
+        ctx.stroke();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = ink;
+      }
       for (let row = -1; row <= 8; row++) {
         const depth = row - floorPhase;
         if (depth < -.5) continue;
@@ -288,18 +343,18 @@
         const y = horizon + (front - horizon) * scale;
         const spacing = pitch * scale;
         const fade = opacity * clamp(8 - depth, 0, 1);
-        ctx.globalAlpha = fade * (.055 + .13 * scale);
+        ctx.globalAlpha = fade * (.19 + .27 * scale);
         ctx.beginPath();
         ctx.moveTo(left, y);
         ctx.lineTo(right, y);
         ctx.stroke();
-        ctx.globalAlpha = fade * (.13 + .17 * scale);
+        ctx.globalAlpha = fade * (.28 + .30 * scale);
         ctx.beginPath();
         const first = Math.ceil((left - center) / spacing);
         const last = Math.floor((right - center) / spacing);
         for (let column = first; column <= last; column++) {
           const x = center + column * spacing;
-          const advance = .012 * scale;
+          const advance = .022 * scale;
           ctx.moveTo(x - (x - center) * advance, y - (y - horizon) * advance);
           ctx.lineTo(x + (x - center) * advance, y + (y - horizon) * advance);
         }
@@ -311,18 +366,20 @@
       const active = head.lane === activeLane;
       const size = faceScales.get(head.id) || 1;
       const bottom = point.y + head.height * size / 2;
-      const stem = (4 + point.scale * 6) * size;
-      const foot = bottom + stem;
-      const half = (active ? 14 : 9) * size;
+      const foot = bottom + 2 * size;
+      const half = (head.width * .5 - 2) * size;
       ctx.strokeStyle = ink;
       if (active) ctx.strokeStyle = `color-mix(in srgb, ${ink} 55%, ${glyphInfo(model.N[head.id]).colour})`;
       ctx.lineWidth = active ? 1.4 : 1;
-      ctx.globalAlpha = opacity * (active ? .70 : .44);
+      ctx.globalAlpha = opacity * (active ? .85 : .54);
       ctx.beginPath();
-      ctx.moveTo(point.x, bottom);
-      ctx.lineTo(point.x, foot);
       ctx.moveTo(point.x - half, foot);
       ctx.lineTo(point.x + half, foot);
+      if (head.returnX) {
+        const sideX = point.x + Math.sign(head.returnX) * half;
+        ctx.moveTo(sideX, foot);
+        ctx.lineTo(sideX + head.returnX * size, foot + head.returnY * size);
+      }
       ctx.stroke();
       if (!active) return;
       let lastX = point.x, lastY = foot;
@@ -355,7 +412,84 @@
         pane: style.getPropertyValue('--strip').trim() || '#ffffff',
         text: style.getPropertyValue('--text').trim() || '#2c3e50',
         font: style.getPropertyValue('--font').trim() || 'sans-serif',
+        halo: style.getPropertyValue('--bg').trim() || '#ffffff',
       };
+    }
+
+    function shape(id, point) {
+      const head = headsByID.get(id);
+      if (head) return {x:point.x, y:point.y, rx:head.width / 2, ry:head.height / 2};
+      if (lips.has(id)) {
+        const width = paneWidth(headsByLane.get(model.N[id].lane), point);
+        return {x:point.x, y:point.y, rx:width / 2, ry:width >= 63 ? 8.5 : 4.5};
+      }
+      const radius = 1 + 3.5 * point.scale;
+      return {x:point.x, y:point.y, rx:radius, ry:radius};
+    }
+
+    function port(bounds, other) {
+      const dx = other.x - bounds.x, dy = other.y - bounds.y;
+      const step = Math.max(Math.abs(dx) / (bounds.rx + 2), Math.abs(dy) / (bounds.ry + 2));
+      return step >= 1
+        ? {x:bounds.x + dx / step, y:bounds.y + dy / step}
+        : {x:bounds.x, y:bounds.y};
+    }
+
+    function drawInspection(active, colors, x, y, width, height, dpr) {
+      const ink = inspectionInk;
+      if (!ink) return;
+      ink.setTransform(dpr, 0, 0, dpr, -x * dpr, -y * dpr);
+      ink.clearRect(x, y, width, height);
+      const edges = incident.get(active) || [];
+      inspection.dataset.incidentCount = edges.length;
+      const focused = points.get(active);
+      if (!focused) return;
+
+      const mark = (at, color, radius) => {
+        ink.lineWidth = 1.6;
+        ink.fillStyle = colors.halo;
+        ink.strokeStyle = color;
+        ink.beginPath();
+        ink.arc(at.x, at.y, radius, 0, Math.PI * 2);
+        ink.fill();
+        ink.stroke();
+      };
+      const endpoints = [];
+      ink.lineJoin = ink.lineCap = 'round';
+      for (const {from, to} of edges) {
+        const a = points.get(from), b = points.get(to);
+        if (!a || !b) continue;
+        const origin = port(shape(from, a), b), target = port(shape(to, b), a);
+        const node = model.N[to].kind === 'shared' ? model.N[from] : model.N[to];
+        const color = `color-mix(in srgb, ${colors.text} 63%, ${glyphInfo(node).colour})`;
+        const dx = target.x - origin.x, dy = target.y - origin.y;
+        const horizontal = Math.abs(dx) >= Math.abs(dy) * .45;
+        const cx = horizontal ? dx * .33 : 0, cy = horizontal ? 0 : dy * .37;
+        if (Math.hypot(dx, dy) > 5) {
+          ink.beginPath();
+          ink.moveTo(origin.x, origin.y);
+          ink.bezierCurveTo(origin.x + cx, origin.y + cy, target.x - cx, target.y - cy, target.x, target.y);
+          ink.setLineDash([]);
+          ink.strokeStyle = colors.halo;
+          ink.lineWidth = 5;
+          ink.stroke();
+          ink.setLineDash(model.N[to].draft ? [5, 4] : []);
+          ink.strokeStyle = color;
+          ink.lineWidth = 2;
+          ink.stroke();
+          ink.setLineDash([]);
+          const mid = {x:(origin.x + target.x) / 2, y:(origin.y + target.y) / 2};
+          const dir = Math.atan2(dy, dx);
+          ink.beginPath();
+          ink.moveTo(mid.x - 5 * Math.cos(dir - .55), mid.y - 5 * Math.sin(dir - .55));
+          ink.lineTo(mid.x, mid.y);
+          ink.lineTo(mid.x - 5 * Math.cos(dir + .55), mid.y - 5 * Math.sin(dir + .55));
+          ink.stroke();
+        }
+        endpoints.push([origin, color, from === active ? 3.3 : 2.6], [target, color, to === active ? 3.3 : 2.6]);
+      }
+      for (const args of endpoints) mark(...args);
+      if (!cards.has(active) && !rearLinks.has(active)) mark(focused, colors.text, lips.has(active) ? 4 : 5);
     }
 
     function paint() {
@@ -367,6 +501,8 @@
       if (width !== paintWidth || height !== paintHeight || dpr !== pixelRatio) {
         canvas.width = Math.ceil(width * dpr);
         canvas.height = Math.ceil(height * dpr);
+        inspection.width = canvas.width;
+        inspection.height = canvas.height;
         paintWidth = width;
         paintHeight = height;
         pixelRatio = dpr;
@@ -375,7 +511,7 @@
       ctx.setTransform(dpr, 0, 0, dpr, -x * dpr, -y * dpr);
       ctx.clearRect(x, y, width, height);
       const colors = theme();
-      const active = hovered || (focusedByUser === selected ? selected : '');
+      const active = inspected();
       const focus = model.N[active];
       const related = neighborhood.get(active);
       const visible = (a, margin = 0) => a.x >= x - margin && a.y >= y - margin && a.x <= x + width + margin && a.y <= y + height + margin;
@@ -383,6 +519,7 @@
       const paneOpacity = clamp((angle - .46) * 2.1, 0, 1);
       const contains = id => id === active || related?.has(id);
       ctx.lineCap = 'round';
+      pickable.length = 0;
       const groundOpacity = clamp((angle - .58) / .42, 0, 1);
       if (groundOpacity && layout.ground) {
         drawGround(x, x + width, groundOpacity, colors.edge);
@@ -405,32 +542,24 @@
         if (!a || !b || Math.max(a.x, b.x) < x - 48 || Math.max(a.y, b.y) < y - 48 ||
             Math.min(a.x, b.x) > x + width + 48 || Math.min(a.y, b.y) > y + height + 48) continue;
         const parent = model.N[from], child = model.N[to];
-        const tied = active === from || active === to;
+        if (from === active || to === active) continue;
         const sameLane = parent.lane === child.lane;
         const dx = b.x - a.x, dy = b.y - a.y;
         const distance = Math.hypot(dx, dy);
-        if (!tied && distance < 2) continue;
+        if (distance < 2) continue;
         const reach = clamp(Math.abs(dx) * .46, 1, 64);
         const sign = dx < 0 ? -1 : 1;
         const density = sameLane ? 1 : crossings.get([parent.lane, child.lane].sort().join('|')) || 1;
-        const alpha = sameLane ? .12 : (focus ? (contains(from) || contains(to) ? .30 : .08) : .35) / Math.sqrt(density);
-        ctx.globalAlpha = pointOpacity * (tied ? .91 : alpha);
+        const alpha = (focus ? (sameLane ? .07 : .12) : sameLane ? .12 : .35) / Math.sqrt(density);
+        ctx.globalAlpha = pointOpacity * alpha;
         ctx.setLineDash(child.draft ? [5, 4] : []);
         ctx.strokeStyle = sameLane ? colors.edge : glyphInfo(child.kind === 'shared' ? parent : child).colour;
-        ctx.lineWidth = tied ? 2 : 1;
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
         ctx.bezierCurveTo(a.x + reach * sign, a.y, b.x - reach * sign, b.y, b.x, b.y);
         ctx.stroke();
-        if (tied && !sameLane && Math.hypot(dx, dy) > 15 && angle > .7) {
-          const midX = (a.x + b.x) / 2, midY = (a.y + b.y) / 2;
-          const dir = Math.atan2(dy, dx);
-          ctx.beginPath();
-          ctx.moveTo(midX - 6 * Math.cos(dir - .52), midY - 6 * Math.sin(dir - .52));
-          ctx.lineTo(midX, midY);
-          ctx.lineTo(midX - 6 * Math.cos(dir + .52), midY - 6 * Math.sin(dir + .52));
-          ctx.stroke();
-        }
+
       }
 
       ctx.setLineDash([]);
@@ -438,7 +567,8 @@
         const point = points.get(id);
         const node = model.N[id];
         if (lips.has(id) && node && visible(point, 150) && (rearLayer.hidden || !rearLinks.has(id))) {
-          drawPane(node, point, headsByLane.get(node.lane), paneOpacity * (focus && node.lane !== focus.lane ? .48 : .92), colors);
+          drawPane(node, point, headsByLane.get(node.lane), paneOpacity * (focus && !contains(id) ? .58 : .92), colors);
+          pickable.push({id, bounds:shape(id, point), lip:true});
         }
       }
       const occupied = new Set();
@@ -448,14 +578,18 @@
         const node = model.N[id];
         if (!node || !visible(point, 24) || lips.has(id) || (angle > .85 && headsByID.has(id))) continue;
         const strong = contains(id);
-        const local = !focus || node.lane === focus.lane;
         const cell = Math.floor(point.x / 7) + ',' + Math.floor(point.y / 7);
-        if (occupied.has(cell) && !strong) continue;
-        occupied.add(cell);
-        const alpha = strong ? .94 : local ? .18 + .22 * point.scale : .13;
+        const firstInCell = !occupied.has(cell);
+        if (!firstInCell && !strong) continue;
+        if (firstInCell) {
+          occupied.add(cell);
+          pickable.push({id, bounds:shape(id, point)});
+        }
+        const alpha = strong ? .94 : focus ? .14 : .18 + .22 * point.scale;
         drawGlyph(node, point, pointOpacity * alpha);
       }
       ctx.globalAlpha = 1;
+      drawInspection(active, colors, x, y, width, height, dpr);
     }
 
     function repaint() {
@@ -463,27 +597,26 @@
     }
 
     function updateSelection() {
-      const active = hovered || (focusedByUser === selected ? selected : '');
+      const active = inspected();
       if (paintedSelection === active + '|' + selected) return;
       paintedSelection = active + '|' + selected;
-      const focus = model?.N[active];
-      const related = new Set([focus?.lane, ...[...(neighborhood.get(active) || [])].map(id => model.N[id]?.lane)]);
-      for (const {el} of cards.values()) {
-        const isSelected = el.dataset.headState === selected;
-        const sameLane = model?.N[selected]?.lane === el.dataset.headLane;
-        el.classList.toggle('is-selected', isSelected || sameLane);
-        el.classList.toggle('is-related', Boolean(focus && related.has(el.dataset.headLane)));
-        el.classList.toggle('is-muted', Boolean(focus && !related.has(el.dataset.headLane)));
+      if (active) scene.dataset.inspectState = active;
+      else delete scene.dataset.inspectState;
+      const related = neighborhood.get(active);
+      const selectedLane = model?.N[selected]?.lane;
+      const decorate = (id, el) => {
+        const isSelected = id === selected, isInspected = id === active;
+        const isRelated = related?.has(id) && !isInspected;
+        const showsSelectedLane = Boolean(selectedLane && el.dataset.headLane === selectedLane);
+        el.classList.toggle('is-selected', isSelected || showsSelectedLane);
+        el.classList.toggle('is-inspected', isInspected);
+        el.classList.toggle('is-related', Boolean(isRelated));
+        el.classList.toggle('is-muted', Boolean(active && !isRelated && !isInspected));
         if (isSelected) el.setAttribute('aria-current', 'true');
         else el.removeAttribute('aria-current');
-      }
-      for (const [id, el] of rearLinks) {
-        const isSelected = id === selected;
-        el.classList.toggle('is-selected', isSelected);
-        el.classList.toggle('is-muted', Boolean(focus && model.N[id].lane !== focus.lane && !neighborhood.get(active)?.has(id)));
-        if (isSelected) el.setAttribute('aria-current', 'true');
-        else el.removeAttribute('aria-current');
-      }
+      };
+      for (const [id, {el}] of cards) decorate(id, el);
+      for (const [id, el] of rearLinks) decorate(id, el);
     }
 
     // Keep the departing faces in flight as their real predecessors move forward.
@@ -520,7 +653,11 @@
       angle = clamp(value, 0, 1);
       scene.hidden = !angle;
       if (!angle || !T || !next) {
+        inspectable = false;
         hovered = '';
+        focusedByUser = '';
+        tip.hidden = true;
+        updateSelection();
         return;
       }
       setLayout(T, next);
@@ -532,7 +669,12 @@
       scene.style.setProperty('--hc-reveal', String(reveal));
       scene.classList.toggle('is-ready', ready);
       scroll.inert = !ready;
-      rearLayer.hidden = angle < 1 || Boolean(travel);
+      inspectable = angle === 1 && !travel;
+      rearLayer.hidden = !inspectable;
+      if (!inspectable) {
+        hovered = '';
+        tip.hidden = true;
+      }
       if (initialPan && scroll.clientWidth) {
         initialPan = false;
         const requested = headsByID.get(selected) || headsByLane.get(model.N[selected]?.lane);
@@ -579,6 +721,10 @@
       return event.target.closest('.hc-face, .hc-rear');
     }
 
+    function hasVisibleFocus(el) {
+      return Boolean(el && el === document.activeElement && el.getClientRects().length && !el.closest('[hidden], [inert]'));
+    }
+
     function focusHead(id) {
       const lane = model?.N[id]?.lane;
       const el = cards.get(id)?.el || rearLinks.get(id) || cards.get(headsByLane.get(lane)?.id)?.el;
@@ -594,11 +740,60 @@
       silentFocus = true;
       el.focus({preventScroll:true});
       silentFocus = false;
+      if (!hasVisibleFocus(el)) return;
+      focusedByUser = el.dataset.headState || el.dataset.rearState;
+      hovered = '';
+      tip.hidden = true;
+      updateSelection();
+      repaint();
+    }
+
+    function updatePointer(event) {
+      if (!inspectable || event.pointerType === 'touch') return;
+      const {clientX, clientY} = event;
+      pointer = {clientX, clientY, pointerType:event.pointerType};
+      const target = document.elementFromPoint(clientX, clientY);
+      const link = target?.closest('.hc-face[data-head-state], .hc-rear');
+      let id = link?.dataset.headState || link?.dataset.rearState || '';
+      let canvasOnly = false;
+      const box = scene.getBoundingClientRect();
+      if (!id && target?.closest('.hc-space') === space && !target.closest('a, button, .hc-passing')) {
+        const x = clientX - box.left + scroll.scrollLeft, y = clientY - box.top + scroll.scrollTop;
+        let best = Infinity;
+        for (const {id: candidate, bounds, lip} of pickable) {
+          const dx = Math.abs(bounds.x - x), dy = Math.abs(bounds.y - y);
+          const distance = Math.hypot(dx, dy);
+          if (lip ? dx <= bounds.rx && dy <= bounds.ry : distance <= bounds.rx + 3) {
+            // Painted small glyphs sit above lips. Within each kind select
+            // the nearest mark rather than a broad neighbor's hover radius.
+            const score = distance + (lip ? 100 : 0);
+            if (score >= best) continue;
+            best = score;
+            id = candidate;
+          }
+        }
+        canvasOnly = Boolean(id);
+      }
+      if (id !== hovered) {
+        hovered = id;
+        updateSelection();
+        repaint();
+      }
+      tip.hidden = !canvasOnly;
+      if (canvasOnly) {
+        const title = options.title(model.N[id]) || model.N[id].title || model.N[id].label || id;
+        if (tip.textContent !== title) tip.textContent = title;
+        tip.style.left = clamp(clientX - box.left + 11, 6, box.width - tip.offsetWidth - 6) + 'px';
+        tip.style.top = clamp(clientY - box.top + 12, 6, box.height - tip.offsetHeight - 6) + 'px';
+      }
+      return canvasOnly ? id : null;
     }
 
     scene.addEventListener('focusin', event => {
       const el = face(event);
-      if (!silentFocus && el) {
+      if (!silentFocus && hasVisibleFocus(el)) {
+        hovered = '';
+        tip.hidden = true;
         focusedByUser = el.dataset.headState || el.dataset.rearState;
         options.select(focusedByUser);
         updateSelection();
@@ -606,27 +801,35 @@
       }
     });
     scene.addEventListener('click', event => {
-      const el = face(event);
-      if (!el || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const data = face(event)?.dataset;
+      const id = data?.headState || data?.rearState ||
+        (event.detail && event.target.closest('.hc-space') && updatePointer(event));
+      if (!id) return;
       event.preventDefault();
       event.stopPropagation();
-      options.open(el.dataset.headState || el.dataset.rearState);
+      options.open(id);
     });
-    scene.addEventListener('pointerover', event => {
-      if (event.pointerType === 'touch') return;
-      const destination = face(event)?.dataset;
-      const id = destination?.headState || destination?.rearState || '';
-      if (id === hovered) return;
-      hovered = id;
+    scene.addEventListener('focusout', event => {
+      if (!face(event) || event.relatedTarget?.closest?.('.hc-face, .hc-rear')) return;
+      focusedByUser = '';
       updateSelection();
       repaint();
     });
+    scene.addEventListener('pointermove', updatePointer);
+    scene.addEventListener('pointerover', updatePointer);
     scene.addEventListener('pointerleave', () => {
+      pointer = null;
       hovered = '';
+      tip.hidden = true;
       updateSelection();
       repaint();
     });
-    scroll.addEventListener('scroll', () => { repaint(); options.pan?.(); }, {passive:true});
+    scroll.addEventListener('scroll', () => {
+      if (pointer) updatePointer(pointer);
+      repaint();
+      options.pan?.();
+    }, {passive:true});
     const resize = new ResizeObserver(repaint);
     resize.observe(scene);
     const appearance = new MutationObserver(repaint);

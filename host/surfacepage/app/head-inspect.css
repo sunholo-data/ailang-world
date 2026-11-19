@@ -1,0 +1,38 @@
+.hc-inspection {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.hc-space :is(.hc-face, .hc-rear).is-inspected {
+  opacity: 1;
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+.hc-space .hc-rear.is-inspected {
+  box-shadow: inset 0 0 0 1px var(--text);
+}
+.hc-space :is(.hc-face, .hc-rear).is-related {
+  opacity: 1;
+  border-color: var(--text);
+}
+.hc-inspect-tip {
+  position: absolute;
+  z-index: 5;
+  width: max-content;
+  max-width: min(280px, calc(100% - 20px));
+  padding: 5px 8px;
+  border: 1px solid var(--ctl);
+  border-radius: var(--r);
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--text) 15%, transparent);
+  font: 550 11px/1.35 var(--font);
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+.hc-inspect-tip[hidden] { display: none; }
+.hc-scene:has(.hc-inspect-tip:not([hidden])) .hc-space { cursor: pointer; }
+.hc-scene[data-inspect-state] :is(.hc-face, .hc-rear).is-muted { outline: none; }

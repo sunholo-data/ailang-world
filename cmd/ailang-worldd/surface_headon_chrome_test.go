@@ -196,3 +196,72 @@ func TestSurfaceHeadOnTravelsHistoryInChrome(t *testing.T) {
 		document.querySelector('#stage[data-view="heads"]') === window.travelStage &&
 		window.__cspv?.length === 0`)
 }
+
+func TestSurfaceHeadOnInspectsExactStateInChrome(t *testing.T) {
+	b := startPasskeyBrowser(t)
+	origin := rigSurface(t, filepath.Join(t.TempDir(), "credentials.db"))
+	b.do(t, nil, "tab", nil)
+	defer b.do(t, nil, "tab", nil)
+	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface#heads", "raw": true})
+	wait := func(expression string) {
+		t.Helper()
+		b.do(t, nil, "waitFor", map[string]any{"expression": expression})
+	}
+	wait(`document.documentElement.dataset.ready === '1' &&
+		document.querySelector('#stage')?.dataset.view === 'heads'`)
+	wait(`(() => {
+		const scene = document.querySelector('.hc-scene');
+		const head = scene.querySelector('.hc-face');
+		if (!head) return false;
+		head.focus();
+		document.querySelector('#head-angle').focus();
+		window.inspectionBaseline = {scene, url:location.href, selected:head.dataset.headState};
+		fetch('/surface/model.json').then(res => res.json()).then(model => window.inspectionModel = model);
+		return true;
+	})()`)
+	wait(`(() => {
+		const model = window.inspectionModel;
+		if (!model) return false;
+		const {scene, selected} = window.inspectionBaseline;
+		const steps = new Set(model.lanes.flatMap(lane => lane.states.filter(state => state.kind === 'step').map(state => state.id)));
+		const panes = [...scene.querySelectorAll('.hc-rear[data-rear-state]'), ...scene.querySelectorAll('.hc-face[data-head-state]')];
+		for (const pane of panes) {
+			const id = pane.dataset.rearState || pane.dataset.headState;
+			if (id === selected || !steps.has(id)) continue;
+			const incident = model.links.filter(link => link.from === id || link.to === id);
+			if (!incident.length) continue;
+			pane.scrollIntoView({block:'nearest', inline:'nearest'});
+			const rect = pane.getBoundingClientRect();
+			const x = rect.left + rect.width / 2, y = rect.top + rect.height / 2;
+			const hit = document.elementFromPoint(x, y);
+			if (!pane.contains(hit)) continue;
+			window.inspectedPane = {id, incident};
+			hit.dispatchEvent(new PointerEvent('pointermove', {bubbles:true, clientX:x, clientY:y, pointerType:'mouse'}));
+			return true;
+		}
+		return false;
+	})()`)
+	wait(`(() => {
+		const {scene, selected, url} = window.inspectionBaseline;
+		const {id, incident} = window.inspectedPane;
+		if (scene.dataset.inspectState !== id ||
+			Number(scene.querySelector('.hc-inspection').dataset.incidentCount) !== incident.length ||
+			scene.querySelector('.hc-face[aria-current="true"]')?.dataset.headState !== selected ||
+			location.href !== url || document.querySelector('#stage').dataset.view !== 'heads') return false;
+		const neighbors = new Set(incident.map(edge => edge.from === id ? edge.to : edge.from));
+		return [...scene.querySelectorAll('[data-head-state],[data-rear-state]')].every(el => {
+			const state = el.dataset.headState || el.dataset.rearState;
+			return el.classList.contains('is-related') === neighbors.has(state) &&
+				el.classList.contains('is-inspected') === (state === id);
+		});
+	})()`)
+	wait(`(window.inspectionBaseline.scene.dispatchEvent(new PointerEvent('pointerleave', {pointerType:'mouse'})), true)`)
+	wait(`(() => {
+		const {scene, selected, url} = window.inspectionBaseline;
+		return !scene.dataset.inspectState && Number(scene.querySelector('.hc-inspection').dataset.incidentCount) === 0 &&
+			!scene.querySelector('.is-inspected,.is-related') &&
+			scene.querySelector('.hc-face[aria-current="true"]')?.dataset.headState === selected &&
+			location.href === url && document.querySelector('#stage').dataset.view === 'heads' &&
+			window.__cspv?.length === 0;
+	})()`)
+}
