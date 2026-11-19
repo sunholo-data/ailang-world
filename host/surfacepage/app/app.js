@@ -1037,6 +1037,7 @@
     if (!$('phone-step-nav')) {
       $('br').insertAdjacentHTML('afterbegin', '<nav id="phone-step-nav" class="phone-view" aria-label="State navigation"><button type="button" id="phone-back">← Timeline</button><button type="button" id="phone-earlier">Earlier</button><button type="button" id="phone-later">Later</button></nav>');
     }
+    $('phone-back').textContent = location.hash === '#heads' ? '← Branch heads' : '← Timeline';
     $('phone-earlier').disabled = pos === 0;
     $('phone-later').disabled = pos >= RAIL.length - 1;
     placeBars(animate);
@@ -1046,12 +1047,21 @@
   // ---------- Header ----------
   const addrOf = () => F.kind === 'open' ? String(F.id).replace(/:episode:/, ':') : `${String(F.brane).replace(/^([a-z][a-z0-9-]*):brane:/, '$1:')}@${railIdx() + 1}`;
   function renderCrumbs() {
+    $('heads-link').href = st.d === 1 && F ? '/surface/heads#' + encodeURIComponent(F.brane) : '/surface/heads';
+    const fromHeads = st.d === 1 && location.hash === '#heads';
+    $('heads-link').setAttribute('aria-label', fromHeads ? 'Back to Branch heads' : 'Branch heads');
+    $('heads-link').textContent = fromHeads ? '← Branch heads' : 'Branch heads';
     $('crumbs').innerHTML = crumbsHTML(st.d === 1 && F ? addrOf() : null);
     $('addr').placeholder = st.d !== 0 ? '' : (T && T.GROUPS[0].id ? 'go to a place — ' + T.GROUPS.map(g => g.id).join(' · ') + ' · ' + T.GROUPS[0].id + ':row-N@1' : 'go to a place — row-189@6 · shared@0ffbb9c') + ' · episode report <episode> · why <target>';
   }
   let msgT;
   function say(t) { const m = $('hmsg'); m.textContent = t; m.style.opacity = '1'; clearTimeout(msgT); msgT = setTimeout(() => { m.style.opacity = '0'; }, 2600); }
-  function follow(path) { try { if (location.pathname + location.search !== path) history.replaceState(null, '', path); } catch (_) { /* the view still moves */ } }
+  function follow(path) {
+    const hash = location.hash === '#heads' && path.includes('?') ? '#heads' : '';
+    try {
+      if (location.pathname + location.search !== path) history.replaceState(null, '', path + hash);
+    } catch (_) { /* the view still moves */ }
+  }
 
   // ---------- Live data ----------
   async function getJSON(url) {
@@ -1309,6 +1319,10 @@
     renderCrumbs(); follow(appPath(F.brane, F.id)); $('root').focus({ preventScroll: true });
     return true;
   }
+  function backFromState() {
+    if (st.d === 1 && location.hash === '#heads') return location.assign($('heads-link').href);
+    return out();
+  }
   function out(focusId) {
     if (st.d === 0) return;
     openSeq++;
@@ -1468,7 +1482,7 @@
   let suppressClick = false;
   $('stage').addEventListener('click', e => {
     if (suppressClick) { suppressClick = false; e.stopPropagation(); return; }
-    if (e.target.closest('#phone-back')) return out();
+    if (e.target.closest('#phone-back')) return backFromState();
     if (e.target.closest('#phone-earlier')) return openRail(railIdx() - 1);
     if (e.target.closest('#phone-later')) return openRail(railIdx() + 1);
     if (e.target.closest('#phone-activity')) {
@@ -1582,7 +1596,7 @@
     if (k === '?') toggle('keys');
     else if (k === ',') toggle('look');
     else if (k === '/') $('addr').focus();
-    else if (k === 'Escape') { if ($('verb')) $('verb').remove(); else if (!$('keys').hidden || !$('look').hidden) { $('keys').hidden = true; $('look').hidden = true; } else out(); }
+    else if (k === 'Escape') { if ($('verb')) $('verb').remove(); else if (!$('keys').hidden || !$('look').hidden) { $('keys').hidden = true; $('look').hidden = true; } else backFromState(); }
     else if (k === 'n' || k === 'N') { const a = document.querySelector('[data-needs] a'); if (a) { if (st.d === 1) out(); a.focus(); } }   // design §2.8: N jumps to what needs you
     else if (st.d === 1 && k === 'ArrowUp') openRail(railIdx() - 1);
     else if (st.d === 1 && k === 'ArrowDown') openRail(railIdx() + 1);

@@ -388,3 +388,7 @@ button { user-select: none; -webkit-user-select: none; }
   #br .rrow,#br button.chip { min-height:44px; }
 }
 @media(max-width:700px) and (hover:none){#tip{display:none}}
+
+.world-view-link { display:inline-flex;align-items:center;min-height:44px;flex:none;color:var(--hText);font-weight:650;text-underline-offset:4px; }
+.world-view-link:focus-visible { outline:2px solid currentColor; }
+@media(max-width:700px){.world-view-link{font-size:12px}}
