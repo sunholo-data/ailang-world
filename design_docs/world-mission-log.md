@@ -1834,3 +1834,12 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 **Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence). Unanswered, another rule-(d) block report. A dev red outranks either way.
 
 **Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16; next boundary Monday 2026-11-23 07:00 local). The weekly external-issue sweep ran this week at 393.
+
+**Judge follow-through (iteration 413):** Agent `sonnet`, fresh foreground read-only context, judged record commit `784f6392`. Verdict **PASS 93/100, zero blocking** (correctness 38/40, integrity 25/25, traceability 17/20, completeness 13/15). It used 49,957 subagent tokens, 6 tool uses and 32 s. Generator ≠ judge: opus controller, sonnet judge. The directive gave it the files and eight checks, not the controller's numbers.
+- **What it re-measured:** 3 canonical stamps and 6358 charter lines at both `31413192` and `784f6392`; the 410 stamp present once in the archive under `grep -cxF`; rows 261–263 intact; `--check` valid 107 rows (rc 0) and `--open` = 119, 120; 0 changed `| D-WORLD` rows, `design_docs/` only; the ledger rows and V4 §8 gate S3–S12 on 119/120; 0 directives on #574 (22 comments); dev check-runs 3/3; open PRs #615 and #617, neither `mission/`; the ticket at count 3; template sections; no closing keyword; no personal address.
+- **Non-blocking notes and their disposition:**
+  1. The readings file showed the ticket at count 2 because it was captured before the filing. The controller appended a post-filing `ailang mission ticket open` read (count 3) to the readings file.
+  2. Row 263's body still lists 410–412 as the failing fires, and only the appended iteration-413 note covers 413. No change: the row is append-only history, and the note carries 413.
+  3. "Unchanged since iteration 406" was checked only over 412's range. Entries 407–412 each recorded 0 changed ledger rows over their own ranges. No change.
+  4. The `PIPESTATUS` slip is disclosed. No change.
+- **What it did not check:** the row 150/151 grep controls, the index beyond its new line, skill drift, the inbox, the 410–412 worktrees, the harness share, and #617's contents.

@@ -75,3 +75,6 @@ lanes degraded: ; `planner`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`1`
 
 ## skill drift (resolved symlink target vs ailang origin/dev)
 compared=14 drift=0 (ailang origin/dev 43fba158b)
+
+## fleet ticket list after this fire's filing (inbox_1795095747723_a853df5c), read 2026-11-19T13:45:28Z
+3   none   skill:idle-record-barred-on-degraded-no-pick-fire  (world; first 2026-11-09 08:55)
