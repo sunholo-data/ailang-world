@@ -1,0 +1,71 @@
+# World iteration 412 — Gate 0–2 readings (fire world-1795081142-37104), captured 2026-11-19T09:43:12Z
+
+## origin/dev and Gate-1 base
+5c28cb0728ba55efca1ed3c8d8fc891bafcdd549
+Gate-1 base: 5c28cb0728ba55efca1ed3c8d8fc891bafcdd549 2026-11-19T09:40:11Z
+
+## commits since iteration 411 Gate-1 base 2c9bb491
+5c28cb07 Merge pull request #614 from sunholo-data/mission/world-iter411-record
+e1798860 record: iteration 411 — first recorded CI red of TestFinishConfirmOnSurfaceDispatchesTheNamedDecision
+9b24ee8c record: iteration 411 — row 259 flake instance 6 on the record PR race gate
+4fcdfb5a record: iteration 411 — judge follow-through (sonnet PASS 90, zero blocking)
+6ff2af6a record: iteration 411 — no pick; row 262 RESOLVED on the fleet fix (ailang PR 2421, cf540337e), rule (d) block report
+count=5
+ledger lines changed (| D-WORLD table rows) in 2c9bb491..origin/dev: 0
+paths changed: design_docs/verification/world-iter411/gate1-2-readings.txt design_docs/world-mission-dashboard.md design_docs/world-mission-index.md design_docs/world-mission-log.md design_docs/world-mission-status-archive.md design_docs/world-mission.md 
+
+## ledger
+decision ledger valid: 107 rows
+check rc=0
+D-WORLD-119	OPEN
+D-WORLD-120	OPEN
+
+## dev CI at origin/dev
+checks=3
+  go race gate (go test -race, own job): success
+  go host build + test gate: success
+  ailang-code verify gate: success
+
+## row 150 (attended A1) — subjects in 2c9bb491..origin/dev
+match row ?150|A1|marketing: 0  control record|iteration 411: 5
+
+## row 151 (needs row 188 N2d/N4a)
+subjects since 2026-10-01 matching N2d|N4a: 0  control N2c: 1
+non-test .go files naming file.json: 0  control surface: 109
+
+## Gate 0 directives
+⚠ mission_directives: watermark file /Users/voightkampff/.ailang/state/mission-574-last-seen is absent — reading every allowlisted comment on #574; the first --mark creates it
+mission_directives: #574 — 0 directive(s) from [MarkEdmondson1234] since 1970-01-01T00:00:00Z inclusive, 0 new, 0 already processed (of 21 comments; the rest are public feedback, never directives)
+mission_directives: #1 — 0 directive(s) from [MarkEdmondson1234] since 2026-09-30T14:19:22Z inclusive, 0 new, 0 already processed (of 25 comments; the rest are public feedback, never directives)
+
+## Gate 0 step 6a self-notices (prescribed form)
+crash: issue=524 at=2026-11-13T09:48:25Z rc=1 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/524#issuecomment-6849577904
+transcript: issue=524 at=2026-11-16T09:37:59Z hits=2 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/524#issuecomment-6912778168 fire=world-1794807071-53892
+issue: 574 comments=21 self=21 crash=0 transcript=0 other=21
+issue: 524 comments=47 self=47 crash=1 transcript=1 other=45
+control: issue=107 expect=4 got=4 ok
+verdict: 1 crash notice(s) since 1970-01-01T00:00:00Z on #574,#524 — A FIRE DIED (newest rc=1 at 2026-11-13T09:48:25Z on #524): run Gate 2's died-mid-flight traces (a) open PRs (b) worktrees (c) uncommitted state BEFORE picking, and credit the orphan in the 
+rc=1
+
+## inbox (mission-world, unread)
+unread=0 (`--compact` prints "No messages found."; `--json` prints null; a first draft counted that line as 1, corrected)
+
+## died-mid-flight traces
+open PRs by fleet account:
+  615 ui/finish-card-review
+  (615 ui/finish-card-review: not a mission/ branch; 0 charter/log mentions; attended UI work, left alone)
+origin branches matching iter412 before this record: 0
+  /Users/voightkampff/dev/sunholo-data/.wt-world-iter410-record porcelain=0
+  /Users/voightkampff/dev/sunholo-data/.wt-world-iter411-record porcelain=0
+last slot verdicts:
+  2026-11-19T02:16:14Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=2283 stamps=9 controller=claude:claude-opus-5-5
+  2026-11-19T07:08:20Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=5408 stamps=9 controller=claude:claude-opus-5-5
+
+## idle fingerprint
+5067a49335082c7930526acb206dcf3ac3689b9edfdfd770a144006355d31845 head=6ff2af6 ledger=107 open=2 directives=0 inbox=0 red=0 fire=world-1795081142-37104 at=1795081144
+
+routing note: lanes degraded: ; `planner`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`1`) → handed to `opus`; `executor`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`1`) → handed to `claude:claude-haiku-5-5`
+
+## harness ticket filed this fire
+   skill:idle-record-barred-on-degraded-no-pick-fire slots_lost= 2 last_seen= 2026-11-19T09:42:49.772468Z
+  control open rows: 17

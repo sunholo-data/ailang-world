@@ -1704,3 +1704,75 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 
 **Gate 3b (record PR #614):** head `4fcdfb5a` run 44467497039 attempt 1 read 2/3. `ailang-code verify gate` and `go host build + test gate` passed. `go race gate` failed on `host/broker` `TestSeedRestartIgnoresASurvivingOldCopy/survivor` (`exec_seed_test.go:656`, "the old staging dir survived the restart: <nil>"). The job's two `DATA RACE` warnings are its own known-positive control (`racecontrol/main.go`), as expected. Attribution: the PR changes only `design_docs/` (0 other paths), and the parent `2c9bb491` was 3/3 on the same gate. This is row 259's flake, instance 6, now added to that row. `gh run rerun --failed` → attempt 2 3/3. The instance note is a new head, so the PR is re-polled on it before merge.
 - **Head `9b24ee8c` (the row-259 note) run 44470410757 attempt 1 read 2/3 again, on a different test:** `go race gate`, `cmd/ailang-worldd` `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision` (`episode_finish_surface_rig_test.go:410`, "1 decisions (1 named sha256:36c0…); the record names sha256:36c0…"; the test wants 2 decision objects). The other two jobs passed. The diff changes only `design_docs/`, so this is not from this PR. Attempt 2 went 3/3. **First recorded instance** of this test failing (0 mentions in charter or archive, 1 in the log, iteration 404's carried-items line). Under D-WORLD-109 (2) a single CI red is logged here, not filed as a row; at its third instance it becomes a 258-class row. **Hypothesis (not measured):** `t0` is read before the first POST, so if that POST's decision lands in the next wall second under `-race` load, `nextWallSecond(t0)` returns at once and the retry's decision falls in the same second, has the same content and is stored once. The test came in with row 243 V3 S5 (`ba783c32`, iteration 404). **Landing rule for this record:** this note is a new head, so it is polled again. If that head flakes too, it is re-run and merged without another commit, and the instance is named in the merge commit body and the Gate-5 report on #574.
+
+## 412 — 2026-11-19 — no pick: rule (d) block report, the third in a row; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); the idle-record ticket re-filed (count 2, row 263) because a failing codex probe bars the idle fingerprint; dev green at `5c28cb07` [ADMIN]
+
+**Kind:** no-pick iteration. Nothing is loop-routable without an answer from Mark, so standing rule (d) applies. The only change since iteration 411 is 411's own record. There is no design, plan, code or product acceptance. The record is the STATUS stamp (409 moved to the archive), the Current route line, new queue row 263, this entry, the regenerated index, the dashboard and `verification/world-iter412/gate1-2-readings.txt`. An independent judge reviews the record before merge.
+
+**Pick and why:** none. Clause map at `5c28cb07`: 1.0 clauses 1–7 MET, so there is no UNMET clause and no critical-path row.
+- **What moved since iteration 411's Gate-1 base (`2c9bb491`):** only 411's record. 5 commits (`6ff2af6a`, `4fcdfb5a`, `9b24ee8c`, `e1798860`, merge `5c28cb07`), all under `design_docs/`. 0 `| D-WORLD` table rows changed.
+- **Ledger:** `--check` valid, 107 rows; `--open` → D-WORLD-119, D-WORLD-120, both unchanged since iteration 406 filed them.
+- **Row 243 (D-WORLD-109 granted scope):** V4 design §8 gates S3–S8 on 119 A/B, S9–S11 also on 120 A/B, and S12 on 119 A. S1, S2 and S2b are landed. None of the 5 commits touches the design.
+- **Row 150** waits on the attended A1. Subjects in `2c9bb491..5c28cb07` matching `row ?150|A1|marketing` → **0**; control `record|iteration 411` → **5**.
+- **Row 151** needs row 188's N2d and N4a. Subjects since 2026-10-01 matching `N2d|N4a` → **0**; control `N2c` → **1**. Non-test `.go` files naming `file.json` on `origin/dev` → **0**; control `surface` → **109**.
+- **Rows 217–219** are on the attended track beside row 188 (D-WORLD-94). **Rows 258, 259, 261** sit under rule (d), below the release rows (D-WORLD-109 (2)).
+- **External predicates:** no routable row waits on an outside party. Row 263 (filed this fire) waits on the fleet.
+- **The single CI red 411 recorded** (`TestFinishConfirmOnSurfaceDispatchesTheNamedDecision`, first instance) stays a log note under D-WORLD-109 (2). It has not recurred: dev's three latest CI runs are green.
+
+**Gate 0:**
+- Stamped first. Kill switch armed (`mission-world.disabled` absent). `gh` is `sunholo-voight-kampff`. Billing CLEAN. The env was read by name, then specific non-secret values.
+- Directives: 0 allowlisted on #574 (21 comments, read from the epoch because `mission-574-last-seen` is absent), 0 on issue #1 since its legacy watermark, 0 on #524 since `mission-world-last-seen`. Nothing to `--mark`; no watermark moved.
+- Self-notices (step 6a), prescribed form: **rc 1**, the same two #524 notices (crash `2026-11-13T09:48:25Z` rc 1; transcript fire `world-1794807071-53892`, 2 hits), control 107:4 ok. Both credited in entries 393 and 394, and row 262's resolution predicted this exact repeat until #524 leaves `-prev` on 2026-11-23. So nothing new died. Died-mid-flight traces: no `iter412` branch on origin before this record; the iteration-410/411 record worktrees have 0 porcelain lines each; the last two slot verdicts are `COMPLETED rc=0`. Transcript notice count 1, the one entry 394 reported.
+- **Open PR #615** (`ui/finish-card-review`, author the fleet account, created 08:10Z today, CI 3/3, 9 files under `host/surfacepage/` and one `cmd/ailang-worldd` Chrome test). It is not a `mission/` branch and appears 0 times in the charter or log, so it is attended UI work, not a dead iteration. Left alone (Gate 2 trace (a): an unattributable PR is not the loop's to touch).
+- Inbox: 0 unread on `mission-world`. (A first count said 1 because `grep -c .` counted the CLI's `No messages found.` line; `--json` prints `null`. Corrected in the readings file.)
+- Skill drift: `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target `cmp` equal to the driver clone's `origin/dev` (14 compared, 0 drift).
+- Dev CI at `5c28cb07`: 3/3 check-runs success (run 44475533675). Main checkout equal to `origin/dev`, with only the known untracked residue.
+
+**Gate 1:** `git rev-parse dev origin/dev` both `5c28cb07…`. Gate-1 base `5c28cb0728ba55efca1ed3c8d8fc891bafcdd549@2026-11-19T09:40:11Z`. Record written in its own worktree (`mission/world-iter412-record` from `5c28cb07`, `mission-worktree.sh add` then `wait` → ready).
+
+**Row 263 — the idle-record ticket:**
+- The driver left a pending idle fingerprint for this fire (`head=6ff2af6 ledger=107 open=2 directives=0 inbox=0 red=0`). Gate 5's IDLE RECORD would promote it, so the next identical fire exits before any probe.
+- The same rule bars `--record` when the fire degraded, and a failed probe counts. `MISSION_ROUTING_NOTE` this fire: the codex lane `gpt-6.2-sol` probed rc 1 for both planner and executor (handed to opus and `claude:claude-haiku-5-5`). Iterations 410 and 411 carried the same note and declined the record for the same reason (411's Ruled out says so).
+- A no-pick fire spawns neither role, so the degrade changed nothing this fire did. It still blocks the record. Each identical fire therefore writes a stamp, a log entry, a judge run and a record PR.
+- The fleet ticket for this already existed: `skill:idle-record-barred-on-degraded-no-pick-fire`, first filed by World at iteration 370 (2026-11-09). The charter, log and archive had 0 mentions of it, so it had no queue row. Filed this occurrence (`inbox_1795081369772_b08f35bc`), count 1 → 2, `--blocking none`, workaround none. It is now row 263.
+- The probe failure itself looks like D-FLEET-47 (fleet iteration 124's controlplane digest: the mission codex daemon 0.162.1 blocks `gpt-6.2-sol`). That is the fleet's ask to Mark, not World's.
+
+**Designer / planner / executor:** not spawned. A no-pick iteration has no doc, plan or code, so the routing table sends them nothing. No spawn was attempted, so none failed.
+
+**Independent evaluator (record):** REQUIRED. `resolve-role-spawn.sh evaluator` → `agent-tool sonnet declared:alias-pin`. Agent `sonnet`, fresh foreground read-only context, judging the record commit before merge. Result in the follow-through below.
+
+**Routing evidence:** base=5c28cb0728ba55efca1ed3c8d8fc891bafcdd549@2026-11-19T09:43:41Z (Gate 4).
+- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner, executor unused.
+- Evaluator: Agent `sonnet` (tokens in the follow-through). Generator ≠ judge: opus controller, sonnet judge.
+- Quorum: none (no doc). Metered $0.
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at 2 of 12 sprints. Every remaining V4 sprint waits on D-WORLD-119.
+
+**Ruled out:**
+- Picking 150, 151, 217–219, 243, 258, 259 or 261: measured reasons above.
+- Touching PR #615: attended work outside the loop's rows.
+- Promoting the idle fingerprint anyway: Gate 5 forbids it on a degraded fire. The ticket is the route, not a local override.
+- Treating step 6a's `A FIRE DIED` as a new death: both notices are credited (393, 394), and the traces are clean.
+- Re-asking D-WORLD-119/120: both asks are already in the digest, unchanged.
+- Rotating the log: 23 live entries with this one, below ~40. The index is regenerated with `rotate-log --index-only`.
+
+**Retro:**
+1. **A ticket that never became a row was invisible for ten days.** Iteration 370 filed the idle-record ticket. Nothing in the charter pointed at it, so fires 410 and 411 each declined the record without connecting it to an open ticket. Filing and recording the row are separate steps, the same lesson as Gate 2 rule (c).
+2. **Counting lines is not counting messages.** `grep -c .` on the CLI's empty-state text read as 1 unread. Use `--json` (or read the line) for a count.
+- Harness share: this entry files 1 ticket occurrence and fixes nothing. No skill edit.
+
+**Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence). Unanswered, another rule-(d) block report. A dev red outranks either way.
+
+**Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16; next boundary Monday 2026-11-23 07:00 local). The weekly external-issue sweep ran this week at 393.
+
+**Judge follow-through (iteration 412):** Agent `sonnet`, fresh foreground read-only context, judged record commit `6ab87ce6`. Verdict **PASS 92/100, zero blocking**. It used 41,583 subagent tokens, 7 tool uses and 34 s. Generator ≠ judge: opus controller, sonnet judge. The directive gave it the files and seven checks, not the controller's numbers.
+- **What it re-measured:** `--open` = 119 and 120, `--check` valid at 107 rows, and 0 changed `| D-WORLD` rows in the 5 commits, which touch only `design_docs/`. That V4 design §8 gates S3–S12 on 119/120 (from the grep hits, not a full read). 3 canonical stamps, 3 intended `-` lines, and the archived 409 stamp `cmp` identical. The row 150/151 counts and controls (0/5, 0/1, 0/109). Dev check-runs 3/3. Inbox `null`. PR #615's branch, CI and files. The ticket (`slots_lost` 2, both message ids, `first_seen` 2026-11-09). `git grep idle-record-barred` at `5c28cb07` = 0. The IDLE RECORD rule text. No closing keyword. The readings file is tracked. Every template section is present.
+- **Non-blocking notes and their disposition:**
+  1. The follow-through was missing at judge time. It is this paragraph.
+  2. That the probe failed on 410 and 411 was carried only by assertion. The controller checked: entry 410 (Designer line and Ruled out) and entry 411 (the same two places) each record the driver's routing note with the codex probe at rc 1. Those are the earlier controllers' readings of their own env, not a re-measure.
+  3. D-FLEET-47 is hedged as "looks like" and is not verified here. No change.
+  4. "Ten days" fits 2026-11-09 → 2026-11-19. No change.
+  5. Gate 3b's CI line is added after the record PR runs.
+- **What it did not check:** the readings file's content, the skill-drift `cmp`, the #524 notices and watermark files, the 410/411 worktrees, the pending fingerprint's contents, the index beyond its new line, and the #574 comment counts.
+
+**Gate 3b (record PR #616):** head `a5a4c128` run 44499502941 attempt 1 read **3/3** (`ailang-code verify gate`, `go host build + test gate`, `go race gate`), first time. Neither row 259's flake nor 411's `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision` recurred. This line is a new head, so the PR is polled again on it before merge. If that head flakes, it is re-run and merged without another commit, and the instance is named in the merge commit body and the Gate-5 report.
