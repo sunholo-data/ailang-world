@@ -1,0 +1,88 @@
+# World iteration 415 — Gate 0–2 readings (fire world-1795124390-72863), captured 2026-11-19T21:42:44Z
+
+## origin/dev and Gate-1 base
+3e5a46646acf5c6f55e98e9e00a42b9b167b9ba6
+Gate-1 base: 3e5a46646acf5c6f55e98e9e00a42b9b167b9ba6 2026-11-19T21:40:59Z
+
+## commits since iteration 414 Gate-1 base 036fdf83
+3e5a4664 Merge pull request #620 from sunholo-data/mission/world-iter414-record
+825f2a2b record: iteration 414 — judge follow-through (sonnet PASS 94, zero blocking)
+4299cdb6 record: iteration 414 — no pick, rule (d) block report (fifth, first undegraded); row 264 idle-fingerprint path ticket
+count=3
+ledger lines changed (| D-WORLD table rows) in 036fdf83..origin/dev: 0
+paths changed: design_docs/verification/world-iter414/gate1-2-readings.txt design_docs/world-mission-dashboard.md design_docs/world-mission-index.md design_docs/world-mission-log.md design_docs/world-mission-status-archive.md design_docs/world-mission.md 
+
+## ledger
+decision ledger valid: 107 rows
+check rc=0
+D-WORLD-119	OPEN
+D-WORLD-120	OPEN
+
+## dev CI at origin/dev
+checks=3
+  go host build + test gate: success
+  ailang-code verify gate: success
+  go race gate (go test -race, own job): success
+
+## row 150 (attended A1) — subjects in 036fdf83..origin/dev
+match row ?150|A1|marketing: 0  control record|iteration 414: 3
+
+## row 151 (needs row 188 N2d/N4a)
+subjects since 2026-10-01 matching N2d|N4a: 0  control N2c: 1
+non-test .go files naming file.json (fixed string): 0  control surface: 109
+
+## row 243 V4 design gating
+design=design_docs/planned/w-world-address-bar-verbs-v4.md lines naming D-WORLD-119: 4  D-WORLD-120: 2  design touched in range: 0
+
+## Gate 0 directives
+⚠ mission_directives: watermark file /Users/voightkampff/.ailang/state/mission-574-last-seen is absent — reading every allowlisted comment on #574; the first --mark creates it
+mission_directives: #574 — 0 directive(s) from [MarkEdmondson1234] since 1970-01-01T00:00:00Z inclusive, 0 new, 0 already processed (of 25 comments; the rest are public feedback, never directives)
+⚠ mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-1-last-seen (bare timestamp, no processed ids, written before #981) — the first --mark upgrades it
+mission_directives: #1 — 0 directive(s) from [MarkEdmondson1234] since 2026-09-30T14:19:22Z inclusive, 0 new, 0 already processed (of 25 comments; the rest are public feedback, never directives)
+⚠ mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-world-last-seen (bare timestamp, no processed ids, written before #981) — the first --mark upgrades it
+mission_directives: #524 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 47 comments; the rest are public feedback, never directives)
+
+## open PRs (fleet account)
+619 ui/world-head-on updated 2026-11-19T21:42:01Z
+617 ui/live-branch-heads updated 2026-11-19T13:39:01Z
+615 ui/finish-card-review updated 2026-11-19T08:10:54Z
+
+## idle pre-check and lane state (driver log, this fire)
+[2026-11-19 22:38:18] world: inputs changed since the last no-pick fire (4d83abf8aa0bd9677720fea953532ddadd366cdbdab4ba1d6eb54a8bd936f718 head=4299cdb ledger=107 open=2 directives=0 inbox=0 red=0) — proceeding with a full fire
+[2026-11-19 22:38:33] codex model 'gpt-6.2-sol' unusable: quota-limited
+[2026-11-19 22:38:38] codex planner lane -> falling back to 'opus' for this fire (model 'gpt-6.2-sol')
+[2026-11-19 22:38:42] codex executor lane -> falling back to 'claude:claude-haiku-5-5' for this fire (model 'gpt-6.2-sol')
+[2026-11-19 22:39:48] LANE DEGRADED this fire: - `planner`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`75` — over daily ration) → handed to `opus` - `executor`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`75` — over daily ration) → handed to `claude:claude-haiku-5-5`
+[2026-11-19 22:39:55] world: idle snapshot taken for world-1795124390-72863 (4d83abf8aa0bd9677720fea953532ddadd366cdbdab4ba1d6eb54a8bd936f718 head=4299cdb ledger=107 open=2 directives=0 inbox=0 red=0)
+unusable lines this fire preflight: 2
+
+## row 264 prediction check
+414 snapshot head (pending at 18:40): b152bdc; this fire snapshot head: 4299cdb
+4299cdb paths:
+design_docs/verification/world-iter414/gate1-2-readings.txt
+design_docs/world-mission-dashboard.md
+design_docs/world-mission-index.md
+design_docs/world-mission-log.md
+design_docs/world-mission-status-archive.md
+design_docs/world-mission.md
+825f2a2b paths:
+design_docs/world-mission-log.md
+driver: mission-control.sh removes the record and logs inputs changed (line ~1797)
+
+## slot verdicts (last 3)
+2026-11-19T10:32:21Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=3248 stamps=9 controller=claude:claude-opus-5-5
+2026-11-19T14:31:12Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=3179 stamps=8 controller=claude:claude-opus-5-5
+2026-11-19T18:16:42Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=2309 stamps=5 controller=claude:claude-opus-5-5
+
+## worktrees iter41x record porcelain
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter410-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter411-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter412-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter413-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter414-record 0
+
+## open fleet tickets (world rows)
+3   none   quorum:gpt6-1-sol-openai-api-credits-exhausted  (stapledon,world; first 2026-10-01 07:00)
+3   none   skill:idle-record-barred-on-degraded-no-pick-fire  (world; first 2026-11-09 08:55)
+2   none   messaging:pubsub-notify-wrong-project  (world; first 2026-10-15 16:55)
+1   none   driver:idle-fingerprint-head-ignores-design-docs-verification  (world; first 2026-11-19 17:45)
