@@ -1686,3 +1686,18 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 **Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence). Unanswered, another rule-(d) block report. A dev red outranks either way.
 
 **Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16 09:06Z; next boundary Monday 2026-11-23 07:00 local). The weekly external-issue sweep ran this week at 393.
+
+**Judge follow-through (iteration 411):** Agent `sonnet`, fresh foreground read-only context, judged record commit `6ff2af6a`. Verdict **PASS 90/100, zero blocking**. It used 51,886 subagent tokens, 10 tool uses and 39 s. Generator ≠ judge: opus controller, sonnet judge. The directive gave it the files and seven open questions, not the controller's numbers.
+- **What it re-measured:**
+  - The reply message, its commit, and that `cf540337e` is the pinned driver's HEAD.
+  - Both step-6a scripts on the prescribed inputs, exit codes taken directly: pinned rc 1 (DEGRADED whole-issue read, `crash=1`, `transcript=1`, control 107:4 ok), parent rc 2 `watermark channel unavailable`. Both issue-scoped watermark files absent.
+  - The credits in entries 393 (crash, matched by time) and 394 (transcript fire).
+  - `--check` valid at 107 rows, `--open` = 119 and 120, 0 changed `| D-WORLD` rows in `f267fac4..2c9bb491`.
+  - V4 §8's sprint gates, rows 150 and 151's stated blockers, and that the D-WORLD-64 exception needs a routable row.
+  - The rotation: 3 stamps left, 408 in the archive, queue rows unchanged, the canonical heading regex.
+  - The commit message (no closing keyword), `check-ignore` on the readings file, dev CI 3/3 and 0 open PRs.
+- **Non-blocking notes and their disposition:**
+  1. The crash credit is by time, not URL, and the time gap is not spelled out here. Entry 410 and its judge matched the notice (09:48:25Z) to the driver's `CRASHED at=gate-3 rc=1` (10:48:12 local), which is the same instant. No change.
+  2. The "until #524 rotates out on 2026-11-23" date. #574 opened 2026-11-16 and the next Monday-07:00 rotation is 2026-11-23, at which point #574 becomes `-prev` and #524 drops out of the read. This is a prediction for later fires, not a measurement.
+  3. "Acknowledged in the report below" was a future action when judged. The fleet message is acked after merge, and the Gate 5 report names it.
+- **What it did not check:** the row 150/151 grep counts, the skill-drift `cmp`, the slot verdicts and worktree porcelain, the ticket-open counts, the full index and dashboard diffs, and the middle of the long stamp text.
