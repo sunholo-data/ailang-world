@@ -32,7 +32,10 @@ func TestHeadCameraUsesTimelineGeometry(t *testing.T) {
 const headCameraHarness = `
 const assert = require('node:assert/strict');
 const {adaptModel} = require(process.argv[1]);
-const {layout, turn} = require(process.argv[2]);
+const {layout, turn, project, block} = require(process.argv[2]);
+const nearEqual = (a,b) => Math.abs(a-b)<1e-7;
+const checkRay = (a,b,g) => assert(nearEqual(
+  (a.x-g.vx)*(b.y-g.horizon), (b.x-g.vx)*(a.y-g.horizon)), 'points share the camera vanishing point');
 const now = Date.parse('2026-11-19T12:00:00Z');
 const state = (id, rank, days, extra = {}) => ({
   id, rank, kind: 'step', at: days == null ? '' : new Date(now - days * 86400000).toISOString(), ...extra
@@ -78,7 +81,7 @@ for (const width of [320, 390, 1300]) {
   assert(scene.points.get('u1').depth > scene.points.get('r2').depth, 'unknown dates do not become fresh');
   const older = scene.points.get('r1');
   const lip = head.recent.y - head.recent.height / 2;
-  assert(older.y < lip && lip - older.y < 9 && older.depth > scene.points.get('r2').depth,
+  assert(older.y < lip && lip - older.y < 25 && older.depth > scene.points.get('r2').depth,
     'the first past state sits immediately behind the face');
   assert(scene.points.get('s0').y < scene.points.get('s80').y, 'older shared history recedes towards the horizon');
 
@@ -92,20 +95,43 @@ for (const width of [320, 390, 1300]) {
         'head faces overlap: ' + a.id + ' and ' + b.id);
     }
   }
-  const center = scene.width/2;
+  const ground = scene.ground, center = scene.width/2;
+  assert.equal(ground.vx,center);
+  assert(nearEqual(ground.focal,640/(2*Math.tan(27*Math.PI/180))));
+  const fronts = new Map(scene.heads.map(h=>[h.lane,h]));
   for (const face of scene.heads) {
-    assert(Math.sign(face.returnX) === Math.sign(center-face.x) && face.returnY < 0,
-      'walls turn inward and up toward the sightline');
-    assert(Math.abs(face.x-center) - face.width/2 - Math.abs(face.returnX) > 0,
-      'even the side walls leave the central path open');
+    const shape = block(ground,face,face.width,face.height);
+    const inferred = block(ground,{x:face.x,y:face.y},face.width,face.height);
+    assert(nearEqual(shape.depth,inferred.depth) && nearEqual(shape.depth,face.depth));
+    assert(nearEqual(face.scale*face.depth,1));
+    assert(nearEqual(shape.backDepth-shape.depth,ground.blockDepth));
+    const groundCenter = project(ground,(face.x-center)*face.depth,0,face.depth);
+    assert(nearEqual(groundCenter.x,face.x) && nearEqual(groundCenter.y,face.y+face.height/2));
+    assert(shape.front.concat(shape.back).every(p=>Math.sign(p.x-center)===Math.sign(face.x-center)),
+      'the solid building leaves the central view open');
+    for (const [i,p] of shape.front.entries()) checkRay(p,shape.back[i],ground);
+  }
+  for (const [id,point] of scene.points) {
+    assert(nearEqual(point.scale*point.depth,1),'inverse depth controls scale');
+    const head = fronts.get(timeline.N[id].lane);
+    checkRay(head,point,ground);
+    const elevation = head.height*head.depth/2;
+    const expected = project(ground,(head.x-center)*head.depth,elevation,point.depth);
+    assert(nearEqual(expected.x,point.x) && nearEqual(expected.y,point.y),'lane histories retain fixed physical X/elevation');
   }
   const foreground = [head.recent, head.shared].sort((a,b) => a.x-b.x);
   const [left,right] = foreground;
   assert(left.x < center && right.x > center);
   assert(left.width / left.height >= 1.9 && right.width / right.height >= 1.9, 'foreground faces are landscape');
   assert.notEqual(left.y,right.y,'foreground faces stagger in recorded depth');
-  assert(Math.abs(right.x-right.width/2-(left.x+left.width/2)-scene.ground.street)<1e-9);
-  assert.equal(scene.ground.streetY, Math.max(...foreground.map(h=>h.y+h.height/2)));
+  assert(nearEqual((center-left.x-left.width/2)*left.depth,ground.street/2));
+  assert(nearEqual((right.x-right.width/2-center)*right.depth,ground.street/2));
+  assert.equal(ground.streetY, Math.max(...foreground.map(h=>h.y+h.height/2)));
+  for (const face of scene.heads) {
+    assert(nearEqual(face.height*face.depth,left.height*left.depth),'facades share the same world height');
+    const relativeWidth = (face.width*face.depth)/(left.width*left.depth);
+    assert(relativeWidth>0.99 && relativeWidth<=1.10000001,'far facades retain plausible world widths');
+  }
   for (const important of ['selected', 'live']) {
     const a = head[important];
     assert(Math.abs(a.x-center) + a.width/2 <= width/2, 'important heads visible on centered load');
@@ -122,11 +148,12 @@ for (const width of [320, 390, 1280]) {
 const recentLanes = Array.from({length:12},(_, i)=>lane('recent-'+i,[state('new'+i,200+i,.5)]));
 const threeNear = layout(adaptModel({...model,lanes:recentLanes.slice(0,3),links:[]}),{width:1280,height:780});
 assert.equal(threeNear.width,1280,'all three near faces fit in the desktop frame');
-assert(threeNear.heads.every(h=>h.width>=240 && h.width<=250 && h.height>=80 && h.height<=87));
+assert(threeNear.heads.every(h=>h.width>=226 && h.width<=250 && h.height>=80 && h.height<=87));
 const busy = layout(adaptModel({...model,lanes:recentLanes,links:[]}),{width:1280,height:780});
-assert(busy.width>1280 && busy.heads.every(h=>h.width>=172),'busy desktop can pan at a readable width');
+assert(busy.width>1280 && busy.heads.every(h=>h.width*h.depth>=171.999999),'busy desktop can pan at a readable width');
 const mobile = layout(adaptModel({...model,lanes:recentLanes.slice(0,3),links:[]}),{width:320,height:640});
-assert(mobile.heads.every(h=>h.width===122 && h.height===61),'desktop fitting leaves phone faces alone');
+assert(nearEqual(Math.max(...mobile.heads.map(h=>h.width)),122) &&
+  nearEqual(Math.max(...mobile.heads.map(h=>h.height)),61),'desktop fitting leaves the nearest phone face alone');
 
 const allOld = layout(adaptModel({...model, lanes:model.lanes.slice(7), links:[]}), {width:320, height:400});
 assert.equal(allOld.heads.filter(h => h.priority).length, 1);
@@ -139,10 +166,32 @@ assert.deepEqual(running(), ['selected'], 'the latest summary supersedes stored 
 follow.D.nowEdge.open.live = [];
 assert.deepEqual(running(), [], 'an ended session loses its live mark on the next poll');
 
+const testGround = {vx:160,horizon:70,streetY:310,blockDepth:.2};
+assert.deepEqual(project(testGround,0,0,1),{x:160,y:310},'Z=1 lands at the street reference');
+assert.deepEqual(project(testGround,100,120,2),{x:210,y:130});
+const solid = block(testGround,{x:235,y:200},80,60);
+const factor = solid.depth/solid.backDepth;
+assert(nearEqual(solid.back[1].x-solid.back[0].x,80*factor));
+assert(nearEqual(solid.back[2].y-solid.back[1].y,60*factor));
+assert(solid.top && solid.side && solid.floor);
+assert.equal(solid.side[0],solid.front[0],'right bank exposes the side facing inward');
+const opposite = block(testGround,{x:85,y:200},80,60);
+assert.equal(opposite.side[0],opposite.front[1],'left bank exposes the opposite face');
+const straddled = block(testGround,{x:160,y:80},60,60);
+assert.equal(straddled.top,null,'roof above eye height is hidden');
+assert.equal(straddled.side,null,'a face spanning the vanishing point hides both sides');
+assert.equal(block(testGround,{x:160,y:40},40,40),null,'front feet above the horizon have no inferred ground depth');
+const raised = block(testGround,{x:235,y:40,depth:2},60,24);
+assert.equal(raised.depth,2,'an elevated pane retains its actual camera Z');
+assert.equal(raised.floor[0].y,190,'the elevated pane footprint still lies on the ground');
+assert(raised.front[3].y < testGround.horizon && raised.floor[0].y > testGround.horizon);
+checkRay(raised.front[0],raised.back[0],testGround);
+
 const side = {x:10, y:40, scale:1, depth:0}, end = {x:100, y:80, scale:.5, depth:2};
 assert.deepEqual(turn(side,end,0), side);
 assert.deepEqual(turn(side,end,1), end);
 const middle = turn(side,end,.5);
 assert(middle.x > 55 && middle.x < 100, 'farther points show perspective during the same camera turn');
 assert(middle.scale > .5 && middle.scale < 1);
+assert(nearEqual(middle.depth*middle.scale,1),'camera turn carries a consistent depth and inverse scale');
 `

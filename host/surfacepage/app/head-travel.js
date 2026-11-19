@@ -6,23 +6,6 @@
     return new Map((T.LANES?.[lane]?.states || []).map(({id}, index) => [id, index]));
   }
 
-  function readableFace(head, peers, layout) {
-    // Keep the selected face anchored while giving its historical title room.
-    // Existing neighbours and the scene edges bound any expansion.
-    let halfHeight = Math.min(33, head.y - 4, layout.height - head.y - 4);
-    for (const peer of peers) {
-      const horizontalGap = Math.abs(head.x - peer.x) - (head.width + peer.width) / 2;
-      if (horizontalGap < 4) halfHeight = Math.min(halfHeight, Math.abs(head.y - peer.y) - peer.height / 2 - 4);
-    }
-    const height = Math.max(head.height, halfHeight * 2);
-    let halfWidth = Math.min(74, head.x - 4, layout.width - head.x - 4);
-    for (const peer of peers) {
-      const verticalGap = Math.abs(head.y - peer.y) - (height + peer.height) / 2;
-      if (verticalGap < 4) halfWidth = Math.min(halfWidth, Math.abs(head.x - peer.x) - peer.width / 2 - 4);
-    }
-    return {height, width: Math.max(head.width, halfWidth * 2)};
-  }
-
   function project(T, base, lane, id) {
     const stop = T?.N?.[id];
     if (!base || stop?.lane !== lane || !Number.isFinite(stop.rank) ||
@@ -55,23 +38,20 @@
       else heads.push(strip.face);
     }
 
-    const chosen = strips.get(lane);
-    const faceSize = readableFace(chosen.face, heads.slice(1), base);
-    Object.assign(chosen.face, faceSize, {priority: 4});
+    strips.get(lane).face.priority = 4;
     for (const head of heads) {
       const strip = strips.get(head.lane);
-      const rise = (head.height - strip.head.height) / 2;
       for (const [index, record] of strip.visible.entries()) {
         // Retain the lane and move each eligible record forward into the
         // corresponding camera slot, including the previous-state lip.
-        const slot = strip.slots[index].point;
-        points.set(record.id, index === 0 ? {...slot, x: head.x, y: head.y} :
-          rise ? {...slot, y: slot.y - rise} : slot);
+        points.set(record.id, strip.slots[index].point);
       }
     }
 
     const edges = base.edges.filter(({from, to}) => points.has(from) && points.has(to));
-    return {...base, points, heads, edges};
+    // The recorded stop's original camera depth drives the ground travel.
+    const travelZ = base.points.get(id).depth - points.get(id).depth;
+    return {...base, points, heads, edges, travelZ};
   }
 
   const api = {project};

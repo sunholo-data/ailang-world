@@ -62,16 +62,50 @@
     return {near, middle, far, ageOf};
   }
 
-  function placeBanks(band) {
-    // Lateral relevance fills the entrances first, with newer or quieter
-    // faces still retaining their own world depth and staggering.
-    const banks = [-1, 1].map(side => ({side, edge: band.street / 2}));
+  // A level image plane. Its ground reference is the street line at Z=1.
+  function project(ground, x, elevation, z) {
+    return {
+      x: ground.vx + x / z,
+      y: ground.horizon + (ground.streetY - ground.horizon - elevation) / z
+    };
+  }
+
+  function block(ground, center, width, height, length = ground?.blockDepth) {
+    const {vx, horizon, streetY} = ground || {};
+    if (![vx, horizon, streetY, center?.x, center?.y, width, height, length].every(Number.isFinite) ||
+        !(width > 0 && height > 0 && length > 0 && streetY > horizon)) return null;
+    const l = center.x - width / 2, r = center.x + width / 2;
+    const t = center.y - height / 2, b = center.y + height / 2;
+    const eyeHeight = streetY - horizon;
+    const explicitDepth = Number.isFinite(center.depth) && center.depth > 0;
+    if (!explicitDepth && b <= horizon) return null;
+    const depth = explicitDepth ? center.depth : eyeHeight / (b - horizon);
+    const backDepth = depth + length;
+    const front = [{x:l,y:t}, {x:r,y:t}, {x:r,y:b}, {x:l,y:b}];
+    const back = front.map(({x, y}) => project(ground, (x - vx) * depth, eyeHeight - (y - horizon) * depth, backDepth));
+    const top = t > horizon ? [front[0], front[1], back[1], back[0]] : null;
+    const side = vx < l ? [front[0], front[3], back[3], back[0]]
+      : vx > r ? [front[1], back[1], back[2], front[2]] : null;
+    // An elevated historical label still casts its footprint onto the
+    // ground plane at the same pair of physical depths.
+    const worldLeft = (l - vx) * depth, worldRight = (r - vx) * depth;
+    const floor = [project(ground, worldLeft, 0, depth), project(ground, worldRight, 0, depth),
+      project(ground, worldRight, 0, backDepth), project(ground, worldLeft, 0, backDepth)];
+    return {front, back, top, side, floor, depth, backDepth};
+  }
+
+  function placeBanks(band, ground) {
+    // The innermost front corner meets the projected curb at its own depth.
+    // Extra faces pack outwards within each bank to keep the text clear.
+    const banks = [-1, 1].map(side => ({side, edge: 0}));
     for (const [index, member] of band.members.entries()) {
       const bank = banks[(index + band.lead) % 2];
-      member.x = bank.side * (bank.edge + member.width / 2);
-      bank.edge += member.width + band.gap;
+      const curb = ground.street / (2 * member.z);
+      const edge = Math.max(curb, bank.edge);
+      member.x = bank.side * (edge + member.width / 2);
+      bank.edge = edge + member.width + band.gap;
     }
-    return Math.max(...banks.map(bank => bank.edge - band.gap));
+    return Math.max(0, ...banks.map(bank => bank.edge - band.gap));
   }
 
   function layout(T, options = {}) {
@@ -92,13 +126,12 @@
     const bankWidth = (viewportWidth - street) / 2 - gutter;
     const nearWidth = narrow ? faceWidth : clamp((bankWidth - (occupied - 1) * gap) / occupied, 172, faceWidth);
     const nearHeight = narrow ? clamp(61 + (viewportWidth - 320) * .16, 61, 82) : clamp(nearWidth * .35, 74, 96);
-    const middleHeight = narrow ? clamp(50 + (viewportWidth - 320) * .12, 50, 63) : 65;
-    const horizon = clamp(viewportHeight * .13, 45, 130);
-    const span = Math.max(320, viewportHeight * .58);
+    const horizon = Math.max(44, viewportHeight * .19);
+    const span = Math.max(nearHeight * 3.8, viewportHeight * .50);
     const tiers = [
-      {strips: near, gap, street, lead: 1, width: nearWidth, height: nearHeight},
-      {strips: middle, gap: gap * .75, street: street * .74, lead: 0, width: faceWidth * .76, height: middleHeight},
-      {strips: far, gap: gap * .62, street: street * .56, lead: 1, width: Math.max(102, faceWidth * .57), height: 40}
+      {strips: near, gap, lead: 1},
+      {strips: middle, gap: gap * .75, lead: 0},
+      {strips: far, gap: gap * .62, lead: 1}
     ];
     let oldestKnown = 14;
     for (const band of tiers) {
@@ -112,58 +145,69 @@
     const unknownDepth = Math.log1p(oldestKnown) + .3;
     const depthFor = age => Number.isFinite(age) ? Math.log1p(age) : unknownDepth;
 
-    let width = viewportWidth;
     for (const [tier, band] of tiers.entries()) {
       const byAge = [...band.strips].sort((a, b) => a.age - b.age || a.lane.localeCompare(b.lane));
       const ageOrder = new Map(byAge.map(({lane}, i) => [lane, i]));
       band.members = band.strips.map(strip => {
-        const depth = depthFor(strip.age);
-        const scale = perspective(depth);
-        const shrink = tier === 2 ? mix(.65, 1, scale) : 1;
-        const regularWidth = band.width * shrink;
-        const prominentWidth = tier === 2 ? faceWidth * .86 : tier === 1 ? faceWidth * .88 : nearWidth;
-        const width = strip.priority ? Math.max(regularWidth, prominentWidth) : regularWidth;
+        const ageDepth = depthFor(strip.age);
         const stagger = Math.min(tier === 2 ? 20 : 18, ageOrder.get(strip.lane) * (tier === 0 ? 16 : tier === 1 ? 11 : 6));
-        return {...strip, depth, scale, width, height: band.height, stagger};
+        return {...strip, ageDepth, stagger};
       });
-      width = Math.max(width, Math.ceil(2 * (placeBanks(band) + gutter)));
     }
 
-    const center = width / 2;
-    let height = viewportHeight;
-    let streetY = near.length ? 0 : horizon + span * .98 + nearHeight / 2;
+    const groundReach = ({age, stagger}) => span * mix(.98, .92, age / 2) + nearHeight / 2 - stagger;
+    const eyeHeight = near.length ? Math.max(...tiers[0].members.map(groundReach)) : span * .98 + nearHeight / 2;
+    const streetY = horizon + eyeHeight;
+    const focal = viewportHeight / (2 * Math.tan(54 * Math.PI / 360));
+    const ground = {vx: 0, horizon, streetY, street, focal, front: horizon + span * 1.35,
+      pitch: faceWidth * .74, blockDepth: .115};
+    let width = viewportWidth;
     for (const [tier, band] of tiers.entries()) {
       for (const member of band.members) {
-        const {lane, states, age, depth, scale, priority, width: w, height: h} = member;
-        const x = center + member.x;
-        const distance = tier === 0 ? mix(.98, .92, age / 2)
-          : tier === 1 ? mix(.60, .52, (age - 2) / 5) : mix(.16, .34, scale);
-        const y = horizon + span * distance - member.stagger;
-        const towardCenter = x < center ? 1 : -1;
-        const returnDepth = tier === 0 ? clamp(w * .13, narrow ? 16 : 25, narrow ? 27 : 48) : clamp(w * .12, 7, 27);
-        const returnX = towardCenter * returnDepth;
-        const returnY = tier === 0 ? -clamp(w * .07, 11, 18) : -clamp(h * .15, 6, 16);
-        const id = states[0].state.id;
-        heads.push({id, lane, x, y, scale, width: w, height: h, priority,
-          attention: member.attention, live: member.live, returnX, returnY});
-        points.set(id, {x, y, scale, depth});
-        height = Math.max(height, Math.ceil(y + h / 2 + 18));
-        if (tier === 0) streetY = Math.max(streetY, y + h / 2);
+        const {age, ageDepth, priority, stagger} = member;
+        // Place the foot in depth first. Both dimensions of the same
+        // world-size facade then shrink with the camera's inverse depth.
+        const reach = tier === 0 ? groundReach(member) :
+          (tier === 1 ? mix(.70, .62, (age - 2) / 5) : mix(.34, .55, perspective(ageDepth))) * eyeHeight - stagger;
+        const scale = reach / eyeHeight;
+        const z = 1 / scale;
+        const widthFactor = tier > 0 && priority ? 1.1 : 1;
+        member.z = z;
+        member.width = nearWidth * widthFactor / z;
+        member.height = nearHeight / z;
+        member.y = project(ground, 0, nearHeight / 2, z).y;
+      }
+      width = Math.max(width, Math.ceil(2 * (placeBanks(band, ground) + gutter)));
+    }
 
-        // The first rear state touches the face's lip. Beyond it, the lane
-        // tapers toward its own point on the common horizon.
-        const vanishingX = clamp(center + (x - center) * .32 - towardCenter * (tier + 1) * 9, 4, width - 4);
-        const faceInset = (h / 2 + 7) / (y - horizon);
-        let previous = depth, firstRearDepth;
+    ground.vx = width / 2;
+    let height = viewportHeight;
+    for (const band of tiers) {
+      for (const member of band.members) {
+        const {lane, states, ageDepth, priority, width: w, height: h, y, z} = member;
+        const worldX = member.x * z, elevation = h / 2 * z;
+        const x = ground.vx + member.x;
+        const scale = 1 / z, id = states[0].state.id;
+        heads.push({id, lane, x, y, scale, width: w, height: h, priority,
+          attention: member.attention, live: member.live, depth: z});
+        points.set(id, {x, y, scale, depth: z});
+        height = Math.max(height, Math.ceil(y + h / 2 + 18));
+
+        // The pane centers are one fixed transverse point and elevation
+        // viewed at successively greater physical depths on the same ray.
+        const lipInset = (h / 2 + 7) / (y - horizon);
+        const faceInset = Math.max(lipInset, 1 - z / (z + ground.blockDepth));
+        let previous = ageDepth, firstRearDepth;
         for (let index = 1; index < states.length; index++) {
           const record = states[index];
-          const current = Math.max(depthFor(ageOf(record.time)), depth + Math.log1p(index) * .48, previous + .008);
+          const age = depthFor(ageOf(record.time));
+          const current = Math.max(age, ageDepth + Math.log1p(index) * .48, previous + .008);
           firstRearDepth ??= current;
           const distance = (current - firstRearDepth) * .22 + Math.log1p(index - 1) * .21;
           const progress = faceInset + (1 - faceInset) * .94 * distance / (1 + distance);
+          const rearZ = z / (1 - progress);
           points.set(record.state.id, {
-            x: mix(x, vanishingX, progress), y: mix(y, horizon, progress),
-            scale: perspective(current) * .84, depth: current
+            ...project(ground, worldX, elevation, rearZ), scale: 1 / rearZ, depth: rearZ
           });
           previous = current;
         }
@@ -180,7 +224,7 @@
       }
     }
     heads.sort((a, b) => b.priority - a.priority || points.get(a.id).depth - points.get(b.id).depth);
-    return {points, heads, width, height, edges, ground:{horizon, front:horizon + span * 1.35, pitch:faceWidth * .74, street, streetY}};
+    return {points, heads, width, height, edges, ground};
   }
 
   // The timeline supplies the longitudinal coordinate. The end-on layout
@@ -197,11 +241,11 @@
       x:axisX + (side * (a.x - axisX) * wa + front * (b.x - axisX) * wb) / w,
       y:mix(a.y * wa, b.y * wb, front * front) / w,
       scale:1 / w,
-      depth:mix(a.depth ?? 0, b.depth ?? 0, front * front)
+      depth:w
     };
   }
 
-  const api = {layout, turn};
+  const api = {layout, turn, project, block};
   if (typeof window !== 'undefined') window.WorldHeadCamera = api;
   if (typeof module !== 'undefined') module.exports = api;
 })();

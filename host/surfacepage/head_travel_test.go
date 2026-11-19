@@ -55,6 +55,9 @@ for (const width of [320, 1280]) {
   const slice = travel.project(model,base,'a','a1');
   assert.deepEqual([slice.width,slice.height],[base.width,base.height],'retains scene bounds');
   assert.deepEqual([...base.points],initial,'whole-scene geometry remains reusable');
+  assert.equal(slice.ground,base.ground);
+  assert.equal(slice.travelZ,base.points.get('a1').depth-slice.points.get('a1').depth);
+  assert(slice.travelZ>0,'travel advances by the exact recorded stop depth');
   assert.deepEqual(slice.heads.map(h=>h.id).sort(),['a1','b-tied-latest','s1']);
   assert.equal(slice.heads[0].id,'a1','the chosen exact stop is foreground');
   assert.deepEqual([...slice.points.keys()].sort(),['a0','a1','b-tied-latest','b0','b1','s0','s1']);
@@ -62,6 +65,14 @@ for (const width of [320, 1280]) {
     const original = base.heads.find(h=>h.lane===head.lane);
     const point = slice.points.get(head.id);
     assert.deepEqual([head.x,head.y,point.x,point.y],[original.x,original.y,original.x,original.y],'lane stays anchored');
+    assert.deepEqual([head.width,head.height,head.depth],[original.width,original.height,original.depth],'fixed facade footprint');
+    assert(Math.abs(point.scale*point.depth-1)<1e-10);
+    for (const [id,pane] of slice.points) {
+      if (model.N[id].lane!==head.lane) continue;
+      const g = slice.ground;
+      assert(Math.abs((pane.x-g.vx)*(head.y-g.horizon)-(head.x-g.vx)*(pane.y-g.horizon))<1e-7,
+        'historical stop retains the same vanishing ray');
+    }
     assert.equal(head.attention,false,'present-only attention is cleared');
     assert.equal(head.live,false,'present-only running status is cleared');
   }

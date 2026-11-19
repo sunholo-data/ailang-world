@@ -72,7 +72,7 @@
       const focusOnFace = Boolean(document.activeElement?.closest('.hc-face,.hc-rear'));
       cancelTravel();
       const next = slice();
-      if (!hooks.reduced()) flight = {...scene.startTravel(next, direction), progress:0};
+      if (!hooks.reduced()) flight = {...scene.startTravel(next), progress:0};
       layout = next;
       selected = id;
       hooks.select(id);

@@ -265,3 +265,92 @@ func TestSurfaceHeadOnInspectsExactStateInChrome(t *testing.T) {
 			window.__cspv?.length === 0;
 	})()`)
 }
+
+func TestSurfaceHeadOnRenderedBuildingsConvergeInChrome(t *testing.T) {
+	b := startPasskeyBrowser(t)
+	origin := rigSurface(t, filepath.Join(t.TempDir(), "credentials.db"))
+	b.do(t, nil, "tab", nil)
+	defer b.do(t, nil, "tab", nil)
+	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface#heads", "raw": true})
+	b.do(t, nil, "waitFor", map[string]any{"expression": `document.documentElement.dataset.ready === '1' &&
+		document.querySelector('#stage[data-view="heads"] .hc-roof polygon')?.points.length === 4`})
+	// Observe the strokes the page actually submits to Chrome on a repaint.
+	// Keep this independent of WorldHeadCamera and its projection math.
+	b.do(t, nil, "waitFor", map[string]any{"expression": `(() => {
+		const canvas = document.querySelector('.hc-graph');
+		const ctx = canvas.getContext('2d');
+		const originals = {};
+		let path = [];
+		for (const [method, record] of Object.entries({
+			beginPath: () => { path = []; },
+			moveTo: (x, y) => { path.push(['M', x, y]); },
+			lineTo: (x, y) => { path.push(['L', x, y]); },
+			stroke: () => {
+				if (path.map(point => point[0]).join('') !== 'MLML') return;
+				const [[, x, y], [, left, endY], [, x2, y2], [, right, rightY]] = path;
+				if (x !== x2 || y !== y2 || left >= x || right <= x || endY <= y || endY !== rightY) return;
+				const pixel = ctx.getTransform().transformPoint({x, y});
+				const rect = canvas.getBoundingClientRect();
+				window.drawnRoadVanishingPoint = [
+					rect.x + pixel.x * rect.width / canvas.width, rect.y + pixel.y * rect.height / canvas.height
+				];
+				for (const key of Object.keys(originals)) delete ctx[key];
+			},
+		})) {
+			originals[method] = ctx[method];
+			ctx[method] = (...args) => {
+				record(...args);
+				return originals[method].apply(ctx, args);
+			};
+		}
+		document.querySelector('.hc-scroll').dispatchEvent(new Event('scroll'));
+		return true;
+	})()`})
+	var result struct {
+		Left, Right int
+		Failures    []string
+	}
+	b.do(t, &result, "waitFor", map[string]any{"expression": `(() => {
+		const vp = window.drawnRoadVanishingPoint;
+		if (!vp) return false;
+		const result = {left:0, right:0, failures:[]};
+		const vertices = polygon => {
+			const transform = polygon.getScreenCTM();
+			return [...polygon.points].map(point => {
+				const {x, y} = point.matrixTransform(transform);
+				return [x, y];
+			});
+		};
+		const distance = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
+		const nearest = (target, points) => points.reduce((best, pt) => distance(pt, target) < distance(best, target) ? pt : best);
+		const miss = (a, b) => Math.abs((b[0] - a[0]) * (vp[1] - a[1]) - (b[1] - a[1]) * (vp[0] - a[0])) / distance(a, b);
+		for (const face of document.querySelectorAll('.hc-face[data-head-state]')) {
+			const {left, right, top, bottom} = face.getBoundingClientRect();
+			const bank = right < vp[0] - 1 ? 'left' : left > vp[0] + 1 ? 'right' : '';
+			const roof = face.querySelector('.hc-roof polygon'), cheek = face.querySelector('.hc-cheek polygon');
+			if (!bank || roof?.points.length !== 4 || cheek?.points.length !== 4) continue;
+			const corners = vertices(roof), walls = vertices(cheek);
+			const front = [[left, top], [right, top]].map(target => nearest(target, corners));
+			const back = corners.filter(pt => !front.includes(pt)).sort((a, b) => a[0] - b[0]);
+			const inward = bank === 'left' ? 1 : 0;
+			const foot = [front[inward][0], bottom];
+			const frontFoot = nearest(foot, walls);
+			const backFoot = walls.find(pt => pt !== frontFoot &&
+				distance(pt, front[inward]) > 1 && back[inward] && distance(pt, back[inward]) > 1);
+			if (back.length !== 2 || distance(front[0], [left, top]) > 1 || distance(front[1], [right, top]) > 1 ||
+				distance(back[0], back[1]) >= distance(front[0], front[1]) ||
+				miss(front[0], back[0]) > 1 || miss(front[1], back[1]) > 1 ||
+				distance(frontFoot, foot) > 1 || !backFoot || miss(frontFoot, backFoot) > 1 ||
+				distance(nearest(front[inward], walls), front[inward]) > 1 ||
+				distance(nearest(back[inward], walls), back[inward]) > 1) {
+				result.failures.push(face.dataset.headState);
+			} else {
+				result[bank]++;
+			}
+		}
+		return result;
+	})()`})
+	if result.Left == 0 || result.Right == 0 || len(result.Failures) != 0 {
+		t.Fatalf("expected rendered roofs and inward walls on each bank to meet the road's vanishing point: %+v", result)
+	}
+}
