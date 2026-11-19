@@ -1128,6 +1128,8 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/follow-status.json", d.handleSurfaceFollowStatus)
 	mux.HandleFunc("GET /surface/home-summary.json", d.handleHomeSummary)
 	mux.HandleFunc("GET /surface", d.handleSurface)
+	mux.HandleFunc("GET /surface/heads", d.handleSurfaceHeads)
+	mux.HandleFunc("GET /surface/heads.js", d.handleSurfaceHeadsScript)
 	mux.HandleFunc("GET /surface/static", d.handleSurfaceStatic)
 	mux.HandleFunc("GET /surface/surface.js", d.handleSurfaceScript)
 	mux.HandleFunc("GET /surface/app.js", d.handleSurfaceAppScript)

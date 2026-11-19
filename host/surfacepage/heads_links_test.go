@@ -1,0 +1,98 @@
+package surfacepage
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"testing"
+	"time"
+)
+
+func TestHeadsLinks(t *testing.T) {
+	node := os.Getenv("WORLD_EXEC_NODE")
+	if node == "" {
+		var err error
+		node, err = exec.LookPath("node")
+		if err != nil {
+			t.Skip("node unavailable locally")
+		}
+	}
+	env := followEnv(t)
+	model, err := json.Marshal(BuildFollowModel(env, followSources(), Now{At: fixedNow}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	script, err := filepath.Abs(filepath.Join("app", "heads-links.js"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, node, "-e", headsLinksHarness, script)
+	cmd.Stdin = bytes.NewReader(model)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("heads links: %v\n%s", err, out)
+	}
+}
+
+const headsLinksHarness = `
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const {project, neighbors, stationsFor, detailsMarkup, geometry} = require(process.argv[1]);
+const model = JSON.parse(fs.readFileSync(0));
+
+const before = JSON.stringify(model);
+const projected = project(model);
+const endpointLane = new Map(model.lanes.flatMap(lane => lane.states.map(state => [state.id, lane.key])));
+const expected = model.links.filter(({from, to}) => endpointLane.get(from) !== endpointLane.get(to));
+const actual = projected.pairs.flatMap(pair => pair.edges.map(({from, to}) => [from.state.id, to.state.id]));
+assert.deepEqual(actual.sort(), expected.map(({from, to}) => [from, to]).sort(), 'retain all directed timeline links across lanes');
+assert(projected.pairs.some(pair => pair.edges.length > 1), 'collapse multiple state links between the same pair of branes');
+assert(projected.pairs.every(pair => pair.edges.every(({from, to}) => from.lane.repo === to.lane.repo)), 'keep colliding repo IDs separate');
+assert.equal(JSON.stringify(model), before, 'the timeline model is unchanged');
+
+const selected = 'world:brane:row-189';
+const shown = new Map([[selected, {}]]);
+const details = detailsMarkup(projected, shown, selected);
+assert.match(details, /off page/);
+const shared = 'world:brane:shared';
+assert.match(details, /data-locate="world:brane:shared"/);
+assert.match(details, /data-relation="fork"/);
+assert.match(details, /data-relation="merge"/);
+assert.match(details, /data-topology-state="world:episode:w189z"/);
+assert.match(details, /data-head-timeline="world:episode:w189z" href="\/surface#brane=world%3Abrane%3Arow-189&amp;at=world%3Aepisode%3Aw189z"/);
+const stations = stationsFor(projected, neighbors(projected, selected), selected);
+assert(stations.some(({incoming, outgoing}) => incoming.length && outgoing.length), 'a fork and merge can meet at the same selected state');
+assert.equal(stations[0].state.id, projected.tips.get(selected));
+for (let index = 2; index < stations.length; index++) {
+  assert(Date.parse(stations[index - 1].state.at) >= Date.parse(stations[index].state.at), 'selected stations are ordered in recorded time');
+}
+const anotherPage = detailsMarkup(projected, new Map([[shared, {}]]), shared);
+assert.match(anotherPage, /data-locate="world:brane:row-189"/);
+assert.doesNotMatch(anotherPage, /data-locate="world:brane:shared"/);
+const running = 'world:brane:row-190';
+const singleEdge = project({...model, links: model.links.filter(edge => edge.to === 'world:episode:w189z')});
+assert.equal(neighbors(singleEdge, running).size, 0);
+assert.match(detailsMarkup(singleEdge, new Map([[running, {}]]), running), /No branch links/);
+assert.equal(stationsFor(singleEdge, neighbors(singleEdge, selected), selected, 'world:episode:w189z')[0].incoming.length, 1);
+const anchor = model.links.find(edge => edge.to === 'world:episode:w189z').from;
+const sharedStation = stationsFor(singleEdge, neighbors(singleEdge, shared), shared, anchor)[0];
+assert.equal(sharedStation.state.id, anchor);
+assert(sharedStation.outgoing.some(edge => edge.to.state.id === 'world:episode:w189z'));
+assert(sharedStation.incoming.some(edge => edge.from.lane.key === shared), 'include the timeline first-parent line');
+assert(sharedStation.outgoing.some(edge => edge.to.lane.key === shared), 'include the timeline first-parent successor');
+assert.equal(stationsFor(projected, neighbors(projected, selected), selected, anchor)[0].state.id, projected.tips.get(selected), 'reject an address on another branch');
+assert.match(details, /Earlier state/);
+assert.match(details, /<strong>Fork/);
+assert.match(details, /<strong>Merge/);
+assert.match(details, /row-189&(?:amp;)?at=world%3Aepisode%3Aw189z#heads/);
+assert.doesNotMatch(details, /tools%3A/);
+assert(!actual.some(edge => edge.includes('world:episode:w190q')), 'an open state with an unavailable base gets no inferred link');
+
+const points = geometry({x: 10, y: 80, width: 210, height: 30, exact: true}, {x: 500, y: 100, width: 210, height: 30});
+assert.deepEqual(points.source, {x: 222, y: 95});
+assert.deepEqual(points.target, {x: 495, y: 115});
+`

@@ -16,10 +16,16 @@ import (
 //go:embed app/app.js
 var timelineScript []byte
 
+//go:embed app/brane.js
+var braneScript []byte
+
+//go:embed app/projection-motion.js
+var projectionMotion []byte
+
 //go:embed app/composer.js
 var composerScript []byte
 
-var AppScript = bytes.Join([][]byte{timelineScript, composerScript}, []byte("\n"))
+var AppScript = bytes.Join([][]byte{braneScript, projectionMotion, timelineScript, composerScript}, []byte("\n"))
 
 // AppStyle is /surface/app.css: the working copy's stylesheet, its fonts
 // self-hosted under /surface/fonts/.

@@ -310,9 +310,25 @@ async function tap({ id }) {
   return {};
 }
 
+async function drag({ id, dx, dy }) {
+  const start = await evaluate(`(() => {
+    const grip = document.getElementById(${JSON.stringify(id)});
+    grip.scrollIntoView({block:'center'});
+    const box = grip.getBoundingClientRect();
+    const x = box.x + box.width / 2, y = box.y + box.height / 2;
+    return grip.contains(document.elementFromPoint(x, y)) ? { x, y } : null;
+  })()`);
+  if (!start) throw new Error(id + ' cannot receive a pointer');
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...start, button: 'left', buttons: 1, clickCount: 1 });
+  const end = { x: start.x + dx, y: start.y + dy };
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...end, buttons: 1 });
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...end, button: 'left', buttons: 0, clickCount: 1 });
+  return {};
+}
+
 const product = (await send('Browser.getVersion', {}, null)).product;
 console.log(JSON.stringify({ ready: true, chrome: product, pid: chrome.pid }));
-const commands = { tab, open, ceremony, uv, advance, fetchRewrite, openCard, press, waitFor, credential, fill, save, card: cardState, key, tap, grantNotifications, notification };
+const commands = { tab, open, ceremony, uv, advance, fetchRewrite, openCard, press, waitFor, credential, fill, save, card: cardState, key, tap, drag, grantNotifications, notification };
 for await (const line of readline.createInterface({ input: process.stdin })) {
   const { cmd, ...args } = JSON.parse(line);
   try {

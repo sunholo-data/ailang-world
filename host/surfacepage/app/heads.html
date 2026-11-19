@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en" data-app data-heads>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Branch heads · AILANG World</title>
+<link rel="stylesheet" href="/surface/app.css">
+<style>
+[data-heads] body { display:flex;flex-direction:column;height:100dvh; }
+#heads-workspace { flex:1;min-height:0;min-width:0; }
+.heads-shell .logo-tile svg { width:32px;height:32px; }
+.heads-shell .brand { text-decoration:none; }
+</style>
+</head>
+<body>
+<header class="hdr heads-shell">
+  <a class="brand" href="/surface" aria-label="World timeline"><span class="logo-tile" aria-hidden="true"><!-- World mark --></span><span class="brand-name">World</span></a>
+  <nav class="world-angles" aria-label="World views">
+    <a id="timeline-link" href="/surface">Timeline</a>
+    <h1 aria-current="page">Branch heads</h1>
+  </nav>
+</header>
+<main id="heads-workspace" aria-label="Branch heads"><p role="status">Reading branch heads…</p></main>
+<script src="/surface/surface.js" defer></script>
+<script src="/surface/heads.js" defer></script>
+</body>
+</html>

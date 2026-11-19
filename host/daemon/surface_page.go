@@ -162,6 +162,21 @@ func (d *Daemon) handleSurfaceAppScript(w http.ResponseWriter, _ *http.Request) 
 	writeSurfaceAsset(w, "text/javascript; charset=utf-8", surfacepage.AppScript)
 }
 
+func (d *Daemon) handleSurfaceHeads(w http.ResponseWriter, r *http.Request) {
+	// at preserves the inspected state when returning from either projection.
+	q, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil || r.URL.RawQuery != "" && (len(q) != 1 || len(q["at"]) != 1 || q.Get("at") == "") {
+		writeSurfaceError(w, http.StatusBadRequest, "BadRequest", unknownSurfaceKeyMessage)
+		return
+	}
+	setSurfaceHeaders(w)
+	_, _ = w.Write(surfacepage.HeadsShell)
+}
+
+func (d *Daemon) handleSurfaceHeadsScript(w http.ResponseWriter, _ *http.Request) {
+	writeSurfaceAsset(w, "text/javascript; charset=utf-8", surfacepage.HeadsScript)
+}
+
 func (d *Daemon) handleSurfaceAppStyle(w http.ResponseWriter, _ *http.Request) {
 	writeSurfaceAsset(w, "text/css; charset=utf-8", surfacepage.AppStyle)
 }

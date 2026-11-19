@@ -3,6 +3,7 @@ package daemon
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -115,12 +116,32 @@ func TestSurfaceAppRoutes(t *testing.T) {
 		}
 	})
 
+	t.Run("heads shell", func(t *testing.T) {
+		w := request("GET", "/surface/heads")
+		if w.Code != http.StatusOK || !bytes.Equal(w.Body.Bytes(), surfacepage.HeadsShell) ||
+			w.Header().Get("Content-Security-Policy") != surfaceCSP {
+			t.Fatalf("branch heads shell: HTTP %d with CSP %q", w.Code, w.Header().Get("Content-Security-Policy"))
+		}
+		if w := request("POST", "/surface/heads"); w.Code != http.StatusMethodNotAllowed {
+			t.Errorf("POST /surface/heads = %d", w.Code)
+		}
+		if w := request("GET", "/surface/heads?at=world%3Acommit%3Aabc"); w.Code != http.StatusOK || !bytes.Equal(w.Body.Bytes(), surfacepage.HeadsShell) {
+			t.Errorf("addressed branch head = %d", w.Code)
+		}
+		for _, query := range []string{"at=", "at=x&at=y", "brane=x", "at=x&extra=y", "at=%GG"} {
+			if w := request("GET", "/surface/heads?"+query); w.Code != http.StatusBadRequest {
+				t.Errorf("unexpected branch heads query %q = %d", query, w.Code)
+			}
+		}
+	})
+
 	t.Run("assets", func(t *testing.T) {
 		for _, tc := range []struct {
 			target, contentType string
 			body                []byte
 		}{
 			{"/surface/app.js", "text/javascript; charset=utf-8", surfacepage.AppScript},
+			{"/surface/heads.js", "text/javascript; charset=utf-8", surfacepage.HeadsScript},
 			{"/surface/app.css", "text/css; charset=utf-8", surfacepage.AppStyle},
 			{"/surface/ailang-logo.svg", "image/svg+xml", surfacepage.AppLogo},
 		} {
