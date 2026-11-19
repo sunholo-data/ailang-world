@@ -157,7 +157,15 @@
   }
 
   const id = (location.pathname.match(/^\/surface\/confirm\/(vr-[0-9a-f]{16})$/) || [])[1];
-  if (location.hash) {
+  try {
+    const theme = JSON.parse(localStorage.getItem('world.appearance') || '{}')?.theme;
+    document.documentElement.dataset.theme = theme === 'night' || theme === 'slate' ||
+      (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches) ? 'slate' : 'paper';
+  } catch (_) { /* Paper is the World default when preferences are unavailable. */ }
+  if (location.hash === '#activity') {
+    $('back').href = '/surface#activity';
+    $('back').textContent = '← Back to Activity';
+  } else if (location.hash) {
     const place = new URLSearchParams(location.hash.slice(1));
     const brane = place.get('brane'), at = place.get('at');
     if (brane && at && brane.length < 256 && at.length < 256) {

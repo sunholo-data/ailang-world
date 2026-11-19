@@ -109,6 +109,7 @@ class El {
 }
 function makeDoc() {
   const doc = { sinks: [], byId: {} };
+  doc.documentElement = new El(doc, 'html');
   doc.body = new El(doc, 'body');
   doc.body.dataset.state = HTML.match(/<body data-state="([a-z]+)">/)[1];
   for (const m of HTML.matchAll(/<([a-z0-9]+) id="([a-z-]+)"( hidden)?/g)) doc.byId[m[2]] = new El(doc, m[1], m[2], !!m[3]);
@@ -123,9 +124,9 @@ const hang = (init) => new Promise((_, reject) => init.signal.addEventListener('
 // open runs confirm.js at path against fetch and waits, on the wall clock (at most 10 s), until the page leaves
 // 'loading': its SHA-256 digests resolve off the event loop, so no count of ticks bounds them (iteration 401 M7);
 // fire runs the page's stubbed timers once, as soon as it has asked (its fetch made and its abort timer set).
-async function open(path, fetch, fire, navigator) {
+async function open(path, fetch, fire, navigator, hash = '') {
   const doc = makeDoc(), timers = [], blobs = [], fetches = [];
-  vm.runInNewContext(SRC, { document: doc, location: { pathname: path, origin: 'http://localhost:1' }, crypto: globalThis.crypto, TextEncoder, TextDecoder, atob, btoa, Blob, AbortController, console, navigator,
+  vm.runInNewContext(SRC, { document: doc, URLSearchParams, localStorage: {getItem: () => JSON.stringify({theme: 'slate'})}, location: { pathname: path, hash, origin: 'http://localhost:1' }, crypto: globalThis.crypto, TextEncoder, TextDecoder, atob, btoa, Blob, AbortController, console, navigator,
     URL: { createObjectURL: (b) => { blobs.push(b); return 'blob:http://localhost:1/' + blobs.length; } },
     setTimeout: (f, ms) => timers.push({ f, ms, cleared: false }), clearTimeout: (n) => { if (timers[n - 1]) timers[n - 1].cleared = true; },
     fetch: (url, init) => { fetches.push({ url, init }); return fetch(init); } });
@@ -163,6 +164,13 @@ const sections = {
     const ok = await open(card(c), answer(200, c));
     assert.equal(ok.state, 'ready', ok.what);
     assert.equal(ok.fetches.length, 1);
+    assert.equal(ok.doc.documentElement.dataset.theme, 'slate');
+    for (const [fragment, target] of [['#activity', '/surface#activity'],
+      ['#brane=row-218&at=step%2F1&return=https://elsewhere.invalid', '/surface?brane=row-218&at=step%2F1']]) {
+      const contextual = await open(card(c), answer(200, c), false, undefined, fragment);
+      assert.equal(contextual.$('back').href, target);
+      assert.equal(contextual.fetches[0].url, '/surface/confirmations/' + c.id);
+    }
     assert.equal(ok.fetches[0].url, '/surface/confirmations/' + c.id);
     assert(ok.fetches[0].init.cache === 'no-store' && ok.fetches[0].init.credentials === 'omit' && ok.fetches[0].init.signal);
     assert(ok.timers.length === 1 && ok.timers[0].ms === 10000 && ok.timers[0].cleared, JSON.stringify(ok.timers));

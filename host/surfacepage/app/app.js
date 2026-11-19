@@ -456,7 +456,7 @@
   // a summarised row whose id is a confirmation id (store.VerbRequestIDPattern); otherwise its reason, no link.
   function confirmLineHTML(c) {
     if (c.refused || !/^vr-[0-9a-f]{16}$/.test(c.id)) return `<div class="nl sub">Confirm · ${esc(c.id)} · refused: ${esc(c.refused || 'not a confirmation id')}</div>`;
-    return `<div class="nl"><a id="confirm-${esc(c.id)}" href="/surface/confirm/${esc(c.id)}">Confirm · episode finish ${esc(c.episode)} · ${esc(c.repository)} ${esc(c.head)}@${esc(String(c.sha || '').slice(0, 12))}`
+    return `<div class="nl"><a id="confirm-${esc(c.id)}" href="/surface/confirm/${esc(c.id)}#activity">Confirm · episode finish ${esc(c.episode)} · ${esc(c.repository)} ${esc(c.head)}@${esc(String(c.sha || '').slice(0, 12))}`
       + ` · ${c.draft ? 'draft' : 'ready'} · expires ${hm(new Date(c.expires * 1000))}</a></div>`;
   }
   // notifyHTML is the opt-in: "Notify me" while this browser has not been asked (permission "default"),
@@ -1046,16 +1046,16 @@
 
   // An episode's pending finishes also belong beside its recorded decisions.
   // Keep signing at the canonical confirmation origin and return to this stack.
+  const stackFragment = () => '#' + new URLSearchParams({brane: F.brane, at: F.id});
   function showFinishRequests() {
     const section = $('front')?.querySelector('[data-decisions]');
     if (!section || !F) return;
     let links = section.querySelector('[data-finish-links]');
-    const requests = (REQS?.confirmations || []).filter(c =>
+    const requests = (Array.isArray(REQS?.confirmations) ? REQS.confirmations : []).filter(c =>
       F.episode && c.episode === F.episode && !c.refused && /^vr-[0-9a-f]{16}$/.test(c.id));
     if (!requests.length) { links?.remove(); return; }
     const html = requests.map(c => {
-      const origin = new URLSearchParams({brane:F.brane, at:F.id});
-      return `<a class="finish-link" href="/surface/confirm/${esc(c.id)}#${esc(origin.toString())}">Review ${c.draft ? 'draft PR' : 'PR'} · ${esc(c.repository)}<small>${esc(c.head)} @ ${esc(String(c.sha).slice(0,8))}</small></a>`;
+      return `<a class="finish-link" href="/surface/confirm/${esc(c.id)}${esc(stackFragment())}">Review ${c.draft ? 'draft PR' : 'PR'} · ${esc(c.repository)}<small>${esc(c.head)} @ ${esc(String(c.sha).slice(0,8))}</small></a>`;
     }).join('');
     if (!links) {
       links = document.createElement('div');
@@ -1354,7 +1354,7 @@
   function go(raw) {
     return goWith(raw, { out, address: goAddress,
       ask: q => askVerb(q, { fetch: (u, o) => fetch(u, o), AbortController, setTimeout: (f, ms) => setTimeout(f, ms), clearTimeout: t => clearTimeout(t) }),
-      act: { assign: h => location.assign(h), panel: showVerbPanel, say, clear: () => { if ($('addr').value === raw) $('addr').value = ''; } } });
+      act: { assign: h => location.assign(st.d === 1 && F && h.startsWith('/surface/confirm/') ? h + stackFragment() : h), panel: showVerbPanel, say, clear: () => { if ($('addr').value === raw) $('addr').value = ''; } } });
   }
   function showVerbPanel(p) {
     const old = $('verb'), el = verbPanel(document, p);
@@ -1652,7 +1652,14 @@
     if (followMode) schedulePoll();
     if (ok && q && q.brane != null) await openState(q.brane, q.at);   // a deep link, or a reload inside a brane
     document.documentElement.dataset.ready = '1';
-    $('root').focus({ preventScroll: true });
+    const needs = ok && !q?.brane && location.hash === '#activity' && $('tl').querySelector('[data-needs]');
+    if (needs) {
+      needs.tabIndex = -1;
+      needs.focus({preventScroll: true});
+      needs.scrollIntoView({block: 'nearest'});
+    } else {
+      $('root').focus({preventScroll: true});
+    }
   }
   boot();
 })();

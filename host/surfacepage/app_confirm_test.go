@@ -54,7 +54,7 @@ const app = require('./app.js');
 const G = JSON.parse(require('node:fs').readFileSync('golden.json', 'utf8'));
 const HEAD = (n) => '<div class="nsec" data-needs><div class="nh" style="color:var(--' + (n ? 'youShell' : 'sub') + ')">Needs you · ' + n + '</div>';
 const refused = '<div class="nl sub">Confirm · vr-00000000000000c6 · refused: the stored request does not match its digest</div>';
-const link = (id, ep, word) => '<div class="nl"><a id="confirm-' + id + '" href="/surface/confirm/' + id + '">Confirm · episode finish ' + ep
+const link = (id, ep, word) => '<div class="nl"><a id="confirm-' + id + '" href="/surface/confirm/' + id + '#activity">Confirm · episode finish ' + ep
   + ' · sunholo-data/ailang-world world/' + ep + '@0a0a0a0a0a0a · ' + word + ' · expires 08:09</a></div>';
 const lines = refused + link('vr-00000000000000c4', 'w1', 'draft') + link('vr-00000000000000c2', 'w2', 'ready');
 // The handler's answer: one line each, newest first, after the decisions; the refused one has no link.
@@ -77,7 +77,7 @@ assert.equal(app.needsYouHTML({...G.v9, confirmations: []}, 0), HEAD(0) + '<div 
 // Every value escaped where it lands (the sha cut to its first 12 characters, then escaped).
 { const real = G.v9.confirmations[1];
   assert.equal(app.needsYouHTML({confirmations: [{...real, episode: '<e>', repository: 'a&b', head: '"h"', sha: '<sha>0123456789'}]}, 0), HEAD(1)
-    + '<div class="nl"><a id="confirm-vr-00000000000000c4" href="/surface/confirm/vr-00000000000000c4">Confirm · episode finish &lt;e&gt; · a&amp;b &quot;h&quot;@&lt;sha&gt;0123456 · draft · expires 08:09</a></div></div>');
+    + '<div class="nl"><a id="confirm-vr-00000000000000c4" href="/surface/confirm/vr-00000000000000c4#activity">Confirm · episode finish &lt;e&gt; · a&amp;b &quot;h&quot;@&lt;sha&gt;0123456 · draft · expires 08:09</a></div></div>');
   assert.equal(app.needsYouHTML({confirmations: [{...G.v9.confirmations[0], id: '<x>', refused: '<i>r</i>'}]}, 0), HEAD(1)
     + '<div class="nl sub">Confirm · &lt;x&gt; · refused: &lt;i&gt;r&lt;/i&gt;</div></div>');
   // A summarised row whose id is not exactly vr- and 16 lower-case hex: its id, escaped, and no link.

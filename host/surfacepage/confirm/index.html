@@ -5,38 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AILANG World: confirm an episode finish</title>
 <style>
-:root { color-scheme: light; font: 100%/1.5 system-ui, sans-serif; background: #f3f5f8; color: #182230; }
+@font-face { font-family: Montserrat; src: url('/surface/fonts/Montserrat-Variable.ttf') format('truetype'); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: 'IBM Plex Mono'; src: url('/surface/fonts/IBMPlexMono-Regular.ttf') format('truetype'); font-display: swap; }
+:root { color-scheme: light; --stage: #edf1f4; --card: #fff; --ink: #2c3e50; --sub: #526677; --line: #dce3e8; --panel: #f6f8fa; --accent: #bd3012; --button: #314352;
+  font: 100%/1.5 Montserrat, 'Segoe UI', sans-serif; background: var(--stage); color: var(--ink); }
+:root[data-theme="slate"] { color-scheme: dark; --stage: #2c3e50; --card: #314352; --ink: #fff; --sub: #dce3e8; --line: #667b8e; --panel: #263544; --accent: #f9a697; --button: #dce3e8; }
 * { box-sizing: border-box; }
 body { max-width: 50rem; margin: auto; padding: 0.75rem clamp(0.75rem, 4vw, 2rem) 2rem; overflow-wrap: anywhere; }
-main { background: #fff; border: 1px solid #d2dbe6; border-radius: 0.8rem; padding: clamp(1rem, 4vw, 2rem); }
+main { background: var(--card); border: 1px solid var(--line); border-top: 4px solid var(--button); border-radius: 3px; padding: clamp(1rem, 4vw, 2rem); }
 h1 { font-size: clamp(1.45rem, 5vw, 2rem); line-height: 1.2; margin: 0 0 0.35rem; }
 h2 { font-size: 1.125rem; margin: 1.25rem 0 0.5rem; }
 p { margin: 0.5rem 0; }
-a { color: #164899; }
+a { color: var(--ink); }
 #back { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 0.5rem; }
 #overview { margin: 0 0 0.85rem; }
 #what, #answer { white-space: pre-wrap; }
-.notice { background: #eef4ff; border-inline-start: 4px solid #3762a1; border-radius: 0.35rem; padding: 0.65rem 0.8rem; }
+.notice { background: var(--panel); border-inline-start: 4px solid var(--sub); border-radius: 0.35rem; padding: 0.65rem 0.8rem; }
+body[data-state="ready"] .notice { border-inline-start-color: var(--accent); }
 #status { display: block; }
 #what:empty, #answer:empty { margin: 0; }
-#what[data-error] { color: #9c1730; }
+#what[data-error] { color: var(--accent); }
 dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 3fr); gap: 0.4rem 0.8rem; margin: 0; }
-dt { color: #475467; }
+dt { color: var(--sub); }
 dd { margin: 0; min-width: 0; }
 .exact, pre, #signed dd { white-space: pre-wrap; overflow-wrap: anywhere; }
-pre, code, #signed dd { font: 0.875rem/1.5 ui-monospace, monospace; }
-pre { background: #f3f5f8; padding: 0.65rem; margin: 0.4rem 0 0; border-radius: 0.35rem; }
+pre, code, #signed dd { font: 0.875rem/1.5 'IBM Plex Mono', ui-monospace, monospace; }
+pre { background: var(--panel); padding: 0.65rem; margin: 0.4rem 0 0; border-radius: 0.35rem; }
 #review-protected { margin: 0; padding-inline-start: 1.25rem; }
-details { border-top: 1px solid #d2dbe6; }
+details { border-top: 1px solid var(--line); }
 summary { cursor: pointer; min-height: 44px; padding: 0.65rem 0.25rem; font-weight: 600; }
 details[open] { padding-bottom: 0.7rem; }
 #controls { margin: 1rem 0; }
-button { font: inherit; font-weight: 650; padding: 0.65rem 1rem; min-height: 44px; cursor: pointer; background: #164899; color: #fff; border: 1px solid transparent; border-radius: 0.4rem; }
-button:disabled { background: #e4e9f0; color: #475467; cursor: default; }
+button { font: inherit; font-weight: 650; padding: 0.65rem 1rem; min-height: 44px; cursor: pointer; background: var(--button); color: var(--card); border: 1px solid transparent; border-radius: 3px; }
+button:disabled { background: var(--panel); color: var(--sub); cursor: default; }
 #go { margin-bottom: 0.6rem; }
 #save { display: inline-flex; align-items: center; min-height: 44px; }
 textarea { display: block; width: 100%; min-height: 6rem; font: inherit; margin: 0.35rem 0 0.7rem; }
-:focus-visible { outline: 3px solid #164899; outline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 [hidden] { display: none !important; }
 @media (max-width: 32rem) {
   #review, #signed { grid-template-columns: minmax(0, 1fr); gap: 0; }
