@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 411 | 2026-11-19 | no pick: row 262 RESOLVED on the fleet's fix (ailang #2421, `cf540337e`), checked first-party; then a rule (d) block report, row 243 V4 S3–S12 stil... |
 | 410 | 2026-11-19 | no pick: rule (d) block report; row 243 V4 S3–S12 wait on D-WORLD-119 (S9–S11 also 120); Gate 0's self-notices rc 2 added to the fleet ticket `gate... |
 | 409 | 2026-11-18 | row 243 V4 sprint 2b LANDED (PR #611, merge `07b30a5e`): the `host/authority` operator-action judges `JudgeOperatorAction`/`RecheckOperatorAction` ... |
 | 408 | 2026-11-18 | row 243 V4 sprint 2 LANDED (PR #609, merge `cee5174c`): the `world/operator-action/v1` envelope, its strict decoder, two digests and the 97-byte si... |
