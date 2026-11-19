@@ -35,7 +35,7 @@
     const neighborhood = new Map(), incident = new Map();
     const scratch = document.createElement('template');
     let model, layout, sidePoints, angle = 0, selected = '', hovered = '', frame = 0, silentFocus = false;
-    let initialPan = true, focusedByUser = '', paintedSelection, paintWidth = 0, paintHeight = 0, pixelRatio = 0;
+    let panAxis, panWidth = 0, panOffset = 0, focusedByUser = '', paintedSelection, paintWidth = 0, paintHeight = 0, pixelRatio = 0;
     let floorTravel = 0;
     const faceSizes = new Map();
     let points = new Map(), headsByID = new Map(), headsByLane = new Map(), order = [], histories = new Map();
@@ -45,7 +45,6 @@
     const miniatures = document.createElementNS(svgNS, 'svg');
     miniatures.setAttribute('class', 'hc-miniatures');
     rearLayer.append(miniatures);
-    const paneThickness = .37;
 
     function attachFront(el) {
       const content = document.createElement('span');
@@ -67,7 +66,7 @@
       const ground = layout.ground;
       const reveal = clamp((angle - .94) / .06, 0, 1);
       return reveal && ground && WorldHeadCamera.block
-        ? WorldHeadCamera.block(ground, point, width, height, ground.blockDepth * reveal * (pane ? paneThickness : 1))
+        ? WorldHeadCamera.block(ground, point, width, height, reveal * (pane ? ground.paneDepth : ground.blockDepth))
         : null;
     }
 
@@ -262,8 +261,7 @@
     }
 
     function paneSize(head, point) {
-      const scale = head.depth / Math.max(.01, point.depth);
-      return {width:head.width * .88 * scale, height:head.height * layout.ground.paneHeightRatio * scale};
+      return WorldHeadCamera.paneSize(layout.ground, head, point);
     }
 
     function miniatureLink() {
@@ -280,7 +278,7 @@
 
     function placeMiniature(entry, point, width, height) {
       const ground = layout.ground;
-      const block = WorldHeadCamera.block(ground, point, width, height, ground.blockDepth * paneThickness);
+      const block = WorldHeadCamera.block(ground, point, width, height, ground.paneDepth);
       const outline = vertices => vertices ? 'M' + vertices.map(p => p.x + ',' + p.y).join('L') + 'Z' : '';
       entry.paths[0].setAttribute('d', outline(block.side) + outline(block.top));
       entry.paths[1].setAttribute('d', outline(block.front));
@@ -765,12 +763,11 @@
         hovered = '';
         tip.hidden = true;
       }
-      if (initialPan && scroll.clientWidth) {
-        initialPan = false;
-        const requested = headsByID.get(selected) || headsByLane.get(model.N[selected]?.lane);
-        const center = layout.width / 2;
-        const centered = layout.heads.slice(0, 2).every(head => Math.abs(center - head.x) + head.width / 2 <= scroll.clientWidth / 2);
-        scroll.scrollLeft = Math.max(0, (centered ? center : requested?.x ?? center) - scroll.clientWidth / 2);
+      const viewportWidth = scroll.clientWidth;
+      if (viewportWidth && (panAxis !== layout.ground?.vx || panWidth !== viewportWidth)) {
+        panWidth = viewportWidth;
+        panAxis = layout.ground?.vx ?? layout.width / 2;
+        scroll.scrollLeft = panAxis - viewportWidth / 2 + panOffset;
       }
       points = new Map();
       faceSizes.clear();
@@ -923,6 +920,9 @@
       repaint();
     });
     scroll.addEventListener('scroll', () => {
+      // A resize can clamp scrollLeft before layout runs. Remember the
+      // deliberate offset only while the viewport matches the framed scene.
+      if (panWidth && panWidth === scroll.clientWidth) panOffset = scroll.scrollLeft + panWidth / 2 - panAxis;
       if (pointer) updatePointer(pointer);
       else if (!tip.hidden) showHistoryTitle();
       repaint();

@@ -274,7 +274,8 @@ func TestSurfaceHeadOnRenderedBuildingsConvergeInChrome(t *testing.T) {
 	defer b.do(t, nil, "tab", nil)
 	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface#heads", "raw": true})
 	b.do(t, nil, "waitFor", map[string]any{"expression": `document.documentElement.dataset.ready === '1' &&
-		document.querySelector('#stage[data-view="heads"] .hc-roof polygon')?.points.length === 4`})
+		[...document.querySelectorAll('#stage[data-view="heads"] .hc-roof polygon')]
+			.some(roof => roof.checkVisibility() && roof.points.length === 4)`})
 	// Observe the strokes the page actually submits to Chrome on a repaint.
 	// Keep this independent of WorldHeadCamera and its projection math.
 	b.do(t, nil, "waitFor", map[string]any{"expression": `(() => {
@@ -308,13 +309,16 @@ func TestSurfaceHeadOnRenderedBuildingsConvergeInChrome(t *testing.T) {
 		return true;
 	})()`})
 	var result struct {
-		Left, Right int
-		Failures    []string
+		Left, Right, Center    int
+		RoadOffset, FaceOffset float64
+		Failures               []string
 	}
 	b.do(t, &result, "waitFor", map[string]any{"expression": `(() => {
 		const vp = window.drawnRoadVanishingPoint;
 		if (!vp) return false;
-		const result = {left:0, right:0, failures:[]};
+		const viewport = document.querySelector('.hc-scroll');
+		const center = viewport.getBoundingClientRect().left + viewport.clientWidth / 2;
+		const result = {left:0, right:0, center:0, roadOffset:Math.abs(vp[0] - center), faceOffset:10000, failures:[]};
 		const vertices = polygon => {
 			const transform = polygon.getScreenCTM();
 			return [...polygon.points].map(point => {
@@ -327,21 +331,34 @@ func TestSurfaceHeadOnRenderedBuildingsConvergeInChrome(t *testing.T) {
 		const miss = (a, b) => Math.abs((b[0] - a[0]) * (vp[1] - a[1]) - (b[1] - a[1]) * (vp[0] - a[0])) / distance(a, b);
 		for (const face of document.querySelectorAll('.hc-face[data-head-state]')) {
 			const {left, right, top, bottom} = face.getBoundingClientRect();
-			const bank = right < vp[0] - 1 ? 'left' : left > vp[0] + 1 ? 'right' : '';
+			result.faceOffset = Math.min(result.faceOffset, Math.abs((left + right) / 2 - center));
 			const roof = face.querySelector('.hc-roof polygon'), cheek = face.querySelector('.hc-cheek polygon');
-			if (!bank || roof?.points.length !== 4 || cheek?.points.length !== 4) continue;
-			const corners = vertices(roof), walls = vertices(cheek);
+			if (!roof?.checkVisibility() || roof.points.length !== 4) continue;
+			const corners = vertices(roof);
 			const front = [[left, top], [right, top]].map(target => nearest(target, corners));
 			const back = corners.filter(pt => !front.includes(pt)).sort((a, b) => a[0] - b[0]);
+			if (back.length !== 2 || distance(front[0], [left, top]) > 1 || distance(front[1], [right, top]) > 1 ||
+				distance(back[0], back[1]) >= distance(front[0], front[1]) ||
+				miss(front[0], back[0]) > 1 || miss(front[1], back[1]) > 1) {
+				result.failures.push(face.dataset.headState);
+				continue;
+			}
+			const bank = right < vp[0] - 1 ? 'left' : left > vp[0] + 1 ? 'right' : '';
+			if (!bank) {
+				if (left < vp[0] - 1 && right > vp[0] + 1 && cheek?.checkVisibility()) result.failures.push(face.dataset.headState);
+				else result.center++;
+				continue;
+			}
+			if (!cheek?.checkVisibility() || cheek.points.length !== 4) {
+				result.failures.push(face.dataset.headState);
+				continue;
+			}
+			const walls = vertices(cheek);
 			const inward = bank === 'left' ? 1 : 0;
 			const foot = [front[inward][0], bottom];
 			const frontFoot = nearest(foot, walls);
-			const backFoot = walls.find(pt => pt !== frontFoot &&
-				distance(pt, front[inward]) > 1 && back[inward] && distance(pt, back[inward]) > 1);
-			if (back.length !== 2 || distance(front[0], [left, top]) > 1 || distance(front[1], [right, top]) > 1 ||
-				distance(back[0], back[1]) >= distance(front[0], front[1]) ||
-				miss(front[0], back[0]) > 1 || miss(front[1], back[1]) > 1 ||
-				distance(frontFoot, foot) > 1 || !backFoot || miss(frontFoot, backFoot) > 1 ||
+			const backFoot = walls.find(pt => pt !== frontFoot && distance(pt, front[inward]) > 1 && distance(pt, back[inward]) > 1);
+			if (distance(frontFoot, foot) > 1 || !backFoot || miss(frontFoot, backFoot) > 1 ||
 				distance(nearest(front[inward], walls), front[inward]) > 1 ||
 				distance(nearest(back[inward], walls), back[inward]) > 1) {
 				result.failures.push(face.dataset.headState);
@@ -351,8 +368,8 @@ func TestSurfaceHeadOnRenderedBuildingsConvergeInChrome(t *testing.T) {
 		}
 		return result;
 	})()`})
-	if result.Left == 0 || result.Right == 0 || len(result.Failures) != 0 {
-		t.Fatalf("expected rendered roofs and inward walls on each bank to meet the road's vanishing point: %+v", result)
+	if result.Left == 0 || result.Right == 0 || result.RoadOffset > 1 || result.FaceOffset > 1 || len(result.Failures) != 0 {
+		t.Fatalf("expected centered road and converging rendered roofs and inward walls: %+v", result)
 	}
 }
 

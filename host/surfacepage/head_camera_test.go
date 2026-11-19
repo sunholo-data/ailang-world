@@ -32,7 +32,7 @@ func TestHeadCameraUsesTimelineGeometry(t *testing.T) {
 const headCameraHarness = `
 const assert = require('node:assert/strict');
 const {adaptModel} = require(process.argv[1]);
-const {layout, turn, project, block} = require(process.argv[2]);
+const {layout, turn, project, block, paneSize} = require(process.argv[2]);
 const nearEqual = (a,b) => Math.abs(a-b)<1e-7;
 const checkRay = (a,b,g) => assert(nearEqual(
   (a.x-g.vx)*(b.y-g.horizon), (b.x-g.vx)*(a.y-g.horizon)), 'points share the camera vanishing point');
@@ -55,6 +55,31 @@ const model = {
   ],
   links: [{from:'s89',to:'r1'}, {from:'r1',to:'r2'}, {from:'r1',to:'r2'}]
 };
+function checkLaneSilhouettes(scene, graph) {
+  const g = scene.ground, heads = new Map(scene.heads.map(h=>[h.lane,h]));
+  const drawn = [...scene.points].map(([id,p]) => {
+    const lane = graph.N[id].lane, head = heads.get(lane);
+    const front = head.id === id;
+    const {width,height} = front ? head : paneSize(g,head,p);
+    assert(width>0 && height>0, 'even the oldest record has a face');
+    const {front:near,back} = block(g,p,width,height,front ? g.blockDepth : g.paneDepth);
+    const corners = [...near,...back];
+    const xs = corners.map(v=>v.x), ys = corners.map(v=>v.y);
+    return {id,corners,l:Math.min(...xs),r:Math.max(...xs),t:Math.min(...ys),b:Math.max(...ys)};
+  });
+  for (const [i,a] of drawn.entries()) for (const b of drawn.slice(i+1)) {
+    if (a.r<=b.l || b.r<=a.l || a.b<=b.t || b.b<=a.t) continue;
+    // In one-point perspective the remaining silhouette edges all run
+    // toward the vanishing point. Check those separating axes as well.
+    const separate = [...a.corners,...b.corners].some(corner => {
+      const dx = corner.x-g.vx, dy = corner.y-g.horizon;
+      const normal = p => p.x*dy-p.y*dx;
+      const left = a.corners.map(normal), right = b.corners.map(normal);
+      return Math.max(...left)<=Math.min(...right) || Math.max(...right)<=Math.min(...left);
+    });
+    assert(separate,'record silhouettes intersect: '+a.id+' and '+b.id);
+  }
+}
 const timeline = adaptModel(model);
 const options = {selected:'selected', attention:new Set(['attention'])};
 for (const width of [320, 390, 1300]) {
@@ -91,7 +116,8 @@ for (const width of [320, 390, 1300]) {
   for (const [i,current] of firstFive.entries()) {
     if (!i) continue;
     const previous = firstFive[i-1];
-    assert(current.depth-previous.depth>=g.historyPitch-1e-9,'physical pitch never compresses');
+    assert(current.depth-previous.depth>=g.historyPitch-1e-9 &&
+      nearEqual(current.depth-previous.depth,head.shared.historyPitch),'physical pitch never compresses');
     assert(previous.y-sharedWorldPane/previous.depth/2 > current.y+sharedWorldPane/current.depth/2,
       'near history stays individually exposed beyond the third pane');
   }
@@ -120,8 +146,10 @@ for (const width of [320, 390, 1300]) {
     assert(nearEqual(shape.backDepth-shape.depth,ground.blockDepth));
     const groundCenter = project(ground,(face.x-center)*face.depth,0,face.depth);
     assert(nearEqual(groundCenter.x,face.x) && nearEqual(groundCenter.y,face.y+face.height/2));
-    assert(shape.front.concat(shape.back).every(p=>Math.sign(p.x-center)===Math.sign(face.x-center)),
-      'the solid building leaves the central view open');
+    if (face.lane !== ground.centerLane) {
+      assert(shape.front.concat(shape.back).every(p=>Math.sign(p.x-center)===Math.sign(face.x-center)),
+        'branch silhouette stays on its bank');
+    }
     for (const [i,p] of shape.front.entries()) checkRay(p,shape.back[i],ground);
   }
   for (const [id,point] of scene.points) {
@@ -132,19 +160,24 @@ for (const width of [320, 390, 1300]) {
     const expected = project(ground,(head.x-center)*head.depth,elevation,point.depth);
     assert(nearEqual(expected.x,point.x) && nearEqual(expected.y,point.y),'lane histories retain fixed physical X/elevation');
   }
-  const foreground = [head.recent, head.shared].sort((a,b) => a.x-b.x);
-  const [left,right] = foreground;
-  assert(left.x < center && right.x > center);
-  assert(left.width / left.height >= 1.9 && right.width / right.height >= 1.9, 'foreground faces are landscape');
-  assert.notEqual(left.y,right.y,'foreground faces stagger in recorded depth');
-  assert(nearEqual((center-left.x-left.width/2)*left.depth,ground.street/2));
-  assert(nearEqual((right.x-right.width/2-center)*right.depth,ground.street/2));
-  assert.equal(ground.streetY, Math.max(...foreground.map(h=>h.y+h.height/2)));
-  for (const face of scene.heads) {
-    assert(nearEqual(face.height*face.depth,left.height*left.depth),'facades share the same world height');
-    const relativeWidth = (face.width*face.depth)/(left.width*left.depth);
-    assert(relativeWidth>0.99 && relativeWidth<=1.10000001,'far facades retain plausible world widths');
+  assert.equal(ground.centerLane,'shared');
+  assert.equal(head.shared.x,center,'shared world sits on the optical axis');
+  assert([...scene.points].filter(([id])=>timeline.N[id].lane==='shared').every(([,p])=>p.x===center));
+  for (const face of [head.shared,head.recent]) {
+    assert(face.width / face.height >= 1.9,'foreground faces are landscape');
   }
+  assert.notEqual(head.shared.y,head.recent.y,'foreground faces stagger in recorded depth');
+  assert(nearEqual(ground.streetY, Math.max(...[head.shared,head.recent].map(h=>h.y+h.height/2))));
+  for (const face of scene.heads) {
+    assert(nearEqual(face.height*face.depth,head.shared.height*head.shared.depth),'facades share the same world height');
+    const relativeWidth = (face.width*face.depth)/(head.shared.width*head.shared.depth);
+    assert(relativeWidth>0.99 && relativeWidth<=1.10000001,'far facades retain plausible world widths');
+    if (face.lane !== 'shared') {
+      assert((Math.abs(face.x-center)-face.width/2)*face.depth>=ground.street/2-1e-8,
+        'branch faces stay beyond the curb');
+    }
+  }
+  checkLaneSilhouettes(scene,timeline);
   for (const important of ['selected', 'live']) {
     const a = head[important];
     assert(Math.abs(a.x-center) + a.width/2 <= width/2, 'important heads visible on centered load');
@@ -170,9 +203,41 @@ assert(nearEqual(Math.max(...mobile.heads.map(h=>h.width)),122) &&
 
 // Duplicate timestamps still occupy distinct slots through a long ray.
 const longLane = lane('long',Array.from({length:420},(_,i)=>state('long'+i,i,0)));
-const long = layout(adaptModel({...model,lanes:[longLane],links:[]}),{width:320,height:640});
+const longModel = adaptModel({...model,lanes:[longLane],links:[]});
+const long = layout(longModel,{width:320,height:640});
+checkLaneSilhouettes(long,longModel);
 assert.equal(new Set([...long.points.values()].map(p=>p.depth)).size,420);
 assert(long.points.get('long0').depth>60 && long.points.get('long0').y-long.ground.horizon<8);
+
+// Angles are reusable where lone heads have no projected depth overlap.
+const quietModel = adaptModel({...model,lanes:[
+  lane('new',[state('new',1,.5)]), lane('middle',[state('mid',2,5)]), lane('distant',[state('distant',3,40)])
+],links:[]});
+const quiet = layout(quietModel,{width:320,height:640});
+const quietHeads = Object.fromEntries(quiet.heads.map(h=>[h.lane,h]));
+assert(nearEqual((quietHeads.new.x-quiet.ground.vx)*quietHeads.new.depth,
+  (quietHeads.distant.x-quiet.ground.vx)*quietHeads.distant.depth),
+  'one-item lanes reuse angular space at disjoint depth');
+assert(quiet.width<370);
+checkLaneSilhouettes(quiet,quietModel);
+
+const repoLane = (repo,name,kind,age) => ({
+  ...lane(repo+':brane:'+name,Array.from({length:65},(_,i)=>state(repo+name+i,i,age+64-i,{kind}))),repo
+});
+const following = adaptModel({...model,repos:[
+  {id:'b',shared:'b:brane:shared'},{id:'a',shared:'a:brane:shared'}
+],lanes:[
+  repoLane('a','shared','shared',.5),repoLane('b','shared','shared',.5),
+  repoLane('a','branch','step',8),repoLane('b','branch','step',10)
+],links:[]});
+for (const width of [320,1280]) {
+  const multi = layout(following,{width,height:640});
+  assert.equal(multi.ground.centerLane,'b:brane:shared','first configured repo receives the optical axis');
+  assert.equal(multi.heads.find(h=>h.lane==='b:brane:shared').x,multi.ground.vx);
+  assert.notEqual(multi.heads.find(h=>h.lane==='a:brane:shared').x,multi.ground.vx);
+  assert.equal(multi.points.size,260);
+  checkLaneSilhouettes(multi,following);
+}
 
 const allOld = layout(adaptModel({...model, lanes:model.lanes.slice(7), links:[]}), {width:320, height:400});
 assert.equal(allOld.heads.filter(h => h.priority).length, 1);

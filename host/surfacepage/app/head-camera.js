@@ -94,18 +94,89 @@
     return {front, back, top, side, floor, depth, backDepth};
   }
 
-  function placeBanks(band, ground) {
-    // The innermost front corner meets the projected curb at its own depth.
-    // Extra faces pack outwards within each bank to keep the text clear.
-    const banks = [-1, 1].map(side => ({side, edge: 0}));
-    for (const [index, member] of band.members.entries()) {
-      const bank = banks[(index + band.lead) % 2];
-      const curb = ground.street / (2 * member.z);
-      const edge = Math.max(curb, bank.edge);
-      member.x = bank.side * (edge + member.width / 2);
-      bank.edge = edge + member.width + band.gap;
+  function measureLane(member, ground, worldHeight) {
+    const eyeHeight = ground.streetY - ground.horizon;
+    const centerDrop = eyeHeight - worldHeight / 2;
+    const paneHalfHeight = worldHeight * ground.paneHeightRatio / 2;
+    const roof = project(ground, 0, worldHeight, member.z + ground.blockDepth).y;
+    const first = Math.max(member.z + ground.blockDepth,
+      (centerDrop + paneHalfHeight) / (roof - ground.horizon - 4));
+    const gapRatio = 2 * paneHalfHeight / (centerDrop - paneHalfHeight);
+    const historyPitch = Math.max(ground.historyPitch, first * gapRatio / (1 - 3 * gapRatio) * 1.06);
+    member.historyPitch = historyPitch;
+    member.firstRear = first;
+    const halfWidth = member.width * member.z / 2;
+    // A whole lane needs at most two bounds: its head and the run of
+    // smaller cards behind it. Their projected sides converge on the axis.
+    const band = (front, back, halfWidth, halfHeight) => ({
+      front, back, halfWidth, topDrop: centerDrop - halfHeight, bottomDrop: centerDrop + halfHeight,
+      top: (centerDrop - halfHeight) / back, bottom: (centerDrop + halfHeight) / front
+    });
+    member.bands = [band(member.z, member.z + ground.blockDepth, halfWidth, worldHeight / 2)];
+    if (member.states.length > 1) {
+      const last = first + (member.states.length - 2) * historyPitch;
+      member.bands.push(band(first, last + ground.paneDepth, halfWidth * ground.paneWidthRatio, paneHalfHeight));
     }
-    return Math.max(0, ...banks.map(bank => bank.edge - band.gap));
+  }
+
+  function bankPosition(member, placed, side, ground) {
+    const blocked = [];
+    for (const other of placed) {
+      const innerX = other.worldX * side;
+      if (innerX < 0) continue;
+      for (const band of member.bands) {
+        for (const peer of other.bands) {
+          if (band.bottom <= peer.top || peer.bottom <= band.top) continue;
+          // A card fits when either its projected X bounds or its rays
+          // from the vanishing point clear the neighboring band.
+          const inner = innerX - peer.halfWidth, outer = innerX + peer.halfWidth;
+          const left = inner * Math.max(band.topDrop / peer.bottomDrop, band.front / peer.back);
+          const right = outer * Math.min(band.bottomDrop / peer.topDrop, band.back / peer.front);
+          blocked.push([left - band.halfWidth - 8, right + band.halfWidth + 8]);
+        }
+      }
+    }
+    let x = ground.street / 2 + member.bands[0].halfWidth;
+    // Use the first free position on this bank, including gaps between lanes.
+    for (const [left, right] of blocked.sort((a, b) => a[0] - b[0])) {
+      if (x <= left) break;
+      x = Math.max(x, right);
+    }
+    return x;
+  }
+
+  function placeLanes(T, members, ground, gutter) {
+    const byLane = new Map(members.map(member => [member.lane, member]));
+    const shared = (T.GROUPS || []).map(group => byLane.get(group.shared)).filter(Boolean);
+    // Follow's first represented repo owns the optical axis. A legacy
+    // model uses its shared lane or the lane containing shared history.
+    const center = shared[0] || byLane.get('shared') ||
+      members.find(member => member.states.some(record => record.state.kind === 'shared'));
+    ground.centerLane = center?.lane || '';
+    const placed = [];
+    const groupSides = new Map();
+    let reach = 0;
+    if (center) {
+      center.worldX = 0;
+      placed.push(center);
+      reach = center.width / 2;
+    }
+    const ordered = [...shared.slice(1), ...members.filter(member => member !== center && !shared.includes(member))
+      .sort((a, b) => b.priority - a.priority || a.z - b.z || a.lane.localeCompare(b.lane))];
+    for (const [i, member] of ordered.entries()) {
+      const repoLane = T.groupOf?.(member.lane)?.shared;
+      const preference = groupSides.get(repoLane) || (i % 2 ? -1 : 1);
+      const preferred = bankPosition(member, placed, preference, ground);
+      const opposite = bankPosition(member, placed, -preference, ground);
+      // Keep a repo's faces together where the opposite bank would only
+      // save a negligible amount of screen width.
+      const side = preferred <= opposite + gutter * member.z ? preference : -preference;
+      member.worldX = side * (side === preference ? preferred : opposite);
+      if (shared.includes(member)) groupSides.set(member.lane, side);
+      placed.push(member);
+      reach = Math.max(reach, Math.abs(member.worldX) / member.z + member.width / 2);
+    }
+    return reach;
   }
 
   function layout(T, options = {}) {
@@ -128,11 +199,7 @@
     const nearHeight = narrow ? clamp(61 + (viewportWidth - 320) * .16, 61, 82) : clamp(nearWidth * .35, 74, 96);
     const horizon = Math.max(44, viewportHeight * .19);
     const span = Math.max(nearHeight * 3.8, viewportHeight * .50);
-    const tiers = [
-      {strips: near, gap, lead: 1},
-      {strips: middle, gap: gap * .75, lead: 0},
-      {strips: far, gap: gap * .62, lead: 1}
-    ];
+    const tiers = [{strips: near}, {strips: middle}, {strips: far}];
     let oldestKnown = 14;
     for (const band of tiers) {
       for (const strip of band.strips) {
@@ -159,9 +226,10 @@
     const eyeHeight = near.length ? Math.max(...tiers[0].members.map(groundReach)) : span * .98 + nearHeight / 2;
     const streetY = horizon + eyeHeight;
     const focal = viewportHeight / (2 * Math.tan(54 * Math.PI / 360));
+    const blockDepth = .115;
     const ground = {vx: 0, horizon, streetY, street, focal, front: horizon + span * 1.35,
-      pitch: faceWidth * .74, blockDepth: .115, historyPitch: .16, paneHeightRatio: .36};
-    let width = viewportWidth;
+      pitch: faceWidth * .74, blockDepth, historyPitch: .16, paneHeightRatio: .36, paneWidthRatio: .88,
+      paneDepth: blockDepth * .37};
     for (const [tier, band] of tiers.entries()) {
       for (const member of band.members) {
         const {age, ageDepth, priority, stagger} = member;
@@ -176,40 +244,27 @@
         member.width = nearWidth * widthFactor / z;
         member.height = nearHeight / z;
         member.y = project(ground, 0, nearHeight / 2, z).y;
+        measureLane(member, ground, nearHeight);
       }
-      width = Math.max(width, Math.ceil(2 * (placeBanks(band, ground) + gutter)));
     }
 
+    const reach = placeLanes(T, tiers.flatMap(band => band.members), ground, gutter);
+    const width = reach <= viewportWidth / 2 ? viewportWidth : Math.ceil(2 * (reach + gutter));
     ground.vx = width / 2;
     let height = viewportHeight;
     for (const band of tiers) {
       for (const member of band.members) {
-        const {lane, states, priority, width: w, height: h, y, z} = member;
-        const worldX = member.x * z, elevation = h / 2 * z;
-        const x = ground.vx + member.x;
+        const {lane, states, priority, width: w, height: h, y, z, worldX, historyPitch} = member;
+        const elevation = nearHeight / 2;
+        const x = ground.vx + worldX / z;
         const scale = 1 / z, id = states[0].state.id;
-        heads.push({id, lane, x, y, scale, width: w, height: h, priority,
+        heads.push({id, lane, x, y, scale, width: w, height: h, priority, historyPitch,
           attention: member.attention, live: member.live, depth: z});
         points.set(id, {x, y, scale, depth: z});
         height = Math.max(height, Math.ceil(y + h / 2 + 18));
 
-        // Keep the label above the projected back roof edge, then keep
-        // walking back in world units. The perspective alone compresses a
-        // long history rather than bunching records at a finite depth.
-        const centerDrop = eyeHeight - elevation;
-        const paneHalfHeight = elevation * ground.paneHeightRatio;
-        const roof = project(ground, worldX, elevation * 2, z + ground.blockDepth).y;
-        const clearance = 4;
-        const firstRear = Math.max(z + ground.blockDepth,
-          (centerDrop + paneHalfHeight) / (roof - horizon - clearance));
-
-        // The same pitch must separate the first five projected rectangles,
-        // even on a short stage where the reference faces are relatively tall.
-        const gapRatio = 2 * paneHalfHeight / (centerDrop - paneHalfHeight);
-        const labelPitch = firstRear * gapRatio / (1 - 3 * gapRatio);
-        const pitch = Math.max(ground.historyPitch, labelPitch * 1.06);
         for (let index = 1; index < states.length; index++) {
-          const rearZ = firstRear + (index - 1) * pitch;
+          const rearZ = member.firstRear + (index - 1) * historyPitch;
           points.set(states[index].state.id, {
             ...project(ground, worldX, elevation, rearZ), scale: 1 / rearZ, depth: rearZ
           });
@@ -230,6 +285,20 @@
     return {points, heads, width, height, edges, ground};
   }
 
+  function paneSize(ground, head, point) {
+    const z = point.depth, scale = head.depth / z;
+    const pitch = head.historyPitch;
+    const drop = (head.y - ground.horizon) * scale;
+    // Between this roof at Z + paneDepth and the next front at Z + pitch,
+    // reserve a fifth of the projected interval for the gap and edge strokes.
+    // The farther panes taper as this interval falls below their normal height.
+    const clearance = drop * (pitch - ground.paneDepth) / (z + pitch);
+    return {
+      width: head.width * ground.paneWidthRatio * scale,
+      height: Math.min(head.height * ground.paneHeightRatio * scale, clearance * .8)
+    };
+  }
+
   // The timeline supplies the longitudinal coordinate. The end-on layout
   // supplies the transverse coordinate. Yaw both about one line of sight,
   // then apply perspective at the current depth.
@@ -248,7 +317,7 @@
     };
   }
 
-  const api = {layout, turn, project, block};
+  const api = {layout, turn, project, block, paneSize};
   if (typeof window !== 'undefined') window.WorldHeadCamera = api;
   if (typeof module !== 'undefined') module.exports = api;
 })();
