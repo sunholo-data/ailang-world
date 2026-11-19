@@ -45,14 +45,15 @@ func TestSurfaceHeadOnUsesSameSceneInChrome(t *testing.T) {
 	const visibleFocus = `document.activeElement !== document.body &&
 		document.activeElement.checkVisibility({visibilityProperty:true, opacityProperty:true})`
 	wait(sameScene + ` && document.querySelector('#stage').dataset.view === 'heads' &&
-		document.activeElement.matches('#stage a[data-head-state]') && ` + visibleFocus + ` && ` + fitsViewport)
+		document.activeElement.matches('#stage a:is([data-head-state], [data-rear-state])') && ` + visibleFocus + ` && ` + fitsViewport)
 	wait(`(() => {
 		const face = document.activeElement;
-		if (!face.matches('#stage a[data-head-state][href]')) return false;
-		const href = new URL(face.href);
-		const state = face.dataset.headState;
-		if (href.pathname !== '/surface' || href.searchParams.get('at') !== state ||
-			href.searchParams.get('brane') !== face.dataset.headLane || !state) return false;
+		if (!face.matches('#stage a[href]:is([data-head-state], [data-rear-state])')) return false;
+		const href = new URL(face.getAttribute('href'), location.href);
+		const state = face.dataset.headState || face.dataset.rearState;
+		const lane = href.searchParams.get('brane');
+		if (href.pathname !== '/surface' || href.searchParams.get('at') !== state || !lane ||
+			(face.dataset.headLane && lane !== face.dataset.headLane) || !state) return false;
 		window.chosenHeadState = state;
 		return true;
 	})()`)
@@ -353,4 +354,78 @@ func TestSurfaceHeadOnRenderedBuildingsConvergeInChrome(t *testing.T) {
 	if result.Left == 0 || result.Right == 0 || len(result.Failures) != 0 {
 		t.Fatalf("expected rendered roofs and inward walls on each bank to meet the road's vanishing point: %+v", result)
 	}
+}
+
+func TestSurfaceHeadOnOpensOlderRecordedPaneInChrome(t *testing.T) {
+	b := startPasskeyBrowser(t)
+	origin := rigSurface(t, filepath.Join(t.TempDir(), "credentials.db"))
+	b.do(t, nil, "tab", nil)
+	defer b.do(t, nil, "tab", nil)
+	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface#heads", "raw": true})
+	wait := func(expression string) {
+		t.Helper()
+		b.do(t, nil, "waitFor", map[string]any{"expression": expression})
+	}
+	wait(`document.documentElement.dataset.ready === '1' &&
+		document.querySelector('#stage')?.dataset.view === 'heads'`)
+	wait(`(() => {
+		window.longLaneScene = document.querySelector('.hc-scene');
+		fetch('/surface/model.json').then(r => r.json()).then(model => {
+			window.recordedLanes = model.lanes;
+		});
+		return Boolean(window.longLaneScene);
+	})()`)
+	var inventory struct {
+		Lanes                     int
+		Missing, Duplicate, Wrong []string
+	}
+	b.do(t, &inventory, "waitFor", map[string]any{"expression": `(() => {
+		const lanes = window.recordedLanes;
+		if (!lanes) return false;
+		const byState = new Map();
+		for (const link of window.longLaneScene.querySelectorAll('a[data-head-state], a[data-rear-state]')) {
+			const id = link.dataset.headState || link.dataset.rearState;
+			const copies = byState.get(id) || [];
+			copies.push(link);
+			byState.set(id, copies);
+		}
+		const report = {lanes:lanes.filter(lane=>lane.states.length).length,missing:[],duplicate:[],wrong:[]};
+		for (const lane of lanes) {
+			for (const state of lane.states) {
+				const copies = byState.get(state.id) || [];
+				if (copies.length === 0) { report.missing.push(state.id); continue; }
+				if (copies.length > 1) { report.duplicate.push(state.id); continue; }
+				const link = copies[0];
+				const url = new URL(link.getAttribute('href'), location.href);
+				const rect = link.getBoundingClientRect();
+				if (url.pathname !== '/surface' || url.searchParams.get('at') !== state.id ||
+					url.searchParams.get('brane') !== lane.key || rect.width <= 0 || rect.height <= 0) report.wrong.push(state.id);
+			}
+		}
+		return report;
+	})()`})
+	if inventory.Lanes < 2 || len(inventory.Missing)+len(inventory.Duplicate)+len(inventory.Wrong) > 0 {
+		t.Fatalf("expected one rendered native pane with the exact stack address per recorded state: %+v", inventory)
+	}
+	wait(`(() => {
+		const states = window.recordedLanes.find(lane => lane.key === 'row-156').states
+			.slice().sort((a, b) => b.rank - a.rank);
+		if (states.length < 5) return false;
+		const oldest = states.at(-1);
+		const pane = [...window.longLaneScene.querySelectorAll('a[data-rear-state]')]
+			.find(link => link.dataset.rearState === oldest.id);
+		if (!pane) return false;
+		pane.focus();
+		if (document.activeElement !== pane) return false;
+		window.oldNativePane = oldest.id;
+		return true;
+	})()`)
+	wait(`window.longLaneScene.dataset.inspectState === window.oldNativePane &&
+		location.hash === '#heads' && !location.search`)
+	b.do(t, nil, "key", map[string]any{"key": "Enter"})
+	wait(`document.querySelector('#stage[data-view="brane"]') &&
+		document.querySelector('#front')?.dataset.front === window.oldNativePane`)
+	b.do(t, nil, "tap", map[string]any{"id": "head-angle"})
+	wait(`document.querySelector('#stage[data-view="heads"] .hc-scene') === window.longLaneScene &&
+		window.longLaneScene.querySelector('a[data-rear-state][aria-current="true"]')?.dataset.rearState === window.oldNativePane`)
 }

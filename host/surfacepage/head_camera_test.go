@@ -79,11 +79,24 @@ for (const width of [320, 390, 1300]) {
       'selection and attention change lateral prominence, not projected depth or scale');
   }
   assert(scene.points.get('u1').depth > scene.points.get('r2').depth, 'unknown dates do not become fresh');
+  const {ground:g} = scene;
   const older = scene.points.get('r1');
-  const lip = head.recent.y - head.recent.height / 2;
-  assert(older.y < lip && lip - older.y < 25 && older.depth > scene.points.get('r2').depth,
-    'the first past state sits immediately behind the face');
-  assert(scene.points.get('s0').y < scene.points.get('s80').y, 'older shared history recedes towards the horizon');
+  const recent = head.recent;
+  const roof = block(g,recent,recent.width,recent.height).back[0].y;
+  const worldPaneHeight = recent.height*recent.depth*g.paneHeightRatio;
+  assert(older.y + worldPaneHeight/older.depth/2 < roof - 3.9 &&
+    older.depth > recent.depth + g.blockDepth,'the first label has a clear slot behind the roof');
+  const firstFive = [88,87,86,85,84].map(i=>scene.points.get('s'+i));
+  const sharedWorldPane = head.shared.height*head.shared.depth*g.paneHeightRatio;
+  for (const [i,current] of firstFive.entries()) {
+    if (!i) continue;
+    const previous = firstFive[i-1];
+    assert(current.depth-previous.depth>=g.historyPitch-1e-9,'physical pitch never compresses');
+    assert(previous.y-sharedWorldPane/previous.depth/2 > current.y+sharedWorldPane/current.depth/2,
+      'near history stays individually exposed beyond the third pane');
+  }
+  const tail = scene.points.get('s0');
+  assert(tail.depth>12 && tail.y-g.horizon<32,'long histories taper toward the horizon');
 
   for (const [i, a] of scene.heads.entries()) {
     assert(a.x-a.width/2 >= 0 && a.x+a.width/2 <= scene.width);
@@ -154,6 +167,12 @@ assert(busy.width>1280 && busy.heads.every(h=>h.width*h.depth>=171.999999),'busy
 const mobile = layout(adaptModel({...model,lanes:recentLanes.slice(0,3),links:[]}),{width:320,height:640});
 assert(nearEqual(Math.max(...mobile.heads.map(h=>h.width)),122) &&
   nearEqual(Math.max(...mobile.heads.map(h=>h.height)),61),'desktop fitting leaves the nearest phone face alone');
+
+// Duplicate timestamps still occupy distinct slots through a long ray.
+const longLane = lane('long',Array.from({length:420},(_,i)=>state('long'+i,i,0)));
+const long = layout(adaptModel({...model,lanes:[longLane],links:[]}),{width:320,height:640});
+assert.equal(new Set([...long.points.values()].map(p=>p.depth)).size,420);
+assert(long.points.get('long0').depth>60 && long.points.get('long0').y-long.ground.horizon<8);
 
 const allOld = layout(adaptModel({...model, lanes:model.lanes.slice(7), links:[]}), {width:320, height:400});
 assert.equal(allOld.heads.filter(h => h.priority).length, 1);

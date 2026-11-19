@@ -36,7 +36,7 @@
   opacity: var(--hc-reveal, 0);
 }
 /* Fronts and clipped planes all live in the same native link. */
-.hc-space :is(.hc-face, .hc-rear) {
+.hc-space :is(.hc-face, .hc-rear:not(.hc-mini)) {
   --hc-rim: color-mix(in srgb, var(--hc-lane) 64%, var(--cardEdge));
   position: absolute;
   top: 0;
@@ -169,16 +169,19 @@
 }
 
 .hc-rear-layer { position: absolute; inset: 0; pointer-events: none; }
-.hc-rear-layer[hidden] { display: none; }
-.hc-rear {
+.hc-rear-layer[hidden], .hc-miniatures[hidden] { display: none; }
+.hc-miniatures { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.hc-rear:not(.hc-mini) {
   font: 500 9px/15px var(--font);
   white-space: nowrap;
   pointer-events: auto;
 }
 .hc-rear .hc-front-content {
   display: block;
-  padding: 0 7px;
-  border-color: var(--edge);
+  align-content: center;
+  line-height: 1.1;
+  padding: 0 5px;
+  border-color: color-mix(in srgb, var(--hc-lane) 38%, var(--edge));
   border-radius: 1px;
   background: var(--strip);
   text-overflow: ellipsis;
@@ -189,7 +192,7 @@
   background: var(--cardHead);
   box-shadow: inset 0 0 0 1px var(--text);
 }
-.hc-rear:focus-visible { outline: 1px solid var(--text); }
+.hc-rear:not(.hc-mini):focus-visible { outline: 1px solid var(--text); }
 .hc-passing { position: absolute; inset: 0; pointer-events: none; }
 :is(.hc-face, .hc-rear):is(.is-inspected, .is-related) .hc-front-content { border-color: var(--text); }
 
@@ -197,3 +200,13 @@
 .hc-face.is-distant .hc-face-bar { padding-inline: 3px; gap: 2px; }
 .hc-face.is-distant .hc-lane-name { font-size: 9px; line-height: 1.05; }
 .hc-face.is-distant .hc-age { display: none; }
+
+.hc-mini path {
+  pointer-events: visiblePainted;
+  stroke: color-mix(in srgb, var(--hc-lane) 40%, var(--edge));
+  stroke-linejoin: round;
+}
+.hc-mini-body { fill: color-mix(in srgb, var(--hc-lane) 22%, var(--strip)); }
+.hc-mini-front { fill: color-mix(in srgb, var(--hc-lane) 5%, var(--strip)); }
+.hc-mini:is(.is-inspected, :focus-visible, .is-related) path { stroke: var(--text); }
+.hc-mini:is(.is-inspected, :focus-visible) .hc-mini-front { fill: var(--hc-lane); }

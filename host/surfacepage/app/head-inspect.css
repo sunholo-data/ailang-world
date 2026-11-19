@@ -6,7 +6,7 @@
   height: 100%;
   pointer-events: none;
 }
-.hc-space :is(.hc-face, .hc-rear).is-inspected {
+.hc-space :is(.hc-face, .hc-rear:not(.hc-mini)).is-inspected {
   opacity: 1;
   outline: 2px solid var(--text);
   outline-offset: 2px;

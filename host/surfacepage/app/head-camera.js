@@ -160,7 +160,7 @@
     const streetY = horizon + eyeHeight;
     const focal = viewportHeight / (2 * Math.tan(54 * Math.PI / 360));
     const ground = {vx: 0, horizon, streetY, street, focal, front: horizon + span * 1.35,
-      pitch: faceWidth * .74, blockDepth: .115};
+      pitch: faceWidth * .74, blockDepth: .115, historyPitch: .16, paneHeightRatio: .36};
     let width = viewportWidth;
     for (const [tier, band] of tiers.entries()) {
       for (const member of band.members) {
@@ -184,7 +184,7 @@
     let height = viewportHeight;
     for (const band of tiers) {
       for (const member of band.members) {
-        const {lane, states, ageDepth, priority, width: w, height: h, y, z} = member;
+        const {lane, states, priority, width: w, height: h, y, z} = member;
         const worldX = member.x * z, elevation = h / 2 * z;
         const x = ground.vx + member.x;
         const scale = 1 / z, id = states[0].state.id;
@@ -193,23 +193,26 @@
         points.set(id, {x, y, scale, depth: z});
         height = Math.max(height, Math.ceil(y + h / 2 + 18));
 
-        // The pane centers are one fixed transverse point and elevation
-        // viewed at successively greater physical depths on the same ray.
-        const lipInset = (h / 2 + 7) / (y - horizon);
-        const faceInset = Math.max(lipInset, 1 - z / (z + ground.blockDepth));
-        let previous = ageDepth, firstRearDepth;
+        // Keep the label above the projected back roof edge, then keep
+        // walking back in world units. The perspective alone compresses a
+        // long history rather than bunching records at a finite depth.
+        const centerDrop = eyeHeight - elevation;
+        const paneHalfHeight = elevation * ground.paneHeightRatio;
+        const roof = project(ground, worldX, elevation * 2, z + ground.blockDepth).y;
+        const clearance = 4;
+        const firstRear = Math.max(z + ground.blockDepth,
+          (centerDrop + paneHalfHeight) / (roof - horizon - clearance));
+
+        // The same pitch must separate the first five projected rectangles,
+        // even on a short stage where the reference faces are relatively tall.
+        const gapRatio = 2 * paneHalfHeight / (centerDrop - paneHalfHeight);
+        const labelPitch = firstRear * gapRatio / (1 - 3 * gapRatio);
+        const pitch = Math.max(ground.historyPitch, labelPitch * 1.06);
         for (let index = 1; index < states.length; index++) {
-          const record = states[index];
-          const age = depthFor(ageOf(record.time));
-          const current = Math.max(age, ageDepth + Math.log1p(index) * .48, previous + .008);
-          firstRearDepth ??= current;
-          const distance = (current - firstRearDepth) * .22 + Math.log1p(index - 1) * .21;
-          const progress = faceInset + (1 - faceInset) * .94 * distance / (1 + distance);
-          const rearZ = z / (1 - progress);
-          points.set(record.state.id, {
+          const rearZ = firstRear + (index - 1) * pitch;
+          points.set(states[index].state.id, {
             ...project(ground, worldX, elevation, rearZ), scale: 1 / rearZ, depth: rearZ
           });
-          previous = current;
         }
       }
     }

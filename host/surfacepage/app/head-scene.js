@@ -24,7 +24,6 @@
     const ctx = canvas.getContext('2d');
     const inspection = scene.querySelector('.hc-inspection'), tip = scene.querySelector('.hc-inspect-tip');
     const inspectionInk = inspection.getContext('2d');
-    const pickable = [];
     let inspectable = false, pointer = null;
     const inspected = () => {
       const id = hovered || focusedByUser;
@@ -32,7 +31,6 @@
     };
     const rearLayer = space.querySelector('.hc-rear-layer');
     const cards = new Map(), rearLinks = new Map();
-    let lips = new Set();
     const stamps = new Map(), paneTitles = new Map(), crossings = new Map();
     const neighborhood = new Map(), incident = new Map();
     const scratch = document.createElement('template');
@@ -44,6 +42,10 @@
 
     let passingLayer = null;
     const svgNS = 'http://www.w3.org/2000/svg';
+    const miniatures = document.createElementNS(svgNS, 'svg');
+    miniatures.setAttribute('class', 'hc-miniatures');
+    rearLayer.append(miniatures);
+    const paneThickness = .37;
 
     function attachFront(el) {
       const content = document.createElement('span');
@@ -65,7 +67,7 @@
       const ground = layout.ground;
       const reveal = clamp((angle - .94) / .06, 0, 1);
       return reveal && ground && WorldHeadCamera.block
-        ? WorldHeadCamera.block(ground, point, width, height, ground.blockDepth * reveal * (pane ? .37 : 1))
+        ? WorldHeadCamera.block(ground, point, width, height, ground.blockDepth * reveal * (pane ? paneThickness : 1))
         : null;
     }
 
@@ -208,9 +210,9 @@
         if (compact) el.setAttribute('aria-label', el.title);
         else el.removeAttribute('aria-label');
         el.style.setProperty('--hc-lane', accent(lane));
-        if (space.children[index + 1] !== el) {
+        if (space.children[index] !== el) {
           const focused = document.activeElement === el;
-          space.insertBefore(el, space.children[index + 1] || null);
+          space.insertBefore(el, space.children[index] || null);
           if (focused && document.activeElement !== el) {
             silentFocus = true;
             el.focus({preventScroll: true});
@@ -218,19 +220,6 @@
           }
         }
       });
-      lips = new Set();
-      for (const head of layout.heads) {
-        let previousY = head.y - head.height / 2;
-        const limit = head.height <= 48 ? 2 : 3;
-        let count = 0;
-        for (const id of histories.get(head.lane)) {
-          const projected = layout.points.get(id);
-          if (previousY - projected.y < 20) continue;
-          lips.add(id);
-          previousY = projected.y;
-          if (++count === limit) break;
-        }
-      }
       syncRearLinks();
       space.style.width = Math.ceil(layout.width) + 'px';
       space.style.height = Math.ceil(layout.height) + 'px';
@@ -274,46 +263,89 @@
 
     function paneSize(head, point) {
       const scale = head.depth / Math.max(.01, point.depth);
-      return {width:head.width * .88 * scale, height:head.height * .36 * scale};
+      return {width:head.width * .88 * scale, height:head.height * layout.ground.paneHeightRatio * scale};
+    }
+
+    function miniatureLink() {
+      const el = document.createElementNS(svgNS, 'a');
+      el.setAttribute('class', 'hc-rear hc-mini');
+      const paths = ['body', 'front'].map(name => {
+        const path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('class', 'hc-mini-' + name);
+        el.append(path);
+        return path;
+      });
+      return {el, paths};
+    }
+
+    function placeMiniature(entry, point, width, height) {
+      const ground = layout.ground;
+      const block = WorldHeadCamera.block(ground, point, width, height, ground.blockDepth * paneThickness);
+      const outline = vertices => vertices ? 'M' + vertices.map(p => p.x + ',' + p.y).join('L') + 'Z' : '';
+      entry.paths[0].setAttribute('d', outline(block.side) + outline(block.top));
+      entry.paths[1].setAttribute('d', outline(block.front));
+      // Narrow the ink as well as the faces near the vanishing point.
+      entry.el.style.strokeWidth = Math.min(.85, height * .10) + 'px';
     }
 
     function syncRearLinks() {
-      const titled = new Set();
+      const focusedState = document.activeElement?.dataset.rearState;
+      miniatures.setAttribute('width', layout.width);
+      miniatures.setAttribute('height', layout.height);
+      const deepestHead = layout.heads.reduce((depth, head) => Math.max(depth, head.depth), 0);
+      let miniIndex = 0;
+      const fullLinks = [];
       for (const id of order) {
-        if (!lips.has(id)) continue;
-        const node = model.N[id];
-        const point = layout.points.get(id);
+        if (headsByID.has(id)) continue;
+        const node = model.N[id], point = layout.points.get(id);
         const {width,height} = paneSize(headsByLane.get(node.lane), point);
-        if (width < 63 || height < 13) continue;
-        const x = point.x - width / 2, y = point.y - height / 2;
-        const covered = layout.heads.some(head =>
-          layout.points.get(head.id).depth < point.depth && x >= head.x - head.width / 2 && x + width <= head.x + head.width / 2 &&
-          y >= head.y - head.height / 2 && y + height <= head.y + head.height / 2);
-        if (covered) continue;
-        titled.add(id);
+        // Only group silhouettes behind every full-size link. This keeps
+        // native hit order identical to physical occlusion on either bank.
+        const mini = height < 13 && point.depth > deepestHead;
         let entry = rearLinks.get(id);
-        if (!entry) {
-          const el = document.createElement('a');
-          el.className = 'hc-rear';
-          el.dataset.rearState = id;
-          entry = attachFront(el);
+        if (!entry || mini !== Boolean(entry.paths)) {
+          entry?.el.remove();
+          if (mini) entry = miniatureLink();
+          else {
+            const el = document.createElement('a');
+            el.className = 'hc-rear';
+            entry = attachFront(el);
+          }
+          entry.el.dataset.rearState = id;
           rearLinks.set(id, entry);
         }
-        const {el, content} = entry;
+        const {el} = entry;
         const title = options.title(node) || node.title || node.label || id;
         const label = model.laneTitle?.(node.lane) || node.lane;
-        content.textContent = title;
         el.style.setProperty('--hc-lane', accent(model.LANES[node.lane]));
-        el.title = title;
         el.setAttribute('aria-label', label + ' · ' + title);
-        el.href = statePath(node);
-        const index = titled.size - 1;
-        if (rearLayer.children[index] !== el) rearLayer.insertBefore(el, rearLayer.children[index] || null);
+        el.setAttribute('href', statePath(node));
+        if (mini) {
+          placeMiniature(entry, point, width, height);
+          if (miniatures.children[miniIndex] !== el) miniatures.insertBefore(el, miniatures.children[miniIndex] || null);
+          miniIndex++;
+        } else {
+          entry.content.textContent = height >= 13 && width >= 50 ? title : '';
+          el.title = title;
+          fullLinks.push(el);
+        }
       }
+      // Tab reaches the current heads, then the nearby labels, before
+      // entering the long run of miniatures behind them.
+      fullLinks.reverse().forEach((el, index) => {
+        if (rearLayer.children[index] !== el) rearLayer.insertBefore(el, rearLayer.children[index] || null);
+      });
       for (const [id, {el}] of rearLinks) {
-        if (titled.has(id)) continue;
+        if (layout.points.has(id) && !headsByID.has(id)) continue;
         el.remove();
         rearLinks.delete(id);
+      }
+      const restored = rearLinks.get(focusedState)?.el;
+      if (restored && restored !== document.activeElement) {
+        silentFocus = true;
+        restored.focus({preventScroll:true});
+        silentFocus = false;
+        if (document.activeElement === restored) focusedByUser = focusedState;
       }
     }
 
@@ -323,9 +355,9 @@
       const {width,height} = paneSize(head, point);
       const x = point.x - width / 2, y = point.y - height / 2;
       ctx.globalAlpha = alpha;
-      ctx.fillStyle = theme.pane;
-      ctx.strokeStyle = theme.edge;
-      ctx.lineWidth = 1;
+      const laneColor = accent(model.LANES[node.lane]);
+      ctx.strokeStyle = colorsForPane(theme.edge, laneColor, 40);
+      ctx.lineWidth = Math.min(1, height * .10);
       const block = blockAt(point, width, height, true);
       const path = (vertices, fill) => {
         ctx.beginPath();
@@ -338,8 +370,8 @@
       const front = block?.front || [{x,y}, {x:x+width,y}, {x:x+width,y:y+height}, {x,y:y+height}];
       if (block?.side) path(block.side, colorsForPane(theme.pane, theme.edge, 36));
       if (block?.top) path(block.top, colorsForPane(theme.pane, theme.edge, 16));
-      path(front, theme.pane);
-      if (width < 63 || height < 13 || angle < .86) return block;
+      path(front, height < 13 ? colorsForPane(theme.pane, laneColor, 5) : theme.pane);
+      if (width < 50 || height < 13 || angle < .86) return;
       const text = options.title(node) || node.title || node.label || '';
       ctx.font = '500 9px ' + theme.font;
       ctx.textBaseline = 'middle';
@@ -360,7 +392,6 @@
       }
       ctx.fillStyle = theme.text;
       ctx.fillText(visible, x + 8, point.y + .5);
-      return block;
     }
 
     function drawGround(left, right, bottom, opacity, ink) {
@@ -487,12 +518,8 @@
     function shape(id, point) {
       const head = headsByID.get(id);
       if (head) return {x:point.x, y:point.y, rx:head.width / 2, ry:head.height / 2};
-      if (lips.has(id)) {
-        const {width,height} = paneSize(headsByLane.get(model.N[id].lane), point);
-        return {x:point.x, y:point.y, rx:width / 2, ry:height / 2};
-      }
-      const radius = 1 + 3.5 * point.scale;
-      return {x:point.x, y:point.y, rx:radius, ry:radius};
+      const {width,height} = paneSize(headsByLane.get(model.N[id].lane), point);
+      return {x:point.x, y:point.y, rx:width / 2, ry:height / 2};
     }
 
     function port(bounds, other) {
@@ -510,8 +537,7 @@
       ink.clearRect(x, y, width, height);
       const edges = incident.get(active) || [];
       inspection.dataset.incidentCount = edges.length;
-      const focused = points.get(active);
-      if (!focused) return;
+      if (!points.has(active)) return;
 
       const mark = (at, color, radius) => {
         ink.lineWidth = 1.6;
@@ -557,7 +583,6 @@
         endpoints.push([origin, color, from === active ? 3.3 : 2.6], [target, color, to === active ? 3.3 : 2.6]);
       }
       for (const args of endpoints) mark(...args);
-      if (!cards.has(active) && !rearLinks.has(active)) mark(focused, colors.text, lips.has(active) ? 4 : 5);
     }
 
     function paint() {
@@ -587,7 +612,6 @@
       const paneOpacity = clamp((angle - .46) * 2.1, 0, 1);
       const contains = id => id === active || related?.has(id);
       ctx.lineCap = 'round';
-      pickable.length = 0;
       const groundOpacity = clamp((angle - .78) / .22, 0, 1);
       if (groundOpacity && layout.ground) {
         drawGround(x, x + width, y + height, groundOpacity, colors.edge);
@@ -623,30 +647,18 @@
       }
 
       ctx.setLineDash([]);
+      // At rest every history state is a native link. During a camera
+      // move, paint the miniature solids at their interpolated depth.
+      const movingMiniatures = miniatures.hasAttribute('hidden');
+      const glyphOpacity = 1 - paneOpacity;
       for (const id of order) {
-        const point = points.get(id);
-        const node = model.N[id];
-        if (lips.has(id) && node && visible(point, 150) && (rearLayer.hidden || !rearLinks.has(id))) {
-          const block = drawPane(node, point, headsByLane.get(node.lane), paneOpacity * (focus && !contains(id) ? .58 : .92), colors);
-          pickable.push({id, bounds:shape(id, point), lip:true, block});
+        const point = points.get(id), node = model.N[id];
+        if (!node || !visible(point, 160)) continue;
+        const entry = rearLinks.get(id);
+        if (entry && paneOpacity && (rearLayer.hidden || (entry.paths && movingMiniatures))) {
+          drawPane(node, point, headsByLane.get(node.lane), paneOpacity, colors);
         }
-      }
-      const occupied = new Set();
-      for (let index = order.length - 1; index >= 0; index--) {
-        const id = order[index];
-        const point = points.get(id);
-        const node = model.N[id];
-        if (!node || !visible(point, 24) || lips.has(id) || (angle > .85 && headsByID.has(id))) continue;
-        const strong = contains(id);
-        const cell = Math.floor(point.x / 7) + ',' + Math.floor(point.y / 7);
-        const firstInCell = !occupied.has(cell);
-        if (!firstInCell && !strong) continue;
-        if (firstInCell) {
-          occupied.add(cell);
-          pickable.push({id, bounds:shape(id, point)});
-        }
-        const alpha = strong ? .94 : focus ? .14 : .18 + .22 * point.scale;
-        drawGlyph(node, point, pointOpacity * alpha);
+        if (glyphOpacity) drawGlyph(node, point, glyphOpacity * (contains(id) ? .94 : .40));
       }
       ctx.globalAlpha = 1;
       drawInspection(active, colors, x, y, width, height, dpr);
@@ -692,7 +704,7 @@
       space.append(layer);
       passingLayer = layer;
       const departures = [], sizes = new Map(faceSizes);
-      for (const id of lips) {
+      for (const id of rearLinks.keys()) {
         const pane = points.get(id), node = model.N[id];
         const head = node && headsByLane.get(node.lane);
         if (!pane || !head || sizes.has(id)) continue;
@@ -744,6 +756,7 @@
       inspectable = angle === 1 && !travel;
       rearLayer.hidden = angle < .94;
       rearLayer.inert = !inspectable;
+      miniatures.toggleAttribute('hidden', !inspectable);
       if (!travel) {
         passingLayer?.remove();
         passingLayer = null;
@@ -776,11 +789,9 @@
           const past = travel.points.get(id);
           const origin = past || movedCamera(endpoint, targetTravel - travel.floorFrom);
           const ratio = endpoint.depth / origin.depth;
-          const glyphWidth = 2 + 7 * clamp(origin.scale, 0, 1);
-          const previous = travel.sizes.get(id) || (head
-            ? (past ? {width:glyphWidth, height:glyphWidth} : {width:head.width * ratio, height:head.height * ratio})
-            : {width:0, height:0});
-          const pose = cameraTravel(origin, endpoint, previous, displayed || previous, travel.progress);
+          const target = displayed || paneSize(headsByLane.get(model.N[id].lane), endpoint);
+          const previous = travel.sizes.get(id) || {width:target.width * ratio, height:target.height * ratio};
+          const pose = cameraTravel(origin, endpoint, previous, target, travel.progress);
           point = pose.point;
           if (head) displayed = pose.size;
         }
@@ -793,6 +804,7 @@
       }
       if (!rearLayer.hidden) {
         for (const [id, entry] of rearLinks) {
+          if (entry.paths) continue;
           const point = points.get(id), head = headsByLane.get(model.N[id].lane);
           const target = paneSize(head, layout.points.get(id));
           const prior = travel?.points.get(id);
@@ -840,19 +852,9 @@
       if (!hasVisibleFocus(el)) return;
       focusedByUser = el.dataset.headState || el.dataset.rearState;
       hovered = '';
-      tip.hidden = true;
+      showHistoryTitle();
       updateSelection();
       repaint();
-    }
-
-    function containsPoint(vertices, x, y) {
-      if (!vertices) return false;
-      let inside = false;
-      for (let i = 0, j = vertices.length - 1; i < vertices.length; j = i++) {
-        const a = vertices[i], b = vertices[j];
-        if ((a.y > y) !== (b.y > y) && x < (b.x - a.x) * (y - a.y) / (b.y - a.y) + a.x) inside = !inside;
-      }
-      return inside;
     }
 
     function updatePointer(event) {
@@ -861,50 +863,36 @@
       pointer = {clientX, clientY, pointerType:event.pointerType};
       const target = document.elementFromPoint(clientX, clientY);
       const link = target?.closest('.hc-face[data-head-state], .hc-rear');
-      let id = link?.dataset.headState || link?.dataset.rearState || '';
-      let canvasOnly = false;
-      const box = scene.getBoundingClientRect();
-      if (!id && target?.closest('.hc-space') === space && !target.closest('a, button, .hc-passing')) {
-        const x = clientX - box.left + scroll.scrollLeft, y = clientY - box.top + scroll.scrollTop;
-        let best = Infinity;
-        for (const {id: candidate, bounds, lip, block} of pickable) {
-          const dx = Math.abs(bounds.x - x), dy = Math.abs(bounds.y - y);
-          const distance = Math.hypot(dx, dy);
-          const insidePane = (dx <= bounds.rx && dy <= bounds.ry) ||
-            containsPoint(block?.top, x, y) || containsPoint(block?.side, x, y);
-          if (lip ? insidePane : distance <= bounds.rx + 3) {
-            // Painted small glyphs sit above lips. Within each kind select
-            // the nearest mark rather than a broad neighbor's hover radius.
-            const score = distance + (lip ? 100 : 0);
-            if (score >= best) continue;
-            best = score;
-            id = candidate;
-          }
-        }
-        canvasOnly = Boolean(id);
-      }
+      const id = link?.dataset.headState || link?.dataset.rearState || '';
       if (id !== hovered) {
         hovered = id;
         updateSelection();
         repaint();
       }
-      tip.hidden = !canvasOnly;
-      if (canvasOnly) {
-        const title = options.title(model.N[id]) || model.N[id].title || model.N[id].label || id;
-        if (tip.textContent !== title) tip.textContent = title;
-        tip.style.left = clamp(clientX - box.left + 11, 6, box.width - tip.offsetWidth - 6) + 'px';
-        tip.style.top = clamp(clientY - box.top + 12, 6, box.height - tip.offsetHeight - 6) + 'px';
-      }
-      return canvasOnly ? id : null;
+      showHistoryTitle();
+    }
+
+    function showHistoryTitle() {
+      const id = inspected(), entry = rearLinks.get(id);
+      tip.hidden = !entry;
+      if (!entry) return;
+      const box = scene.getBoundingClientRect();
+      const title = options.title(model.N[id]) || model.N[id].title || model.N[id].label || id;
+      if (tip.textContent !== title) tip.textContent = title;
+      const rect = entry.el.getBoundingClientRect();
+      const x = hovered && pointer ? pointer.clientX : rect.left + rect.width / 2;
+      const y = hovered && pointer ? pointer.clientY : rect.bottom;
+      tip.style.left = clamp(x - box.left + 11, 6, box.width - tip.offsetWidth - 6) + 'px';
+      tip.style.top = clamp(y - box.top + 12, 6, box.height - tip.offsetHeight - 6) + 'px';
     }
 
     scene.addEventListener('focusin', event => {
       const el = face(event);
       if (!silentFocus && hasVisibleFocus(el)) {
         hovered = '';
-        tip.hidden = true;
         focusedByUser = el.dataset.headState || el.dataset.rearState;
         options.select(focusedByUser);
+        showHistoryTitle();
         updateSelection();
         repaint();
       }
@@ -912,8 +900,7 @@
     scene.addEventListener('click', event => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const data = face(event)?.dataset;
-      const id = data?.headState || data?.rearState ||
-        (event.detail && event.target.closest('.hc-space') && updatePointer(event));
+      const id = data?.headState || data?.rearState;
       if (!id) return;
       event.preventDefault();
       event.stopPropagation();
@@ -922,6 +909,7 @@
     scene.addEventListener('focusout', event => {
       if (!face(event) || event.relatedTarget?.closest?.('.hc-face, .hc-rear')) return;
       focusedByUser = '';
+      showHistoryTitle();
       updateSelection();
       repaint();
     });
@@ -930,12 +918,13 @@
     scene.addEventListener('pointerleave', () => {
       pointer = null;
       hovered = '';
-      tip.hidden = true;
+      showHistoryTitle();
       updateSelection();
       repaint();
     });
     scroll.addEventListener('scroll', () => {
       if (pointer) updatePointer(pointer);
+      else if (!tip.hidden) showHistoryTitle();
       repaint();
       options.pan?.();
     }, {passive:true});
