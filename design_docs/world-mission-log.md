@@ -1557,3 +1557,55 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 **Next:** no answer-independent row 243 work remains. Until Mark answers D-WORLD-119, the next fire has no routable build row (release rows 150/151 are attended; rows 258/259/261 sit under rule (d)) and records a rule-(d) block report. With 119 = A or B, the next loop work is the V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence).
 
 **Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16 09:06Z; next Monday 2026-11-23). The weekly external-issue sweep already ran this week at 393.
+
+## 410 — 2026-11-19 — no pick: rule (d) block report; row 243 V4 S3–S12 wait on D-WORLD-119 (S9–S11 also 120); Gate 0's self-notices rc 2 added to the fleet ticket `gate0:self-notices-rc2-no-watermark-file` (row 262); dev green at `f267fac4` [ADMIN]
+
+**Kind:** no-pick iteration. Nothing is loop-routable without an answer from Mark, so standing rule (d) applies. There is no design, plan, code or product acceptance. The record is the STATUS stamp (407 moved to the archive), the Current route line, queue row 262, this entry, the regenerated index, the dashboard and `verification/world-iter410/gate1-2-readings.txt`. An independent judge reviews the record before merge.
+
+**Pick and why:** none. Clause map at `f267fac4`: 1.0 clauses 1–7 MET, so there is no UNMET clause and no critical-path row.
+- **What moved since iteration 409's Gate-1 base (`4b1c39e2`):** only 409's own work. 7 commits: plan `1f083c2f`, M1–M3 `e582b846`/`7f490bd7`/`0e9e8d35`, merge `07b30a5e`, record `c6214e24`, merge `f267fac4`. 0 `| D-WORLD` lines changed.
+- **Ledger:** `--check` valid, 107 rows; `--open` → D-WORLD-119, D-WORLD-120, both unchanged since iteration 406 filed them.
+- **Row 243 (D-WORLD-109 granted scope):** V4 design §8, re-read this fire, gates S3–S8 on 119 A/B, S9–S11 also on 120 A/B, and S12 on 119 A. S1, S2 and S2b are landed. No answer-independent V4 sprint is left.
+- **Row 150** waits on the attended A1 (descriptor publish, `session mint`, capture, promotion). Subjects in range matching `row ?150|A1|marketing` → **0**; control `row 243|record|merge` → **7**.
+- **Row 151** needs row 188's N2d and N4a. Subjects since 2026-10-01 matching `N2d|N4a` → **0**; control `N2c` → **1**. Non-test `.go` files naming N2d's `file.json` route → **0**; control `surface` → **92**.
+- **Rows 217–219** are on the attended track beside row 188 (D-WORLD-94). **Rows 258, 259, 261** sit under rule (d), below the release rows (D-WORLD-109 (2)).
+- **External predicates:** no row in the routable set waits on an upstream party this fire; the only outward predicate is the new fleet ticket below.
+
+**Gate 0:**
+- Stamped first (rc 0). Kill switch armed (`mission-world.disabled` absent). `gh` is `sunholo-voight-kampff`. Billing CLEAN. The env was read by name, then specific non-secret values.
+- Directives: 0 allowlisted on #574 (19 comments, read from the epoch because `mission-574-last-seen` is absent), 0 on #574 and #524 since `2026-10-27T09:03:42Z` (the mission-scoped watermark, per the charter's two-watermark rule), 0 ever on issue #1. Nothing to `--mark`; no watermark moved.
+- **Self-notices (step 6a):** the prescribed form (two issue-scoped watermarks) → rc 2 `watermark channel unavailable`, as on every fire since 371. Re-run with `--watermark-file mission-world-last-seen` → **rc 1**, `A FIRE DIED`: 1 crash notice (#524, `2026-11-13T09:48:25Z`, rc 1) and 1 transcript notice (#524, fire `world-1794807071-53892`, 2 hits), control 107:4 ok. Both were already credited: the crash is the 2026-11-13 10:31 CET fire (driver log `slot-verdict: CRASHED at=gate-3 rc=1`, 10:48:12 local), listed in entry 393's "Orphans — three dead attempts"; the transcript notice is in entry 394's Gate 0 inbox line. So nothing new died. The died-mid-flight traces ran anyway: 0 open PRs from the fleet account, the three iteration-409 worktrees have 0 porcelain lines each, no `iter410` branch existed on origin, and the last two slot verdicts are `COMPLETED rc=0`.
+- **Harness ticket:** the fleet already had `gate0:self-notices-rc2-no-watermark-file` open (filed by stapledon 2026-11-18). World had recorded the same rc 2 in about 39 entries without filing it. Filed World's occurrence under the same signature (`--blocking none`, `--workaround none`; message `inbox_1795052586078_70d26102`); `ticket open` now reads count 2, missions `stapledon,world`. Queue row 262 records it. One error in the filed evidence: it says the mission-scoped re-run "returns rc=0"; it exits rc 1. My first reading went through `| tail`, and that was tail's code. The verdict text in the ticket is correct.
+- Inbox: `messages list --unread --inbox mission-world` → none. Skill drift: `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target `cmp` equal to the driver clone's `origin/dev`, and equal to the pin's copies (gate-1 rule (d) form, with the `resources/` prefix this time).
+- Dev CI at `f267fac4`: 3/3 check-runs success. Main checkout level with `origin/dev`; only the known untracked residue (Mark's drafts, `.wt-world-iter306-r0`, `.claude/worktrees/`), untouched.
+
+**Gate 1:** `git rev-parse dev origin/dev` both `f267fac4…`. Gate-1 base `f267fac413182976765b697648740f1b145c5044@2026-11-19T01:39:50Z`. 0 open PRs from the fleet account. Record written in its own worktree (`mission/world-iter410-record` from `f267fac4`, `mission-worktree.sh add` then `wait` → ready).
+
+**Designer / planner / executor:** not spawned. A no-pick iteration has no doc, plan or code, so the routing table has nothing to send them. No spawn was attempted, so none failed. The driver's routing note says the codex lane probed rc 1 this fire (planner → opus, executor → `claude:claude-haiku-5-5`); neither role was needed.
+
+**Independent evaluator (record):** REQUIRED. `resolve-role-spawn.sh evaluator` → `agent-tool sonnet declared:alias-pin`. Agent `sonnet`, fresh foreground read-only context, judging the record commit before merge. Result in the follow-through below.
+
+**Routing evidence:** base=f267fac413182976765b697648740f1b145c5044@2026-11-19T01:39:50Z (Gate 1).
+- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner, executor unused.
+- Evaluator: Agent `sonnet` (tokens in the follow-through). Generator ≠ judge: opus controller, sonnet judge.
+- Quorum: none (no doc). Metered $0.
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at 2 of 12 sprints (S2b landed in 409). Every remaining V4 sprint waits on D-WORLD-119.
+
+**Ruled out:**
+- Picking 150, 151, 217–219, 243, 258, 259 or 261: measured reasons above.
+- Treating the mission-scoped self-notices verdict (`A FIRE DIED`) as a new death: both notices are credited (393, 394), and the traces are clean.
+- Hand-writing `mission-574-last-seen` to make the prescribed read work: Gate 0 step 8 forbids writing a watermark by hand, and the fix is the fleet's.
+- Promoting the idle fingerprint: Gate 5 forbids it when the fire degraded, and this fire's codex probe failed (driver routing note).
+- Re-asking D-WORLD-119/120: both asks are already in the digest, unchanged.
+- Rotating the log: 21 live entries with this one, below ~40. The index is regenerated with `rotate-log --index-only`.
+
+**Retro:**
+1. **A "still" with a known cause, carried 39 times.** Each entry since 371 wrote "rc 2, an instrument failure, not a verdict" and moved on. That was correct per entry, but the gap was never escalated, and the gate could not see a death on its own for that whole stretch. The fix for the loop is the ticket, now filed, not a local workaround.
+2. **Instance 3 of an exit code read through a pipe** (verification rule 3): my first self-notices re-run read `rc=0` from `| tail -15`. The script exits 1. Caught when I re-captured the readings under `bash` with the code taken directly. The ticket evidence carries the wrong code (noted above).
+3. **zsh again** (memory `controller-shell-is-zsh`): `set -- $spec` did not word-split, and `PIPESTATUS` is absent, in my first readings capture. Re-run as a `bash` script; nothing was written from the bad run.
+- Harness share: this entry files 1 ticket (an escalation, the correct outcome) and fixes nothing. No skill edit.
+
+**Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence). Unanswered, another rule-(d) block report. A dev red outranks either way. The fleet's `harness-resolved` reply for `gate0:self-notices-rc2-no-watermark-file` unparks row 262.
+
+**Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16 09:06Z; next boundary Monday 2026-11-23 07:00 local). The weekly external-issue sweep ran this week at 393.
