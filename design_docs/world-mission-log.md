@@ -1774,3 +1774,5 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
   4. "Ten days" fits 2026-11-09 → 2026-11-19. No change.
   5. Gate 3b's CI line is added after the record PR runs.
 - **What it did not check:** the readings file's content, the skill-drift `cmp`, the #524 notices and watermark files, the 410/411 worktrees, the pending fingerprint's contents, the index beyond its new line, and the #574 comment counts.
+
+**Gate 3b (record PR #616):** head `a5a4c128` run 44499502941 attempt 1 read **3/3** (`ailang-code verify gate`, `go host build + test gate`, `go race gate`), first time. Neither row 259's flake nor 411's `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision` recurred. This line is a new head, so the PR is polled again on it before merge. If that head flakes, it is re-run and merged without another commit, and the instance is named in the merge commit body and the Gate-5 report.
