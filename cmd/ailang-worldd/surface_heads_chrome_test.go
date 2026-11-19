@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"path/filepath"
+	"sync"
 	"testing"
 )
 
@@ -24,7 +26,7 @@ func TestSurfaceHeadsOpensExactHistoryInChrome(t *testing.T) {
 	}
 	open("/surface")
 	wait(`document.documentElement.dataset.ready === '1' &&
-		document.querySelector('#heads-link')?.getAttribute('href') === '/surface/heads'`)
+		new URL(document.querySelector('#heads-link').href).pathname === '/surface/heads'`)
 	b.do(t, nil, "tap", map[string]any{"id": "heads-link"})
 
 	const lane = "row-189"
@@ -36,6 +38,16 @@ func TestSurfaceHeadsOpensExactHistoryInChrome(t *testing.T) {
 		[...document.querySelectorAll('h1')].some(h => h.textContent.trim() === 'Branch heads' && h.getClientRects().length) &&
 		document.querySelector('.wh-card[data-head=%q] .wh-open')?.getAttribute('href') === %q`,
 		lane, stackPath(tip)))
+
+	// An older lane may be folded in the present slice. Recall it through
+	// the same navigator an operator uses before inspecting its history.
+	wait(fmt.Sprintf(`(() => {
+		const pick = document.querySelector('.wh-picker select');
+		if (!pick || !Array.from(pick.options).some(o => o.value === %q)) return false;
+		pick.value = %q;
+		pick.dispatchEvent(new Event('change', {bubbles:true}));
+		return true;
+	})()`, lane, lane))
 
 	focus := func(selector string) {
 		t.Helper()
@@ -85,4 +97,36 @@ func TestSurfaceHeadsOpensExactHistoryInChrome(t *testing.T) {
 	focus(fmt.Sprintf(`.wh-history[open] a[href=%q]`, stackPath(earlierState)))
 	enter()
 	assertStackAndReturn(earlierState)
+}
+
+// The model can arrive first. Hold the stack response until Chrome has built
+// the timeline, then verify that the user still sees only the stack loader.
+func TestSurfaceHeadsDirectStackWhileLoadingInChrome(t *testing.T) {
+	b := startPasskeyBrowser(t)
+	resume := make(chan struct{})
+	var once sync.Once
+	release := func() { once.Do(func() { close(resume) }) }
+	index := filepath.Join("..", "..", "host", "surface", "testdata", "index-rig.json")
+	origin := cardOrigin(t, filepath.Join(t.TempDir(), "credentials.db"), index, func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/surface/stack.json" {
+				select {
+				case <-resume:
+				case <-r.Context().Done():
+					return
+				}
+			}
+			next.ServeHTTP(w, r)
+		})
+	})
+	defer release()
+	b.do(t, nil, "tab", nil)
+	const id = "f36428abd9a72e5093b61cba14e716c37019f1ef"
+	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface?brane=row-189&at=" + id + "#heads", "raw": true})
+	b.do(t, nil, "waitFor", map[string]any{"expression": `document.querySelector('#tl .node') &&
+		document.querySelector('#stage').dataset.view === 'stack-loading' &&
+		document.querySelector('#L0').inert && getComputedStyle(document.querySelector('#L0')).visibility === 'hidden'`})
+	release()
+	b.do(t, nil, "waitFor", map[string]any{"expression": fmt.Sprintf(`document.querySelector('#stage').dataset.view === 'brane' &&
+		document.querySelector('#front')?.dataset.front === %q`, id)})
 }

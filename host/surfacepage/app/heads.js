@@ -4,7 +4,7 @@
   const PAGE_SIZE = 16;
   const HISTORY_PAGE = 40;
   const STORAGE_KEY = 'world-heads-worktable';
-  const QUIET_AGE = 7 * 24 * 60 * 60 * 1000;
+  const DAY = 24 * 60 * 60 * 1000;
   const defaultColour = '#657b91';
   const viewByContainer = new WeakMap();
   const timeFormat = new Intl.DateTimeFormat(undefined, {
@@ -13,11 +13,24 @@
   const rearTimeFormat = new Intl.DateTimeFormat(undefined, {
     month: 'short', day: 'numeric', timeZone: 'UTC'
   });
-  const glyphs = { circle: '○', square: '▪', triangle: '▲', diamond: '◆', hexagon: '⬢', pentagon: '⬟', star: '★' };
+  const {glyph, label: braneLabel, sharedInk} = WorldBrane;
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
   const title = state => state.title || state.summary || state.label || state.id;
-  const stateTime = state => Date.parse(state?.at) || 0;
+  const stateTime = state => {
+    const time = Date.parse(state?.at);
+    return Number.isFinite(time) ? time : -Infinity;
+  };
+  const lastActivity = head => head.states.reduce((latest, state) => Math.max(latest, stateTime(state)), stateTime(head.latest));
+  const stateAttributes = state => `data-head-state="${esc(state.id)}" data-state="${esc(state.id)}"`;
   const colour = head => /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(head.colour) ? head.colour : defaultColour;
+  const headGlyph = head => glyph(head.glyph, head.glyph === 'circle' ? sharedInk : colour(head), 12);
+  const headLabel = head => braneLabel(head.name, head.row);
+  const ageStamp = head => {
+    const label = esc(head.ageLabel);
+    if (head.liveNow || !Number.isFinite(head.activity)) return `<span class="wh-age">${label}</span>`;
+    const at = new Date(head.activity).toISOString();
+    return `<time class="wh-age" datetime="${at}" title="Last recorded activity: ${esc(timeFormat.format(head.activity))} UTC">${label}</time>`;
+  };
   const stamp = (state, compact = false) => state.at && Number.isFinite(Date.parse(state.at))
     ? `<time datetime="${esc(state.at)}" title="${esc(state.at)}">${esc((compact ? rearTimeFormat : timeFormat).format(Date.parse(state.at)))}${compact ? '' : ' UTC'}</time>`
     : '<span>Time unavailable</span>';
@@ -36,7 +49,7 @@
     const positions = new Map(Array.isArray(persisted?.positions) ? persisted.positions : []);
     let selected = typeof persisted?.selected === 'string' ? persisted.selected : '';
     let page = Number.isInteger(persisted?.page) ? Math.max(0, persisted.page) : 0;
-    let stale = false, quietBefore = 0, heads = [], headByKey = new Map(), entries = new Map();
+    let stale = false, currentModel, heads = [], headByKey = new Map(), entries = new Map();
     let drag, pending, historyKey, historyLimit = HISTORY_PAGE;
     let firstRender = true;
     let width = 280, boardHeight = 0;
@@ -44,13 +57,20 @@
     container.classList.add('world-heads');
     container.innerHTML = `
       <header class="wh-bar">
-        <div><h1>Branch heads</h1><p>Drag a head to move it. Select any pane to open its recorded state.</p></div>
+        <div><h1>Branch heads</h1><p>Branes seen end-on. Select an older brane to bring it forward.</p></div>
         <div class="wh-readout"><p class="wh-counts"></p><p class="wh-status" role="status"></p></div>
       </header>
       <div class="wh-board" role="region" aria-label="Branch head worktable" tabindex="0">
-        <div class="wh-plane"></div>
+        <div class="wh-plane">
+          <svg class="wh-links" aria-hidden="true"></svg>
+          <div class="wh-band" data-band="front"></div>
+          <div class="wh-band" data-band="near"></div>
+          <div class="wh-band" data-band="far"></div>
+          <div class="wh-cards"></div>
+        </div>
         <p class="wh-empty" hidden></p>
       </div>
+      <div class="wh-link-details" hidden></div>
       <footer class="wh-nav" aria-label="Worktable navigation">
         <details class="wh-sessions" hidden><summary></summary><ul></ul></details>
         <div class="wh-tokens" role="group" aria-label="Heads on this page"></div>
@@ -68,6 +88,8 @@
       </dialog>`;
     const find = q => container.querySelector(q);
     const board = find('.wh-board'), plane = find('.wh-plane'), empty = find('.wh-empty');
+    const cards = find('.wh-cards'), svg = find('.wh-links'), linkDetails = find('.wh-link-details');
+    const bands = [...plane.querySelectorAll('.wh-band')];
     const status = find('.wh-status'), counts = find('.wh-counts'), nav = find('.wh-nav'), picker = find('.wh-picker select');
     const tokens = find('.wh-tokens'), pages = find('.wh-pages'), reset = find('.wh-reset');
     const sessions = find('.wh-sessions'), history = find('.wh-history'), list = history.querySelector('ol');
@@ -81,12 +103,20 @@
 
     addEventListener('pagehide', save);
 
+    function renderLinks() {
+      window.WorldHeadLinks?.render(svg, linkDetails, currentModel, entries, selected);
+    }
+
     function focusHead(key) {
-      if (!headByKey.has(key)) return;
+      if (!headByKey.has(key) || selected === key) return;
+      const previous = headByKey.get(selected);
+      const next = headByKey.get(key);
       selected = key;
       entries.forEach(({el}, id) => el.classList.toggle('is-selected', id === key));
       tokens.querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.locate === key)));
       picker.value = key;
+      if ((previous && previous.depth !== 'front') || next.depth !== 'front') layout();
+      else renderLinks();
       save();
     }
 
@@ -98,28 +128,33 @@
       const state = head.latest;
       const earlier = orderedStates(head);
       const past = earlier.slice(0, 3).map((record, i) => `
-        <a class="wh-rear" data-depth="${i + 1}" href="${esc(href(head, record))}" title="${esc(title(record))}">
+        <a class="wh-rear" data-depth="${i + 1}" ${stateAttributes(record)} href="${esc(href(head, record))}" title="${esc(title(record))}">
           ${stamp(record, true)} <span>${esc(title(record))}</span>
         </a>`).reverse().join('');
       const text = state ? title(state) : 'No recorded state';
       const stateContent = state?.id
-        ? `<a class="wh-open" href="${esc(href(head, state))}" title="${esc(text)}">${esc(text)}</a>`
+        ? `<a class="wh-open" ${stateAttributes(state)} href="${esc(href(head, state))}" title="${esc(text)}">${esc(text)}</a>`
         : `<strong class="wh-open">${esc(text)}</strong>`;
       const info = state ? stateLabel(state) : '';
       const [session] = head.live;
       const sessionText = stale ? 'Seen live' : head.live.length > 1 ? head.live.length + ' live' : 'Live';
       const sessionTitle = stale ? 'Last seen running' : 'Running session';
       const sessionControl = !session ? '' : head.live.length === 1
-        ? `<a class="wh-live${stale ? ' was-live' : ''}" href="${esc(href(head, session))}" title="${esc(sessionTitle + ' / ' + session.episode)}">${sessionText}</a>`
+        ? `<a class="wh-live${stale ? ' was-live' : ''}" ${stateAttributes(session)} href="${esc(href(head, session))}" title="${esc(sessionTitle + ' / ' + session.episode)}">${sessionText}</a>`
         : `<button class="wh-live${stale ? ' was-live' : ''}" type="button" data-history>${sessionText}</button>`;
       return `
+        <button class="wh-restore" type="button" aria-label="Bring ${esc(headLabel(head))} forward. ${esc(head.ageLabel)}" title="${esc(headLabel(head))}">
+          <span class="wh-glyph" aria-hidden="true">${headGlyph(head)}</span>
+          <span class="wh-head-name">${esc(headLabel(head))}</span>
+          ${ageStamp(head)}
+        </button>
         ${past ? `<div class="wh-depth" data-count="${Math.min(3, earlier.length)}" aria-hidden="true"></div>` : ''}
         ${past}
         <div class="wh-face">
           <div class="wh-handle">
-            <button class="wh-grip" type="button" aria-label="Move ${esc(head.name)}" title="Drag or use the arrow keys to move this head">
-              <span aria-hidden="true" class="wh-glyph">${glyphs[head.glyph] || '•'}</span>
-              <span class="wh-head-name">${esc(head.name)}</span>
+            <button class="wh-grip" type="button" aria-label="Move ${esc(headLabel(head))}" title="Drag or use the arrow keys to move this head">
+              <span aria-hidden="true" class="wh-glyph">${headGlyph(head)}</span>
+              <span class="wh-head-name">${esc(headLabel(head))}</span>
               <i aria-hidden="true"></i>
             </button>
             ${sessionControl}
@@ -130,9 +165,10 @@
             ${info && info !== text ? `<span class="wh-record" title="${esc(info)}">${esc(info)}</span>` : ''}
           </div>
           <div class="wh-meta">
-            ${state ? `<span class="wh-stamp">${stamp(state)}</span>` : ''}
+            ${ageStamp(head)}
+            ${state ? `<span class="wh-stamp">${stamp(state, true)}</span>` : ''}
             ${earlier.length > 3 ? `<button class="wh-all" type="button" data-history>All ${earlier.length + 1} states</button>` : ''}
-            <button class="wh-details" type="button" data-history aria-label="Details for ${esc(head.name)}">Details</button>
+            <button class="wh-details" type="button" data-history aria-label="Details for ${esc(headLabel(head))}">Details</button>
           </div>
         </div>`;
     }
@@ -146,29 +182,81 @@
       const cell = overview ? 127 : 214;
       const columns = Math.min(4, Math.max(1, Math.floor((available + gap) / (cell + gap))));
       width = Math.min(320, Math.floor((available - gap * (columns - 1)) / columns));
-      const usedWidth = columns * width + (columns - 1) * gap;
-      const left = Math.max(gutter, (board.clientWidth - usedWidth) / 2);
-      boardHeight = Math.max(board.clientHeight, Math.ceil(entries.size / columns) * 236 + 18);
-      plane.style.setProperty('--wh-width', width + 'px');
-      plane.style.height = boardHeight + 'px';
-      let index = 0;
-      entries.forEach(({el}, key) => {
-        const column = index % columns;
-        const startX = left + column * (width + gap);
-        const startY = 104 + Math.floor(index / columns) * 236 + (column % 2) * 18;
-        const saved = positions.get(key);
-        if (saved) applyPosition(el, 8 + saved[0] * dragWidth(), saved[1]);
-        else applyPosition(el, startX, startY);
-        index++;
+
+      const active = document.activeElement;
+      let replacementFocus;
+      const pageEntries = [...entries.values()];
+      const fallback = pageEntries.find(entry => entry.head.depth === 'front' || entry.head.key === selected) ? null : pageEntries[0];
+      const groups = {front: [], near: [], far: []};
+      for (const entry of pageEntries) {
+        const {el, head} = entry;
+        const depth = head.key === selected || entry === fallback ? 'front' : head.depth;
+        if (el.dataset.zone !== depth && el.contains(active)) {
+          if (depth === 'far') replacementFocus = el.querySelector('.wh-restore');
+          else if (active.classList.contains('wh-restore')) replacementFocus = el.querySelector('.wh-grip');
+        }
+        el.dataset.zone = depth;
+        groups[depth].push(entry);
+      }
+      const recalled = groups.front.findIndex(({head}) => head.key === selected && head.depth !== 'front');
+      if (recalled > 0) groups.front.unshift(...groups.front.splice(recalled, 1));
+
+      let nextTop = 12;
+      const slots = [];
+      bands.forEach(band => {
+        const group = band.dataset.band;
+        const members = groups[group];
+        const front = group === 'front', far = group === 'far';
+        band.hidden = !members.length;
+        if (!members.length) return;
+
+        const count = far ? Math.min(6, Math.max(columns, Math.floor((available + 8) / 166))) : columns;
+        const cardGap = far ? 8 : gap;
+        const cardWidth = front ? width : Math.min(far ? 206 : 270, Math.floor((available - cardGap * (count - 1)) / count), far ? width : Math.floor(width * .9));
+        const left = Math.max(gutter, (board.clientWidth - count * cardWidth - (count - 1) * cardGap) / 2);
+        const rowHeight = front ? 239 : far ? 43 : 192;
+        const firstFace = nextTop + (front ? 114 : far ? 34 : 90);
+        if (front) {
+          const hasRecent = members.some(({head}) => head.depth === 'front');
+          band.textContent = fallback ? 'Foreground · Latest on this page'
+            : recalled >= 0 ? (hasRecent ? 'Foreground · Selected, live or past 48h' : 'Foreground · Selected brane')
+            : 'Foreground · Live or past 48h';
+        } else {
+          band.textContent = far ? 'Older branes · 7d+' : 'Further back · 2–7d';
+        }
+        band.style.setProperty('--wh-band-top', nextTop + 'px');
+        band.style.setProperty('--wh-band-side', gutter + 'px');
+
+        members.forEach((entry, index) => {
+          const column = index % count;
+          entry.el.style.setProperty('--wh-width', cardWidth + 'px');
+          slots.push({
+            entry,
+            x: left + column * (cardWidth + cardGap),
+            y: firstFace + Math.floor(index / count) * rowHeight + (front ? (column % 2) * 14 : 0),
+          });
+        });
+        nextTop = firstFace + (Math.ceil(members.length / count) - 1) * rowHeight + (front ? 169 : far ? 48 : 140);
       });
+      boardHeight = Math.max(board.clientHeight, nextTop);
+      plane.style.height = boardHeight + 'px';
+      slots.forEach(({entry: {el, head}, x, y}, index) => {
+        if (cards.children[index] !== el) cards.insertBefore(el, cards.children[index] || null);
+        const saved = el.dataset.zone === 'front' ? positions.get(head.key) : null;
+        if (saved) applyPosition(el, 8 + saved[0] * dragWidth(el), saved[1]);
+        else applyPosition(el, x, y);
+      });
+      if (replacementFocus) replacementFocus.focus({preventScroll:true});
+      else if (cards.contains(active) && document.activeElement !== active) active.focus({preventScroll:true});
+      renderLinks();
     }
 
-    function dragWidth() { return Math.max(1, board.clientWidth - width - 16); }
+    function dragWidth(el) { return Math.max(1, board.clientWidth - el.offsetWidth - 16); }
 
     function applyPosition(el, x, y) {
       const position = [
-        Math.round(Math.max(8, Math.min(board.clientWidth - width - 8, x))),
-        Math.round(Math.max(88, Math.min(boardHeight - el.offsetHeight - 10, y)))
+        Math.round(Math.max(8, Math.min(board.clientWidth - el.offsetWidth - 8, x))),
+        Math.round(Math.max(el.dataset.zone === 'far' ? 8 : 88, Math.min(boardHeight - el.offsetHeight - 10, y)))
       ];
       el.style.left = position[0] + 'px';
       el.style.top = position[1] + 'px';
@@ -177,7 +265,8 @@
 
     function move(el, x, y) {
       const [left, top] = applyPosition(el, x, y);
-      positions.set(el.dataset.head, [(left - 8) / dragWidth(), top]);
+      positions.set(el.dataset.head, [(left - 8) / dragWidth(el), top]);
+      renderLinks();
     }
 
     function drawPage() {
@@ -185,12 +274,12 @@
       const previous = entries;
       const active = document.activeElement;
       entries = new Map();
-      shown.forEach((head, index) => {
+      shown.forEach(head => {
         const previousEntry = previous.get(head.key);
         const el = previousEntry?.el || document.createElement('article');
         const markup = card(head);
         const focusedClass = el.contains(active) && active.className;
-        el.className = 'wh-card' + (head.key === selected ? ' is-selected' : '') + (head.live.length || stateTime(head.latest) >= quietBefore ? '' : ' is-quiet');
+        el.className = 'wh-card' + (head.key === selected ? ' is-selected' : '');
         el.dataset.head = head.key;
         el.style.setProperty('--wh-base', colour(head));
         if (previousEntry?.markup !== markup) {
@@ -201,15 +290,15 @@
             (replacement || el.querySelector('.wh-grip'))?.focus({preventScroll:true});
           }
         }
-        if (plane.children[index] !== el) plane.insertBefore(el, plane.children[index] || null);
-        entries.set(head.key, {el, markup});
+        if (el.parentNode !== cards) cards.append(el);
+        entries.set(head.key, {el, markup, head});
       });
       previous.forEach(({el}, key) => { if (!entries.has(key)) el.remove(); });
       const tokenFocus = tokens.contains(active) ? active.dataset.locate : '';
       const tokenMarkup = shown.slice(0, 8).map(head => `
-        <button type="button" data-locate="${esc(head.key)}" title="${esc(head.name)}"
-          aria-label="Locate ${esc(head.name)}" style="--wh-token:${colour(head)}">
-          ${glyphs[head.glyph] || '•'}
+        <button type="button" data-locate="${esc(head.key)}" title="${esc(headLabel(head))}"
+          aria-label="Locate ${esc(headLabel(head))}" style="--wh-token:${colour(head)}">
+          ${headGlyph(head)}
         </button>`).join('');
       if (tokens.dataset.markup !== tokenMarkup) {
         tokens.innerHTML = tokenMarkup;
@@ -237,17 +326,18 @@
       const el = entries.get(key).el;
       el.scrollIntoView({block:'center', inline:'nearest'});
       if (focus) el.querySelector('.wh-grip').focus({preventScroll:true});
+      save();
     }
 
     function renderHistory(resetScroll = false) {
       const head = headByKey.get(historyKey);
       if (!head?.latest?.id) { if (history.open) history.close(); return; }
       const all = [head.latest, ...orderedStates(head)];
-      history.querySelector('h2').textContent = head.name;
+      history.querySelector('h2').textContent = headLabel(head);
       const liveMarkup = head.live.length ? `
         <h3>${stale ? 'Last seen running' : 'Running sessions'}</h3>
         <ul>${head.live.map(session => `
-          <li><a href="${esc(href(head, session))}">${esc(session.episode)}</a>
+          <li><a ${stateAttributes(session)} href="${esc(href(head, session))}">${esc(session.episode)}</a>
           <span>${esc(session.label || '')}</span></li>`).join('')}</ul>` : '';
       if (liveList.dataset.markup !== liveMarkup) {
         const link = liveList.contains(document.activeElement) && document.activeElement.getAttribute('href');
@@ -256,7 +346,7 @@
         if (link) [...liveList.querySelectorAll('a')].find(el => el.getAttribute('href') === link)?.focus({preventScroll:true});
       }
       const markup = all.slice(0, historyLimit).map((state, index) => `
-        <li><div><a href="${esc(href(head, state))}">${esc(title(state))}</a>
+        <li><div><a ${stateAttributes(state)} href="${esc(href(head, state))}">${esc(title(state))}</a>
           ${index === 0 && state.summary && state.summary !== title(state) ? `<p>${esc(state.summary)}</p>` : ''}
           ${index === 0 && stateLabel(state) ? `<span>${esc(stateLabel(state))}</span>` : ''}
         </div> ${stamp(state)}</li>`).join('');
@@ -273,6 +363,10 @@
     container.addEventListener('click', event => {
       const button = event.target.closest('button');
       const el = event.target.closest('.wh-card');
+      if (button?.classList.contains('wh-restore') && el) {
+        locate(el.dataset.head, true);
+        return;
+      }
       if (el) focusHead(el.dataset.head);
       if (!button) return;
       if (button.dataset.locate) locate(button.dataset.locate, true);
@@ -341,10 +435,20 @@
       if (drag) { pending = [model, options]; return; }
       const projection = model ? window.WorldHeadsData.project(model) : {heads: [], unlinked: [], status: ''};
       stale = Boolean(options.stale);
-      quietBefore = (Date.parse(model?.now) || Date.now()) - QUIET_AGE;
+      currentModel = model;
+      const modelTime = Date.parse(model?.now);
+      const now = Number.isFinite(modelTime) ? modelTime : Date.now();
       const selectedWasVisible = entries.has(selected);
-      heads = [...projection.heads].sort((a, b) =>
-        Number(b.live.length > 0) - Number(a.live.length > 0) || stateTime(b.latest) - stateTime(a.latest) || (b.latest?.rank ?? 0) - (a.latest?.rank ?? 0) || a.name.localeCompare(b.name));
+      heads = projection.heads.map(head => {
+        const activity = lastActivity(head);
+        const elapsed = Math.max(0, now - activity);
+        const age = Math.floor(elapsed / DAY);
+        const live = !stale && head.live.length > 0;
+        const depth = live || elapsed < 2 * DAY ? 'front' : elapsed < 7 * DAY ? 'near' : 'far';
+        const ageLabel = live ? 'Active now' : !Number.isFinite(age) ? 'Date unknown' : age === 0 ? 'Past 24h' : age < 365 ? age + 'd ago' : Math.floor(age / 365) + 'y ago';
+        return {...head, activity, liveNow: live, depth, ageLabel};
+      }).sort((a, b) =>
+        Number(b.liveNow) - Number(a.liveNow) || b.activity - a.activity || (b.latest?.rank ?? 0) - (a.latest?.rank ?? 0) || a.name.localeCompare(b.name));
       headByKey = new Map(heads.map(head => [head.key, head]));
       const restore = firstRender && heads.length;
       if (restore) {
@@ -373,7 +477,7 @@
         ? [options.reason || 'World’s branch history is unavailable.', 'This view will retry automatically.'].join(' ')
         : 'Waiting for World’s branch history.');
       const optionMarkup = '<option value="">Jump to…</option>' + heads.map(head =>
-        `<option value="${esc(head.key)}">${esc(head.name)}${head.repo ? ' / ' + esc(head.repo) : ''}</option>`).join('');
+        `<option value="${esc(head.key)}">${esc(headLabel(head))}${head.repo ? ' / ' + esc(head.repo) : ''}</option>`).join('');
       if (picker.dataset.markup !== optionMarkup) {
         picker.innerHTML = optionMarkup;
         picker.dataset.markup = optionMarkup;

@@ -392,3 +392,19 @@ button { user-select: none; -webkit-user-select: none; }
 .world-view-link { display:inline-flex;align-items:center;min-height:44px;flex:none;color:var(--hText);font-weight:650;text-underline-offset:4px; }
 .world-view-link:focus-visible { outline:2px solid currentColor; }
 @media(max-width:700px){.world-view-link{font-size:12px}}
+
+/* A projected brane's edge and glyph travel together between documents. */
+.projection-carrier { position:fixed; inset:0; z-index:100; pointer-events:none; overflow:hidden; }
+.projection-edge,.projection-marker { position:absolute; transform-origin:0 0; }
+.projection-edge { border:2px solid var(--projection-ink); border-radius:var(--r); background:color-mix(in srgb,var(--projection-ink) 12%,transparent); }
+.projection-marker { display:grid; place-items:center; filter:drop-shadow(0 0 4px var(--stageBg)); }
+.projection-marker > * { margin:0 !important; }
+@media (prefers-reduced-motion:reduce) { .projection-carrier { display:none; } }
+
+#state-status { position:absolute; inset:0; min-height:0; overflow:auto; background:var(--stageBg); padding:clamp(24px,8vw,84px); }
+#state-status h1 { font-size:clamp(18px,3vw,24px); margin:0 0 8px; }
+#state-status p { margin:0 0 16px; }
+#state-status a { color:var(--text); margin-right:16px; }
+.stage[data-view="stack-loading"] #L0,
+.stage[data-view="stack-error"] #L0 { visibility:hidden; }
+.direct-stack .layer { transition:none; }

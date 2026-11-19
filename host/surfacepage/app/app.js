@@ -27,21 +27,9 @@
     .replace(/\s+:/g, ':').replace(/\s{2,}/g, ' ').trim();
   const shortTitle = (t, max = 44) => { const c = cleanTitle(t); if (c.length <= max) return c; const cut = c.slice(0, max); return cut.slice(0, Math.max(cut.lastIndexOf(' '), max - 10)).replace(/[\s,;:—–-]+$/, '') + '…'; };
   const summaryOf = n => String(n.summary || '').replace(/\s+-\s+/g, ' ').replace(/\s{2,}/g, ' ').trim();
-  // A lane's label: its name and, for a row whose name is not already "row N", the row.
-  const rowLabel = (name, row) => row && name !== 'row ' + row ? `${name} · row ${row}` : String(name || '');
+  const {glyph: gl, label: rowLabel, sharedInk: SHARED_INK} = WorldBrane;
   // A shared world's lane: "shared" in v1, "<repo>:brane:shared" in follow mode (row 220 M4).
   const isSharedKey = k => k === 'shared' || /^[a-z][a-z0-9-]*:brane:shared$/.test(String(k == null ? '' : k));
-
-  // ---------- Glyphs (one shape per brane; colour from the data) ----------
-  const CLIP = { square: 'none', triangle: 'polygon(50% 4%, 100% 96%, 0 96%)', diamond: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)',
-    hexagon: 'polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0 50%)', pentagon: 'polygon(50% 0, 100% 38%, 81% 100%, 19% 100%, 0 38%)',
-    star: 'polygon(50% 0, 62% 35%, 99% 36%, 69% 58%, 80% 95%, 50% 73%, 20% 95%, 31% 58%, 1% 36%, 38% 35%)' };
-  const SHARED_INK = '#526677';
-  function gl(shape, colour, size, extra = '') {
-    if (!shape) return `<span class="g" style="width:${size - 2}px;height:${size - 2}px;border-radius:50%;background:#8496a5;margin:1px;${extra}"></span>`;
-    if (shape === 'circle') return `<span class="g" style="width:${size}px;height:${size}px;border-radius:50%;border:2px solid ${colour || SHARED_INK};${extra}"></span>`;
-    return `<span class="g" style="width:${size}px;height:${size}px;background:${colour};clip-path:${CLIP[shape] || 'none'};border-radius:${shape === 'square' ? '2px' : '0'};${extra}"></span>`;
-  }
 
   // ---------- Time axis: each shared state is a point; zoom levels blend "one slot each" into real time ----------
   const BREAK_H = 72;                           // longer quiet gaps are drawn as an axis break, not as empty weeks
@@ -586,6 +574,12 @@
   // ================= The page =================
   const $ = id => document.getElementById(id);
   const SEAMS = window.WorldSurface || {};
+  const projection = window.WorldProjection;
+  const incoming = projection?.take();
+  const initialQuery = parseAppQuery(location.search);
+  const initialStack = initialQuery?.brane != null;
+  const timelineBrane = new URLSearchParams(location.hash.slice(1)).get('brane');
+  const headsPath = brane => '/surface/heads' + (brane ? '#' + encodeURIComponent(brane) : '');
   let T = null, D = null, LANES = {}, N = {}, parents = {}, kids = {}, SH = [], NS = 0, SIDX = {}, TT = [], LX = [], MAXU = LEVELS.length - 1;
   let STEPS = [], TNOW = 0, NOW_D = new Date(), quiet = [], LY = {}, ROWS = [], MXS = [], XS = [];
   let nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, isBreak, lastStep, lastState;
@@ -711,7 +705,7 @@
     ROWS.forEach((key, k) => {
       const y = LY[key], tall = T.multi ? T.GAP : T.isOther(key) ? 72 : 98;
       h += `<div class="band" style="top:${y - tall / 2 - 4}px;height:${tall}px;width:${PR}px;background:${k % 2 === 0 ? 'var(--laneBand)' : 'transparent'}"></div>`;
-      h += `<div class="lrule" style="top:${y}px;left:${PL}px;width:${PW}px"></div>`;
+      h += `<div class="lrule" data-projection-row="${esc(key)}" style="top:${y}px;left:${PL}px;width:${PW}px"></div>`;
       h += T.isOther(key) ? otherHead(y, key) : laneHead(key, y);
     });
     h += `<div class="pedge" style="left:${PL - 1}px;top:96px;height:${TICK_T + 36 - 96}px"></div><div class="pedge" style="left:${PR}px;top:96px;height:${TICK_T + 36 - 96}px"></div>`;
@@ -789,7 +783,7 @@
       <div style="font-size:15px;font-weight:700;color:var(--sub)">${kind === 'empty' ? 'Nothing to show yet' : 'The world could not be read'}</div>
       <div style="font-size:13px;color:var(--sub);max-width:640px">${esc(reason)}</div>
       ${(repos || []).map(r => `<div style="font-size:12.5px;color:${r.warn ? 'var(--you)' : 'var(--sub)'};max-width:640px" data-repo="${esc(r.id)}">${esc(r.line)}</div>`).join('')}</div>`;
-    setView(kind);
+    if (st.d === 0 && $('state-status').hidden) setView(kind);
     return false;
   }
 
@@ -872,6 +866,7 @@
   }
 
   function applyFocus() {
+    if (st.d === 0 && $('state-status').hidden) $('heads-link').href = headsPath(focusedBrane());
     const f = st.focus, fr = REP[f] || f, linked = linksOf(f);
     const linkedR = new Set([...linked.keys()].map(k => REP[k]).filter(Boolean));
     const lit = (pr, cr) => (pr === fr && linkedR.has(cr)) || (cr === fr && linkedR.has(pr));
@@ -1046,9 +1041,35 @@
 
   // ---------- Header ----------
   const addrOf = () => F.kind === 'open' ? String(F.id).replace(/:episode:/, ':') : `${String(F.brane).replace(/^([a-z][a-z0-9-]*):brane:/, '$1:')}@${railIdx() + 1}`;
+  function focusedBrane() {
+    return N[st.focus]?.lane || N[DISP[st.focus]?.ids?.[0]]?.lane;
+  }
+  function timelineMarker() {
+    const brane = focusedBrane();
+    const id = REP[st.focus] || st.focus;
+    const row = DISP[id]?.row;
+    const node = [...$('tl').querySelectorAll('.node')].find(el => el.dataset.id === id);
+    const lane = [...$('tl').querySelectorAll('.lhead[data-brane]')].find(el => el.dataset.brane === brane);
+    const x = screenX(st.focus);
+    const marker = x >= PL && x <= PR && node?.querySelector('.g, .bub');
+    const rule = [...$('tl').querySelectorAll('.lrule')].find(el => el.dataset.projectionRow === T?.homeRow(row));
+    return [marker || lane?.querySelector('.g'), rule || lane];
+  }
+  function showHeads(event) {
+    if (event && !projection?.plainClick(event)) return;
+    const link = $('heads-link'), brane = st.d === 1 ? F?.brane : focusedBrane();
+    if (brane && $('state-status').hidden) {
+      const [glyph, face] = st.d === 1
+        ? [$('front')?.querySelector('.fbar .g'), $('front')]
+        : timelineMarker();
+      projection?.save(link.href, brane, glyph, face, LANES[brane]?.colour || F?.colour, st.d === 0);
+    }
+    if (!event) location.assign(link.href);
+  }
   function renderCrumbs() {
-    $('heads-link').href = st.d === 1 && F ? '/surface/heads#' + encodeURIComponent(F.brane) : '/surface/heads';
-    const fromHeads = st.d === 1 && location.hash === '#heads';
+    const waiting = initialStack && $('stage').dataset.view.startsWith('stack-');
+    $('heads-link').href = headsPath(st.d === 1 && F ? F.brane : waiting ? initialQuery.brane : focusedBrane());
+    const fromHeads = (st.d === 1 || waiting) && location.hash === '#heads';
     $('heads-link').setAttribute('aria-label', fromHeads ? 'Back to Branch heads' : 'Branch heads');
     $('heads-link').textContent = fromHeads ? '← Branch heads' : 'Branch heads';
     $('crumbs').innerHTML = crumbsHTML(st.d === 1 && F ? addrOf() : null);
@@ -1064,8 +1085,8 @@
   }
 
   // ---------- Live data ----------
-  async function getJSON(url) {
-    const r = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+  async function getJSON(url, signal) {
+    const r = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store', signal });
     let body = null;
     try { body = await r.json(); } catch (_) { body = null; }
     return { ok: r.ok, status: r.status, body };
@@ -1087,8 +1108,10 @@
   const poll = { note: '' };
   async function loadModel() {
     let res;
-    await loadRequests();
+    const requests = loadRequests();
     try { res = await getJSON('/surface/model.json'); } catch (e) { return renderVoid('error', 'the surface model could not be fetched: ' + e.message); }
+    if (!initialStack) await requests;
+    else requests.then(repaintNow);
     const b = res.body || {};
     followMode = b.schema === FOLLOW_MODEL;
     if (!res.ok) return renderVoid('error', b.reason || `the surface model answered HTTP ${res.status}`, b.repos);
@@ -1097,9 +1120,11 @@
     setModel(b);
     shownGen = b.generation == null ? null : b.generation; shownAt = hm(new Date());
     const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);   // the latest work, as v3 opened on its front
-    st.focus = newest ? newest.id : SH[NS - 1] || null;
-    renderTimeline(); renderCrumbs();
-    setView('timeline');
+    st.focus = (st.d === 1 && F?.id) || lastState(timelineBrane)?.id || newest?.id || SH[NS - 1] || null;
+    renderTimeline();
+    if (st.d === 1 && F) renderBrane(false);
+    if (st.d === 0 && $('state-status').hidden) setView('timeline');
+    renderCrumbs();
     return true;
   }
 
@@ -1144,8 +1169,11 @@
     if (!T) {
       setModel(r.model);
       const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);
-      st.focus = newest ? newest.id : SH[NS - 1] || null;
-      renderTimeline(); renderCrumbs(); setView('timeline');
+      st.focus = (st.d === 1 && F?.id) || newest?.id || SH[NS - 1] || null;
+      renderTimeline();
+      if (st.d === 1 && F) renderBrane(false);
+      else if ($('state-status').hidden) setView('timeline');
+      renderCrumbs();
       if (!liveStarted) startLive();
       return;
     }
@@ -1167,7 +1195,7 @@
       follow(appPath(F.brane, F.id)); renderCrumbs();
     }
     st.d = depth;
-    setView(depth === 1 ? 'brane' : 'timeline');
+    if ($('state-status').hidden) setView(depth === 1 ? 'brane' : 'timeline');
     $('addr').value = address;
     if (active && active.isConnected) active.focus({preventScroll: true});
     else {
@@ -1302,25 +1330,55 @@
   }
   // openState fetches the state's stack and zooms into it; a newer open supersedes an older one.
   let openSeq = 0;
-  async function openState(brane, at) {
+  function stateStatus(reason) {
+    setView(reason ? 'stack-error' : 'stack-loading');
+    $('L0').inert = true;
+    $('state-status').hidden = false;
+    $('state-status-title').textContent = reason ? 'The state could not be read' : 'Reading state…';
+    $('state-status-detail').textContent = reason || '';
+    $('state-status-heads').href = headsPath(initialQuery.brane);
+    $('state-retry').hidden = !reason;
+    $('state-retry').href = location.href;
+    renderCrumbs();
+  }
+  async function openState(brane, at, direct = false) {
     const seq = ++openSeq;
-    let res;
-    try { res = await getJSON(stackPath(brane, at)); } catch (e) { if (seq === openSeq) say('the stack could not be fetched: ' + e.message); return false; }
+    const controller = direct ? new AbortController() : null;
+    const deadline = controller && setTimeout(() => controller.abort(), 12000);
+    let res, error;
+    try { res = await getJSON(stackPath(brane, at), controller?.signal); }
+    catch (e) { error = e.name === 'AbortError' ? 'The state request timed out.' : 'The stack could not be fetched: ' + e.message; }
+    finally { clearTimeout(deadline); }
     if (seq !== openSeq) return false;
-    const b = res.body || {};
-    if (!res.ok || !b.front) { say(b.reason || `no such state (HTTP ${res.status})`); if (st.d === 0) follow(appPath()); return false; }
+    const firstPaintStack = direct || !$('state-status').hidden;
+    if (error || !res?.ok || !res.body?.front) {
+      const reason = error || res.body?.reason || `No such state (HTTP ${res.status})`;
+      if (firstPaintStack) stateStatus(reason);
+      else { say(reason); if (st.d === 0) follow(appPath()); }
+      return false;
+    }
     const was = st.d === 1;
-    setStack(b);
-    if (!was && T) { const sx = screenX(F.id), d = DISP[REP[F.id]]; setOrigin(sx != null ? Math.max(PL, Math.min(PR, sx)) : PL, d ? d.y : LY[T.GROUPS[0].shared]); }
+    setStack(res.body);
+    if (!was && T && !firstPaintStack) { const sx = screenX(F.id), d = DISP[REP[F.id]]; setOrigin(sx != null ? Math.max(PL, Math.min(PR, sx)) : PL, d ? d.y : LY[T.GROUPS[0].shared]); }
     st.d = 1; st.focus = F.id; $('tip').hidden = true;
+    $('L0').inert = true; $('L1').inert = false; $('state-status').hidden = true;
+    if (firstPaintStack) $('root').classList.add('direct-stack');
     renderBrane(was);
     if (narrow.matches) $('L1').scrollTop = 0;
     $('root').classList.add('zoomed'); setView('brane');
-    renderCrumbs(); follow(appPath(F.brane, F.id)); $('root').focus({ preventScroll: true });
+    renderCrumbs();
+    if (direct) projection?.animate(incoming, JSON.stringify([brane, at]), $('front').querySelector('.fbar .g'), $('front'), false);
+    if (firstPaintStack) {
+      // The initial stack is fully visible before enabling in-page zoom transitions.
+      $('L1').getBoundingClientRect();
+      $('root').classList.remove('direct-stack');
+    }
+    follow(appPath(F.brane, F.id)); $('root').focus({ preventScroll: true });
     return true;
   }
   function backFromState() {
-    if (st.d === 1 && location.hash === '#heads') return location.assign($('heads-link').href);
+    if ((st.d === 1 || !$('state-status').hidden) && location.hash === '#heads') return showHeads();
+    if (!$('state-status').hidden) return location.assign(appPath());
     return out();
   }
   function out(focusId) {
@@ -1332,8 +1390,8 @@
       const x = screenX(id); if (x == null || x < PL + 40 || x > PR - 40) panTo(view.L + (x - (PL + PW / 2)), false);
       applyFocus(); setOrigin(screenX(id), DISP[REP[id]].y);
     }
-    st.d = 0; $('root').classList.remove('zoomed'); $('tip').hidden = true;
-    setView(T ? 'timeline' : $('stage').dataset.view);
+    st.d = 0; $('L0').inert = false; $('L1').inert = true; $('root').classList.remove('zoomed'); $('tip').hidden = true;
+    setView(T || !$('tl').querySelector('[data-void]') ? 'timeline' : 'error');
     renderCrumbs(); follow(appPath()); $('root').focus({ preventScroll: true });
   }
   function openRail(k) {
@@ -1575,10 +1633,11 @@
   // The brand is the way home: in a brane it does what Esc does, on the timeline it goes to Now.
   // A modified or middle click keeps the link's own default (/surface in a new tab or window).
   $('home').addEventListener('click', e => {
-    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || !$('state-status').hidden) return;
     e.preventDefault();
     if (st.d === 1) out(); else if (T) goNow();
   });
+  $('heads-link').addEventListener('click', showHeads);
   $('keys-btn').addEventListener('click', () => toggle('keys'));
   $('look-btn').addEventListener('click', () => toggle('look'));
   $('look').addEventListener('click', e => { const b = e.target.closest('[data-look]'); if (!b) return; const [k, v] = b.dataset.look.split(':'); look[k] = v; saveLook(); applyLook(); renderLook(); });
@@ -1591,7 +1650,7 @@
   document.addEventListener('keydown', e => {
     if (e.target && (e.target.tagName === 'INPUT' || e.target.closest?.('#episode-draft, #compose-btn'))) return;
     const k = e.key; let done = true;
-    if (k === 'Enter' && e.target && e.target.id === 'home') return;   // the link's own activation: its click goes home
+    if (k === 'Enter' && e.target && (e.target.id === 'home' || e.target.id === 'heads-link')) return;   // the link's own activation: its click goes home
     if (k === 'Enter' && e.target && e.target.closest && e.target.closest('[data-now]')) return;   // the now card's links and buttons activate themselves
     if (k === '?') toggle('keys');
     else if (k === ',') toggle('look');
@@ -1634,15 +1693,24 @@
 
   async function boot() {
     applyLook();
-    try { await document.fonts.ready; } catch (_) {}
-    renderCrumbs(); fit();
-    const q = parseAppQuery(location.search);
-    const ok = await loadModel();
+    $('L1').inert = true;
+    if (initialStack) stateStatus();
+    else renderCrumbs();
+    fit();
+    const stack = initialStack ? openState(initialQuery.brane, initialQuery.at, true) : null;
+    const model = loadModel();
+    const ok = await model;
+    if (ok && timelineBrane && !initialStack && focusedBrane() === timelineBrane) {
+      ensureVisible(st.focus, false);
+      const [glyph, face] = timelineMarker();
+      if (narrow.matches) glyph?.scrollIntoView({block: 'nearest'});
+      projection?.animate(incoming, timelineBrane, glyph, face, true);
+    }
+    if (stack) await stack;
     if (ok) startLive();
     if (followMode) schedulePoll();
-    if (ok && q && q.brane != null) await openState(q.brane, q.at);   // a deep link, or a reload inside a brane
     document.documentElement.dataset.ready = '1';
-    $('root').focus({ preventScroll: true });
+    if (document.activeElement === document.body) $('root').focus({ preventScroll: true });
   }
   boot();
 })();

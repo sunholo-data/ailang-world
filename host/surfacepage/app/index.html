@@ -78,6 +78,13 @@
   <main class="stage" id="stage" data-view="timeline">
     <section class="layer" id="L0" aria-label="The world timeline"><div class="canvas" id="tl"></div></section>
     <section class="layer" id="L1" aria-label="One brane"><div class="canvas" id="br"></div></section>
+    <section id="state-status" hidden>
+      <h1 id="state-status-title">Reading state…</h1>
+      <p id="state-status-detail" role="status"></p>
+      <a id="state-status-heads" href="/surface/heads">Branch heads</a>
+      <a href="/surface">Timeline</a>
+      <a id="state-retry" href="" hidden>Retry</a>
+    </section>
     <div class="pop" id="keys" role="dialog" aria-label="Keyboard shortcuts" hidden></div>
     <div class="pop" id="look" role="dialog" aria-label="Appearance" hidden></div>
     <div class="tip" id="tip" hidden></div>

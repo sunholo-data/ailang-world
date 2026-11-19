@@ -33,7 +33,7 @@
       const latest = lane.states.reduce((tip, state) => state.rank > tip.rank ? state : tip);
       const states = lane.states.slice().sort((a, b) => Date.parse(b.at) - Date.parse(a.at) || b.rank - a.rank);
       const head = {
-        key: lane.key, name: lane.name, repo: lane.repo, colour: lane.colour, glyph: lane.glyph,
+        key: lane.key, name: lane.name, row: lane.row, repo: lane.repo, colour: lane.colour, glyph: lane.glyph,
         states, latest, live: [], source: sourceByID.get(lane.repo),
       };
       heads.push(head);

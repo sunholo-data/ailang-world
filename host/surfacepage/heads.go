@@ -14,6 +14,12 @@ var headsStyle []byte
 //go:embed app/heads-data.js
 var headsData []byte
 
+//go:embed app/heads-links.js
+var headsLinks []byte
+
+//go:embed app/heads-links.css
+var headsLinksStyle []byte
+
 //go:embed app/heads.js
 var headsView []byte
 
@@ -22,7 +28,7 @@ var headsPage []byte
 
 // HeadsShell shares the timeline's fonts, appearance tokens and embedded World mark.
 var HeadsShell = inlineStyle(bytes.Replace(headsIndex, []byte("<!-- World mark -->"), AppLogo, 1),
-	bytes.Join([][]byte{AppStyle, headsStyle}, []byte("\n")))
+	bytes.Join([][]byte{AppStyle, headsStyle, headsLinksStyle}, []byte("\n")))
 
 // HeadsScript renders the same indexed states the timeline and brane stack expose.
-var HeadsScript = bytes.Join([][]byte{headsData, headsView, headsPage}, []byte("\n"))
+var HeadsScript = bytes.Join([][]byte{braneScript, projectionMotion, headsData, headsLinks, headsView, headsPage}, []byte("\n"))

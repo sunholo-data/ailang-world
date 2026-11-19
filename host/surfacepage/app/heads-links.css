@@ -1,0 +1,71 @@
+.wh-link {
+  color: color-mix(in srgb, var(--sub) 66%, var(--ctl));
+  opacity: .62;
+}
+.wh-link.is-muted { opacity: .24; }
+.wh-link.is-active { color: var(--text); opacity: .83; }
+.wh-link path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.35px;
+  vector-effect: non-scaling-stroke;
+}
+.wh-link.is-history path { stroke-dasharray: 4 4; }
+.wh-link.is-active path { stroke-width: 2px; }
+.wh-link circle { fill: var(--stageBg); stroke: currentColor; }
+.wh-link circle.is-exact { fill: currentColor; }
+
+.wh-link-details {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  padding: 5px clamp(10px, 3vw, 32px);
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--sub);
+  font-size: 11px;
+}
+.wh-link-note { color: var(--text); }
+.wh-link-details details { flex: 0 1 auto; min-width: 0; }
+.wh-link-details summary {
+  padding: 4px;
+  color: var(--text);
+  font-weight: 650;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.wh-link-details summary:hover { text-decoration: underline; }
+.wh-link-details ul {
+  position: absolute;
+  inset: auto auto 100% clamp(10px, 3vw, 32px);
+  width: min(660px, calc(100% - 24px));
+  max-height: min(46dvh, 380px);
+  overflow: auto;
+  margin: 0;
+  padding: 5px 12px;
+  border: 1px solid var(--ctl);
+  border-radius: var(--r);
+  list-style: none;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 8px 22px #152e4830;
+}
+.wh-link-details li { padding: 8px 0; }
+.wh-link-details li + li { border-top: 1px solid var(--line); }
+.wh-link-details strong span { font-weight: normal; color: var(--sub); }
+.wh-link-states {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 5px;
+}
+.wh-link-states div { display: grid; gap: 2px; overflow-wrap: anywhere; }
+.wh-link-states :is(small, div > span) { color: var(--sub); }
+.wh-link-states a { color: var(--text); text-underline-offset: 2px; }
+.wh-link-states time { font-family: var(--mono); }
+.wh-link-arrow { color: var(--sub); }
