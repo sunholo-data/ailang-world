@@ -180,7 +180,7 @@
       }
     }
     heads.sort((a, b) => b.priority - a.priority || points.get(a.id).depth - points.get(b.id).depth);
-    return {points, heads, width, height, edges};
+    return {points, heads, width, height, edges, ground:{horizon, front:horizon + span * 1.35, pitch:faceWidth * .74}};
   }
 
   // The timeline supplies the longitudinal coordinate. The end-on layout

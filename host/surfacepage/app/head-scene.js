@@ -30,6 +30,8 @@
     const scratch = document.createElement('template');
     let model, layout, sidePoints, angle = 0, selected = '', hovered = '', frame = 0, silentFocus = false;
     let initialPan = true, focusedByUser = '', paintedSelection, paintWidth = 0, paintHeight = 0, pixelRatio = 0;
+    let floorPhase = 0;
+    const faceScales = new Map();
     let points = new Map(), headsByID = new Map(), headsByLane = new Map(), order = [], histories = new Map();
 
     function setLayout(T, next) {
@@ -272,6 +274,80 @@
       ctx.stroke();
     }
 
+    // Transverse rulings share the scene's horizon. Panning keeps them
+    // fixed in world space; passing one state advances them by one interval.
+    function drawGround(left, right, opacity, ink) {
+      const {horizon, front, pitch} = layout.ground;
+      const center = layout.width / 2;
+      ctx.strokeStyle = ink;
+      ctx.lineWidth = 1;
+      for (let row = -1; row <= 8; row++) {
+        const depth = row - floorPhase;
+        if (depth < -.5) continue;
+        const scale = 1 / (1 + depth * .42);
+        const y = horizon + (front - horizon) * scale;
+        const spacing = pitch * scale;
+        const fade = opacity * clamp(8 - depth, 0, 1);
+        ctx.globalAlpha = fade * (.055 + .13 * scale);
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        ctx.stroke();
+        ctx.globalAlpha = fade * (.13 + .17 * scale);
+        ctx.beginPath();
+        const first = Math.ceil((left - center) / spacing);
+        const last = Math.floor((right - center) / spacing);
+        for (let column = first; column <= last; column++) {
+          const x = center + column * spacing;
+          const advance = .012 * scale;
+          ctx.moveTo(x - (x - center) * advance, y - (y - horizon) * advance);
+          ctx.lineTo(x + (x - center) * advance, y + (y - horizon) * advance);
+        }
+        ctx.stroke();
+      }
+    }
+
+    function drawFootprints(head, point, trail, activeLane, activeID, opacity, ink) {
+      const active = head.lane === activeLane;
+      const size = faceScales.get(head.id) || 1;
+      const bottom = point.y + head.height * size / 2;
+      const stem = (4 + point.scale * 6) * size;
+      const foot = bottom + stem;
+      const half = (active ? 14 : 9) * size;
+      ctx.strokeStyle = ink;
+      if (active) ctx.strokeStyle = `color-mix(in srgb, ${ink} 55%, ${glyphInfo(model.N[head.id]).colour})`;
+      ctx.lineWidth = active ? 1.4 : 1;
+      ctx.globalAlpha = opacity * (active ? .70 : .44);
+      ctx.beginPath();
+      ctx.moveTo(point.x, bottom);
+      ctx.lineTo(point.x, foot);
+      ctx.moveTo(point.x - half, foot);
+      ctx.lineTo(point.x + half, foot);
+      ctx.stroke();
+      if (!active) return;
+      let lastX = point.x, lastY = foot;
+      for (const id of trail) {
+        const p = points.get(id);
+        const scale = clamp((p.y - layout.ground.horizon) / Math.max(1, point.y - layout.ground.horizon), 0, 1);
+        const y = p.y + (foot - point.y) * scale;
+        if (id !== activeID && lastY - y < 11) continue;
+        ctx.globalAlpha = opacity * (.10 + .12 * scale);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(p.x, y);
+        ctx.stroke();
+        lastX = p.x;
+        lastY = y;
+        const span = 3 + 5 * scale;
+        ctx.globalAlpha = opacity * (id === activeID ? .85 : .22 + .22 * scale);
+        ctx.beginPath();
+        ctx.moveTo(p.x - span, y);
+        ctx.lineTo(p.x + span, y);
+        ctx.stroke();
+      }
+    }
+
     function theme() {
       const style = getComputedStyle(scene);
       return {
@@ -307,6 +383,15 @@
       const paneOpacity = clamp((angle - .46) * 2.1, 0, 1);
       const contains = id => id === active || related?.has(id);
       ctx.lineCap = 'round';
+      const groundOpacity = clamp((angle - .58) / .42, 0, 1);
+      if (groundOpacity && layout.ground) {
+        drawGround(x, x + width, groundOpacity, colors.edge);
+        const picked = focus || model.N[selected];
+        for (const head of layout.heads) {
+          const point = points.get(head.id);
+          if (visible(point, head.width)) drawFootprints(head, point, histories.get(head.lane), picked?.lane, picked?.id, groundOpacity, colors.edge);
+        }
+      }
       if (paneOpacity) {
         for (const head of layout.heads) {
           const trail = histories.get(head.lane);
@@ -456,6 +541,8 @@
         scroll.scrollLeft = Math.max(0, (centered ? center : requested?.x ?? center) - scroll.clientWidth / 2);
       }
       points = new Map();
+      faceScales.clear();
+      floorPhase = travel ? travel.direction * travel.progress : 0;
       const yaw = (1 - angle) * 90;
       const scrollX = scroll.scrollLeft, scrollY = scroll.scrollTop;
       const axisX = scrollX + scroll.clientWidth / 2;
@@ -479,7 +566,10 @@
         }
         points.set(id, point);
         const entry = cards.get(id);
-        if (entry) entry.el.style.transform = `translate3d(${point.x}px,${point.y}px,0) translate(-50%,-50%) perspective(800px) rotateY(${yaw}deg) scale(${faceScale})`;
+        if (entry) {
+          faceScales.set(id, faceScale);
+          entry.el.style.transform = `translate3d(${point.x}px,${point.y}px,0) translate(-50%,-50%) perspective(800px) rotateY(${yaw}deg) scale(${faceScale})`;
+        }
       }
       updateSelection();
       repaint();

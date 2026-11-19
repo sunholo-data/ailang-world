@@ -51,7 +51,7 @@
   box-shadow: 0 10px 23px color-mix(in srgb, var(--text) 15%, transparent), 0 2px 5px color-mix(in srgb, var(--text) 10%, transparent);
   transition: opacity .16s, box-shadow .16s;
 }
-.hc-face.is-muted { opacity: .68; }
+.hc-face.is-muted:not(:hover, :focus-visible, .is-selected) > * { opacity: .78; }
 .hc-face:is(:hover, :focus-visible, .is-selected) {
   z-index: 100000 !important;
   opacity: 1;
