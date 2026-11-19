@@ -2,23 +2,26 @@
 (() => {
   'use strict';
 
+  const brane = typeof WorldBrane !== 'undefined' ? WorldBrane : require('./brane.js');
   const projectionByModel = new WeakMap();
   const viewBySVG = new WeakMap();
-  let nextDescription = 0;
-  const directions = {
-    incoming: {badge: 'In', label: 'Recorded links to the selected branch'},
-    outgoing: {badge: 'Out', label: 'Recorded links from the selected branch'},
-    both: {badge: 'Both', label: 'Recorded links in both directions'},
-  };
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
-  const laneName = lane => [globalThis.WorldBrane?.label(lane.name || lane.key, lane.row) || lane.name || lane.key, lane.repo].filter(Boolean).join(' / ');
+  const laneName = lane => [brane.label(lane.name || lane.key, lane.row) || lane.name || lane.key, lane.repo].filter(Boolean).join(' / ');
   const stateTitle = state => state.title || state.summary || state.label || state.id;
   const stateHref = ({lane, state}) => '/surface?' + new URLSearchParams({brane: lane.key, at: state.id}) + '#heads';
-  const relation = ({from, to}) => from.state.kind === 'step' && to.state.kind === 'shared' ? 'Merge' : 'Base';
+  const timelineHref = ({lane, state}) => brane.timelineHref(lane.key, state.id);
+  const relation = ({from, to}) => {
+    if (from.lane.key === to.lane.key) return 'Continues';
+    if (from.state.kind === 'step' && to.state.kind === 'shared') return 'Merge';
+    return from.state.kind === 'shared' ? 'Fork' : 'Base';
+  };
+  const colour = lane => /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(lane?.colour) ? lane.colour : '#657b91';
+  const glyph = lane => brane.glyph(lane.glyph, colour(lane), 10);
+  const date = new Intl.DateTimeFormat(undefined, {month:'short', day:'numeric', year:'numeric', timeZone:'UTC'});
 
   function project(model) {
     if (model && projectionByModel.has(model)) return projectionByModel.get(model);
-    const lanes = new Map(), states = new Map(), tips = new Map(), pairs = new Map(), byLane = new Map();
+    const lanes = new Map(), states = new Map(), tips = new Map(), pairs = new Map(), byLane = new Map(), byState = new Map();
     for (const lane of model?.lanes || []) {
       lanes.set(lane.key, lane);
       let tip;
@@ -28,9 +31,15 @@
       }
       if (tip) tips.set(lane.key, tip.id);
     }
-    for (const {from: source, to: target} of model?.links || []) {
+    for (const {from: source, to: target} of brane.graphEdges(model || {})) {
       const from = states.get(source), to = states.get(target);
-      if (!from || !to || from.lane.key === to.lane.key) continue;
+      if (!from || !to) continue;
+      const edge = {from, to};
+      for (const id of new Set([source, target])) {
+        if (!byState.has(id)) byState.set(id, []);
+        byState.get(id).push(edge);
+      }
+      if (from.lane.key === to.lane.key) continue;
       const lanes = [from.lane.key, to.lane.key].sort();
       const key = JSON.stringify(lanes);
       let pair = pairs.get(key);
@@ -42,9 +51,9 @@
           byLane.get(lane).push(pair);
         }
       }
-      pair.edges.push({from, to});
+      pair.edges.push(edge);
     }
-    const projection = {lanes, pairs: [...pairs.values()], byLane, tips};
+    const projection = {lanes, states, pairs: [...pairs.values()], byLane, byState, tips};
     if (model) projectionByModel.set(model, projection);
     return projection;
   }
@@ -52,8 +61,11 @@
   function stateLink(endpoint, tips) {
     const {lane, state} = endpoint;
     const position = state.id === tips.get(lane.key) ? 'Head' : 'Earlier state';
-    return `<a href="${esc(stateHref(endpoint))}" title="${esc(state.id)}">${esc(stateTitle(state))}</a>
-      <span>${esc(laneName(lane))} · ${position}${state.at ? ' · <time datetime="' + esc(state.at) + '">' + esc(state.at.replace('T', ' ')) + '</time>' : ''}</span>`;
+    return `<div class="wh-evidence-state">
+      <div>${esc(laneName(lane))} · ${position}</div>
+      <a data-head-state="${esc(state.id)}" href="${esc(stateHref(endpoint))}">${esc(stateTitle(state))}</a>
+      <a data-head-timeline="${esc(state.id)}" href="${esc(timelineHref(endpoint))}" aria-label="View ${esc(stateTitle(state))} on the timeline">Timeline</a>
+    </div>`;
   }
 
   function neighbors(projection, selected) {
@@ -61,118 +73,138 @@
     for (const {edges} of projection.byLane.get(selected) || []) {
       const {from, to} = edges[0];
       const lane = from.lane.key === selected ? to.lane : from.lane;
-      const incoming = edges.some(edge => edge.to.lane.key === selected);
-      const outgoing = edges.some(edge => edge.from.lane.key === selected);
-      peers.set(lane.key, {lane, edges, direction: incoming && outgoing ? 'both' : incoming ? 'incoming' : 'outgoing'});
+      peers.set(lane.key, {lane, edges});
     }
     return peers;
   }
 
-  function detailsMarkup(projection, entries, selected, peers = neighbors(projection, selected)) {
-    const {byLane, tips} = projection;
-    const active = tips.has(selected);
-    const anyOnPage = [...entries.keys()].some(key => byLane.has(key));
-    if (!active && !anyOnPage) return '';
-    const legend = '<span class="wh-link-key">Dashed lines include earlier states or multiple links.</span>';
-    if (!peers.size) {
-      return '<span class="wh-link-note">' + (active
-        ? 'No recorded links to other branches for this head.'
-        : 'Select a branch head to see its relationships.') + '</span>' + (anyOnPage && !active ? legend : '');
+  function selectedEndpoint(projection, selected, requested) {
+    const endpoint = projection.states.get(requested);
+    return endpoint?.lane.key === selected ? endpoint : projection.states.get(projection.tips.get(selected));
+  }
+
+  function stationsFor(projection, peers, selected, requested) {
+    const current = selectedEndpoint(projection, selected, requested);
+    if (!current) return [];
+    const byState = new Map([[current.state.id, current.state]]);
+    for (const {edges} of peers.values()) {
+      for (const {from, to} of edges) {
+        const {state} = to.lane.key === selected ? to : from;
+        byState.set(state.id, state);
+      }
     }
-    let offPage = 0;
-    const items = [...peers.values()].map(({lane, edges, direction}) => {
-      const away = !entries.has(lane.key);
-      if (away) offPage++;
-      return `<li>
-        <div class="wh-link-peer">
-          <button type="button" data-locate="${esc(lane.key)}" aria-label="Show branch ${esc(laneName(lane))}">${esc(laneName(lane))}</button>
-          <span>${directions[direction].label}${away ? ' · Other page' : ''}</span>
+    const earlier = [...byState.values()].filter(state => state.id !== current.state.id).sort((a, b) =>
+      (Date.parse(b.at) - Date.parse(a.at)) || b.rank - a.rank);
+    return [current.state, ...earlier].map(state => {
+      const edges = projection.byState.get(state.id) || [];
+      return {
+        state,
+        incoming: edges.filter(edge => edge.to.state.id === state.id),
+        outgoing: edges.filter(edge => edge.from.state.id === state.id),
+      };
+    });
+  }
+
+  function topologyEdge(edge, incoming, entries) {
+    const endpoint = incoming ? edge.from : edge.to;
+    const {lane, state} = endpoint;
+    const sameLane = edge.from.lane.key === edge.to.lane.key;
+    const name = sameLane ? stateTitle(state) : laneName(lane);
+    const type = relation(edge);
+    const offPage = entries.has(lane.key) ? '' : ' · Other page';
+    const content = `${glyph(lane)}<span>${esc(sameLane ? name : lane.name || lane.key)}</span>`;
+    const control = sameLane
+      ? `<a href="${esc(timelineHref(endpoint))}" data-head-timeline="${esc(state.id)}"
+          aria-label="View ${esc(name)} on the timeline" title="${esc(name)}">${content}</a>`
+      : `<button type="button" data-locate="${esc(lane.key)}" title="${esc(name + offPage)}"
+          aria-label="${esc('Show branch ' + name + offPage)}">${content}</button>`;
+    return `<div class="wh-topology-edge" data-relation="${type.toLowerCase()}">
+      ${control}<span class="wh-edge-direction" title="${esc(stateTitle(state))}">${type}<span aria-hidden="true"> →</span></span>
+    </div>`;
+  }
+
+  function detailsMarkup(projection, entries, selected, requested, peers = neighbors(projection, selected)) {
+    const {tips} = projection;
+    const lane = projection.lanes.get(selected);
+    if (!lane || !tips.has(selected)) return '';
+    const stations = stationsFor(projection, peers, selected, requested);
+    const rows = stations.map(({state, incoming, outgoing}, index) => {
+      const parsed = Date.parse(state.at);
+      const at = Number.isFinite(parsed) ? `<time datetime="${esc(state.at)}">${esc(date.format(parsed))}</time>` : '';
+      const id = 'wh-evidence-' + index;
+      return `<li class="wh-topology-station">
+        <div class="wh-topology-in">${incoming.map(edge => topologyEdge(edge, true, entries)).join('')}</div>
+        <div class="wh-topology-node">
+          <button type="button" data-topology-state="${esc(state.id)}" aria-controls="${id}" aria-expanded="false"
+            aria-label="Evidence for ${esc(stateTitle(state))}" title="${esc(stateTitle(state))}">${glyph(lane)}${at}</button>
         </div>
-        <details class="wh-link-records" data-peer-records="${esc(lane.key)}">
-          <summary>${edges.length} recorded ${edges.length === 1 ? 'link' : 'links'}</summary>
-          <ol>${edges.map(edge => `<li>
-            <strong>${relation(edge)}</strong>
-            <div class="wh-link-states">
-              <div><small>From</small>${stateLink(edge.from, tips)}</div>
-              <span class="wh-link-arrow" aria-hidden="true">→</span>
-              <div><small>To</small>${stateLink(edge.to, tips)}</div>
-            </div>
-          </li>`).join('')}</ol>
-        </details>
+        <div class="wh-topology-out">${outgoing.map(edge => topologyEdge(edge, false, entries)).join('')}</div>
+        <div class="wh-topology-evidence" id="${id}" hidden>
+          ${incoming.length || outgoing.length ? '' : '<p class="wh-link-note">No recorded links for this state.</p>'}
+          ${[...incoming, ...outgoing].map(edge => `<div class="wh-evidence-edge">
+            <strong>${relation(edge)}</strong>${stateLink(edge.from, tips)}
+            <span aria-hidden="true">→</span>${stateLink(edge.to, tips)}
+          </div>`).join('')}
+        </div>
       </li>`;
     });
-    const label = laneName(projection.lanes.get(selected));
-    return `<details class="wh-neighborhood"><summary>${esc(label)} · ${peers.size} linked ${peers.size === 1 ? 'branch' : 'branches'}${offPage ? ' · ' + offPage + ' off page' : ''}</summary>
-      <ul>${items.join('')}</ul></details>
-      <span class="wh-link-directions">In points to the selected head. Out points away.</span>${legend}`;
+    const offPage = [...peers.keys()].filter(key => !entries.has(key)).length;
+    const label = brane.label(lane.name || lane.key, lane.row);
+    const pickedTip = stations[0].state.id === tips.get(selected);
+    const earlier = rows.length > 1 ? `<details class="wh-topology-earlier">
+      <summary>${rows.length - 1} ${pickedTip ? 'earlier' : 'other'} linked ${rows.length === 2 ? 'state' : 'states'}</summary>
+      <ol class="wh-topology" start="2">${rows.slice(1).join('')}</ol></details>` : '';
+    return `<section class="wh-neighborhood" aria-label="Recorded connections">
+      <header><span class="wh-topology-title">${glyph(lane)}<strong>${esc(label)}</strong></span>
+        <span>${peers.size ? peers.size + ' linked ' + (peers.size === 1 ? 'branch' : 'branches') : 'No branch links'}${offPage ? ' · ' + offPage + ' off page' : ''}</span></header>
+      <div class="wh-topology-panel"><ol class="wh-topology">${rows[0]}</ol>${earlier}</div></section>`;
   }
 
-  function markCards(entries, selected, peers) {
-    for (const [key, {el}] of entries) {
-      const peer = peers.get(key);
-      el.classList.toggle('has-wh-link', Boolean(peer));
-      el.classList.toggle('wh-unrelated', peers.size > 0 && key !== selected && !peer);
-      const controls = el.querySelectorAll('.wh-grip, .wh-restore');
-      let description = el.querySelector('.wh-link-description');
-      if (peer && !description) {
-        description = document.createElement('span');
-        description.className = 'wh-link-description';
-        description.id = 'wh-link-description-' + ++nextDescription;
-        el.append(description);
-      }
-      if (description) description.textContent = peer ? directions[peer.direction].label : '';
-      for (const control of controls) {
-        let marker = control.querySelector('.wh-link-marker');
-        const ids = (control.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && id !== description?.id);
-        if (peer) {
-          if (!marker) {
-            marker = document.createElement('span');
-            marker.className = 'wh-link-marker';
-            marker.setAttribute('aria-hidden', 'true');
-            control.querySelector('.wh-head-name')?.after(marker);
-          }
-          marker.textContent = directions[peer.direction].badge;
-          ids.push(description.id);
-        } else {
-          marker?.remove();
-        }
-        if (ids.length) control.setAttribute('aria-describedby', ids.join(' '));
-        else control.removeAttribute('aria-describedby');
-      }
-      if (!peer) description?.remove();
-    }
+  function toggleEvidence(control, open) {
+    const evidence = control.closest('.wh-topology-station').querySelector('.wh-topology-evidence');
+    evidence.hidden = !open;
+    control.setAttribute('aria-expanded', String(open));
   }
 
-  function drawDetails(view, details, projection, entries, selected) {
-    if (view.detailProjection === projection && view.detailEntries === entries && view.detailSelected === selected) return;
+  function drawDetails(view, details, projection, entries, selected, requested) {
+    if (view.detailProjection === projection && view.detailEntries === entries && view.detailSelected === selected && view.detailState === requested) return;
     const peers = neighbors(projection, selected);
-    const accent = projection.lanes.get(selected)?.colour;
+    const lane = projection.lanes.get(selected);
     const root = details.closest('.world-heads');
-    if (/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(accent)) root?.style.setProperty('--wh-selection', accent);
+    if (lane) root?.style.setProperty('--wh-selection', colour(lane));
     else root?.style.removeProperty('--wh-selection');
-    markCards(entries, selected, peers);
-    Object.assign(view, {detailProjection: projection, detailEntries: entries, detailSelected: selected});
-    const markup = detailsMarkup(projection, entries, selected, peers);
+    for (const [key, {el}] of entries) {
+      el.classList.toggle('has-wh-link', peers.has(key));
+      el.classList.toggle('wh-unrelated', peers.size > 0 && key !== selected && !peers.has(key));
+    }
+    Object.assign(view, {detailProjection: projection, detailEntries: entries, detailSelected: selected, detailState: requested});
+    const markup = detailsMarkup(projection, entries, selected, requested, peers);
     if (view.markup === markup) return;
-    const open = details.querySelector('.wh-neighborhood')?.open;
-    const openPeers = new Set([...details.querySelectorAll('.wh-link-records[open]')].map(group => group.dataset.peerRecords));
+    const oldPanel = details.querySelector('.wh-neighborhood');
+    const scroll = oldPanel?.querySelector('.wh-topology-panel')?.scrollTop;
+    const earlierOpen = oldPanel?.querySelector('.wh-topology-earlier')?.open;
+    const openStates = new Set([...details.querySelectorAll('[data-topology-state][aria-expanded="true"]')].map(node => node.dataset.topologyState));
     const active = document.activeElement;
     const focused = details.contains(active);
     details.innerHTML = markup;
     const panel = details.querySelector('.wh-neighborhood');
-    if (panel && view.neighborhoodSelected === selected) {
-      panel.open = Boolean(open);
-      for (const group of panel.querySelectorAll('.wh-link-records')) group.open = openPeers.has(group.dataset.peerRecords);
+    if (panel && oldPanel && view.neighborhoodSelected === selected && view.neighborhoodState === requested) {
+      const earlier = panel.querySelector('.wh-topology-earlier');
+      if (earlier) earlier.open = Boolean(earlierOpen);
+      for (const control of panel.querySelectorAll('[data-topology-state]')) {
+        if (openStates.has(control.dataset.topologyState)) toggleEvidence(control, true);
+      }
+      panel.querySelector('.wh-topology-panel').scrollTop = scroll || 0;
     }
     if (focused) {
-      const replacement = [...details.querySelectorAll('a, button[data-locate], .wh-link-records > summary')].find(control =>
+      const replacement = [...details.querySelectorAll('a, button')].find(control =>
         (active.tagName === 'A' && control.href === active.href) ||
         (active.dataset.locate && control.dataset.locate === active.dataset.locate) ||
-        (active.parentElement?.dataset.peerRecords && control.parentElement?.dataset.peerRecords === active.parentElement.dataset.peerRecords));
+        (active.dataset.topologyState && control.dataset.topologyState === active.dataset.topologyState));
       (replacement || panel?.querySelector('summary'))?.focus({preventScroll: true});
     }
     details.hidden = !markup;
-    Object.assign(view, {markup, neighborhoodSelected: selected});
+    Object.assign(view, {markup, neighborhoodSelected: selected, neighborhoodState: requested});
   }
 
   function positions(entries, keys, bounds) {
@@ -220,7 +252,7 @@
     const bounds = svg.getBoundingClientRect();
     if (!bounds.width || !bounds.height) return;
     const boxes = positions(entries, view.visibleKeys, bounds);
-    const lines = [], highlighted = [];
+    const lines = [];
     for (const {lanes, edges} of view.visiblePairs) {
       const [first, second] = lanes.map(lane => boxes.get(lane));
       const endpoints = edges.length === 1 ? [edges[0].from, edges[0].to] : [];
@@ -231,36 +263,37 @@
       };
       const a = endpoint(first, 0), b = endpoint(second, 1);
       const {source, target, d} = geometry(a, b);
-      const active = lanes.includes(selected);
       const current = a.exact && b.exact && endpoints.every(({lane, state}) => projection.tips.get(lane.key) === state.id);
-      const classes = 'wh-link' + (active ? ' is-active' : entries.has(selected) ? ' is-muted' : '') + (current ? '' : ' is-history');
+      const classes = 'wh-link' + (selected ? ' is-active' : '') + (current ? '' : ' is-history');
       const port = ({x, y}, exact) => `<circle cx="${x}" cy="${y}" r="2.5" class="${exact ? 'is-exact' : ''}"/>`;
       const line = `<g class="${classes}"><path d="${d}"/>${port(source, a.exact)}${port(target, b.exact)}</g>`;
-      (active ? highlighted : lines).push(line);
+      lines.push(line);
     }
-    const markup = lines.concat(highlighted).join('');
+    const markup = lines.join('');
     if (view.svgMarkup !== markup) {
       svg.innerHTML = markup;
       view.svgMarkup = markup;
     }
   }
 
-  function render(svg, details, model, entries, selected) {
+  function render(svg, details, model, entries, selected, requested) {
     let view = viewBySVG.get(svg);
     if (!view) {
       view = {};
       viewBySVG.set(svg, view);
+      details.addEventListener('click', event => {
+        const control = event.target.closest('[data-topology-state]');
+        if (control) toggleEvidence(control, control.getAttribute('aria-expanded') !== 'true');
+      });
     }
     const projection = project(model);
-    drawDetails(view, details, projection, entries, selected);
-    if (view.geometry?.projection !== projection || view.geometry.entries !== entries) {
+    drawDetails(view, details, projection, entries, selected, requested);
+    if (view.geometry?.projection !== projection || view.geometry.entries !== entries || view.geometry.selected !== selected) {
       const visiblePairs = new Set(), visibleKeys = new Set();
-      for (const key of entries.keys()) {
-        for (const pair of projection.byLane.get(key) || []) {
-          if (!pair.lanes.every(lane => entries.has(lane))) continue;
-          visiblePairs.add(pair);
-          pair.lanes.forEach(lane => visibleKeys.add(lane));
-        }
+      for (const pair of (selected ? projection.byLane.get(selected) || [] : projection.pairs)) {
+        if (!pair.lanes.every(lane => entries.has(lane))) continue;
+        visiblePairs.add(pair);
+        pair.lanes.forEach(lane => visibleKeys.add(lane));
       }
       Object.assign(view, {visiblePairs, visibleKeys});
     }
@@ -273,5 +306,5 @@
   }
 
   if (typeof window !== 'undefined') window.WorldHeadLinks = {render};
-  if (typeof module !== 'undefined') module.exports = {project, neighbors, detailsMarkup, geometry};
+  if (typeof module !== 'undefined') module.exports = {project, neighbors, stationsFor, detailsMarkup, geometry};
 })();

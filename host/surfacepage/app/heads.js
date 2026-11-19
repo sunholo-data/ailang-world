@@ -63,6 +63,7 @@
     let requested = '';
     try { requested = decodeURIComponent(location.hash.slice(1)); }
     catch (_) { /* A malformed location is equivalent to opening the worktable. */ }
+    const returnedState = new URLSearchParams(location.search).get('at');
     const positions = new Map(Array.isArray(persisted?.positions) ? persisted.positions : []);
     let selected = typeof persisted?.selected === 'string' ? persisted.selected : '';
     let page = Number.isInteger(persisted?.page) ? Math.max(0, persisted.page) : 0;
@@ -73,10 +74,7 @@
 
     container.classList.add('world-heads');
     container.innerHTML = `
-      <header class="wh-bar">
-        <div><h1>Branch heads</h1><p>Each strip shows 30 days of recorded activity. Today is at the right edge.</p></div>
-        <div class="wh-readout"><p class="wh-counts"></p><p class="wh-status" role="status"></p></div>
-      </header>
+      <p class="wh-status" role="status"></p>
       <div class="wh-board" role="region" aria-label="Branch head worktable" tabindex="0">
         <div class="wh-plane">
           <svg class="wh-links" aria-hidden="true"></svg>
@@ -86,8 +84,8 @@
       </div>
       <div class="wh-link-details" hidden></div>
       <footer class="wh-nav" aria-label="Worktable navigation">
+        <span class="wh-counts"></span>
         <details class="wh-sessions" hidden><summary></summary><ul></ul></details>
-        <div class="wh-tokens" role="group" aria-label="Heads on this page"></div>
         <label class="wh-picker">Find brane <select aria-label="Find brane"></select></label>
         <div class="wh-pages" role="group" aria-label="Worktable pages">
           <button type="button" data-page="-1" aria-label="Previous page">‹</button>
@@ -104,7 +102,7 @@
     const board = find('.wh-board'), plane = find('.wh-plane'), empty = find('.wh-empty');
     const cards = find('.wh-cards'), svg = find('.wh-links'), linkDetails = find('.wh-link-details');
     const status = find('.wh-status'), counts = find('.wh-counts'), nav = find('.wh-nav'), picker = find('.wh-picker select');
-    const tokens = find('.wh-tokens'), pages = find('.wh-pages'), reset = find('.wh-reset');
+    const pages = find('.wh-pages'), reset = find('.wh-reset');
     const sessions = find('.wh-sessions'), history = find('.wh-history'), list = history.querySelector('ol');
     const more = find('.wh-more'), liveList = find('.wh-history-live');
     let sessionContent = '';
@@ -117,7 +115,7 @@
     addEventListener('pagehide', save);
 
     function renderLinks() {
-      window.WorldHeadLinks?.render(svg, linkDetails, currentModel, entries, selected);
+      window.WorldHeadLinks?.render(svg, linkDetails, currentModel, entries, selected, selected === requested ? returnedState : null);
     }
 
     function focusHead(key) {
@@ -126,7 +124,6 @@
       const next = headByKey.get(key);
       selected = key;
       entries.forEach(({el}, id) => el.classList.toggle('is-selected', id === key));
-      tokens.querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.locate === key)));
       picker.value = key;
       if ((previous && previous.depth !== 'front') || next.depth !== 'front') layout();
       else renderLinks();
@@ -140,9 +137,12 @@
     function card(head) {
       const state = head.latest;
       const earlier = orderedStates(head);
-      const past = earlier.slice(0, 3).map((record, i) => `
-        <a class="wh-rear" data-depth="${i + 1}" ${stateAttributes(record)} href="${esc(href(head, record))}" title="${esc(title(record))}">
-          ${stamp(record, true)} <span>${esc(title(record))}</span>
+      const returned = head.key === requested && earlier.find(record => record.id === returnedState);
+      const visible = earlier.slice(0, 3);
+      if (returned && !visible.includes(returned)) visible.splice(2, 1, returned);
+      const past = visible.map((record, i) => `
+        <a class="wh-rear" ${returned === record ? 'aria-current="location"' : ''} data-depth="${i + 1}" ${stateAttributes(record)} href="${esc(href(head, record))}" title="${esc(title(record))}">
+          ${returned === record ? headGlyph(head) : ''}${stamp(record, true)} <span>${esc(title(record))}</span>
         </a>`).reverse().join('');
       const activityStrip = recency(head);
       const text = state ? title(state) : 'No recorded state';
@@ -169,19 +169,18 @@
             <button class="wh-grip" type="button" aria-label="Move ${esc(headLabel(head))}" title="Drag or use the arrow keys to move this head">
               <span aria-hidden="true" class="wh-glyph">${headGlyph(head)}</span>
               <span class="wh-head-name">${esc(headLabel(head))}</span>
-              <i aria-hidden="true"></i>
             </button>
             ${sessionControl}
           </div>
           <div class="wh-content">
-            ${head.repo ? `<span class="wh-repo" title="${esc(head.repo)}">${esc(head.repo)}</span>` : ''}
+            ${head.repo && currentModel?.repos?.length > 1 ? `<span class="wh-repo" title="${esc(head.repo)}">${esc(head.repo)}</span>` : ''}
             ${stateContent}
             ${info && info !== text ? `<span class="wh-record" title="${esc(info)}">${esc(info)}</span>` : ''}
           </div>
           <div class="wh-meta">
+            ${state?.id ? `<a class="wh-map" data-head-timeline="${esc(state.id)}" href="${esc(WorldBrane.timelineHref(head.key, state.id))}" aria-label="Show ${esc(title(state))} on the timeline">Timeline</a>` : ''}
             ${activityStrip}
-            ${earlier.length > 3 ? `<button class="wh-all" type="button" data-history>All ${earlier.length + 1} states</button>` : ''}
-            <button class="wh-details" type="button" data-history aria-label="Details for ${esc(headLabel(head))}">Details</button>
+            ${earlier.length ? `<button class="wh-all" type="button" data-history aria-label="History of ${esc(headLabel(head))}, ${earlier.length + 1} states">${earlier.length + 1} states</button>` : ''}
           </div>
         </div>`;
     }
@@ -264,6 +263,7 @@
     function move(el, x, y) {
       const [left, top] = applyPosition(el, x, y);
       positions.set(el.dataset.head, [(left - 8) / dragWidth(el), top]);
+      reset.hidden = false;
       renderLinks();
     }
 
@@ -293,18 +293,6 @@
         entries.set(head.key, {el, markup, head});
       });
       previous.forEach(({el}, key) => { if (!entries.has(key)) el.remove(); });
-      const tokenFocus = tokens.contains(active) ? active.dataset.locate : '';
-      const tokenMarkup = shown.slice(0, 8).map(head => `
-        <button type="button" data-locate="${esc(head.key)}" title="${esc(headLabel(head))}"
-          aria-label="Locate ${esc(headLabel(head))}" style="--wh-token:${colour(head)}">
-          ${headGlyph(head)}
-        </button>`).join('');
-      if (tokens.dataset.markup !== tokenMarkup) {
-        tokens.innerHTML = tokenMarkup;
-        tokens.dataset.markup = tokenMarkup;
-        [...tokens.children].find(button => button.dataset.locate === tokenFocus)?.focus({preventScroll:true});
-      }
-      tokens.querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.locate === selected)));
       const count = Math.ceil(heads.length / PAGE_SIZE);
       pages.hidden = count <= 1;
       pages.querySelector('span').textContent = `${page + 1} / ${count}`;
@@ -348,7 +336,7 @@
         <li><div><a ${stateAttributes(state)} href="${esc(href(head, state))}">${esc(title(state))}</a>
           ${index === 0 && state.summary && state.summary !== title(state) ? `<p>${esc(state.summary)}</p>` : ''}
           ${index === 0 && stateLabel(state) ? `<span>${esc(stateLabel(state))}</span>` : ''}
-        </div> ${stamp(state)}</li>`).join('');
+        </div><a class="wh-history-time" data-head-timeline="${esc(state.id)}" href="${esc(WorldBrane.timelineHref(head.key, state.id))}" aria-label="Show ${esc(title(state))} on the timeline">${stamp(state)}<span>Timeline</span></a></li>`).join('');
       if (list.dataset.markup !== markup) {
         const active = list.contains(document.activeElement) && document.activeElement.getAttribute('href');
         list.innerHTML = markup;
@@ -376,6 +364,7 @@
       }
       if (button === reset) {
         positions.clear();
+        reset.hidden = true;
         board.scrollTop = 0;
         layout();
         save();
@@ -475,15 +464,15 @@
       empty.textContent = model?.reason || (model ? 'No recorded branch heads are available.' : stale
         ? [options.reason || 'World’s branch history is unavailable.', 'This view will retry automatically.'].join(' ')
         : 'Waiting for World’s branch history.');
-      const optionMarkup = '<option value="">Jump to…</option>' + heads.map(head =>
-        `<option value="${esc(head.key)}">${esc(headLabel(head))}${head.repo ? ' / ' + esc(head.repo) : ''}</option>`).join('');
+      const optionMarkup = '<option value="">Choose…</option>' + heads.map(head =>
+        `<option value="${esc(head.key)}">${esc(headLabel(head))}${head.repo && currentModel?.repos?.length > 1 ? ' / ' + esc(head.repo) : ''}</option>`).join('');
       if (picker.dataset.markup !== optionMarkup) {
         picker.innerHTML = optionMarkup;
         picker.dataset.markup = optionMarkup;
       }
       picker.value = headByKey.has(selected) ? selected : '';
       picker.disabled = !heads.length;
-      reset.disabled = !heads.length;
+      reset.hidden = !positions.size;
       nav.classList.toggle('wh-no-cards', !heads.length);
       sessions.hidden = !projection.unlinked.length;
       sessions.querySelector('summary').textContent = `${projection.unlinked.length} unlinked ${stale ? 'last seen' : 'live'} ${projection.unlinked.length === 1 ? 'session' : 'sessions'}`;
@@ -495,7 +484,7 @@
       }
       drawPage();
       if (restore) {
-        if (requested && requested !== persisted?.selected && entries.has(requested)) locate(requested, false);
+        if (requested && (returnedState || requested !== persisted?.selected) && entries.has(requested)) locate(requested, false);
         else if (Number.isFinite(persisted?.scrollTop)) board.scrollTop = persisted.scrollTop;
       }
       if (history.open) renderHistory();

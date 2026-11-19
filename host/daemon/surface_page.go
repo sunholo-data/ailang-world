@@ -163,7 +163,9 @@ func (d *Daemon) handleSurfaceAppScript(w http.ResponseWriter, _ *http.Request) 
 }
 
 func (d *Daemon) handleSurfaceHeads(w http.ResponseWriter, r *http.Request) {
-	if r.URL.RawQuery != "" {
+	// at preserves the inspected state when returning from either projection.
+	q, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil || r.URL.RawQuery != "" && (len(q) != 1 || len(q["at"]) != 1 || q.Get("at") == "") {
 		writeSurfaceError(w, http.StatusBadRequest, "BadRequest", unknownSurfaceKeyMessage)
 		return
 	}

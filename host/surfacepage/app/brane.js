@@ -13,5 +13,21 @@ const WorldBrane = (() => {
     return `<span class="g" style="width:${size}px;height:${size}px;background:${colour};clip-path:${CLIP[shape] || 'none'};border-radius:${shape === 'square' ? '2px' : '0'};${extra}"></span>`;
   }
 
-  return {glyph: gl, label: rowLabel, sharedInk: SHARED_INK};
+  const timelineHref = (brane, at) => '/surface#' + new URLSearchParams(at ? {brane, at} : {brane});
+  function graphEdges(model) {
+    const lanes = new Map((model.lanes || []).map(lane => [lane.key, lane]));
+    const ids = new Set([...lanes.values()].flatMap(lane => (lane.states || []).map(state => state.id)));
+    const edges = (model.links || []).filter(({from, to}) => ids.has(from) && ids.has(to));
+    const repos = Array.isArray(model.repos) ? model.repos.filter(repo => repo.shared && lanes.has(repo.shared)) : [];
+    const shared = repos.length ? repos.map(repo => repo.shared) : ['shared'];
+    for (const key of shared) {
+      const line = (lanes.get(key)?.states || []).filter(state => state.kind === 'shared').sort((a, b) => a.rank - b.rank);
+      for (let i = 1; i < line.length; i++) edges.push({from: line[i - 1].id, to: line[i].id});
+    }
+    return edges;
+  }
+
+  return {glyph: gl, label: rowLabel, sharedInk: SHARED_INK, timelineHref, graphEdges};
 })();
+
+if (typeof module !== 'undefined') module.exports = WorldBrane;

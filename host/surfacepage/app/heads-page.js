@@ -10,30 +10,35 @@
 
   const selectedCard = () => container.querySelector('.wh-card.is-selected');
   function updateTimelineLink() {
-    const brane = selectedCard()?.dataset.head;
-    timeline.href = '/surface' + (brane ? '#brane=' + encodeURIComponent(brane) : '');
+    const selected = selectedCard();
+    const state = selected?.querySelector('.wh-rear[aria-current="location"], .wh-open[data-state]');
+    timeline.href = selected ? WorldBrane.timelineHref(selected.dataset.head, state?.dataset.state) : '/surface';
+  }
+  function saveProjection(link, stateLink) {
+    const target = new URL(link.href);
+    const side = !target.searchParams.has('brane');
+    const address = side ? new URLSearchParams(target.hash.slice(1)) : target.searchParams;
+    const brane = address.get('brane'), at = address.get('at');
+    if (!brane) return;
+    const card = [...container.querySelectorAll('.wh-card')].find(el => el.dataset.head === brane);
+    const pane = stateLink ? link.closest('.wh-rear, .wh-face') : card?.querySelector('.wh-rear[aria-current="location"]');
+    const visible = el => el?.getClientRects().length;
+    const anchor = pane || (stateLink ? link : card?.querySelector('.wh-face'));
+    const ownGlyph = card?.querySelector('.wh-grip .g');
+    const glyph = pane?.querySelector('.g') || (visible(ownGlyph) && (pane || !stateLink) ? ownGlyph : link.querySelector('.g') || link);
+    projection.save(link.href, at ? JSON.stringify([brane, at]) : brane, glyph, anchor,
+      card?.style.getPropertyValue('--wh-base'), false);
   }
   timeline.addEventListener('pointerdown', updateTimelineLink);
   timeline.addEventListener('focus', updateTimelineLink);
   timeline.addEventListener('click', event => {
     updateTimelineLink();
-    const selected = selectedCard();
-    if (selected && projection?.plainClick(event)) {
-      projection.save(timeline.href, selected.dataset.head, selected.querySelector('.wh-grip .wh-glyph'),
-        selected.querySelector('.wh-face'), selected.style.getPropertyValue('--wh-base'), false);
-    }
+    if (projection?.plainClick(event)) saveProjection(timeline, false);
   });
   container.addEventListener('click', event => {
     if (!projection?.plainClick(event)) return;
-    const link = event.target.closest('a[data-head-state]');
-    if (!link) return;
-    const target = new URL(link.href);
-    const brane = target.searchParams.get('brane');
-    const card = link.closest('.wh-card') || selectedCard();
-    const glyph = card?.querySelector('.wh-grip .wh-glyph');
-    const face = link.closest('.wh-rear') || link.closest('.wh-face') || link;
-    projection.save(link.href, JSON.stringify([brane, link.dataset.headState]), glyph || link, face,
-      card?.style.getPropertyValue('--wh-base'), false);
+    const link = event.target.closest('a[data-head-state], a[data-head-timeline]');
+    if (link) saveProjection(link, true);
   }, {capture:true});
   container.addEventListener('click', updateTimelineLink);
   container.addEventListener('change', updateTimelineLink);
@@ -44,8 +49,8 @@
     const selected = selectedCard();
     if (!selected) return;
     projected = true;
-    projection.animate(incoming, selected.dataset.head, selected.querySelector('.wh-grip .wh-glyph'),
-      selected.querySelector('.wh-face'), false);
+    const pane = selected.querySelector('.wh-rear[aria-current="location"]') || selected.querySelector('.wh-face');
+    projection.animate(incoming, selected.dataset.head, pane.querySelector('.g'), pane, false);
   }
 
   const dark = matchMedia('(prefers-color-scheme: dark)');

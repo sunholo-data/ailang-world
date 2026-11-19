@@ -41,7 +41,7 @@ func TestHeadsLinks(t *testing.T) {
 const headsLinksHarness = `
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const {project, neighbors, detailsMarkup, geometry} = require(process.argv[1]);
+const {project, neighbors, stationsFor, detailsMarkup, geometry} = require(process.argv[1]);
 const model = JSON.parse(fs.readFileSync(0));
 
 const before = JSON.stringify(model);
@@ -59,22 +59,34 @@ const shown = new Map([[selected, {}]]);
 const details = detailsMarkup(projected, shown, selected);
 assert.match(details, /off page/);
 const shared = 'world:brane:shared';
-const peer = neighbors(projected, selected).get(shared);
-assert.equal(peer.direction, 'both', 'a recorded base and merge imply both directions across branch history');
 assert.match(details, /data-locate="world:brane:shared"/);
-assert.match(details, /Recorded links in both directions/);
-assert.match(details, /<details class="wh-link-records"/);
+assert.match(details, /data-relation="fork"/);
+assert.match(details, /data-relation="merge"/);
+assert.match(details, /data-topology-state="world:episode:w189z"/);
+assert.match(details, /data-head-timeline="world:episode:w189z" href="\/surface#brane=world%3Abrane%3Arow-189&amp;at=world%3Aepisode%3Aw189z"/);
+const stations = stationsFor(projected, neighbors(projected, selected), selected);
+assert(stations.some(({incoming, outgoing}) => incoming.length && outgoing.length), 'a fork and merge can meet at the same selected state');
+assert.equal(stations[0].state.id, projected.tips.get(selected));
+for (let index = 2; index < stations.length; index++) {
+  assert(Date.parse(stations[index - 1].state.at) >= Date.parse(stations[index].state.at), 'selected stations are ordered in recorded time');
+}
 const anotherPage = detailsMarkup(projected, new Map([[shared, {}]]), shared);
 assert.match(anotherPage, /data-locate="world:brane:row-189"/);
 assert.doesNotMatch(anotherPage, /data-locate="world:brane:shared"/);
 const running = 'world:brane:row-190';
 const singleEdge = project({...model, links: model.links.filter(edge => edge.to === 'world:episode:w189z')});
 assert.equal(neighbors(singleEdge, running).size, 0);
-assert.match(detailsMarkup(singleEdge, new Map([[running, {}]]), running), /No recorded links/);
-assert.equal(neighbors(singleEdge, selected).get(shared).direction, 'incoming');
-assert.equal(neighbors(singleEdge, shared).get(selected).direction, 'outgoing');
+assert.match(detailsMarkup(singleEdge, new Map([[running, {}]]), running), /No branch links/);
+assert.equal(stationsFor(singleEdge, neighbors(singleEdge, selected), selected, 'world:episode:w189z')[0].incoming.length, 1);
+const anchor = model.links.find(edge => edge.to === 'world:episode:w189z').from;
+const sharedStation = stationsFor(singleEdge, neighbors(singleEdge, shared), shared, anchor)[0];
+assert.equal(sharedStation.state.id, anchor);
+assert(sharedStation.outgoing.some(edge => edge.to.state.id === 'world:episode:w189z'));
+assert(sharedStation.incoming.some(edge => edge.from.lane.key === shared), 'include the timeline first-parent line');
+assert(sharedStation.outgoing.some(edge => edge.to.lane.key === shared), 'include the timeline first-parent successor');
+assert.equal(stationsFor(projected, neighbors(projected, selected), selected, anchor)[0].state.id, projected.tips.get(selected), 'reject an address on another branch');
 assert.match(details, /Earlier state/);
-assert.match(details, /<strong>Base/);
+assert.match(details, /<strong>Fork/);
 assert.match(details, /<strong>Merge/);
 assert.match(details, /row-189&(?:amp;)?at=world%3Aepisode%3Aw189z#heads/);
 assert.doesNotMatch(details, /tools%3A/);

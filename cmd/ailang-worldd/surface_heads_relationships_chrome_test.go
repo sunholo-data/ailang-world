@@ -38,6 +38,7 @@ func TestSurfaceHeadsTracksSelectedRelationshipsInChrome(t *testing.T) {
 		{From: "base-tip", To: "selected-tip"},
 		{From: "selected-tip", To: "derived-tip"},
 		{From: "mixed-base", To: "selected-tip"},
+		{From: "mixed-base", To: "mixed-tip"},
 		{From: "selected-tip", To: "mixed-tip"},
 		{From: "selected-tip", To: "remote-tip"},
 	}
@@ -71,44 +72,52 @@ func TestSurfaceHeadsTracksSelectedRelationshipsInChrome(t *testing.T) {
 	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface/heads#selected", "raw": true})
 	wait(`(() => {
 		window.headCard = key => document.querySelector('.wh-card[data-head="' + key + '"]');
-		window.relationshipBadge = key => Array.from(headCard(key)?.querySelectorAll('.wh-link-marker') || [])
-			.find(badge => badge.getClientRects().length)?.textContent;
-		const base = headCard('base')?.querySelector('.wh-restore');
-		const badge = base?.querySelector('.wh-link-marker');
-		const recency = base?.querySelector('.wh-recency');
-		const description = document.getElementById(base?.getAttribute('aria-describedby'));
+		window.station = () => document.querySelector('.wh-topology-station');
+		const on = key => headCard(key)?.classList.contains('has-wh-link');
 		return headCard('selected')?.classList.contains('is-selected') &&
-			relationshipBadge('base') === 'In' && relationshipBadge('derived') === 'Out' &&
-			relationshipBadge('mixed') === 'Both' && !relationshipBadge('unrelated') &&
+			on('base') && on('derived') && on('mixed') && !on('unrelated') &&
 			headCard('unrelated').classList.contains('wh-unrelated') &&
-			headCard('base').classList.contains('has-wh-link') &&
-			description?.textContent === 'Recorded links to the selected branch' &&
-			badge.getBoundingClientRect().bottom <= recency.getBoundingClientRect().top &&
+			station()?.querySelector('.wh-topology-in [data-relation="fork"] button[data-locate="base"]') &&
+			station()?.querySelector('.wh-topology-out [data-relation="base"] button[data-locate="derived"]') &&
+			station()?.querySelector('.wh-topology-out [data-relation="merge"] button[data-locate="mixed"]') &&
+			station()?.querySelector('.wh-topology-in button[data-locate="mixed"]') &&
 			document.querySelectorAll('.wh-link.is-active').length === 3 &&
-			document.querySelector('.wh-neighborhood > summary')?.textContent.includes('1 off page');
+			document.querySelector('.wh-neighborhood header')?.textContent.includes('1 off page');
 	})()`)
+	tap(`[data-topology-state="selected-tip"]`)
+	wait(`(() => {
+		const evidence = station().querySelector('.wh-topology-evidence:not([hidden])');
+		return evidence?.querySelector('a[data-head-timeline="mixed-base"]')?.getAttribute('href') === '/surface#brane=mixed&at=mixed-base' &&
+			evidence.querySelector('a[data-head-state="mixed-base"]')?.getAttribute('href') === '/surface?brane=mixed&at=mixed-base#heads' &&
+			evidence.textContent.includes('Earlier state');
+	})()`)
+	tap(`[data-topology-state="selected-tip"]`)
 
 	// Following a folded peer moves the focus and redraws the neighborhood.
 	tap(`.wh-card[data-head="mixed"] .wh-restore`)
 	wait(`headCard('mixed').classList.contains('is-selected') &&
-		relationshipBadge('selected') === 'Both' &&
-		!headCard('base').querySelector('.wh-link-marker') && !relationshipBadge('derived') &&
+		headCard('selected').classList.contains('has-wh-link') &&
+		!headCard('base').classList.contains('has-wh-link') &&
+		!headCard('derived').classList.contains('has-wh-link') &&
+		station().querySelector('[data-topology-state="mixed-tip"]') &&
+		station().querySelector('.wh-topology-in [data-relation="continues"] a[data-head-timeline="mixed-base"]')?.getAttribute('href') === '/surface#brane=mixed&at=mixed-base' &&
 		document.querySelectorAll('.wh-link.is-active').length === 1`)
-	tap(`.wh-neighborhood > summary`)
-	tap(`.wh-neighborhood button[data-locate="selected"]`)
-	wait(`headCard('selected').classList.contains('is-selected') && relationshipBadge('base') === 'In'`)
+	tap(`.wh-topology-earlier > summary`)
+	wait(`document.querySelector('.wh-topology-earlier[open] [data-topology-state="mixed-base"]')?.getClientRects().length`)
+	tap(`.wh-neighborhood > .wh-topology-panel > .wh-topology button[data-locate="selected"]`)
+	wait(`headCard('selected').classList.contains('is-selected') && headCard('base').classList.contains('has-wh-link')`)
 
-	// Navigate via the relationship list to a peer on the second page.
-	tap(`.wh-neighborhood > summary`)
+	// Navigate via the topology to a peer on the second page.
 	tap(`.wh-neighborhood button[data-locate="remote"]`)
 	wait(`headCard('remote')?.classList.contains('is-selected') &&
-		!headCard('selected') && !document.querySelector('.wh-link-marker') &&
-		document.querySelector('.wh-neighborhood > summary')?.textContent.includes('1 off page') &&
+		!headCard('selected') && !document.querySelector('.wh-card.has-wh-link') &&
+		document.querySelector('.wh-neighborhood header')?.textContent.includes('1 off page') &&
 		document.querySelector('.wh-neighborhood button[data-locate="selected"]')`)
 
 	tap(`.wh-card[data-head="isolated"] .wh-restore`)
 	wait(`headCard('isolated').classList.contains('is-selected') &&
-		!document.querySelector('.wh-link-marker, .wh-card.wh-unrelated, .wh-link.is-active') &&
-		document.querySelector('.wh-link-note')?.textContent.includes('No recorded links') &&
+		!document.querySelector('.wh-card.has-wh-link, .wh-card.wh-unrelated, .wh-link.is-active') &&
+		document.querySelector('.wh-neighborhood header')?.textContent.includes('No branch links') &&
+		station().querySelector('[data-topology-state="isolated-tip"]') &&
 		window.__cspv?.length === 0`)
 }

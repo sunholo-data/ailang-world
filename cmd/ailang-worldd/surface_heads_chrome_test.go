@@ -34,11 +34,12 @@ func TestSurfaceHeadsOpensExactHistoryInChrome(t *testing.T) {
 	const rearState = "f36428abd9a72e5093b61cba14e716c37019f1ef"
 	const earlierState = "59bbded417388861f3acae45c07eb9046f3cacaa"
 	const tip = "652c341d5072c5f49fefe29f9409c93a5119a5be"
-	stackPath := func(state string) string { return "/surface?brane=" + lane + "&at=" + state + "#heads" }
-	wait(fmt.Sprintf(`location.pathname === '/surface/heads' &&
-		[...document.querySelectorAll('h1')].some(h => h.textContent.trim() === 'Branch heads' && h.getClientRects().length) &&
-		document.querySelector('.wh-card[data-head=%q] .wh-open')?.getAttribute('href') === %q`,
-		lane, stackPath(tip)))
+	stackURL := func(state string) string { return "/surface?brane=" + lane + "&at=" + state }
+	stackPath := func(state string) string { return stackURL(state) + "#heads" }
+	timelinePath := func(state string) string { return "/surface#brane=" + lane + "&at=" + state }
+	returnPath := func(state string) string { return "/surface/heads?at=" + state + "#" + lane }
+	wait(`location.pathname === '/surface/heads' &&
+		[...document.querySelectorAll('h1')].some(h => h.textContent.trim() === 'Branch heads' && h.getClientRects().length)`)
 
 	// An older lane may be folded in the present slice. Recall it through
 	// the same navigator an operator uses before inspecting its history.
@@ -49,6 +50,9 @@ func TestSurfaceHeadsOpensExactHistoryInChrome(t *testing.T) {
 		pick.dispatchEvent(new Event('change', {bubbles:true}));
 		return true;
 	})()`, lane, lane))
+	wait(fmt.Sprintf(`document.querySelector('.wh-card[data-head=%q].is-selected .wh-open')?.getAttribute('href') === %q &&
+		document.querySelector('.wh-card[data-head=%q].is-selected .wh-map')?.getAttribute('href') === %q`,
+		lane, stackPath(tip), lane, timelinePath(tip)))
 
 	focus := func(selector string) {
 		t.Helper()
@@ -64,18 +68,43 @@ func TestSurfaceHeadsOpensExactHistoryInChrome(t *testing.T) {
 		b.do(t, nil, "key", map[string]any{"key": "Enter"})
 	}
 
-	assertStackAndReturn := func(state string) {
+	assertHeadsReturn := func(state string) {
 		t.Helper()
+		b.do(t, nil, "tap", map[string]any{"id": "heads-link"})
+		pane := fmt.Sprintf(`.wh-card[data-head=%q].is-selected `, lane)
+		if state == tip {
+			pane += fmt.Sprintf(`.wh-open[data-head-state=%q]`, state)
+		} else {
+			pane += fmt.Sprintf(`.wh-rear[data-head-state=%q][aria-current="location"]`, state)
+		}
 		wait(fmt.Sprintf(`location.pathname + location.search + location.hash === %q &&
+			document.querySelector(%q)?.getClientRects().length > 0 && window.__cspv?.length === 0`, returnPath(state), pane))
+	}
+	assertStackAndReturn := func(state string, fromHeads bool) {
+		t.Helper()
+		wait(fmt.Sprintf(`location.pathname + location.search === %q &&
 			document.documentElement.dataset.ready === '1' && document.querySelector('#stage')?.dataset.view === 'brane' &&
 			document.querySelector('#front')?.dataset.front === %q &&
-			document.querySelector('#heads-link')?.getAttribute('aria-label') === 'Back to Branch heads' &&
-			document.querySelector('#heads-link')?.getAttribute('href') === %q`, stackPath(state), state, "/surface/heads#"+lane))
-		b.do(t, nil, "tap", map[string]any{"id": "heads-link"})
-		wait(fmt.Sprintf(`location.pathname === '/surface/heads' && location.hash === %q &&
-			document.querySelector('.wh-card[data-head=%q].is-selected .wh-open')?.getClientRects().length > 0 &&
-			window.__cspv?.length === 0`, "#"+lane, lane))
+			document.querySelector('#heads-link')?.getAttribute('href') === %q`, stackURL(state), state, returnPath(state)))
+		if fromHeads {
+			wait(`location.hash === '#heads' && document.querySelector('#heads-link')?.getAttribute('aria-label') === 'Back to Branch heads'`)
+		}
+		assertHeadsReturn(state)
 	}
+	assertExactTimeline := func(state string) {
+		t.Helper()
+		wait(fmt.Sprintf(`location.pathname + location.search + location.hash === %q &&
+			document.documentElement.dataset.ready === '1' && document.querySelector('#stage')?.dataset.view === 'timeline' &&
+			document.querySelector('#state-status')?.hidden && document.querySelector('#front')?.dataset.front !== %q &&
+			document.querySelector('#tl .node[data-state=%q]')?.checkVisibility({visibilityProperty:true, opacityProperty:true}) &&
+			document.querySelector('#heads-link')?.getAttribute('href') === %q`, timelinePath(state), state, state, returnPath(state)))
+	}
+
+	// The front face's timeline control opens the current tip on the timeline.
+	focus(fmt.Sprintf(`.wh-card[data-head=%q] .wh-map[href=%q]`, lane, timelinePath(tip)))
+	enter()
+	assertExactTimeline(tip)
+	assertHeadsReturn(tip)
 
 	// Verify the rear pane can receive an actual pointer click above the front
 	// card. The driver takes an element ID, so tag the matched link for the tap.
@@ -90,14 +119,38 @@ func TestSurfaceHeadsOpensExactHistoryInChrome(t *testing.T) {
 		return true;
 	})()`, rear))
 	b.do(t, nil, "tap", map[string]any{"id": "chrome-rear-pane"})
-	assertStackAndReturn(rearState)
+	assertStackAndReturn(rearState, true)
 
 	// Browse the full lane history and choose a different older state by keyboard.
 	focus(fmt.Sprintf(`.wh-card[data-head=%q] .wh-all`, lane))
 	enter()
 	focus(fmt.Sprintf(`.wh-history[open] a[href=%q]`, stackPath(earlierState)))
 	enter()
-	assertStackAndReturn(earlierState)
+	assertStackAndReturn(earlierState, true)
+
+	// Follow the timestamp's timeline link and return directly to its exact rear pane.
+	focus(fmt.Sprintf(`.wh-card[data-head=%q] .wh-all`, lane))
+	enter()
+	focus(fmt.Sprintf(`.wh-history[open] .wh-history-time[href=%q]`, timelinePath(earlierState)))
+	enter()
+	assertExactTimeline(earlierState)
+	assertHeadsReturn(earlierState)
+
+	// The header's timeline control inherits the returned position. The exact
+	// timeline node opens the stack for that state.
+	focus(fmt.Sprintf(`#timeline-link[href=%q]`, timelinePath(earlierState)))
+	enter()
+	assertExactTimeline(earlierState)
+	wait(fmt.Sprintf(`(() => {
+		const node = document.querySelector('#tl .node[data-state=%q]');
+		if (!node?.checkVisibility({visibilityProperty:true, opacityProperty:true})) return false;
+		const box = node.getBoundingClientRect();
+		if (!node.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2))) return false;
+		node.id = 'chrome-exact-timeline-node';
+		return true;
+	})()`, earlierState))
+	b.do(t, nil, "tap", map[string]any{"id": "chrome-exact-timeline-node"})
+	assertStackAndReturn(earlierState, false)
 }
 
 // The model can arrive first. Hold the stack response until Chrome has built
@@ -192,14 +245,17 @@ func TestSurfaceHeadActivityMovesWithWindowInChrome(t *testing.T) {
 		const recency = window.visibleRecency(card);
 		if (!grip?.getClientRects().length || recency?.querySelector('.wh-trace')?.outerHTML !== window.headTrace ||
 			recency?.querySelector('time.wh-age')?.dateTime !== window.headStamp ||
-			card.style.left !== window.foldedPosition[0] || card.style.top !== window.foldedPosition[1]) return false;
+			Math.abs(parseFloat(card.style.left) - parseFloat(window.foldedPosition[0])) > 2 ||
+			card.style.top !== window.foldedPosition[1]) return false;
+		window.expandedPosition = [card.offsetLeft, card.offsetTop];
 		grip.id = 'chrome-drag-older';
 		return true;
 	})()`)
 	b.do(t, nil, "drag", map[string]any{"id": "chrome-drag-older", "dx": 40, "dy": -30})
 	wait(`(() => {
 		const card = document.querySelector('.wh-card[data-head="older"]');
-		if (card.style.left === window.foldedPosition[0] && card.style.top === window.foldedPosition[1]) return false;
+		const [left, top] = window.expandedPosition;
+		if (Math.hypot(card.offsetLeft - left, card.offsetTop - top) < 10) return false;
 		if (window.visibleRecency(card)?.querySelector('.wh-trace')?.outerHTML !== window.headTrace) return false;
 		window.draggedPosition = [card.style.left, card.style.top];
 		const picker = document.querySelector('.wh-picker select');

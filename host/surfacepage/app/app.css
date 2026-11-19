@@ -389,16 +389,32 @@ button { user-select: none; -webkit-user-select: none; }
 }
 @media(max-width:700px) and (hover:none){#tip{display:none}}
 
-.world-view-link { display:inline-flex;align-items:center;min-height:44px;flex:none;color:var(--hText);font-weight:650;text-underline-offset:4px; }
-.world-view-link:focus-visible { outline:2px solid currentColor; }
-@media(max-width:700px){.world-view-link{font-size:12px}}
+.world-angles { display: inline-flex; flex: none; align-items: center; gap: 2px; }
+.world-angles :is(h1,a) { display: inline-flex; align-items: center; min-height: 44px; margin: 0; padding-inline: 8px; border-block-end: 2px solid transparent; color: var(--hText); font: 600 13px var(--font); text-decoration: none; white-space: nowrap; }
+.world-angles [aria-current="page"] { border-color: currentColor; }
+.world-angles a[href]:hover { background: #ffffff14; }
+.world-angles :focus-visible { outline: 2px solid currentColor; }
+@media(max-width:700px) {
+  .world-angles :is(h1,a) { padding-inline: 5px; font-size: 12px; }
+  .hdr:has(.world-angles) .brand-name { display: none; }
+}
 
-/* A projected brane's edge and glyph travel together between documents. */
+/* The moving pane pivots around the brane's glyph. */
 .projection-carrier { position:fixed; inset:0; z-index:100; pointer-events:none; overflow:hidden; }
-.projection-edge,.projection-marker { position:absolute; transform-origin:0 0; }
-.projection-edge { border:2px solid var(--projection-ink); border-radius:var(--r); background:color-mix(in srgb,var(--projection-ink) 12%,transparent); }
-.projection-marker { display:grid; place-items:center; filter:drop-shadow(0 0 4px var(--stageBg)); }
-.projection-marker > * { margin:0 !important; }
+.projection-flight,.projection-footprint,.projection-edge,.projection-marker { position:absolute; }
+.projection-flight { top:0; left:0; }
+.projection-edge,.projection-footprint {
+  border:1.5px solid color-mix(in srgb,var(--projection-ink) 75%,var(--text));
+  border-radius:var(--r);
+}
+.projection-edge {
+  background:color-mix(in srgb,var(--projection-ink) 10%,var(--bg) 28%);
+  box-shadow:0 3px 10px #152e4824;
+}
+.projection-footprint { border-style:dashed; }
+.projection-footprint.is-side { border-width:0 0 1.5px; border-radius:0; }
+.projection-marker { display:grid; place-items:center; }
+.projection-marker > * { display:block; width:100% !important; height:100% !important; margin:0 !important; }
 @media (prefers-reduced-motion:reduce) { .projection-carrier { display:none; } }
 
 #state-status { position:absolute; inset:0; min-height:0; overflow:auto; background:var(--stageBg); padding:clamp(24px,8vw,84px); }

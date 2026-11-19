@@ -61,7 +61,7 @@
     (D.lanes || []).forEach(l => { LANES[l.key] = l; (l.states || []).forEach(s => { N[s.id] = Object.assign({}, s, { lane: l.key }); }); });
     const parents = {}, kids = {};
     const addEdge = (p, c) => { (kids[p] = kids[p] || []).push(c); (parents[c] = parents[c] || []).push(p); };
-    (D.links || []).forEach(k => { if (N[k.from] && N[k.to]) addEdge(k.from, k.to); }); // links run parent (from) → child (to)
+    WorldBrane.graphEdges(D).forEach(({from, to}) => addEdge(from, to));
     // Groups: follow mode's repos in config order, each with its own shared world and branes; else the one world.
     const repos = Array.isArray(D.repos) ? D.repos.filter(r => r.shared && LANES[r.shared]) : [];
     const GROUPS = repos.length ? repos.map(r => ({ id: r.id, shared: r.shared, repo: r })) : [{ id: '', shared: 'shared', repo: null }];
@@ -69,10 +69,6 @@
     const groupOf = key => { const l = LANES[key]; return (l && l.repo && GROUPS.find(g => g.id === l.repo)) || GROUPS[0]; };
     const dipOf = g => multi ? 'dip|' + g.id : 'dip', otherOf = g => multi ? 'other|' + g.id : 'other';
     const SH = Object.values(N).filter(n => n.kind === 'shared').sort((a, b) => a.rank - b.rank).map(n => n.id);
-    GROUPS.forEach(g => {   // each shared world's own first-parent line; no edge joins two repos
-      const line = SH.filter(id => N[id].lane === g.shared);
-      for (let i = 1; i < line.length; i++) addEdge(line[i - 1], line[i]);
-    });
     const nameOf = key => { const l = LANES[key]; return l ? l.name || l.title || key : String(key); };
     const laneTitle = key => rowLabel(nameOf(key), LANES[key] && LANES[key].row);
     const glyphOf = (key, size) => { const l = LANES[key] || {}; return gl(l.glyph, l.glyph === 'circle' ? SHARED_INK : l.colour, size); };
@@ -126,7 +122,7 @@
 
   // ---------- Layout of the visible graph at one zoom (XS) ----------
   const isCluster = id => typeof id === 'string' && id.startsWith('c:');
-  function layoutGraph(T, XS) {
+  function layoutGraph(T, XS, addressedState) {
     const { N, SIDX, NS, LY } = T, POS = {}, REP = {}, DISP = {};
     Object.keys(N).forEach(id => {
       const n = N[id], r = T.rowOf(id);
@@ -146,8 +142,20 @@
       let g = [];
       const flush = () => {
         if (!g.length) return;
-        if (g.length === 1) { REP[g[0]] = g[0]; DISP[g[0]] = { x: POS[g[0]][0], y: POS[g[0]][1], ids: g, row }; }
-        else { const rid = 'c:' + g[0]; const x = g.reduce((a, id) => a + POS[id][0], 0) / g.length; g.forEach(id => { REP[id] = rid; }); DISP[rid] = { x, y: POS[g[0]][1], ids: g, row }; }
+        // Keep a directly addressed state clickable at its true position even
+        // when the row combines several states into one count at this zoom.
+        const split = g.length > 1 && g.includes(addressedState);
+        if (split) {
+          REP[addressedState] = addressedState;
+          DISP[addressedState] = {x: POS[addressedState][0], y: POS[addressedState][1], ids: [addressedState], row};
+          g = g.filter(id => id !== addressedState);
+        }
+        const id = g.length === 1 ? g[0] : 'c:' + g[0];
+        const x = g.reduce((sum, k) => sum + POS[k][0], 0) / g.length;
+        const y = POS[g[0]][1];
+        const dy = split && Math.abs(x - POS[addressedState][0]) < 24 ? 24 : 0;
+        g.forEach(k => { REP[k] = id; });
+        DISP[id] = {x, y: y + dy, ids: g, row};
         g = [];
       };
       ids.forEach(id => { if (g.length && POS[id][0] - POS[g[g.length - 1]][0] >= SEP) flush(); g.push(id); });
@@ -578,8 +586,14 @@
   const incoming = projection?.take();
   const initialQuery = parseAppQuery(location.search);
   const initialStack = initialQuery?.brane != null;
-  const timelineBrane = new URLSearchParams(location.hash.slice(1)).get('brane');
-  const headsPath = brane => '/surface/heads' + (brane ? '#' + encodeURIComponent(brane) : '');
+  const timelineAddress = new URLSearchParams(location.hash.slice(1));
+  const timelineBrane = timelineAddress.get('brane');
+  const timelineAt = timelineAddress.get('at');
+  const addressedState = () => {
+    const id = T?.aliasOf[timelineAt] || timelineAt;
+    return id && N[id]?.lane === timelineBrane ? id : null;
+  };
+  const headsPath = (brane, at) => '/surface/heads' + (brane && at ? '?' + new URLSearchParams({at}) : '') + (brane ? '#' + encodeURIComponent(brane) : '');
   let T = null, D = null, LANES = {}, N = {}, parents = {}, kids = {}, SH = [], NS = 0, SIDX = {}, TT = [], LX = [], MAXU = LEVELS.length - 1;
   let STEPS = [], TNOW = 0, NOW_D = new Date(), quiet = [], LY = {}, ROWS = [], MXS = [], XS = [];
   let nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, isBreak, lastStep, lastState;
@@ -645,7 +659,7 @@
   const reduced = () => $('root').classList.contains('reduced');
 
   let POS = {}, REP = {}, DISP = {}, LABELED = new Set();
-  function layout() { ({ POS, REP, DISP, LABELED } = layoutGraph(T, XS)); }
+  function layout() { ({ POS, REP, DISP, LABELED } = layoutGraph(T, XS, addressedState())); }
 
   // ---------- Timeline (static frame) ----------
   const readFrom = id => [...READS.values()].some(rd => rd.fromId === id);
@@ -866,7 +880,7 @@
   }
 
   function applyFocus() {
-    if (st.d === 0 && $('state-status').hidden) $('heads-link').href = headsPath(focusedBrane());
+    if (st.d === 0 && $('state-status').hidden) $('heads-link').href = headsPath(focusedBrane(), focusedState());
     const f = st.focus, fr = REP[f] || f, linked = linksOf(f);
     const linkedR = new Set([...linked.keys()].map(k => REP[k]).filter(Boolean));
     const lit = (pr, cr) => (pr === fr && linkedR.has(cr)) || (cr === fr && linkedR.has(pr));
@@ -1041,6 +1055,9 @@
 
   // ---------- Header ----------
   const addrOf = () => F.kind === 'open' ? String(F.id).replace(/:episode:/, ':') : `${String(F.brane).replace(/^([a-z][a-z0-9-]*):brane:/, '$1:')}@${railIdx() + 1}`;
+  function focusedState() {
+    return N[st.focus] ? st.focus : null;
+  }
   function focusedBrane() {
     return N[st.focus]?.lane || N[DISP[st.focus]?.ids?.[0]]?.lane;
   }
@@ -1051,9 +1068,9 @@
     const node = [...$('tl').querySelectorAll('.node')].find(el => el.dataset.id === id);
     const lane = [...$('tl').querySelectorAll('.lhead[data-brane]')].find(el => el.dataset.brane === brane);
     const x = screenX(st.focus);
-    const marker = x >= PL && x <= PR && node?.querySelector('.g, .bub');
+    const marker = x >= PL && x <= PR && node?.querySelector('.g');
     const rule = [...$('tl').querySelectorAll('.lrule')].find(el => el.dataset.projectionRow === T?.homeRow(row));
-    return [marker || lane?.querySelector('.g'), rule || lane];
+    return [marker || lane?.querySelector('.g') || node?.querySelector('.bub'), rule || lane];
   }
   function showHeads(event) {
     if (event && !projection?.plainClick(event)) return;
@@ -1068,10 +1085,18 @@
   }
   function renderCrumbs() {
     const waiting = initialStack && $('stage').dataset.view.startsWith('stack-');
-    $('heads-link').href = headsPath(st.d === 1 && F ? F.brane : waiting ? initialQuery.brane : focusedBrane());
+    $('heads-link').href = headsPath(st.d === 1 && F ? F.brane : waiting ? initialQuery.brane : focusedBrane(), st.d === 1 && F ? F.id : waiting ? initialQuery.at : focusedState());
     const fromHeads = (st.d === 1 || waiting) && location.hash === '#heads';
     $('heads-link').setAttribute('aria-label', fromHeads ? 'Back to Branch heads' : 'Branch heads');
-    $('heads-link').textContent = fromHeads ? '← Branch heads' : 'Branch heads';
+    const side = $('timeline-view');
+    const state = st.d === 1 ? F : waiting ? initialQuery : null;
+    if (state) {
+      side.href = WorldBrane.timelineHref(state.brane, state.id || state.at);
+      side.removeAttribute('aria-current');
+    } else {
+      side.removeAttribute('href');
+      side.setAttribute('aria-current', 'page');
+    }
     $('crumbs').innerHTML = crumbsHTML(st.d === 1 && F ? addrOf() : null);
     $('addr').placeholder = st.d !== 0 ? '' : (T && T.GROUPS[0].id ? 'go to a place — ' + T.GROUPS.map(g => g.id).join(' · ') + ' · ' + T.GROUPS[0].id + ':row-N@1' : 'go to a place — row-189@6 · shared@0ffbb9c') + ' · episode report <episode> · why <target>';
   }
@@ -1120,7 +1145,7 @@
     setModel(b);
     shownGen = b.generation == null ? null : b.generation; shownAt = hm(new Date());
     const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);   // the latest work, as v3 opened on its front
-    st.focus = (st.d === 1 && F?.id) || lastState(timelineBrane)?.id || newest?.id || SH[NS - 1] || null;
+    st.focus = (st.d === 1 && F?.id) || addressedState() || lastState(timelineBrane)?.id || newest?.id || SH[NS - 1] || null;
     renderTimeline();
     if (st.d === 1 && F) renderBrane(false);
     if (st.d === 0 && $('state-status').hidden) setView('timeline');
@@ -1336,7 +1361,7 @@
     $('state-status').hidden = false;
     $('state-status-title').textContent = reason ? 'The state could not be read' : 'Reading state…';
     $('state-status-detail').textContent = reason || '';
-    $('state-status-heads').href = headsPath(initialQuery.brane);
+    $('state-status-heads').href = headsPath(initialQuery.brane, initialQuery.at);
     $('state-retry').hidden = !reason;
     $('state-retry').href = location.href;
     renderCrumbs();
@@ -1638,6 +1663,10 @@
     if (st.d === 1) out(); else if (T) goNow();
   });
   $('heads-link').addEventListener('click', showHeads);
+  $('timeline-view').addEventListener('click', event => {
+    if (!F || st.d !== 1 || !projection?.plainClick(event)) return;
+    projection.save(event.currentTarget.href, JSON.stringify([F.brane, F.id]), $('front').querySelector('.fbar .g'), $('front'), F.colour, false);
+  });
   $('keys-btn').addEventListener('click', () => toggle('keys'));
   $('look-btn').addEventListener('click', () => toggle('look'));
   $('look').addEventListener('click', e => { const b = e.target.closest('[data-look]'); if (!b) return; const [k, v] = b.dataset.look.split(':'); look[k] = v; saveLook(); applyLook(); renderLook(); });
@@ -1650,7 +1679,7 @@
   document.addEventListener('keydown', e => {
     if (e.target && (e.target.tagName === 'INPUT' || e.target.closest?.('#episode-draft, #compose-btn'))) return;
     const k = e.key; let done = true;
-    if (k === 'Enter' && e.target && (e.target.id === 'home' || e.target.id === 'heads-link')) return;   // the link's own activation: its click goes home
+    if (k === 'Enter' && e.target && (e.target.id === 'home' || e.target.id === 'heads-link' || e.target.id === 'timeline-view')) return;   // the link's own activation: its click goes home
     if (k === 'Enter' && e.target && e.target.closest && e.target.closest('[data-now]')) return;   // the now card's links and buttons activate themselves
     if (k === '?') toggle('keys');
     else if (k === ',') toggle('look');
@@ -1701,11 +1730,13 @@
     const model = loadModel();
     const ok = await model;
     if (ok && timelineBrane && !initialStack && focusedBrane() === timelineBrane) {
-      ensureVisible(st.focus, false);
+      panTo(DISP[REP[st.focus]].x - PW / 2, false);
       const [glyph, face] = timelineMarker();
       if (narrow.matches) glyph?.scrollIntoView({block: 'nearest'});
-      projection?.animate(incoming, timelineBrane, glyph, face, true);
+      if (timelineAt) glyph?.closest('.node')?.focus({preventScroll: true});
+      projection?.animate(incoming, timelineAt ? JSON.stringify([timelineBrane, timelineAt]) : timelineBrane, glyph, face, true);
     }
+    if (ok && timelineAt && !initialStack && !addressedState()) say('This state is outside the current timeline');
     if (stack) await stack;
     if (ok) startLive();
     if (followMode) schedulePoll();

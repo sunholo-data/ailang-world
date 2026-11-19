@@ -125,8 +125,13 @@ func TestSurfaceAppRoutes(t *testing.T) {
 		if w := request("POST", "/surface/heads"); w.Code != http.StatusMethodNotAllowed {
 			t.Errorf("POST /surface/heads = %d", w.Code)
 		}
-		if w := request("GET", "/surface/heads?at=x"); w.Code != http.StatusBadRequest {
-			t.Errorf("unexpected branch heads query = %d", w.Code)
+		if w := request("GET", "/surface/heads?at=world%3Acommit%3Aabc"); w.Code != http.StatusOK || !bytes.Equal(w.Body.Bytes(), surfacepage.HeadsShell) {
+			t.Errorf("addressed branch head = %d", w.Code)
+		}
+		for _, query := range []string{"at=", "at=x&at=y", "brane=x", "at=x&extra=y", "at=%GG"} {
+			if w := request("GET", "/surface/heads?"+query); w.Code != http.StatusBadRequest {
+				t.Errorf("unexpected branch heads query %q = %d", query, w.Code)
+			}
 		}
 	})
 

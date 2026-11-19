@@ -1,130 +1,142 @@
 .world-heads {
   --wh-relation-ink: color-mix(in srgb, var(--wh-selection, var(--ctl)) 65%, var(--text));
-  --wh-relation-fill: color-mix(in srgb, var(--wh-selection, var(--ctl)) 40%, var(--text));
 }
 .wh-link {
-  color: color-mix(in srgb, var(--sub) 66%, var(--ctl));
-  opacity: .62;
+  color: var(--wh-relation-ink);
+  opacity: .2;
 }
-.wh-link.is-muted { opacity: .12; }
-.wh-link.is-active { color: var(--wh-relation-ink); opacity: .92; }
+.wh-link.is-active { opacity: .75; }
 .wh-link path {
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.35px;
+  stroke-width: 1.6px;
   vector-effect: non-scaling-stroke;
 }
 .wh-link.is-history path { stroke-dasharray: 4 4; }
-.wh-link.is-active path { stroke-width: 2px; }
 .wh-link circle { fill: var(--stageBg); stroke: currentColor; }
 .wh-link circle.is-exact { fill: currentColor; }
 
 .wh-link-details {
-  position: relative;
-  z-index: 2;
-  display: flex;
   flex: 0 0 auto;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 14px;
-  padding: 5px clamp(10px, 3vw, 32px);
+  padding: 4px clamp(10px, 3vw, 32px);
   border-top: 1px solid var(--line);
   background: var(--panel);
   color: var(--sub);
   font-size: 11px;
 }
 .wh-link-note { color: var(--text); }
-.wh-link-details details { flex: 0 1 auto; min-width: 0; }
-.wh-link-details summary {
-  padding: 4px;
-  color: var(--text);
-  font-weight: 650;
-  cursor: pointer;
-  overflow-wrap: anywhere;
+.wh-neighborhood { max-width: 760px; margin-inline: auto; }
+.wh-neighborhood header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 5px 10px;
+  padding-block: 2px 4px;
 }
-.wh-link-details summary:hover { text-decoration: underline; }
-.wh-neighborhood > ul {
+.wh-neighborhood header > span:last-child { flex: none; }
+.wh-topology-title { display: inline-flex; align-items: center; gap: 6px; min-width: 0; color: var(--text); }
+.wh-topology-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wh-topology-title .g, .wh-topology-edge .g { flex: none; }
+.wh-topology-panel { max-height: min(130px, 22dvh); overflow: auto; scrollbar-color: var(--ctl) var(--panel); }
+.wh-topology-panel:has(.wh-topology-earlier[open], [aria-expanded="true"]) { max-height: min(280px, 39dvh); }
+.wh-topology { list-style: none; margin: 0; padding: 0; }
+.wh-topology-station {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(66px, 16%) minmax(0, 1fr);
+  align-items: center;
+  min-height: 44px;
+}
+.wh-topology-station + li { border-top: 1px solid var(--line); }
+.wh-topology-node {
+  position: relative;
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  height: 100%;
+}
+.wh-topology-node::before {
   position: absolute;
-  inset: auto auto 100% clamp(10px, 3vw, 32px);
-  width: min(660px, calc(100% - 24px));
-  max-height: min(46dvh, 380px);
-  overflow: auto;
-  margin: 0;
-  padding: 5px 12px;
-  border: 1px solid var(--ctl);
-  border-radius: var(--r);
-  list-style: none;
-  background: var(--bg);
-  color: var(--text);
-  box-shadow: 0 8px 22px #152e4830;
+  inset: 0 auto;
+  content: '';
+  width: 1px;
+  background: var(--wh-relation-ink);
 }
-.wh-neighborhood li { padding: 8px 0; }
-.wh-neighborhood li + li { border-top: 1px solid var(--line); }
-.wh-link-peer { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; }
-.wh-link-peer > span { color: var(--sub); }
-.wh-link-peer button {
-  padding: 4px 7px;
-  border: 1px solid var(--ctl);
+.wh-topology-node button {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 3px 2px;
+  border: 1px solid transparent;
+  border-radius: var(--r);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  font: 10px var(--mono);
+}
+.wh-topology-node button:hover, .wh-topology-node button[aria-expanded="true"] { border-color: var(--wh-relation-ink); }
+.wh-topology-in, .wh-topology-out { display: grid; gap: 2px; padding-block: 2px; }
+.wh-topology-edge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.wh-topology-in .wh-topology-edge { justify-content: end; }
+.wh-topology-out .wh-topology-edge { flex-direction: row-reverse; justify-content: start; }
+.wh-topology-edge :is(button, a) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 3px 4px;
+  border: 1px solid var(--line);
   border-radius: var(--r);
   background: var(--btn);
   color: var(--text);
-  font: 650 12px var(--font);
-  overflow-wrap: anywhere;
-  text-align: left;
+  font: 600 11px var(--font);
+  cursor: pointer;
+  text-decoration: none;
+}
+.wh-topology-edge :is(button, a):hover { border-color: var(--wh-relation-ink); }
+.wh-topology-edge :is(button, a) > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wh-edge-direction { flex: none; color: var(--wh-relation-ink); font-size: 10px; font-weight: 650; }
+.wh-topology-earlier > summary {
+  width: fit-content;
+  margin: 2px auto;
+  padding: 3px 5px;
+  color: var(--text);
   cursor: pointer;
 }
-.wh-link-peer button:hover { border-color: var(--wh-relation-ink); text-decoration: underline; }
-.wh-link-records > summary { margin-top: 4px; }
-.wh-link-records ol { margin: 0; padding: 0 0 0 12px; border-inline-start: 1px solid var(--line); list-style: none; }
-.wh-link-states {
+.wh-topology-evidence {
+  grid-column: 1 / -1;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--bg);
+}
+.wh-evidence-edge {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 6px 10px;
-  margin-top: 5px;
+  gap: 4px 8px;
+  align-items: start;
+  padding-block: 5px;
 }
-.wh-link-states div { display: grid; gap: 2px; overflow-wrap: anywhere; }
-.wh-link-states :is(small, div > span) { color: var(--sub); }
-.wh-link-states a { color: var(--text); text-underline-offset: 2px; }
-.wh-link-states time { font-family: var(--mono); }
-.wh-link-arrow { color: var(--sub); }
-
+.wh-evidence-edge + .wh-evidence-edge { border-top: 1px solid var(--line); }
+.wh-evidence-edge > strong { grid-column: 1 / -1; color: var(--text); }
+.wh-evidence-state { display: grid; justify-items: start; min-width: 0; gap: 3px; overflow-wrap: anywhere; }
+.wh-evidence-state a { color: var(--text); text-underline-offset: 2px; }
 
 .wh-card.is-selected .wh-face {
-  outline: 4px double var(--wh-relation-ink);
+  outline: 2px solid var(--wh-relation-ink);
   outline-offset: 2px;
 }
 .wh-card.has-wh-link :is(.wh-face, .wh-restore) {
-  outline: 2px solid var(--wh-relation-ink);
-  outline-offset: 1px;
+  border-color: var(--wh-relation-ink);
 }
 .wh-card.wh-unrelated:not(:hover, :focus-within) :is(.wh-face, .wh-restore, .wh-rear) {
   border-color: var(--line);
   box-shadow: none;
-}
-.wh-link-marker {
-  flex: none;
-  padding: 1px 4px;
-  border-radius: var(--r);
-  background: var(--wh-relation-fill);
-  color: var(--bg);
-  font: 650 10px/1.3 var(--font);
-}
-.wh-grip:has(.wh-link-marker) i { display: none; }
-.wh-link-description {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-@media (max-width: 540px) {
-  .wh-link-details { gap: 2px 8px; }
-  .wh-link-key { display: none; }
-  .wh-link-marker { padding-inline: 3px; }
-}
-
-.wh-card[data-zone="far"] .wh-restore:has(.wh-link-marker) {
-  grid-template-columns: auto minmax(0, 1fr) auto;
 }
