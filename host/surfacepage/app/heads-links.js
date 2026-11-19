@@ -4,16 +4,23 @@
 
   const projectionByModel = new WeakMap();
   const viewBySVG = new WeakMap();
+  let nextDescription = 0;
+  const directions = {
+    incoming: {badge: 'In', label: 'Recorded links to the selected branch'},
+    outgoing: {badge: 'Out', label: 'Recorded links from the selected branch'},
+    both: {badge: 'Both', label: 'Recorded links in both directions'},
+  };
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
-  const laneName = lane => [lane.name || lane.key, lane.repo].filter(Boolean).join(' / ');
+  const laneName = lane => [globalThis.WorldBrane?.label(lane.name || lane.key, lane.row) || lane.name || lane.key, lane.repo].filter(Boolean).join(' / ');
   const stateTitle = state => state.title || state.summary || state.label || state.id;
   const stateHref = ({lane, state}) => '/surface?' + new URLSearchParams({brane: lane.key, at: state.id}) + '#heads';
   const relation = ({from, to}) => from.state.kind === 'step' && to.state.kind === 'shared' ? 'Merge' : 'Base';
 
   function project(model) {
     if (model && projectionByModel.has(model)) return projectionByModel.get(model);
-    const states = new Map(), tips = new Map(), pairs = new Map(), byLane = new Map();
+    const lanes = new Map(), states = new Map(), tips = new Map(), pairs = new Map(), byLane = new Map();
     for (const lane of model?.lanes || []) {
+      lanes.set(lane.key, lane);
       let tip;
       for (const state of lane.states) {
         states.set(state.id, {lane, state});
@@ -37,7 +44,7 @@
       }
       pair.edges.push({from, to});
     }
-    const projection = {pairs: [...pairs.values()], byLane, tips};
+    const projection = {lanes, pairs: [...pairs.values()], byLane, tips};
     if (model) projectionByModel.set(model, projection);
     return projection;
   }
@@ -49,59 +56,123 @@
       <span>${esc(laneName(lane))} · ${position}${state.at ? ' · <time datetime="' + esc(state.at) + '">' + esc(state.at.replace('T', ' ')) + '</time>' : ''}</span>`;
   }
 
-  function detailsMarkup(projection, entries, selected) {
+  function neighbors(projection, selected) {
+    const peers = new Map();
+    for (const {edges} of projection.byLane.get(selected) || []) {
+      const {from, to} = edges[0];
+      const lane = from.lane.key === selected ? to.lane : from.lane;
+      const incoming = edges.some(edge => edge.to.lane.key === selected);
+      const outgoing = edges.some(edge => edge.from.lane.key === selected);
+      peers.set(lane.key, {lane, edges, direction: incoming && outgoing ? 'both' : incoming ? 'incoming' : 'outgoing'});
+    }
+    return peers;
+  }
+
+  function detailsMarkup(projection, entries, selected, peers = neighbors(projection, selected)) {
     const {byLane, tips} = projection;
-    const pairs = byLane.get(selected) || [];
+    const active = tips.has(selected);
     const anyOnPage = [...entries.keys()].some(key => byLane.has(key));
-    if (!anyOnPage && !pairs.length) return '';
-    const legend = '<span class="wh-link-key">Lines connect branches with recorded links. Dashed lines include earlier states or multiple links.</span>';
-    if (!pairs.length) {
-      return legend + '<span class="wh-link-note">' + (selected && entries.has(selected)
+    if (!active && !anyOnPage) return '';
+    const legend = '<span class="wh-link-key">Dashed lines include earlier states or multiple links.</span>';
+    if (!peers.size) {
+      return '<span class="wh-link-note">' + (active
         ? 'No recorded links to other branches for this head.'
-        : 'Select a head to inspect its links.') + '</span>';
+        : 'Select a branch head to see its relationships.') + '</span>' + (anyOnPage && !active ? legend : '');
     }
-    let count = 0, offPage = 0;
-    const items = [];
-    for (const pair of pairs) {
-      const peer = pair.lanes.find(key => key !== selected);
-      const away = !entries.has(peer);
-      count += pair.edges.length;
-      if (away) offPage += pair.edges.length;
-      for (const edge of pair.edges) {
-        items.push(`<li>
-          <strong>${relation(edge)}<span>${away ? ' · Other page' : ''}</span></strong>
-          <div class="wh-link-states">
-            <div><small>From</small>${stateLink(edge.from, tips)}</div>
-            <span class="wh-link-arrow" aria-hidden="true">→</span>
-            <div><small>To</small>${stateLink(edge.to, tips)}</div>
-          </div>
-        </li>`);
+    let offPage = 0;
+    const items = [...peers.values()].map(({lane, edges, direction}) => {
+      const away = !entries.has(lane.key);
+      if (away) offPage++;
+      return `<li>
+        <div class="wh-link-peer">
+          <button type="button" data-locate="${esc(lane.key)}" aria-label="Show branch ${esc(laneName(lane))}">${esc(laneName(lane))}</button>
+          <span>${directions[direction].label}${away ? ' · Other page' : ''}</span>
+        </div>
+        <details class="wh-link-records" data-peer-records="${esc(lane.key)}">
+          <summary>${edges.length} recorded ${edges.length === 1 ? 'link' : 'links'}</summary>
+          <ol>${edges.map(edge => `<li>
+            <strong>${relation(edge)}</strong>
+            <div class="wh-link-states">
+              <div><small>From</small>${stateLink(edge.from, tips)}</div>
+              <span class="wh-link-arrow" aria-hidden="true">→</span>
+              <div><small>To</small>${stateLink(edge.to, tips)}</div>
+            </div>
+          </li>`).join('')}</ol>
+        </details>
+      </li>`;
+    });
+    const label = laneName(projection.lanes.get(selected));
+    return `<details class="wh-neighborhood"><summary>${esc(label)} · ${peers.size} linked ${peers.size === 1 ? 'branch' : 'branches'}${offPage ? ' · ' + offPage + ' off page' : ''}</summary>
+      <ul>${items.join('')}</ul></details>
+      <span class="wh-link-directions">In points to the selected head. Out points away.</span>${legend}`;
+  }
+
+  function markCards(entries, selected, peers) {
+    for (const [key, {el}] of entries) {
+      const peer = peers.get(key);
+      el.classList.toggle('has-wh-link', Boolean(peer));
+      el.classList.toggle('wh-unrelated', peers.size > 0 && key !== selected && !peer);
+      const controls = el.querySelectorAll('.wh-grip, .wh-restore');
+      let description = el.querySelector('.wh-link-description');
+      if (peer && !description) {
+        description = document.createElement('span');
+        description.className = 'wh-link-description';
+        description.id = 'wh-link-description-' + ++nextDescription;
+        el.append(description);
       }
+      if (description) description.textContent = peer ? directions[peer.direction].label : '';
+      for (const control of controls) {
+        let marker = control.querySelector('.wh-link-marker');
+        const ids = (control.getAttribute('aria-describedby') || '').split(/\s+/).filter(id => id && id !== description?.id);
+        if (peer) {
+          if (!marker) {
+            marker = document.createElement('span');
+            marker.className = 'wh-link-marker';
+            marker.setAttribute('aria-hidden', 'true');
+            control.querySelector('.wh-head-name')?.after(marker);
+          }
+          marker.textContent = directions[peer.direction].badge;
+          ids.push(description.id);
+        } else {
+          marker?.remove();
+        }
+        if (ids.length) control.setAttribute('aria-describedby', ids.join(' '));
+        else control.removeAttribute('aria-describedby');
+      }
+      if (!peer) description?.remove();
     }
-    const label = laneName(pairs[0].edges[0].from.lane.key === selected ? pairs[0].edges[0].from.lane : pairs[0].edges[0].to.lane);
-    return legend + `<details><summary>${count} recorded ${count === 1 ? 'link' : 'links'} · ${esc(label)}${offPage ? ' · ' + offPage + ' off page' : ''}</summary>
-      <ul>${items.join('')}</ul></details>`;
   }
 
   function drawDetails(view, details, projection, entries, selected) {
-    const page = [...entries.keys()].join('\n');
-    if (view.detailProjection === projection && view.detailPage === page && view.detailSelected === selected) return;
-    const markup = detailsMarkup(projection, entries, selected);
-    if (view.markup !== markup) {
-      const open = details.querySelector('details')?.open;
-      const active = document.activeElement;
-      const focused = details.contains(active);
-      details.innerHTML = markup;
-      const panel = details.querySelector('details');
-      if (panel && view.detailSelected === selected) panel.open = Boolean(open);
-      if (focused) {
-        const replacement = [...details.querySelectorAll('a')].find(link => link.href === active.href);
-        (replacement || panel?.querySelector('summary'))?.focus({preventScroll: true});
-      }
-      details.hidden = !markup;
-      view.markup = markup;
+    if (view.detailProjection === projection && view.detailEntries === entries && view.detailSelected === selected) return;
+    const peers = neighbors(projection, selected);
+    const accent = projection.lanes.get(selected)?.colour;
+    const root = details.closest('.world-heads');
+    if (/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(accent)) root?.style.setProperty('--wh-selection', accent);
+    else root?.style.removeProperty('--wh-selection');
+    markCards(entries, selected, peers);
+    Object.assign(view, {detailProjection: projection, detailEntries: entries, detailSelected: selected});
+    const markup = detailsMarkup(projection, entries, selected, peers);
+    if (view.markup === markup) return;
+    const open = details.querySelector('.wh-neighborhood')?.open;
+    const openPeers = new Set([...details.querySelectorAll('.wh-link-records[open]')].map(group => group.dataset.peerRecords));
+    const active = document.activeElement;
+    const focused = details.contains(active);
+    details.innerHTML = markup;
+    const panel = details.querySelector('.wh-neighborhood');
+    if (panel && view.neighborhoodSelected === selected) {
+      panel.open = Boolean(open);
+      for (const group of panel.querySelectorAll('.wh-link-records')) group.open = openPeers.has(group.dataset.peerRecords);
     }
-    Object.assign(view, {detailProjection: projection, detailPage: page, detailSelected: selected});
+    if (focused) {
+      const replacement = [...details.querySelectorAll('a, button[data-locate], .wh-link-records > summary')].find(control =>
+        (active.tagName === 'A' && control.href === active.href) ||
+        (active.dataset.locate && control.dataset.locate === active.dataset.locate) ||
+        (active.parentElement?.dataset.peerRecords && control.parentElement?.dataset.peerRecords === active.parentElement.dataset.peerRecords));
+      (replacement || panel?.querySelector('summary'))?.focus({preventScroll: true});
+    }
+    details.hidden = !markup;
+    Object.assign(view, {markup, neighborhoodSelected: selected});
   }
 
   function positions(entries, keys, bounds) {
@@ -202,5 +273,5 @@
   }
 
   if (typeof window !== 'undefined') window.WorldHeadLinks = {render};
-  if (typeof module !== 'undefined') module.exports = {project, detailsMarkup, geometry};
+  if (typeof module !== 'undefined') module.exports = {project, neighbors, detailsMarkup, geometry};
 })();

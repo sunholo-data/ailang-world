@@ -16,21 +16,38 @@
   const {glyph, label: braneLabel, sharedInk} = WorldBrane;
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
   const title = state => state.title || state.summary || state.label || state.id;
-  const stateTime = state => {
-    const time = Date.parse(state?.at);
-    return Number.isFinite(time) ? time : -Infinity;
-  };
-  const lastActivity = head => head.states.reduce((latest, state) => Math.max(latest, stateTime(state)), stateTime(head.latest));
   const stateAttributes = state => `data-head-state="${esc(state.id)}" data-state="${esc(state.id)}"`;
   const colour = head => /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(head.colour) ? head.colour : defaultColour;
   const headGlyph = head => glyph(head.glyph, head.glyph === 'circle' ? sharedInk : colour(head), 12);
   const headLabel = head => braneLabel(head.name, head.row);
-  const ageStamp = head => {
+  function recency(head) {
+    const {last, days} = head.trace;
     const label = esc(head.ageLabel);
-    if (head.liveNow || !Number.isFinite(head.activity)) return `<span class="wh-age">${label}</span>`;
-    const at = new Date(head.activity).toISOString();
-    return `<time class="wh-age" datetime="${at}" title="Last recorded activity: ${esc(timeFormat.format(head.activity))} UTC">${label}</time>`;
-  };
+    const activeDays = days.filter(Boolean).length;
+    const explanation = last === null ? 'No dated state in this snapshot'
+      : `Last recorded state ${timeFormat.format(last)} UTC. Activity on ${activeDays} of the last 30 days.`;
+    const age = last === null ? `<span class="wh-age">${label}</span>`
+      : `<time class="wh-age" datetime="${new Date(last).toISOString()}">${label}</time>`;
+    const bars = days.map((count, i) => {
+      if (!count) return '';
+      const x = 4 + i * 2;
+      const height = Math.min(11, 5 + Math.log2(count) * 2);
+      return `M${x} 12v-${height.toFixed(1)}`;
+    }).join('');
+    const beforeWindow = !activeDays && last !== null ? '<path class="wh-before" d="m4 8-3 3 3 3"/>' : '';
+    return `<span class="wh-recency" title="${esc(explanation)}">
+      <svg class="wh-trace" viewBox="0 0 66 16" preserveAspectRatio="none" role="img" aria-label="${esc(explanation)}"><path class="wh-axis" d="M2 12h61m0-10v12"/>
+        <path class="wh-bars" d="${bars}"/>${beforeWindow}</svg>${age}</span>`;
+  }
+
+  function elapsedLabel(elapsed) {
+    if (!Number.isFinite(elapsed)) return 'Undated';
+    if (elapsed < 60000) return 'Just now';
+    if (elapsed < 3600000) return Math.floor(elapsed / 60000) + 'm ago';
+    if (elapsed < DAY) return Math.floor(elapsed / 3600000) + 'h ago';
+    return Math.floor(elapsed / DAY) + 'd ago';
+  }
+
   const stamp = (state, compact = false) => state.at && Number.isFinite(Date.parse(state.at))
     ? `<time datetime="${esc(state.at)}" title="${esc(state.at)}">${esc((compact ? rearTimeFormat : timeFormat).format(Date.parse(state.at)))}${compact ? '' : ' UTC'}</time>`
     : '<span>Time unavailable</span>';
@@ -57,15 +74,12 @@
     container.classList.add('world-heads');
     container.innerHTML = `
       <header class="wh-bar">
-        <div><h1>Branch heads</h1><p>Branes seen end-on. Select an older brane to bring it forward.</p></div>
+        <div><h1>Branch heads</h1><p>Each strip shows 30 days of recorded activity. Today is at the right edge.</p></div>
         <div class="wh-readout"><p class="wh-counts"></p><p class="wh-status" role="status"></p></div>
       </header>
       <div class="wh-board" role="region" aria-label="Branch head worktable" tabindex="0">
         <div class="wh-plane">
           <svg class="wh-links" aria-hidden="true"></svg>
-          <div class="wh-band" data-band="front"></div>
-          <div class="wh-band" data-band="near"></div>
-          <div class="wh-band" data-band="far"></div>
           <div class="wh-cards"></div>
         </div>
         <p class="wh-empty" hidden></p>
@@ -89,7 +103,6 @@
     const find = q => container.querySelector(q);
     const board = find('.wh-board'), plane = find('.wh-plane'), empty = find('.wh-empty');
     const cards = find('.wh-cards'), svg = find('.wh-links'), linkDetails = find('.wh-link-details');
-    const bands = [...plane.querySelectorAll('.wh-band')];
     const status = find('.wh-status'), counts = find('.wh-counts'), nav = find('.wh-nav'), picker = find('.wh-picker select');
     const tokens = find('.wh-tokens'), pages = find('.wh-pages'), reset = find('.wh-reset');
     const sessions = find('.wh-sessions'), history = find('.wh-history'), list = history.querySelector('ol');
@@ -131,6 +144,7 @@
         <a class="wh-rear" data-depth="${i + 1}" ${stateAttributes(record)} href="${esc(href(head, record))}" title="${esc(title(record))}">
           ${stamp(record, true)} <span>${esc(title(record))}</span>
         </a>`).reverse().join('');
+      const activityStrip = recency(head);
       const text = state ? title(state) : 'No recorded state';
       const stateContent = state?.id
         ? `<a class="wh-open" ${stateAttributes(state)} href="${esc(href(head, state))}" title="${esc(text)}">${esc(text)}</a>`
@@ -146,7 +160,7 @@
         <button class="wh-restore" type="button" aria-label="Bring ${esc(headLabel(head))} forward. ${esc(head.ageLabel)}" title="${esc(headLabel(head))}">
           <span class="wh-glyph" aria-hidden="true">${headGlyph(head)}</span>
           <span class="wh-head-name">${esc(headLabel(head))}</span>
-          ${ageStamp(head)}
+          ${activityStrip}
         </button>
         ${past ? `<div class="wh-depth" data-count="${Math.min(3, earlier.length)}" aria-hidden="true"></div>` : ''}
         ${past}
@@ -165,8 +179,7 @@
             ${info && info !== text ? `<span class="wh-record" title="${esc(info)}">${esc(info)}</span>` : ''}
           </div>
           <div class="wh-meta">
-            ${ageStamp(head)}
-            ${state ? `<span class="wh-stamp">${stamp(state, true)}</span>` : ''}
+            ${activityStrip}
             ${earlier.length > 3 ? `<button class="wh-all" type="button" data-history>All ${earlier.length + 1} states</button>` : ''}
             <button class="wh-details" type="button" data-history aria-label="Details for ${esc(headLabel(head))}">Details</button>
           </div>
@@ -186,63 +199,48 @@
       const active = document.activeElement;
       let replacementFocus;
       const pageEntries = [...entries.values()];
-      const fallback = pageEntries.find(entry => entry.head.depth === 'front' || entry.head.key === selected) ? null : pageEntries[0];
+      const fallback = pageEntries.find(entry => entry.head.depth === 'front') ? null : pageEntries[0];
       const groups = {front: [], near: [], far: []};
       for (const entry of pageEntries) {
         const {el, head} = entry;
-        const depth = head.key === selected || entry === fallback ? 'front' : head.depth;
+        const home = entry === fallback ? 'front' : head.depth;
+        const depth = head.key === selected || positions.has(head.key) ? 'front' : home;
         if (el.dataset.zone !== depth && el.contains(active)) {
           if (depth === 'far') replacementFocus = el.querySelector('.wh-restore');
           else if (active.classList.contains('wh-restore')) replacementFocus = el.querySelector('.wh-grip');
         }
         el.dataset.zone = depth;
-        groups[depth].push(entry);
+        groups[home].push(entry);
       }
-      const recalled = groups.front.findIndex(({head}) => head.key === selected && head.depth !== 'front');
-      if (recalled > 0) groups.front.unshift(...groups.front.splice(recalled, 1));
-
       let nextTop = 12;
       const slots = [];
-      bands.forEach(band => {
-        const group = band.dataset.band;
-        const members = groups[group];
+      Object.entries(groups).forEach(([group, members]) => {
         const front = group === 'front', far = group === 'far';
-        band.hidden = !members.length;
         if (!members.length) return;
 
         const count = far ? Math.min(6, Math.max(columns, Math.floor((available + 8) / 166))) : columns;
         const cardGap = far ? 8 : gap;
         const cardWidth = front ? width : Math.min(far ? 206 : 270, Math.floor((available - cardGap * (count - 1)) / count), far ? width : Math.floor(width * .9));
         const left = Math.max(gutter, (board.clientWidth - count * cardWidth - (count - 1) * cardGap) / 2);
-        const rowHeight = front ? 239 : far ? 43 : 192;
-        const firstFace = nextTop + (front ? 114 : far ? 34 : 90);
-        if (front) {
-          const hasRecent = members.some(({head}) => head.depth === 'front');
-          band.textContent = fallback ? 'Foreground · Latest on this page'
-            : recalled >= 0 ? (hasRecent ? 'Foreground · Selected, live or past 48h' : 'Foreground · Selected brane')
-            : 'Foreground · Live or past 48h';
-        } else {
-          band.textContent = far ? 'Older branes · 7d+' : 'Further back · 2–7d';
-        }
-        band.style.setProperty('--wh-band-top', nextTop + 'px');
-        band.style.setProperty('--wh-band-side', gutter + 'px');
-
+        const rowHeight = front ? 239 : far ? 60 : 192;
+        const firstFace = nextTop + (front ? 90 : far ? 8 : 73);
         members.forEach((entry, index) => {
           const column = index % count;
-          entry.el.style.setProperty('--wh-width', cardWidth + 'px');
+          entry.el.style.setProperty('--wh-width', (entry.el.dataset.zone === 'front' ? width : cardWidth) + 'px');
           slots.push({
             entry,
             x: left + column * (cardWidth + cardGap),
             y: firstFace + Math.floor(index / count) * rowHeight + (front ? (column % 2) * 14 : 0),
           });
         });
-        nextTop = firstFace + (Math.ceil(members.length / count) - 1) * rowHeight + (front ? 169 : far ? 48 : 140);
+        nextTop = firstFace + (Math.ceil(members.length / count) - 1) * rowHeight + (front ? 154 : far ? 60 : 133);
       });
-      boardHeight = Math.max(board.clientHeight, nextTop);
+      boardHeight = Math.max(board.clientHeight, nextTop, ...slots.map(({entry, y}) =>
+        Math.max(y, positions.get(entry.head.key)?.[1] || 0) + entry.el.offsetHeight + 12));
       plane.style.height = boardHeight + 'px';
       slots.forEach(({entry: {el, head}, x, y}, index) => {
         if (cards.children[index] !== el) cards.insertBefore(el, cards.children[index] || null);
-        const saved = el.dataset.zone === 'front' ? positions.get(head.key) : null;
+        const saved = positions.get(head.key);
         if (saved) applyPosition(el, 8 + saved[0] * dragWidth(el), saved[1]);
         else applyPosition(el, x, y);
       });
@@ -281,6 +279,7 @@
         const focusedClass = el.contains(active) && active.className;
         el.className = 'wh-card' + (head.key === selected ? ' is-selected' : '');
         el.dataset.head = head.key;
+        el.dataset.recency = head.recency;
         el.style.setProperty('--wh-base', colour(head));
         if (previousEntry?.markup !== markup) {
           el.innerHTML = markup;
@@ -440,13 +439,13 @@
       const now = Number.isFinite(modelTime) ? modelTime : Date.now();
       const selectedWasVisible = entries.has(selected);
       heads = projection.heads.map(head => {
-        const activity = lastActivity(head);
-        const elapsed = Math.max(0, now - activity);
-        const age = Math.floor(elapsed / DAY);
+        const trace = WorldHeadActivity.trace(head.states, now);
+        const activity = trace.last ?? -Infinity;
+        const elapsed = now - activity;
         const live = !stale && head.live.length > 0;
         const depth = live || elapsed < 2 * DAY ? 'front' : elapsed < 7 * DAY ? 'near' : 'far';
-        const ageLabel = live ? 'Active now' : !Number.isFinite(age) ? 'Date unknown' : age === 0 ? 'Past 24h' : age < 365 ? age + 'd ago' : Math.floor(age / 365) + 'y ago';
-        return {...head, activity, liveNow: live, depth, ageLabel};
+        const recency = trace.last === null ? 'unknown' : elapsed < 2 * DAY ? 'recent' : elapsed < 7 * DAY ? 'week' : 'older';
+        return {...head, trace, activity, liveNow: live, depth, recency, ageLabel: elapsedLabel(elapsed)};
       }).sort((a, b) =>
         Number(b.liveNow) - Number(a.liveNow) || b.activity - a.activity || (b.latest?.rank ?? 0) - (a.latest?.rank ?? 0) || a.name.localeCompare(b.name));
       headByKey = new Map(heads.map(head => [head.key, head]));

@@ -41,7 +41,7 @@ func TestHeadsLinks(t *testing.T) {
 const headsLinksHarness = `
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const {project, detailsMarkup, geometry} = require(process.argv[1]);
+const {project, neighbors, detailsMarkup, geometry} = require(process.argv[1]);
 const model = JSON.parse(fs.readFileSync(0));
 
 const before = JSON.stringify(model);
@@ -58,6 +58,21 @@ const selected = 'world:brane:row-189';
 const shown = new Map([[selected, {}]]);
 const details = detailsMarkup(projected, shown, selected);
 assert.match(details, /off page/);
+const shared = 'world:brane:shared';
+const peer = neighbors(projected, selected).get(shared);
+assert.equal(peer.direction, 'both', 'a recorded base and merge imply both directions across branch history');
+assert.match(details, /data-locate="world:brane:shared"/);
+assert.match(details, /Recorded links in both directions/);
+assert.match(details, /<details class="wh-link-records"/);
+const anotherPage = detailsMarkup(projected, new Map([[shared, {}]]), shared);
+assert.match(anotherPage, /data-locate="world:brane:row-189"/);
+assert.doesNotMatch(anotherPage, /data-locate="world:brane:shared"/);
+const running = 'world:brane:row-190';
+const singleEdge = project({...model, links: model.links.filter(edge => edge.to === 'world:episode:w189z')});
+assert.equal(neighbors(singleEdge, running).size, 0);
+assert.match(detailsMarkup(singleEdge, new Map([[running, {}]]), running), /No recorded links/);
+assert.equal(neighbors(singleEdge, selected).get(shared).direction, 'incoming');
+assert.equal(neighbors(singleEdge, shared).get(selected).direction, 'outgoing');
 assert.match(details, /Earlier state/);
 assert.match(details, /<strong>Base/);
 assert.match(details, /<strong>Merge/);

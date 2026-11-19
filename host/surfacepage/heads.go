@@ -14,6 +14,9 @@ var headsStyle []byte
 //go:embed app/heads-data.js
 var headsData []byte
 
+//go:embed app/heads-activity.js
+var headsActivity []byte
+
 //go:embed app/heads-links.js
 var headsLinks []byte
 
@@ -31,4 +34,4 @@ var HeadsShell = inlineStyle(bytes.Replace(headsIndex, []byte("<!-- World mark -
 	bytes.Join([][]byte{AppStyle, headsStyle, headsLinksStyle}, []byte("\n")))
 
 // HeadsScript renders the same indexed states the timeline and brane stack expose.
-var HeadsScript = bytes.Join([][]byte{braneScript, projectionMotion, headsData, headsLinks, headsView, headsPage}, []byte("\n"))
+var HeadsScript = bytes.Join([][]byte{braneScript, projectionMotion, headsData, headsActivity, headsLinks, headsView, headsPage}, []byte("\n"))

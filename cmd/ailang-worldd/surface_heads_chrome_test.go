@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"testing"
 )
 
@@ -129,4 +130,97 @@ func TestSurfaceHeadsDirectStackWhileLoadingInChrome(t *testing.T) {
 	release()
 	b.do(t, nil, "waitFor", map[string]any{"expression": fmt.Sprintf(`document.querySelector('#stage').dataset.view === 'brane' &&
 		document.querySelector('#front')?.dataset.front === %q`, id)})
+}
+
+// A folded head keeps its activity trace when expanded, dragged, deselected,
+// and updated by the next model response.
+func TestSurfaceHeadActivityMovesWithWindowInChrome(t *testing.T) {
+	b := startPasskeyBrowser(t)
+	var responses atomic.Int32
+	const last = "2026-11-06T09:32:11Z"
+	origin := cardOrigin(t, filepath.Join(t.TempDir(), "credentials.db"), "", func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path != "/surface/model.json" {
+				next.ServeHTTP(w, r)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(w, `{
+				"schema":"world/surface-model/v1", "now":"2026-11-19T15:00:00Z", "nowEdge":{"sessions":[{"episode":"running-episode"}]},
+				"lanes":[
+					{"key":"running","name":"Running","states":[
+						{"id":"running-tip","rank":1,"at":"2026-09-01T10:00:00Z","episode":"running-episode"}
+					]},
+					{"key":"older","name":"Older","states":[
+						{"id":"older-tip","rank":3,"title":"Recorded model %d"},
+						{"id":"older-last","rank":2,"at":%q},
+						{"id":"older-first","rank":1,"at":"2026-11-02T13:00:00Z"}
+					]}
+				]
+			}`, responses.Add(1), last)
+		})
+	})
+	wait := func(expression string) {
+		t.Helper()
+		b.do(t, nil, "waitFor", map[string]any{"expression": expression})
+	}
+	b.do(t, nil, "tab", nil)
+	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface/heads", "raw": true})
+	wait(fmt.Sprintf(`(() => {
+		const card = document.querySelector('.wh-card[data-head="older"]');
+		window.visibleRecency = card => [...(card?.querySelectorAll('.wh-recency') || [])]
+			.find(part => part.getClientRects().length && getComputedStyle(part).visibility === 'visible');
+		const running = document.querySelector('.wh-card[data-head="running"]');
+		const runningAge = window.visibleRecency(running)?.querySelector('time.wh-age');
+		if (!running?.querySelector('.wh-live')?.getClientRects().length ||
+			Date.parse(runningAge?.dateTime) !== Date.parse('2026-09-01T10:00:00Z')) return false;
+		const recency = window.visibleRecency(card);
+		const trace = recency?.querySelector('.wh-trace');
+		const stamp = recency?.querySelector('time.wh-age');
+		if (!trace || !stamp || Date.parse(stamp.dateTime) !== Date.parse(%q) ||
+			!card.querySelector('.wh-restore')?.getClientRects().length) return false;
+		window.headTrace = trace.outerHTML;
+		window.headStamp = stamp.dateTime;
+		window.foldedPosition = [card.style.left, card.style.top];
+		card.querySelector('.wh-restore').id = 'chrome-restore-older';
+		return true;
+	})()`, last))
+	b.do(t, nil, "tap", map[string]any{"id": "chrome-restore-older"})
+	wait(`(() => {
+		const card = document.querySelector('.wh-card[data-head="older"].is-selected');
+		const grip = card?.querySelector('.wh-grip');
+		const recency = window.visibleRecency(card);
+		if (!grip?.getClientRects().length || recency?.querySelector('.wh-trace')?.outerHTML !== window.headTrace ||
+			recency?.querySelector('time.wh-age')?.dateTime !== window.headStamp ||
+			card.style.left !== window.foldedPosition[0] || card.style.top !== window.foldedPosition[1]) return false;
+		grip.id = 'chrome-drag-older';
+		return true;
+	})()`)
+	b.do(t, nil, "drag", map[string]any{"id": "chrome-drag-older", "dx": 40, "dy": -30})
+	wait(`(() => {
+		const card = document.querySelector('.wh-card[data-head="older"]');
+		if (card.style.left === window.foldedPosition[0] && card.style.top === window.foldedPosition[1]) return false;
+		if (window.visibleRecency(card)?.querySelector('.wh-trace')?.outerHTML !== window.headTrace) return false;
+		window.draggedPosition = [card.style.left, card.style.top];
+		const picker = document.querySelector('.wh-picker select');
+		picker.value = 'running';
+		picker.dispatchEvent(new Event('change', {bubbles:true}));
+		return true;
+	})()`)
+	const retained = `(() => {
+		const card = document.querySelector('.wh-card[data-head="older"]:not(.is-selected)');
+		const recency = window.visibleRecency(card);
+		return recency?.querySelector('.wh-trace')?.outerHTML === window.headTrace &&
+			recency?.querySelector('time.wh-age')?.dateTime === window.headStamp &&
+			card.style.left === window.draggedPosition[0] && card.style.top === window.draggedPosition[1] &&
+			window.__cspv?.length === 0;
+	})()`
+	wait(retained)
+	wait(`(() => {
+		const card = document.querySelector('.wh-card[data-head="older"]');
+		window.modelTitleBeforeRefresh = card.querySelector('.wh-open').textContent;
+		document.dispatchEvent(new Event('visibilitychange'));
+		return true;
+	})()`)
+	wait(retained + ` && document.querySelector('.wh-card[data-head="older"] .wh-open').textContent !== window.modelTitleBeforeRefresh`)
 }
