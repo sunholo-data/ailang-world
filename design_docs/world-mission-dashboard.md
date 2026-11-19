@@ -13,5 +13,5 @@
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Goal unmoved.
 - **Open PRs #615, #617 and #619** are attended UI work, not the loop's; left alone.
 - **Routing this fire:** controller opus; designer, planner and executor not needed; judge sonnet via Agent on the record. Codex over ration (planner fell back to opus, executor to haiku; neither spawned). Metered $0.
-- **Dev CI:** 3/3 green at `3e5a4664`.
+- **Dev CI:** 3/3 green at `1dbf8f0f` on attempt 3; attempts 1 and 2 hit two known `-race` flakes. The second, `TestCommitInvocationReceiptIdentity`, is now hygiene row 265 (third instance).
 - **Bookkeeping thread:** #574 (rotates Monday 2026-11-23).

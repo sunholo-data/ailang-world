@@ -1990,3 +1990,10 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 - **What it did not check:** skill drift, self-notice and directive counts, the rotation boundary, the `mission-control.sh` line reference, the inbox ids, the remaining dashboard numbers and the route line's wording.
 
 **Gate 3b (record PR #621):** the head CI verdict and the merge commit's CI go in the merge commit body and the Gate-5 report, not a further record commit.
+
+**Gate 3b, continued (record PR #621, merged as `1dbf8f0f`):**
+- Head `f8ab5d4a`: check-runs 3/3 success. Merged with `--match-head-commit`; `1dbf8f0f^{tree}` = `f8ab5d4a^{tree}` (`16a0bb42`), so the merge changed no byte.
+- Merge run 44624286720 **attempt 1**: `go race gate` red on `cmd/ailang-worldd` `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision` (`episode_finish_surface_rig_test.go:410`, "1 decisions (1 named …)", the test wants 2). The other two jobs passed; the two `DATA RACE` warnings are the gate's own positive control (`racecontrol/main.go`). This is the test's **second** recorded instance (the first was 411's Gate 3b on `9b24ee8c`), so under D-WORLD-109 (2) it is logged here, not filed.
+- **Attempt 2** (`rerun --failed`): `go race gate` red again, on a different test: `host/daemon` `TestCommitInvocationReceiptIdentity/A_landed_uncertain_then_B_on_top` (`commit_budget_test.go:323`, commit B 409 `HeadConflict`). Its **third** recorded instance (226; record PR #564 in the 389/390 entry; this one), so it becomes 258-class row **265** `w-commit-receipt-identity-race-flake`.
+- **Attempt 3**: 3/3 success. Dev HEAD `1dbf8f0f` is green.
+- This note, row 265 and a STATUS-stamp sentence land as a follow-up record PR (`mission/world-iter415-gate3b`), because the instance count is what D-WORLD-109 (2) keys on and the merged record could not carry it.
