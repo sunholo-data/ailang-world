@@ -1,0 +1,106 @@
+# World iteration 414 — Gate 0–2 readings (fire world-1795110046-96435), captured 2026-11-19T17:44:12Z
+
+## origin/dev and Gate-1 base
+036fdf832a76337859633c3d40c24923cc700ad9
+Gate-1 base: 036fdf832a76337859633c3d40c24923cc700ad9 2026-11-19T17:41:48Z
+
+## commits since iteration 413 Gate-1 base 31413192
+036fdf83 Merge pull request #618 from sunholo-data/mission/world-iter413-record
+03ed6a51 record: iteration 413 — Gate 3b head CI 3/3
+b152bdc9 record: iteration 413 — judge follow-through (sonnet PASS 93, zero blocking)
+784f6392 record: iteration 413 — no pick, rule (d) block report (fourth); idle-record ticket count 3 (row 263)
+count=4
+ledger lines changed (| D-WORLD table rows) in 31413192..origin/dev: 0
+paths changed: design_docs/verification/world-iter413/gate1-2-readings.txt design_docs/world-mission-dashboard.md design_docs/world-mission-index.md design_docs/world-mission-log.md design_docs/world-mission-status-archive.md design_docs/world-mission.md 
+
+## ledger
+decision ledger valid: 107 rows
+check rc=0
+D-WORLD-119	OPEN
+D-WORLD-120	OPEN
+
+## dev CI at origin/dev
+checks=3
+  go host build + test gate: success
+  go race gate (go test -race, own job): success
+  ailang-code verify gate: success
+
+## row 150 (attended A1) — subjects in 31413192..origin/dev
+match row ?150|A1|marketing: 0  control record|iteration 413: 4
+
+## row 151 (needs row 188 N2d/N4a)
+subjects since 2026-10-01 matching N2d|N4a: 0  control N2c: 1
+non-test .go files naming file.json (fixed string): 0  control surface: 109
+  (controller note: a first, unescaped 'file.json' regex read 1 — cmd/ailang-worldd/doctor.go:43 'profile json', '.' matching a space; an instrument error, not a route)
+
+## row 243 V4 design gating (D-WORLD-119/120 mentions in design)
+design=design_docs/planned/w-world-address-bar-verbs-v4.md lines naming D-WORLD-119: 4  D-WORLD-120: 2  design touched in range: 0
+
+## Gate 0 directives
+⚠ mission_directives: watermark file /Users/voightkampff/.ailang/state/mission-574-last-seen is absent — reading every allowlisted comment on #574; the first --mark creates it
+mission_directives: #574 — 0 directive(s) from [MarkEdmondson1234] since 1970-01-01T00:00:00Z inclusive, 0 new, 0 already processed (of 24 comments; the rest are public feedback, never directives)
+mission_directives: #1 — 0 directive(s) from [MarkEdmondson1234] since 2026-09-30T14:19:22Z inclusive, 0 new, 0 already processed (of 25 comments; the rest are public feedback, never directives)
+mission_directives: #524 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 47 comments; the rest are public feedback, never directives)
+
+## Gate 0 step 6a self-notices (prescribed form; full output /tmp/w414_selfnotices.txt)
+crash: issue=524 at=2026-11-13T09:48:25Z rc=1 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/524#issuecomment-6849577904
+transcript: issue=524 at=2026-11-16T09:37:59Z hits=2 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/524#issuecomment-6912778168 fire=world-1794807071-53892
+issue: 574 comments=24 self=24 crash=0 transcript=0 other=24
+issue: 524 comments=47 self=47 crash=1 transcript=1 other=45
+control: issue=107 expect=4 got=4 ok
+verdict: 1 crash notice(s) since 1970-01-01T00:00:00Z on #574,#524 — A FIRE DIED (newest rc=1 at 2026-11-13T09:48:25Z on #524): run Gate 2's died-mid-flight traces (a) open PRs (b) worktrees (c) uncommitted state BEFORE picking, and credit the orphan in the 
+rc=1 (taken directly at Gate 0)
+
+## inbox (mission-world, unread)
+json: null
+
+## died-mid-flight traces
+open PRs by fleet account:
+  619 ui/world-head-on
+  617 ui/live-branch-heads
+  615 ui/finish-card-review
+  charter+log mentions #619: 0  (#619 ui/world-head-on, opened 2026-11-19T14:25Z, 17 files under host/surfacepage/ and cmd/ailang-worldd/; not a mission/ branch; attended UI work, left alone)
+origin branches matching iter414 before this record: 0
+  /Users/voightkampff/dev/sunholo-data/.wt-world-iter410-record porcelain=0
+  /Users/voightkampff/dev/sunholo-data/.wt-world-iter411-record porcelain=0
+  /Users/voightkampff/dev/sunholo-data/.wt-world-iter412-record porcelain=0
+  /Users/voightkampff/dev/sunholo-data/.wt-world-iter413-record porcelain=0
+last slot verdicts:
+[2026-11-19 11:32:21] slot-verdict: COMPLETED rc=0 attempt=1/3 stamps=9 last_age_s=11 elapsed_s=3248 mission=world hb=/Users/voightkampff/.ailang/state/mission-world-heartbeat
+[2026-11-19 15:31:12] slot-verdict: COMPLETED rc=0 attempt=1/3 stamps=8 last_age_s=13 elapsed_s=3179 mission=world hb=/Users/voightkampff/.ailang/state/mission-world-heartbeat
+
+## fleet ticket list (signature of row 263)
+3   none   skill:idle-record-barred-on-degraded-no-pick-fire  (world; first 2026-11-09 08:55)
+open tickets total: 16
+
+## routing (driver, this fire)
+MISSION_ROUTING_NOTE is set and empty: 1
+roles: designer=claude:claude-opus-5-5 planner=codex:gpt-6.2-sol executor=codex:gpt-6.2-sol evaluator=sonnet
+driver log, this fire's preflight (18:38:11–18:40:48 local):
+[2026-11-19 18:38:18] anthropic:claude-opus-5-5 quota is UNREADABLE (not measured) — probing the lane instead of refusing it; an unreadable quota is not an exhausted one
+[2026-11-19 18:38:22] anthropic:sonnet quota is UNREADABLE (not measured) — probing the lane instead of refusing it; an unreadable quota is not an exhausted one
+[2026-11-19 18:40:37] anthropic:claude-opus-5-5 quota is UNREADABLE (not measured) — probing the lane instead of refusing it; an unreadable quota is not an exhausted one
+[2026-11-19 18:40:48] world: idle snapshot taken for world-1795110046-96435 (f8eacc0f50a3d7f95026f3f4811858dc1a76f391447fd5e84d86aae78f05fa50 head=b152bdc ledger=107 open=2 directives=0 inbox=0 red=0)
+[2026-11-19 18:40:48] === mission iteration starting (controller=claude:claude-opus-5-5 via probe ok, timeout=21600s | bg-wait-ceiling=0ms | roles: designer=claude:claude-opus-5-5 planner=codex:gpt-6.2-sol executor=codex:gpt-6.2-sol evaluator=sonnet) ===
+codex 'unusable' lines in this fire's window: 0  control (same pattern, iteration 413 fire 14:38–14:39): 2
+driver source: the role loop (mission-control.sh ~L1907) runs _mc_probe_codex once per codex model and logs only on rc != 0
+
+## skill drift (resolved symlink target and pin copy vs ailang origin/dev)
+compared=28 drift=0 (ailang origin/dev cb83f9d8a)
+
+## harness share (2b) over the last 20 log entries
+entries: 394 395 396 397 398 399 400 401 402 403 404 405 406 407 408 409 410 411 412 413 
+tagged: 20  HARNESS: 0
+
+## fleet ticket list after this fire's filing (inbox_1795110349073_38952901), read 2026-11-19T17:45:58Z
+3   none   skill:idle-record-barred-on-degraded-no-pick-fire  (world; first 2026-11-09 08:55)
+1   none   driver:idle-fingerprint-head-ignores-design-docs-verification  (world; first 2026-11-19 17:45)
+
+## idle fingerprint head pathspec (idle-fingerprint.sh:74-77) vs World's readings path
+driver pathspec head: b152bdc9  with design_docs/verification/world-iter* also excluded: 0e9e8d35
+  b152bdc9 non-excluded paths: design_docs/verification/world-iter413/gate1-2-readings.txt 
+  784f6392 non-excluded paths: design_docs/verification/world-iter413/gate1-2-readings.txt 
+  6ab87ce6 non-excluded paths: design_docs/verification/world-iter412/gate1-2-readings.txt 
+  6ff2af6a non-excluded paths: design_docs/verification/world-iter411/gate1-2-readings.txt 
+  8c851a1b non-excluded paths: design_docs/verification/world-iter410/gate1-2-readings.txt 
+pending snapshot: head=b152bdc ledger=107 open=2 directives=0 inbox=0 red=0

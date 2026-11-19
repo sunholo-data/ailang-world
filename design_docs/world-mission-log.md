@@ -1845,3 +1845,68 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 - **What it did not check:** the row 150/151 grep controls, the index beyond its new line, skill drift, the inbox, the 410–412 worktrees, the harness share, and #617's contents.
 
 **Gate 3b (record PR #618):** head `b152bdc9` run 44536677726 attempt 1 read **3/3** (`ailang-code verify gate`, `go host build + test gate`, `go race gate`), first time. The poller was SHA-pinned to the full head, with a 30-minute cap, under `/bin/bash`. This line makes a new head, so the PR is polled again on it before merge. If that head flakes, it is re-run and merged without another commit, and the instance is named in the merge commit body and the Gate-5 report.
+
+## 414 — 2026-11-19 — no pick: rule (d) block report, the fifth in a row and the first not degraded; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); new row 264: the idle fingerprint's head moves on every World record, so the idle record cannot hold; dev green at `036fdf83` [ADMIN]
+
+**Kind:** no-pick iteration. Nothing is loop-routable without an answer from Mark, so standing rule (d) applies. The only change since iteration 413 is 413's own record. There is no design, plan, code or product acceptance. The record is the STATUS stamp (411 moved to the archive), the Current route line, row 263's iteration-414 note, new row 264, this entry, the regenerated index, the dashboard and `verification/world-iter414/gate1-2-readings.txt`. An independent judge reviews the record before merge.
+
+**Pick and why:** none. Clause map at `036fdf83`: 1.0 clauses 1–7 MET, so there is no UNMET clause and no critical-path row.
+- **What moved since iteration 413's Gate-1 base (`31413192`):** only 413's record. 4 commits (`784f6392`, `b152bdc9`, `03ed6a51`, merge `036fdf83`), all under `design_docs/`. 0 `| D-WORLD` table rows changed.
+- **Ledger:** `--check` valid (rc 0), 107 rows; `--open` → D-WORLD-119, D-WORLD-120, both unchanged since iteration 406 filed them.
+- **Row 243 (D-WORLD-109 granted scope):** V4 design §8 gates S3–S8 on 119 A/B, S9–S11 also on 120 A/B, and S12 on 119 A. S1, S2 and S2b are landed. None of the 4 commits touches the design (0 paths).
+- **Row 150** waits on the attended A1. Subjects in `31413192..036fdf83` matching `row ?150|A1|marketing` → **0**; control `record|iteration 413` → **4**.
+- **Row 151** needs row 188's N2d and N4a. Subjects since 2026-10-01 matching `N2d|N4a` → **0**; control `N2c` → **1**. Non-test `.go` files naming `file.json` on `origin/dev`, fixed-string → **0**; control `surface` → **109**. A first, unescaped regex read 1 (`cmd/ailang-worldd/doctor.go:43`, "profile json", the `.` matching a space). That was the controller's instrument, not a route.
+- **Rows 217–219** are on the attended track beside row 188 (D-WORLD-94). **Rows 258, 259, 261** sit under rule (d), below the release rows (D-WORLD-109 (2)). No ledger row changed, so neither placement moved.
+- **External predicates:** no routable row waits on an outside party. Rows 263 and 264 wait on the fleet. 0 unread on `mission-world`, so no `harness-resolved` reply has arrived.
+
+**Gate 0:**
+- Stamped first. Kill switch armed (`mission-world.disabled` absent). `gh` is `sunholo-voight-kampff`. Billing CLEAN. The env was read by name, then specific non-secret values.
+- Directives: 0 allowlisted on #574 (24 comments, read from the epoch because `mission-574-last-seen` is absent), 0 on issue #1 since its legacy watermark, 0 on #524 since `mission-world-last-seen`. Nothing to `--mark`; no watermark moved.
+- Self-notices (step 6a), prescribed form: **rc 1**, the same two #524 notices (crash `2026-11-13T09:48:25Z` rc 1; transcript fire `world-1794807071-53892`, 2 hits), control 107:4 ok. Both credited in entries 393 and 394, so nothing new died. Died-mid-flight traces: no `iter414` branch on origin before this record; the iteration-410 to 413 record worktrees have 0 porcelain lines each; the last two slot verdicts are `COMPLETED rc=0`. Transcript notice count 1, the one entry 394 reported.
+- **Open PRs from the fleet account:** #615 and #617 (as in 413) and **#619** (`ui/world-head-on`, "View the World timeline head-on and travel through its history", created 14:25Z today, 17 files under `host/surfacepage/` and `cmd/ailang-worldd/`). None is a `mission/` branch and #619 appears 0 times in the charter or log. All are attended UI work and are left alone (Gate 2 trace (a)).
+- Inbox: 0 unread on `mission-world` (`--json` → `null`). The controlplane drift notice for the ailang source clone (58 behind) was stale by the time it was read: the clone is 0/0 against `origin/dev` `cb83f9d8a` after the driver's skill-sync fast-forward.
+- Skill drift: `SKILL.md` and all 13 `resources/*.md`, at both the resolved symlink target and the pin worktree, `cmp` equal to the ailang `origin/dev` `cb83f9d8a` after a fresh fetch (28 compared, 0 drift).
+- Dev CI at `036fdf83`: 3/3 check-runs success.
+
+**Gate 1:** `git rev-parse dev origin/dev` both `036fdf83…` (local `dev` fast-forwarded 4 commits first; the tree had only untracked files). Gate-1 base `036fdf832a76337859633c3d40c24923cc700ad9@2026-11-19T17:41:48Z`. Record written in its own worktree (`mission/world-iter414-record` from `036fdf83`, `mission-worktree.sh add` then `wait` → ready).
+
+**This fire is not degraded (row 263's bar did not apply):**
+- `MISSION_ROUTING_NOTE` is set and empty. Roles: designer `claude:claude-opus-5-5`, planner and executor `codex:gpt-6.2-sol`, evaluator `sonnet`.
+- The driver's role loop (`mission-control.sh` about line 1907) runs `_mc_probe_codex` once per codex model and logs only when it fails. This fire's preflight window has **0** `unusable` lines; the same pattern over iteration 413's window reads **2**.
+- So no occurrence was filed on row 263 (count stays 3), and Gate 5's IDLE RECORD may promote the pending fingerprint for the first time in World's history.
+
+**Row 264 — new ticket `driver:idle-fingerprint-head-ignores-design-docs-verification`:**
+- Before promoting, the controller read what the fingerprint keys on. `idle-fingerprint.sh:74-77` takes the head as the newest commit outside `design_docs/world-mission*` and root `verification/world-iter*`. World writes its readings to `design_docs/verification/world-iter<N>/` (root `verification/` was last touched 2026-11-06, around iteration 358).
+- Measured: the pending snapshot's head is `b152bdc` (413's judge follow-through). The driver pathspec selects 5 commits after the last product commit `0e9e8d35`: `8c851a1b`, `6ff2af6a`, `6ab87ce6`, `784f6392`, `b152bdc9`. All are 410–413 record commits, and each one's only non-excluded path is its `design_docs/verification/world-iter41x/gate1-2-readings.txt`. Adding that exclusion gives `0e9e8d35`.
+- So this fire's own record moves the head, and the fingerprint Gate 5 promotes goes stale when the record merges. The next identical fire will run a full block report anyway. That is a prediction for the next fire to check.
+- Filed `inbox_1795110349073_38952901`, count 1, `--blocking none`, workaround none. World keeps its layout. Moving the readings to root `verification/` would dodge the defect, and Gate 2 says not to work around a harness defect. The fix is the fleet's, or Mark's if he prefers the layout change.
+
+**Designer / planner / executor:** not spawned. A no-pick iteration has no doc, plan or code, so the routing table sends them nothing. No spawn was attempted, so none failed.
+
+**Independent evaluator (record):** REQUIRED. Agent `sonnet` (`MISSION_EVALUATOR_RESOLVED=sonnet`), fresh foreground read-only context, judging the record commit before merge. Result in the follow-through below.
+
+**Routing evidence:** base=036fdf832a76337859633c3d40c24923cc700ad9@2026-11-19T17:41:48Z (Gate 1).
+- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner, executor unused.
+- Evaluator: Agent `sonnet` (tokens in the follow-through). Generator ≠ judge: opus controller, sonnet judge.
+- Quorum: none (no doc). Metered $0.
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at 2 of 12 sprints. Every remaining V4 sprint waits on D-WORLD-119.
+
+**Ruled out:**
+- Picking 150, 151, 217–219, 243, 258, 259 or 261: measured reasons above.
+- Touching PR #615, #617 or #619: attended work outside the loop's rows.
+- Filing a row-263 occurrence: this fire is not degraded.
+- Moving the readings file to root `verification/` so the fingerprint holds: a workaround of a harness defect (Gate 2 admissibility). Ticket instead.
+- Treating step 6a's `A FIRE DIED` as a new death: both notices are credited (393, 394), and the traces are clean.
+- Re-asking D-WORLD-119/120 or raising them to `[normal]`: both asks are unchanged since 406, so Gate 5 3d keeps them `[fyi]`.
+- Rotating the log: 25 live entries with this one, below ~40. The index is regenerated with `rotate-log --index-only`.
+
+**Retro:**
+1. **A rule that has never fired hides its own defects.** Gate 5's idle record has been barred on every World no-pick fire, so nobody had checked what it keys on against World's layout. The first fire allowed to run it found that it cannot hold. Routed as ticket row 264 (fleet lane). No skill edit: one instance.
+2. **An unescaped `.` in a predicate grep.** `file.json` as a regex matched "file json" and read 1 where the row's predicate reads 0. Re-measured with `-F` and both readings are disclosed. A controller slip, not a gap.
+- Harness share (2b): **0/20** over entries 394–413 (20 rows, 20 tagged). Bar-moving landings (2c): no UNMET clause exists, so the drift alarm does not apply.
+- No skill edit.
+
+**Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence). Unanswered, another rule-(d) block report. The next fire should confirm the row-264 prediction: its idle check misses because this record moved the head. A dev red outranks either way.
+
+**Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16; next boundary Monday 2026-11-23 07:00 local). The weekly external-issue sweep ran this week at 393.
