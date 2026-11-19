@@ -10,18 +10,22 @@
   const shortAge = value => String(value ?? '').replace(/\b(minutes?|mins?)\b/i, 'm')
     .replace(/\b(hours?|hrs?)\b/i, 'h').replace(/\bdays?\b/i, 'd')
     .replace(/\bweeks?\b/i, 'w').replace(/\s+(?=[mhdw]\b)|\s+ago$/gi, '');
-  const exactTime = new Intl.DateTimeFormat(undefined, {year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', timeZone:'UTC'});
+  const exactTime = new Intl.DateTimeFormat(undefined, {year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', timeZone:'UTC'});
+
+  const tickDate = new Intl.DateTimeFormat('en-GB', {day:'numeric', month:'short', timeZone:'UTC'});
+  const tickClock = new Intl.DateTimeFormat('en-GB', {hour:'2-digit', minute:'2-digit', timeZone:'UTC'});
 
   function create(container, options) {
     const scene = document.createElement('section');
     scene.className = 'hc-scene';
     scene.setAttribute('aria-label', 'Branch heads');
     scene.hidden = true;
-    scene.innerHTML = '<canvas class="hc-graph" aria-hidden="true"></canvas><div class="hc-scroll"><div class="hc-space"><div class="hc-rear-layer" hidden></div></div></div><canvas class="hc-inspection" aria-hidden="true"></canvas><div class="hc-inspect-tip" aria-hidden="true" hidden></div>';
+    scene.innerHTML = '<canvas class="hc-graph" aria-hidden="true"></canvas><div class="hc-scroll"><div class="hc-space"><div class="hc-rear-layer" hidden></div></div></div><div class="hc-time-axis" role="group" aria-label="Time, UTC" hidden></div><canvas class="hc-inspection" aria-hidden="true"></canvas><div class="hc-inspect-tip" aria-hidden="true" hidden></div>';
     container.append(scene);
 
     const scroll = scene.querySelector('.hc-scroll'), space = scene.querySelector('.hc-space'), canvas = scene.querySelector('canvas');
     const ctx = canvas.getContext('2d');
+    const timeAxis = scene.querySelector('.hc-time-axis');
     const inspection = scene.querySelector('.hc-inspection'), tip = scene.querySelector('.hc-inspect-tip');
     const inspectionInk = inspection.getContext('2d');
     let inspectable = false, pointer = null;
@@ -66,7 +70,7 @@
       const ground = layout.ground;
       const reveal = clamp((angle - .94) / .06, 0, 1);
       return reveal && ground && WorldHeadCamera.block
-        ? WorldHeadCamera.block(ground, point, width, height, reveal * (pane ? ground.paneDepth : ground.blockDepth))
+        ? WorldHeadCamera.block(ground, point, width, height, reveal * (pane ? point.paneDepth ?? ground.paneDepth : ground.blockDepth))
         : null;
     }
 
@@ -123,17 +127,55 @@
 
     // Continue an entering or departing front along its viewing ray. Clip
     // it short of the eye while it fades past the camera.
-    function movedCamera(point, deltaZ) {
-      const {vx, horizon} = layout.ground;
+    function movedCamera(point, deltaZ, {vx, horizon} = layout.ground) {
       const depth = Math.max(point.depth * .35, point.depth + deltaZ);
       const ratio = point.depth / depth;
       return {x:vx + (point.x-vx)*ratio, y:horizon + (point.y-horizon)*ratio, depth, scale:1/depth};
+    }
+
+    function setTimeAxis() {
+      const axis = layout.time;
+      const ticks = [];
+      if (axis && model.dated) {
+        const {firstIndex,lastIndex} = axis;
+        // Keep both ends of the scale. Between them, label the nearest
+        // distinct instants with enough space for a date and a clock time.
+        const addTick = index => {
+          if (index < firstIndex || (model.undated && index === 0)) return;
+          const ms = model.TT[index], y = axis.yAt(index);
+          if (!Number.isFinite(ms) || !Number.isFinite(y) || y < 0 || y > layout.height ||
+              ticks.some(tick => Math.abs(tick.y - y) < 44)) return;
+          ticks.push({ms,y});
+        };
+        addTick(lastIndex);
+        addTick(firstIndex + Number(model.undated && firstIndex === 0));
+        for (let i = lastIndex - 1; i > firstIndex; i--) addTick(i);
+      }
+      timeAxis.replaceChildren();
+      if (!ticks.length) return;
+      ticks.sort((a,b) => a.y - b.y);
+      const top = ticks[0].y;
+      timeAxis.style.top = top + 'px';
+      timeAxis.style.height = (ticks[ticks.length - 1].y - top) + 'px';
+      const label = document.createElement('span');
+      label.className = 'hc-time-title';
+      label.textContent = 'Time · UTC';
+      timeAxis.append(label);
+      for (const {ms,y} of ticks) {
+        const tick = document.createElement('time'), date = new Date(ms);
+        tick.dateTime = date.toISOString();
+        tick.title = exactTime.format(date) + ' UTC';
+        tick.style.top = (y - top) + 'px';
+        tick.textContent = tickDate.format(date) + '\n' + tickClock.format(date);
+        timeAxis.append(tick);
+      }
     }
 
     function setLayout(T, next) {
       if (model === T && layout === next) return;
       model = T;
       layout = next;
+      setTimeAxis();
       headsByID = new Map(layout.heads.map(head => [head.id, head]));
       headsByLane = new Map(layout.heads.map(head => [head.lane, head]));
       order = [...layout.points.keys()].sort((a, b) => (layout.points.get(b).depth || 0) - (layout.points.get(a).depth || 0));
@@ -278,7 +320,7 @@
 
     function placeMiniature(entry, point, width, height) {
       const ground = layout.ground;
-      const block = WorldHeadCamera.block(ground, point, width, height, ground.paneDepth);
+      const block = WorldHeadCamera.block(ground, point, width, height, point.paneDepth ?? ground.paneDepth);
       const outline = vertices => vertices ? 'M' + vertices.map(p => p.x + ',' + p.y).join('L') + 'Z' : '';
       entry.paths[0].setAttribute('d', outline(block.side) + outline(block.top));
       entry.paths[1].setAttribute('d', outline(block.front));
@@ -599,6 +641,7 @@
         pixelRatio = dpr;
       }
       const x = scroll.scrollLeft, y = scroll.scrollTop;
+      timeAxis.style.transform = 'translateY(' + (-y) + 'px)';
       ctx.setTransform(dpr, 0, 0, dpr, -x * dpr, -y * dpr);
       ctx.clearRect(x, y, width, height);
       const colors = theme();
@@ -702,6 +745,10 @@
       space.append(layer);
       passingLayer = layer;
       const departures = [], sizes = new Map(faceSizes);
+      // The destination can have a wider scroll surface. Carry the old
+      // screen positions into its coordinates before the first animation frame.
+      const dx = Math.round(next.ground.vx - scroll.clientWidth / 2) - scroll.scrollLeft;
+      const origins = dx ? new Map([...points].map(([id,p]) => [id, {...p, x:p.x + dx}])) : points;
       for (const id of rearLinks.keys()) {
         const pane = points.get(id), node = model.N[id];
         const head = node && headsByLane.get(node.lane);
@@ -711,12 +758,12 @@
       for (const [id, entry] of cards) {
         if (incoming.has(id)) continue;
         const {el} = entry;
-        const old = points.get(id), rear = next.points.get(id);
-        if (!old || old.x < scroll.scrollLeft - 180 || old.x > scroll.scrollLeft + scroll.clientWidth + 180) continue;
+        const old = origins.get(id), rear = next.points.get(id);
+        if (!old || Math.abs(old.x - next.ground.vx) > scroll.clientWidth / 2 + 180) continue;
         const head = headsByID.get(id);
         const from = sizes.get(id) || head;
         const nextHead = nextByLane.get(head.lane);
-        const end = rear || movedCamera(old, floorTravel - (next.travelZ || 0));
+        const end = rear || movedCamera(old, floorTravel - (next.travelZ || 0), next.ground);
         const ratio = old.depth / end.depth;
         const to = rear && nextHead ? paneSize(nextHead, rear)
           : {width:from.width * ratio, height:from.height * ratio};
@@ -728,7 +775,7 @@
         layer.append(el);
         departures.push({entry, head, old, end, from, to});
       }
-      return {points, sizes, departures, floorFrom:floorTravel};
+      return {points:origins, sizes, departures, floorFrom:floorTravel};
     }
 
     function render(T, next, side, value, focused, travel) {
@@ -755,6 +802,7 @@
       rearLayer.hidden = angle < .94;
       rearLayer.inert = !inspectable;
       miniatures.toggleAttribute('hidden', !inspectable);
+      timeAxis.hidden = !inspectable || !timeAxis.childElementCount;
       if (!travel) {
         passingLayer?.remove();
         passingLayer = null;
@@ -779,7 +827,7 @@
       for (const [id, endpoint] of layout.points) {
         const sidePoint = sidePoints?.get(id);
         const start = sidePoint ? {...sidePoint, x: sidePoint.x + scrollX, y: sidePoint.y + scrollY} : endpoint;
-        let point = WorldHeadCamera.turn(start, endpoint, angle, axisX);
+        let point = angle === 1 ? endpoint : WorldHeadCamera.turn(start, endpoint, angle, axisX);
         const head = headsByID.get(id);
         let displayed = head && {width:head.width, height:head.height};
         if (travel) {
@@ -791,6 +839,10 @@
           const pose = cameraTravel(origin, endpoint, previous, target, travel.progress);
           point = pose.point;
           if (head) displayed = pose.size;
+        }
+        if (point !== endpoint && endpoint.paneHeight !== undefined) {
+          point.paneHeight = endpoint.paneHeight * endpoint.depth / point.depth;
+          point.paneDepth = endpoint.paneDepth;
         }
         points.set(id, point);
         const entry = cards.get(id);
@@ -874,8 +926,10 @@
       tip.hidden = !entry;
       if (!entry) return;
       const box = scene.getBoundingClientRect();
-      const title = options.title(model.N[id]) || model.N[id].title || model.N[id].label || id;
-      if (tip.textContent !== title) tip.textContent = title;
+      const node = model.N[id], stamp = Date.parse(node.at);
+      const title = options.title(node) || node.title || node.label || id;
+      const line = Number.isFinite(stamp) ? title + ' · ' + exactTime.format(stamp) + ' UTC' : title;
+      if (tip.textContent !== line) tip.textContent = line;
       const rect = entry.el.getBoundingClientRect();
       const x = hovered && pointer ? pointer.clientX : rect.left + rect.width / 2;
       const y = hovered && pointer ? pointer.clientY : rect.bottom;
@@ -926,27 +980,17 @@
       if (pointer) updatePointer(pointer);
       else if (!tip.hidden) showHistoryTitle();
       repaint();
-      options.pan?.();
     }, {passive:true});
     const resize = new ResizeObserver(repaint);
     resize.observe(scene);
     const appearance = new MutationObserver(repaint);
     appearance.observe(document.documentElement, {attributes:true, attributeFilter:['class', 'data-theme']});
 
-    function aim(preferred) {
-      const left = scroll.scrollLeft, right = left + scroll.clientWidth;
-      const current = headsByLane.get(model?.N[preferred]?.lane);
-      if (current && current.x >= left && current.x <= right) return preferred;
-      return layout?.heads.reduce((best, h) => !best || Math.abs(h.x - (left+right)/2) < Math.abs(best.x - (left+right)/2) ? h : best, null)?.id;
+    function center() {
+      panOffset = 0;
+      scroll.scrollLeft = layout.ground.vx - scroll.clientWidth / 2;
     }
-    function reveal(id, smooth) {
-      const head = headsByLane.get(model?.N[id]?.lane);
-      if (!head) return;
-      const left = scroll.scrollLeft, right = left + scroll.clientWidth;
-      if (head.x - head.width / 2 >= left && head.x + head.width / 2 <= right) return;
-      scroll.scrollTo({left:head.x - scroll.clientWidth / 2, behavior:smooth ? 'smooth' : 'instant'});
-    }
-    return {render, element:scene, startTravel, aim, reveal, focus: focusHead, destroy() {
+    return {render, element:scene, startTravel, center, focus: focusHead, destroy() {
       if (frame) cancelAnimationFrame(frame);
       resize.disconnect();
       appearance.disconnect();

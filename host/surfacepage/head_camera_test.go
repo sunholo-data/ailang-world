@@ -62,7 +62,7 @@ function checkLaneSilhouettes(scene, graph) {
     const front = head.id === id;
     const {width,height} = front ? head : paneSize(g,head,p);
     assert(width>0 && height>0, 'even the oldest record has a face');
-    const {front:near,back} = block(g,p,width,height,front ? g.blockDepth : g.paneDepth);
+    const {front:near,back} = block(g,p,width,height,front ? g.blockDepth : p.paneDepth);
     const corners = [...near,...back];
     const xs = corners.map(v=>v.x), ys = corners.map(v=>v.y);
     return {id,corners,l:Math.min(...xs),r:Math.max(...xs),t:Math.min(...ys),b:Math.max(...ys)};
@@ -92,7 +92,7 @@ for (const width of [320, 390, 1300]) {
 
   const head = Object.fromEntries(scene.heads.map(h => [h.lane, h]));
   const unselected = layout(timeline, {width, height:640});
-  assert.equal(head.recent.id, 'r2', 'use rank for identity');
+  assert.equal(head.recent.id, 'r1', 'use the last timeline instant for the head');
   assert.equal(head.recent.priority, 1, 'use newest recorded time for lane relevance');
   assert.deepEqual([head.selected.priority, head.live.priority, head.attention.priority], [4,3,2]);
   assert(head.recent.y > head.middle.y && head.middle.y > head.selected.y && head.selected.y > head.unknown.y,
@@ -104,25 +104,13 @@ for (const width of [320, 390, 1300]) {
       'selection and attention change lateral prominence, not projected depth or scale');
   }
   assert(scene.points.get('u1').depth > scene.points.get('r2').depth, 'unknown dates do not become fresh');
-  const {ground:g} = scene;
-  const older = scene.points.get('r1');
-  const recent = head.recent;
-  const roof = block(g,recent,recent.width,recent.height).back[0].y;
-  const worldPaneHeight = recent.height*recent.depth*g.paneHeightRatio;
-  assert(older.y + worldPaneHeight/older.depth/2 < roof - 3.9 &&
-    older.depth > recent.depth + g.blockDepth,'the first label has a clear slot behind the roof');
-  const firstFive = [88,87,86,85,84].map(i=>scene.points.get('s'+i));
-  const sharedWorldPane = head.shared.height*head.shared.depth*g.paneHeightRatio;
-  for (const [i,current] of firstFive.entries()) {
-    if (!i) continue;
-    const previous = firstFive[i-1];
-    assert(current.depth-previous.depth>=g.historyPitch-1e-9 &&
-      nearEqual(current.depth-previous.depth,head.shared.historyPitch),'physical pitch never compresses');
-    assert(previous.y-sharedWorldPane/previous.depth/2 > current.y+sharedWorldPane/current.depth/2,
-      'near history stays individually exposed beyond the third pane');
-  }
+  const {ground:g,time} = scene;
+  assert.equal(time.referenceIndex,timeline.presentIndex);
+  assert.equal(time.referenceX,timeline.LX[1][timeline.presentIndex]);
+  assert.equal(scene.travelZ,0);
+  assert.equal(time.depthAt(time.referenceIndex),1);
   const tail = scene.points.get('s0');
-  assert(tail.depth>12 && tail.y-g.horizon<32,'long histories taper toward the horizon');
+  assert(tail.depth>12 && tail.y-g.horizon<32,'long Timeline history tapers toward the horizon');
 
   for (const [i, a] of scene.heads.entries()) {
     assert(a.x-a.width/2 >= 0 && a.x+a.width/2 <= scene.width);
@@ -155,19 +143,22 @@ for (const width of [320, 390, 1300]) {
   for (const [id,point] of scene.points) {
     assert(nearEqual(point.scale*point.depth,1),'inverse depth controls scale');
     const head = fronts.get(timeline.N[id].lane);
-    checkRay(head,point,ground);
-    const elevation = head.height*head.depth/2;
-    const expected = project(ground,(head.x-center)*head.depth,elevation,point.depth);
-    assert(nearEqual(expected.x,point.x) && nearEqual(expected.y,point.y),'lane histories retain fixed physical X/elevation');
+    if (head.worldX===point.worldX) checkRay(head,point,ground);
+    const expected = project(ground,point.worldX,ground.eventElevation,point.depth);
+    assert(nearEqual(expected.x,point.x) && nearEqual(expected.y,point.y),'record retains fixed elevation');
+    const index = timeline.timeIndex.get(id);
+    assert.equal(point.timeIndex,index);
+    assert(nearEqual(point.depth,1+(time.referenceX-timeline.LX[1][index])/time.unitsPerZ));
+    assert.equal(point.y,time.yAt(index));
   }
   assert.equal(ground.centerLane,'shared');
   assert.equal(head.shared.x,center,'shared world sits on the optical axis');
-  assert([...scene.points].filter(([id])=>timeline.N[id].lane==='shared').every(([,p])=>p.x===center));
+  assert([...scene.points].filter(([id,p])=>timeline.N[id].lane==='shared' && p.worldX===0).every(([,p])=>p.x===center));
   for (const face of [head.shared,head.recent]) {
     assert(face.width / face.height >= 1.9,'foreground faces are landscape');
   }
   assert.notEqual(head.shared.y,head.recent.y,'foreground faces stagger in recorded depth');
-  assert(nearEqual(ground.streetY, Math.max(...[head.shared,head.recent].map(h=>h.y+h.height/2))));
+  assert(ground.streetY>Math.max(...[head.shared,head.recent].map(h=>h.y+h.height/2)), 'the present plane is now, after latest activity');
   for (const face of scene.heads) {
     assert(nearEqual(face.height*face.depth,head.shared.height*head.shared.depth),'facades share the same world height');
     const relativeWidth = (face.width*face.depth)/(head.shared.width*head.shared.depth);
@@ -188,38 +179,74 @@ for (const width of [320, 390, 1280]) {
   const single = layout(adaptModel({...model,lanes:[model.lanes[1]],links:[]}),{width,height:620});
   const only = single.heads[0], center = single.width/2;
   assert(Math.abs(only.x-center)+only.width/2 <= width/2,'a single foreground face is readable on arrival');
-  assert(Math.abs(only.x-center)-only.width/2 > 0,'a lone lane leaves the through-path open');
+  assert.equal(single.ground.centerLane,only.lane,'branch-only worlds still have a camera reference');
+  assert.equal(only.x,center);
 }
 
 const recentLanes = Array.from({length:12},(_, i)=>lane('recent-'+i,[state('new'+i,200+i,.5)]));
 const threeNear = layout(adaptModel({...model,lanes:recentLanes.slice(0,3),links:[]}),{width:1280,height:780});
 assert.equal(threeNear.width,1280,'all three near faces fit in the desktop frame');
-assert(threeNear.heads.every(h=>h.width>=226 && h.width<=250 && h.height>=80 && h.height<=87));
+assert(threeNear.heads.every(h=>h.width*h.depth>=240 && h.width*h.depth<=250));
 const busy = layout(adaptModel({...model,lanes:recentLanes,links:[]}),{width:1280,height:780});
 assert(busy.width>1280 && busy.heads.every(h=>h.width*h.depth>=171.999999),'busy desktop can pan at a readable width');
 const mobile = layout(adaptModel({...model,lanes:recentLanes.slice(0,3),links:[]}),{width:320,height:640});
-assert(nearEqual(Math.max(...mobile.heads.map(h=>h.width)),122) &&
-  nearEqual(Math.max(...mobile.heads.map(h=>h.height)),61),'desktop fitting leaves the nearest phone face alone');
+assert(mobile.heads.every(h=>nearEqual(h.width*h.depth,122) && nearEqual(h.height*h.depth,61)),
+  'desktop fitting leaves the reference facade size on phones alone');
 
-// Duplicate timestamps still occupy distinct slots through a long ray.
-const longLane = lane('long',Array.from({length:420},(_,i)=>state('long'+i,i,0)));
-const longModel = adaptModel({...model,lanes:[longLane],links:[]});
-const long = layout(longModel,{width:320,height:640});
-checkLaneSilhouettes(long,longModel);
+const longLane = lane('long',Array.from({length:420},(_,i)=>state('long'+i,i,420-i)));
+const long = layout(adaptModel({...model,lanes:[longLane],links:[]}),{width:320,height:640});
 assert.equal(new Set([...long.points.values()].map(p=>p.depth)).size,420);
 assert(long.points.get('long0').depth>60 && long.points.get('long0').y-long.ground.horizon<8);
 
-// Angles are reusable where lone heads have no projected depth overlap.
-const quietModel = adaptModel({...model,lanes:[
-  lane('new',[state('new',1,.5)]), lane('middle',[state('mid',2,5)]), lane('distant',[state('distant',3,40)])
-],links:[]});
-const quiet = layout(quietModel,{width:320,height:640});
-const quietHeads = Object.fromEntries(quiet.heads.map(h=>[h.lane,h]));
-assert(nearEqual((quietHeads.new.x-quiet.ground.vx)*quietHeads.new.depth,
-  (quietHeads.distant.x-quiet.ground.vx)*quietHeads.distant.depth),
-  'one-item lanes reuse angular space at disjoint depth');
-assert(quiet.width<370);
-checkLaneSilhouettes(quiet,quietModel);
+const exact = adaptModel({...model,lanes:[
+  lane('shared',[state('old',1,3,{kind:'shared'}),state('tie1',4,1,{kind:'shared'}),state('tie2',5,1,{kind:'shared'}),
+    state('latest',8,.2,{kind:'shared'})]),
+  lane('b',[state('b-old',0,10),state('b-at-tie',2,1),state('b-after',3,.5)]),
+  lane('unknown',[state('undated',12,null)]),
+  lane('future',[state('future',99,-1)]),
+  lane('draft',[state('local',100,99,{draft:true,kind:'draft'})])
+],links:[{from:'b-at-tie',to:'tie1'},{from:'b-at-tie',to:'b-after'}]});
+for (const width of [320,1280]) {
+  for (const timeXs of [exact.LX[1],exact.LX[3]]) {
+    const base = layout(exact,{width,height:650,timeXs,attention:new Set(['b'])});
+    assert(base.points.has('local') && !base.points.has('future'));
+    assert.equal(base.points.get('local').depth,1,'draft fixes to the real present');
+    const first = base.points.get('tie1'), second = base.points.get('tie2'), other = base.points.get('b-at-tie');
+    assert.deepEqual([first.depth,first.y],[second.depth,second.y]);
+    assert.deepEqual([second.depth,second.y],[other.depth,other.y]);
+    assert.notEqual(first.x,second.x,'same-lane tied records use lateral placements');
+    const cut = layout(exact,{width,height:650,timeXs,base,stop:'tie1',attention:new Set(['b'])});
+    assert.equal(cut.heads.find(h=>h.lane==='shared').id,'tie1');
+    assert.equal(cut.heads.find(h=>h.lane==='b').id,'b-at-tie');
+    assert.deepEqual([...cut.points.keys()].sort(),['b-at-tie','b-old','old','tie1','tie2','undated']);
+    assert(cut.heads.every(h=>!h.live && !h.attention));
+    assert.equal(cut.points.get('tie1').depth,1);
+    assert(nearEqual(cut.travelZ,base.points.get('tie1').depth-1));
+    assert(cut.edges.some(e=>e.from==='b-at-tie'&&e.to==='tie1'));
+    for (const [id,p] of cut.points) assert(nearEqual(base.points.get(id).depth-p.depth,cut.travelZ));
+    checkLaneSilhouettes(base,exact);
+    checkLaneSilhouettes(cut,exact);
+
+    const shift = layout(exact,{width,height:650,timeXs,base,viewLane:'b',selected:'b'});
+    assert.equal(shift.ground.centerLane,'b');
+    assert.deepEqual(shift.laneOrder,base.laneOrder);
+    assert.equal(shift.heads.find(h=>h.lane==='b').x,shift.ground.vx);
+    assert.deepEqual([...shift.points].map(([id,p])=>[id,p.depth,p.y]).sort(),
+      [...base.points].map(([id,p])=>[id,p.depth,p.y]).sort());
+    for (let i=1;i<shift.laneOrder.length;i++) {
+      const prev=shift.heads.find(h=>h.lane===shift.laneOrder[i-1]);
+      const next=shift.heads.find(h=>h.lane===shift.laneOrder[i]);
+      assert(prev.worldX<=next.worldX,'recenter keeps the left-to-right order');
+    }
+    checkLaneSilhouettes(shift,exact);
+  }
+}
+const branchOnly = layout(adaptModel({...model,lanes:[
+  lane('oldbranch',[state('oldbranch',1,20)]),lane('mainbranch',[state('mainbranch',3,.1)]),
+  lane('otherbranch',[state('otherbranch',2,7)])
+],links:[]}),{width:320,height:640});
+assert.equal(branchOnly.ground.centerLane,'mainbranch');
+assert.equal(branchOnly.laneOrder.indexOf('mainbranch'),1,'a branch-only default permits lane switching on either side');
 
 const repoLane = (repo,name,kind,age) => ({
   ...lane(repo+':brane:'+name,Array.from({length:65},(_,i)=>state(repo+name+i,i,age+64-i,{kind}))),repo

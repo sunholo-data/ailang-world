@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"path/filepath"
 	"testing"
 )
@@ -125,28 +126,28 @@ func TestSurfaceHeadOnTravelsHistoryInChrome(t *testing.T) {
 		window.visibleTravelFaces = () => [...window.travelScene.querySelectorAll('a[data-head-state][href]')]
 			.filter(link => link.checkVisibility({visibilityProperty:true, opacityProperty:true}));
 		fetch('/surface/model.json').then(response => response.json()).then(model => {
-			window.travelRanks = new Map(model.lanes.flatMap(lane => lane.states.map(state => [state.id, state.rank])));
+			window.travelTimes = new Map(model.lanes.flatMap(lane => lane.states.map(state => [state.id, Date.parse(state.at)])));
 		});
 		return Boolean(window.travelScene);
 	})()`)
-	wait(`window.travelRanks instanceof Map && window.getTravelStop() === '' &&
+	wait(`window.travelTimes instanceof Map && window.getTravelStop() === '' &&
 		window.visibleTravelFaces().length > 0`)
 
 	assertStop := func(slot, newer string) {
 		t.Helper()
 		wait(fmt.Sprintf(`(() => {
 			const stop = window.getTravelStop();
-			const cutoff = window.travelRanks.get(stop);
+			const cutoff = window.travelTimes.get(stop);
 			const faces = window.visibleTravelFaces();
 			const selected = faces.find(link => link.dataset.headState === stop);
 			if (!selected || !Number.isFinite(cutoff) || stop === window[%q] ||
-				(window[%q] && cutoff > window.travelRanks.get(window[%q]))) return false;
+				(window[%q] && cutoff > window.travelTimes.get(window[%q]))) return false;
 			const bounds = selected.getBoundingClientRect();
 			if (bounds.right <= 0 || bounds.bottom <= 0 || bounds.left >= innerWidth || bounds.top >= innerHeight) return false;
 			const url = new URL(selected.href);
 			if (url.pathname !== '/surface' || url.searchParams.get('at') !== stop ||
 				url.searchParams.get('brane') !== selected.dataset.headLane) return false;
-			if (!faces.every(face => window.travelRanks.get(face.dataset.headState) <= cutoff)) return false;
+			if (!faces.every(face => window.travelTimes.get(face.dataset.headState) <= cutoff)) return false;
 			window[%q] = stop;
 			return document.querySelector('.hc-scene') === window.travelScene &&
 				document.querySelector('#stage[data-view="heads"]') === window.travelStage;
@@ -446,3 +447,153 @@ func TestSurfaceHeadOnOpensOlderRecordedPaneInChrome(t *testing.T) {
 	wait(`document.querySelector('#stage[data-view="heads"] .hc-scene') === window.longLaneScene &&
 		window.longLaneScene.querySelector('a[data-rear-state][aria-current="true"]')?.dataset.rearState === window.oldNativePane`)
 }
+
+func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
+	b := startPasskeyBrowser(t)
+	index := filepath.Join("..", "..", "host", "surface", "testdata", "index-rig.json")
+	origin := cardOrigin(t, filepath.Join(t.TempDir(), "credentials.db"), index, func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/surface/model.json" {
+				w.Header().Set("Content-Type", "application/json")
+				fmt.Fprint(w, recordedTimeBrowserModel)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	})
+	b.do(t, nil, "tab", nil)
+	defer b.do(t, nil, "tab", nil)
+	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface", "raw": true})
+	wait := func(expression string) {
+		t.Helper()
+		b.do(t, nil, "waitFor", map[string]any{"expression": expression})
+	}
+	wait(`document.documentElement.dataset.ready === '1' && document.querySelector('#stage')?.dataset.view === 'timeline'`)
+	var timeline struct {
+		Tips   int
+		DeltaX float64
+		Ticks  int
+	}
+	b.do(t, &timeline, "waitFor", map[string]any{"expression": `(() => {
+		const tips = [...document.querySelectorAll('#tl .node:is([data-state="a-tip"],[data-state="b-tip"])')];
+		const ticks = [...document.querySelectorAll('#tl .tick-t')]
+			.filter(tick => tick.checkVisibility() && tick.textContent.trim());
+		const center = el => { const r = el.getBoundingClientRect(); return r.x + r.width / 2; };
+		return {tips:tips.length, deltaX:tips.length === 2 ? Math.abs(center(tips[0])-center(tips[1])) : -1, ticks:ticks.length};
+	})()`})
+	if timeline.Tips != 2 || timeline.DeltaX > 1 || timeline.Ticks == 0 {
+		t.Fatalf("expected equal-time Timeline nodes and a visible time axis: %+v", timeline)
+	}
+	b.do(t, nil, "tap", map[string]any{"id": "head-angle"})
+	wait(`(() => {
+		const stage = document.querySelector('#stage[data-view="heads"]');
+		if (!stage) return false;
+		const axis = stage.querySelector('.hc-time-axis');
+		const ticks = axis && [...axis.querySelectorAll('time[datetime]')];
+		if (!axis?.checkVisibility() || !axis.textContent.includes('Time') ||
+			!ticks.some(tick => tick.checkVisibility() && tick.textContent.trim() && Number.isFinite(Date.parse(tick.dateTime)))) return false;
+		window.timedScene = stage.querySelector('.hc-scene');
+		window.paneFor = id => [...window.timedScene.querySelectorAll('a[data-head-state], a[data-rear-state]')]
+			.find(el => (el.dataset.headState || el.dataset.rearState) === id);
+		window.alignedPanes = (a, b) => {
+			const first = window.paneFor(a), second = window.paneFor(b);
+			if (!first || !second) return false;
+			const midpoint = r => r.top + r.height / 2;
+			const front = link => link.querySelector('.hc-mini-front') || link;
+			return Math.abs(midpoint(front(first).getBoundingClientRect()) - midpoint(front(second).getBoundingClientRect())) <= 1;
+		};
+		return window.alignedPanes('a-tip', 'b-tip');
+	})()`)
+	wait(`(() => {
+		const tip = window.paneFor('a-tip');
+		tip.focus();
+		if (document.activeElement !== tip) return false;
+		tip.dispatchEvent(new KeyboardEvent('keydown', {key:'+', bubbles:true, cancelable:true}));
+		return true;
+	})()`)
+	wait(`(() => {
+		const scene = window.timedScene;
+		if (scene.dataset.travelState !== 'a-stop' || document.querySelector('#stage').dataset.view !== 'heads') return false;
+		window.sameRecordedCut = () => {
+			const expected = ['a-stop', 'b-earlier', 'b-tie', 'shared-cut', 'shared-early'];
+			const actual = [...scene.querySelectorAll('a[data-head-state], a[data-rear-state]')]
+				.map(el => el.dataset.headState || el.dataset.rearState).sort();
+			return JSON.stringify(actual) === JSON.stringify(expected);
+		};
+		return window.sameRecordedCut() && window.alignedPanes('a-stop', 'b-tie');
+	})()`)
+	var movement struct {
+		Key   string
+		Stops []struct{ ID, Lane string }
+	}
+	b.do(t, &movement, "waitFor", map[string]any{"expression": `(() => {
+		const laneX = el => { const r = el.getBoundingClientRect(); return r.left + r.width / 2; };
+		const ordered = [...window.timedScene.querySelectorAll('a[data-head-state]')]
+			.sort((a, b) => laneX(a) - laneX(b));
+		const first = ordered.indexOf(window.paneFor('a-stop')), second = ordered.indexOf(window.paneFor('b-tie'));
+		if (first < 0 || second < 0 || first === second) return false;
+		window.lateralStep = (id, key) => {
+			const link = window.paneFor(id);
+			link.focus();
+			if (document.activeElement !== link) return false;
+			link.dispatchEvent(new KeyboardEvent('keydown', {key, bubbles:true, cancelable:true}));
+			return true;
+		};
+		window.centeredAt = (id, lane) => {
+			const scroll = window.timedScene.querySelector('.hc-scroll');
+			const center = scroll.getBoundingClientRect().left + scroll.clientWidth / 2;
+			return window.timedScene.dataset.viewLane === lane && window.timedScene.dataset.travelState === 'a-stop' &&
+				window.sameRecordedCut() && window.alignedPanes('a-stop', 'b-tie') &&
+				Math.abs(laneX(window.paneFor(id)) - center) <= 1 && document.activeElement === window.paneFor(id);
+		};
+		const stops = ordered.slice(Math.min(first, second), Math.max(first, second) + 1);
+		if (first > second) stops.reverse();
+		return {key:first < second ? 'ArrowRight' : 'ArrowLeft',
+			stops:stops.map(el=>({id:el.dataset.headState, lane:el.dataset.headLane}))};
+	})()`})
+	for i := 1; i < len(movement.Stops); i++ {
+		from, to := movement.Stops[i-1], movement.Stops[i]
+		wait(fmt.Sprintf("window.lateralStep(%q, %q)", from.ID, movement.Key))
+		wait(fmt.Sprintf("window.centeredAt(%q, %q)", to.ID, to.Lane))
+	}
+	reverseKey := "ArrowLeft"
+	if movement.Key == reverseKey {
+		reverseKey = "ArrowRight"
+	}
+	for i := len(movement.Stops) - 1; i > 0; i-- {
+		from, to := movement.Stops[i], movement.Stops[i-1]
+		wait(fmt.Sprintf("window.lateralStep(%q, %q)", from.ID, reverseKey))
+		wait(fmt.Sprintf("window.centeredAt(%q, %q)", to.ID, to.Lane))
+	}
+}
+
+// The stop shares an instant with b-tie despite different wire offsets.
+// b-earlier and b-later have ranks that deliberately disagree with their time.
+const recordedTimeBrowserModel = `{
+	"schema": "world/surface-model/v1",
+	"now": "2026-10-20T15:00:00Z",
+	"nowEdge": {},
+	"lanes": [
+		{"key":"shared","name":"Shared world","glyph":"circle","colour":"#8496a5","states":[
+			{"id":"shared-early","kind":"shared","label":"Shared early","at":"2026-10-20T09:00:00Z","rank":1},
+			{"id":"shared-cut","kind":"shared","label":"Shared cut","at":"2026-10-20T12:00:00Z","rank":2},
+			{"id":"shared-late","kind":"shared","label":"Shared late","at":"2026-10-20T14:30:00Z","rank":3}
+		]},
+		{"key":"row-156","row":156,"name":"First branch","glyph":"hex","colour":"#93675d","states":[
+			{"id":"a-stop","kind":"step","label":"Historical stop","at":"2026-10-20T12:00:00Z","rank":20},
+			{"id":"a-tip","kind":"step","label":"First tip","at":"2026-10-20T14:00:00Z","rank":50}
+		]},
+		{"key":"row-189","row":189,"name":"Second branch","glyph":"square","colour":"#42669a","states":[
+			{"id":"b-earlier","kind":"step","label":"Earlier time, higher rank","at":"2026-10-20T10:00:00Z","rank":30},
+			{"id":"b-tie","kind":"step","label":"Same instant","at":"2026-10-20T14:00:00+02:00","rank":40},
+			{"id":"b-later","kind":"step","label":"Later time, lower rank","at":"2026-10-20T13:00:00Z","rank":10},
+			{"id":"b-tip","kind":"step","label":"Second tip","at":"2026-10-20T16:00:00+02:00","rank":51}
+		]}
+	],
+	"links": [
+		{"from":"a-stop","to":"a-tip"},
+		{"from":"b-earlier","to":"b-tie"},
+		{"from":"b-tie","to":"b-later"},
+		{"from":"b-later","to":"b-tip"}
+	]
+}`

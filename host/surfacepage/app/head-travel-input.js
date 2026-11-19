@@ -8,9 +8,11 @@
     const controls = document.createElement('div');
     controls.className = 'hc-travel';
     controls.setAttribute('role', 'group');
-    controls.setAttribute('aria-label', 'History depth');
+    controls.setAttribute('aria-label', 'Move through branches and time');
     controls.innerHTML = `
+      <button type="button" class="hc-lane-left" aria-label="Move one lane left">←</button>
       <span class="hc-travel-label" role="status"></span>
+      <button type="button" class="hc-lane-right" aria-label="Move one lane right">→</button>
       <button type="button" class="hc-travel-reset" aria-label="Return to present">Present</button>
       <button type="button" class="hc-travel-out" aria-label="Move toward present" title="Move toward present (−)">−</button>
       <button type="button" class="hc-travel-in" aria-label="Move into history" title="Move into history (+)">+</button>`;
@@ -21,6 +23,7 @@
     const older = controls.querySelector('.hc-travel-in');
     const newer = controls.querySelector('.hc-travel-out');
     const reset = controls.querySelector('.hc-travel-reset');
+    const left = controls.querySelector('.hc-lane-left'), right = controls.querySelector('.hc-lane-right');
     let state = {active:false, canIn:false, canOut:false};
     let wheelAt = 0, wheelDirection = 0, wheelAmount = 0, lastWheelStep = -Infinity;
     let pinch = null, suppressClickUntil = 0;
@@ -46,6 +49,8 @@
       if (available(direction)) hooks.step(direction, target);
     }
 
+    listen(left, 'click', () => { if (active() && state.left) hooks.shift(-1); });
+    listen(right, 'click', () => { if (active() && state.right) hooks.shift(1); });
     listen(older, 'click', () => step(1, null));
     listen(newer, 'click', () => step(-1, null));
     listen(reset, 'click', () => {
@@ -116,11 +121,19 @@
 
     listen(window, 'keydown', event => {
       if (!active() || event.defaultPrevented || event.isComposing || event.repeat || event.altKey ||
-          event.metaKey || event.ctrlKey || event.target?.closest?.('dialog, [role="dialog"], input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]')) return;
+          event.metaKey || event.ctrlKey || document.querySelector('#keys:not([hidden]), #look:not([hidden]), dialog[open]') ||
+          event.target?.closest?.('[role="dialog"], input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]')) return;
+      if (!event.shiftKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
+        event.preventDefault();
+        const leftwards = event.key === 'ArrowLeft';
+        if (leftwards ? state.left : state.right) hooks.shift(leftwards ? -1 : 1);
+        return;
+      }
       const direction = event.key === '+' || event.key === '=' ? 1 : event.key === '-' ? -1 : 0;
-      if (!direction || !available(direction)) return;
+      const target = sceneTarget(document.activeElement);
+      if (!direction || !available(direction, target)) return;
       event.preventDefault();
-      step(direction, sceneTarget(document.activeElement));
+      step(direction, target);
     });
 
     return {
@@ -135,13 +148,17 @@
           wheelAt = 0;
           pinch = null;
         }
+        left.setAttribute('aria-disabled', String(!state.left));
+        right.setAttribute('aria-disabled', String(!state.right));
+        left.title = state.left || 'Leftmost lane';
+        right.title = state.right || 'Rightmost lane';
         older.setAttribute('aria-disabled', String(!state.canIn));
         newer.setAttribute('aria-disabled', String(!state.canOut));
         if (reset === document.activeElement && !state.canOut && state.active) older.focus({preventScroll:true});
         reset.hidden = !state.canOut;
         const description = state.label || '';
         if (label.textContent !== description) label.textContent = description;
-        label.title = description;
+        label.title = [description, state.when].filter(Boolean).join(' · ');
         label.hidden = !description;
       },
       destroy() {

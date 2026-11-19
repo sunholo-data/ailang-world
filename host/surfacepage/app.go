@@ -22,9 +22,6 @@ var headDrafts []byte
 //go:embed app/head-camera.js
 var headCamera []byte
 
-//go:embed app/head-travel.js
-var headTravel []byte
-
 //go:embed app/head-travel-input.js
 var headTravelInput []byte
 
@@ -37,7 +34,7 @@ var cameraController []byte
 //go:embed app/composer.js
 var composerScript []byte
 
-var AppScript = bytes.Join([][]byte{headDrafts, headCamera, headTravel, headTravelInput, headScene, cameraController, timelineScript, composerScript}, []byte("\n"))
+var AppScript = bytes.Join([][]byte{headDrafts, headCamera, headTravelInput, headScene, cameraController, timelineScript, composerScript}, []byte("\n"))
 
 // AppStyle is /surface/app.css: the working copy's stylesheet, its fonts
 // self-hosted under /surface/fonts/.

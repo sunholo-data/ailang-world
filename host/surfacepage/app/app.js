@@ -10,9 +10,9 @@
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const pad = n => String(n).padStart(2, '0');
-  const hm = iso => { const d = new Date(iso); return pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()); };
-  const dayOf = iso => { const d = new Date(iso); return d.getUTCDate() + ' ' + MON[d.getUTCMonth()]; };
-  const exactOf = iso => dayOf(iso) + ' ' + hm(iso) + ' UTC';
+  const hm = iso => { if (iso == null) return ''; const d = new Date(iso); return Number.isFinite(+d) ? pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) : ''; };
+  const dayOf = iso => { if (iso == null) return ''; const d = new Date(iso); return Number.isFinite(+d) ? d.getUTCDate() + ' ' + MON[d.getUTCMonth()] : ''; };
+  const exactOf = iso => dayOf(iso) ? dayOf(iso) + ' ' + hm(iso) + ' UTC' : 'Time unrecorded';
   const prettyModel = m => (m || '').split('-').filter(Boolean).reduce((a, w, i, all) => {
     if (/^\d+$/.test(w) && /^\d+$/.test(all[i - 1] || '')) return a + '.' + w;
     const word = /^gpt$/i.test(w) ? 'GPT' : /^\d/.test(w) ? w : w[0].toUpperCase() + w.slice(1);
@@ -43,18 +43,18 @@
     return `<span class="g" style="width:${size}px;height:${size}px;background:${colour};clip-path:${CLIP[shape] || 'none'};border-radius:${shape === 'square' ? '2px' : '0'};${extra}"></span>`;
   }
 
-  // ---------- Time axis: each shared state is a point; zoom levels blend "one slot each" into real time ----------
+  // ---------- Time axis: one slot per instant, shared by both views ----------
   const BREAK_H = 72;                           // longer quiet gaps are drawn as an axis break, not as empty weeks
   const LEVELS = [{ name: 'Close', G: 84, P: 0 }, { name: 'Steps', G: 50, P: 0 }, { name: 'Hours', G: 14, P: 16 }, { name: 'Days', G: 3, P: 6 }, { name: 'Weeks', G: 0, P: 2.4 }];
   const breakAt = (TT, i) => i > 0 && (TT[i] - TT[i - 1]) / 3.6e6 > BREAK_H;
-  // levelXs is each level's x for every shared state, then now; TT is their times, then now's.
-  function levelXs(TT) {
+  // levelXs blends evenly spaced instants into elapsed time as you zoom out.
+  function levelXs(TT, presentIndex = TT.length - 1, undated = false) {
     const NS = TT.length - 1;
     return LEVELS.map(L => {
       const xs = [220];
       for (let i = 1; i <= NS; i++) {
         const dth = (TT[i] - TT[i - 1]) / 3.6e6;
-        const gap = breakAt(TT, i) ? Math.max(L.G, 64) : i === NS ? Math.max(L.G * 1.44, dth * L.P, 28) : Math.max(L.G, dth * L.P);
+        const gap = (undated && i === 1) || breakAt(TT, i) ? Math.max(L.G, 64) : i === presentIndex ? Math.max(L.G * 1.44, dth * L.P, 28) : Math.max(L.G, dth * L.P);
         xs.push(xs[i - 1] + gap);
       }
       return xs;
@@ -62,6 +62,25 @@
   }
   // blendXS is the x of every point at zoom u, between two levels.
   function blendXS(LX, u) { const k = Math.min(LX.length - 2, Math.floor(u)), f = u - k; return LX[k].map((x, i) => x + (LX[k + 1][i] - x) * f); }
+
+  function timeAxis(nodes, now) {
+    const entries = nodes.map(n => [n, n.draft ? NaN : Date.parse(n.at)]);
+    const times = entries.map(([, t]) => t).filter(Number.isFinite);
+    const measured = Date.parse(now);
+    const nowKnown = Number.isFinite(measured);
+    const TNOW = nowKnown ? measured : times.reduce((latest, time) => Math.max(latest, time), -Infinity);
+    const present = Number.isFinite(TNOW) ? TNOW : 0;
+    const TT = [...new Set([...times, present])].sort((a, b) => a - b);
+    const undated = entries.some(([n, t]) => !n.draft && !Number.isFinite(t));
+    // Undated states get one slot outside recorded history. Its ordering key
+    // is synthetic and never shown as a timestamp. Local drafts sit at now.
+    if (undated) TT.unshift(TT[0] - 1);
+    const indexes = new Map(TT.map((t, i) => [t, i]));
+    const presentIndex = indexes.get(present);
+    const timeIndex = new Map(entries.map(([n, t]) => [n.id, n.draft ? presentIndex : indexes.get(t) ?? 0]));
+    const LX = levelXs(TT, presentIndex, undated);
+    return { TT, LX, timeIndex, undated, nowKnown, dated: nowKnown || times.length > 0, presentIndex, TNOW:present, NOW_D:new Date(present), NS:TT.length - 1 };
+  }
 
   // ---------- Canvas geometry (1600 × 936 design canvas, scaled to the window) ----------
   let PL = 262, PR = 1262, PW = PR - PL;
@@ -90,17 +109,14 @@
     const glyphOf = (key, size) => { const l = LANES[key] || {}; return gl(l.glyph, l.glyph === 'circle' ? SHARED_INK : l.colour, size); };
     const glyphOfNode = (n, size) => n.kind === 'shared' ? gl('circle', SHARED_INK, size) : isSharedKey(n.lane) ? gl(null, null, size) : glyphOf(n.lane, size);
     const mergeOf = id => (kids[id] || []).find(c => N[c].kind === 'shared');
-    const STEPS = Object.values(N).filter(n => n.kind === 'step');
-    const OPEN = Object.values(N).filter(n => n.kind === 'open');
-    const TNOW = Date.parse(D.now), NOW_D = new Date(D.now);
-    const NS = SH.length;                         // index NS is "now"
-    const SIDX = {}; SH.forEach((id, i) => { SIDX[id] = i; });
-    const TT = SH.map(id => Date.parse(N[id].at)).concat([TNOW]);
-    const LX = levelXs(TT);
+    const nodes = Object.values(N);
+    const STEPS = nodes.filter(n => n.kind === 'step');
+    const OPEN = nodes.filter(n => n.kind === 'open');
+    const axis = timeAxis(nodes, D.now);
     // Rows: the most recent brane above the shared world, the next three below, the rest share one quiet lane.
     // Several repos: each repo's shared world, then its newest branes, then its quiet lane, in config order.
     const recent = {};
-    STEPS.concat(OPEN).forEach(n => { if (!isSharedKey(n.lane)) recent[n.lane] = Math.max(recent[n.lane] == null ? -1 : recent[n.lane], n.rank); });
+    nodes.filter(n => n.kind !== 'shared').forEach(n => { if (!isSharedKey(n.lane)) recent[n.lane] = Math.max(recent[n.lane] == null ? -1 : recent[n.lane], n.rank); });
     const byRecent = Object.keys(recent).sort((a, b) => recent[b] - recent[a]);
     const LY = {}, QUIET = {}, HOME = {};
     let above = [], below = [], quiet = [], ROWS = [], GAP = 98;
@@ -109,7 +125,7 @@
       above = byRecent.slice(0, 1); below = byRecent.slice(1, 4);
       quiet = Object.keys(LANES).filter(k => !isSharedKey(k) && !above.includes(k) && !below.includes(k));
       above.forEach(k => { LY[k] = 182; }); LY[g.shared] = 320; below.forEach((k, i) => { LY[k] = 440 + i * 98; }); LY[otherOf(g)] = 440 + below.length * 98 - 6;
-      ROWS = above.concat([g.shared], below, quiet.length ? [otherOf(g)] : []);
+      ROWS = above.concat(LANES[g.shared] ? [g.shared] : [], below, quiet.length ? [otherOf(g)] : []);
       QUIET[otherOf(g)] = quiet; HOME[dipOf(g)] = g.shared;
     } else {
       const per = GROUPS.length === 2 ? 2 : GROUPS.length === 3 ? 1 : 0;
@@ -127,27 +143,20 @@
     const rowY = r => HOME[r] ? LY[HOME[r]] + (multi ? Math.round(GAP * 0.45) : 44) : LY[r];
     const isDip = r => !!HOME[r], isOther = r => !!QUIET[r] || r === 'other';
     const homeRow = r => HOME[r] || r;
-    const isBreak = i => breakAt(TT, i);
     const lastStep = key => STEPS.filter(n => n.lane === key).sort((a, b) => b.rank - a.rank)[0];
     const lastState = key => ((LANES[key] && LANES[key].states) || []).reduce((a, s) => !a || s.rank > a.rank ? s : a, null);
     const aliasOf = {}; (D.aliases || []).forEach(a => { if (N[a.target]) aliasOf[a.id] = a.target; });
-    return { D, LANES, N, parents, kids, SH, NS, SIDX, TT, LX, MAXU: LX.length - 1, STEPS, OPEN, TNOW, NOW_D, above, below, quiet, LY, ROWS,
+    return { D, LANES, N, parents, kids, SH, ...axis, MAXU: axis.LX.length - 1, STEPS, OPEN, above, below, quiet, LY, ROWS,
       GROUPS, multi, GAP, QUIET, groupOf, isDip, isOther, homeRow, aliasOf,
-      nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, rowOf, rowY, isBreak, lastStep, lastState };
+      nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, rowOf, rowY, lastStep, lastState };
   }
 
   // ---------- Layout of the visible graph at one zoom (XS) ----------
   const isCluster = id => typeof id === 'string' && id.startsWith('c:');
   function layoutGraph(T, XS, selectedID) {
-    const { N, SIDX, NS, LY } = T, POS = {}, REP = {}, DISP = {};
+    const { N, timeIndex } = T, POS = {}, REP = {}, DISP = {};
     Object.keys(N).forEach(id => {
-      const n = N[id], r = T.rowOf(id);
-      if (n.kind === 'shared') { POS[id] = [XS[SIDX[id]], LY[r]]; return; }
-      const m = T.mergeOf(id);
-      let x;
-      if (m != null && SIDX[m] != null) { const i = SIDX[m], xm = XS[i], xp = i > 0 ? XS[i - 1] : xm - 52; x = xm - Math.min(26, Math.max(0, (xm - xp) / 2)); }
-      else x = XS[NS] - 26;
-      POS[id] = [x, T.rowY(r)];
+      POS[id] = [XS[timeIndex.get(id)], T.rowY(T.rowOf(id))];
     });
     // Collapse dense runs on each row into a count bubble.
     const byRow = {};
@@ -595,9 +604,9 @@
   // ================= The page =================
   const $ = id => document.getElementById(id);
   const SEAMS = window.WorldSurface || {};
-  let T = null, D = null, LANES = {}, N = {}, parents = {}, kids = {}, SH = [], NS = 0, SIDX = {}, TT = [], LX = [], MAXU = LEVELS.length - 1;
+  let T = null, D = null, LANES = {}, N = {}, parents = {}, kids = {}, SH = [], NS = 0, TT = [], LX = [], MAXU = LEVELS.length - 1;
   let STEPS = [], TNOW = 0, NOW_D = new Date(), quiet = [], LY = {}, ROWS = [], MXS = [], XS = [];
-  let nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, isBreak, lastStep, lastState;
+  let nameOf, laneTitle, glyphOf, glyphOfNode, lastStep, lastState;
   let recordedModel;
   const drafts = WorldHeadDrafts.create(({id, parent, discarded}) => {
     if (!recordedModel) return;
@@ -611,9 +620,9 @@
   function setModel(m) {
     recordedModel = m;
     T = adaptModel(drafts.project(m));
-    ({ D, LANES, N, parents, kids, SH, NS, SIDX, TT, LX, MAXU, STEPS, TNOW, NOW_D, quiet, LY, ROWS, nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, isBreak, lastStep, lastState } = T);
+    ({ D, LANES, N, parents, kids, SH, NS, TT, LX, MAXU, STEPS, TNOW, NOW_D, quiet, LY, ROWS, nameOf, laneTitle, glyphOf, glyphOfNode, lastStep, lastState } = T);
     measureMini();
-    XS = LX[1].slice();
+    computeXS(view.u);
   }
   function measureMini() {
     const a = LX[3][0], z = LX[3][NS];
@@ -625,18 +634,30 @@
   const railIdx = () => F ? Math.max(0, RAIL.findIndex(r => r.id === F.id)) : 0;
   const setView = v => { $('stage').dataset.view = v; };
 
+  const isBreak = i => breakAt(TT, i);
+  const breaksBetween = (a, b) => {
+    for (let i = Math.min(a, b) + 1; i <= Math.max(a, b); i++) if (isBreak(i)) return true;
+    return false;
+  };
+  // Enumerate ticks within drawn time spans to skip over unbounded quiet gaps.
+  function* tickTimes(step) {
+    if (!T.dated) return;
+    const first = T.undated ? 1 : 0;
+    for (let i = first; i <= NS; i++) {
+      if (i > first && !isBreak(i)) {
+        for (let t = (Math.floor(TT[i - 1] / step) + 1) * step; t < TT[i]; t += step) {
+          yield [t, i - 1 + (t - TT[i - 1]) / (TT[i] - TT[i - 1])];
+        }
+      }
+      if (TT[i] % step === 0) yield [TT[i], i];
+    }
+  }
   const computeXS = u => { XS = blendXS(LX, u); };
   const posF = f => { f = Math.max(0, Math.min(NS, f)); const i = Math.floor(f), j = Math.min(NS, i + 1); return XS[i] + (XS[j] - XS[i]) * (f - i); };
   const fAt = x => {
     if (x <= XS[0]) return 0; if (x >= XS[NS]) return NS;
     let lo = 0, hi = NS; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (XS[m] <= x) lo = m; else hi = m; }
     return lo + (XS[hi] === XS[lo] ? 0 : (x - XS[lo]) / (XS[hi] - XS[lo]));
-  };
-  const fOfTime = t => {
-    if (t < TT[0] || t > TT[NS]) return null;
-    let lo = 0, hi = NS; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (TT[m] <= t) lo = m; else hi = m; }
-    if (isBreak(hi)) return null;
-    return lo + (TT[hi] === TT[lo] ? 0 : (t - TT[lo]) / (TT[hi] - TT[lo]));
   };
   const level = () => view.u < 1.5 ? 'steps' : view.u < 2.5 ? 'hours' : view.u < 3.5 ? 'days' : 'weeks';
   const levelName = () => LEVELS[Math.round(view.u)].name;
@@ -701,7 +722,7 @@
     return lanes;
   }
   const camera = WorldCameraController.create($('stage'), $('head-space'), {
-    model:() => T, sidePoints, attention:attentionLanes, reduced,
+    model:() => T, timeXs:() => XS, sidePoints, attention:attentionLanes, reduced,
     glyph:(n, size) => glyphOfNode(n, size), title:n => cleanTitle(n.title) || n.episode || n.label || n.id,
     open:id => open(id),
     select:id => { if (N[id]) { st.focus = id; camera.select(id); } },
@@ -799,13 +820,13 @@
   function statusOf(key) {
     const run = T.OPEN.find(n => n.lane === key && n.open && n.open.sessionLive);
     if (run) return `<span class="stat on" data-tip="node:${esc(run.id)}">running</span>`;
-    const s = isSharedKey(key) ? (key === 'shared' ? N[SH[NS - 1]] : lastShared(key)) : lastStep(key);
+    const s = isSharedKey(key) ? (key === 'shared' ? N[SH.at(-1)] : lastShared(key)) : lastStep(key);
     const on = s && dayDiff(s.at) <= 1;
     return `<span class="stat${on ? ' on' : ''}" data-tip="${s ? 'node:' + s.id : ''}">${on ? 'active' : 'quiet'}</span>`;
   }
   function progressOf(key) {
     const l = LANES[key];
-    if (key === 'shared') return `<div class="prog">${NS} merges into dev</div>`;
+    if (key === 'shared') return `<div class="prog">${SH.length} merges into dev</div>`;
     if (isSharedKey(key)) { const g = T.groupOf(key), n = (l.states || []).filter(s => s.kind === 'shared').length; return `<div class="prog">${n} merge${n === 1 ? "" : "s"} into ${esc(g.repo ? g.repo.branch : 'dev')}</div>`; }
     const ms = l.milestones;
     if (ms && ms.names) {
@@ -899,7 +920,7 @@
     const activity = running + needsYouHTML(REQS, REQS ? REQS.now : 0, notifyPermission());
     return `<div class="now" data-now style="left:${PR + 22}px;top:56px">
       <button type="button" class="phone-view" id="activity-back">← Timeline</button>
-      <div><div style="font-size:12px;font-weight:600;color:var(--sub)">Now</div><div style="font-size:15px;font-weight:700">${DOW[now.getUTCDay()]} ${dayOf(D.now)} · ${hm(D.now)}</div></div>
+      <div><div style="font-size:12px;font-weight:600;color:var(--sub)">Now</div><div style="font-size:15px;font-weight:700">${T.nowKnown ? DOW[now.getUTCDay()] + ' ' + dayOf(now) + ' · ' + hm(now) : 'Time unavailable'}</div></div>
       <div style="display:flex;gap:9px;align-items:center"><span style="width:9px;height:9px;border-radius:5px;background:${healthy ? 'var(--okDot)' : 'var(--you)'};flex:none"></span><span style="font-weight:700;color:var(--ok)">${healthy ? 'Healthy' : esc(ne.health)}</span><span style="font-size:12.5px;color:var(--sub)">checked ${esc(ne.checked)}</span></div>
       ${narrow.matches ? activity : ''}
       ${serviceLineHTML(ne.service)}
@@ -953,12 +974,12 @@
         : opened ? `<span class="g open" data-open="${esc(n.open.state)}" style="width:14px;height:14px;border-radius:50%;border:2px dashed ${l.colour};background:${n.open.sessionLive ? l.colour + '55' : 'var(--shellBg)'}"></span>`
         : unfiled ? gl(null, null, 9) : gl(l.glyph, l.colour, size);
       const what = shared ? `Merged ${n.pr ? '#' + n.pr : n.label}` : opened ? `${n.open.label}: ${n.title || n.episode}` : (cleanTitle(n.title) || n.episode || n.label);
-      h += `<button type="button" class="node${shared ? ' sh' : ''}" data-id="${id}" data-state="${esc(id)}" data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${esc((shared ? 'Shared world' : nameOf(n.lane)) + ': ' + what + ', ' + n.rel + (n.badge ? ', ' + n.badge + ' of your decisions' : ''))}"><span class="halo">${inner}</span></button>`;
+      h += `<button type="button" class="node${shared ? ' sh' : ''}" data-id="${id}" data-state="${esc(id)}" data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${esc((shared ? 'Shared world' : nameOf(n.lane)) + ': ' + what + (n.rel ? ', ' + n.rel : '') + (n.badge ? ', ' + n.badge + ' of your decisions' : ''))}"><span class="halo">${inner}</span></button>`;
       if (n.badge > 0) h += `<div class="nb" style="left:${x + 6}px;top:${y - 19}px">${n.badge}</div>`;
       if (LABELED.has(id)) h += `<div class="nlab" data-l="${id}" style="left:${x - 56}px;bottom:${936 - (y - 18)}px"><span class="tx">${esc(opened ? n.episode + ' · ' + n.open.label : shortTitle(n.title || '') || n.episode || n.label)}</span></div>`;
       h += `<div class="nlab" data-r="${id}" style="left:${x - 56}px;top:${y + (shared ? 9 : 14)}px"><div class="rel"></div></div>`;
     });
-    h += `<div class="nowline" style="left:${XS[NS]}px;top:92px;height:${TICK_T + 30 - 92}px"></div>`;
+    h += `<div class="nowline" style="left:${XS[T.presentIndex]}px;top:92px;height:${TICK_T + 30 - 92}px"></div>`;
     h += ticksHTML();
     $('world').style.width = W + 'px';
     $('world').innerHTML = h;
@@ -973,16 +994,17 @@
     const pt = [], pd = [];
     if (lv === 'steps') {
       let lastDay = '';
-      SH.forEach((id, i) => {
-        const n = N[id], d = dayOf(n.at), x = XS[i];
-        if (d !== lastDay) { place(x, d, 'tick-d', 76, pd); lastDay = d; place(x, hm(n.at), 'tick-t', 44, pt); }
+      const times = T.dated ? TT.map((t, i) => ({t, i})).slice(T.undated ? 1 : 0) : [];
+      if (T.undated) place(XS[0], 'Undated', 'tick-d', 76, pd);
+      times.forEach(({t, i}) => {
+        const d = dayOf(t), x = XS[i];
+        if (d !== lastDay) { place(x, d, 'tick-d', 76, pd); lastDay = d; place(x, hm(t), 'tick-t', 44, pt); }
       });
-      SH.forEach((id, i) => place(XS[i], hm(N[id].at), 'tick-t', 44, pt));
+      times.forEach(({t, i}) => place(XS[i], hm(t), 'tick-t', 44, pt));
     } else {
-      const H = 3.6e6, start = Math.floor(TT[0] / 864e5) * 864e5;
+      if (T.undated) place(XS[0], 'Undated', 'tick-d', 84, pd);
       const cands = [];
-      for (let t = start; t <= TNOW; t += H) {
-        const f = fOfTime(t); if (f == null) continue;
+      for (const [t, f] of tickTimes(lv === 'weeks' ? 864e5 : lv === 'days' ? 12 * 3.6e6 : 3.6e6)) {
         const d = new Date(t), hh = d.getUTCHours(), mid = hh === 0, mon = mid && d.getUTCDay() === 1;
         const pri = lv === 'weeks' ? (mon ? 0 : mid ? 1 : 9) : mid ? 0 : hh % 12 === 0 ? 1 : hh % 6 === 0 ? 2 : hh % 3 === 0 ? 3 : 4;
         if (pri < 9) cands.push({ t, x: posF(f), pri, d, mid, mon });
@@ -1007,7 +1029,9 @@
     const lit = (pr, cr) => (pr === fr && linkedR.has(cr)) || (cr === fr && linkedR.has(pr));
     let e = '';
     const W = XS[NS] + 260;
-    T.GROUPS.forEach(g => { e += `<path d="M 0 ${LY[g.shared]} L ${XS[0]} ${LY[g.shared]}" fill="none" stroke="var(--edge)" stroke-width="1.4" stroke-dasharray="3 5"></path>`; });
+    T.GROUPS.forEach(g => {
+      if (LANES[g.shared]) e += `<path d="M 0 ${LY[g.shared]} L ${XS[0]} ${LY[g.shared]}" fill="none" stroke="var(--edge)" stroke-width="1.4" stroke-dasharray="3 5"></path>`;
+    });
     const seen = new Set();
     Object.keys(POS).forEach(c => {
       const n = N[c], rc = REP[c], [x2, y2] = [DISP[rc].x, DISP[rc].y];
@@ -1024,10 +1048,10 @@
         const col = L ? 'var(--lit)' : isSharedKey(ownKey) ? 'var(--edge)' : LANES[ownKey].colour;
         const w = L ? 2.6 : 1.6, op = L || isSharedKey(ownKey) ? 1 : 0.6;
         let d;
-        const brk = (n.kind === 'shared' && N[p].kind === 'shared' && isBreak(SIDX[c])) || n.kind === 'open';
-        if (y1 === y2) d = `M ${x1} ${y1} L ${x2} ${y2}`;
+        const brk = (n.kind === 'shared' && N[p].kind === 'shared' && breaksBetween(T.timeIndex.get(p), T.timeIndex.get(c))) || n.kind === 'open';
+        if (x1 === x2 || y1 === y2) d = `M ${x1} ${y1} L ${x2} ${y2}`;
         else if (n.kind === 'shared') d = `M ${x1} ${y1} C ${x2} ${y1}, ${x2} ${y2}, ${x2} ${y2}`;
-        else { const k = Math.min(30, Math.max(4, (x2 - x1) / 2)); d = `M ${x1} ${y1} C ${x1 + k} ${y1}, ${x1} ${y2}, ${x1 + k} ${y2} L ${x2} ${y2}`; }
+        else { const k = Math.sign(x2 - x1) * Math.min(30, Math.abs(x2 - x1) / 2); d = `M ${x1} ${y1} C ${x1 + k} ${y1}, ${x1} ${y2}, ${x1 + k} ${y2} L ${x2} ${y2}`; }
         e += `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" opacity="${op}"${brk ? ' stroke-dasharray="3 5"' : ''}></path>`;
       });
     });
@@ -1058,7 +1082,8 @@
   // ---------- Panning, zooming, the overview strip ----------
   const minL = () => XS[0] - 150, maxL = () => XS[NS] + 4 - PW;
   const clampL = L => { const lo = minL(), hi = maxL(); return hi < lo ? hi : Math.max(lo, Math.min(hi, L)); };
-  const atNow = () => Math.abs(view.L - clampL(maxL())) < 1;
+  const nowL = () => XS[T.presentIndex] + 4 - PW;
+  const atNow = () => T != null && Math.abs(view.L - clampL(nowL())) < 1;
   let anim = 0;
   const ease = t => 1 - Math.pow(1 - t, 3);
   function applyView(keepPosition = false) {
@@ -1066,14 +1091,14 @@
     $('world').style.transform = `translateX(${-view.L}px)`;
     const fL = fAt(view.L), fR = fAt(view.L + PW), mw = $('mwin');
     if (mw) { const a = MX(fL), b = MX(fR); mw.style.left = a + 'px'; mw.style.width = Math.max(8, b - a) + 'px'; }
-    const tL = timeOfF(fL), tR = timeOfF(fR), nowIn = view.L + PW >= XS[NS] - 1;
+    const tL = timeOfF(fL), tR = timeOfF(fR), nowIn = T.nowKnown && (atNow() || tR === TNOW);
     $('range').innerHTML = `<b>${fmtRange(tL)}</b> → <b>${nowIn ? 'now' : fmtRange(tR)}</b>${atNow() ? '' : `<span class="behind">${behindText(tR)}</span>`}`;
     $('now-b').classList.toggle('live', !atNow());
-    $('pg-fwd').disabled = atNow(); $('pg-back').disabled = view.L <= minL() + 1;
+    $('pg-fwd').disabled = view.L >= clampL(maxL()) - 1; $('pg-back').disabled = view.L <= minL() + 1;
   }
-  const timeOfF = f => { const i = Math.floor(Math.max(0, Math.min(NS, f))), j = Math.min(NS, i + 1); return TT[i] + (TT[j] - TT[i]) * (f - i); };
-  const fmtRange = t => { const d = new Date(t); return `${DOW[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`; };
-  const behindText = tR => { const h = (TNOW - tR) / 3.6e6; return h < 1 ? '' : h < 36 ? `${Math.round(h)} h before now` : `${Math.round(h / 24)} days before now`; };
+  const timeOfF = f => { const i = Math.floor(Math.max(0, Math.min(NS, f))), j = Math.min(NS, i + 1); return !T.dated || (T.undated && i === 0) ? null : TT[i] + (TT[j] - TT[i]) * (f - i); };
+  const fmtRange = t => { if (t == null) return 'Undated'; const d = new Date(t); return `${DOW[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`; };
+  const behindText = tR => { if (tR == null || !T.nowKnown) return ''; const h = (TNOW - tR) / 3.6e6; return h < 1 ? '' : h < 36 ? `${Math.round(h)} h before now` : `${Math.round(h / 24)} days before now`; };
   function panTo(L, animate = true) {
     cancelAnimationFrame(anim);
     L = clampL(L);
@@ -1082,7 +1107,7 @@
     const step = now => { const k = Math.min(1, (now - t0) / dur); view.L = L0 + (L - L0) * ease(k); applyView(); if (k < 1) anim = requestAnimationFrame(step); };
     anim = requestAnimationFrame(step);
   }
-  const goNow = (animate = true) => panTo(maxL(), animate);
+  const goNow = (animate = true) => panTo(nowL(), animate);
   function setZoom(u, ax) {   // ax: the design-x on screen that stays put
     const f = fAt(view.L + (ax - PL));
     view.u = Math.max(0, Math.min(MAXU, u));
@@ -1114,21 +1139,18 @@
   function renderMini() {
     const rowH = T.multi ? 3 : 4, top = 5;
     let h = '';
-    const start = Math.floor(TT[0] / 864e5) * 864e5;
-    for (let t = start; t <= TNOW; t += 864e5) {
-      const f = fOfTime(t); if (f == null) continue;
+    for (const [t, f] of tickTimes(864e5)) {
       const x = MX(f), d = new Date(t);
       h += `<div class="mday" style="left:${x}px"></div><div class="mdl" style="left:${x + 3}px">${d.getUTCDate()} ${MON[d.getUTCMonth()]}</div>`;
     }
     for (let i = 1; i <= NS; i++) if (isBreak(i)) h += `<div class="mbrk" style="left:${(MXS[i - 1] + MXS[i]) / 2 - 6}px">≈</div>`;
     ROWS.forEach((r, k) => { h += `<div class="mrow" style="top:${top + k * (rowH + 1)}px"></div>`; });
-    SH.forEach((id, i) => { h += `<div class="mk" style="left:${MXS[i]}px;top:${top + ROWS.indexOf(T.rowOf(id)) * (rowH + 1)}px;height:${rowH}px;width:1px;background:var(--edge)"></div>`; });
-    STEPS.forEach(n => {
-      const m = mergeOf(n.id); if (m == null) return;
-      const r = T.homeRow(T.rowOf(n.id)), k = ROWS.indexOf(r);
-      h += `<div class="mk" style="left:${MX(SIDX[m] - 0.15) - 1}px;top:${top + k * (rowH + 1)}px;height:${rowH}px;width:3px;background:${isSharedKey(n.lane) ? 'var(--edge)' : LANES[n.lane].colour}"></div>`;
-    });
-    h += `<div class="mnow" style="left:${MXS[NS]}px"></div><div class="mwin" id="mwin"></div>`;
+    for (const n of Object.values(N)) {
+      const x = MXS[T.timeIndex.get(n.id)], k = ROWS.indexOf(T.homeRow(T.rowOf(n.id)));
+      const width = n.kind === 'shared' ? 1 : 3, colour = isSharedKey(n.lane) ? 'var(--edge)' : LANES[n.lane].colour;
+      h += `<div class="mk" style="left:${x - (width - 1) / 2}px;top:${top + k * (rowH + 1)}px;height:${rowH}px;width:${width}px;background:${colour}"></div>`;
+    }
+    h += `<div class="mnow" style="left:${MXS[T.presentIndex]}px"></div><div class="mwin" id="mwin"></div>`;
     $('mini').innerHTML = h;
   }
 
@@ -1223,8 +1245,7 @@
     if (!Array.isArray(b.lanes) || !b.lanes.some(l => l.states && l.states.length)) return renderVoid('empty', 'The surface index holds no states yet.', b.repos);
     setModel(b);
     shownGen = b.generation == null ? null : b.generation; shownAt = hm(new Date());
-    const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);   // the latest work, as v3 opened on its front
-    st.focus = newest ? newest.id : SH[NS - 1] || null;
+    st.focus = defaultFocus();
     renderTimeline(); renderCrumbs();
     setView('timeline');
     return true;
@@ -1267,11 +1288,15 @@
     pollTimer = setTimeout(() => { pollTimer = null; refresh('poll'); }, delay == null ? POLL_MS : delay);
   }
   // applyModel replaces the render with a coherent model (and stack), keeping pan, zoom, focus and address.
+  function defaultFocus() {
+    const work = STEPS.length ? STEPS : T.OPEN;
+    const newest = work.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);
+    return newest?.id || SH.at(-1) || null;
+  }
   function applyModel(r, selection) {
     if (!T) {
       setModel(r.model);
-      const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);
-      st.focus = newest ? newest.id : SH[NS - 1] || null;
+      st.focus = defaultFocus();
       renderTimeline(); renderCrumbs(); setView('timeline');
       if (location.hash === '#heads') chooseAngle(true, {navigate:false, instant:true});
       if (!liveStarted) startLive();
@@ -1280,14 +1305,14 @@
     const active = document.activeElement, activeId = active && active.id;
     const activeKey = active && ['data-id', 'data-state', 'data-go', 'data-rail', 'data-lane'].find(k => active.hasAttribute(k));
     const activeValue = activeKey && active.getAttribute(activeKey);
-    const focus = st.focus, u = view.u, L = view.L, depth = st.d;
+    const focus = st.focus, u = view.u, L = view.L, pinned = atNow(), depth = st.d;
     const railTop = $('rail') ? $('rail').scrollTop : 0, address = $('addr').value;
     setModel(r.model);
-    const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);
-    st.focus = N[focus] ? focus : T.aliasOf[focus] ? T.aliasOf[focus] : newest ? newest.id : SH[NS - 1] || null;
+    st.focus = N[focus] ? focus : T.aliasOf[focus] || defaultFocus();
     view.u = u; view.L = L;
     renderTimeline(true);
-    applyView(true);
+    if (pinned) goNow(false);
+    else applyView(true);
     if (depth === 1 && selection && selection.seq === openSeq) {
       if (!r.stack) { say(r.missing || 'the selection is no longer on the surface'); out(); return; }
       setStack(r.stack); renderBrane(false); $('rail').scrollTop = railTop;
@@ -1304,7 +1329,7 @@
     }
   }
   // refresh is N2c's refresh on a committed log entry ("live") and follow mode's model poll ("poll"): fetch
-  // everything before touching the old render; an unchanged generation repaints only the now card.
+  // everything before touching the old render; an unchanged generation keeps the stack.
   async function refresh(trigger) {
     if (trigger === 'live') liveRefresh = null;
     if (refreshing) { if (trigger === 'live') queued = true; return; }
@@ -1322,7 +1347,7 @@
       } else if (r.kind === 'keep') {
         poll.note = 'The graph changed during the refresh · showing the view from ' + shownAt;
       } else {
-        if (r.kind === 'same') { recordedModel = r.model; D.nowEdge = r.model.nowEdge; D.repos = r.model.repos; D.now = r.model.now; NOW_D = new Date(r.model.now); T.TNOW = Date.parse(r.model.now); }
+        if (r.kind === 'same') applyModel(r, null);
         else { applyModel(r, selection); indexP = null; }
         if (r.model) { shownGen = r.model.generation == null ? null : r.model.generation; shownAt = hm(new Date()); }
         poll.note = '';
@@ -1422,9 +1447,32 @@
     const o = `${x * scale}px ${y * scale}px`;
     $('L0').style.transformOrigin = o; $('L1').style.transformOrigin = o;
   }
+  function openCluster(cluster) {
+    if (view.u > 0.001) return zoomTo(Math.ceil(view.u - 0.01) - 1, PL + cluster.x - view.L);
+    const dialog = document.createElement('dialog'), heading = document.createElement('h2');
+    heading.id = 'timeline-cluster-title';
+    heading.textContent = 'States at this position';
+    dialog.setAttribute('aria-labelledby', heading.id);
+    dialog.append(heading);
+    const list = document.createElement('ul');
+    for (const id of cluster.ids) {
+      const item = document.createElement('li'), button = document.createElement('button'), state = N[id];
+      button.textContent = nameOf(state.lane) + ' · ' + (cleanTitle(state.title) || tagOf(state)) + ' · ' + exactOf(state.at);
+      button.addEventListener('click', () => { dialog.close(); open(id); });
+      item.append(button);
+      list.append(item);
+    }
+    const close = document.createElement('button');
+    close.textContent = 'Close';
+    close.addEventListener('click', () => dialog.close());
+    dialog.append(list, close);
+    dialog.addEventListener('close', () => dialog.remove(), {once: true});
+    $('stage').append(dialog);
+    dialog.showModal();
+  }
   function open(id) {
     if (!T) return;
-    if (isCluster(id)) { const d = DISP[id]; return zoomTo(Math.ceil(view.u - 0.01) - 1, PL + d.x - view.L); }
+    if (isCluster(id)) { if (DISP[id]) openCluster(DISP[id]); return; }
     const n = N[id];
     if (!n) { say('That state is not on the timeline'); return; }
     if (n.draft) return drafts.edit(N[n.parent], id);
@@ -1508,6 +1556,14 @@
   // ---------- Popovers ----------
   const KEYROWS = [['← →', 'back · forward a page', '—'], ['⇧← ⇧→', 'previous · next state', '—'], ['↑ ↓', 'lane above · below', 'back in time · toward now'], ['+ −', 'zoom in · out', '—'], ['End', 'back to now', 'most recent'], ['Home', 'the oldest state', 'earliest'], ['Enter', 'open brane', '—'], ['Esc', '—', 'back to timeline'], ['N', 'what needs you', 'what needs you'], ['/', 'address bar', 'address bar'], ['Enter', 'in the bar: a place, episode report E, why T, approve ID', 'the same'], [',', 'appearance', 'appearance'], ['?', 'these keys', 'these keys']];
   function renderKeys() {
+    if (camera.heads && camera.active && st.d === 0) {
+      const rows = [['← →', 'Move one lane left or right'], ['+ −', 'Move into history or toward the present'],
+        ['Enter', 'Open the focused state'], ['Esc', 'Return to Timeline'], ['/', 'Address bar'],
+        ['N', 'What needs you'], [',', 'Appearance'], ['?', 'These keys']];
+      $('keys').innerHTML = '<div class="kgrid heads-keys"><strong>Heads</strong>' +
+        rows.map(([key, action]) => `<span><span class="kbd">${key}</span></span><span>${action}</span>`).join('') + '</div>';
+      return;
+    }
     $('keys').innerHTML = `<div class="kgrid"><span></span><span style="font-size:12px;font-weight:700;color:${st.d === 0 ? 'var(--text)' : 'var(--faint)'}">Timeline</span><span style="font-size:12px;font-weight:700;color:${st.d === 1 ? 'var(--text)' : 'var(--faint)'}">Brane</span>` +
       KEYROWS.map(([k, a, b]) => `<span><span class="kbd">${k}</span></span><span>${a}</span><span>${b}</span>`).join('') +
       `</div><div style="margin-top:10px;font-size:12px;color:var(--sub)">Drag or scroll sideways to pan. ⌘-scroll or pinch to zoom around the pointer.</div>`;

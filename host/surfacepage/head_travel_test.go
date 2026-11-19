@@ -23,7 +23,7 @@ func TestHistoricalHeadSliceRetainsTheScene(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	out, err := exec.CommandContext(ctx, node, "-e", headTravelHarness, script("app.js"), script("head-camera.js"), script("head-travel.js")).CombinedOutput()
+	out, err := exec.CommandContext(ctx, node, "-e", headTravelHarness, script("app.js"), script("head-camera.js")).CombinedOutput()
 	if err != nil {
 		t.Fatalf("historical head slice: %v\n%s", err, out)
 	}
@@ -33,7 +33,6 @@ const headTravelHarness = `
 const assert = require('node:assert/strict');
 const {adaptModel} = require(process.argv[1]);
 const camera = require(process.argv[2]);
-const travel = require(process.argv[3]);
 const state = (id,rank,age,extra={}) => ({id,kind:'step',rank,at:new Date(Date.UTC(2026,10,19-age)).toISOString(),...extra});
 const model = adaptModel({
   now:'2026-11-19T12:00:00Z',
@@ -50,38 +49,29 @@ const model = adaptModel({
   ]
 });
 for (const width of [320, 1280]) {
-  const base = camera.layout(model,{width,height:640,selected:'a',attention:new Set(['b'])});
-  const initial = [...base.points];
-  const slice = travel.project(model,base,'a','a1');
-  assert.deepEqual([slice.width,slice.height],[base.width,base.height],'retains scene bounds');
-  assert.deepEqual([...base.points],initial,'whole-scene geometry remains reusable');
-  assert.equal(slice.ground,base.ground);
+  const options = {width,height:640,selected:'a',attention:new Set(['b'])};
+  const base = camera.layout(model,options);
+  const slice = camera.layout(model,{...options,base,stop:'a1'});
   assert.equal(slice.travelZ,base.points.get('a1').depth-slice.points.get('a1').depth);
-  assert(slice.travelZ>0,'travel advances by the exact recorded stop depth');
-  assert.deepEqual(slice.heads.map(h=>h.id).sort(),['a1','b-tied-latest','s1']);
-  assert.equal(slice.heads[0].id,'a1','the chosen exact stop is foreground');
-  assert.deepEqual([...slice.points.keys()].sort(),['a0','a1','b-tied-latest','b0','b1','s0','s1']);
-  for (const head of slice.heads) {
-    const original = base.heads.find(h=>h.lane===head.lane);
-    const point = slice.points.get(head.id);
-    assert.deepEqual([head.x,head.y,point.x,point.y],[original.x,original.y,original.x,original.y],'lane stays anchored');
-    assert.deepEqual([head.width,head.height,head.depth],[original.width,original.height,original.depth],'fixed facade footprint');
-    assert(Math.abs(point.scale*point.depth-1)<1e-10);
-    for (const [id,pane] of slice.points) {
-      if (model.N[id].lane!==head.lane) continue;
-      const g = slice.ground;
-      assert(Math.abs((pane.x-g.vx)*(head.y-g.horizon)-(head.x-g.vx)*(pane.y-g.horizon))<1e-7,
-        'historical stop retains the same vanishing ray');
-    }
-    assert.equal(head.attention,false,'present-only attention is cleared');
-    assert.equal(head.live,false,'present-only running status is cleared');
+  assert(slice.travelZ>0,'the camera advances by the actual time between now and the stop');
+  assert.deepEqual(slice.heads.map(h=>h.id).sort(),['a1','b0','c0','s1']);
+  assert.deepEqual([...slice.points.keys()].sort(),
+    ['a-tied-later','a0','a1','b-tied-latest','b0','c0','s0','s1'],
+    'includes simultaneous and earlier states regardless of their ranks');
+  for (const [id,point] of slice.points) {
+    const index = model.timeIndex.get(id);
+    assert(Math.abs(point.depth - (base.points.get(id).depth - slice.travelZ))<1e-8,
+      'every surviving record moves through the same physical distance');
+    assert(Math.abs(point.y - slice.time.yAt(index))<1e-8, 'the time ruler marks the actual card center');
   }
-  const prior = slice.points.get('a0'), head = slice.heads[0];
-  assert(prior.y < head.y - head.height/2,'older state stays just behind the head');
-  assert.equal(slice.edges.length,4);
-  assert(slice.edges.some(e=>e.from==='s0'&&e.to==='s1'),'shared chronological line survives');
-  assert(slice.edges.every(e=>base.edges.includes(e) && slice.points.has(e.from) && slice.points.has(e.to)));
-  assert.equal(travel.project(model,base,'a','b0'),base,'a foreign stop leaves the view intact');
-  assert.equal(travel.project(model,base,'draft','d0'),base,'local drafts are not historical stops');
+  assert.equal(slice.points.get('a1').y,slice.points.get('a-tied-later').y);
+  assert.notEqual(slice.points.get('a1').x,slice.points.get('a-tied-later').x);
+  for (const head of slice.heads) {
+    assert(!head.live && !head.attention, 'a historical slice clears current session/approval signals');
+  }
+  const edges = slice.edges.map(e=>[e.from,e.to]);
+  assert(edges.some(([from,to])=>from==='s0' && to==='s1'), 'shared chronology survives travel');
+  assert(edges.every(([from,to])=>slice.points.has(from) && slice.points.has(to)));
+  assert(base.points.has('d0') && base.points.has('s2'),'the present scene remains available for return');
 }
 `

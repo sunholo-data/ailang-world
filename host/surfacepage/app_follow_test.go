@@ -94,9 +94,18 @@ for (const g of T.GROUPS) {
 const all = model.lanes.flatMap(l => l.states.map(s => s.id));
 assert.equal(new Set(all).size, all.length, 'every id distinct across repos');
 for (const u of [0, 1, 2, 4]) {
-  const g = app.layoutGraph(T, app.blendXS(T.LX, u));
+  const xs = app.blendXS(T.LX, u), g = app.layoutGraph(T, xs);
   assert.deepEqual(Object.values(g.DISP).flatMap(d => d.ids).sort(), Object.keys(T.N).sort(), 'zoom ' + u);
-  for (const id of Object.keys(T.N)) assert(Number.isFinite(g.POS[id][0]) && Number.isFinite(g.POS[id][1]), id);
+  for (const id of Object.keys(T.N)) {
+    const [x, y] = g.POS[id], ix = T.timeIndex.get(id);
+    assert.equal(x, xs[ix], id);
+    assert.equal(T.TT[ix], Date.parse(T.N[id].at), id);
+    assert(Number.isFinite(y), id);
+  }
+  for (const id of T.SH.filter(id => repo(id) === 'world')) {
+    const sameCommit = id.replace(/^world:/, 'tools:');
+    assert.equal(g.POS[id][0], g.POS[sameCommit][0], 'repos share one axis');
+  }
 }
 const ep = T.N['world:episode:w189z'];
 assert.equal(ep.kind, 'open'); assert.equal(T.rowOf(ep.id), 'world:brane:row-189', 'the running episode sits on its branch row');

@@ -210,3 +210,41 @@
 .hc-mini-front { fill: color-mix(in srgb, var(--hc-lane) 5%, var(--strip)); }
 .hc-mini:is(.is-inspected, :focus-visible, .is-related) path { stroke: var(--text); }
 .hc-mini:is(.is-inspected, :focus-visible) .hc-mini-front { fill: var(--hc-lane); }
+
+.hc-time-axis {
+  position: absolute;
+  z-index: 3;
+  left: max(5px, env(safe-area-inset-left));
+  width: 60px;
+  border-inline-end: 1px solid var(--edge);
+  color: var(--text);
+  font: 10px/1.2 var(--mono);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.hc-time-axis[hidden] { display: none; }
+.hc-time-title, .hc-time-axis time {
+  position: absolute;
+  left: 0;
+  padding: 2px 3px;
+  background: var(--stageBg);
+}
+.hc-time-title { bottom: calc(100% + 16px); font: 600 10px/1.2 var(--font); white-space: nowrap; }
+.hc-time-axis time {
+  right: 0;
+  transform: translateY(-50%);
+  white-space: pre;
+  text-align: end;
+  padding-inline-end: 9px;
+}
+.hc-time-axis time::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 6px;
+  border-top: 1px solid var(--edge);
+}
+@media (max-width: 600px) {
+  .hc-time-axis { width: 48px; }
+}
