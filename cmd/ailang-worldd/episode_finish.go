@@ -74,6 +74,9 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	onSurface := fs.Bool("confirm-on-surface", false, "confirm the pull request with an enrolled key on the surface")
 	var allowed multiFlag
 	fs.Var(&allowed, "allow-failing", "allow this failing check")
+	if episodeFlagSetSeen != nil {
+		episodeFlagSetSeen(fs)
+	}
 	pos, err := verbs.ParseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, episodeFinishHelp)

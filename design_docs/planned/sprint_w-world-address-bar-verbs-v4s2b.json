@@ -1,0 +1,173 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s2b",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1 (quorum r1 BLOCKED 1/3 -> r2 PROCEED 3/3; independent audit sonnet PASS 81, iteration 406); not reopened",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s2b-sprint-plan.md",
+ "previous_sprint": "row 243 V4 S2 (iteration 408, PR #609, merge cee5174c, judge PASS 92; record 4b1c39e2); inherits S2 Appendix C 'Moved out (S2-D1)' (the parked host/authority adapters) and judge-408 notes 1-4; closest analogue: V3 host/authority/judge_verb.go (VerbJudgeInput.admit, sshApprover, passkeyApprover reused unchanged, RecheckVerb's artifact dispatch) and its tests' rig (jgRig, jgExec)",
+ "base_commit": "4b1c39e2a32fa129f2b340f4f9c2b6a312c63e0f",
+ "design_measured_at": "41331b4d (every S2b cite re-measured at 4b1c39e2: none moved; plan 1.2 C1)",
+ "queue_row": 243,
+ "iteration": 409,
+ "phase": "V4",
+ "sprint": "S2b (the host/authority operator judges JudgeOperatorAction and RecheckOperatorAction with the judge-only proof VerifiedOperatorAction, parked by S2's cut; judge-408's X-PK-ALIAS and runner-lifetime pins; writes-nothing)",
+ "sprint_number": "2b",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter409-row243-v4s2b",
+ "branch": "sprint/world-iter409-row243-v4s2b",
+ "authority": [
+  "D-WORLD-119 OPEN and D-WORLD-120 OPEN (controller, iteration 409: --open lists both): S2b is answer-independent (S2 Appendix C: the adapters need no schema; D-WORLD-119 default 'build S1 and S2 against fixtures only'); nothing is registered or called",
+  "D-WORLD-109 = A (test stores in t.TempDir() opened read-only; approvaltest seeded keys and passkeys only)",
+  "D-WORLD-107 = A; D-WORLD-118 = A; D-WORLD-89 R1-R5"
+ ],
+ "behaviour": "No served or CLI behaviour change. NEW host/authority JudgeOperatorAction(ctx, ro, OperatorJudgeInput, artifact) and RecheckOperatorAction(ctx, ro, action, challenge, expiry, now, artifact, approvedBy) returning *VerifiedOperatorAction (unexported fields; Binds, ApprovedBy, PasskeyUse, Rechecked) or a *JudgeError; neither takes an approver: the enrolled approver is read from the read-only store. Unregistered: no production caller.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat 4b1c39e2 HEAD -- cmd host docs app (insertions + deletions; the same unfiltered)",
+  "parked_as_shipped": 260,
+  "measured": 526,
+  "margin": 874,
+  "fired": "no",
+  "moved_out": {}
+ },
+ "planner_decisions": {
+  "S2b-D1_no_cut_three_submilestones": "M1 the judges + their tests (401) / M2 judge-408 pins in host/approval, test only (469) / M3 writes-nothing, test only (526)",
+  "S2b-D2_parked_patch_changes": "production 108 -> 116: OperatorJudgeInput.admit() (V3's VerbJudgeInput shape), comments; no behaviour change (the parked tests pass against it). Tests 152 -> 285: NEW TestOperatorJudgeReadsTheStore (19 rows, step + class + no proof), stricter BothKeys/RunnerRechecks, NEW TestOperatorUnjudgedProofBindsNothing (nil guards were static-only kills in run 1), no-approver-parameter check in the AST test. Driven by the parked patch's 13 whole-package mutant survivors (park0)",
+  "S2b-D3_judge408_note3": "PIN, not add: design 3.1 line 80 bounds the signed request (600 s) at confirmation (C2); line 83 gives the runner expiry and revocation; OperatorCheckInput has no creation time. TestOperatorRunnerRecheckBoundsExpiryNotLifetime kills R1-LIFETIME-ADDED (SURVIVED at base)",
+  "S2b-D4_judge408_note2": "TestOperatorPasskeyUseIsACopy kills X-PK-ALIAS (operator_signed.go:126) and PK-USE-ALIAS (:163); both SURVIVED the whole host/approval package at the base",
+  "S2b-D5_judge408_note4": "carried: episode/kind/argv/options are binding-redundant through Validate's O9 (argv == OperatorArgv(kind, episode, options)); S2's round-trip tests kill the drops",
+  "S2b-D6_equivalents": "REUSED-SSH-KEY and REUSED-PK-CREDID: the lookups select the row by exactly those bytes",
+  "S2b-D7_no_chrome_node_docs_cmd": "no page, route, command, flag or output"
+ },
+ "scope": [
+  "host/authority/judge_operator.go (NEW, 116)",
+  "host/authority/judge_operator_test.go (NEW, 285)",
+  "host/approval/operator_pins_test.go (NEW, 68)",
+  "host/authority/judge_operator_silent_test.go (NEW, 57)"
+ ],
+ "judges": {
+  "package": "host/authority",
+  "file": "host/authority/judge_operator.go",
+  "api": "type VerifiedOperatorAction struct{signed *approval.SignedOperatorAction; rechecked bool}; var ErrOperatorApprover; type OperatorJudgeInput struct{Action approval.OperatorAction; Digest, Challenge, BytesDigest [32]byte; CreatedAt, ExpiresAt, Now int64; Consumed bool}; func JudgeOperatorAction(ctx, ro *store.Credentials, in OperatorJudgeInput, artifact []byte) (*VerifiedOperatorAction, error); func RecheckOperatorAction(ctx, ro *store.Credentials, action approval.OperatorAction, challenge [32]byte, expiry, now int64, artifact []byte, approvedBy string) (*VerifiedOperatorAction, error); (*VerifiedOperatorAction).Binds/ApprovedBy/PasskeyUse/Rechecked",
+  "proof_type": "VerifiedOperatorAction: unexported fields; one composite literal (verifiedOperatorAction), called only by the two judges (AST test, positive control); nil/zero/unsigned bind nothing",
+  "approver_source": "the read-only store only (sshApprover/passkeyApprover reused unchanged); no judge parameter holds an approval.Approver (reflect, positive control OperatorConfirmInput)",
+  "production_callers": "none (gates JUDGE_PRODUCTION_CALLERS, control authority.RecheckVerb 1)"
+ },
+ "executor_lane": "as routed by the controller; one run: M1, M2, M3; apply patches, never retype; never launch Chrome",
+ "executor_form": "every sub-milestone is a unified diff in the plan's Appendix P, applied in order with /usr/bin/patch -p1 -E after a --dry-run (all files new; no deletion); acceptance via the plan's accept.sh (one part, fast)",
+ "estimate_loc": {
+  "parked_as_shipped": 260,
+  "compiled_landed": 526,
+  "production": 116,
+  "test": 410
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "the host/authority operator judges and the judge-only proof",
+   "production": 116,
+   "test": 285,
+   "expected_cumulative_numstat": 401,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M1 fast"
+  },
+  {
+   "id": "M2",
+   "title": "judge-408 pins: the passkey use is a copy; the runner bounds expiry, not lifetime",
+   "production": 0,
+   "test": 68,
+   "expected_cumulative_numstat": 469,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M2 fast"
+  },
+  {
+   "id": "M3",
+   "title": "the operator judges write nothing",
+   "production": 0,
+   "test": 57,
+   "expected_cumulative_numstat": 526,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M3 fast"
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "2/0/2",
+  "M2": "3/0/3",
+  "M3": "4/0/4",
+  "format": "STATUS lines / DELETED lines / MANIFEST lines; only host/"
+ },
+ "design_premises_found_false": [
+  "F1 cites moved: none moved",
+  "F2 parked patch compiles/vets/green at 4b1c39e2: true",
+  "F3 parked tests adequate: false - 13 whole-package survivors of 38 compiled mutants (park0); tests rewritten, run 2 has 0 survivors",
+  "F4 runner should re-bound lifetime: no - design 3.1 lines 80/83; pinned with a named test",
+  "F5 TestOperatorConfirmBinding could kill each field drop: no - binding-redundant via O9; carried",
+  "F6 ctl_roundtrip.sh loops M1-M4: S2b ships M1-M3; the controller edits the loop"
+ ],
+ "existing_tests_edited": [],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [],
+ "files_outside_design_section_7": [],
+ "not_touched": [
+  "tools/launchd/*",
+  "skills",
+  "world/*.ail",
+  "packages/",
+  "scripts/",
+  "cmd/ (all)",
+  "plugins/",
+  "host/surfacepage/app/app.js",
+  "host/daemon/surface_page.go",
+  "host/daemon/daemon.go",
+  "host/store/*",
+  "host/approval production files",
+  "host/authority/judge_verb.go, judge.go, judge_test.go (reused, unedited)",
+  "every pre-existing file"
+ ],
+ "judge408_notes": {
+  "1_store_sourced_approver": "closed: no approver parameter (static + control); 13 REUSED-* store-sourced mutants each killed by a named test and the whole package; 2 lookup-equality equivalents",
+  "2_X-PK-ALIAS": "base SURVIVED whole host/approval (reproduced); final KILLED by TestOperatorPasskeyUseIsACopy (named and whole); PK-USE-ALIAS likewise",
+  "3_runner_lifetime": "pinned: TestOperatorRunnerRecheckBoundsExpiryNotLifetime (design 3.1 lines 80, 83); R1-LIFETIME-ADDED base SURVIVED, final KILLED",
+  "4_field_drop_binding": "carried to Appendix C (binding-redundant via Validate O9)"
+ },
+ "mutants": {
+  "total": 61,
+  "killed": 59,
+  "named_equivalents": 2,
+  "survivors": 0,
+  "nm": 0,
+  "verdict_source": "named test and WHOLE package of the mutated file; no kill rests on the static AST/reflect test alone",
+  "equivalents": {
+   "REUSED-SSH-KEY": "final2 REUSED-SSH-KEY host/authority/judge_verb.go named[TestOperatorJudgeBothKeys]: SURVIVED | whole[./host/authority/]: SURVIVED (ApproverByKey selects public_key = sig.PublicKey.Blob)",
+   "REUSED-PK-CREDID": "final2 REUSED-PK-CREDID host/authority/judge_verb.go named[TestOperatorJudgeBothKeys]: SURVIVED | whole[./host/authority/]: SURVIVED (PasskeyByCredentialID selects credential_id = resp.RawID)"
+  },
+  "parked_patch_park0": {
+   "ids": 43,
+   "nm_text": 5,
+   "killed_whole": 25,
+   "survived_whole": 13
+  }
+ },
+ "mutant_ledger": "$HOME/.ailang/state/world-iter409/plan-scratch/mutants/ledger.txt (tags: final1 = run 1 pre-split draft; base-whole = X-PK-ALIAS/PK-USE-ALIAS/R1-LIFETIME-ADDED at 4b1c39e2; park0 = the parked patch; final2 = run 2, the plan's table)",
+ "race_added_seconds": {
+  "host/authority": 0.95,
+  "host/approval": 0.01,
+  "note": "host/authority under -race 5.6 s (base 4.6-5.3 s); host/approval 2.1 s (base 2.2 s); host/daemon and host/broker gain nothing"
+ },
+ "gates_script": "plan section 6 (gates.sh), saved byte-equal at $HOME/.ailang/state/world-iter409/gates.sh; legs: status verify_ail gofmt build vet fence pkgs race inv + route/untouched/preexisting/judge-caller/envelope-caller/unchanged checks + verify_go (controller); no chrome or node leg; TOUCHED_PACKAGES must be 'host/approval host/authority'",
+ "controller_decisions_requested": [
+  "edit ctl_roundtrip.sh's loop to M1 M2 M3 (S2b has no M4)"
+ ],
+ "verification": {
+  "base_gates": "GATES_DONE 96s FAILS: none (36 named PASS, routes 47, verify_ail PASSED 16/40/503)",
+  "final_gates": "GATES_DONE 61s FAILS: none (44 named PASS, TOUCHED_PACKAGES host/approval host/authority, routes 47, UNTOUCHED none, PREEXISTING none, judge callers none (control 1), envelope callers outside the judges none (control 1), UNCHANGED app.js/surface_page.go/daemon.go/credentials.go; verify_go controller's)",
+  "accept": "M1 15 / M2 17 / M3 18 named top-level PASS, each ACCEPT_OK",
+  "roundtrip": "CMP_EQUAL x3; NUMSTAT 401/469/526 (unfiltered equal); diff -r cmd/host vs st-M rc 0 each; ROUNDTRIP_IDENTICAL_TO_STAGE_TREE; SCRIPT_EQUAL accept.sh, gates.sh; SAVED_GATES_EQUAL; ctl_roundtrip copy (loop M1 M2 M3) all diff rc 0",
+  "snapshot_rehearsal": "M1 2/0/2, M2 3/0/3, M3 4/0/4, MANIFEST_OK, BLOCK_VERBATIM_BUT_W_M_D",
+  "pinned": "AILANG v0.41.0; go1.26.6 darwin/arm64; /usr/bin/ssh-keygen"
+ }
+}

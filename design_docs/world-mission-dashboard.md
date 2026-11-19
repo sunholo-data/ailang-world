@@ -1,22 +1,14 @@
-# World mission dashboard — iteration 406 (2026-11-18)
+# World mission dashboard — iteration 411 (2026-11-19)
 
-- **Done this fire:** row 243 **V4 design r1** — [`w-world-address-bar-verbs-v4.md`](planned/w-world-address-bar-verbs-v4.md) (880 lines). Quorum r2 **PROCEED 3/3**; independent audit sonnet **PASS 81**, 0 blocking.
-  - **Who runs it:** an opt-in user LaunchAgent "runner" installed by `service`, running as you with an explicit PATH (the installed World job's PATH has no `gh`). Measured this fire: under that PATH, `gh` and Git over the Keychain helper work non-interactively.
-  - **Order:** start and launch an episode from the browser first (one headless agent), then finish to a PR with two key gestures (local prep, then V3's real PR prompt).
-  - **Durable:** every action is a signed record with one owner; every effect (worktree, mint, launch, commit, push, PR) is reserved before it runs and reconciled after a crash. Nothing is blindly re-run.
-  - **Out:** merge, per-check confirmation of unsandboxed checks, notifications.
-  - **Size:** 12 sprints, about 12.7k changed lines. The parent estimated about 2,000.
-- **DECISIONS FOR MARK (new):**
-  - **D-WORLD-119:** may the World app start and launch a confined episode through the runner after a key approval? Recommendation A (headless now, herdr later after its experiment). Default: only S1–S2 (pins, the pure law) get built.
-  - **D-WORLD-120:** may finish run without a terminal (key for local prep, then key for the exact PR)? Recommendation A. Default: finish keeps needing a terminal.
-- **Next loop work:** row 243 **V4 sprint 1** planner — the judge-405 pins and the pure admitted grammar. It needs no answer. The audit recommends splitting the plan into V4a start, V4b finish and herdr.
-- **Attended context used:** your untracked briefs `w-phone-episode-workflow.md` and `w-human-agent-surface.md` (read as product input, not committed). PR #604 merged during the fire.
-- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Release rows 150 and 151 are not routable.
-- **Routing this fire:**
-  - Designer: `codex:gpt-6.2-sol` (rotation's turn; r0 29 min, r1 11 min).
-  - Evaluator: sonnet via Agent (3.7 min).
-  - Quorum: sonnet, gemini-4-argon, glm-5-3 (OpenAI benched as author). Metered $0.46.
-- **Instrument notes:**
-  - The designer's sandboxed `gh auth` probe read as a failure; the real probe outside the sandbox passed. Network and launchd probes belong to the controller.
-  - Self-notices still read no watermark (the #574/#524 files are absent).
-- **Bookkeeping thread:** #574.
+- **Done this fire:** nothing built. Row 262 is closed: the fleet fixed Gate 0's crash-notice read (ailang #2421, `cf540337e`), and this fire checked the fix against the old script on the same inputs (old rc 2, new rc 1). No other row can move without an answer from Mark, so the rest is a rule-(d) block report.
+  - Row 243 V4 sprints 3–12 all need **D-WORLD-119** (9–11 also need **D-WORLD-120**).
+  - Release rows 150 and 151 are not routable. 150 waits on your attended A1. 151 waits on row 188's N2d and N4a, which are not built.
+- **DECISIONS FOR MARK (open, unchanged since iteration 406):**
+  - **D-WORLD-119:** may the app start and launch a confined episode through the runner after a key approval? Recommendation A. Every remaining V4 sprint waits on it.
+  - **D-WORLD-120:** may finish run without a terminal (key for local prep, then key for the exact PR)? Recommendation A. Sprints 9–11 also wait on it.
+- **Next loop work:** with D-WORLD-119 = A or B, **V4 sprint 3** (schema 10 for operator actions, receipts and CAS). Unanswered, another block report.
+- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Goal unmoved.
+- **Gate 0 now:** the crash-notice read works again without a watermark file. It shows the two #524 notices (a 2026-11-13 crash and one transcript notice), both credited before. They repeat until #524 rotates out on 2026-11-23.
+- **Routing this fire:** controller opus; designer, planner and executor not needed; judge sonnet via Agent on the record. The codex lane probed rc 1. Metered $0.
+- **Dev CI:** 3/3 green at `2c9bb491`. No open PRs.
+- **Bookkeeping thread:** #574 (rotates Monday 2026-11-23).

@@ -1,0 +1,16 @@
+{
+ "finish": {
+  "Canonical": "{\"schema\":\"world/operator-action/v1\",\"id\":\"oa-0123456789abcdef0123456789abcdef\",\"kind\":\"finish\",\"episode\":\"fixture-ep\",\"store\":\"/ws/state/credentials.db\",\"argv\":[\"ailang-worldd\",\"episode\",\"finish\",\"fixture-ep\",\"--preset\",\"sol-headless\",\"--confirm-on-surface\"],\"options\":{\"preset\":\"sol-headless\",\"headless\":false,\"confirm_on_surface\":true,\"ready\":false},\"resolution\":[{\"name\":\"agent\",\"value\":\"codex\"},{\"name\":\"base_oid\",\"value\":\"8db22168689f31e19349b075e0199c8d9c940e61\"},{\"name\":\"model\",\"value\":\"gpt-6.2-sol\u003c\u0026\u003e\"},{\"name\":\"repo\",\"value\":\"/src/ailang-world\"}],\"task\":\"\",\"review\":\"Finish fixture-ep: check, commit, then confirm the PR.\\n\"}",
+  "ReviewDigest": "b9c16e206af876c6f553aed3c7116479993f42034a90dbeb0b906d9a739a4660",
+  "SignatureDigest": "bd143eecafe4c902ac54c4a1f593557aef84dc61cfe8cafdc45283e1af150f82",
+  "Message": "776f726c642d6f70657261746f722d616374696f6e2f763100bd143eecafe4c902ac54c4a1f593557aef84dc61cfe8cafdc45283e1af150f826f61010203000000000000000000000000000000000000000000000000000000000000006955b900",
+  "MessageHash": "1bc8f82c4b6941035c9cd49f2335947815fede831ee2337e57ebe10db58b6d58"
+ },
+ "start": {
+  "Canonical": "{\"schema\":\"world/operator-action/v1\",\"id\":\"oa-0123456789abcdef0123456789abcdef\",\"kind\":\"start\",\"episode\":\"fixture-ep\",\"store\":\"/ws/state/credentials.db\",\"argv\":[\"ailang-worldd\",\"episode\",\"start\",\"fixture-ep\",\"--preset\",\"sol-headless\",\"--launch\",\"--headless\"],\"options\":{\"preset\":\"sol-headless\",\"headless\":true,\"confirm_on_surface\":false,\"ready\":false},\"resolution\":[{\"name\":\"agent\",\"value\":\"codex\"},{\"name\":\"base_oid\",\"value\":\"8db22168689f31e19349b075e0199c8d9c940e61\"},{\"name\":\"model\",\"value\":\"gpt-6.2-sol\u003c\u0026\u003e\"},{\"name\":\"repo\",\"value\":\"/src/ailang-world\"}],\"task\":\"Fix the flaky test; $(rm -rf ~) `x` \u003cb\u003eé\u003c/b\u003e\\n\",\"review\":\"Start fixture-ep with sol-headless, headless.\\n\"}",
+  "ReviewDigest": "bb4a1f15e74d078556c2e366145885110652daf63088f0b7e6dd2da0d2c4eeb0",
+  "SignatureDigest": "f2b9bab25f0af92eee921f92a0cb3b7cf8425f0d855daeea8f1ffc3bcb219b40",
+  "Message": "776f726c642d6f70657261746f722d616374696f6e2f763100f2b9bab25f0af92eee921f92a0cb3b7cf8425f0d855daeea8f1ffc3bcb219b406f61010203000000000000000000000000000000000000000000000000000000000000006955b900",
+  "MessageHash": "9cab2a653aba7a7dd10981c335718ab449199227c57e6dcc597eb7cf7921028d"
+ }
+}
