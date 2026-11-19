@@ -138,7 +138,7 @@
 
   // ---------- Layout of the visible graph at one zoom (XS) ----------
   const isCluster = id => typeof id === 'string' && id.startsWith('c:');
-  function layoutGraph(T, XS) {
+  function layoutGraph(T, XS, selectedID) {
     const { N, SIDX, NS, LY } = T, POS = {}, REP = {}, DISP = {};
     Object.keys(N).forEach(id => {
       const n = N[id], r = T.rowOf(id);
@@ -158,8 +158,17 @@
       let g = [];
       const flush = () => {
         if (!g.length) return;
-        if (g.length === 1) { REP[g[0]] = g[0]; DISP[g[0]] = { x: POS[g[0]][0], y: POS[g[0]][1], ids: g, row }; }
-        else { const rid = 'c:' + g[0]; const x = g.reduce((a, id) => a + POS[id][0], 0) / g.length; g.forEach(id => { REP[id] = rid; }); DISP[rid] = { x, y: POS[g[0]][1], ids: g, row }; }
+        const separate = g.length > 1 && g.includes(selectedID);
+        if (separate) {
+          REP[selectedID] = selectedID;
+          DISP[selectedID] = {x:POS[selectedID][0], y:POS[selectedID][1], ids:[selectedID], row};
+          g = g.filter(id => id !== selectedID);
+        }
+        const rep = g.length === 1 ? g[0] : 'c:' + g[0];
+        const x = g.reduce((sum, id) => sum + POS[id][0], 0) / g.length;
+        const y = POS[g[0]][1] + (separate && Math.abs(x - POS[selectedID][0]) < 24 ? 24 : 0);
+        g.forEach(id => { REP[id] = rep; });
+        DISP[rep] = {x, y, ids:g, row};
         g = [];
       };
       ids.forEach(id => { if (g.length && POS[id][0] - POS[g[g.length - 1]][0] >= SEP) flush(); g.push(id); });
@@ -589,8 +598,18 @@
   let T = null, D = null, LANES = {}, N = {}, parents = {}, kids = {}, SH = [], NS = 0, SIDX = {}, TT = [], LX = [], MAXU = LEVELS.length - 1;
   let STEPS = [], TNOW = 0, NOW_D = new Date(), quiet = [], LY = {}, ROWS = [], MXS = [], XS = [];
   let nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, isBreak, lastStep, lastState;
+  let recordedModel;
+  const drafts = WorldHeadDrafts.create(({id, parent, discarded}) => {
+    if (!recordedModel) return;
+    setModel(recordedModel);
+    st.focus = discarded ? parent : id;
+    renderTimeline(true);
+    applyView();
+    chooseAngle(true, {instant:true, keyboard:true, anchor:st.focus});
+  });
   function setModel(m) {
-    T = adaptModel(m);
+    recordedModel = m;
+    T = adaptModel(drafts.project(m));
     ({ D, LANES, N, parents, kids, SH, NS, SIDX, TT, LX, MAXU, STEPS, TNOW, NOW_D, quiet, LY, ROWS, nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, isBreak, lastStep, lastState } = T);
     measureMini();
     XS = LX[1].slice();
@@ -651,7 +670,117 @@
   const reduced = () => $('root').classList.contains('reduced');
 
   let POS = {}, REP = {}, DISP = {}, LABELED = new Set();
-  function layout() { ({ POS, REP, DISP, LABELED } = layoutGraph(T, XS)); }
+  let pinnedTimelineState = null;
+  function layout() { ({ POS, REP, DISP, LABELED } = layoutGraph(T, XS, pinnedTimelineState)); }
+
+  let fromHeads = false, stackFlight;
+  function sidePoints() {
+    const points = new Map(), stageBox = $('stage').getBoundingClientRect();
+    const world = $('world')?.getBoundingClientRect();
+    if (world) {
+      for (const [id, rep] of Object.entries(REP)) {
+        const d = DISP[rep];
+        points.set(id, {x:world.left - stageBox.left + d.x * scale, y:world.top - stageBox.top + d.y * scale});
+      }
+    }
+    return points;
+  }
+
+  // Only attribute a pending request to a lane when its episode has one owner.
+  function attentionLanes() {
+    const requests = [...(REQS?.pending || []), ...(REQS?.decisions || []), ...(REQS?.confirmations || [])];
+    const pending = new Set(requests.filter(r => !r.refused && !r.recorded && (!r.expires || r.expires > REQS.now)).map(r => r.episode).filter(Boolean));
+    const episodes = new Map(), lanes = new Set();
+    for (const node of Object.values(N)) {
+      if (!pending.has(node.episode)) continue;
+      if (!episodes.has(node.episode)) episodes.set(node.episode, new Set());
+      episodes.get(node.episode).add(node.lane);
+    }
+    for (const owners of episodes.values()) if (owners.size === 1) owners.forEach(lane => lanes.add(lane));
+    return lanes;
+  }
+  const camera = WorldCameraController.create($('stage'), $('head-space'), {
+    model:() => T, sidePoints, attention:attentionLanes, reduced,
+    glyph:(n, size) => glyphOfNode(n, size), title:n => cleanTitle(n.title) || n.episode || n.label || n.id,
+    open:id => open(id),
+    select:id => { if (N[id]) { st.focus = id; camera.select(id); } },
+    sideVisible:keyboard => {
+      $('L0').inert = false;
+      if (keyboard) $('timeline-angle').focus({preventScroll:true});
+    }
+  });
+
+  function markAngle(which) {
+    for (const [id, name] of [['timeline-angle','timeline'], ['head-angle','heads']]) {
+      if (name === which) $(id).setAttribute('aria-current', 'page');
+      else $(id).removeAttribute('aria-current');
+    }
+  }
+  function cameraURL(url, push) {
+    if (location.pathname + location.search + location.hash === url) return;
+    history[push ? 'pushState' : 'replaceState'](null, '', url);
+  }
+  function faceFor(id) {
+    const space = $('head-space');
+    const exact = space.querySelector(`[data-head-state="${CSS.escape(id)}"],[data-rear-state="${CSS.escape(id)}"]`);
+    if (exact) return exact;
+    const lane = N[id]?.lane;
+    return lane && space.querySelector(`[data-head-lane="${CSS.escape(lane)}"]`);
+  }
+  function animateStack(face, back) {
+    stackFlight?.cancel();
+    if (reduced() || !face || !face.width) return;
+    const front = $('front').getBoundingClientRect();
+    if (!front.width || !front.height) return;
+    const zoom = face.width / front.width;
+    const x = face.left + face.width / 2 - (front.left + front.width / 2), y = face.top - front.top;
+    const crop = Math.max(0, front.height - face.height / zoom);
+    const small = {transform:`translate(${x}px,${y}px) scale(${zoom})`, transformOrigin:'50% 0', clipPath:`inset(0 0 ${crop}px)`,opacity:.4};
+    const full = {transform:'none', transformOrigin:'50% 0', clipPath:'inset(0 0 0px)',opacity:1};
+    stackFlight = $('front').animate(back ? [full,small] : [small,full], {duration:640, easing:'cubic-bezier(.34,.04,.21,1)'});
+    return stackFlight;
+  }
+  function chooseAngle(heads, {navigate=true, instant=false, keyboard=false, anchor=null} = {}) {
+    if (!T) return;
+    openSeq++;
+    const wasStack = st.d === 1;
+    $('stage').classList.remove('head-approach','head-return');
+    stackFlight?.cancel();
+    if (wasStack && heads && !instant && !reduced()) $('stage').classList.add('head-return');
+    if (wasStack) {
+      st.focus = N[F.id] ? F.id : st.focus;
+      st.d = 0;
+      $('root').classList.remove('zoomed');
+      $('L1').inert = true;
+      renderCrumbs();
+    }
+    if (anchor && N[anchor]) st.focus = anchor;
+    if (wasStack && fromHeads && !heads && !camera.active) camera.turn(true, st.focus, true, false);
+    if (!heads && st.focus && REP[st.focus]) {
+      pinnedTimelineState = st.focus;
+      relayout();
+      ensureVisible(st.focus, false);
+      if (narrow.matches) {
+        const y = DISP[REP[st.focus]].y;
+        const layer = $('L0');
+        if (y < layer.scrollTop + 40 || y > layer.scrollTop + layer.clientHeight - 40) layer.scrollTop = y - layer.clientHeight / 2;
+      }
+      applyFocus();
+    }
+    $('L0').inert = heads || camera.active;
+    $('tip').hidden = true;
+    markAngle(heads ? 'heads' : 'timeline');
+    if (navigate) cameraURL(heads ? '/surface#heads' : '/surface', true);
+    camera.turn(heads, N[st.focus] ? st.focus : DISP[st.focus]?.ids?.at(-1), instant || wasStack && heads, keyboard);
+    if (!heads && !camera.active) { setView('timeline'); $('L0').inert = false; }
+    if ($('stage').classList.contains('head-return')) {
+      const face = faceFor(st.focus)?.getBoundingClientRect();
+      const flight = animateStack(face, true);
+      const finish = () => $('stage').classList.remove('head-return');
+      if (flight) flight.finished.then(finish, () => {}); else finish();
+    }
+    fromHeads = false;
+  }
 
   // ---------- Timeline (static frame) ----------
   const readFrom = id => [...READS.values()].some(rd => rd.fromId === id);
@@ -1031,12 +1160,19 @@
       $('br').innerHTML = `<div class="bstage" id="bstage"><article class="front" id="front"></article></div><nav class="rail" id="rail" aria-label="Brane timeline"></nav>`;
     }
     $('front').innerHTML = frontHTML(S, T);
+    const fork = document.createElement('button');
+    fork.type = 'button'; fork.className = 'state-branch'; fork.textContent = 'Branch…';
+    fork.setAttribute('aria-label', 'Draft a branch from this state');
+    fork.setAttribute('aria-haspopup', 'dialog');
+    fork.addEventListener('click', () => drafts.edit(N[F.id]));
+    if (N[F.id]) $('front').querySelector('.fbar')?.append(fork);
     $('front').dataset.front = F.id;
     $('front').setAttribute('aria-label', cleanTitle(F.title) || F.label);
     const pos = railIdx();
     if (!$('phone-step-nav')) {
       $('br').insertAdjacentHTML('afterbegin', '<nav id="phone-step-nav" class="phone-view" aria-label="State navigation"><button type="button" id="phone-back">← Timeline</button><button type="button" id="phone-earlier">Earlier</button><button type="button" id="phone-later">Later</button></nav>');
     }
+    $('phone-back').textContent = fromHeads ? '← Heads' : '← Timeline';
     $('phone-earlier').disabled = pos === 0;
     $('phone-later').disabled = pos >= RAIL.length - 1;
     placeBars(animate);
@@ -1136,6 +1272,7 @@
       const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);
       st.focus = newest ? newest.id : SH[NS - 1] || null;
       renderTimeline(); renderCrumbs(); setView('timeline');
+      if (location.hash === '#heads') chooseAngle(true, {navigate:false, instant:true});
       if (!liveStarted) startLive();
       return;
     }
@@ -1157,7 +1294,7 @@
       follow(appPath(F.brane, F.id)); renderCrumbs();
     }
     st.d = depth;
-    setView(depth === 1 ? 'brane' : 'timeline');
+    setView(depth === 1 ? 'brane' : camera.active ? 'heads' : 'timeline');
     $('addr').value = address;
     if (active && active.isConnected) active.focus({preventScroll: true});
     else {
@@ -1184,7 +1321,7 @@
       } else if (r.kind === 'keep') {
         poll.note = 'The graph changed during the refresh · showing the view from ' + shownAt;
       } else {
-        if (r.kind === 'same') { D.nowEdge = r.model.nowEdge; D.repos = r.model.repos; D.now = r.model.now; NOW_D = new Date(r.model.now); }
+        if (r.kind === 'same') { recordedModel = r.model; D.nowEdge = r.model.nowEdge; D.repos = r.model.repos; D.now = r.model.now; NOW_D = new Date(r.model.now); T.TNOW = Date.parse(r.model.now); }
         else { applyModel(r, selection); indexP = null; }
         if (r.model) { shownGen = r.model.generation == null ? null : r.model.generation; shownAt = hm(new Date()); }
         poll.note = '';
@@ -1199,6 +1336,7 @@
     } finally {
       refreshing = false;
       if (queued) { queued = false; queueRefresh(); }
+      if (camera.active) camera.update();
       repaintNow();
       livePaint();
       if (followMode) schedulePoll();
@@ -1288,29 +1426,54 @@
     if (isCluster(id)) { const d = DISP[id]; return zoomTo(Math.ceil(view.u - 0.01) - 1, PL + d.x - view.L); }
     const n = N[id];
     if (!n) { say('That state is not on the timeline'); return; }
+    if (n.draft) return drafts.edit(N[n.parent], id);
     return openState(n.lane, id);
   }
   // openState fetches the state's stack and zooms into it; a newer open supersedes an older one.
   let openSeq = 0;
-  async function openState(brane, at) {
+  async function openState(brane, at, navigate = true) {
+    if (N[at]?.draft) return drafts.edit(N[N[at].parent], at);
     const seq = ++openSeq;
     let res;
     try { res = await getJSON(stackPath(brane, at)); } catch (e) { if (seq === openSeq) say('the stack could not be fetched: ' + e.message); return false; }
     if (seq !== openSeq) return false;
     const b = res.body || {};
-    if (!res.ok || !b.front) { say(b.reason || `no such state (HTTP ${res.status})`); if (st.d === 0) follow(appPath()); return false; }
+    if (!res.ok || !b.front) { say(b.reason || `no such state (HTTP ${res.status})`); if (st.d === 0 && !camera.active) follow(appPath()); return false; }
     const was = st.d === 1;
+    $('stage').classList.remove('head-return');
+    const face = camera.active && faceFor(b.front.id)?.getBoundingClientRect();
+    if (!was) fromHeads = camera.heads && camera.active || location.hash === '#heads';
     setStack(b);
     if (!was && T) { const sx = screenX(F.id), d = DISP[REP[F.id]]; setOrigin(sx != null ? Math.max(PL, Math.min(PR, sx)) : PL, d ? d.y : LY[T.GROUPS[0].shared]); }
     st.d = 1; st.focus = F.id; $('tip').hidden = true;
     renderBrane(was);
     if (narrow.matches) $('L1').scrollTop = 0;
     $('root').classList.add('zoomed'); setView('brane');
-    renderCrumbs(); follow(appPath(F.brane, F.id)); $('root').focus({ preventScroll: true });
+    $('L0').inert = true;
+    $('L1').inert = false;
+    markAngle(null);
+    if (camera.active) {
+      $('head-space').inert = true;
+      $('stage').classList.add('head-approach');
+      const flight = animateStack(face, false);
+      const finish = () => {
+        if (st.d !== 1) return;
+        camera.hide();
+        $('stage').classList.remove('head-approach');
+      };
+      if (flight) flight.finished.then(finish, () => {}); else finish();
+    }
+    renderCrumbs();
+    if (fromHeads) {
+      if (navigate) cameraURL(appPath(F.brane, F.id) + '#heads', !was);
+    } else follow(appPath(F.brane, F.id));
+    $('root').focus({ preventScroll: true });
     return true;
   }
   function out(focusId) {
-    if (st.d === 0) return;
+    if (st.d === 0) { if (camera.active) chooseAngle(false); return; }
+    if (fromHeads) { chooseAngle(true, {keyboard:true}); return; }
+    $('L0').inert = false; $('L1').inert = true; markAngle('timeline');
     openSeq++;
     const id = focusId || (F && F.id);
     if (T && id && POS[id]) {
@@ -1539,7 +1702,7 @@
   // Scroll / trackpad: sideways (or plain wheel) pans; ⌘/Ctrl-wheel and pinch zoom around the pointer.
   let wq = null;
   $('stage').addEventListener('wheel', e => {
-    if (!T || st.d !== 0 || narrow.matches) return;
+    if (!T || camera.active || st.d !== 0 || narrow.matches) return;
     e.preventDefault();
     const r = $('tl').getBoundingClientRect(), ax = Math.max(PL, Math.min(PR, (e.clientX - r.left) / scale));
     const unit = e.deltaMode === 1 ? 16 : 1;
@@ -1563,7 +1726,19 @@
   $('home').addEventListener('click', e => {
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
-    if (st.d === 1) out(); else if (T) goNow();
+    if (st.d === 1) out(); else if (camera.active) chooseAngle(false); else if (T) goNow();
+  });
+  for (const [id, heads] of [['head-angle',true],['timeline-angle',false]]) {
+    $(id).addEventListener('click', event => {
+      if (event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      chooseAngle(heads, {keyboard:event.detail === 0});
+    });
+  }
+  window.addEventListener('popstate', () => {
+    const q = parseAppQuery(location.search);
+    if (q?.brane) { fromHeads = location.hash === '#heads'; openState(q.brane, q.at, false); }
+    else chooseAngle(location.hash === '#heads', {navigate:false});
   });
   $('keys-btn').addEventListener('click', () => toggle('keys'));
   $('look-btn').addEventListener('click', () => toggle('look'));
@@ -1575,15 +1750,17 @@
   });
   const onRow = row => Object.keys(DISP).filter(id => DISP[id].row === row).sort((a, b) => DISP[a].x - DISP[b].x);
   document.addEventListener('keydown', e => {
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.closest?.('#episode-draft, #compose-btn'))) return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.closest?.('dialog, #compose-btn, .state-branch'))) return;
     const k = e.key; let done = true;
+    if (e.target.closest?.('.camera-angles') && k === 'Enter') return;
+    if (camera.active && st.d === 0 && !['Escape','?',',','/','n','N'].includes(k)) return;
     if (k === 'Enter' && e.target && e.target.id === 'home') return;   // the link's own activation: its click goes home
     if (k === 'Enter' && e.target && e.target.closest && e.target.closest('[data-now]')) return;   // the now card's links and buttons activate themselves
     if (k === '?') toggle('keys');
     else if (k === ',') toggle('look');
     else if (k === '/') $('addr').focus();
     else if (k === 'Escape') { if ($('verb')) $('verb').remove(); else if (!$('keys').hidden || !$('look').hidden) { $('keys').hidden = true; $('look').hidden = true; } else out(); }
-    else if (k === 'n' || k === 'N') { const a = document.querySelector('[data-needs] a'); if (a) { if (st.d === 1) out(); a.focus(); } }   // design §2.8: N jumps to what needs you
+    else if (k === 'n' || k === 'N') { if (camera.active) chooseAngle(false, {instant:true}); const a = document.querySelector('[data-needs] a'); if (a) { if (st.d === 1) out(); a.focus(); } }   // design §2.8: N jumps to what needs you
     else if (st.d === 1 && k === 'ArrowUp') openRail(railIdx() - 1);
     else if (st.d === 1 && k === 'ArrowDown') openRail(railIdx() + 1);
     else if (st.d === 1 && k === 'Home') openRail(0);
@@ -1610,7 +1787,7 @@
     } else done = false;
     if (done) e.preventDefault();
   });
-  window.addEventListener('resize', fit);
+  window.addEventListener('resize', () => { fit(); camera.update(); });
 
   // Exposed for the screenshot driver.
   window.World = { open: label => { const n = Object.values(N).find(x => x.id === label || x.episode === label || x.label === label) || (T && N[T.aliasOf[label]]); if (n) open(n.id); return !!n; }, out: () => out(), rail: k => openRail(k),
@@ -1620,6 +1797,8 @@
 
   async function boot() {
     applyLook();
+    $('L1').inert = true;
+    if (location.hash === '#heads' || location.hash.startsWith('#draft=')) $('stage').classList.add('camera-loading');
     try { await document.fonts.ready; } catch (_) {}
     renderCrumbs(); fit();
     const q = parseAppQuery(location.search);
@@ -1627,8 +1806,17 @@
     if (ok) startLive();
     if (followMode) schedulePoll();
     if (ok && q && q.brane != null) await openState(q.brane, q.at);   // a deep link, or a reload inside a brane
+    if (ok && !q?.brane && (location.hash === '#heads' || location.hash.startsWith('#draft='))) {
+      chooseAngle(true, {navigate:false, instant:true});
+      if (location.hash.startsWith('#draft=')) {
+        const id = new URLSearchParams(location.hash.slice(1)).get('draft');
+        cameraURL('/surface#heads', false);
+        if (N[id]?.draft) drafts.edit(N[N[id].parent], id); else say('This draft belongs to its original tab');
+      }
+    }
+    $('stage').classList.remove('camera-loading');
     document.documentElement.dataset.ready = '1';
-    $('root').focus({ preventScroll: true });
+    if (!document.querySelector('dialog[open]')) $('root').focus({ preventScroll: true });
   }
   boot();
 })();

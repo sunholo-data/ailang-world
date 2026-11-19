@@ -16,16 +16,36 @@ import (
 //go:embed app/app.js
 var timelineScript []byte
 
+//go:embed app/head-drafts.js
+var headDrafts []byte
+
+//go:embed app/head-camera.js
+var headCamera []byte
+
+//go:embed app/head-scene.js
+var headScene []byte
+
+//go:embed app/camera-controller.js
+var cameraController []byte
+
 //go:embed app/composer.js
 var composerScript []byte
 
-var AppScript = bytes.Join([][]byte{timelineScript, composerScript}, []byte("\n"))
+var AppScript = bytes.Join([][]byte{headDrafts, headCamera, headScene, cameraController, timelineScript, composerScript}, []byte("\n"))
 
 // AppStyle is /surface/app.css: the working copy's stylesheet, its fonts
 // self-hosted under /surface/fonts/.
 //
 //go:embed app/app.css
-var AppStyle []byte
+var timelineStyle []byte
+
+//go:embed app/head-scene.css
+var headStyle []byte
+
+//go:embed app/head-drafts.css
+var headDraftStyle []byte
+
+var AppStyle = bytes.Join([][]byte{timelineStyle, headStyle, headDraftStyle}, []byte("\n"))
 
 // AppLogo is /surface/ailang-logo.svg, the AILANG mark the shell inlines.
 //

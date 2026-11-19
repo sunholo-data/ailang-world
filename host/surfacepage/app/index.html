@@ -61,6 +61,10 @@
 </svg></span>
       <span class="brand-name">World</span>
     </a>
+    <nav class="camera-angles" aria-label="View angle">
+      <a href="/surface" id="timeline-angle" aria-current="page">Timeline</a>
+      <a href="/surface#heads" id="head-angle">Heads</a>
+    </nav>
     <nav class="crumbs" id="crumbs" aria-label="Where you are"></nav>
     <label class="addr">
       <span class="prompt">world&gt;</span>
@@ -76,6 +80,7 @@
   </header>
   <main class="stage" id="stage" data-view="timeline">
     <section class="layer" id="L0" aria-label="The world timeline"><div class="canvas" id="tl"></div></section>
+    <section id="head-space" aria-label="Branch heads" hidden inert></section>
     <section class="layer" id="L1" aria-label="One brane"><div class="canvas" id="br"></div></section>
     <div class="pop" id="keys" role="dialog" aria-label="Keyboard shortcuts" hidden></div>
     <div class="pop" id="look" role="dialog" aria-label="Appearance" hidden></div>
