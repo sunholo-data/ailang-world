@@ -1,0 +1,113 @@
+# World iteration 419 — Gate 0–2 readings (fire world-1795181980-58527), captured 2026-11-20T13:43:51Z
+
+## origin/dev and Gate-1 base
+48725b7a05f4822cb60faa6a39aca1e485f4f1e6
+Gate-1 base: 48725b7a05f4822cb60faa6a39aca1e485f4f1e6 2026-11-20T13:42:00Z
+
+## commits since iteration 418 Gate-1 base 9e05da55
+48725b7a Merge pull request #619 from sunholo-data/ui/world-head-on
+1a879b60 Merge pull request #625 from sunholo-data/mission/world-iter418-record
+301131e7 Frame the selected World node in Heads and distinguish PR merges across views
+ca829225 record: iteration 418 — judge follow-through (sonnet PASS 94, zero blocking)
+507f6731 record: iteration 418 — no pick, rule (d) block report (ninth); idle snapshot identical to 417 but the fire degraded, row 263 count 7
+861a7da0 Keep the displayed time when dragging across Heads lanes
+b9ec074e Ease Heads floor drags through lanes and recorded time
+918a4d4f Follow the active thread when dragging sideways in Heads
+09c6f2e9 Bring World status into Heads and navigate on the dated grid
+780b7e07 Share the time ribbon and reveal node context in Heads
+93b9ce66 Keep merges and their sources on fixed tracks through Heads history
+8a2a9f36 Bring lane tips forward and preserve branch order through history
+95e1564c Align Timeline and Heads by timestamp and move the camera across lanes
+8f06f562 Center shared history and separate projected branch lanes
+05484693 Carry every recorded state into the head-on history view
+01930db4 Project the World street and branch heads through one camera
+4ed8bf37 Frame the branes around a central path and illuminate their exact connections
+018454ed Ground the head-on branes with perspective guides
+c8435e21 Travel along recorded branes in the head-on view
+efc35f3d Turn the World timeline head-on in the same scene
+count=20
+ledger lines changed (| D-WORLD table rows) in 9e05da55..origin/dev: 0
+paths outside design_docs/: 32
+design_docs/ paths: design_docs/verification/world-iter418/gate1-2-readings.txt design_docs/world-mission-dashboard.md design_docs/world-mission-index.md design_docs/world-mission-log.md design_docs/world-mission-status-archive.md design_docs/world-mission.md 
+PR #619 (ui/world-head-on, attended UI) merged 2026-11-20T10:27:58Z
+
+## ledger
+decision ledger valid: 107 rows
+check rc=0
+D-WORLD-119	OPEN
+D-WORLD-120	OPEN
+
+## dev CI at origin/dev
+checks=3
+  go host build + test gate: success
+  go race gate (go test -race, own job): success
+  ailang-code verify gate: success
+
+## row 150 (attended A1) — subjects in 9e05da55..origin/dev
+match row ?150|A1|marketing: 0  control record|iteration 418: 6
+
+## row 151 (needs row 188 N2d/N4a)
+subjects since 2026-10-01 matching N2d|N4a: 0  control N2c: 1
+non-test .go files naming file.json (fixed string): 0  control surface: 109
+
+## row 243 V4 design gating
+design=design_docs/planned/w-world-address-bar-verbs-v4.md lines naming D-WORLD-119: 4  D-WORLD-120: 2  design touched in range: 0
+
+## Gate 0 directives
+⚠ mission_directives: watermark file /Users/voightkampff/.ailang/state/mission-574-last-seen is absent — reading every allowlisted comment on #574; the first --mark creates it
+mission_directives: #574 — 0 directive(s) from [MarkEdmondson1234] since 1970-01-01T00:00:00Z inclusive, 0 new, 0 already processed (of 29 comments; the rest are public feedback, never directives)
+⚠ mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-1-last-seen (bare timestamp, no processed ids, written before #981) — the first --mark upgrades it
+mission_directives: #1 — 0 directive(s) from [MarkEdmondson1234] since 2026-09-30T14:19:22Z inclusive, 0 new, 0 already processed (of 25 comments; the rest are public feedback, never directives)
+⚠ mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-world-last-seen (bare timestamp, no processed ids, written before #981) — the first --mark upgrades it
+mission_directives: #524 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 47 comments; the rest are public feedback, never directives)
+
+## Gate 0 step 6a (self-notices)
+crash: issue=524 at=2026-11-13T09:48:25Z rc=1 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/524#issuecomment-6849577904
+transcript: issue=524 at=2026-11-16T09:37:59Z hits=2 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/524#issuecomment-6912778168 fire=world-1794807071-53892
+control: issue=107 expect=4 got=4 ok
+verdict: 1 crash notice(s) since 1970-01-01T00:00:00Z on #574,#524 — A FIRE DIED (newest rc=1 at 2026-11-13T09:48:25Z on #524): run Gate 2's died-mid-flight traces (a) open PRs (b) worktrees (c) uncommitted state BEFORE picking, and credit the orphan in the log; "the queue is untouched" describes the charter, not the work [mis
+rc=1 (re-run under bash; zsh has no PIPESTATUS)
+
+## inbox (mission-world unread)
+raw: No messages found.
+
+## open PRs (fleet account)
+617 ui/live-branch-heads updated 2026-11-19T13:39:01Z
+615 ui/finish-card-review updated 2026-11-19T08:10:54Z
+
+## idle pre-check and lane state (driver log, this fire)
+[2026-11-20 14:38:22] Codex quota window: state=over window=10080m used=19.0% allowed=18.3% start_margin=2.0pp observed=2026-11-20T13:38:16Z
+[2026-11-20 14:38:22] ration gate: blocked buckets (over ration or unknown quota):codex anthropic 
+[2026-11-20 14:38:33] codex model 'gpt-6.2-sol' unusable: quota-limited
+[2026-11-20 14:38:41] codex planner lane -> falling back to 'opus' for this fire (model 'gpt-6.2-sol')
+[2026-11-20 14:38:46] codex executor lane -> falling back to 'claude:claude-haiku-5-5' for this fire (model 'gpt-6.2-sol')
+[2026-11-20 14:39:40] LANE DEGRADED this fire: - `planner`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`75` — over daily ration) → handed to `opus` - `executor`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`75` — over daily ration) → handed to `claude:claude-haiku-5-5`
+[2026-11-20 14:39:42] world: idle snapshot taken for world-1795181980-58527 (dae8092b025c9639d6637ead60b69a51ac094f0756708da2df0ce39ba0782fde head=301131e ledger=107 open=2 directives=0 inbox=0 red=0)
+previous fire (418) snapshot: [2026-11-20 10:39:38] world: idle snapshot taken for world-1795167576-8056 (0355e1e27457a8d866647f30f4c831a2de38416194843062384ce5af5e2c9454 head=0e9e8d3 ledger=107 open=2 directives=0 inbox=0 red=0)
+
+## harness ticket row 263 (before filing)
+slots_lost=7 blocking=none last_seen=2026-11-20T09:42:34.299876Z
+
+## slot verdicts (last 3)
+2026-11-20T02:14:55Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=2201 stamps=7 controller=claude:claude-opus-5-5
+2026-11-20T06:16:24Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=2289 stamps=9 controller=claude:claude-opus-5-5
+2026-11-20T10:18:49Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=2434 stamps=8 controller=claude:claude-opus-5-5
+
+## worktrees iter41x record porcelain
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter410-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter411-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter412-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter413-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter414-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter415-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter416-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter417-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter418-record 0
+origin branches matching iter419 before this record: 0
+
+## codex quota window (driver log; this fire vs iteration 418)
+this fire: [2026-11-20 14:38:22] Codex quota window: state=over window=10080m used=19.0% allowed=18.3% start_margin=2.0pp observed=2026-11-20T13:38:16Z
+418:       [2026-11-20 10:38:22] Codex quota window: state=over window=10080m used=17.0% allowed=14.9% start_margin=2.0pp observed=2026-11-20T09:38:16Z
+
+## row 263 occurrence filed this fire
+filed id=inbox_1795182270016_58846867; ticket open --json after filing: slots_lost=8 blocking=none last_seen=2026-11-20T13:44:30.016438Z
