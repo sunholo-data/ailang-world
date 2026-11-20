@@ -265,7 +265,11 @@ assert.equal(Object.keys(T.N).length, all.length);
 for (const [key, s] of all) { assert.equal(T.N[s.id].lane, key); assert.equal(T.N[s.id].title, s.title); assert.equal(T.N[s.id].summary, s.summary); }
 for (const k of model.links) { assert(T.kids[k.from].includes(k.to)); assert(T.parents[k.to].includes(k.from)); }
 const shared = model.lanes[0].states.filter(s => s.kind === 'shared').sort((a, b) => a.rank - b.rank).map(s => s.id);
-assert.deepEqual(T.SH, shared); assert.equal(T.NS, shared.length); assert.equal(T.TT.length, T.NS + 1); assert.equal(T.TT[T.NS], Date.parse(model.now));
+assert.deepEqual(T.SH, shared);
+assert.equal(T.TT.length, T.NS + 1);
+assert.deepEqual(T.TT, [...new Set([...all.map(([, s]) => Date.parse(s.at)), Date.parse(model.now)])].sort((a, b) => a - b));
+assert.equal(T.TT[T.presentIndex], Date.parse(model.now));
+for (const [, state] of all) assert.equal(T.TT[T.timeIndex.get(state.id)], Date.parse(state.at), state.id);
 for (let i = 1; i < T.SH.length; i++) assert(T.parents[T.SH[i]].includes(T.SH[i - 1]), 'the shared line');
 // Rows: the newest brane above, three below, the rest quiet; every brane lane exactly once.
 const branes = model.lanes.slice(1).map(l => l.key);
@@ -299,15 +303,51 @@ assert.equal(app.levelXs(gap)[4][1] - 220, 64, 'a quiet month is an axis break, 
 
 // ---- layoutGraph: at every zoom, every state is drawn once, as a node or inside a bubble.
 for (const u of [0, 0.5, 1, 2, 3, 4]) {
-  const g = app.layoutGraph(T, app.blendXS(T.LX, u));
+  const xs = app.blendXS(T.LX, u), g = app.layoutGraph(T, xs);
   const drawn = Object.values(g.DISP).flatMap(d => d.ids).sort();
   assert.deepEqual(drawn, Object.keys(T.N).sort(), 'zoom ' + u);
-  for (const id of Object.keys(T.N)) { assert(g.DISP[g.REP[id]].ids.includes(id)); assert(Number.isFinite(g.POS[id][0]) && Number.isFinite(g.POS[id][1])); }
+  for (const id of Object.keys(T.N)) { assert(g.DISP[g.REP[id]].ids.includes(id)); assert.equal(g.POS[id][0], xs[T.timeIndex.get(id)]); assert(Number.isFinite(g.POS[id][1])); }
   for (const id of g.LABELED) assert(!id.startsWith('c:') && T.N[id].kind !== 'shared');
   for (const [id, d] of Object.entries(g.DISP)) assert.equal(id.startsWith('c:'), d.ids.length > 1);
 }
 const steps = app.layoutGraph(T, T.LX[1]);
-for (const s of T.STEPS) { const m = T.mergeOf(s.id); if (m) assert(steps.POS[s.id][0] < steps.POS[m][0], s.id + ' sits before its merge'); }
+for (const s of T.STEPS) {
+  const m = T.mergeOf(s.id);
+  if (m) assert.equal(Math.sign(steps.POS[s.id][0] - steps.POS[m][0]), Math.sign(Date.parse(s.at) - Date.parse(T.N[m].at)), s.id + ' uses its own time');
+}
+
+// A branch need not have a merge to appear on the axis. Missing timestamps
+// get one slot before history, simultaneous states share x and drafts use now.
+const branch = app.adaptModel({now:'2026-10-01T00:00:00Z', lanes:[
+  {key:'trial', states:[
+    {id:'a', kind:'step', rank:0, at:'2026-09-01T00:00:00Z'},
+    {id:'tie', kind:'open', rank:1, at:'2026-08-31T20:00:00-04:00'},
+    {id:'future', kind:'open', rank:2, at:'2026-10-02T00:00:00Z'},
+    {id:'unknown', kind:'step', rank:3},
+    {id:'invalid', kind:'open', rank:4, at:'unrecorded'},
+    {id:'draft', kind:'draft', rank:5, at:'2026-09-23T00:00:00Z', draft:true},
+  ]},
+], links:[{from:'a', to:'tie'}]});
+assert.equal(branch.SH.length, 0);
+assert.deepEqual(branch.ROWS, ['trial']);
+assert.equal(branch.TT.length, 4);
+assert(branch.undated);
+assert.equal(branch.timeIndex.get('unknown'), 0);
+assert.equal(branch.timeIndex.get('invalid'), 0);
+assert.equal(branch.timeIndex.get('draft'), branch.presentIndex);
+assert.equal(branch.timeIndex.get('future'), branch.NS);
+assert(branch.presentIndex < branch.NS);
+assert.deepEqual(branch.parents.tie, ['a']);
+for (const xs of branch.LX) {
+  const {POS, DISP, REP} = app.layoutGraph(branch, xs, 'tie');
+  assert.equal(POS.a[0], POS.tie[0]);
+  assert.equal(POS.tie[0], DISP[REP.tie].x);
+  assert(POS.a[0] < POS.draft[0] && POS.draft[0] < POS.future[0]);
+  assert(Object.values(POS).every(at => at.every(Number.isFinite)));
+}
+const withoutClock = app.adaptModel({now:'unknown', lanes:[]});
+assert(!withoutClock.nowKnown && !withoutClock.dated);
+assert(withoutClock.TT.every(Number.isFinite));
 
 // ---- The brane view, on every committed stack.
 const w189d = stacks.find(s => s.front.id.startsWith('f36428a'));
@@ -320,7 +360,7 @@ for (const S of stacks) {
   assert(html.includes('No view from the agent yet') && html.includes('row 151'), 'the agent band is an honest gap');
   if (!F.files) assert(html.includes('Files: not recorded'), 'absent files are a gap: ' + F.id);
   if (F.kind === 'step' && !F.episode) assert(html.includes('No episode record for this step'), F.id);
-  if (F.kind === 'shared') { assert(html.includes('A merge has no checks of its own.')); assert(!html.includes('Grants')); assert.equal((html.match(/via">parent</g) || []).length, F.parents.length); }
+  if (F.kind === 'shared') { assert(html.includes('No checks are recorded for this shared commit.')); assert(!html.includes('Grants')); assert.equal((html.match(/via">parent</g) || []).length, F.parents.length); }
   if (!F.checks.graders) assert(!/class="ctile"/.test(html), 'no tile invents a check: ' + F.id);
   if (!F.decisions.length) assert(html.includes('None recorded.'));
   const bars = app.stackBars(S.earlier, -1).concat(app.stackBars(S.later, 1));

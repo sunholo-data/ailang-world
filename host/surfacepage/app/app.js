@@ -10,9 +10,9 @@
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const pad = n => String(n).padStart(2, '0');
-  const hm = iso => { const d = new Date(iso); return pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()); };
-  const dayOf = iso => { const d = new Date(iso); return d.getUTCDate() + ' ' + MON[d.getUTCMonth()]; };
-  const exactOf = iso => dayOf(iso) + ' ' + hm(iso) + ' UTC';
+  const hm = iso => { if (iso == null) return ''; const d = new Date(iso); return Number.isFinite(+d) ? pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) : ''; };
+  const dayOf = iso => { if (iso == null) return ''; const d = new Date(iso); return Number.isFinite(+d) ? d.getUTCDate() + ' ' + MON[d.getUTCMonth()] : ''; };
+  const exactOf = iso => dayOf(iso) ? dayOf(iso) + ' ' + hm(iso) + ' UTC' : 'Time unrecorded';
   const prettyModel = m => (m || '').split('-').filter(Boolean).reduce((a, w, i, all) => {
     if (/^\d+$/.test(w) && /^\d+$/.test(all[i - 1] || '')) return a + '.' + w;
     const word = /^gpt$/i.test(w) ? 'GPT' : /^\d/.test(w) ? w : w[0].toUpperCase() + w.slice(1);
@@ -43,18 +43,26 @@
     return `<span class="g" style="width:${size}px;height:${size}px;background:${colour};clip-path:${CLIP[shape] || 'none'};border-radius:${shape === 'square' ? '2px' : '0'};${extra}"></span>`;
   }
 
-  // ---------- Time axis: each shared state is a point; zoom levels blend "one slot each" into real time ----------
+  const RECORD_LABEL = {
+    'github-merge': 'GitHub merge', 'shared-commit': 'Shared commit',
+    episode: 'World episode', draft: 'World draft', step: 'Work step',
+  };
+  const mergeGlyph = (size, timeline = false) => `<svg class="g merge-glyph" viewBox="0 0 16 16" width="${size}" height="${size}" aria-hidden="true" focusable="false"${timeline ? ' style="color:var(--text)"' : ''}>
+      <path d="M2 4h3c3 0 3 4 6 4h3M2 12h3c3 0 3-4 6-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>`;
+
+  // ---------- Time axis: one slot per instant, shared by both views ----------
   const BREAK_H = 72;                           // longer quiet gaps are drawn as an axis break, not as empty weeks
   const LEVELS = [{ name: 'Close', G: 84, P: 0 }, { name: 'Steps', G: 50, P: 0 }, { name: 'Hours', G: 14, P: 16 }, { name: 'Days', G: 3, P: 6 }, { name: 'Weeks', G: 0, P: 2.4 }];
   const breakAt = (TT, i) => i > 0 && (TT[i] - TT[i - 1]) / 3.6e6 > BREAK_H;
-  // levelXs is each level's x for every shared state, then now; TT is their times, then now's.
-  function levelXs(TT) {
+  // levelXs blends evenly spaced instants into elapsed time as you zoom out.
+  function levelXs(TT, presentIndex = TT.length - 1, undated = false) {
     const NS = TT.length - 1;
     return LEVELS.map(L => {
       const xs = [220];
       for (let i = 1; i <= NS; i++) {
         const dth = (TT[i] - TT[i - 1]) / 3.6e6;
-        const gap = breakAt(TT, i) ? Math.max(L.G, 64) : i === NS ? Math.max(L.G * 1.44, dth * L.P, 28) : Math.max(L.G, dth * L.P);
+        const gap = (undated && i === 1) || breakAt(TT, i) ? Math.max(L.G, 64) : i === presentIndex ? Math.max(L.G * 1.44, dth * L.P, 28) : Math.max(L.G, dth * L.P);
         xs.push(xs[i - 1] + gap);
       }
       return xs;
@@ -62,6 +70,25 @@
   }
   // blendXS is the x of every point at zoom u, between two levels.
   function blendXS(LX, u) { const k = Math.min(LX.length - 2, Math.floor(u)), f = u - k; return LX[k].map((x, i) => x + (LX[k + 1][i] - x) * f); }
+
+  function timeAxis(nodes, now) {
+    const entries = nodes.map(n => [n, n.draft ? NaN : Date.parse(n.at)]);
+    const times = entries.map(([, t]) => t).filter(Number.isFinite);
+    const measured = Date.parse(now);
+    const nowKnown = Number.isFinite(measured);
+    const TNOW = nowKnown ? measured : times.reduce((latest, time) => Math.max(latest, time), -Infinity);
+    const present = Number.isFinite(TNOW) ? TNOW : 0;
+    const TT = [...new Set([...times, present])].sort((a, b) => a - b);
+    const undated = entries.some(([n, t]) => !n.draft && !Number.isFinite(t));
+    // Undated states get one slot outside recorded history. Its ordering key
+    // is synthetic and never shown as a timestamp. Local drafts sit at now.
+    if (undated) TT.unshift(TT[0] - 1);
+    const indexes = new Map(TT.map((t, i) => [t, i]));
+    const presentIndex = indexes.get(present);
+    const timeIndex = new Map(entries.map(([n, t]) => [n.id, n.draft ? presentIndex : indexes.get(t) ?? 0]));
+    const LX = levelXs(TT, presentIndex, undated);
+    return { TT, LX, timeIndex, undated, nowKnown, dated: nowKnown || times.length > 0, presentIndex, TNOW:present, NOW_D:new Date(present), NS:TT.length - 1 };
+  }
 
   // ---------- Canvas geometry (1600 × 936 design canvas, scaled to the window) ----------
   let PL = 262, PR = 1262, PW = PR - PL;
@@ -88,19 +115,30 @@
     const nameOf = key => { const l = LANES[key]; return l ? l.name || l.title || key : String(key); };
     const laneTitle = key => rowLabel(nameOf(key), LANES[key] && LANES[key].row);
     const glyphOf = (key, size) => { const l = LANES[key] || {}; return gl(l.glyph, l.glyph === 'circle' ? SHARED_INK : l.colour, size); };
-    const glyphOfNode = (n, size) => n.kind === 'shared' ? gl('circle', SHARED_INK, size) : isSharedKey(n.lane) ? gl(null, null, size) : glyphOf(n.lane, size);
+    const recordKind = n => {
+      if (n.kind === 'shared') return n.pr && parents[n.id]?.some(id => N[id]?.kind === 'step')
+        ? 'github-merge' : 'shared-commit';
+      if (n.draft) return 'draft';
+      return n.kind === 'open' || n.episode ? 'episode' : 'step';
+    };
+    const recordLabel = n => RECORD_LABEL[recordKind(n)];
+    const glyphOfNode = (n, size) => {
+      if (n.kind === 'shared') return recordKind(n) === 'github-merge' ? mergeGlyph(size) : gl('circle', SHARED_INK, size);
+      if (n.kind === 'open') {
+        const colour = LANES[n.lane]?.colour || SHARED_INK;
+        return gl('circle', colour, size, 'border-style:dashed;background:' + (n.open?.sessionLive ? colour + '55' : 'var(--shellBg)') + ';');
+      }
+      return isSharedKey(n.lane) ? gl(null, null, size) : glyphOf(n.lane, size);
+    };
     const mergeOf = id => (kids[id] || []).find(c => N[c].kind === 'shared');
-    const STEPS = Object.values(N).filter(n => n.kind === 'step');
-    const OPEN = Object.values(N).filter(n => n.kind === 'open');
-    const TNOW = Date.parse(D.now), NOW_D = new Date(D.now);
-    const NS = SH.length;                         // index NS is "now"
-    const SIDX = {}; SH.forEach((id, i) => { SIDX[id] = i; });
-    const TT = SH.map(id => Date.parse(N[id].at)).concat([TNOW]);
-    const LX = levelXs(TT);
+    const nodes = Object.values(N);
+    const STEPS = nodes.filter(n => n.kind === 'step');
+    const OPEN = nodes.filter(n => n.kind === 'open');
+    const axis = timeAxis(nodes, D.now);
     // Rows: the most recent brane above the shared world, the next three below, the rest share one quiet lane.
     // Several repos: each repo's shared world, then its newest branes, then its quiet lane, in config order.
     const recent = {};
-    STEPS.concat(OPEN).forEach(n => { if (!isSharedKey(n.lane)) recent[n.lane] = Math.max(recent[n.lane] == null ? -1 : recent[n.lane], n.rank); });
+    nodes.filter(n => n.kind !== 'shared').forEach(n => { if (!isSharedKey(n.lane)) recent[n.lane] = Math.max(recent[n.lane] == null ? -1 : recent[n.lane], n.rank); });
     const byRecent = Object.keys(recent).sort((a, b) => recent[b] - recent[a]);
     const LY = {}, QUIET = {}, HOME = {};
     let above = [], below = [], quiet = [], ROWS = [], GAP = 98;
@@ -109,7 +147,7 @@
       above = byRecent.slice(0, 1); below = byRecent.slice(1, 4);
       quiet = Object.keys(LANES).filter(k => !isSharedKey(k) && !above.includes(k) && !below.includes(k));
       above.forEach(k => { LY[k] = 182; }); LY[g.shared] = 320; below.forEach((k, i) => { LY[k] = 440 + i * 98; }); LY[otherOf(g)] = 440 + below.length * 98 - 6;
-      ROWS = above.concat([g.shared], below, quiet.length ? [otherOf(g)] : []);
+      ROWS = above.concat(LANES[g.shared] ? [g.shared] : [], below, quiet.length ? [otherOf(g)] : []);
       QUIET[otherOf(g)] = quiet; HOME[dipOf(g)] = g.shared;
     } else {
       const per = GROUPS.length === 2 ? 2 : GROUPS.length === 3 ? 1 : 0;
@@ -127,27 +165,20 @@
     const rowY = r => HOME[r] ? LY[HOME[r]] + (multi ? Math.round(GAP * 0.45) : 44) : LY[r];
     const isDip = r => !!HOME[r], isOther = r => !!QUIET[r] || r === 'other';
     const homeRow = r => HOME[r] || r;
-    const isBreak = i => breakAt(TT, i);
     const lastStep = key => STEPS.filter(n => n.lane === key).sort((a, b) => b.rank - a.rank)[0];
     const lastState = key => ((LANES[key] && LANES[key].states) || []).reduce((a, s) => !a || s.rank > a.rank ? s : a, null);
     const aliasOf = {}; (D.aliases || []).forEach(a => { if (N[a.target]) aliasOf[a.id] = a.target; });
-    return { D, LANES, N, parents, kids, SH, NS, SIDX, TT, LX, MAXU: LX.length - 1, STEPS, OPEN, TNOW, NOW_D, above, below, quiet, LY, ROWS,
+    return { D, LANES, N, parents, kids, SH, ...axis, MAXU: axis.LX.length - 1, STEPS, OPEN, above, below, quiet, LY, ROWS,
       GROUPS, multi, GAP, QUIET, groupOf, isDip, isOther, homeRow, aliasOf,
-      nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, rowOf, rowY, isBreak, lastStep, lastState };
+      nameOf, laneTitle, glyphOf, glyphOfNode, recordKind, recordLabel, mergeOf, rowOf, rowY, lastStep, lastState };
   }
 
   // ---------- Layout of the visible graph at one zoom (XS) ----------
   const isCluster = id => typeof id === 'string' && id.startsWith('c:');
-  function layoutGraph(T, XS) {
-    const { N, SIDX, NS, LY } = T, POS = {}, REP = {}, DISP = {};
+  function layoutGraph(T, XS, selectedID) {
+    const { N, timeIndex } = T, POS = {}, REP = {}, DISP = {};
     Object.keys(N).forEach(id => {
-      const n = N[id], r = T.rowOf(id);
-      if (n.kind === 'shared') { POS[id] = [XS[SIDX[id]], LY[r]]; return; }
-      const m = T.mergeOf(id);
-      let x;
-      if (m != null && SIDX[m] != null) { const i = SIDX[m], xm = XS[i], xp = i > 0 ? XS[i - 1] : xm - 52; x = xm - Math.min(26, Math.max(0, (xm - xp) / 2)); }
-      else x = XS[NS] - 26;
-      POS[id] = [x, T.rowY(r)];
+      POS[id] = [XS[timeIndex.get(id)], T.rowY(T.rowOf(id))];
     });
     // Collapse dense runs on each row into a count bubble.
     const byRow = {};
@@ -158,8 +189,17 @@
       let g = [];
       const flush = () => {
         if (!g.length) return;
-        if (g.length === 1) { REP[g[0]] = g[0]; DISP[g[0]] = { x: POS[g[0]][0], y: POS[g[0]][1], ids: g, row }; }
-        else { const rid = 'c:' + g[0]; const x = g.reduce((a, id) => a + POS[id][0], 0) / g.length; g.forEach(id => { REP[id] = rid; }); DISP[rid] = { x, y: POS[g[0]][1], ids: g, row }; }
+        const separate = g.length > 1 && g.includes(selectedID);
+        if (separate) {
+          REP[selectedID] = selectedID;
+          DISP[selectedID] = {x:POS[selectedID][0], y:POS[selectedID][1], ids:[selectedID], row};
+          g = g.filter(id => id !== selectedID);
+        }
+        const rep = g.length === 1 ? g[0] : 'c:' + g[0];
+        const x = g.reduce((sum, id) => sum + POS[id][0], 0) / g.length;
+        const y = POS[g[0]][1] + (separate && Math.abs(x - POS[selectedID][0]) < 24 ? 24 : 0);
+        g.forEach(id => { REP[id] = rep; });
+        DISP[rep] = {x, y, ids:g, row};
         g = [];
       };
       ids.forEach(id => { if (g.length && POS[id][0] - POS[g[g.length - 1]][0] >= SEP) flush(); g.push(id); });
@@ -177,7 +217,7 @@
   }
 
   // ---------- Brane view: world/surface-stack/v1 as bars, the front card and the rail ----------
-  const tagOf = c => c.kind === 'shared' ? `Merged ${c.pr ? '#' + c.pr : c.label}` : (c.episode || c.label);
+  const tagOf = c => c.kind === 'shared' ? `Shared ${c.pr ? '#' + c.pr : c.label}` : (c.episode || c.label);
   function stackBars(cols, dir) {
     const shown = (cols || []).slice(0, 3), nc = Math.max(1, shown.length), cw = (1180 - (nc - 1) * 12) / nc, out = [];
     shown.forEach((col, c) => {
@@ -273,7 +313,7 @@
     const v = verdict(ck.graders, ck.rounds, F.firstRoundPass, ck.minutes);
     const tiles = [[ck.graders, 'graders'], [ck.rounds, ck.rounds === 1 ? 'round' : 'rounds'], [ck.minutes, 'agent min'], [ck.calls, 'World calls']]
       .filter(([x]) => x != null && x !== '').map(([x, k]) => `<div class="ctile"><div class="v">${esc(x)}</div><div class="k">${k}</div></div>`).join('');
-    const checks = `<div class="col g9"><div class="colh">Checks</div>${v ? `<div class="verdict">${esc(v)}</div>` : none(step ? 'No episode record for this step.' : 'A merge has no checks of its own.')}${tiles ? `<div class="tiles">${tiles}</div>` : ''}</div>`;
+    const checks = `<div class="col g9"><div class="colh">Checks</div>${v ? `<div class="verdict">${esc(v)}</div>` : none(step ? 'No episode record for this step.' : 'No checks are recorded for this shared commit.')}${tiles ? `<div class="tiles">${tiles}</div>` : ''}</div>`;
 
     return bar + `<div class="fbody">${head}${view}<div class="cols">${inputs}${outputs}${decisions}${checks}</div></div>`;
   }
@@ -586,37 +626,63 @@
   // ================= The page =================
   const $ = id => document.getElementById(id);
   const SEAMS = window.WorldSurface || {};
-  let T = null, D = null, LANES = {}, N = {}, parents = {}, kids = {}, SH = [], NS = 0, SIDX = {}, TT = [], LX = [], MAXU = LEVELS.length - 1;
+  let T = null, D = null, LANES = {}, N = {}, parents = {}, kids = {}, SH = [], NS = 0, TT = [], LX = [], MAXU = LEVELS.length - 1;
   let STEPS = [], TNOW = 0, NOW_D = new Date(), quiet = [], LY = {}, ROWS = [], MXS = [], XS = [];
-  let nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, isBreak, lastStep, lastState;
+  let nameOf, laneTitle, glyphOf, glyphOfNode, lastStep, lastState;
+  let recordedModel;
+  const drafts = WorldHeadDrafts.create(({id, parent, discarded}) => {
+    if (!recordedModel) return;
+    setModel(recordedModel);
+    st.focus = discarded ? parent : id;
+    renderTimeline(true);
+    applyView();
+    camera.present();
+    chooseAngle(true, {instant:true, keyboard:true, anchor:st.focus});
+  });
   function setModel(m) {
-    T = adaptModel(m);
-    ({ D, LANES, N, parents, kids, SH, NS, SIDX, TT, LX, MAXU, STEPS, TNOW, NOW_D, quiet, LY, ROWS, nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, isBreak, lastStep, lastState } = T);
-    measureMini();
-    XS = LX[1].slice();
+    recordedModel = m;
+    T = adaptModel(drafts.project(m));
+    ({ D, LANES, N, parents, kids, SH, NS, TT, LX, MAXU, STEPS, TNOW, NOW_D, quiet, LY, ROWS, nameOf, laneTitle, glyphOf, glyphOfNode, lastStep, lastState } = T);
+    measureStops();
+    computeXS(view.u);
   }
-  function measureMini() {
+  function measureMini(width) {
     const a = LX[3][0], z = LX[3][NS];
-    MXS = LX[3].map(x => 8 + (x - a) / ((z - a) || 1) * (PW - 16));
+    MXS = LX[3].map(x => 8 + (x - a) / ((z - a) || 1) * Math.max(1, width - 16));
   }
   // The open stack (world/surface-stack/v1), when a brane is open.
   let S = null, F = null, RAIL = [], READS = new Map();
   function setStack(s) { S = s; F = s.front; RAIL = s.rail || []; READS = new Map((F.reads || []).map(r => [r.via + ':' + r.fromId, r])); }
   const railIdx = () => F ? Math.max(0, RAIL.findIndex(r => r.id === F.id)) : 0;
-  const setView = v => { $('stage').dataset.view = v; };
+  const setView = v => {
+    $('stage').dataset.view = v;
+    if (v === 'brane' || !T) { showHeadRibbon(false); placeNow(false); }
+  };
 
+  const isBreak = i => breakAt(TT, i);
+  const breaksBetween = (a, b) => {
+    for (let i = Math.min(a, b) + 1; i <= Math.max(a, b); i++) if (isBreak(i)) return true;
+    return false;
+  };
+  // Enumerate ticks within drawn time spans to skip over unbounded quiet gaps.
+  function* tickTimes(step) {
+    if (!T.dated) return;
+    const first = T.undated ? 1 : 0;
+    for (let i = first; i <= NS; i++) {
+      if (i > first && !isBreak(i)) {
+        for (let t = (Math.floor(TT[i - 1] / step) + 1) * step; t < TT[i]; t += step) {
+          yield [t, i - 1 + (t - TT[i - 1]) / (TT[i] - TT[i - 1])];
+        }
+      }
+      if (TT[i] % step === 0) yield [TT[i], i];
+    }
+  }
   const computeXS = u => { XS = blendXS(LX, u); };
   const posF = f => { f = Math.max(0, Math.min(NS, f)); const i = Math.floor(f), j = Math.min(NS, i + 1); return XS[i] + (XS[j] - XS[i]) * (f - i); };
   const fAt = x => {
     if (x <= XS[0]) return 0; if (x >= XS[NS]) return NS;
     let lo = 0, hi = NS; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (XS[m] <= x) lo = m; else hi = m; }
     return lo + (XS[hi] === XS[lo] ? 0 : (x - XS[lo]) / (XS[hi] - XS[lo]));
-  };
-  const fOfTime = t => {
-    if (t < TT[0] || t > TT[NS]) return null;
-    let lo = 0, hi = NS; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (TT[m] <= t) lo = m; else hi = m; }
-    if (isBreak(hi)) return null;
-    return lo + (TT[hi] === TT[lo] ? 0 : (t - TT[lo]) / (TT[hi] - TT[lo]));
   };
   const level = () => view.u < 1.5 ? 'steps' : view.u < 2.5 ? 'hours' : view.u < 3.5 ? 'days' : 'weeks';
   const levelName = () => LEVELS[Math.round(view.u)].name;
@@ -632,7 +698,6 @@
       const pinned = T && atNow();
       PL = left; PR = right; PW = Math.max(1, PR - PL);
       if (T) {
-        measureMini();
         renderTimeline(true);
         if (pinned) goNow(false); else applyView();
       }
@@ -651,7 +716,131 @@
   const reduced = () => $('root').classList.contains('reduced');
 
   let POS = {}, REP = {}, DISP = {}, LABELED = new Set();
-  function layout() { ({ POS, REP, DISP, LABELED } = layoutGraph(T, XS)); }
+  let pinnedTimelineState = null;
+  function layout() { ({ POS, REP, DISP, LABELED } = layoutGraph(T, XS, pinnedTimelineState)); }
+
+  let fromHeads = false, timelineAnchor = '', stackFlight;
+  function chooseTimelineNode(id) {
+    timelineAnchor = N[id]?.id || DISP[id]?.ids?.at(-1) || '';
+    if (st.focus === id) return;
+    st.focus = id;
+    applyFocus();
+  }
+  function sidePoints() {
+    const points = new Map(), stageBox = $('stage').getBoundingClientRect();
+    const world = $('world')?.getBoundingClientRect();
+    if (world) {
+      for (const [id, rep] of Object.entries(REP)) {
+        const d = DISP[rep];
+        points.set(id, {x:world.left - stageBox.left + d.x * scale, y:world.top - stageBox.top - toolbar.offsetHeight + d.y * scale});
+      }
+    }
+    return points;
+  }
+
+  // Only attribute a pending request to a lane when its episode has one owner.
+  function attentionLanes() {
+    const requests = [...(REQS?.pending || []), ...(REQS?.decisions || []), ...(REQS?.confirmations || [])];
+    const pending = new Set(requests.filter(r => !r.refused && !r.recorded && (!r.expires || r.expires > REQS.now)).map(r => r.episode).filter(Boolean));
+    const episodes = new Map(), lanes = new Set();
+    for (const node of Object.values(N)) {
+      if (!pending.has(node.episode)) continue;
+      if (!episodes.has(node.episode)) episodes.set(node.episode, new Set());
+      episodes.get(node.episode).add(node.lane);
+    }
+    for (const owners of episodes.values()) if (owners.size === 1) owners.forEach(lane => lanes.add(lane));
+    return lanes;
+  }
+  const camera = WorldCameraController.create($('stage'), $('head-space'), {
+    model:() => T, timeXs:() => XS, sidePoints, attention:attentionLanes, reduced,
+    glyph:(n, size) => glyphOfNode(n, size), title:n => cleanTitle(n.title) || n.episode || n.label || n.id,
+    summary:summaryOf, agent:agentLine, tag:tagOf, stops:() => miniStops,
+    open:id => open(id),
+    select:id => { if (N[id]) { st.focus = id; camera.select(id); } },
+    placeStatus:placeNow,
+    timeChanged: (index, active) => updateHeadRibbon(index, active && st.d === 0),
+    sideVisible:keyboard => {
+      $('L0').inert = false;
+      if (keyboard) $('timeline-angle').focus({preventScroll:true});
+    }
+  });
+
+  function markAngle(which) {
+    for (const [id, name] of [['timeline-angle','timeline'], ['head-angle','heads']]) {
+      if (name === which) $(id).setAttribute('aria-current', 'page');
+      else $(id).removeAttribute('aria-current');
+    }
+  }
+  function cameraURL(url, push) {
+    if (location.pathname + location.search + location.hash === url) return;
+    history[push ? 'pushState' : 'replaceState'](null, '', url);
+  }
+  function faceFor(id) {
+    const space = $('head-space');
+    const exact = space.querySelector(`[data-head-state="${CSS.escape(id)}"],[data-rear-state="${CSS.escape(id)}"],[data-lineage-state="${CSS.escape(id)}"]`);
+    if (exact) return exact;
+    const lane = N[id]?.lane;
+    return lane && space.querySelector(`[data-head-lane="${CSS.escape(lane)}"]`);
+  }
+  function animateStack(face, back) {
+    stackFlight?.cancel();
+    if (reduced() || !face || !face.width) return;
+    const front = $('front').getBoundingClientRect();
+    if (!front.width || !front.height) return;
+    const zoom = face.width / front.width;
+    const x = face.left + face.width / 2 - (front.left + front.width / 2), y = face.top - front.top;
+    const crop = Math.max(0, front.height - face.height / zoom);
+    const small = {transform:`translate(${x}px,${y}px) scale(${zoom})`, transformOrigin:'50% 0', clipPath:`inset(0 0 ${crop}px)`,opacity:.4};
+    const full = {transform:'none', transformOrigin:'50% 0', clipPath:'inset(0 0 0px)',opacity:1};
+    stackFlight = $('front').animate(back ? [full,small] : [small,full], {duration:640, easing:'cubic-bezier(.34,.04,.21,1)'});
+    return stackFlight;
+  }
+  function chooseAngle(heads, {navigate=true, instant=false, keyboard=false, anchor=null} = {}) {
+    if (!T) return;
+    openSeq++;
+    const wasStack = st.d === 1;
+    $('stage').classList.remove('head-approach','head-return');
+    stackFlight?.cancel();
+    if (wasStack && heads && !instant && !reduced()) $('stage').classList.add('head-return');
+    if (wasStack) {
+      timelineAnchor = N[F.id]?.id || T.aliasOf[F.id] || '';
+      st.d = 0;
+      $('root').classList.remove('zoomed');
+      $('L1').inert = true;
+      renderCrumbs();
+    }
+    const chosen = anchor || timelineAnchor;
+    const node = N[chosen] || N[T.aliasOf[chosen]];
+    if (node) st.focus = node.id;
+    if (wasStack && fromHeads && !heads && !camera.active) camera.turn(true, st.focus, {instant:true});
+    if (!heads && st.focus && REP[st.focus]) {
+      pinnedTimelineState = st.focus;
+      relayout();
+      ensureVisible(st.focus, false);
+      if (narrow.matches) {
+        const y = DISP[REP[st.focus]].y;
+        const layer = $('L0');
+        if (y < layer.scrollTop + 40 || y > layer.scrollTop + layer.clientHeight - 40) layer.scrollTop = y - layer.clientHeight / 2;
+      }
+      applyFocus();
+    }
+    $('L0').inert = heads || camera.active;
+    $('tip').hidden = true;
+    markAngle(heads ? 'heads' : 'timeline');
+    if (navigate) cameraURL(heads ? '/surface#heads' : '/surface', true);
+    const id = N[st.focus] ? st.focus : DISP[st.focus]?.ids?.at(-1);
+    const frameNode = heads && Boolean(node);
+    if (heads) timelineAnchor = '';
+    camera.turn(heads, id, {instant:instant || wasStack && heads, keyboard, frameNode});
+    if (!heads && !camera.active) { setView('timeline'); $('L0').inert = false; }
+    if ($('stage').classList.contains('head-return')) {
+      const face = faceFor(st.focus)?.getBoundingClientRect();
+      const flight = animateStack(face, true);
+      const finish = () => $('stage').classList.remove('head-return');
+      if (flight) flight.finished.then(finish, () => {}); else finish();
+    }
+    fromHeads = false;
+  }
 
   // ---------- Timeline (static frame) ----------
   const readFrom = id => [...READS.values()].some(rd => rd.fromId === id);
@@ -669,14 +858,13 @@
   function statusOf(key) {
     const run = T.OPEN.find(n => n.lane === key && n.open && n.open.sessionLive);
     if (run) return `<span class="stat on" data-tip="node:${esc(run.id)}">running</span>`;
-    const s = isSharedKey(key) ? (key === 'shared' ? N[SH[NS - 1]] : lastShared(key)) : lastStep(key);
+    const s = isSharedKey(key) ? (key === 'shared' ? N[SH.at(-1)] : lastShared(key)) : lastStep(key);
     const on = s && dayDiff(s.at) <= 1;
     return `<span class="stat${on ? ' on' : ''}" data-tip="${s ? 'node:' + s.id : ''}">${on ? 'active' : 'quiet'}</span>`;
   }
   function progressOf(key) {
     const l = LANES[key];
-    if (key === 'shared') return `<div class="prog">${NS} merges into dev</div>`;
-    if (isSharedKey(key)) { const g = T.groupOf(key), n = (l.states || []).filter(s => s.kind === 'shared').length; return `<div class="prog">${n} merge${n === 1 ? "" : "s"} into ${esc(g.repo ? g.repo.branch : 'dev')}</div>`; }
+    if (isSharedKey(key)) { const g = T.groupOf(key), n = (l.states || []).filter(s => s.kind === 'shared').length; return `<div class="prog">${n} shared record${n === 1 ? '' : 's'} on ${esc(g.repo ? g.repo.branch : 'dev')}</div>`; }
     const ms = l.milestones;
     if (ms && ms.names) {
       const dots = ms.names.map(nm => {
@@ -723,14 +911,10 @@
         <button type="button" class="cb" id="pg-fwd" aria-label="Forward in time" data-tip="k:→ forward a page">›</button>
         <button type="button" class="cb now-b" id="now-b" aria-label="Back to now" data-tip="k:End · back to the newest state">Now</button>
       </span>
-      <span class="ctl zoom" role="group" aria-label="Zoom">
-        <button type="button" class="cb" id="z-out" aria-label="Zoom out" data-tip="k:− · ⌘-scroll or pinch to zoom">−</button>
-        <span class="zl" id="zl">Steps</span>
-        <button type="button" class="cb" id="z-in" aria-label="Zoom in" data-tip="k:+ · ⌘-scroll or pinch to zoom">+</button>
-      </span></div>`;
-    h += nowCard();
+      <span id="timeline-zoom"></span></div>`;
+    h += '<div id="timeline-now"></div>';
     h += `<div class="mini-lab" style="top:${MINI_T + 2}px">Overview<span>drag the window · click to jump</span></div>`;
-    h += `<div class="mini" id="mini" style="left:${PL}px;top:${MINI_T}px;width:${PW}px;height:${MINI_H}px"></div>`;
+    h += '<div id="timeline-mini"></div>';
     ROWS.filter(T.isOther).forEach(row => {
       h += `<div class="quiet-list" data-quiet-list="${esc(row)}" style="left:16px;bottom:${936 - (LY[row] - 28)}px" hidden>${(T.QUIET[row] || []).map(k => {
         const s = lastStep(k);
@@ -738,46 +922,51 @@
       }).join('')}</div>`;
     });
     h += `<div class="legend" aria-label="Legend" style="top:${LEGEND_T}px">
+      <span>${mergeGlyph(11, true)}GitHub merge</span>
+      <span>${gl('square', 'var(--sub)', 10)}World episode or work step</span>
       <span><span class="nb inl">1</span>your decisions</span>
       <span><span style="width:14px;height:14px;border-radius:7px;box-shadow:0 0 0 4px var(--halo)"></span>connected to the step you point at</span>
       <span><span style="width:18px;border-top:2px dotted var(--read)"></span>read</span>
-      <span><span class="bub inl">4</span>several merges or steps · click to open up</span>
+      <span><span class="bub inl">4</span>several records · click to open up</span>
       <span class="off"><span style="width:18px;border-top:2px dashed var(--ran)"></span>ran on <i>· not recorded yet</i></span>
     </div>`;
     $('tl').innerHTML = h;
+    repaintNow();
     // The plot clips; it must never scroll itself (focus() or scrollIntoView on a node would).
     $('plot').addEventListener('scroll', e => { e.target.scrollTop = 0; e.target.scrollLeft = 0; });
-    renderMini();
+    mini.style.cssText = `left:${PL}px;top:${MINI_T}px;width:${PW}px;height:${MINI_H}px`;
+    placeRibbon();
+    drawMini();
     relayout();
     if (!keepView) goNow(false);
   }
 
   function nowCard() {
     const ne = D.nowEdge || {}, now = NOW_D, sess = ne.sessions || [], td = ne.today;
-    const healthy = /healthy/i.test(ne.health);
+    const healthy = /\bhealthy\b/i.test(ne.health);
     let today = '';
     if (td) {
       const by = Object.entries(td.byAgent || {}).map(([a, n]) => `${cap(a)} ${n}`).join(', ');
-      today = `<div class="nsec"><div class="nh">Today</div>
+      today = `<div class="nsec" data-today><div class="nh">Today</div>
         <div class="nl"><b>${td.landed} step${td.landed === 1 ? '' : 's'} landed</b>${by ? ` · ${esc(by)}` : ''}</div>
         <div class="nl sub">${td.firstRound} first-round pass${td.firstRound === 1 ? '' : 'es'} · ${td.fixRounds} fix round${td.fixRounds === 1 ? '' : 's'} · ${Math.round(td.agentMinutes)} agent-minutes</div></div>`;
     }
     const run = sess[0], runLane = run && Object.keys(LANES).find(k => LANES[k].row && new RegExp('^w' + LANES[k].row + '[a-z]?$').test(run.episode));
-    const running = ne.open ? openRunningHTML(ne.open) : ne.sessionsUnavailable ? `<div class="nsec"><div class="nh">Running</div><div class="nl sub">${esc(ne.sessionsUnavailable)}</div></div>`
-      : `<div class="nsec"><div class="nh">Running · ${sess.length}</div>
+    const running = ne.open ? openRunningHTML(ne.open) : ne.sessionsUnavailable ? `<div class="nsec" data-running><div class="nh">Running</div><div class="nl sub">${esc(ne.sessionsUnavailable)}</div></div>`
+      : `<div class="nsec" data-running><div class="nh">Running · ${sess.length}</div>
         ${run ? `<div class="nl"><b>${esc(run.episode)}</b>${runLane ? ` · ${esc(nameOf(runLane))}` : ''}</div><div class="nl sub">started ${esc(run.started)}</div>` : '<div class="nl sub">Nothing running</div>'}</div>`;
     const activity = running + needsYouHTML(REQS, REQS ? REQS.now : 0, notifyPermission());
     return `<div class="now" data-now style="left:${PR + 22}px;top:56px">
       <button type="button" class="phone-view" id="activity-back">← Timeline</button>
-      <div><div style="font-size:12px;font-weight:600;color:var(--sub)">Now</div><div style="font-size:15px;font-weight:700">${DOW[now.getUTCDay()]} ${dayOf(D.now)} · ${hm(D.now)}</div></div>
-      <div style="display:flex;gap:9px;align-items:center"><span style="width:9px;height:9px;border-radius:5px;background:${healthy ? 'var(--okDot)' : 'var(--you)'};flex:none"></span><span style="font-weight:700;color:var(--ok)">${healthy ? 'Healthy' : esc(ne.health)}</span><span style="font-size:12.5px;color:var(--sub)">checked ${esc(ne.checked)}</span></div>
-      ${narrow.matches ? activity : ''}
+      <div class="now-overview"><div class="now-clock"><div class="nh">Now</div><div style="font-size:15px;font-weight:700">${T.nowKnown ? DOW[now.getUTCDay()] + ' ' + dayOf(now) + ' · ' + hm(now) : 'Time unavailable'}</div></div>
+      <div class="now-health" style="display:flex;gap:9px;align-items:center"><span style="width:9px;height:9px;border-radius:5px;background:${healthy ? 'var(--okDot)' : 'var(--you)'};flex:none"></span><span data-health style="font-weight:700;color:var(--ok)">${healthy ? 'Healthy' : esc(ne.health)}</span><span style="font-size:12.5px;color:var(--sub)">checked ${esc(ne.checked)}</span></div>
       ${serviceLineHTML(ne.service)}
       <div class="nl sub" data-live>${esc(liveStatus(live))}</div>
       ${poll.note ? `<div class="nl sub" data-poll style="color:var(--you)">${esc(poll.note)}</div>` : ''}
+      </div>
       ${sourcesHTML(D.repos)}
       ${today}
-      ${narrow.matches ? '' : activity}
+      ${activity}
       ${decidedHTML(REQS, decidedAll)}
     </div>`;
   }
@@ -808,7 +997,7 @@
       const { x, y } = d;
       if (isCluster(id)) {
         const ns = d.ids.map(k => N[k]), shared = isSharedKey(d.row);
-        const word = shared ? 'merges' : 'steps';
+        const word = shared ? 'shared records' : 'work records';
         const col = shared || T.isDip(d.row) || T.isOther(d.row) ? 'var(--edge)' : LANES[d.row].colour;
         const badge = ns.reduce((a, n) => a + (n.badge || 0), 0);
         h += `<button type="button" class="node bub-n" data-id="${id}" data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${ns.length} ${word}, ${esc(exactOf(ns[0].at))} to ${esc(exactOf(ns[ns.length - 1].at))}"><span class="halo"><span class="bub" style="border-color:${col}">${ns.length}</span></span>${d.ids.map(k => `<span data-state="${esc(k)}" hidden></span>`).join('')}</button>`;
@@ -819,16 +1008,20 @@
       const l = LANES[n.lane];
       const size = shared ? 9 : unfiled ? 9 : l.glyph === 'square' ? 15 : 18;
       // An open episode: a dashed ring in its lane's colour, filled while its session is live. Never a commit glyph.
-      const inner = shared ? `<span class="g ring" style="width:9px;height:9px;border-radius:50%;background:var(--shellBg);border:2px solid var(--edge)"></span>`
-        : opened ? `<span class="g open" data-open="${esc(n.open.state)}" style="width:14px;height:14px;border-radius:50%;border:2px dashed ${l.colour};background:${n.open.sessionLive ? l.colour + '55' : 'var(--shellBg)'}"></span>`
+      const record = T.recordKind(n);
+      const inner = record === 'github-merge' ? mergeGlyph(13, true)
+        : shared ? gl('circle', SHARED_INK, size, 'background:var(--shellBg);')
+        : opened ? glyphOfNode(n, 14)
         : unfiled ? gl(null, null, 9) : gl(l.glyph, l.colour, size);
-      const what = shared ? `Merged ${n.pr ? '#' + n.pr : n.label}` : opened ? `${n.open.label}: ${n.title || n.episode}` : (cleanTitle(n.title) || n.episode || n.label);
-      h += `<button type="button" class="node${shared ? ' sh' : ''}" data-id="${id}" data-state="${esc(id)}" data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${esc((shared ? 'Shared world' : nameOf(n.lane)) + ': ' + what + ', ' + n.rel + (n.badge ? ', ' + n.badge + ' of your decisions' : ''))}"><span class="halo">${inner}</span></button>`;
+      const title = cleanTitle(n.title) || n.episode || n.label;
+      const pr = n.pr && title !== '#' + n.pr && 'PR #' + n.pr;
+      const what = [T.recordLabel(n), opened && n.open?.label, title, pr].filter(Boolean).join(', ');
+      h += `<button type="button" class="node${shared ? ' sh' : ''}" data-id="${id}" data-state="${esc(id)}" data-record-kind="${record}"${opened ? ` data-open="${esc(n.open?.state || '')}"` : ''} data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${esc(nameOf(n.lane) + ', ' + what + (n.rel ? ', ' + n.rel : '') + (n.badge ? ', ' + n.badge + ' of your decisions' : ''))}"><span class="halo">${inner}</span></button>`;
       if (n.badge > 0) h += `<div class="nb" style="left:${x + 6}px;top:${y - 19}px">${n.badge}</div>`;
       if (LABELED.has(id)) h += `<div class="nlab" data-l="${id}" style="left:${x - 56}px;bottom:${936 - (y - 18)}px"><span class="tx">${esc(opened ? n.episode + ' · ' + n.open.label : shortTitle(n.title || '') || n.episode || n.label)}</span></div>`;
       h += `<div class="nlab" data-r="${id}" style="left:${x - 56}px;top:${y + (shared ? 9 : 14)}px"><div class="rel"></div></div>`;
     });
-    h += `<div class="nowline" style="left:${XS[NS]}px;top:92px;height:${TICK_T + 30 - 92}px"></div>`;
+    h += `<div class="nowline" style="left:${XS[T.presentIndex]}px;top:92px;height:${TICK_T + 30 - 92}px"></div>`;
     h += ticksHTML();
     $('world').style.width = W + 'px';
     $('world').innerHTML = h;
@@ -843,16 +1036,17 @@
     const pt = [], pd = [];
     if (lv === 'steps') {
       let lastDay = '';
-      SH.forEach((id, i) => {
-        const n = N[id], d = dayOf(n.at), x = XS[i];
-        if (d !== lastDay) { place(x, d, 'tick-d', 76, pd); lastDay = d; place(x, hm(n.at), 'tick-t', 44, pt); }
+      const times = T.dated ? TT.map((t, i) => ({t, i})).slice(T.undated ? 1 : 0) : [];
+      if (T.undated) place(XS[0], 'Undated', 'tick-d', 76, pd);
+      times.forEach(({t, i}) => {
+        const d = dayOf(t), x = XS[i];
+        if (d !== lastDay) { place(x, d, 'tick-d', 76, pd); lastDay = d; place(x, hm(t), 'tick-t', 44, pt); }
       });
-      SH.forEach((id, i) => place(XS[i], hm(N[id].at), 'tick-t', 44, pt));
+      times.forEach(({t, i}) => place(XS[i], hm(t), 'tick-t', 44, pt));
     } else {
-      const H = 3.6e6, start = Math.floor(TT[0] / 864e5) * 864e5;
+      if (T.undated) place(XS[0], 'Undated', 'tick-d', 84, pd);
       const cands = [];
-      for (let t = start; t <= TNOW; t += H) {
-        const f = fOfTime(t); if (f == null) continue;
+      for (const [t, f] of tickTimes(lv === 'weeks' ? 864e5 : lv === 'days' ? 12 * 3.6e6 : 3.6e6)) {
         const d = new Date(t), hh = d.getUTCHours(), mid = hh === 0, mon = mid && d.getUTCDay() === 1;
         const pri = lv === 'weeks' ? (mon ? 0 : mid ? 1 : 9) : mid ? 0 : hh % 12 === 0 ? 1 : hh % 6 === 0 ? 2 : hh % 3 === 0 ? 3 : 4;
         if (pri < 9) cands.push({ t, x: posF(f), pri, d, mid, mon });
@@ -877,7 +1071,9 @@
     const lit = (pr, cr) => (pr === fr && linkedR.has(cr)) || (cr === fr && linkedR.has(pr));
     let e = '';
     const W = XS[NS] + 260;
-    T.GROUPS.forEach(g => { e += `<path d="M 0 ${LY[g.shared]} L ${XS[0]} ${LY[g.shared]}" fill="none" stroke="var(--edge)" stroke-width="1.4" stroke-dasharray="3 5"></path>`; });
+    T.GROUPS.forEach(g => {
+      if (LANES[g.shared]) e += `<path d="M 0 ${LY[g.shared]} L ${XS[0]} ${LY[g.shared]}" fill="none" stroke="var(--edge)" stroke-width="1.4" stroke-dasharray="3 5"></path>`;
+    });
     const seen = new Set();
     Object.keys(POS).forEach(c => {
       const n = N[c], rc = REP[c], [x2, y2] = [DISP[rc].x, DISP[rc].y];
@@ -894,10 +1090,10 @@
         const col = L ? 'var(--lit)' : isSharedKey(ownKey) ? 'var(--edge)' : LANES[ownKey].colour;
         const w = L ? 2.6 : 1.6, op = L || isSharedKey(ownKey) ? 1 : 0.6;
         let d;
-        const brk = (n.kind === 'shared' && N[p].kind === 'shared' && isBreak(SIDX[c])) || n.kind === 'open';
-        if (y1 === y2) d = `M ${x1} ${y1} L ${x2} ${y2}`;
+        const brk = (n.kind === 'shared' && N[p].kind === 'shared' && breaksBetween(T.timeIndex.get(p), T.timeIndex.get(c))) || n.kind === 'open';
+        if (x1 === x2 || y1 === y2) d = `M ${x1} ${y1} L ${x2} ${y2}`;
         else if (n.kind === 'shared') d = `M ${x1} ${y1} C ${x2} ${y1}, ${x2} ${y2}, ${x2} ${y2}`;
-        else { const k = Math.min(30, Math.max(4, (x2 - x1) / 2)); d = `M ${x1} ${y1} C ${x1 + k} ${y1}, ${x1} ${y2}, ${x1 + k} ${y2} L ${x2} ${y2}`; }
+        else { const k = Math.sign(x2 - x1) * Math.min(30, Math.abs(x2 - x1) / 2); d = `M ${x1} ${y1} C ${x1 + k} ${y1}, ${x1} ${y2}, ${x1 + k} ${y2} L ${x2} ${y2}`; }
         e += `<path d="${d}" fill="none" stroke="${col}" stroke-width="${w}" opacity="${op}"${brk ? ' stroke-dasharray="3 5"' : ''}></path>`;
       });
     });
@@ -928,22 +1124,23 @@
   // ---------- Panning, zooming, the overview strip ----------
   const minL = () => XS[0] - 150, maxL = () => XS[NS] + 4 - PW;
   const clampL = L => { const lo = minL(), hi = maxL(); return hi < lo ? hi : Math.max(lo, Math.min(hi, L)); };
-  const atNow = () => Math.abs(view.L - clampL(maxL())) < 1;
+  const nowL = () => XS[T.presentIndex] + 4 - PW;
+  const atNow = () => T != null && Math.abs(view.L - clampL(nowL())) < 1;
   let anim = 0;
   const ease = t => 1 - Math.pow(1 - t, 3);
   function applyView(keepPosition = false) {
     if (!keepPosition) view.L = clampL(view.L);
     $('world').style.transform = `translateX(${-view.L}px)`;
     const fL = fAt(view.L), fR = fAt(view.L + PW), mw = $('mwin');
-    if (mw) { const a = MX(fL), b = MX(fR); mw.style.left = a + 'px'; mw.style.width = Math.max(8, b - a) + 'px'; }
-    const tL = timeOfF(fL), tR = timeOfF(fR), nowIn = view.L + PW >= XS[NS] - 1;
+    if (mw && headRibbon.hidden) updateMiniWindow(fL, fR);
+    const tL = timeOfF(fL), tR = timeOfF(fR), nowIn = T.nowKnown && (atNow() || tR === TNOW);
     $('range').innerHTML = `<b>${fmtRange(tL)}</b> → <b>${nowIn ? 'now' : fmtRange(tR)}</b>${atNow() ? '' : `<span class="behind">${behindText(tR)}</span>`}`;
     $('now-b').classList.toggle('live', !atNow());
-    $('pg-fwd').disabled = atNow(); $('pg-back').disabled = view.L <= minL() + 1;
+    $('pg-fwd').disabled = view.L >= clampL(maxL()) - 1; $('pg-back').disabled = view.L <= minL() + 1;
   }
-  const timeOfF = f => { const i = Math.floor(Math.max(0, Math.min(NS, f))), j = Math.min(NS, i + 1); return TT[i] + (TT[j] - TT[i]) * (f - i); };
-  const fmtRange = t => { const d = new Date(t); return `${DOW[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`; };
-  const behindText = tR => { const h = (TNOW - tR) / 3.6e6; return h < 1 ? '' : h < 36 ? `${Math.round(h)} h before now` : `${Math.round(h / 24)} days before now`; };
+  const timeOfF = f => { const i = Math.floor(Math.max(0, Math.min(NS, f))), j = Math.min(NS, i + 1); return !T.dated || (T.undated && i === 0) ? null : TT[i] + (TT[j] - TT[i]) * (f - i); };
+  const fmtRange = t => { if (t == null) return 'Undated'; const d = new Date(t); return `${DOW[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`; };
+  const behindText = tR => { if (tR == null || !T.nowKnown) return ''; const h = (TNOW - tR) / 3.6e6; return h < 1 ? '' : h < 36 ? `${Math.round(h)} h before now` : `${Math.round(h / 24)} days before now`; };
   function panTo(L, animate = true) {
     cancelAnimationFrame(anim);
     L = clampL(L);
@@ -952,13 +1149,14 @@
     const step = now => { const k = Math.min(1, (now - t0) / dur); view.L = L0 + (L - L0) * ease(k); applyView(); if (k < 1) anim = requestAnimationFrame(step); };
     anim = requestAnimationFrame(step);
   }
-  const goNow = (animate = true) => panTo(maxL(), animate);
+  const goNow = (animate = true) => panTo(nowL(), animate);
   function setZoom(u, ax) {   // ax: the design-x on screen that stays put
     const f = fAt(view.L + (ax - PL));
     view.u = Math.max(0, Math.min(MAXU, u));
     relayout();
     view.L = clampL(posF(f) - (ax - PL));
     applyView();
+    if (!headRibbon.hidden) camera.update();
   }
   let zanim = 0;
   function zoomTo(u, ax, animate = true) {
@@ -971,7 +1169,10 @@
   }
   const screenX = id => { const d = DISP[REP[id] || id]; return d ? PL + d.x - view.L : null; };
   const keyAnchor = () => { const x = screenX(st.focus); return x != null && x >= PL && x <= PR ? x : PL + PW / 2; };
-  const zoomStep = dir => zoomTo(dir < 0 ? Math.ceil(view.u - 0.01) - 1 : Math.floor(view.u + 0.01) + 1, keyAnchor());
+  const zoomStep = dir => {
+    const target = dir < 0 ? Math.ceil(view.u - 0.01) - 1 : Math.floor(view.u + 0.01) + 1;
+    zoomTo(target, keyAnchor(), headRibbon.hidden);
+  };
   function ensureVisible(id, animate = true) {
     const x = screenX(id); if (x == null) return;
     if (x < PL + 60) panTo(view.L - (PL + 60 - x) - PW * 0.25, animate);
@@ -979,27 +1180,152 @@
   }
 
   // Overview: a fixed real-time layout of the whole history (the Days level), normalised to the strip.
+  const mini = document.createElement('div'), zoom = document.createElement('span'), headRibbon = document.createElement('div');
+  mini.id = 'mini';
+  mini.className = 'mini';
+  zoom.className = 'ctl zoom';
+  zoom.setAttribute('role', 'group');
+  zoom.setAttribute('aria-label', 'Zoom');
+  zoom.innerHTML = `
+    <button type="button" class="cb" id="z-out" aria-label="Zoom out" data-tip="k:− · ⌘-scroll or pinch to zoom">−</button>
+    <span class="zl" id="zl">Steps</span>
+    <button type="button" class="cb" id="z-in" aria-label="Zoom in" data-tip="k:+ · ⌘-scroll or pinch to zoom">+</button>`;
+  headRibbon.id = 'head-ribbon';
+  headRibbon.hidden = true;
+  $('keys').before(headRibbon);
+
+  let miniWidth = 0, headIndex, miniStops = [];
+  function measureStops() {
+    const at = new Map();
+    for (const n of Object.values(N)) {
+      const i = T.timeIndex.get(n.id);
+      if (n.draft || (T.undated && i === 0) || i >= T.presentIndex || at.has(i)) continue;
+      at.set(i, n.id);
+    }
+    at.set(T.presentIndex, '');
+    miniStops = [...at].map(([index, id]) => ({index, id})).sort((a, b) => a.index - b.index);
+  }
+  function placeRibbon() {
+    const inHeads = !headRibbon.hidden;
+    const miniSlot = inHeads ? headRibbon : $('timeline-mini');
+    const zoomSlot = inHeads ? headRibbon : $('timeline-zoom');
+    if (miniSlot && mini.parentElement !== miniSlot) miniSlot.append(mini);
+    if (zoomSlot && zoom.parentElement !== zoomSlot) zoomSlot.append(zoom);
+  }
+  function showHeadRibbon(show) {
+    if (show === !headRibbon.hidden) return;
+    headRibbon.hidden = !show;
+    placeRibbon();
+    if (show) {
+      mini.tabIndex = 0;
+      mini.setAttribute('role', 'slider');
+      mini.setAttribute('aria-label', 'Recorded time');
+    } else {
+      for (const attr of ['tabindex', 'role', 'aria-label', 'aria-valuemin', 'aria-valuemax', 'aria-valuenow', 'aria-valuetext']) mini.removeAttribute(attr);
+    }
+    if (!T) return;
+    for (const [id, key] of [['z-out', '−'], ['z-in', '+']]) {
+      $(id).dataset.tip = show ? '' : `k:${key} · ⌘-scroll or pinch to zoom`;
+    }
+    drawMini();
+  }
+  function drawMini() {
+    miniWidth = headRibbon.hidden ? PW : mini.clientWidth;
+    measureMini(miniWidth);
+    renderMini();
+    if (headRibbon.hidden) updateMiniWindow(fAt(view.L), fAt(view.L + PW));
+    else updateMiniMarker();
+  }
+  function updateMiniWindow(fL, fR) {
+    const a = MX(fL), b = MX(fR), mw = $('mwin');
+    mw.style.left = a + 'px';
+    mw.style.width = Math.max(8, b - a) + 'px';
+  }
+  function updateHeadRibbon(index, active) {
+    headIndex = index;
+    if (!T || !mini.isConnected) return;
+    const changed = active === headRibbon.hidden;
+    showHeadRibbon(active);
+    if (active && !changed) {
+      if (miniWidth !== mini.clientWidth) drawMini();
+      else updateMiniMarker();
+    }
+  }
+  function updateMiniMarker() {
+    const x = MXS[headIndex];
+    if (x == null) return;
+    const text = headIndex === T.presentIndex ? 'Present' : fmtRange(timeOfF(headIndex));
+    mini.style.setProperty('--mini-cursor', x + 'px');
+    $('mhead-date').textContent = text;
+    mini.setAttribute('aria-valuemin', String(miniStops[0].index));
+    mini.setAttribute('aria-valuemax', String(T.presentIndex));
+    mini.setAttribute('aria-valuenow', String(Math.max(headIndex, miniStops[0].index)));
+    mini.setAttribute('aria-valuetext', headIndex === T.presentIndex || timeOfF(headIndex) == null ? text : text + ' UTC');
+  }
+  let miniDragId = null, miniDragIndex = null;
+  function scrubHeadTime(event) {
+    const x = event.clientX - mini.getBoundingClientRect().left - mini.clientLeft;
+    const stop = miniStops.reduce((best, next) =>
+      Math.abs(MXS[next.index] - x) <= Math.abs(MXS[best.index] - x) ? next : best);
+    if (stop.index === miniDragIndex) return;
+    miniDragIndex = stop.index;
+    camera.seek(stop.id);
+  }
+  mini.addEventListener('pointerdown', event => {
+    if (headRibbon.hidden || event.button !== 0 || !event.isPrimary) return;
+    event.stopPropagation();
+    event.preventDefault();
+    mini.focus({preventScroll:true});
+    miniDragId = event.pointerId;
+    miniDragIndex = null;
+    mini.setPointerCapture(event.pointerId);
+    scrubHeadTime(event);
+  });
+  mini.addEventListener('pointermove', event => {
+    if (event.pointerId === miniDragId && !headRibbon.hidden) scrubHeadTime(event);
+  });
+  mini.addEventListener('pointerup', event => {
+    if (event.pointerId === miniDragId && !headRibbon.hidden) scrubHeadTime(event);
+  });
+  mini.addEventListener('lostpointercapture', event => {
+    if (event.pointerId === miniDragId) miniDragId = null;
+  });
+  mini.addEventListener('keydown', event => {
+    if (headRibbon.hidden || event.ctrlKey || event.altKey || event.metaKey) return;
+    const key = event.key;
+    let stop;
+    if (key === 'Home') stop = miniStops[0];
+    else if (key === 'End') stop = miniStops.at(-1);
+    else if (key === 'ArrowRight' || key === 'ArrowUp') stop = miniStops.find(s => s.index > headIndex);
+    else if (key === 'ArrowLeft' || key === 'ArrowDown') stop = miniStops.findLast(s => s.index < headIndex);
+    else return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (stop) camera.seek(stop.id);
+  });
   const MX = f => { f = Math.max(0, Math.min(NS, f)); const i = Math.floor(f), j = Math.min(NS, i + 1); return MXS[i] + (MXS[j] - MXS[i]) * (f - i); };
   const fOfMX = mx => { if (mx <= MXS[0]) return 0; if (mx >= MXS[NS]) return NS; let i = 0; while (i < NS && MXS[i + 1] < mx) i++; return i + (MXS[i + 1] === MXS[i] ? 0 : (mx - MXS[i]) / (MXS[i + 1] - MXS[i])); };
   function renderMini() {
     const rowH = T.multi ? 3 : 4, top = 5;
-    let h = '';
-    const start = Math.floor(TT[0] / 864e5) * 864e5;
-    for (let t = start; t <= TNOW; t += 864e5) {
-      const f = fOfTime(t); if (f == null) continue;
+    let h = '', lastDateX = -Infinity;
+    for (const [t, f] of tickTimes(864e5)) {
       const x = MX(f), d = new Date(t);
-      h += `<div class="mday" style="left:${x}px"></div><div class="mdl" style="left:${x + 3}px">${d.getUTCDate()} ${MON[d.getUTCMonth()]}</div>`;
+      h += `<div class="mday" style="left:${x}px"></div>`;
+      if (headRibbon.hidden || (x - lastDateX >= 36 && x + 36 <= miniWidth)) {
+        h += `<div class="mdl" style="left:${x + 3}px">${d.getUTCDate()} ${MON[d.getUTCMonth()]}</div>`;
+        lastDateX = x;
+      }
     }
     for (let i = 1; i <= NS; i++) if (isBreak(i)) h += `<div class="mbrk" style="left:${(MXS[i - 1] + MXS[i]) / 2 - 6}px">≈</div>`;
     ROWS.forEach((r, k) => { h += `<div class="mrow" style="top:${top + k * (rowH + 1)}px"></div>`; });
-    SH.forEach((id, i) => { h += `<div class="mk" style="left:${MXS[i]}px;top:${top + ROWS.indexOf(T.rowOf(id)) * (rowH + 1)}px;height:${rowH}px;width:1px;background:var(--edge)"></div>`; });
-    STEPS.forEach(n => {
-      const m = mergeOf(n.id); if (m == null) return;
-      const r = T.homeRow(T.rowOf(n.id)), k = ROWS.indexOf(r);
-      h += `<div class="mk" style="left:${MX(SIDX[m] - 0.15) - 1}px;top:${top + k * (rowH + 1)}px;height:${rowH}px;width:3px;background:${isSharedKey(n.lane) ? 'var(--edge)' : LANES[n.lane].colour}"></div>`;
-    });
-    h += `<div class="mnow" style="left:${MXS[NS]}px"></div><div class="mwin" id="mwin"></div>`;
-    $('mini').innerHTML = h;
+    for (const n of Object.values(N)) {
+      const x = MXS[T.timeIndex.get(n.id)], k = ROWS.indexOf(T.homeRow(T.rowOf(n.id)));
+      const width = n.kind === 'shared' ? 1 : 3, colour = isSharedKey(n.lane) ? 'var(--edge)' : LANES[n.lane].colour;
+      h += `<div class="mk" style="left:${x - (width - 1) / 2}px;top:${top + k * (rowH + 1)}px;height:${rowH}px;width:${width}px;background:${colour}"></div>`;
+    }
+    h += `<div class="mnow" style="left:${MXS[T.presentIndex]}px"></div><div class="mwin" id="mwin"></div>
+      <div class="mhead" aria-hidden="true"><span id="mhead-date"></span></div>`;
+    mini.innerHTML = h;
   }
 
   // ---------- Brane view ----------
@@ -1031,12 +1357,19 @@
       $('br').innerHTML = `<div class="bstage" id="bstage"><article class="front" id="front"></article></div><nav class="rail" id="rail" aria-label="Brane timeline"></nav>`;
     }
     $('front').innerHTML = frontHTML(S, T);
+    const fork = document.createElement('button');
+    fork.type = 'button'; fork.className = 'state-branch'; fork.textContent = 'Branch…';
+    fork.setAttribute('aria-label', 'Draft a branch from this state');
+    fork.setAttribute('aria-haspopup', 'dialog');
+    fork.addEventListener('click', () => drafts.edit(N[F.id]));
+    if (N[F.id]) $('front').querySelector('.fbar')?.append(fork);
     $('front').dataset.front = F.id;
     $('front').setAttribute('aria-label', cleanTitle(F.title) || F.label);
     const pos = railIdx();
     if (!$('phone-step-nav')) {
       $('br').insertAdjacentHTML('afterbegin', '<nav id="phone-step-nav" class="phone-view" aria-label="State navigation"><button type="button" id="phone-back">← Timeline</button><button type="button" id="phone-earlier">Earlier</button><button type="button" id="phone-later">Later</button></nav>');
     }
+    $('phone-back').textContent = fromHeads ? '← Heads' : '← Timeline';
     $('phone-earlier').disabled = pos === 0;
     $('phone-later').disabled = pos >= RAIL.length - 1;
     placeBars(animate);
@@ -1086,8 +1419,7 @@
     if (!Array.isArray(b.lanes) || !b.lanes.some(l => l.states && l.states.length)) return renderVoid('empty', 'The surface index holds no states yet.', b.repos);
     setModel(b);
     shownGen = b.generation == null ? null : b.generation; shownAt = hm(new Date());
-    const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);   // the latest work, as v3 opened on its front
-    st.focus = newest ? newest.id : SH[NS - 1] || null;
+    st.focus = defaultFocus();
     renderTimeline(); renderCrumbs();
     setView('timeline');
     return true;
@@ -1115,13 +1447,56 @@
     liveRefresh = setTimeout(refreshLive, 300);
   }
   const refreshLive = () => refresh('live');
-  // repaintNow redraws the now card alone: a status change is visible even when the graph did not change.
+  // One live Now card moves between the Timeline sidebar and the Heads header.
+  const toolbar = $('head-toolbar'), statusToggle = $('head-status-toggle'), statusDetail = $('head-status-detail');
+  let statusPreference;
+  try { statusPreference = localStorage.getItem('world.headStatus'); } catch (_) {}
+  function statusExpanded() {
+    return statusPreference == null ? !narrow.matches : statusPreference === 'expanded';
+  }
+  function setStatusExpanded(expanded) {
+    statusPreference = expanded ? 'expanded' : 'compact';
+    try { localStorage.setItem('world.headStatus', statusPreference); } catch (_) {}
+    applyStatusSize();
+  }
+  function applyStatusSize() {
+    const expanded = statusExpanded();
+    statusToggle.setAttribute('aria-expanded', String(expanded));
+    statusToggle.title = expanded ? 'Minimise world status' : 'Expand world status';
+    statusDetail.hidden = !expanded;
+  }
+  statusToggle.addEventListener('click', () => setStatusExpanded(!statusExpanded()));
+  const toolbarResize = new ResizeObserver(() => {
+    if (!toolbar.hidden && !toolbar.closest('[inert]')) camera.update();
+  });
+  toolbarResize.observe(toolbar);
+
+  function placeNow(inHeads) {
+    if (toolbar.hidden === !inHeads) return;
+    toolbar.hidden = !inHeads;
+    const card = document.querySelector('[data-now]');
+    const slot = inHeads ? statusDetail : $('timeline-now');
+    if (card && slot) slot.append(card);
+    applyStatusSize();
+  }
   function repaintNow() {
-    const el = document.querySelector('[data-now]');
-    if (!el || !T) return;
-    const focused = el.contains(document.activeElement) && document.activeElement.id;
-    el.outerHTML = nowCard();
-    if (focused) $(focused)?.focus({ preventScroll: true });
+    if (!T) return;
+    const slot = toolbar.hidden ? $('timeline-now') : statusDetail;
+    if (!slot) return;
+    const focused = slot.contains(document.activeElement) && document.activeElement;
+    slot.innerHTML = nowCard();
+    if (focused) {
+      const action = focused.id ? $(focused.id) : focused.dataset.go &&
+        slot.querySelector('[data-go="' + CSS.escape(focused.dataset.go) + '"]');
+      action?.focus({preventScroll:true});
+    }
+    const card = slot.firstElementChild;
+    $('head-status-health').textContent = card.querySelector('[data-health]')?.textContent || '';
+    const needs = card.querySelector('[data-needs] .nh')?.textContent;
+    const running = card.querySelector('[data-running] .nh')?.textContent;
+    const active = [needs, running].filter(label => label && !/ · 0$/.test(label));
+    $('head-status-activity').textContent = active.join(' · ');
+    applyStatusSize();
   }
   // schedulePoll: follow mode polls the model every 15 s while the page is visible, independently of AG-UI.
   function schedulePoll(delay) {
@@ -1130,26 +1505,31 @@
     pollTimer = setTimeout(() => { pollTimer = null; refresh('poll'); }, delay == null ? POLL_MS : delay);
   }
   // applyModel replaces the render with a coherent model (and stack), keeping pan, zoom, focus and address.
+  function defaultFocus() {
+    const work = STEPS.length ? STEPS : T.OPEN;
+    const newest = work.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);
+    return newest?.id || SH.at(-1) || null;
+  }
   function applyModel(r, selection) {
     if (!T) {
       setModel(r.model);
-      const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);
-      st.focus = newest ? newest.id : SH[NS - 1] || null;
+      st.focus = defaultFocus();
       renderTimeline(); renderCrumbs(); setView('timeline');
+      if (location.hash === '#heads') chooseAngle(true, {navigate:false, instant:true});
       if (!liveStarted) startLive();
       return;
     }
     const active = document.activeElement, activeId = active && active.id;
     const activeKey = active && ['data-id', 'data-state', 'data-go', 'data-rail', 'data-lane'].find(k => active.hasAttribute(k));
     const activeValue = activeKey && active.getAttribute(activeKey);
-    const focus = st.focus, u = view.u, L = view.L, depth = st.d;
+    const focus = st.focus, u = view.u, L = view.L, pinned = atNow(), depth = st.d;
     const railTop = $('rail') ? $('rail').scrollTop : 0, address = $('addr').value;
     setModel(r.model);
-    const newest = STEPS.reduce((a, n) => !a || n.rank > a.rank ? n : a, null);
-    st.focus = N[focus] ? focus : T.aliasOf[focus] ? T.aliasOf[focus] : newest ? newest.id : SH[NS - 1] || null;
+    st.focus = N[focus] ? focus : T.aliasOf[focus] || defaultFocus();
     view.u = u; view.L = L;
     renderTimeline(true);
-    applyView(true);
+    if (pinned) goNow(false);
+    else applyView(true);
     if (depth === 1 && selection && selection.seq === openSeq) {
       if (!r.stack) { say(r.missing || 'the selection is no longer on the surface'); out(); return; }
       setStack(r.stack); renderBrane(false); $('rail').scrollTop = railTop;
@@ -1157,7 +1537,7 @@
       follow(appPath(F.brane, F.id)); renderCrumbs();
     }
     st.d = depth;
-    setView(depth === 1 ? 'brane' : 'timeline');
+    setView(depth === 1 ? 'brane' : camera.active ? 'heads' : 'timeline');
     $('addr').value = address;
     if (active && active.isConnected) active.focus({preventScroll: true});
     else {
@@ -1166,7 +1546,7 @@
     }
   }
   // refresh is N2c's refresh on a committed log entry ("live") and follow mode's model poll ("poll"): fetch
-  // everything before touching the old render; an unchanged generation repaints only the now card.
+  // everything before touching the old render; an unchanged generation keeps the stack.
   async function refresh(trigger) {
     if (trigger === 'live') liveRefresh = null;
     if (refreshing) { if (trigger === 'live') queued = true; return; }
@@ -1184,7 +1564,7 @@
       } else if (r.kind === 'keep') {
         poll.note = 'The graph changed during the refresh · showing the view from ' + shownAt;
       } else {
-        if (r.kind === 'same') { D.nowEdge = r.model.nowEdge; D.repos = r.model.repos; D.now = r.model.now; NOW_D = new Date(r.model.now); }
+        if (r.kind === 'same') applyModel(r, null);
         else { applyModel(r, selection); indexP = null; }
         if (r.model) { shownGen = r.model.generation == null ? null : r.model.generation; shownAt = hm(new Date()); }
         poll.note = '';
@@ -1199,6 +1579,7 @@
     } finally {
       refreshing = false;
       if (queued) { queued = false; queueRefresh(); }
+      if (camera.active) camera.update();
       repaintNow();
       livePaint();
       if (followMode) schedulePoll();
@@ -1283,38 +1664,89 @@
     const o = `${x * scale}px ${y * scale}px`;
     $('L0').style.transformOrigin = o; $('L1').style.transformOrigin = o;
   }
+  function openCluster(cluster) {
+    if (view.u > 0.001) return zoomTo(Math.ceil(view.u - 0.01) - 1, PL + cluster.x - view.L);
+    const dialog = document.createElement('dialog'), heading = document.createElement('h2');
+    heading.id = 'timeline-cluster-title';
+    heading.textContent = 'States at this position';
+    dialog.setAttribute('aria-labelledby', heading.id);
+    dialog.append(heading);
+    const list = document.createElement('ul');
+    for (const id of cluster.ids) {
+      const item = document.createElement('li'), button = document.createElement('button'), state = N[id];
+      button.textContent = nameOf(state.lane) + ' · ' + (cleanTitle(state.title) || tagOf(state)) + ' · ' + exactOf(state.at);
+      button.addEventListener('click', () => { dialog.close(); open(id); });
+      item.append(button);
+      list.append(item);
+    }
+    const close = document.createElement('button');
+    close.textContent = 'Close';
+    close.addEventListener('click', () => dialog.close());
+    dialog.append(list, close);
+    dialog.addEventListener('close', () => dialog.remove(), {once: true});
+    $('stage').append(dialog);
+    dialog.showModal();
+  }
   function open(id) {
     if (!T) return;
-    if (isCluster(id)) { const d = DISP[id]; return zoomTo(Math.ceil(view.u - 0.01) - 1, PL + d.x - view.L); }
+    if (isCluster(id)) { if (DISP[id]) openCluster(DISP[id]); return; }
     const n = N[id];
     if (!n) { say('That state is not on the timeline'); return; }
+    if (n.draft) return drafts.edit(N[n.parent], id);
     return openState(n.lane, id);
   }
   // openState fetches the state's stack and zooms into it; a newer open supersedes an older one.
   let openSeq = 0;
-  async function openState(brane, at) {
+  async function openState(brane, at, navigate = true) {
+    if (N[at]?.draft) return drafts.edit(N[N[at].parent], at);
     const seq = ++openSeq;
     let res;
     try { res = await getJSON(stackPath(brane, at)); } catch (e) { if (seq === openSeq) say('the stack could not be fetched: ' + e.message); return false; }
     if (seq !== openSeq) return false;
     const b = res.body || {};
-    if (!res.ok || !b.front) { say(b.reason || `no such state (HTTP ${res.status})`); if (st.d === 0) follow(appPath()); return false; }
+    if (!res.ok || !b.front) { say(b.reason || `no such state (HTTP ${res.status})`); if (st.d === 0 && !camera.active) follow(appPath()); return false; }
     const was = st.d === 1;
+    $('stage').classList.remove('head-return');
+    const face = camera.active && faceFor(b.front.id)?.getBoundingClientRect();
+    if (!was) fromHeads = camera.heads && camera.active || location.hash === '#heads';
     setStack(b);
     if (!was && T) { const sx = screenX(F.id), d = DISP[REP[F.id]]; setOrigin(sx != null ? Math.max(PL, Math.min(PR, sx)) : PL, d ? d.y : LY[T.GROUPS[0].shared]); }
     st.d = 1; st.focus = F.id; $('tip').hidden = true;
     renderBrane(was);
     if (narrow.matches) $('L1').scrollTop = 0;
     $('root').classList.add('zoomed'); setView('brane');
-    renderCrumbs(); follow(appPath(F.brane, F.id)); $('root').focus({ preventScroll: true });
+    $('L0').inert = true;
+    $('L1').inert = false;
+    markAngle(null);
+    if (camera.active) {
+      $('head-space').inert = true;
+      $('stage').classList.add('head-approach');
+      const flight = animateStack(face, false);
+      const finish = () => {
+        if (st.d !== 1) return;
+        camera.hide();
+        $('stage').classList.remove('head-approach');
+      };
+      if (flight) flight.finished.then(finish, () => {}); else finish();
+    }
+    renderCrumbs();
+    if (fromHeads) {
+      if (navigate) cameraURL(appPath(F.brane, F.id) + '#heads', !was);
+    } else follow(appPath(F.brane, F.id));
+    $('root').focus({ preventScroll: true });
     return true;
   }
   function out(focusId) {
-    if (st.d === 0) return;
+    if (st.d === 0) {
+      if (camera.active) chooseAngle(false, {keyboard:headRibbon.contains(document.activeElement)});
+      return;
+    }
+    if (fromHeads) { chooseAngle(true, {keyboard:true}); return; }
+    $('L0').inert = false; $('L1').inert = true; markAngle('timeline');
     openSeq++;
     const id = focusId || (F && F.id);
     if (T && id && POS[id]) {
-      st.focus = id;
+      st.focus = timelineAnchor = id;
       const x = screenX(id); if (x == null || x < PL + 40 || x > PR - 40) panTo(view.L + (x - (PL + PW / 2)), false);
       applyFocus(); setOrigin(screenX(id), DISP[REP[id]].y);
     }
@@ -1344,6 +1776,16 @@
   // ---------- Popovers ----------
   const KEYROWS = [['← →', 'back · forward a page', '—'], ['⇧← ⇧→', 'previous · next state', '—'], ['↑ ↓', 'lane above · below', 'back in time · toward now'], ['+ −', 'zoom in · out', '—'], ['End', 'back to now', 'most recent'], ['Home', 'the oldest state', 'earliest'], ['Enter', 'open brane', '—'], ['Esc', '—', 'back to timeline'], ['N', 'what needs you', 'what needs you'], ['/', 'address bar', 'address bar'], ['Enter', 'in the bar: a place, episode report E, why T, approve ID', 'the same'], [',', 'appearance', 'appearance'], ['?', 'these keys', 'these keys']];
   function renderKeys() {
+    if (camera.heads && camera.active && st.d === 0) {
+      const rows = [['← →', 'Bring the neighboring lane’s latest entry forward'], ['↑ / +', 'Move into history'],
+        ['↓ / −', 'Move toward the present'],
+        ['Enter', 'Open the focused state'], ['Esc', 'Return to Timeline'], ['/', 'Address bar'],
+        ['N', 'What needs you'], [',', 'Appearance'], ['?', 'These keys']];
+      $('keys').innerHTML = '<div class="kgrid heads-keys"><strong>Heads</strong>' +
+        rows.map(([key, action]) => `<span><span class="kbd">${key}</span></span><span>${action}</span>`).join('') +
+        '</div><p>Hold an arrow to keep moving. Drag sideways to switch threads or vertically to travel in time. Double-click the grid to hop there.</p>';
+      return;
+    }
     $('keys').innerHTML = `<div class="kgrid"><span></span><span style="font-size:12px;font-weight:700;color:${st.d === 0 ? 'var(--text)' : 'var(--faint)'}">Timeline</span><span style="font-size:12px;font-weight:700;color:${st.d === 1 ? 'var(--text)' : 'var(--faint)'}">Brane</span>` +
       KEYROWS.map(([k, a, b]) => `<span><span class="kbd">${k}</span></span><span>${a}</span><span>${b}</span>`).join('') +
       `</div><div style="margin-top:10px;font-size:12px;color:var(--sub)">Drag or scroll sideways to pan. ⌘-scroll or pinch to zoom around the pointer.</div>`;
@@ -1388,10 +1830,10 @@
   function nodeCard(id) {
     if (isCluster(id)) {
       const d = DISP[id]; if (!d) return '';
-      const ns = d.ids.map(k => N[k]).sort((a, b) => b.rank - a.rank), shared = d.row === 'shared';
+      const ns = d.ids.map(k => N[k]).sort((a, b) => b.rank - a.rank), shared = ns.every(n => n.kind === 'shared');
       const t0 = ns[ns.length - 1].at, t1 = ns[0].at;
       const span = dayOf(t0) === dayOf(t1) ? `${dayOf(t0)} · ${hm(t0)}–${hm(t1)}` : `${exactOf(t0)} → ${exactOf(t1)}`;
-      return `<div class="hc"><div class="hk">${ns.length} ${shared ? 'merges into the shared world' : 'steps'} · ${esc(span)}</div>` +
+      return `<div class="hc"><div class="hk">${ns.length} ${shared ? 'shared records' : 'work records'} · ${esc(span)}</div>` +
         ns.slice(0, 6).map(n => `<div class="hli">${glyphOfNode(n, 9)}<span>${esc(shortTitle(n.title, 64) || n.episode || n.label)}</span></div>`).join('') +
         `<div class="hid">${ns.length > 6 ? `+${ns.length - 6} more · ` : ''}click or zoom in to open them up</div></div>`;
     }
@@ -1400,14 +1842,14 @@
     const ids = [n.episode, n.pr ? '#' + n.pr : '', String(id).replace(/^.*:commit:/, '').slice(0, 7)].filter(Boolean).join(' · ');
     if (shared) {
       const from = (parents[id] || []).map(p => N[p]).find(p => p.kind === 'step');
-      return `<div class="hc"><div class="hk">${gl('circle', SHARED_INK, 9)}Merged into the shared world · ${esc(n.rel)}</div>
+      return `<div class="hc"><div class="hk">${glyphOfNode(n, 11)}${T.recordLabel(n)} · ${esc(nameOf(n.lane))} · ${esc(n.rel)}</div>
         ${n.title ? `<div class="ht">${esc(cleanTitle(n.title))}</div>` : ''}
         ${from && !isSharedKey(from.lane) ? `<div class="hm">from ${esc(nameOf(from.lane))}${from.episode ? ' · ' + esc(from.episode) : ''}</div>` : ''}
         <div class="hw">${esc(exactOf(n.at))}</div><div class="hid">${esc(ids)}</div></div>`;
     }
     if (n.kind === 'open') {
       const o = n.open || {}, base = o.baseOutsideWindow ? `base ${o.base || 'unrecorded'} is outside the retained window` : o.base ? 'built on ' + o.base : '';
-      return `<div class="hc"><div class="hk">${glyphOfNode(n, 9)}${esc(nameOf(n.lane))} · ${esc(o.label)}</div>
+      return `<div class="hc"><div class="hk">${glyphOfNode(n, 9)}${T.recordLabel(n)} · ${esc(nameOf(n.lane))} · ${esc(o.label)}</div>
         <div class="ht">${esc(n.title || n.episode)}</div>
         ${n.model ? `<div class="hm"><b>${esc(agentLine(n))}</b></div>` : ''}
         <div class="hm">${esc([o.branch, base, n.pr ? 'PR #' + n.pr : ''].filter(Boolean).join(' · '))}</div>
@@ -1415,7 +1857,7 @@
     }
     const s = summaryOf(n);
     const g = n.graders ? `${esc(n.graders)} graders · ${n.firstRoundPass ? 'first round ✓' : `${n.rounds} round${n.rounds === 1 ? '' : 's'}`}` : '';
-    return `<div class="hc"><div class="hk">${glyphOfNode(n, 9)}${esc(n.lane === 'shared' ? 'Straight to the shared world' : nameOf(n.lane))}</div>
+    return `<div class="hc"><div class="hk">${glyphOfNode(n, 9)}${T.recordLabel(n)} · ${esc(nameOf(n.lane))}</div>
       <div class="ht">${esc(cleanTitle(n.title) || n.episode || n.label)}</div>
       ${s ? `<div class="hs">${esc(s)}</div>` : `<div class="hs none">No agent episode recorded.</div>`}
       ${n.model ? `<div class="hm"><b>${esc(agentLine(n))}</b>${g ? ' · ' + g : ''}${n.minutes != null ? ` · ${n.minutes} agent-min` : ''}</div>` : ''}
@@ -1461,10 +1903,12 @@
   });
 
   // ---------- Events ----------
-  $('stage').addEventListener('pointerover', e => {
+  function inspectTimelineNode(e) {
     const n = e.target.closest('#tl .node');
-    if (n && T && st.d === 0 && !dragging && st.focus !== n.dataset.id) { st.focus = n.dataset.id; applyFocus(); }
-  });
+    if (n && T && st.d === 0 && !camera.active && !dragging) chooseTimelineNode(n.dataset.id);
+  }
+  $('stage').addEventListener('pointerover', inspectTimelineNode);
+  $('stage').addEventListener('focusin', inspectTimelineNode);
   let suppressClick = false;
   $('stage').addEventListener('click', e => {
     if (suppressClick) { suppressClick = false; e.stopPropagation(); return; }
@@ -1498,7 +1942,8 @@
     const ch = e.target.closest('[data-go]');
     if (ch) {
       const id = ch.dataset.go, k = RAIL.findIndex(r => r.id === id);
-      if (F && id === F.id) return;
+      if (st.d === 1 && F && id === F.id) return;
+      if (ch.closest('#head-status-detail') && N[id]) return open(id);
       const to = T && T.aliasOf[id] ? T.aliasOf[id] : id;
       return k >= 0 ? openRail(k) : N[to] ? openState(N[to].lane, to) : say(`${ch.textContent.trim() || id.slice(0, 7)} is outside the timeline`);
     }
@@ -1507,7 +1952,7 @@
   // Drag to pan (the plot), drag/click the overview window.
   let drag = null;
   $('stage').addEventListener('pointerdown', e => {
-    if (!T || st.d !== 0 || e.button !== 0) return;
+    if (!T || st.d !== 0 || camera.active || e.button !== 0) return;
     const plot = e.target.closest('#plot'), mini = e.target.closest('#mini');
     if (!plot && !mini) return;
     cancelAnimationFrame(anim);
@@ -1539,7 +1984,7 @@
   // Scroll / trackpad: sideways (or plain wheel) pans; ⌘/Ctrl-wheel and pinch zoom around the pointer.
   let wq = null;
   $('stage').addEventListener('wheel', e => {
-    if (!T || st.d !== 0 || narrow.matches) return;
+    if (!T || camera.active || st.d !== 0 || narrow.matches) return;
     e.preventDefault();
     const r = $('tl').getBoundingClientRect(), ax = Math.max(PL, Math.min(PR, (e.clientX - r.left) / scale));
     const unit = e.deltaMode === 1 ? 16 : 1;
@@ -1563,7 +2008,19 @@
   $('home').addEventListener('click', e => {
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
-    if (st.d === 1) out(); else if (T) goNow();
+    if (st.d === 1) out(); else if (camera.active) chooseAngle(false); else if (T) goNow();
+  });
+  for (const [id, heads] of [['head-angle',true],['timeline-angle',false]]) {
+    $(id).addEventListener('click', event => {
+      if (event.button || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      chooseAngle(heads, {keyboard:event.detail === 0});
+    });
+  }
+  window.addEventListener('popstate', () => {
+    const q = parseAppQuery(location.search);
+    if (q?.brane) { fromHeads = location.hash === '#heads'; openState(q.brane, q.at, false); }
+    else chooseAngle(location.hash === '#heads', {navigate:false});
   });
   $('keys-btn').addEventListener('click', () => toggle('keys'));
   $('look-btn').addEventListener('click', () => toggle('look'));
@@ -1575,15 +2032,24 @@
   });
   const onRow = row => Object.keys(DISP).filter(id => DISP[id].row === row).sort((a, b) => DISP[a].x - DISP[b].x);
   document.addEventListener('keydown', e => {
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.closest?.('#episode-draft, #compose-btn'))) return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.closest?.('dialog, #compose-btn, .state-branch'))) return;
     const k = e.key; let done = true;
+    if (e.target.closest?.('.camera-angles') && k === 'Enter') return;
+    if (camera.active && st.d === 0 && !['Escape','?',',','/','n','N'].includes(k)) return;
     if (k === 'Enter' && e.target && e.target.id === 'home') return;   // the link's own activation: its click goes home
     if (k === 'Enter' && e.target && e.target.closest && e.target.closest('[data-now]')) return;   // the now card's links and buttons activate themselves
     if (k === '?') toggle('keys');
     else if (k === ',') toggle('look');
     else if (k === '/') $('addr').focus();
     else if (k === 'Escape') { if ($('verb')) $('verb').remove(); else if (!$('keys').hidden || !$('look').hidden) { $('keys').hidden = true; $('look').hidden = true; } else out(); }
-    else if (k === 'n' || k === 'N') { const a = document.querySelector('[data-needs] a'); if (a) { if (st.d === 1) out(); a.focus(); } }   // design §2.8: N jumps to what needs you
+    else if (k === 'n' || k === 'N') {
+      const a = document.querySelector('[data-needs] a');
+      if (a) {
+        if (st.d === 1) out();
+        if (!toolbar.hidden && statusDetail.hidden) setStatusExpanded(true);
+        a.focus();
+      }
+    }   // design §2.8: N jumps to what needs you
     else if (st.d === 1 && k === 'ArrowUp') openRail(railIdx() - 1);
     else if (st.d === 1 && k === 'ArrowDown') openRail(railIdx() + 1);
     else if (st.d === 1 && k === 'Home') openRail(0);
@@ -1606,20 +2072,22 @@
         const j = ROWS.indexOf(T.homeRow(d.row)) + (k === 'ArrowUp' ? -1 : 1);
         if (ROWS[j]) { const cand = onRow(ROWS[j]); if (cand.length) nx = cand.reduce((b, id) => Math.abs(DISP[id].x - d.x) < Math.abs(DISP[b].x - d.x) ? id : b); }
       }
-      if (nx && nx !== cur) { st.focus = nx; applyFocus(); ensureVisible(nx); }
+      if (nx && nx !== cur) { chooseTimelineNode(nx); ensureVisible(nx); }
     } else done = false;
     if (done) e.preventDefault();
   });
-  window.addEventListener('resize', fit);
+  window.addEventListener('resize', () => { fit(); camera.update(); });
 
   // Exposed for the screenshot driver.
   window.World = { open: label => { const n = Object.values(N).find(x => x.id === label || x.episode === label || x.label === label) || (T && N[T.aliasOf[label]]); if (n) open(n.id); return !!n; }, out: () => out(), rail: k => openRail(k),
     poll: () => refresh('poll'), generation: () => shownGen,
-    focus: id => { st.focus = id; applyFocus(); }, zoom: (u, ax) => zoomTo(u, ax == null ? PL + PW / 2 : ax, false), pan: L => panTo(L, false), now: () => goNow(false),
+    focus: chooseTimelineNode, zoom: (u, ax) => zoomTo(u, ax == null ? PL + PW / 2 : ax, false), pan: L => panTo(L, false), now: () => goNow(false),
     view: () => ({ u: view.u, L: view.L, level: levelName(), atNow: atNow() }), screenX: id => screenX(id) };
 
   async function boot() {
     applyLook();
+    $('L1').inert = true;
+    if (location.hash === '#heads' || location.hash.startsWith('#draft=')) $('stage').classList.add('camera-loading');
     try { await document.fonts.ready; } catch (_) {}
     renderCrumbs(); fit();
     const q = parseAppQuery(location.search);
@@ -1627,8 +2095,17 @@
     if (ok) startLive();
     if (followMode) schedulePoll();
     if (ok && q && q.brane != null) await openState(q.brane, q.at);   // a deep link, or a reload inside a brane
+    if (ok && !q?.brane && (location.hash === '#heads' || location.hash.startsWith('#draft='))) {
+      chooseAngle(true, {navigate:false, instant:true});
+      if (location.hash.startsWith('#draft=')) {
+        const id = new URLSearchParams(location.hash.slice(1)).get('draft');
+        cameraURL('/surface#heads', false);
+        if (N[id]?.draft) drafts.edit(N[N[id].parent], id); else say('This draft belongs to its original tab');
+      }
+    }
+    $('stage').classList.remove('camera-loading');
     document.documentElement.dataset.ready = '1';
-    $('root').focus({ preventScroll: true });
+    if (!document.querySelector('dialog[open]')) $('root').focus({ preventScroll: true });
   }
   boot();
 })();

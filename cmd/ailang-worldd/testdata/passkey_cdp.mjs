@@ -92,13 +92,14 @@ const addAuthenticator = async (uv) => {
     hasResidentKey: true, hasUserVerification: uv, isUserVerified: uv, automaticPresenceSimulation: true } }));
 };
 
-async function tab({ authenticator = null, inject = null }) {
+async function tab({ authenticator = null, inject = null, viewport = null }) {
   if (target) await send('Target.closeTarget', { targetId: target }, null);
   const { targetId } = await send('Target.createTarget', { url: 'about:blank' }, null);
   const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true }, null);
   session = sessionId;
   target = targetId;
   for (const d of ['Page', 'Runtime', 'Log']) await send(d + '.enable');
+  if (viewport) await send('Emulation.setDeviceMetricsOverride', {...viewport, deviceScaleFactor:1, mobile:false});
   await send('Page.addScriptToEvaluateOnNewDocument', { source: watch + (inject ? injections[inject] : '') });
   if (authenticator) {
     await send('WebAuthn.enable', { enableUI: false });
@@ -280,9 +281,15 @@ async function waitFor({ expression, ms = 15000 }) {
   return v;
 }
 
-// key presses key ('n', 'N' (with Shift), 'Enter') at the focused element; with page, it waits for the new document. It
+// key presses a key at the focused element; with page, it waits for the new document. It
 // returns the focused element's id and the app's view (row 201 A3 sprint 4, the N key).
-const KEYS = { n: { code: 'KeyN', windowsVirtualKeyCode: 78, text: 'n' }, N: { code: 'KeyN', windowsVirtualKeyCode: 78, text: 'N', modifiers: 8 }, Enter: { code: 'Enter', windowsVirtualKeyCode: 13, text: '\r' } };
+const KEYS = {
+  n: { code: 'KeyN', windowsVirtualKeyCode: 78, text: 'n' },
+  N: { code: 'KeyN', windowsVirtualKeyCode: 78, text: 'N', modifiers: 8 },
+  Enter: { code: 'Enter', windowsVirtualKeyCode: 13, text: '\r' },
+  Tab: { code: 'Tab', windowsVirtualKeyCode: 9 },
+  Escape: { code: 'Escape', windowsVirtualKeyCode: 27 },
+};
 async function key({ key, page = false }) {
   const from = events.length;
   await send('Input.dispatchKeyEvent', { type: 'keyDown', key, ...KEYS[key] });
@@ -310,9 +317,16 @@ async function tap({ id }) {
   return {};
 }
 
+// mouse dispatches one real CDP event so a test can inspect the page mid-drag.
+async function mouse({ type, x, y, buttons = 0 }) {
+  const moving = type === 'mouseMoved';
+  await send('Input.dispatchMouseEvent', {type, x, y, buttons, button: moving ? 'none' : 'left', clickCount: moving ? 0 : 1});
+  return {};
+}
+
 const product = (await send('Browser.getVersion', {}, null)).product;
 console.log(JSON.stringify({ ready: true, chrome: product, pid: chrome.pid }));
-const commands = { tab, open, ceremony, uv, advance, fetchRewrite, openCard, press, waitFor, credential, fill, save, card: cardState, key, tap, grantNotifications, notification };
+const commands = { tab, open, ceremony, uv, advance, fetchRewrite, openCard, press, waitFor, credential, fill, save, card: cardState, key, tap, mouse, grantNotifications, notification };
 for await (const line of readline.createInterface({ input: process.stdin })) {
   const { cmd, ...args } = JSON.parse(line);
   try {

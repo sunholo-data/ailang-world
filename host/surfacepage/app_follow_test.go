@@ -79,6 +79,20 @@ const repo = id => String(id).split(':')[0];
 // ---- Grouped layout (AC9): one surface, each repo its own shared world, rows in config order, no edge across repos.
 assert(app.isSharedKey('shared') && app.isSharedKey('world:brane:shared') && !app.isSharedKey('world:brane:row-189') && !app.isSharedKey('shared:x'));
 const T = app.adaptModel(model);
+const recorded = Object.values(T.N);
+const merge = recorded.find(n => n.kind === 'shared' && n.pr && T.parents[n.id]?.some(id => T.N[id].kind === 'step' && T.N[id].pr === n.pr));
+assert(merge, 'fixture needs a PR on both the work-side commit and merge');
+const work = T.parents[merge.id].map(id => T.N[id]).find(n => n.kind === 'step');
+assert.equal(T.recordKind(merge), 'github-merge');
+assert.equal(T.recordKind(work), work.episode ? 'episode' : 'step');
+assert.match(T.glyphOfNode(merge, 12), /merge-glyph/);
+assert.doesNotMatch(T.glyphOfNode(work, 12), /merge-glyph/);
+const episode = recorded.find(n => n.episode && n.kind !== 'shared');
+assert(episode, 'fixture needs a recorded World episode');
+assert.equal(T.recordLabel(episode), 'World episode');
+const direct = {...merge, id:'world:commit:direct'};
+assert.equal(T.recordLabel(direct), 'Shared commit', 'a shared lane and PR number do not prove a merge');
+assert.doesNotMatch(T.glyphOfNode(direct, 12), /merge-glyph/);
 assert.deepEqual(T.GROUPS.map(g => g.id), ['world', 'tools']); assert(T.multi);
 assert.deepEqual(T.ROWS.filter(app.isSharedKey), ['world:brane:shared', 'tools:brane:shared']);
 const rowsOf = r => T.ROWS.filter(k => repo(k.replace(/^(dip|other)\|/, '')) === r).map(k => T.ROWS.indexOf(k));
@@ -94,9 +108,18 @@ for (const g of T.GROUPS) {
 const all = model.lanes.flatMap(l => l.states.map(s => s.id));
 assert.equal(new Set(all).size, all.length, 'every id distinct across repos');
 for (const u of [0, 1, 2, 4]) {
-  const g = app.layoutGraph(T, app.blendXS(T.LX, u));
+  const xs = app.blendXS(T.LX, u), g = app.layoutGraph(T, xs);
   assert.deepEqual(Object.values(g.DISP).flatMap(d => d.ids).sort(), Object.keys(T.N).sort(), 'zoom ' + u);
-  for (const id of Object.keys(T.N)) assert(Number.isFinite(g.POS[id][0]) && Number.isFinite(g.POS[id][1]), id);
+  for (const id of Object.keys(T.N)) {
+    const [x, y] = g.POS[id], ix = T.timeIndex.get(id);
+    assert.equal(x, xs[ix], id);
+    assert.equal(T.TT[ix], Date.parse(T.N[id].at), id);
+    assert(Number.isFinite(y), id);
+  }
+  for (const id of T.SH.filter(id => repo(id) === 'world')) {
+    const sameCommit = id.replace(/^world:/, 'tools:');
+    assert.equal(g.POS[id][0], g.POS[sameCommit][0], 'repos share one axis');
+  }
 }
 const ep = T.N['world:episode:w189z'];
 assert.equal(ep.kind, 'open'); assert.equal(T.rowOf(ep.id), 'world:brane:row-189', 'the running episode sits on its branch row');

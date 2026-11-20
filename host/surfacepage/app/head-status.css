@@ -1,0 +1,78 @@
+/* Now keeps its sidebar layout on Timeline and reflows above the Heads scene. */
+.now-overview { display: contents; }
+#timeline-now { display: contents; }
+#head-space:not([hidden]) {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+#head-space > .hc-scene { position: relative; grid-row: 2; min-height: 0; }
+#head-toolbar {
+  --hc-thread-width: clamp(141px, 19vw, 230px);
+  position: relative;
+  grid-row: 1;
+  min-width: 0;
+  background: var(--nowBg);
+  border-bottom: 1px solid var(--nowLine);
+  color: var(--text);
+}
+#head-status-toggle {
+  display: flex;
+  width: calc(100% - var(--hc-thread-width));
+  margin-left: var(--hc-thread-width);
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  height: 44px;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: 500 13px/1.2 var(--font);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+#head-status-toggle:hover { background: var(--sel); }
+#head-status-toggle:focus-visible { outline-offset: -3px; }
+#head-status-health { display: flex; align-items: center; gap: 6px; color: var(--sub); }
+#head-status-health:not(:empty)::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor;
+}
+#head-status-activity { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#head-status-activity:empty { display: none; }
+.status-chevron {
+  flex: none; margin-left: auto; margin-right: 2px;
+  width: 8px; height: 8px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg);
+}
+[aria-expanded="true"] > .status-chevron { transform: rotate(225deg); }
+
+#head-status-detail { max-height: min(25dvh, 200px); overflow: auto; overscroll-behavior: contain; border-top: 1px solid var(--line); }
+#head-status-detail .now {
+  position: static; display: flex; flex-direction: row; align-items: stretch;
+  width: 100%; border: 0; padding: 0; gap: 0; background: transparent;
+}
+#head-status-detail :is(.nsec,.now-overview) {
+  display: flex; flex-direction: column; gap: 3px; border: 0;
+  padding: 10px 16px 12px; flex: 1 0 145px; min-width: 0; overflow-wrap: anywhere;
+}
+#head-status-detail .now-overview { flex: 1.5 0 210px; }
+#head-status-detail .nsec { border-inline-start: 1px solid var(--line); }
+#head-status-detail .nh { margin-bottom: 3px; color: var(--text); }
+#head-status-detail .now-clock .nh, #head-status-detail #activity-back { display: none; }
+#head-status-detail .now-health { flex-wrap: wrap; }
+#head-status-detail .nl { font-size: 12px; line-height: 1.4; }
+#head-status-detail .run, #head-status-detail a { color: var(--text); }
+#head-status-detail .run:hover, #head-status-detail a:hover { text-decoration: underline; }
+
+@media (max-width: 700px) {
+  #tl #activity-back { order: -3; }
+  #tl :is(.now-clock,.now-health) { order: -2; }
+  #tl .now > :is([data-running],[data-needs]) { order: -1; }
+  #head-status-toggle { gap: 7px; padding-inline: 10px; font-size: 12px; }
+  #head-status-toggle:has(#head-status-activity:not(:empty)) #head-status-health { display: none; }
+  #head-status-detail { max-height: 29dvh; }
+  #head-status-detail .now { width: max-content; min-width: 100%; }
+  #head-status-detail :is(.nsec,.now-overview) { flex: none; width: min(66vw, 240px); padding: 8px 12px; }
+  #head-status-detail .nsec { width: min(52vw, 185px); }
+  #head-status-detail :is(a,button) { display: inline-flex; align-items: center; min-height: 44px; }
+}
