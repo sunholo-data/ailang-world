@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/surface"
 )
 
 // TestSurfaceAppFollow runs app.js's and surface.js's pure parts under node
@@ -27,6 +29,8 @@ func TestSurfaceAppFollow(t *testing.T) {
 		}
 	}
 	env := followEnv(t)
+	env.Open.Episodes[0].LastRun = &surface.LaunchResult{EndedAt: "2026-10-21T08:55:00Z"}
+	env.Open.Episodes[1].LastRun = &surface.LaunchResult{EndedAt: "2026-10-21T07:30:00Z", Failed: true}
 	model := BuildFollowModel(env, followSources(), Now{At: fixedNow})
 	step := stateWithPrefix(t, env.Repos[0].Index, "f36428a")
 	commit, err := BuildFollowStack(env, "tools:brane:row-189", "tools:commit:"+step.ID, fixedNow)
@@ -37,8 +41,12 @@ func TestSurfaceAppFollow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	pr, err := BuildFollowStack(env, "world:brane:shared", "world:episode:w190q", fixedNow)
+	if err != nil {
+		t.Fatal(err)
+	}
 	dir := t.TempDir()
-	files := map[string]any{"model.json": model, "envelope.json": env, "commit.json": commit, "open.json": open}
+	files := map[string]any{"model.json": model, "envelope.json": env, "commit.json": commit, "open.json": open, "pr.json": pr}
 	for name, v := range files {
 		b, err := json.Marshal(v)
 		if err != nil {
@@ -133,21 +141,29 @@ assert(!T1.multi); assert.equal(T1.LY['world:brane:shared'], 320); assert(T1.ROW
 // ---- The open card and the landed alias (minimal; N2d owns the richer card).
 const oh = app.frontHTML(open, T);
 hollow(oh);
-for (const want of ['w189z', 'session live', 'Polish the plugin docs', 'Nothing has landed yet.', 'No checks until it lands.', 'via">built on<', 'trial/row189-m7']) assert(oh.includes(want), want);
+for (const want of ['w189z', 'session live', 'Last run finished · 21 Oct 08:55 UTC', 'Polish the plugin docs', 'Nothing has landed yet.', 'No checks until it lands.', 'via">built on<', 'trial/row189-m7']) assert(oh.includes(want), want);
 assert(!oh.includes('A merge has no checks'), 'an open episode is not a merge');
 const ch = app.frontHTML(commit, T);
 hollow(ch); assert(ch.includes('data-go="tools:commit:'), 'commit stack chips stay in their repo');
 assert(!ch.includes('data-go="world:'), 'a tools stack links no world state');
 hollow(app.railHTML(commit)); hollow(app.railHTML(open));
 
-// ---- Running and Sources (AC12): status per repo; an incomplete or unavailable read never says "Nothing running".
+// ---- Sessions and Sources (AC12): partial reads never confirm zero live sessions.
 const run = app.openRunningHTML(model.nowEdge.open);
 hollow(run);
-assert(run.includes('Running · 3') && run.includes('data-go="world:episode:w189z"') && run.includes('start record unavailable') && run.includes('1 PR open'));
-assert(app.openRunningHTML({status: 'complete', live: []}).includes('Nothing running'));
+assert(run.includes('Live sessions · 3') && run.includes('data-go="world:episode:w189z"') && run.includes('start record unavailable') && run.includes('1 PR open'));
+assert(run.includes('Last run finished · 21 Oct 08:55 UTC'));
+const pr = app.frontHTML(JSON.parse(fs.readFileSync('pr.json', 'utf8')), T);
+assert.match(pr, /Last run failed · 21 Oct 07:30 UTC/);
+assert.match(pr, /PR open/);
+assert.equal(T.N['tools:episode:t1'].open.lastRun, undefined);
+assert(app.openRunningHTML({status: 'complete', live: []}).includes('No live sessions'));
+assert(app.openRunningHTML({status: 'complete', live: [], lastRun: {
+  id: 'world:episode:w190q', episode: 'w190q', failed: true, endedAt: '2026-10-21T07:30:00Z'
+}}).includes('Last run failed · 21 Oct 07:30 UTC'));
 for (const o of [{status: 'unavailable', note: 'running status unavailable: the session read failed', live: []}, {status: 'incomplete', note: 'session read bound reached', live: []}]) {
   const h = app.openRunningHTML(o);
-  assert(!h.includes('Nothing running'), o.status + ' claimed zero'); assert(h.includes(o.note));
+  assert(!h.includes('No live sessions'), o.status + ' claimed zero'); assert(h.includes(o.note));
 }
 const src = app.sourcesHTML(model.repos);
 hollow(src);

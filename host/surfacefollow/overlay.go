@@ -48,7 +48,7 @@ type SessionFact struct {
 	ExpiresAt int64
 }
 
-// StartFact is the whitelisted part of an immutable start record. RepoID is
+// StartFact is the whitelisted part of a start record. RepoID is
 // the configured repo its canonical repo maps to, or "" when none does; the
 // source path itself never reaches this package.
 type StartFact struct {
@@ -62,6 +62,7 @@ type StartFact struct {
 	TaskTitle string
 	// LastExpiry is the latest expiry the start's mint and resumes scheduled.
 	LastExpiry int64
+	LastRun    *surface.LaunchResult
 }
 
 // FinishFact is a trusted row-218 finish record: operator-authenticated,
@@ -244,11 +245,11 @@ func BuildOverlay(parts []surface.FollowPartition, facts *EpisodeFacts, failed b
 				}
 			}
 			if landed != "" {
-				o.Aliases = append(o.Aliases, surface.EpisodeAlias{ID: id, Target: landed, SessionLive: live[ep]})
+				o.Aliases = append(o.Aliases, surface.EpisodeAlias{ID: id, Target: landed, SessionLive: live[ep], LastRun: start.LastRun})
 				continue
 			}
 		}
-		e := surface.OpenEpisode{ID: id, Repo: start.RepoID, Episode: ep, SessionLive: live[ep],
+		e := surface.OpenEpisode{ID: id, Repo: start.RepoID, Episode: ep, SessionLive: live[ep], LastRun: start.LastRun,
 			Branch: surface.SanitizeOpenText(start.Branch, 120), Task: surface.SanitizeOpenText(start.TaskTitle, 120),
 			Agent: surface.SanitizeOpenText(start.Agent, 64), Model: surface.SanitizeOpenText(start.Model, 64)}
 		if t, err := time.Parse(time.RFC3339, start.StartedAt); err == nil {

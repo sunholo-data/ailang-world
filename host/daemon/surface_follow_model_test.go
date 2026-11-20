@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"encoding/json"
+	"net/http/httptest"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -210,5 +211,28 @@ func TestSurfaceFollowRoutesLeakNothing(t *testing.T) {
 	}
 	if !sawTask {
 		t.Fatal("the sanitized task never reached a route: the leak check would be vacuous")
+	}
+}
+
+func TestCommittedToolCallReachesFollowModel(t *testing.T) {
+	d, _, _ := invocationDaemon(t)
+	const episode = "wa1"
+	token := mintSessionGrants(t, d, episode, "world.apply")
+	fixture := followSnapshotFor(t, "g1", []string{"repo0"}, nil)
+	source := []surfacepage.FollowSource{{ID: "repo0", Branch: "dev", State: surfacepage.SourceFresh}}
+	activity := func() map[string]int64 {
+		now := d.followNow(httptest.NewRequest("GET", "/surface/model.json", nil))
+		return surfacepage.BuildFollowModel(fixture.Envelope, source, now).NowEdge.ActivityUntil
+	}
+	if len(activity()) != 0 {
+		t.Fatal("a mint marked the node active before any work")
+	}
+	rec := requestRecorderAuth(t, d, "Bearer "+token, "POST", "/a2a/", strings.NewReader(invokeBody("activity-test")))
+	task := parseInvokeTask(t, rec.Body.Bytes())
+	if task["status"].(map[string]any)["state"] != "completed" {
+		t.Fatalf("tool call failed: %v", task["status"])
+	}
+	if recent := activity(); len(recent) != 1 || recent["repo0:episode:wa1"] <= time.Now().UnixMilli() {
+		t.Fatalf("committed call did not activate its node: %v", recent)
 	}
 }

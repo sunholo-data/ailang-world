@@ -391,6 +391,15 @@ func TestOverlayCheckedAtIsNotAGeneration(t *testing.T) {
 	if s := p.Snapshot(); s.Status.Generation != g || s.Envelope.Open.CheckedAt != f.ReadAt.Format(time.RFC3339) {
 		t.Fatalf("generation %s→%s checked %s", g, s.Status.Generation, s.Envelope.Open.CheckedAt)
 	}
+	// A completed launch changes the published result even with the same live session.
+	f.Starts[0].LastRun = &surface.LaunchResult{EndedAt: f.ReadAt.Format(time.RFC3339)}
+	p.SinkEpisodes(*f, false)
+	p.publish()
+	s := p.Snapshot()
+	if s.Status.Generation == g || s.Envelope.Open.Episodes[0].LastRun == nil || !s.Envelope.Open.Episodes[0].SessionLive {
+		t.Fatalf("launch did not update the live episode: %+v", s.Envelope.Open)
+	}
+	g = s.Status.Generation
 	// A failed read changes the published meaning, so it is a new generation.
 	p.SinkEpisodes(EpisodeFacts{}, true)
 	p.publish()

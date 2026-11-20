@@ -71,6 +71,21 @@ type FollowOpen struct {
 	Running          []RunningEntry `json:"running"`
 }
 
+// LaunchResult is the latest recorded completed launch for an episode.
+// It describes process history independently of the session and finish state.
+type LaunchResult struct {
+	EndedAt string `json:"endedAt"`
+	Failed  bool   `json:"failed"`
+}
+
+func (r *LaunchResult) valid() bool {
+	if r == nil {
+		return true
+	}
+	t, err := time.Parse(time.RFC3339, r.EndedAt)
+	return err == nil && r.EndedAt == t.UTC().Format(time.RFC3339)
+}
+
 // OpenEpisode holds only whitelisted start facts. It never carries preset
 // bytes, paths, remote URLs, checks, tokens or e-mail addresses.
 type OpenEpisode struct {
@@ -92,6 +107,8 @@ type OpenEpisode struct {
 	Agent             string `json:"agent"`
 	Model             string `json:"model"`
 	PR                int    `json:"pr,omitempty"`
+
+	LastRun *LaunchResult `json:"last_run,omitempty"`
 }
 
 // EpisodeAlias keeps an episode address on its landed step after a merge.
@@ -99,6 +116,8 @@ type EpisodeAlias struct {
 	ID          string `json:"id"`     // repo:episode:<ep>
 	Target      string `json:"target"` // repo:commit:<step>
 	SessionLive bool   `json:"session_live"`
+
+	LastRun *LaunchResult `json:"last_run,omitempty"`
 }
 
 // RunningEntry is a live session without an open state, and why.
@@ -206,6 +225,9 @@ func ValidateFollowOpen(o FollowOpen, parts []FollowPartition) error {
 		if _, err := time.Parse(time.RFC3339, e.StartedAt); err != nil {
 			return fail("episodes[%d] %s: started_at must be RFC 3339", i, e.ID)
 		}
+		if !e.LastRun.valid() {
+			return fail("episodes[%d] %s: last run needs a UTC end time", i, e.ID)
+		}
 		if e.EndedAt != "" {
 			if _, err := time.Parse(time.RFC3339, e.EndedAt); err != nil || e.SessionLive {
 				return fail("episodes[%d] %s: ended_at must be RFC 3339 and only without a live session", i, e.ID)
@@ -236,6 +258,9 @@ func ValidateFollowOpen(o FollowOpen, parts []FollowPartition) error {
 			return fail("aliases[%d].id must be a unique episode id without an open state", i)
 		}
 		seen[a.ID] = true
+		if !a.LastRun.valid() {
+			return fail("aliases[%d] %s: last run needs a UTC end time", i, a.ID)
+		}
 		trepo, tkind, tlocal, err := ParseQualifiedID(a.Target)
 		if err != nil || trepo != repo || tkind != "commit" {
 			return fail("aliases[%d] %s: target must be a commit in the same repo", i, a.ID)

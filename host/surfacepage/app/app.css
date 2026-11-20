@@ -413,3 +413,35 @@ button { user-select: none; -webkit-user-select: none; }
 #stage.camera-loading #L0 { visibility:hidden; }
 
 .hc-face.needs-human { border-inline-start:3px solid var(--you); }
+
+/* Recent tool activity and episode arrivals in the shared camera. */
+/* The front face is already positioned by the camera. Paint outside its
+   bounds so the content and the keyboard focus outline stay still. */
+:where(.node, .hc-face, .hc-rear:not(.hc-mini))::after {
+  content: ""; display: var(--world-call-ring, none); position: absolute; inset: 0;
+  pointer-events: none; border-radius: inherit; outline: 3px solid var(--ran); outline-offset: 4px;
+  animation: world-call-pulse 1.8s ease-out infinite;
+}
+.node::after { border-radius: 999px; }
+@keyframes world-call-pulse {
+  from { outline-offset: 2px; opacity: 1; }
+  to { outline-offset: 10px; opacity: .15; }
+}
+/* Distant heads are perspective-projected SVG paths. Follow their edges. */
+.hc-mini path { animation: var(--world-mini-pulse, none) 1.8s ease-out infinite; }
+@keyframes world-call-mini {
+  from { stroke: var(--ran); stroke-width: 2.4px; }
+  to { stroke: var(--ran); stroke-width: 1.2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(.node, .hc-face, .hc-rear:not(.hc-mini))::after { animation: none; }
+  .hc-mini path { animation-play-state: paused; }
+}
+#root.reduced :where(.node, .hc-face, .hc-rear:not(.hc-mini))::after { animation: none; }
+#root.reduced .hc-mini path { animation-play-state: paused; }
+#episode-arrivals { position:absolute; bottom:70px; right:12px; z-index:10; }
+#episode-arrivals button {
+  font: inherit; font-weight: 600; min-height:44px; border:1px solid var(--edge);
+  border-radius:6px; padding:0 12px; background:var(--shellBg); color:var(--text); cursor:pointer;
+}
+#stage[data-view="brane"] #episode-arrivals { display:none; }

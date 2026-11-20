@@ -1171,3 +1171,27 @@ func TestReconcileDamageDisposition(t *testing.T) {
 		})
 	}
 }
+
+func TestCommitObserverSkipsRefusalsAndReceiptReplays(t *testing.T) {
+	r := newRig(t, false)
+	r.genesis()
+	r.describe("echo", r.source(echoSrc), "Invoke")
+	r.publish()
+	c := r.coordinator(r.st, fakeRunner{stdout: `{"echo":true}`})
+	var observed []string
+	c.cfg.OnCommitted = func(episode string) { observed = append(observed, episode) }
+	call := r.call("echo", "one", grants)
+	ctx := boundedTestContext(t)
+	for i := 0; i < 2; i++ {
+		if _, err := c.Dispatch(ctx, call); err != nil {
+			t.Fatal(err)
+		}
+	}
+	call.TaskID = ""
+	if _, err := c.Dispatch(ctx, call); err == nil {
+		t.Fatal("expected invalid task to fail")
+	}
+	if len(observed) != 1 || observed[0] != call.EpisodeID {
+		t.Fatalf("observed commits: %v", observed)
+	}
+}

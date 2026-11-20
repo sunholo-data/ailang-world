@@ -874,7 +874,8 @@ func newDaemon(ctx, phaseParent context.Context, registryBudget time.Duration, c
 		// run writes its `capsule: cold compile` line there (row 153).
 		d.capsule = capsule.New(a, capsule.Config{Log: d.errLog})
 		d.coord, err = coordinator.New(coordinator.Config{Store: d.store, Runner: d.capsule,
-			Binder: d.binder, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
+			OnCommitted: func(episode string) { d.activity.recordCommit(episode, time.Now()) },
+			Binder:      d.binder, Now: func() int64 { return time.Now().Unix() }, MaxInput: 1 << 20, MaxOutput: 1 << 20})
 		if err != nil {
 			return nil, d.abort(StageConfig, "cannot construct invocation coordinator", err)
 		}

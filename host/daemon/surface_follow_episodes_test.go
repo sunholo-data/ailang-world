@@ -90,6 +90,21 @@ func TestSurfaceFollowOpenEpisodes(t *testing.T) {
 	mint("cred-w4", "w4", now.Unix()-5, live, overlayStart("w4", repo, now))
 	mint("cred-w5", "w5", now.Unix()-4, live, overlayStart("w5", repo, now))
 	mint("cred-late", "late", now.Unix()-1, live, overlayStart("late", repo, now))
+	ended := now.Add(-2 * time.Minute).Format(time.RFC3339)
+	for _, run := range []struct {
+		episode string
+		exit    int
+	}{
+		{"w1", 1}, {"w1", 0},
+		{"w4", 0}, {"w4", 1},
+	} {
+		if err := w.AppendEpisodeLaunch(ctx, run.episode, store.EpisodeLaunch{
+			EndedAt: ended, Exit: run.exit, FinishReason: "exit",
+			Transcript: "/synthetic/private-stream", ArgvRedacted: []string{"private-argv-marker"},
+		}); err != nil {
+			t.Fatal(err)
+		}
+	}
 	// Finish records, then revoke: the operator's record makes w4 PR open;
 	// an object under the same head from any other writer is not a finish.
 	putFinish(t, d, EpisodeFinish{Episode: "w4", Branch: "trial/w4", Commit: strings.Repeat("9", 40), Remote: "origin",
@@ -125,16 +140,17 @@ func TestSurfaceFollowOpenEpisodes(t *testing.T) {
 		t.Fatalf("%s %q episodes=%d unconfigured=%d", o.Status, o.Reason, len(o.Episodes), o.Unconfigured)
 	}
 	if e := got["w1"]; e.ID != "repo0:episode:w1" || e.State != surface.OpenRunning || e.Anchor != "repo0:commit:"+strings.Repeat("3", 40) ||
-		e.Agent != "claude" || e.Model != "opus" || e.Branch != "trial/w1" || e.Task != "Ask [email] about w1" {
+		e.Agent != "claude" || e.Model != "opus" || e.Branch != "trial/w1" || e.Task != "Ask [email] about w1" || !e.SessionLive ||
+		e.LastRun == nil || e.LastRun.Failed || e.LastRun.EndedAt != ended {
 		t.Fatalf("w1: %+v", e)
 	}
-	if e := got["w4"]; e.State != surface.OpenPR || e.PR != 12 || e.SessionLive {
+	if e := got["w4"]; e.State != surface.OpenPR || e.PR != 12 || e.SessionLive || e.LastRun == nil || !e.LastRun.Failed || e.LastRun.EndedAt != ended {
 		t.Fatalf("w4: %+v", e)
 	}
 	if e := got["w5"]; e.State != surface.OpenEnded || e.PR != 0 || e.EndedAt != now.Format(time.RFC3339) {
 		t.Fatalf("forged finish trusted: %+v", e)
 	}
-	if e := got["late"]; e.State != surface.OpenRunning {
+	if e := got["late"]; e.State != surface.OpenRunning || e.LastRun != nil {
 		t.Fatalf("row past the 500-row page not joined: %+v", e)
 	}
 	want := `[{legacy start record unavailable} {w2 repo not configured}]`
@@ -149,7 +165,7 @@ func TestSurfaceFollowOpenEpisodes(t *testing.T) {
 	}
 	for _, out := range []string{body.Body.String(), status.Body.String()} {
 		for _, secret := range []string{"preset-bytes-do-not-serve", "presets/attended.json", "remote-token", "example.invalid",
-			"tasks/w1.md", "secret-check", "operator@", root, repo, link, elsewhere, "cred-w1-a", "/home/operator"} {
+			"tasks/w1.md", "secret-check", "operator@", root, repo, link, elsewhere, "cred-w1-a", "/home/operator", "private-stream", "private-argv-marker"} {
 			if strings.Contains(out, secret) {
 				t.Fatalf("leaked %q: %s", secret, out)
 			}

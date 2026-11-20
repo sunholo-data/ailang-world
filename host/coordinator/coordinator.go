@@ -44,7 +44,7 @@ type Runner interface {
 // BinderFor opens a session-scoped binder (prod: broker.OpenBinder).
 type BinderFor func(episodeID string, caps []broker.Capability) transitionreg.Binder
 
-// Config is the construction surface; every field is required.
+// Config is the construction surface. OnCommitted is optional.
 type Config struct {
 	Store     Store
 	Runner    Runner
@@ -52,6 +52,8 @@ type Config struct {
 	Now       func() int64
 	MaxInput  int
 	MaxOutput int
+	// OnCommitted observes a newly committed tool call after its durable work completes.
+	OnCommitted func(episode string)
 }
 
 // Coordinator dispatches authorized invocations.
@@ -265,6 +267,14 @@ func (c *Coordinator) committed(ctx context.Context, rc store.Receipt) (Result, 
 // step, including receipt lookup, intent append and commit. A caller deadline
 // bounds the durable acquisition and the pre-commit transaction body.
 func (c *Coordinator) Dispatch(ctx context.Context, call Call) (Result, error) {
+	result, err := c.dispatch(ctx, call)
+	if err == nil && !result.Reconciled && c.cfg.OnCommitted != nil {
+		c.cfg.OnCommitted(call.EpisodeID)
+	}
+	return result, err
+}
+
+func (c *Coordinator) dispatch(ctx context.Context, call Call) (Result, error) {
 	input, err := c.validateCall(call) // R1
 	if err != nil {
 		return Result{}, err

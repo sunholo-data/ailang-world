@@ -20,6 +20,7 @@ var logoSVG string
 
 // Now is the now edge's input, measured by the daemon per request.
 type Now struct {
+	ActivityUntil   map[string]time.Time
 	Build           string
 	StartedAt       time.Time
 	Supervisor      string
