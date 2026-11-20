@@ -9,7 +9,9 @@
     const input = WorldHeadTravelInput.create(scene.element, {step, shift:(count, fast) => shiftLane(count, {fast}), reset:() => move(-1, true)});
     let angle = 0, destination = 0, frame = 0, graph, base, scope, layout, side;
     let selected = '', viewLane = '', keyboard = false;
-    let stop = '', followHead = false, history = [], flight, travelFrame = 0;
+    // The scope bounds keyboard navigation. The camera can stay on a
+    // particular cut inside it, or follow the selected lane's tip (null).
+    let scopeStop = '', pinnedStop = '', history = [], flight, travelFrame = 0;
     const laneStates = new Map();
     WorldHeadGroundInput.create(scene.element, {
       view:() => angle === 1 && destination === 1 && !space.hidden && !space.inert && layout ?
@@ -59,15 +61,14 @@
         laneStates.get(node.lane)?.find(earlier)?.id ||
         (!node.draft && index < layout.time.referenceIndex ? id : undefined);
     }
-    // Key presses and ground drags traverse the same lanes at the chosen cutoff.
-    function neighbor(count) {
-      if (!scope) return;
-      const lanes = scope.laneOrder, center = lanes.indexOf(layout.ground.centerLane);
+    function neighbor(count, at = scope) {
+      if (!at) return;
+      const lanes = at.laneOrder, center = lanes.indexOf(layout.ground.centerLane);
       if (center < 0) return;
       const direction = Math.sign(count);
       let remaining = Math.abs(count), target;
       for (let i = center + direction; remaining && i >= 0 && i < lanes.length; i += direction) {
-        if (scope.heads.some(head => head.lane === lanes[i])) {
+        if (at.heads.some(head => head.lane === lanes[i])) {
           target = lanes[i];
           remaining--;
         }
@@ -94,10 +95,10 @@
       const options = {...layoutOptions(), base};
       // Browse lanes at the user's chosen moment. Framing an older tip moves
       // the camera to its timestamp without losing the way back to newer lanes.
-      scope = stop ? WorldHeadCamera.layout(graph, {...options, stop}) : base;
-      const tip = followHead && scope.heads.find(head => head.lane === viewLane);
-      const landing = tip && tip.timeIndex < scope.time.referenceIndex ? tip.id : stop;
-      if (landing === stop && (!viewLane || viewLane === scope.ground.centerLane)) return scope;
+      scope = scopeStop ? WorldHeadCamera.layout(graph, {...options, stop:scopeStop}) : base;
+      const tip = pinnedStop === null && scope.heads.find(head => head.lane === viewLane);
+      const landing = pinnedStop ?? (tip && tip.timeIndex < scope.time.referenceIndex ? tip.id : scopeStop);
+      if (landing === scopeStop && (!viewLane || viewLane === scope.ground.centerLane)) return scope;
       return WorldHeadCamera.layout(graph, {...options, viewLane, stop:landing});
     }
     function layoutOptions() {
@@ -116,19 +117,17 @@
         const anchor = layout.points.has(target) ? target : aim();
         const id = nextStop(anchor);
         if (!id) return;
-        history.push({stop, followHead});
-        stop = id;
+        history.push({scopeStop, pinnedStop});
+        scopeStop = pinnedStop = id;
         viewLane = graph.N[anchor].lane;
-        followHead = false;
       } else if (all) {
         history = [];
-        stop = '';
-        followHead = false;
-      } else if (followHead && layout.time.referenceIndex < scope.time.referenceIndex) {
-        followHead = false;
+        scopeStop = pinnedStop = '';
+      } else if (layout.time.referenceIndex < scope.time.referenceIndex) {
+        pinnedStop = scopeStop;
       } else {
         if (!history.length) return;
-        ({stop, followHead} = history.pop());
+        ({scopeStop, pinnedStop} = history.pop());
       }
       const next = slice();
       const center = next.heads.find(head => head.lane === next.ground.centerLane);
@@ -137,14 +136,14 @@
       animateTo(next, center?.id, {focusOnFace:Boolean(focus), fast});
     }
     function shiftLane(count, motion) {
-      const target = neighbor(count);
+      const target = neighbor(count, motion.dragging ? layout : scope);
       if (target) selectLane(target, {focusOnFace:true, ...motion});
       return target;
     }
     function selectLane(lane, motion) {
       if (!layout || angle !== 1 || space.hidden || space.inert || !scope.heads.some(head => head.lane === lane)) return;
       viewLane = lane;
-      followHead = true;
+      pinnedStop = motion?.dragging ? layout.time.stop : null;
       const next = slice();
       animateTo(next, next.heads.find(head => head.lane === lane).id, motion);
     }
@@ -152,14 +151,13 @@
       if (!layout || angle !== 1 || space.hidden || space.inert) return;
       const record = graph.N[id], index = graph.timeIndex.get(id);
       if (id && (!record || record.draft || !Number.isInteger(index) || index > graph.presentIndex)) return;
-      if (id === layout.time.stop && !followHead && lane === layout.ground.centerLane) {
+      if (id === scopeStop && pinnedStop === scopeStop && lane === layout.ground.centerLane) {
         if (!dragging) scene.center();
         return;
       }
       // A ribbon drag sets one absolute cut, regardless of how many pixels it crosses.
-      history = id ? [{stop:'', followHead:false}] : [];
-      stop = id;
-      followHead = false;
+      history = id ? [{scopeStop:'', pinnedStop:''}] : [];
+      scopeStop = pinnedStop = id;
       const visible = !id || laneStates.get(lane)?.some(state => !state.draft && graph.timeIndex.get(state.id) <= index);
       viewLane = visible ? lane : record.lane;
       const next = slice();
@@ -221,7 +219,7 @@
       if (space.hidden) return;
       const fresh = hooks.model();
       if (!fresh) return;
-      const trackingTip = followHead && selected === aim();
+      const trackingTip = Boolean(viewLane) && selected === aim();
       const restoreFocus = flight?.focusOnFace || (trackingTip && targetID(document.activeElement) === selected);
       if (graph !== fresh) {
         graph = fresh;
@@ -230,8 +228,10 @@
           laneStates.set(lane, [...(value.states || [])].sort((a,b) =>
             graph.timeIndex.get(b.id) - graph.timeIndex.get(a.id) || b.rank - a.rank));
         }
-        history = history.filter(place => !place.stop || graph.N[place.stop]);
-        if (stop && !graph.N[stop]) ({stop, followHead} = history.pop() || {stop:'', followHead:false});
+        const exists = id => !id || graph.N[id];
+        history = history.filter(place => exists(place.scopeStop) && exists(place.pinnedStop));
+        if (!exists(scopeStop)) ({scopeStop, pinnedStop} = history.pop() || {scopeStop:'', pinnedStop:''});
+        if (!exists(pinnedStop)) pinnedStop = scopeStop;
         if (viewLane && !graph.LANES[viewLane]) viewLane = '';
       }
       cancelTravel();
@@ -298,7 +298,7 @@
       cancelTravel();
       updateControls();
     }
-    return {turn, update, hide, seek, present() { history = []; stop = ''; followHead = false; viewLane = ''; cancelTravel(); },
+    return {turn, update, hide, seek, present() { history = []; scopeStop = pinnedStop = ''; viewLane = ''; cancelTravel(); },
       select(id) { if (id !== selected && angle === 1 && !space.hidden) { selected = id; paint(); updateControls(); } },
       get active() { return !space.hidden; },
       get heads() { return destination === 1; }

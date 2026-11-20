@@ -85,8 +85,8 @@
       }
       const count = Math.trunc(-dx / press.stride);
       if (count) {
-        // Grabbing left brings the next lane on the right into focus. Start
-        // subsequent depth motion from the same tip an arrow would select.
+        // Cross the street at the displayed time. A vertical turn of the
+        // gesture can then scrub from that same spot in the new lane.
         const lane = hooks.shift(count);
         press.x -= count * press.stride;
         press.pan = 0;

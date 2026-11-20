@@ -204,7 +204,7 @@ func TestSurfaceHeadOnReleasesGroundDragOverCardInChrome(t *testing.T) {
 		document.querySelector('#front')?.dataset.front === window.floorDrag.card`, nil)
 }
 
-func TestSurfaceHeadOnDragsBetweenThreadsLikeArrowKeysInChrome(t *testing.T) {
+func TestSurfaceHeadOnDragsBetweenThreadsAtDisplayedTimeInChrome(t *testing.T) {
 	b := startPasskeyBrowser(t)
 	index := filepath.Join("..", "..", "host", "surface", "testdata", "index-rig.json")
 	origin := cardOrigin(t, filepath.Join(t.TempDir(), "credentials.db"), index, func(next http.Handler) http.Handler {
@@ -223,7 +223,7 @@ func TestSurfaceHeadOnDragsBetweenThreadsLikeArrowKeysInChrome(t *testing.T) {
 		t.Helper()
 		b.do(t, out, "waitFor", map[string]any{"expression": expression})
 	}
-	type view struct{ Lane, Node, Thread, Cut, Time string }
+	type view struct{ Lane, Node, Thread, Cut, Time, Ribbon string }
 	open := func(historical bool) view {
 		t.Helper()
 		b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface#heads", "raw": true})
@@ -233,13 +233,13 @@ func TestSurfaceHeadOnDragsBetweenThreadsLikeArrowKeysInChrome(t *testing.T) {
 			if (scene?.dataset.viewLane !== 'shared' || scene.dataset.travelState) return false;
 			const scroll = scene.querySelector('.hc-scroll');
 			const face = () => scene.querySelector('a[data-head-state][aria-current="true"]');
-			window.threadView = () => {
+			window.threadView = (focused = true) => {
 				const node = face();
 				const marker = scene.querySelector('.hc-time-axis:not([hidden]) time:last-child');
 				const thread = stage.querySelector('.hc-lanes select');
-				if (!node || document.activeElement !== node || !marker || thread?.value !== scene.dataset.viewLane) return false;
+				if (!node || (focused && document.activeElement !== node) || !marker || thread?.value !== scene.dataset.viewLane) return false;
 				return {lane:scene.dataset.viewLane, node:node.dataset.headState, thread:thread.value,
-					cut:scene.dataset.travelState, time:marker.dateTime};
+					cut:scene.dataset.travelState, time:marker.dateTime, ribbon:document.querySelector('#mini').getAttribute('aria-valuetext')};
 			};
 			window.threadCentered = () => {
 				const node = face()?.getBoundingClientRect();
@@ -259,8 +259,46 @@ func TestSurfaceHeadOnDragsBetweenThreadsLikeArrowKeysInChrome(t *testing.T) {
 		if historical {
 			read(`window.threadArrow('ArrowUp')`, nil)
 			read(`window.threadView()?.cut === 'shared-cut' && window.threadView()`, &initial)
+		} else {
+			read(`window.threadView(false)`, &initial)
 		}
 		return initial
+	}
+	startDrag := func() func(string, float64, int) {
+		t.Helper()
+		var start struct{ X, Y float64 }
+		read(`(() => {
+			const rect = document.querySelector('.hc-scroll').getBoundingClientRect();
+			for (const row of [.55, .65, .75]) for (const col of [.5, .4, .6, .35, .65]) {
+				const x = Math.round(rect.left + rect.width * col), y = Math.round(rect.top + rect.height * row);
+				if (document.elementFromPoint(x,y)?.matches('.hc-floor-hit,.hc-graph')) return {x,y};
+			}
+			return false;
+		})()`, &start)
+		mouse := func(event string, dx float64, buttons int) {
+			t.Helper()
+			b.do(t, nil, "mouse", map[string]any{"type": event, "x": start.X + dx, "y": start.Y, "buttons": buttons})
+		}
+		mouse("mouseMoved", 0, 0)
+		mouse("mousePressed", 0, 1)
+		return mouse
+	}
+	checkDrag := func(lane, node string, initial view, released bool) {
+		t.Helper()
+		var crossing struct{ Cut, Ribbon string }
+		read(fmt.Sprintf(`(() => {
+			const scene = document.querySelector('.hc-scene');
+			return scene.dataset.viewLane === %q && {cut:scene.dataset.travelState,
+				ribbon:document.querySelector('#mini').getAttribute('aria-valuetext')};
+		})()`, lane), &crossing)
+		if crossing.Cut != initial.Cut || crossing.Ribbon != initial.Ribbon {
+			t.Fatalf("drag to %s changed cut or time ribbon from %q (%s) to %+v", lane, initial.Cut, initial.Ribbon, crossing)
+		}
+		var actual view
+		read(fmt.Sprintf(`(!%t || window.threadCentered()) && window.threadView()?.lane === %q && window.threadView()`, released, lane), &actual)
+		if actual.Cut != initial.Cut || actual.Time != initial.Time || actual.Node != node || actual.Thread != lane {
+			t.Fatalf("drag to %s should keep %s at %s and focus %s (released %t), got %+v", lane, initial.Cut, initial.Time, node, released, actual)
+		}
 	}
 	for _, historical := range []bool{false, true} {
 		t.Logf("verify lateral gestures with explicit historical cut = %t", historical)
@@ -278,48 +316,45 @@ func TestSurfaceHeadOnDragsBetweenThreadsLikeArrowKeysInChrome(t *testing.T) {
 					t.Fatalf("arrows changed historical scope: before %+v, after %+v", initial, position)
 				}
 			}
+		} else {
+			if right.Cut != right.Node || right.Time != "2026-10-20T14:00:00.000Z" ||
+				middle.Cut != "shared-late" || middle.Time != "2026-10-20T14:30:00.000Z" {
+				t.Fatalf("arrows should keep finding adjacent tips: right %+v, back %+v", right, middle)
+			}
+			open(false)
+			read(`window.threadArrow('ArrowRight')`, nil)
+			var olderTip view
+			read(fmt.Sprintf(`window.threadView()?.lane === %q && window.threadView()`, right.Lane), &olderTip)
+			if olderTip != right {
+				t.Fatalf("could not re-enter the keyboard tip: expected %+v, got %+v", right, olderTip)
+			}
+			mouse := startDrag()
+			mouse("mouseMoved", 105, 1)
+			checkDrag("shared", "shared-cut", olderTip, false)
+			mouse("mouseReleased", 105, 0)
+			checkDrag("shared", "shared-cut", olderTip, true)
+			read(`window.threadArrow('ArrowRight')`, nil)
+			read(fmt.Sprintf(`window.threadView()?.lane === %q && window.threadView()`, right.Lane), &olderTip)
+			read(`window.threadArrow('ArrowLeft')`, nil)
+			var resumed view
+			read(`window.threadView()?.lane === 'shared' && window.threadView()`, &resumed)
+			if olderTip != right || resumed != middle {
+				t.Fatalf("arrows after a pinned drag should resume finding tips: right %+v, back %+v", olderTip, resumed)
+			}
 		}
 
-		open(historical)
-		var start struct{ X, Y float64 }
-		read(`(() => {
-			const scroll = document.querySelector('.hc-scroll');
-			const rect = scroll.getBoundingClientRect();
-			for (const row of [.55, .65, .75]) for (const col of [.5, .4, .6, .35, .65]) {
-				const x = Math.round(rect.left + rect.width * col), y = Math.round(rect.top + rect.height * row);
-				if (document.elementFromPoint(x,y)?.matches('.hc-floor-hit,.hc-graph')) return {x,y};
-			}
-			return false;
-		})()`, &start)
-		mouse := func(event string, dx float64, buttons int) {
-			t.Helper()
-			b.do(t, nil, "mouse", map[string]any{"type": event, "x": start.X + dx, "y": start.Y, "buttons": buttons})
-		}
-		mouse("mouseMoved", 0, 0)
-		mouse("mousePressed", 0, 1)
+		initial = open(historical)
+		mouse := startDrag()
 		mouse("mouseMoved", -35, 1)
 		read(`document.querySelector('.hc-scene').dataset.viewLane === 'shared'`, nil)
 		mouse("mouseMoved", -105, 1)
-		var actual view
-		read(`window.threadView()?.lane !== 'shared' && window.threadView()`, &actual)
-		if actual != right {
-			t.Fatalf("drag left %+v, ArrowRight %+v", actual, right)
-		}
+		checkDrag(right.Lane, right.Node, initial, false)
 		mouse("mouseMoved", 0, 1)
-		read(`window.threadView()?.lane === 'shared' && window.threadView()`, &actual)
-		if actual != middle {
-			t.Fatalf("reversing drag %+v, ArrowLeft %+v", actual, middle)
-		}
+		checkDrag("shared", middle.Node, initial, false)
 		mouse("mouseMoved", 105, 1)
-		read(fmt.Sprintf(`window.threadView()?.lane === %q && window.threadView()`, left.Lane), &actual)
-		if actual != left {
-			t.Fatalf("drag right %+v, ArrowLeft %+v", actual, left)
-		}
+		checkDrag(left.Lane, left.Node, initial, false)
 		mouse("mouseMoved", -105, 1)
 		mouse("mouseReleased", -105, 0)
-		read(fmt.Sprintf(`window.threadCentered() && window.threadView()?.lane === %q && window.threadView()`, right.Lane), &actual)
-		if actual != right {
-			t.Fatalf("drag across two lanes %+v, ArrowRight %+v", actual, right)
-		}
+		checkDrag(right.Lane, right.Node, initial, true)
 	}
 }
