@@ -5,8 +5,8 @@
     const scene = WorldHeadScene.create(space, hooks);
     const scroll = scene.element.querySelector('.hc-scroll');
     const toolbar = space.querySelector('#head-toolbar');
-    const lanes = WorldHeadLanes.create(toolbar, lane => selectLane(lane, false, false));
-    const input = WorldHeadTravelInput.create(scene.element, {step, shift:shiftLane, reset:() => move(-1, true)});
+    const lanes = WorldHeadLanes.create(toolbar, lane => selectLane(lane));
+    const input = WorldHeadTravelInput.create(scene.element, {step, shift:(count, fast) => shiftLane(count, {fast}), reset:() => move(-1, true)});
     let angle = 0, destination = 0, frame = 0, graph, base, scope, layout, side;
     let selected = '', viewLane = '', keyboard = false;
     let stop = '', followHead = false, history = [], flight, travelFrame = 0;
@@ -14,13 +14,15 @@
     WorldHeadGroundInput.create(scene.element, {
       view:() => angle === 1 && destination === 1 && !space.hidden && !space.inert && layout ?
         {layout, stops:hooks.stops()} : null,
-      seek:(id, lane) => seek(id, lane, false),
-      shift:count => shiftLane(count, true),
+      seek:(id, lane) => seek(id, lane, true),
+      shift:count => shiftLane(count, {dragging:true}),
+      grabPan:scene.grabPan, pan:scene.pan,
       settle(changedLane) {
         const head = changedLane ? aim() : undefined;
-        scene.center(head);
+        scene.center(head, true);
         // A depth seek can interrupt a lane flight before it transfers focus.
-        if (head && !flight && targetID(document.activeElement) !== head) scene.focus(head);
+        if (head && flight) flight.focusOnFace = true;
+        else if (head && targetID(document.activeElement) !== head) scene.focus(head, false);
       },
       hop(stop, worldX) {
         const lanes = layout.laneOrder.filter(lane => laneStates.get(lane)?.some(node =>
@@ -132,26 +134,26 @@
       const center = next.heads.find(head => head.lane === next.ground.centerLane);
       const focus = document.activeElement?.closest('.hc-face,.hc-rear') ||
         (document.activeElement === document.body && flight?.focusOnFace);
-      animateTo(next, center?.id, Boolean(focus), fast);
+      animateTo(next, center?.id, {focusOnFace:Boolean(focus), fast});
     }
-    function shiftLane(count, fast) {
+    function shiftLane(count, motion) {
       const target = neighbor(count);
-      if (target) selectLane(target, true, fast);
+      if (target) selectLane(target, {focusOnFace:true, ...motion});
       return target;
     }
-    function selectLane(lane, focusOnFace, fast) {
+    function selectLane(lane, motion) {
       if (!layout || angle !== 1 || space.hidden || space.inert || !scope.heads.some(head => head.lane === lane)) return;
       viewLane = lane;
       followHead = true;
       const next = slice();
-      animateTo(next, next.heads.find(head => head.lane === lane).id, focusOnFace, fast);
+      animateTo(next, next.heads.find(head => head.lane === lane).id, motion);
     }
-    function seek(id, lane = layout?.ground.centerLane, recenter = true) {
+    function seek(id, lane = layout?.ground.centerLane, dragging = false) {
       if (!layout || angle !== 1 || space.hidden || space.inert) return;
       const record = graph.N[id], index = graph.timeIndex.get(id);
       if (id && (!record || record.draft || !Number.isInteger(index) || index > graph.presentIndex)) return;
       if (id === layout.time.stop && !followHead && lane === layout.ground.centerLane) {
-        if (recenter) scene.center();
+        if (!dragging) scene.center();
         return;
       }
       // A ribbon drag sets one absolute cut, regardless of how many pixels it crosses.
@@ -160,36 +162,53 @@
       followHead = false;
       const visible = !id || laneStates.get(lane)?.some(state => !state.draft && graph.timeIndex.get(state.id) <= index);
       viewLane = visible ? lane : record.lane;
+      const next = slice();
+      const head = next.heads.find(head => head.lane === next.ground.centerLane)?.id || id;
+      if (dragging) return animateTo(next, head, {dragging:true});
       cancelTravel();
-      layout = slice();
-      selected = aim() || id;
+      layout = next;
+      selected = head;
       hooks.select(selected);
       paint();
-      if (recenter) scene.center();
+      scene.center();
       updateControls();
     }
-    function animateTo(next, id, focusOnFace, fast) {
-      const duration = fast || flight ? 110 : 220;
+    function animateTo(next, id, {focusOnFace = false, fast = false, dragging = false} = {}) {
+      const duration = dragging ? 300 : (fast || flight ? 110 : 220);
+      // Retarget from the last drawn frame. Closely spaced pointer events
+      // must not keep resetting the camera clock before it can move.
+      const previousFrame = dragging ? flight?.drawnAt : undefined;
       cancelTravel();
-      if (!hooks.reduced()) flight = {...scene.startTravel(next), progress:0, focusOnFace};
+      if (!hooks.reduced()) flight = {...scene.startTravel(next, dragging, id), progress:0, focusOnFace};
       layout = next;
       selected = id;
       hooks.select(id);
       paint();
-      scene.center();
+      if (!dragging) scene.center();
       updateControls();
       if (!flight) {
-        if (focusOnFace) scene.focus(id);
+        if (focusOnFace) scene.focus(id, !dragging);
         return;
       }
-      const started = performance.now();
-      function advance(now) {
-        const t = Math.min(1, (now - started) / duration);
+      const now = performance.now();
+      const started = Math.max(previousFrame ?? now, now - 32);
+      flight.drawnAt = started;
+      function advance() {
+        const now = performance.now();
+        const t = Math.max(0, Math.min(1, (now - started) / duration));
+        flight.drawnAt = now;
+        const focusAtArrival = flight.focusOnFace;
         if (t === 1 || hooks.reduced()) cancelTravel();
-        else flight.progress = t * t * (3 - 2 * t);
+        else if (dragging) {
+          // Ease the selected face in screen space. Perspective otherwise
+          // compresses most of a long approach into the last few frames.
+          const q = 1 - (1 - t) ** 3;
+          const weighted = q * flight.depthRatio;
+          flight.progress = weighted / (1 - q + weighted);
+        } else flight.progress = t * t * (3 - 2 * t);
         paint();
         if (flight) travelFrame = requestAnimationFrame(advance);
-        else if (focusOnFace) scene.focus(id);
+        else if (focusAtArrival) scene.focus(id, !dragging);
       }
       travelFrame = requestAnimationFrame(advance);
     }

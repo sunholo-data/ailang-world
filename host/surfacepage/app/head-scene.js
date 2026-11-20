@@ -44,7 +44,7 @@
     const scratch = document.createElement('template');
     let model, layout, sidePoints, angle = 0, selected = '', hovered = '', frame = 0, silentFocus = false;
     let panAxis, panWidth = 0, panOffset = 0, focusedByUser = '', paintedSelection, paintWidth = 0, paintHeight = 0, pixelRatio = 0;
-    let floorTravel = 0, cameraX = 0;
+    let floorTravel = 0, cameraX = 0, panGlide, traveling = false;
     let timeTicks = [];
     const faceSizes = new Map();
     let points = new Map(), headsByID = new Map(), headsByLane = new Map(), order = [], histories = new Map();
@@ -627,9 +627,10 @@
       for (const args of endpoints) mark(...args);
     }
 
-    function paint() {
+    function paint(now) {
       frame = 0;
       if (!model || !layout || !angle || !ctx) return;
+      if (panGlide) advancePan(now);
       const width = scene.clientWidth, height = scene.clientHeight;
       if (!width || !height) return;
       const dpr = Math.min(2, devicePixelRatio || 1);
@@ -708,7 +709,7 @@
     }
 
     function repaint() {
-      if (!frame) frame = requestAnimationFrame(paint);
+      if (!frame && !traveling) frame = requestAnimationFrame(paint);
     }
 
     function updateSelection() {
@@ -743,7 +744,7 @@
 
     // Departures use the same projection as arrivals while their anchor
     // moves away and their face shrinks into the event history.
-    function startTravel(next) {
+    function startTravel(next, dragging, id) {
       const incoming = new Set(next.heads.map(head => head.id));
       const nextByLane = new Map(next.heads.map(head => [head.lane, head]));
       passingLayer?.remove();
@@ -756,7 +757,7 @@
       const departures = [], sizes = new Map(faceSizes);
       // The destination can have a wider scroll surface. Carry the old
       // screen positions into its coordinates before the first animation frame.
-      const dx = next.ground.vx - (scroll.scrollLeft + scroll.clientWidth / 2);
+      const dx = next.ground.vx - (dragging ? layout.ground.vx : scroll.scrollLeft + scroll.clientWidth / 2);
       const origins = dx ? new Map([...points].map(([id,p]) => [id, {...p, x:p.x + dx}])) : points;
       for (const id of rearLinks.keys()) {
         const pane = points.get(id), node = model.N[id];
@@ -784,11 +785,15 @@
         layer.append(el);
         departures.push({entry, head, old, end, from, to});
       }
-      return {points:origins, sizes, departures, floorFrom:floorTravel, cameraFrom:cameraX};
+      const target = next.points.get(id);
+      const origin = origins.get(id) || (target && movedCamera(target, next.travelZ - floorTravel, next.ground, next.ground.cameraX - cameraX));
+      return {points:origins, sizes, departures, floorFrom:floorTravel, cameraFrom:cameraX,
+        depthRatio:target && origin ? origin.depth / target.depth : 1};
     }
 
     function render(T, next, side, value, focused, travel) {
       angle = clamp(value, 0, 1);
+      traveling = Boolean(travel);
       scene.hidden = !angle;
       if (!angle || !T || !next) {
         inspectable = false;
@@ -886,7 +891,11 @@
       }
       updateSelection();
       if (inspectable && !preview.element.hidden) showPreview();
-      repaint();
+      // Project the grid and the DOM faces from the same camera frame.
+      if (traveling) {
+        cancelAnimationFrame(frame);
+        paint(performance.now());
+      } else repaint();
     }
 
     function face(event) {
@@ -897,7 +906,7 @@
       return Boolean(el && el === document.activeElement && el.getClientRects().length && !el.closest('[hidden], [inert]'));
     }
 
-    function focusHead(id) {
+    function focusHead(id, reveal = true) {
       const lane = model?.N[id]?.lane;
       const el = cards.get(id)?.el || rearLinks.get(id)?.el || cards.get(headsByLane.get(lane)?.id)?.el;
       if (!el || scene.hidden || scroll.inert) return;
@@ -908,7 +917,7 @@
         : Math.max(0, target.right - viewport.right + gap);
       const dy = target.top < viewport.top + gap ? target.top - viewport.top - gap
         : Math.max(0, target.bottom - viewport.bottom + gap);
-      scroll.scrollBy(dx, dy);
+      if (reveal) scroll.scrollBy(dx, dy);
       silentFocus = true;
       el.focus({preventScroll:true});
       silentFocus = false;
@@ -993,12 +1002,45 @@
     const appearance = new MutationObserver(repaint);
     appearance.observe(document.documentElement, {attributes:true, attributeFilter:['class', 'data-theme']});
 
-    function center(id) {
-      const x = layout.points.get(id)?.x ?? layout.ground.vx;
-      panOffset = x - layout.ground.vx;
-      scroll.scrollLeft = x - scroll.clientWidth / 2;
+    function grabPan() {
+      panGlide = null;
+      return scroll.scrollLeft + scroll.clientWidth / 2 - panAxis;
     }
-    return {render, element:scene, startTravel, center, focus: focusHead, destroy() {
+    function setPan(offset) {
+      panOffset = offset;
+      scroll.scrollLeft = panAxis - scroll.clientWidth / 2 + offset;
+    }
+    function advancePan(now) {
+      const {start, carry, anchor, target} = panGlide;
+      const t = options.reduced() ? 1 : clamp((now - start) / 240, 0, 1);
+      // The face can still be approaching when the hand lets go. Settle
+      // its actual distance from screen center while the camera finishes.
+      const point = points.get(anchor);
+      setPan((point ? point.x - panAxis : target) + carry * (1 - t) ** 3);
+      if (t < 1 || (point && traveling)) repaint();
+      else panGlide = null;
+    }
+    function pan(offset, ease, anchor) {
+      const now = performance.now();
+      if (ease) {
+        const carry = grabPan() - offset;
+        if (!options.reduced() && (Math.abs(carry) > .5 || (anchor && traveling))) {
+          panGlide = {start:now, carry, anchor, target:offset};
+        }
+      }
+      // Between crossings the hand moves the target directly. Only the
+      // outstanding distance from the last hop or release eases away.
+      if (panGlide) {
+        panGlide.target = offset;
+        advancePan(now);
+      } else setPan(offset);
+    }
+    function center(id, ease = false) {
+      const point = ease ? points.get(id) : layout.points.get(id);
+      if (!ease) panGlide = null;
+      pan(point ? point.x - panAxis : 0, ease, id);
+    }
+    return {render, element:scene, startTravel, center, grabPan, pan, focus: focusHead, destroy() {
       if (frame) cancelAnimationFrame(frame);
       preview.destroy();
       resize.disconnect();

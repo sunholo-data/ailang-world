@@ -69,6 +69,7 @@
       if (!press.dragged && Math.hypot(dx, dy) < 6) return;
       if (!press.dragged) {
         press.dragged = true;
+        press.pan = hooks.grabPan();
         scene.classList.add('is-floor-dragging');
       }
       tap = null;
@@ -88,6 +89,7 @@
         // subsequent depth motion from the same tip an arrow would select.
         const lane = hooks.shift(count);
         press.x -= count * press.stride;
+        press.pan = 0;
         if (lane) {
           const {time} = hooks.view().layout;
           press.changedLane = true;
@@ -101,9 +103,8 @@
           press.x = event.clientX;
         }
       }
-      // Follow the hand between lane crossings. Release settles on the selected lane.
-      const {ground} = hooks.view().layout;
-      scroll.scrollLeft = ground.vx - scroll.clientWidth / 2 - (event.clientX - press.x);
+      // Rebase the grab at a crossing without resetting the visible pan in one frame.
+      hooks.pan(press.pan - (event.clientX - press.x), Boolean(count));
       event.preventDefault();
       event.stopPropagation();
     }, {capture:true});

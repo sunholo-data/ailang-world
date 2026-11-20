@@ -3,10 +3,97 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"path/filepath"
 	"testing"
 )
+
+func TestSurfaceHeadOnSettlesPartialDragInChrome(t *testing.T) {
+	b := startPasskeyBrowser(t)
+	origin := rigSurface(t, filepath.Join(t.TempDir(), "credentials.db"))
+	b.do(t, nil, "tab", map[string]any{"viewport": map[string]int{"width": 1280, "height": 844}})
+	defer b.do(t, nil, "tab", nil)
+	read := func(expression string, out any) {
+		t.Helper()
+		b.do(t, out, "waitFor", map[string]any{"expression": expression})
+	}
+	for _, motion := range []string{"full", "reduced"} {
+		b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface", "raw": true})
+		read(fmt.Sprintf(`document.documentElement.dataset.ready === '1' &&
+			(localStorage.setItem('world.appearance', JSON.stringify({motion:%q})), true)`, motion), nil)
+		b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface#heads", "raw": true})
+		var start struct{ X, Y float64 }
+		read(fmt.Sprintf(`(() => {
+			const stage = document.querySelector('#stage[data-view="heads"]');
+			if (!stage || document.querySelector('#root').classList.contains('reduced') !== %t) return false;
+			const scene = stage.querySelector('.hc-scene'), scroll = scene.querySelector('.hc-scroll');
+			const rect = scroll.getBoundingClientRect(), centerX = rect.left + scroll.clientWidth / 2;
+			const face = [...scene.querySelectorAll('a[data-head-state]')].find(candidate => {
+				const box = candidate.getBoundingClientRect();
+				return box.width > 0 && Math.abs(box.left + box.width / 2 - centerX) <= 1;
+			});
+			if (!face || scroll.scrollLeft < 40) return false;
+			const centered = face.getBoundingClientRect().left;
+			for (const row of [.55, .65, .75]) for (const col of [.5, .4, .6, .35, .65]) {
+				const x = Math.round(rect.left + rect.width * col), y = Math.round(rect.top + rect.height * row);
+				if (!document.elementFromPoint(x,y)?.matches('.hc-floor-hit,.hc-graph')) continue;
+				window.partialDrag = {scene, face, centered, lane:scene.dataset.viewLane, cut:scene.dataset.travelState};
+				return {x,y};
+			}
+			return false;
+		})()`, motion == "reduced"), &start)
+		mouse := func(event string, dx int, buttons int) {
+			t.Helper()
+			b.do(t, nil, "mouse", map[string]any{"type": event, "x": start.X + float64(dx), "y": start.Y, "buttons": buttons})
+		}
+		mouse("mouseMoved", 0, 0)
+		mouse("mousePressed", 0, 1)
+		mouse("mouseMoved", 38, 1)
+		read(`(() => {
+			const {scene, face, centered, lane, cut} = window.partialDrag;
+			const offset = () => face.getBoundingClientRect().left - centered;
+			const before = offset();
+			if (before < 28 || scene.dataset.viewLane !== lane || scene.dataset.travelState !== cut) return false;
+			// Observe release before the first animation frame. Sampling after the
+			// driver round trip could miss the start of the settle animation.
+			window.addEventListener('pointerup', () => {
+				const started = performance.now();
+				const offsets = [offset()];
+				function sample(now) {
+					const current = offset();
+					offsets.push(current);
+					if (Math.abs(current) > 1 && now - started < 1200) requestAnimationFrame(sample);
+					else window.dragSettle = {before, offsets, sameView:face.isConnected && scene.dataset.viewLane === lane && scene.dataset.travelState === cut};
+				}
+				requestAnimationFrame(sample);
+			}, {once:true, capture:true});
+			return true;
+		})()`, nil)
+		mouse("mouseReleased", 38, 0)
+		var result struct {
+			Before   float64
+			Offsets  []float64
+			SameView bool
+		}
+		read(`window.dragSettle || false`, &result)
+		if !result.SameView || len(result.Offsets) < 2 || math.Abs(result.Offsets[len(result.Offsets)-1]) > 1 {
+			t.Fatalf("%s motion did not settle at the same lane and time: %+v", motion, result)
+		}
+		intermediate := map[float64]bool{}
+		for _, offset := range result.Offsets {
+			if motion == "reduced" && math.Abs(offset) > 1 {
+				t.Fatalf("reduced motion should center at release: %+v", result)
+			}
+			if offset > 1 && offset < result.Before-1 {
+				intermediate[offset] = true
+			}
+		}
+		if motion == "full" && len(intermediate) < 2 {
+			t.Fatalf("full motion should settle over multiple frames: %+v", result)
+		}
+	}
+}
 
 func TestSurfaceHeadOnReleasesGroundDragOverCardInChrome(t *testing.T) {
 	b := startPasskeyBrowser(t)
@@ -40,6 +127,21 @@ func TestSurfaceHeadOnReleasesGroundDragOverCardInChrome(t *testing.T) {
 	})()`, &start)
 	mouse("mouseMoved", start, 0)
 	mouse("mousePressed", start, 1)
+	read(`(() => {
+		const {scene} = window.floorDrag;
+		window.addEventListener('pointermove', () => {
+			const face = scene.querySelector('a[data-head-state][aria-current="true"]');
+			const started = performance.now(), positions = [];
+			function sample(now) {
+				const bounds = face?.getBoundingClientRect();
+				if (bounds?.height) positions.push(Math.round(bounds.top + bounds.height / 2));
+				if (now - started < 600) requestAnimationFrame(sample);
+				else window.floorDrag.scrubSamples = positions;
+			}
+			sample(started);
+		}, {once:true, capture:true});
+		return true;
+	})()`, nil)
 	mouse("mouseMoved", point{start.X, start.Y + 75}, 1)
 	read(`(() => {
 		const {scene} = window.floorDrag;
@@ -47,6 +149,24 @@ func TestSurfaceHeadOnReleasesGroundDragOverCardInChrome(t *testing.T) {
 		window.floorDrag.firstCut = scene.dataset.travelState;
 		return true;
 	})()`, nil)
+	var positions []int
+	read(`window.floorDrag.scrubSamples || false`, &positions)
+	if len(positions) < 3 {
+		t.Fatalf("no depth scrub animation samples: %v", positions)
+	}
+	near, far := positions[0], positions[len(positions)-1]
+	if near > far {
+		near, far = far, near
+	}
+	intermediate := map[int]bool{}
+	for _, y := range positions {
+		if near < y && y < far {
+			intermediate[y] = true
+		}
+	}
+	if len(intermediate) < 2 {
+		t.Fatalf("depth scrub should interpolate the selected face over multiple frames: %v", positions)
+	}
 
 	var release struct {
 		point
