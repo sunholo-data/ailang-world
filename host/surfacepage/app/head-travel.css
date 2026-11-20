@@ -20,6 +20,9 @@
 }
 .hc-travel [hidden], .hc-travel[hidden] { display: none; }
 .hc-travel button {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  user-select: none;
   flex: none;
   min-width: 44px;
   min-height: 44px;
@@ -39,32 +42,10 @@
   font: 650 11px/1 var(--font);
 }
 .hc-travel-label {
-  align-self: center;
-  min-width: 0;
-  max-width: min(50vw, 260px);
-  padding-inline: 3px;
-  color: var(--sub);
-  font: 500 11px/1.25 var(--mono);
+  position: absolute;
+  width: 1px;
+  height: 1px;
   overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-@media (max-width: 480px) {
-  .hc-travel {
-    display: grid;
-    grid-template-columns: 44px 44px auto 44px 44px;
-  }
-  .hc-travel-label {
-    grid-column: 1 / -1;
-    grid-row: 1;
-    max-width: none;
-    padding: 5px 9px;
-    border-bottom: 1px solid var(--line);
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-  .hc-travel button { grid-row: 2; }
-  .hc-travel-out { grid-column: 4; }
-  .hc-travel-in { grid-column: 5; }
 }

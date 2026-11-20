@@ -159,15 +159,17 @@ func TestSurfaceHeadOnTravelsHistoryInChrome(t *testing.T) {
 	tapDepth("Move into history")
 	assertStop("secondDepthStop", "firstDepthStop")
 
-	// The browser harness has no physical +/- keys. Dispatch keydowns from a
-	// focused head to exercise the same production keyboard handling.
+	// Dispatch from a focused head because the browser harness only supports a
+	// few physical keys.
 	depthKey := func(key string) {
 		t.Helper()
 		wait(fmt.Sprintf(`(() => {
-			const link = window.visibleTravelFaces().find(face => face.dataset.headState === window.getTravelStop());
-			if (!link) return false;
-			link.focus();
-			link.dispatchEvent(new KeyboardEvent('keydown', {key:%q, bubbles:true, cancelable:true}));
+			const target = window.visibleTravelFaces().find(face => face.dataset.headState === window.getTravelStop()) ||
+				window.travelScene.querySelector('.hc-travel-in');
+			target.focus();
+			const options = {key:%q, bubbles:true, cancelable:true};
+			target.dispatchEvent(new KeyboardEvent('keydown', options));
+			document.activeElement.dispatchEvent(new KeyboardEvent('keyup', options));
 			return true;
 		})()`, key))
 	}
@@ -193,6 +195,66 @@ func TestSurfaceHeadOnTravelsHistoryInChrome(t *testing.T) {
 	wait(`window.getTravelStop() === window.secondDepthStop`)
 	depthKey("-")
 	wait(`window.getTravelStop() === window.firstDepthStop`)
+	depthKey("ArrowUp")
+	wait(`window.getTravelStop() === window.secondDepthStop`)
+	depthKey("ArrowDown")
+	wait(`window.getTravelStop() === window.firstDepthStop`)
+
+	wait(`(() => {
+		const address = document.querySelector('#addr');
+		address.focus();
+		const event = new KeyboardEvent('keydown', {key:'ArrowUp', bubbles:true, cancelable:true});
+		return document.activeElement === address && address.dispatchEvent(event) &&
+			window.getTravelStop() === window.firstDepthStop;
+	})()`)
+	depthKey("ArrowDown")
+	wait(`window.getTravelStop() === ''`)
+	depthKey("ArrowDown")
+	wait(`window.getTravelStop() === ''`)
+
+	// Fast native-style repeats must be paced. Release while more history
+	// remains so an unwanted step after keyup is observable.
+	wait(`((async () => {
+		const scene = window.travelScene;
+		const lane = scene.dataset.viewLane;
+		const older = scene.querySelector('.hc-travel-in');
+		const stop = window.getTravelStop;
+		const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
+		const send = (type, repeat = false) => document.activeElement.dispatchEvent(new KeyboardEvent(type,
+			{key:'ArrowUp', repeat, bubbles:true, cancelable:true}));
+		const burst = () => { for (let i = 0; i < 12; i++) send('keydown', true); };
+		older.focus();
+		send('keydown');
+		burst();
+		const first = stop() === window.firstDepthStop && scene.dataset.viewLane === lane;
+		const repeatStep = async () => {
+			const previous = stop();
+			const deadline = performance.now() + 1000;
+			while (stop() === previous && performance.now() < deadline) {
+				await pause(25);
+				send('keydown', true);
+			}
+			return stop();
+		};
+		const second = await repeatStep();
+		burst();
+		const paced = stop() === second && scene.dataset.viewLane === lane;
+		const releasedAt = await repeatStep();
+		const repeated = paced && second === window.secondDepthStop &&
+			window.travelTimes.get(releasedAt) < window.travelTimes.get(second) && scene.dataset.viewLane === lane &&
+			older.getAttribute('aria-disabled') === 'false';
+		send('keyup');
+		await pause(450);
+		window.heldArrow = {first, repeated, released:stop() === releasedAt && scene.dataset.viewLane === lane};
+	})(), true)`)
+	var held struct {
+		First, Repeated, Released bool
+	}
+	b.do(t, &held, "waitFor", map[string]any{"expression": `window.heldArrow || false`})
+	if !held.First || !held.Repeated || !held.Released {
+		t.Fatalf("ArrowUp hold should take paced steps in one lane and stop on keyup, got %+v", held)
+	}
+
 	tapDepth("Return to present")
 	wait(`window.getTravelStop() === '' && window.visibleTravelFaces().length > 0 &&
 		document.querySelector('#stage[data-view="heads"]') === window.travelStage &&
@@ -627,6 +689,31 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 		window.axisEndsAt('2026-10-20T14:30:00.000Z') &&
 		window.paneTimeY('a-tip') < window.nearPlaneY - 1 &&
 		window.alignedPanes('a-tip', 'b-tip')`)
+
+	// Seeking on the shared ribbon preserves slider focus. Real successors can
+	// be opened as forward strips without being counted as states in this cut.
+	wait(`(() => {
+		const mini = document.querySelector('#head-ribbon [role="slider"]');
+		if (!mini) return false;
+		window.timeRibbon = mini;
+		mini.focus();
+		mini.dispatchEvent(new KeyboardEvent('keydown', {key:'Home', bubbles:true, cancelable:true}));
+		return true;
+	})()`)
+	wait(`(() => {
+		const scene = window.timedScene;
+		const strips = [...scene.querySelectorAll('[data-lineage-state]')];
+		return scene.dataset.travelState === 'shared-early' && document.activeElement === window.timeRibbon &&
+			!window.paneFor('shared-cut') && strips.length === 2 &&
+			strips[0].dataset.lineageFrom === 'shared-early' && strips[0].dataset.lineageState === 'shared-cut' &&
+			strips[1].dataset.lineageFrom === 'shared-cut' && strips[1].dataset.lineageState === 'shared-late' &&
+			strips.every(el => new URL(el.href).searchParams.get('at') === el.dataset.lineageState);
+	})()`)
+	wait(`(window.timeRibbon.dispatchEvent(new KeyboardEvent('keydown', {key:'End', bubbles:true, cancelable:true})), true)`)
+	wait(`!window.timedScene.dataset.travelState && !window.timedScene.querySelector('[data-lineage-state]') &&
+		window.timeRibbon.getAttribute('aria-valuetext') === 'Present'`)
+	b.do(t, nil, "tap", map[string]any{"id": "timeline-angle"})
+	wait(`document.querySelector('#stage').dataset.view === 'timeline' && document.querySelector('#tl #mini') === window.timeRibbon`)
 }
 
 // The stop shares an instant with b-tie despite different wire offsets.

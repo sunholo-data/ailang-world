@@ -27,6 +27,9 @@
     const ctx = canvas.getContext('2d');
     const timeAxis = scene.querySelector('.hc-time-axis');
     const inspection = scene.querySelector('.hc-inspection'), tip = scene.querySelector('.hc-inspect-tip');
+    const preview = WorldHeadNodePreview.create(scene, options);
+    const nodeLink = '.hc-face[data-head-state], .hc-rear, [data-lineage-state]';
+    const stateID = el => el?.dataset.headState || el?.dataset.rearState || el?.dataset.lineageState || '';
     const inspectionInk = inspection.getContext('2d');
     let inspectable = false, pointer = null;
     const inspected = () => {
@@ -34,6 +37,7 @@
       return inspectable && model?.N[id] ? id : '';
     };
     const rearLayer = space.querySelector('.hc-rear-layer');
+    const lineage = WorldHeadLineage.create(space, {title:options.title, tag:options.tag, path:statePath, accent});
     const cards = new Map(), rearLinks = new Map();
     const stamps = new Map(), paneTitles = new Map(), crossings = new Map();
     const neighborhood = new Map(), incident = new Map();
@@ -249,8 +253,7 @@
         el.classList.toggle('is-middle', !compact && head.height <= 76);
         el.classList.toggle('is-short', !compact && head.height < 58);
         el.href = statePath(node);
-        el.title = label + ' · ' + title;
-        if (compact) el.setAttribute('aria-label', el.title);
+        if (compact) el.setAttribute('aria-label', label + ' · ' + title);
         else el.removeAttribute('aria-label');
         el.style.setProperty('--hc-lane', accent(lane));
         if (space.children[index] !== el) {
@@ -368,7 +371,6 @@
           miniIndex++;
         } else {
           entry.content.textContent = height >= 13 && width >= 50 ? title : '';
-          el.title = title;
           fullLinks.push(el);
         }
       }
@@ -713,11 +715,17 @@
 
     function updateSelection() {
       const active = inspected();
-      if (paintedSelection === active + '|' + selected) return;
-      paintedSelection = active + '|' + selected;
+      const focus = active || (points.has(selected) ? selected : layout?.time.stop);
+      const origin = lineage.link(focus) ? lineage.origin : focus;
+      const point = inspectable && layout?.time.stop && points.get(origin);
+      lineage.update(model, layout, point ? origin : '', point ? shape(origin, point) : null);
+      const key = [active, selected, inspectable].join('|');
+      if (paintedSelection === key) return;
+      paintedSelection = key;
       if (active) scene.dataset.inspectState = active;
       else delete scene.dataset.inspectState;
       const related = neighborhood.get(active);
+      const ancestors = new Set(inspectable && layout?.time.stop ? model?.parents[focus] : []);
       const selectedLane = model?.N[selected]?.lane;
       const decorate = (id, el) => {
         const isSelected = id === selected, isInspected = id === active;
@@ -725,6 +733,7 @@
         const showsSelectedLane = Boolean(selectedLane && el.dataset.headLane === selectedLane);
         el.classList.toggle('is-selected', isSelected || showsSelectedLane);
         el.classList.toggle('is-inspected', isInspected);
+        el.classList.toggle('is-ancestor', ancestors.has(id));
         el.classList.toggle('is-related', Boolean(isRelated));
         el.classList.toggle('is-muted', Boolean(active && !isRelated && !isInspected));
         if (isSelected) el.setAttribute('aria-current', 'true');
@@ -787,7 +796,7 @@
         inspectable = false;
         hovered = '';
         focusedByUser = '';
-        tip.hidden = true;
+        preview.hide();
         updateSelection();
         return;
       }
@@ -811,7 +820,7 @@
       }
       if (!inspectable) {
         hovered = '';
-        tip.hidden = true;
+        preview.hide();
       }
       const viewportWidth = scroll.clientWidth;
       if (viewportWidth && (panAxis !== layout.ground?.vx || panWidth !== viewportWidth)) {
@@ -878,11 +887,12 @@
         }
       }
       updateSelection();
+      if (inspectable && !preview.element.hidden) showPreview();
       repaint();
     }
 
     function face(event) {
-      return event.target.closest('.hc-face, .hc-rear');
+      return event.target.closest(nodeLink);
     }
 
     function hasVisibleFocus(el) {
@@ -905,9 +915,9 @@
       el.focus({preventScroll:true});
       silentFocus = false;
       if (!hasVisibleFocus(el)) return;
-      focusedByUser = el.dataset.headState || el.dataset.rearState;
+      focusedByUser = stateID(el);
       hovered = '';
-      showHistoryTitle();
+      showPreview();
       updateSelection();
       repaint();
     }
@@ -917,56 +927,49 @@
       const {clientX, clientY} = event;
       pointer = {clientX, clientY, pointerType:event.pointerType};
       const target = document.elementFromPoint(clientX, clientY);
-      const link = target?.closest('.hc-face[data-head-state], .hc-rear');
-      const id = link?.dataset.headState || link?.dataset.rearState || '';
+      const link = target?.closest(nodeLink);
+      // Crossing the small gutter between a face and its forward strips
+      // keeps that face's branch open until the pointer reaches the link.
+      if (!link && target?.closest('.hc-forward')) return;
+      const id = stateID(link);
       if (id !== hovered) {
         hovered = id;
         updateSelection();
         repaint();
       }
-      showHistoryTitle();
+      showPreview();
     }
 
-    function showHistoryTitle() {
-      const id = inspected(), entry = rearLinks.get(id);
-      tip.hidden = !entry;
-      if (!entry) return;
-      const box = scene.getBoundingClientRect();
-      const node = model.N[id], stamp = Date.parse(node.at);
-      const title = options.title(node) || node.title || node.label || id;
-      const line = Number.isFinite(stamp) ? title + ' · ' + exactTime.format(stamp) + ' UTC' : title;
-      if (tip.textContent !== line) tip.textContent = line;
-      const rect = entry.el.getBoundingClientRect();
-      const x = hovered && pointer ? pointer.clientX : rect.left + rect.width / 2;
-      const y = hovered && pointer ? pointer.clientY : rect.bottom;
-      tip.style.left = clamp(x - box.left + 11, 6, box.width - tip.offsetWidth - 6) + 'px';
-      tip.style.top = clamp(y - box.top + 12, 6, box.height - tip.offsetHeight - 6) + 'px';
+    function showPreview() {
+      const id = inspected();
+      const anchor = cards.get(id)?.el || rearLinks.get(id)?.el || lineage.link(id);
+      if (hovered || anchor?.matches(':focus-visible')) preview.show(model, id, anchor, hovered ? pointer : null);
+      else preview.hide();
     }
 
     scene.addEventListener('focusin', event => {
       const el = face(event);
       if (!silentFocus && hasVisibleFocus(el)) {
         hovered = '';
-        focusedByUser = el.dataset.headState || el.dataset.rearState;
-        options.select(focusedByUser);
-        showHistoryTitle();
+        focusedByUser = stateID(el);
+        if (!el.dataset.lineageState) options.select(focusedByUser);
+        showPreview();
         updateSelection();
         repaint();
       }
     });
     scene.addEventListener('click', event => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      const data = face(event)?.dataset;
-      const id = data?.headState || data?.rearState;
+      const id = stateID(face(event));
       if (!id) return;
       event.preventDefault();
       event.stopPropagation();
       options.open(id);
     });
     scene.addEventListener('focusout', event => {
-      if (!face(event) || event.relatedTarget?.closest?.('.hc-face, .hc-rear')) return;
+      if (!face(event) || event.relatedTarget?.closest?.(nodeLink)) return;
       focusedByUser = '';
-      showHistoryTitle();
+      showPreview();
       updateSelection();
       repaint();
     });
@@ -975,7 +978,7 @@
     scene.addEventListener('pointerleave', () => {
       pointer = null;
       hovered = '';
-      showHistoryTitle();
+      showPreview();
       updateSelection();
       repaint();
     });
@@ -984,7 +987,7 @@
       // deliberate offset only while the viewport matches the framed scene.
       if (panWidth && panWidth === scroll.clientWidth) panOffset = scroll.scrollLeft + panWidth / 2 - panAxis;
       if (pointer) updatePointer(pointer);
-      else if (!tip.hidden) showHistoryTitle();
+      else if (!tip.hidden) showPreview();
       repaint();
     }, {passive:true});
     const resize = new ResizeObserver(repaint);
@@ -998,6 +1001,7 @@
     }
     return {render, element:scene, startTravel, center, focus: focusHead, destroy() {
       if (frame) cancelAnimationFrame(frame);
+      preview.destroy();
       resize.disconnect();
       appearance.disconnect();
       scene.remove();

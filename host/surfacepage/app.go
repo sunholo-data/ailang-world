@@ -25,6 +25,15 @@ var headCamera []byte
 //go:embed app/head-travel-input.js
 var headTravelInput []byte
 
+//go:embed app/head-lanes.js
+var headLanes []byte
+
+//go:embed app/head-node-preview.js
+var headNodePreview []byte
+
+//go:embed app/head-lineage.js
+var headLineage []byte
+
 //go:embed app/head-scene.js
 var headScene []byte
 
@@ -34,7 +43,7 @@ var cameraController []byte
 //go:embed app/composer.js
 var composerScript []byte
 
-var AppScript = bytes.Join([][]byte{headDrafts, headCamera, headTravelInput, headScene, cameraController, timelineScript, composerScript}, []byte("\n"))
+var AppScript = bytes.Join([][]byte{headDrafts, headCamera, headTravelInput, headLanes, headNodePreview, headLineage, headScene, cameraController, timelineScript, composerScript}, []byte("\n"))
 
 // AppStyle is /surface/app.css: the working copy's stylesheet, its fonts
 // self-hosted under /surface/fonts/.
@@ -54,7 +63,16 @@ var headDraftStyle []byte
 //go:embed app/head-travel.css
 var headTravelStyle []byte
 
-var AppStyle = bytes.Join([][]byte{timelineStyle, headStyle, headInspectStyle, headDraftStyle, headTravelStyle}, []byte("\n"))
+//go:embed app/head-lineage.css
+var headLineageStyle []byte
+
+//go:embed app/head-lanes.css
+var headLaneStyle []byte
+
+//go:embed app/time-ribbon.css
+var timeRibbonStyle []byte
+
+var AppStyle = bytes.Join([][]byte{timelineStyle, headStyle, headInspectStyle, headDraftStyle, headTravelStyle, headLineageStyle, headLaneStyle, timeRibbonStyle}, []byte("\n"))
 
 // AppLogo is /surface/ailang-logo.svg, the AILANG mark the shell inlines.
 //

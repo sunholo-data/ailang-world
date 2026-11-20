@@ -1,0 +1,43 @@
+/* Recorded successors sit on the viewer's side of the historical face. */
+.hc-forward {
+  position: absolute;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: auto;
+}
+.hc-forward[hidden] { display: none; }
+.hc-forward-path { display: grid; justify-items: center; flex: 1; min-width: 0; }
+.hc-forward-path::before {
+  content: '';
+  height: 6px;
+  border-inline-start: 1px dashed var(--edge);
+}
+.hc-forward-path a {
+  display: block;
+  width: 100%;
+  height: 20px;
+  line-height: 18px;
+  padding: 0 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border: 1px dashed color-mix(in srgb, var(--hc-lane) 78%, var(--bg));
+  border-radius: var(--r);
+  color: var(--sub);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  text-decoration: none;
+  font-size: 11px;
+  pointer-events: auto;
+}
+.hc-forward-path a::before { content: '↓'; color: var(--hc-lane); margin-inline-end: 5px; }
+.hc-forward-path a:nth-child(2) { width: 93%; opacity: .8; }
+.hc-forward-path a:nth-child(3) { width: 86%; opacity: .65; }
+.hc-forward-path a:is(:hover, :focus-visible) { opacity: 1; color: var(--text); background: var(--card); border-style: solid; }
+.hc-space .is-ancestor .hc-front-content { border-top: 2px solid var(--hc-lane); }
+.hc-space .hc-mini.is-ancestor .hc-mini-front { stroke: var(--text); }
+@media (pointer: coarse) {
+  .hc-forward-path a { height: 24px; line-height: 22px; }
+}

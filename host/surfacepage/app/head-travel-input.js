@@ -3,6 +3,8 @@
   'use strict';
   if (typeof window === 'undefined') return;
 
+  const repeatEvery = 135;
+
   function create(scene, hooks) {
     const events = new AbortController();
     const controls = document.createElement('div');
@@ -10,12 +12,12 @@
     controls.setAttribute('role', 'group');
     controls.setAttribute('aria-label', 'Move through branches and time');
     controls.innerHTML = `
-      <button type="button" class="hc-lane-left" aria-label="Move one lane left">←</button>
+      <button type="button" class="hc-lane-left" aria-label="Move one lane left" aria-keyshortcuts="ArrowLeft">←</button>
       <span class="hc-travel-label" role="status"></span>
-      <button type="button" class="hc-lane-right" aria-label="Move one lane right">→</button>
+      <button type="button" class="hc-lane-right" aria-label="Move one lane right" aria-keyshortcuts="ArrowRight">→</button>
       <button type="button" class="hc-travel-reset" aria-label="Return to present">Present</button>
-      <button type="button" class="hc-travel-out" aria-label="Move toward present" title="Move toward present (−)">−</button>
-      <button type="button" class="hc-travel-in" aria-label="Move into history" title="Move into history (+)">+</button>`;
+      <button type="button" class="hc-travel-in" aria-label="Move into history" aria-keyshortcuts="ArrowUp +" title="Move into history (↑ or +)">↑</button>
+      <button type="button" class="hc-travel-out" aria-label="Move toward present" aria-keyshortcuts="ArrowDown -" title="Move toward present (↓ or −)">↓</button>`;
     controls.hidden = true;
     scene.append(controls);
 
@@ -24,6 +26,9 @@
     const newer = controls.querySelector('.hc-travel-out');
     const reset = controls.querySelector('.hc-travel-reset');
     const left = controls.querySelector('.hc-lane-left'), right = controls.querySelector('.hc-lane-right');
+    const keys = new Map([['ArrowLeft', left], ['ArrowRight', right], ['ArrowUp', older], ['ArrowDown', newer],
+      ['+', older], ['=', older], ['-', newer]]);
+    let lastKeyStep = -Infinity, hold, heldClick = false;
     let state = {active:false, canIn:false, canOut:false};
     let wheelAt = 0, wheelDirection = 0, wheelAmount = 0, lastWheelStep = -Infinity;
     let pinch = null, suppressClickUntil = 0;
@@ -45,17 +50,50 @@
       return active() && (direction > 0 ? state.canIn || Boolean(pointed?.closest('[data-head-state], [data-rear-state]')) : state.canOut);
     }
 
-    function step(direction, target) {
-      if (available(direction)) hooks.step(direction, target);
+    function navigate(button, target, fast) {
+      if (!active()) return;
+      if (button === left && state.left) hooks.shift(-1, fast);
+      if (button === right && state.right) hooks.shift(1, fast);
+      if (button === older && available(1, target)) hooks.step(1, target, fast);
+      if (button === newer && state.canOut) hooks.step(-1, null, fast);
     }
 
-    listen(left, 'click', () => { if (active() && state.left) hooks.shift(-1); });
-    listen(right, 'click', () => { if (active() && state.right) hooks.shift(1); });
-    listen(older, 'click', () => step(1, null));
-    listen(newer, 'click', () => step(-1, null));
-    listen(reset, 'click', () => {
-      if (available(-1)) hooks.reset();
+    function endHold() {
+      if (hold) clearTimeout(hold.timer);
+      hold = null;
+    }
+    listen(controls, 'click', event => {
+      const button = event.target.closest('button');
+      if (!button || !active() || (heldClick && event.detail)) return;
+      if (button === reset) { if (state.canOut) hooks.reset(); }
+      else navigate(button);
     });
+    listen(controls, 'pointerdown', event => {
+      if (!event.isPrimary || event.button !== 0) return;
+      endHold();
+      heldClick = false;
+      const button = event.target.closest('button');
+      if (!button || button === reset || button.getAttribute('aria-disabled') === 'true') return;
+      hold = {id:event.pointerId, x:event.clientX, y:event.clientY};
+      const repeat = () => {
+        if (!hold || !active() || button.getAttribute('aria-disabled') === 'true') return endHold();
+        heldClick = true;
+        navigate(button, null, true);
+        if (hold) hold.timer = setTimeout(repeat, repeatEvery);
+      };
+      hold.timer = setTimeout(repeat, 350);
+    });
+    listen(window, 'pointermove', event => {
+      if (hold?.id === event.pointerId && Math.hypot(event.clientX-hold.x, event.clientY-hold.y) > 12) {
+        heldClick = true;
+        endHold();
+      }
+    });
+    for (const type of ['pointerup', 'pointercancel']) {
+      listen(window, type, event => { if (hold?.id === event.pointerId) endHold(); });
+    }
+    listen(window, 'blur', endHold);
+    listen(document, 'visibilitychange', () => { if (document.hidden) endHold(); });
     listen(scene, 'wheel', event => {
       if (!active() || event.defaultPrevented || event.shiftKey || event.metaKey || event.ctrlKey ||
           Math.abs(event.deltaX) >= Math.abs(event.deltaY)) return;
@@ -120,20 +158,16 @@
     }, {capture:true});
 
     listen(window, 'keydown', event => {
-      if (!active() || event.defaultPrevented || event.isComposing || event.repeat || event.altKey ||
+      if (!active() || event.defaultPrevented || event.isComposing || event.altKey ||
           event.metaKey || event.ctrlKey || document.querySelector('#keys:not([hidden]), #look:not([hidden]), dialog[open]') ||
           event.target?.closest?.('[role="dialog"], input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"]')) return;
-      if (!event.shiftKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
-        event.preventDefault();
-        const leftwards = event.key === 'ArrowLeft';
-        if (leftwards ? state.left : state.right) hooks.shift(leftwards ? -1 : 1);
-        return;
-      }
-      const direction = event.key === '+' || event.key === '=' ? 1 : event.key === '-' ? -1 : 0;
-      const target = sceneTarget(document.activeElement);
-      if (!direction || !available(direction, target)) return;
+      const button = keys.get(event.key);
+      if (!button || (event.shiftKey && event.key !== '+')) return;
       event.preventDefault();
-      step(direction, target);
+      const now = performance.now();
+      if (event.repeat && now - lastKeyStep < repeatEvery) return;
+      lastKeyStep = now;
+      navigate(button, event.repeat ? null : sceneTarget(document.activeElement), event.repeat);
     });
 
     return {
@@ -141,6 +175,7 @@
         const becameActive = next.active && !state.active;
         state = next;
         controls.hidden = !state.active;
+        if (!state.active) endHold();
         scene.classList.toggle('hc-travel-active', state.active);
         if (becameActive) {
           wheelAmount = 0;
@@ -156,12 +191,12 @@
         newer.setAttribute('aria-disabled', String(!state.canOut));
         if (reset === document.activeElement && !state.canOut && state.active) older.focus({preventScroll:true});
         reset.hidden = !state.canOut;
-        const description = state.label || '';
+        const description = [state.label, state.when].filter(Boolean).join(' · ');
         if (label.textContent !== description) label.textContent = description;
-        label.title = [description, state.when].filter(Boolean).join(' · ');
         label.hidden = !description;
       },
       destroy() {
+        endHold();
         events.abort();
         controls.remove();
         scene.classList.remove('hc-travel-active');

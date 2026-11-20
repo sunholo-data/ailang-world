@@ -621,18 +621,21 @@
     recordedModel = m;
     T = adaptModel(drafts.project(m));
     ({ D, LANES, N, parents, kids, SH, NS, TT, LX, MAXU, STEPS, TNOW, NOW_D, quiet, LY, ROWS, nameOf, laneTitle, glyphOf, glyphOfNode, lastStep, lastState } = T);
-    measureMini();
+    measureStops();
     computeXS(view.u);
   }
-  function measureMini() {
+  function measureMini(width) {
     const a = LX[3][0], z = LX[3][NS];
-    MXS = LX[3].map(x => 8 + (x - a) / ((z - a) || 1) * (PW - 16));
+    MXS = LX[3].map(x => 8 + (x - a) / ((z - a) || 1) * Math.max(1, width - 16));
   }
   // The open stack (world/surface-stack/v1), when a brane is open.
   let S = null, F = null, RAIL = [], READS = new Map();
   function setStack(s) { S = s; F = s.front; RAIL = s.rail || []; READS = new Map((F.reads || []).map(r => [r.via + ':' + r.fromId, r])); }
   const railIdx = () => F ? Math.max(0, RAIL.findIndex(r => r.id === F.id)) : 0;
-  const setView = v => { $('stage').dataset.view = v; };
+  const setView = v => {
+    $('stage').dataset.view = v;
+    if (v === 'brane' || !T) showHeadRibbon(false);
+  };
 
   const isBreak = i => breakAt(TT, i);
   const breaksBetween = (a, b) => {
@@ -673,7 +676,6 @@
       const pinned = T && atNow();
       PL = left; PR = right; PW = Math.max(1, PR - PL);
       if (T) {
-        measureMini();
         renderTimeline(true);
         if (pinned) goNow(false); else applyView();
       }
@@ -724,8 +726,10 @@
   const camera = WorldCameraController.create($('stage'), $('head-space'), {
     model:() => T, timeXs:() => XS, sidePoints, attention:attentionLanes, reduced,
     glyph:(n, size) => glyphOfNode(n, size), title:n => cleanTitle(n.title) || n.episode || n.label || n.id,
+    summary:summaryOf, agent:agentLine, tag:tagOf,
     open:id => open(id),
     select:id => { if (N[id]) { st.focus = id; camera.select(id); } },
+    timeChanged: (index, active) => updateHeadRibbon(index, active && st.d === 0),
     sideVisible:keyboard => {
       $('L0').inert = false;
       if (keyboard) $('timeline-angle').focus({preventScroll:true});
@@ -744,7 +748,7 @@
   }
   function faceFor(id) {
     const space = $('head-space');
-    const exact = space.querySelector(`[data-head-state="${CSS.escape(id)}"],[data-rear-state="${CSS.escape(id)}"]`);
+    const exact = space.querySelector(`[data-head-state="${CSS.escape(id)}"],[data-rear-state="${CSS.escape(id)}"],[data-lineage-state="${CSS.escape(id)}"]`);
     if (exact) return exact;
     const lane = N[id]?.lane;
     return lane && space.querySelector(`[data-head-lane="${CSS.escape(lane)}"]`);
@@ -874,14 +878,10 @@
         <button type="button" class="cb" id="pg-fwd" aria-label="Forward in time" data-tip="k:→ forward a page">›</button>
         <button type="button" class="cb now-b" id="now-b" aria-label="Back to now" data-tip="k:End · back to the newest state">Now</button>
       </span>
-      <span class="ctl zoom" role="group" aria-label="Zoom">
-        <button type="button" class="cb" id="z-out" aria-label="Zoom out" data-tip="k:− · ⌘-scroll or pinch to zoom">−</button>
-        <span class="zl" id="zl">Steps</span>
-        <button type="button" class="cb" id="z-in" aria-label="Zoom in" data-tip="k:+ · ⌘-scroll or pinch to zoom">+</button>
-      </span></div>`;
+      <span id="timeline-zoom"></span></div>`;
     h += nowCard();
     h += `<div class="mini-lab" style="top:${MINI_T + 2}px">Overview<span>drag the window · click to jump</span></div>`;
-    h += `<div class="mini" id="mini" style="left:${PL}px;top:${MINI_T}px;width:${PW}px;height:${MINI_H}px"></div>`;
+    h += '<div id="timeline-mini"></div>';
     ROWS.filter(T.isOther).forEach(row => {
       h += `<div class="quiet-list" data-quiet-list="${esc(row)}" style="left:16px;bottom:${936 - (LY[row] - 28)}px" hidden>${(T.QUIET[row] || []).map(k => {
         const s = lastStep(k);
@@ -898,7 +898,9 @@
     $('tl').innerHTML = h;
     // The plot clips; it must never scroll itself (focus() or scrollIntoView on a node would).
     $('plot').addEventListener('scroll', e => { e.target.scrollTop = 0; e.target.scrollLeft = 0; });
-    renderMini();
+    mini.style.cssText = `left:${PL}px;top:${MINI_T}px;width:${PW}px;height:${MINI_H}px`;
+    placeRibbon();
+    drawMini();
     relayout();
     if (!keepView) goNow(false);
   }
@@ -1090,7 +1092,7 @@
     if (!keepPosition) view.L = clampL(view.L);
     $('world').style.transform = `translateX(${-view.L}px)`;
     const fL = fAt(view.L), fR = fAt(view.L + PW), mw = $('mwin');
-    if (mw) { const a = MX(fL), b = MX(fR); mw.style.left = a + 'px'; mw.style.width = Math.max(8, b - a) + 'px'; }
+    if (mw && headRibbon.hidden) updateMiniWindow(fL, fR);
     const tL = timeOfF(fL), tR = timeOfF(fR), nowIn = T.nowKnown && (atNow() || tR === TNOW);
     $('range').innerHTML = `<b>${fmtRange(tL)}</b> → <b>${nowIn ? 'now' : fmtRange(tR)}</b>${atNow() ? '' : `<span class="behind">${behindText(tR)}</span>`}`;
     $('now-b').classList.toggle('live', !atNow());
@@ -1114,6 +1116,7 @@
     relayout();
     view.L = clampL(posF(f) - (ax - PL));
     applyView();
+    if (!headRibbon.hidden) camera.update();
   }
   let zanim = 0;
   function zoomTo(u, ax, animate = true) {
@@ -1126,7 +1129,10 @@
   }
   const screenX = id => { const d = DISP[REP[id] || id]; return d ? PL + d.x - view.L : null; };
   const keyAnchor = () => { const x = screenX(st.focus); return x != null && x >= PL && x <= PR ? x : PL + PW / 2; };
-  const zoomStep = dir => zoomTo(dir < 0 ? Math.ceil(view.u - 0.01) - 1 : Math.floor(view.u + 0.01) + 1, keyAnchor());
+  const zoomStep = dir => {
+    const target = dir < 0 ? Math.ceil(view.u - 0.01) - 1 : Math.floor(view.u + 0.01) + 1;
+    zoomTo(target, keyAnchor(), headRibbon.hidden);
+  };
   function ensureVisible(id, animate = true) {
     const x = screenX(id); if (x == null) return;
     if (x < PL + 60) panTo(view.L - (PL + 60 - x) - PW * 0.25, animate);
@@ -1134,14 +1140,141 @@
   }
 
   // Overview: a fixed real-time layout of the whole history (the Days level), normalised to the strip.
+  const mini = document.createElement('div'), zoom = document.createElement('span'), headRibbon = document.createElement('div');
+  mini.id = 'mini';
+  mini.className = 'mini';
+  zoom.className = 'ctl zoom';
+  zoom.setAttribute('role', 'group');
+  zoom.setAttribute('aria-label', 'Zoom');
+  zoom.innerHTML = `
+    <button type="button" class="cb" id="z-out" aria-label="Zoom out" data-tip="k:− · ⌘-scroll or pinch to zoom">−</button>
+    <span class="zl" id="zl">Steps</span>
+    <button type="button" class="cb" id="z-in" aria-label="Zoom in" data-tip="k:+ · ⌘-scroll or pinch to zoom">+</button>`;
+  headRibbon.id = 'head-ribbon';
+  headRibbon.hidden = true;
+  $('keys').before(headRibbon);
+
+  let miniWidth = 0, headIndex, miniStops = [];
+  function measureStops() {
+    const at = new Map();
+    for (const n of Object.values(N)) {
+      const i = T.timeIndex.get(n.id);
+      if (n.draft || (T.undated && i === 0) || i >= T.presentIndex || at.has(i)) continue;
+      at.set(i, n.id);
+    }
+    at.set(T.presentIndex, '');
+    miniStops = [...at].map(([index, id]) => ({index, id})).sort((a, b) => a.index - b.index);
+  }
+  function placeRibbon() {
+    const inHeads = !headRibbon.hidden;
+    const miniSlot = inHeads ? headRibbon : $('timeline-mini');
+    const zoomSlot = inHeads ? headRibbon : $('timeline-zoom');
+    if (miniSlot && mini.parentElement !== miniSlot) miniSlot.append(mini);
+    if (zoomSlot && zoom.parentElement !== zoomSlot) zoomSlot.append(zoom);
+  }
+  function showHeadRibbon(show) {
+    if (show === !headRibbon.hidden) return;
+    headRibbon.hidden = !show;
+    placeRibbon();
+    if (show) {
+      mini.tabIndex = 0;
+      mini.setAttribute('role', 'slider');
+      mini.setAttribute('aria-label', 'Recorded time');
+    } else {
+      for (const attr of ['tabindex', 'role', 'aria-label', 'aria-valuemin', 'aria-valuemax', 'aria-valuenow', 'aria-valuetext']) mini.removeAttribute(attr);
+    }
+    if (!T) return;
+    for (const [id, key] of [['z-out', '−'], ['z-in', '+']]) {
+      $(id).dataset.tip = show ? '' : `k:${key} · ⌘-scroll or pinch to zoom`;
+    }
+    drawMini();
+  }
+  function drawMini() {
+    miniWidth = headRibbon.hidden ? PW : mini.clientWidth;
+    measureMini(miniWidth);
+    renderMini();
+    if (headRibbon.hidden) updateMiniWindow(fAt(view.L), fAt(view.L + PW));
+    else updateMiniMarker();
+  }
+  function updateMiniWindow(fL, fR) {
+    const a = MX(fL), b = MX(fR), mw = $('mwin');
+    mw.style.left = a + 'px';
+    mw.style.width = Math.max(8, b - a) + 'px';
+  }
+  function updateHeadRibbon(index, active) {
+    headIndex = index;
+    if (!T || !mini.isConnected) return;
+    const changed = active === headRibbon.hidden;
+    showHeadRibbon(active);
+    if (active && !changed) {
+      if (miniWidth !== mini.clientWidth) drawMini();
+      else updateMiniMarker();
+    }
+  }
+  function updateMiniMarker() {
+    const x = MXS[headIndex];
+    if (x == null) return;
+    const text = headIndex === T.presentIndex ? 'Present' : fmtRange(timeOfF(headIndex));
+    mini.style.setProperty('--mini-cursor', x + 'px');
+    $('mhead-date').textContent = text;
+    mini.setAttribute('aria-valuemin', String(miniStops[0].index));
+    mini.setAttribute('aria-valuemax', String(T.presentIndex));
+    mini.setAttribute('aria-valuenow', String(Math.max(headIndex, miniStops[0].index)));
+    mini.setAttribute('aria-valuetext', headIndex === T.presentIndex || timeOfF(headIndex) == null ? text : text + ' UTC');
+  }
+  let miniDragId = null, miniDragIndex = null;
+  function scrubHeadTime(event) {
+    const x = event.clientX - mini.getBoundingClientRect().left - mini.clientLeft;
+    const stop = miniStops.reduce((best, next) =>
+      Math.abs(MXS[next.index] - x) <= Math.abs(MXS[best.index] - x) ? next : best);
+    if (stop.index === miniDragIndex) return;
+    miniDragIndex = stop.index;
+    camera.seek(stop.id);
+  }
+  mini.addEventListener('pointerdown', event => {
+    if (headRibbon.hidden || event.button !== 0 || !event.isPrimary) return;
+    event.stopPropagation();
+    event.preventDefault();
+    mini.focus({preventScroll:true});
+    miniDragId = event.pointerId;
+    miniDragIndex = null;
+    mini.setPointerCapture(event.pointerId);
+    scrubHeadTime(event);
+  });
+  mini.addEventListener('pointermove', event => {
+    if (event.pointerId === miniDragId && !headRibbon.hidden) scrubHeadTime(event);
+  });
+  mini.addEventListener('pointerup', event => {
+    if (event.pointerId === miniDragId && !headRibbon.hidden) scrubHeadTime(event);
+  });
+  mini.addEventListener('lostpointercapture', event => {
+    if (event.pointerId === miniDragId) miniDragId = null;
+  });
+  mini.addEventListener('keydown', event => {
+    if (headRibbon.hidden || event.ctrlKey || event.altKey || event.metaKey) return;
+    const key = event.key;
+    let stop;
+    if (key === 'Home') stop = miniStops[0];
+    else if (key === 'End') stop = miniStops.at(-1);
+    else if (key === 'ArrowRight' || key === 'ArrowUp') stop = miniStops.find(s => s.index > headIndex);
+    else if (key === 'ArrowLeft' || key === 'ArrowDown') stop = miniStops.findLast(s => s.index < headIndex);
+    else return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (stop) camera.seek(stop.id);
+  });
   const MX = f => { f = Math.max(0, Math.min(NS, f)); const i = Math.floor(f), j = Math.min(NS, i + 1); return MXS[i] + (MXS[j] - MXS[i]) * (f - i); };
   const fOfMX = mx => { if (mx <= MXS[0]) return 0; if (mx >= MXS[NS]) return NS; let i = 0; while (i < NS && MXS[i + 1] < mx) i++; return i + (MXS[i + 1] === MXS[i] ? 0 : (mx - MXS[i]) / (MXS[i + 1] - MXS[i])); };
   function renderMini() {
     const rowH = T.multi ? 3 : 4, top = 5;
-    let h = '';
+    let h = '', lastDateX = -Infinity;
     for (const [t, f] of tickTimes(864e5)) {
       const x = MX(f), d = new Date(t);
-      h += `<div class="mday" style="left:${x}px"></div><div class="mdl" style="left:${x + 3}px">${d.getUTCDate()} ${MON[d.getUTCMonth()]}</div>`;
+      h += `<div class="mday" style="left:${x}px"></div>`;
+      if (headRibbon.hidden || (x - lastDateX >= 36 && x + 36 <= miniWidth)) {
+        h += `<div class="mdl" style="left:${x + 3}px">${d.getUTCDate()} ${MON[d.getUTCMonth()]}</div>`;
+        lastDateX = x;
+      }
     }
     for (let i = 1; i <= NS; i++) if (isBreak(i)) h += `<div class="mbrk" style="left:${(MXS[i - 1] + MXS[i]) / 2 - 6}px">≈</div>`;
     ROWS.forEach((r, k) => { h += `<div class="mrow" style="top:${top + k * (rowH + 1)}px"></div>`; });
@@ -1150,8 +1283,9 @@
       const width = n.kind === 'shared' ? 1 : 3, colour = isSharedKey(n.lane) ? 'var(--edge)' : LANES[n.lane].colour;
       h += `<div class="mk" style="left:${x - (width - 1) / 2}px;top:${top + k * (rowH + 1)}px;height:${rowH}px;width:${width}px;background:${colour}"></div>`;
     }
-    h += `<div class="mnow" style="left:${MXS[T.presentIndex]}px"></div><div class="mwin" id="mwin"></div>`;
-    $('mini').innerHTML = h;
+    h += `<div class="mnow" style="left:${MXS[T.presentIndex]}px"></div><div class="mwin" id="mwin"></div>
+      <div class="mhead" aria-hidden="true"><span id="mhead-date"></span></div>`;
+    mini.innerHTML = h;
   }
 
   // ---------- Brane view ----------
@@ -1520,7 +1654,10 @@
     return true;
   }
   function out(focusId) {
-    if (st.d === 0) { if (camera.active) chooseAngle(false); return; }
+    if (st.d === 0) {
+      if (camera.active) chooseAngle(false, {keyboard:headRibbon.contains(document.activeElement)});
+      return;
+    }
     if (fromHeads) { chooseAngle(true, {keyboard:true}); return; }
     $('L0').inert = false; $('L1').inert = true; markAngle('timeline');
     openSeq++;
@@ -1557,11 +1694,13 @@
   const KEYROWS = [['← →', 'back · forward a page', '—'], ['⇧← ⇧→', 'previous · next state', '—'], ['↑ ↓', 'lane above · below', 'back in time · toward now'], ['+ −', 'zoom in · out', '—'], ['End', 'back to now', 'most recent'], ['Home', 'the oldest state', 'earliest'], ['Enter', 'open brane', '—'], ['Esc', '—', 'back to timeline'], ['N', 'what needs you', 'what needs you'], ['/', 'address bar', 'address bar'], ['Enter', 'in the bar: a place, episode report E, why T, approve ID', 'the same'], [',', 'appearance', 'appearance'], ['?', 'these keys', 'these keys']];
   function renderKeys() {
     if (camera.heads && camera.active && st.d === 0) {
-      const rows = [['← →', 'Bring the neighboring lane’s latest entry forward'], ['+ −', 'Travel through this lane’s history'],
+      const rows = [['← →', 'Bring the neighboring lane’s latest entry forward'], ['↑ / +', 'Move into history'],
+        ['↓ / −', 'Move toward the present'],
         ['Enter', 'Open the focused state'], ['Esc', 'Return to Timeline'], ['/', 'Address bar'],
         ['N', 'What needs you'], [',', 'Appearance'], ['?', 'These keys']];
       $('keys').innerHTML = '<div class="kgrid heads-keys"><strong>Heads</strong>' +
-        rows.map(([key, action]) => `<span><span class="kbd">${key}</span></span><span>${action}</span>`).join('') + '</div>';
+        rows.map(([key, action]) => `<span><span class="kbd">${key}</span></span><span>${action}</span>`).join('') +
+        '</div><p>Hold an arrow to keep moving.</p>';
       return;
     }
     $('keys').innerHTML = `<div class="kgrid"><span></span><span style="font-size:12px;font-weight:700;color:${st.d === 0 ? 'var(--text)' : 'var(--faint)'}">Timeline</span><span style="font-size:12px;font-weight:700;color:${st.d === 1 ? 'var(--text)' : 'var(--faint)'}">Brane</span>` +
@@ -1727,7 +1866,7 @@
   // Drag to pan (the plot), drag/click the overview window.
   let drag = null;
   $('stage').addEventListener('pointerdown', e => {
-    if (!T || st.d !== 0 || e.button !== 0) return;
+    if (!T || st.d !== 0 || camera.active || e.button !== 0) return;
     const plot = e.target.closest('#plot'), mini = e.target.closest('#mini');
     if (!plot && !mini) return;
     cancelAnimationFrame(anim);

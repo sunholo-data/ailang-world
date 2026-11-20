@@ -1,0 +1,62 @@
+.hc-lanes {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 4;
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ctl) var(--panel);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  padding-inline: max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right));
+  pointer-events: auto;
+  touch-action: pan-x;
+}
+.hc-lanes[hidden] { display: none; }
+.hc-lanes button {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: min(20rem, 82vw);
+  padding: 2px 12px 0;
+  background: transparent;
+  color: var(--sub);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  font: 600 12px/1.15 var(--font);
+  cursor: pointer;
+}
+.hc-lanes .hc-lane-group-start { border-inline-start: 1px solid var(--line); }
+.hc-lanes .hc-lane-shared { font-weight: 700; }
+.hc-lanes button:hover { background: var(--sel); }
+.hc-lanes button[aria-current] {
+  background: var(--sel);
+  border-bottom-color: var(--text);
+  color: var(--text);
+}
+.hc-lanes button:focus-visible { outline-offset: -4px; }
+.hc-lanes button > [aria-hidden] { display: flex; flex: none; }
+.hc-lanes .hc-lane-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hc-lanes button[data-running]::after,
+.hc-lanes button[data-needs-attention]::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--okDot);
+}
+.hc-lanes button[data-needs-attention]::before {
+  border-radius: 1px;
+  background: var(--youLine);
+  order: 1;
+  transform: rotate(45deg);
+}

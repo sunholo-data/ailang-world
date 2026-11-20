@@ -1,0 +1,62 @@
+/* The same overview and zoom buttons reflow into the Heads dock. */
+#timeline-zoom { display: contents; }
+.mhead { display: none; }
+#head-ribbon {
+  position: absolute;
+  z-index: 3;
+  inset-inline: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  height: 44px;
+}
+#head-ribbon[hidden] { display: none; }
+#head-ribbon .mini {
+  position: relative;
+  inset: auto !important;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0;
+  flex: 1;
+  touch-action: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+#head-ribbon .mini:focus-visible { outline: 2px solid var(--lit); outline-offset: -2px; }
+#head-ribbon .mwin { display: none; }
+#head-ribbon .mhead {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+.mhead::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 var(--mini-cursor);
+  width: 2px;
+  background: var(--lit);
+}
+#mhead-date {
+  position: absolute;
+  top: 1px;
+  left: clamp(54px, var(--mini-cursor), calc(100% - 54px));
+  transform: translateX(-50%);
+  padding-inline: 3px;
+  color: var(--text);
+  background: var(--panel);
+  font: 600 10px/15px var(--mono);
+  text-align: center;
+  white-space: nowrap;
+}
+#head-ribbon .zoom { height: auto; }
+#head-ribbon .cb { height: 100%; min-width: 44px; touch-action: manipulation; }
+#head-ribbon .cb:focus-visible { outline-offset: -3px; }
+#head-ribbon .zl { height: 100%; line-height: 42px; }
+
+#head-space .hc-travel { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 52px); }
+#head-space .hc-scroll { bottom: calc(max(12px, env(safe-area-inset-bottom)) + 104px); }
+@media (max-width: 480px) {
+  #head-ribbon .zl { min-width: 40px; }
+}

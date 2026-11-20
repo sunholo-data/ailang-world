@@ -280,9 +280,15 @@ async function waitFor({ expression, ms = 15000 }) {
   return v;
 }
 
-// key presses key ('n', 'N' (with Shift), 'Enter') at the focused element; with page, it waits for the new document. It
+// key presses a key at the focused element; with page, it waits for the new document. It
 // returns the focused element's id and the app's view (row 201 A3 sprint 4, the N key).
-const KEYS = { n: { code: 'KeyN', windowsVirtualKeyCode: 78, text: 'n' }, N: { code: 'KeyN', windowsVirtualKeyCode: 78, text: 'N', modifiers: 8 }, Enter: { code: 'Enter', windowsVirtualKeyCode: 13, text: '\r' } };
+const KEYS = {
+  n: { code: 'KeyN', windowsVirtualKeyCode: 78, text: 'n' },
+  N: { code: 'KeyN', windowsVirtualKeyCode: 78, text: 'N', modifiers: 8 },
+  Enter: { code: 'Enter', windowsVirtualKeyCode: 13, text: '\r' },
+  Tab: { code: 'Tab', windowsVirtualKeyCode: 9 },
+  Escape: { code: 'Escape', windowsVirtualKeyCode: 27 },
+};
 async function key({ key, page = false }) {
   const from = events.length;
   await send('Input.dispatchKeyEvent', { type: 'keyDown', key, ...KEYS[key] });

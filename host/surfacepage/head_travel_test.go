@@ -23,7 +23,7 @@ func TestHistoricalHeadSliceRetainsTheScene(t *testing.T) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	out, err := exec.CommandContext(ctx, node, "-e", headTravelHarness, script("app.js"), script("head-camera.js")).CombinedOutput()
+	out, err := exec.CommandContext(ctx, node, "-e", headTravelHarness, script("app.js"), script("head-camera.js"), script("head-lineage.js")).CombinedOutput()
 	if err != nil {
 		t.Fatalf("historical head slice: %v\n%s", err, out)
 	}
@@ -48,6 +48,12 @@ const model = adaptModel({
     {from:'a1',to:'b-tied-latest'},{from:'s1',to:'a2'},{from:'b2',to:'c0'}
   ]
 });
+const {forwardPaths} = require(process.argv[3]);
+const cut = model.timeIndex.get('s0');
+assert.deepEqual(forwardPaths(model,'s0',cut), [['s1']],
+  'only recorded successors beyond the cut are eligible for the forward stack');
+assert.deepEqual(forwardPaths(model,'a1',model.timeIndex.get('a1')), [],
+  'a simultaneous neighbor and an earlier child belong to the visible side of the cut');
 for (const width of [320, 1280]) {
   const options = {width,height:640,selected:'a',attention:new Set(['b'])};
   const base = camera.layout(model,options);

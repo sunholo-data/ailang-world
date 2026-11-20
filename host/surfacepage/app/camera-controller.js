@@ -3,6 +3,8 @@
   if (typeof window === 'undefined') return;
   function create(stage, space, hooks) {
     const scene = WorldHeadScene.create(space, hooks);
+    const scroll = scene.element.querySelector('.hc-scroll');
+    const lanes = WorldHeadLanes.create(scene.element, lane => selectLane(lane, false, false));
     const input = WorldHeadTravelInput.create(scene.element, {step, shift:shiftLane, reset:() => move(-1, true)});
     let angle = 0, destination = 0, frame = 0, graph, base, scope, layout, side;
     let selected = '', viewLane = '', keyboard = false;
@@ -51,6 +53,9 @@
       const lane = layout?.ground?.centerLane || '';
       const title = lane ? graph.laneTitle(lane) : '';
       const when = Number.isFinite(time) ? date.format(time) : '';
+      hooks.timeChanged(layout?.time.referenceIndex, active);
+      lanes.update({active, graph, current:lane, heads:scope?.heads || [],
+        historical:Boolean(id), order:scope?.laneOrder || []});
       const left = neighbor(-1), right = neighbor(1);
       scene.element.dataset.travelState = id;
       scene.element.dataset.viewLane = lane;
@@ -68,14 +73,17 @@
       return WorldHeadCamera.layout(graph, {...options, viewLane, stop:landing});
     }
     function layoutOptions() {
-      return {width:stage.clientWidth, height:stage.clientHeight, attention:hooks.attention(), timeXs:hooks.timeXs()};
+      // The native scrollbar can appear as the recorded cut changes. Frame
+      // the street from the scroll box so opening history cannot shift the horizon.
+      const height = scroll.offsetHeight || stage.clientHeight - (parseFloat(getComputedStyle(scroll).bottom) || 0);
+      return {width:stage.clientWidth, height:Math.max(1, height), attention:hooks.attention(), timeXs:hooks.timeXs()};
     }
     function cancelTravel() {
       cancelAnimationFrame(travelFrame);
       flight = null;
       travelFrame = 0;
     }
-    function move(direction, all, target) {
+    function move(direction, all, target, fast) {
       if (!layout || angle !== 1 || space.hidden || space.inert) return;
       if (direction > 0) {
         const anchor = layout.points.has(target) ? target : aim();
@@ -97,18 +105,42 @@
       }
       const next = slice();
       const center = next.heads.find(head => head.lane === next.ground.centerLane);
-      animateTo(next, center?.id, Boolean(document.activeElement?.closest('.hc-face,.hc-rear')));
+      const focus = document.activeElement?.closest('.hc-face,.hc-rear') ||
+        (document.activeElement === document.body && flight?.focusOnFace);
+      animateTo(next, center?.id, Boolean(focus), fast);
     }
-    function shiftLane(direction) {
-      if (!layout || angle !== 1 || space.hidden || space.inert) return;
-      const lane = neighbor(direction);
-      if (!lane) return;
+    function shiftLane(direction, fast) {
+      selectLane(neighbor(direction), true, fast);
+    }
+    function selectLane(lane, focusOnFace, fast) {
+      if (!layout || angle !== 1 || space.hidden || space.inert || !scope.heads.some(head => head.lane === lane)) return;
       viewLane = lane;
       followHead = true;
       const next = slice();
-      animateTo(next, next.heads.find(head => head.lane === lane).id, true);
+      animateTo(next, next.heads.find(head => head.lane === lane).id, focusOnFace, fast);
     }
-    function animateTo(next, id, focusOnFace) {
+    function seek(id) {
+      if (!layout || angle !== 1 || space.hidden || space.inert) return;
+      const record = graph.N[id], index = graph.timeIndex.get(id);
+      if (id && (!record || record.draft || !Number.isInteger(index) || index > graph.presentIndex)) return;
+      if (id === layout.time.stop && !followHead) return;
+      // A ribbon drag sets one absolute cut, regardless of how many pixels it crosses.
+      history = id ? [{stop:'', followHead:false}] : [];
+      stop = id;
+      followHead = false;
+      const lane = layout.ground.centerLane;
+      const visible = !id || laneStates.get(lane)?.some(state => !state.draft && graph.timeIndex.get(state.id) <= index);
+      viewLane = visible ? lane : record.lane;
+      cancelTravel();
+      layout = slice();
+      selected = aim() || id;
+      hooks.select(selected);
+      paint();
+      scene.center();
+      updateControls();
+    }
+    function animateTo(next, id, focusOnFace, fast) {
+      const duration = fast || flight ? 110 : 220;
       cancelTravel();
       if (!hooks.reduced()) flight = {...scene.startTravel(next), progress:0, focusOnFace};
       layout = next;
@@ -123,7 +155,7 @@
       }
       const started = performance.now();
       function advance(now) {
-        const t = Math.min(1, (now - started) / 440);
+        const t = Math.min(1, (now - started) / duration);
         if (t === 1 || hooks.reduced()) cancelTravel();
         else flight.progress = t * t * (3 - 2 * t);
         paint();
@@ -132,7 +164,11 @@
       }
       travelFrame = requestAnimationFrame(advance);
     }
-    function step(direction, target) { move(direction, false, targetID(target)); }
+    function step(direction, target, fast) {
+      // While a flight is settling DOM focus can still be on the previous
+      // face. Continue from the current stop on the next keypress.
+      move(direction, false, flight ? undefined : targetID(target), fast);
+    }
     function update() {
       if (space.hidden) return;
       const fresh = hooks.model();
@@ -211,7 +247,7 @@
       cancelTravel();
       updateControls();
     }
-    return {turn, update, hide, present() { history = []; stop = ''; followHead = false; viewLane = ''; cancelTravel(); },
+    return {turn, update, hide, seek, present() { history = []; stop = ''; followHead = false; viewLane = ''; cancelTravel(); },
       select(id) { if (id !== selected && angle === 1 && !space.hidden) { selected = id; paint(); updateControls(); } },
       get active() { return !space.hidden; },
       get heads() { return destination === 1; }

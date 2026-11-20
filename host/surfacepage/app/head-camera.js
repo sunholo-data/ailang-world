@@ -225,7 +225,10 @@
     const nearHeight = base?.ground.worldHeight ??
       (narrow ? clamp(61 + (viewportWidth - 320) * .16, 61, 82) : clamp(nearWidth * .35, 74, 96));
     const horizon = Math.max(44, viewportHeight * .19);
-    const span = Math.max(nearHeight * 3.8, viewportHeight * .50);
+    // Leave space for the forward stack when the viewport can fit it without
+    // compressing the recorded faces into unreadable strips.
+    const span = Math.min(Math.max(nearHeight * 3.8, viewportHeight * .50),
+      Math.max(nearHeight * 2.55, (viewportHeight - horizon - nearHeight / 2 - 84) / .98));
     const streetY = horizon + span * .98 + nearHeight / 2;
     const focal = viewportHeight / (2 * Math.tan(54 * Math.PI / 360));
     const blockDepth = .115;
