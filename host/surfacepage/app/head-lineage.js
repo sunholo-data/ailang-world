@@ -62,7 +62,8 @@
           el.href = path(node);
           el.dataset.lineageState = key;
           el.dataset.lineageFrom = parent;
-          el.setAttribute('aria-label', 'Ahead · ' + [model.laneTitle(node.lane), identity, label].filter(Boolean).join(' · '));
+          el.dataset.recordKind = model.recordKind(node);
+          el.setAttribute('aria-label', 'Ahead · ' + [model.laneTitle(node.lane), model.recordLabel(node), identity, label].filter(Boolean).join(' · '));
           el.textContent = identity && identity !== label ? identity + ' · ' + label : label;
           el.style.setProperty('--hc-lane', accent(model.LANES[node.lane]));
           column.append(el);

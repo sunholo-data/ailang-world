@@ -7,6 +7,58 @@ import (
 	"testing"
 )
 
+const centeredRecordedHead = `(({id, lane, at}) => {
+	const scene = document.querySelector('#stage[data-view="heads"] .hc-scene');
+	const head = [...(scene?.querySelectorAll('a[data-head-state][aria-current="true"]') || [])].find(el => el.dataset.headState === id);
+	if (!head || document.activeElement !== head || head.dataset.headLane !== lane || scene.dataset.viewLane !== lane ||
+		scene.dataset.travelState !== id || document.querySelector('.hc-lanes select')?.value !== lane) return false;
+	const viewport = scene.querySelector('.hc-scroll'), box = head.getBoundingClientRect();
+	const dx = box.left + box.width / 2 - viewport.getBoundingClientRect().left - viewport.clientWidth / 2;
+	return Math.abs(dx) <= 1 && scene.querySelector('.hc-time-axis:not([hidden]) time:last-child')?.dateTime === at;
+})`
+
+func TestSurfaceHeadsCentersTimelineSelectionInChrome(t *testing.T) {
+	b := startPasskeyBrowser(t)
+	index := filepath.Join("..", "..", "host", "surface", "testdata", "index-rig.json")
+	origin := cardOrigin(t, filepath.Join(t.TempDir(), "credentials.db"), index, func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/surface/model.json" {
+				w.Header().Set("Content-Type", "application/json")
+				fmt.Fprint(w, recordedTimeBrowserModel)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	})
+	b.do(t, nil, "tab", map[string]any{"viewport": map[string]int{"width": 1280, "height": 844}})
+	defer b.do(t, nil, "tab", nil)
+	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface", "raw": true})
+	var point struct{ X, Y float64 }
+	b.do(t, &point, "waitFor", map[string]any{"expression": `(() => {
+		const stage = document.querySelector('#stage[data-view="timeline"]');
+		const button = stage?.querySelector('#tl .node[data-state="b-later"]');
+		const box = button?.getBoundingClientRect();
+		if (!box?.width) return false;
+		const x = box.left + box.width / 2, y = box.top + box.height / 2;
+		if (!button.contains(document.elementFromPoint(x,y))) return false;
+		window.selectionStage = stage;
+		return {x,y};
+	})()`})
+	b.do(t, nil, "mouse", map[string]any{"type": "mouseMoved", "x": point.X, "y": point.Y})
+	b.do(t, nil, "waitFor", map[string]any{"expression": `(() => {
+		const node = document.querySelector('#tl .node[data-state="b-later"]');
+		if (!node.querySelector('.halo').style.boxShadow.includes('var(--lit)')) return false;
+		node.dispatchEvent(new KeyboardEvent('keydown', {key:'ArrowLeft', shiftKey:true, bubbles:true, cancelable:true}));
+		return true;
+	})()`})
+	b.do(t, nil, "waitFor", map[string]any{"expression": `document.querySelector('#tl .node[data-state="b-tie"] .halo').style.boxShadow.includes('var(--lit)') &&
+		(document.querySelector('#head-angle').focus(), true)`})
+	b.do(t, nil, "key", map[string]any{"key": "Enter"})
+	b.do(t, nil, "waitFor", map[string]any{"expression": centeredRecordedHead + `({id:'b-tie', lane:'row-189', at:'2026-10-20T12:00:00.000Z'}) &&
+		window.selectionStage === document.querySelector('#stage') &&
+		document.querySelector('.hc-scene a[data-head-state="a-stop"]')?.checkVisibility()`})
+}
+
 // Use the daemon's real index and stack endpoints. Retaining live DOM references
 // detects any projection change that replaces the scene or reloads the page.
 func TestSurfaceHeadOnUsesSameSceneInChrome(t *testing.T) {
@@ -505,9 +557,26 @@ func TestSurfaceHeadOnOpensOlderRecordedPaneInChrome(t *testing.T) {
 	b.do(t, nil, "key", map[string]any{"key": "Enter"})
 	wait(`document.querySelector('#stage[data-view="brane"]') &&
 		document.querySelector('#front')?.dataset.front === window.oldNativePane`)
-	b.do(t, nil, "tap", map[string]any{"id": "head-angle"})
-	wait(`document.querySelector('#stage[data-view="heads"] .hc-scene') === window.longLaneScene &&
-		window.longLaneScene.querySelector('a[data-rear-state][aria-current="true"]')?.dataset.rearState === window.oldNativePane`)
+	// Navigate the live node rail before choosing Heads. The camera must use
+	// the newly displayed state, even though Heads opened a different record.
+	wait(`(() => {
+		const rail = [...document.querySelectorAll('#rail .rrow')];
+		const current = rail.find(button => button.getAttribute('aria-current') === 'true');
+		const next = rail.find(button => Number(button.dataset.k) === Number(current?.dataset.k) + 1);
+		if (!next) return false;
+		const id = next.dataset.tip.replace(/^node:/, '');
+		const lane = window.recordedLanes.find(lane => lane.key === 'row-156');
+		const record = lane.states.find(state => state.id === id);
+		if (!record || id === window.oldNativePane) return false;
+		window.railReturn = {id, lane:lane.key, at:new Date(record.at).toISOString()};
+		next.focus();
+		return document.activeElement === next;
+	})()`)
+	b.do(t, nil, "key", map[string]any{"key": "Enter"})
+	wait(`document.querySelector('#stage[data-view="brane"] #front')?.dataset.front === window.railReturn.id &&
+		(document.querySelector('#head-angle').focus(), true)`)
+	b.do(t, nil, "key", map[string]any{"key": "Enter"})
+	wait(centeredRecordedHead + `(window.railReturn) && document.querySelector('#stage[data-view="heads"] .hc-scene') === window.longLaneScene`)
 }
 
 func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {

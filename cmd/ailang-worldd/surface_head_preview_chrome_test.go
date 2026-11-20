@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -108,4 +109,37 @@ func TestSurfaceHeadOnPreviewsRecordedNodeInChrome(t *testing.T) {
 	b.do(t, nil, "tap", map[string]any{"id": "preview-test-node"})
 	wait(`document.querySelector('#stage').dataset.view === 'brane' &&
 		document.querySelector('#front')?.dataset.front === window.previewTarget.state.id`)
+}
+
+func TestSurfaceRecordKindsUseConsistentMarkersInChrome(t *testing.T) {
+	b := startPasskeyBrowser(t)
+	origin := rigSurface(t, filepath.Join(t.TempDir(), "credentials.db"))
+	b.do(t, nil, "tab", nil)
+	defer b.do(t, nil, "tab", nil)
+	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface", "raw": true})
+	check := func(view, selector string) {
+		t.Helper()
+		b.do(t, nil, "waitFor", map[string]any{"expression": fmt.Sprintf(`(() => {
+			if (document.querySelector('#stage').dataset.view !== %q) return false;
+			const records = [...document.querySelectorAll(%q)];
+			const marker = link => link.querySelector('.g');
+			const labelled = (kind, label) => records.filter(el =>
+				el.dataset.recordKind === kind && el.getAttribute('aria-label')?.includes(label) && marker(el));
+			const merges = labelled('github-merge', 'GitHub merge');
+			const episodes = labelled('episode', 'World episode');
+			return merges.length > 0 && episodes.length > 0 &&
+				merges.some(el => {
+					const svg = marker(el);
+					const paths = svg.querySelectorAll('path');
+					const carrier = svg.closest('#tl, .hc-face-bar');
+					return carrier && svg.matches('svg.merge-glyph[aria-hidden="true"]') && paths.length === 1 &&
+						paths[0].getAttribute('d')?.split('M').length === 3 &&
+						getComputedStyle(paths[0]).stroke === getComputedStyle(carrier).color;
+				}) &&
+				episodes.every(el => !marker(el).matches('.merge-glyph'));
+		})()`, view, selector)})
+	}
+	check("timeline", "#tl .node[data-record-kind]")
+	b.do(t, nil, "tap", map[string]any{"id": "head-angle"})
+	check("heads", ".hc-scene :is(.hc-face,.hc-rear)[data-record-kind]")
 }

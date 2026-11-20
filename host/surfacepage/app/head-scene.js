@@ -223,12 +223,14 @@
         const lane = model.LANES[head.lane];
         const label = model.laneTitle?.(head.lane) || lane?.name || head.lane;
         const title = options.title(node) || node.title || node.label || node.id;
+        const record = model.recordKind(node);
         const stamp = Date.parse(node.at);
         const compact = head.height <= 48;
         const rel = node.rel || (Number.isFinite(stamp) ? exactTime.format(stamp) : '');
         const shownTime = compact ? shortAge(rel) : rel;
         const status = head.attention ? 'Needs you' : head.live ? 'Live' : '';
-        const identity = status || node.open?.label || node.episode || (node.pr ? '#' + node.pr : '');
+        const identity = status || node.open?.label || node.episode ||
+          (record === 'github-merge' ? 'GitHub merge · #' + node.pr : node.pr ? 'PR #' + node.pr : '');
         const timing = Number.isFinite(stamp)
           ? `<time datetime="${escape(node.at)}" title="${escape(exactTime.format(stamp) + ' UTC')}">${escape(shownTime)}</time>`
           : `<span>${escape(shownTime)}</span>`;
@@ -255,8 +257,9 @@
         el.classList.toggle('is-middle', !compact && head.height <= 76);
         el.classList.toggle('is-short', !compact && head.height < 58);
         el.href = statePath(node);
-        if (compact) el.setAttribute('aria-label', label + ' · ' + title);
-        else el.removeAttribute('aria-label');
+        el.dataset.recordKind = record;
+        el.setAttribute('aria-label', [...new Set([label, model.recordLabel(node), title,
+          status || node.open?.label, node.episode, node.pr && 'PR #' + node.pr, rel].filter(Boolean))].join(' · '));
         el.style.setProperty('--hc-lane', accent(lane));
         if (space.children[index] !== el) {
           const focused = document.activeElement === el;
@@ -275,26 +278,40 @@
     }
 
     function glyphInfo(node) {
-      const key = node.lane + '|' + node.kind;
+      const record = model.recordKind(node);
+      const key = node.lane + '|' + node.kind + '|' + record;
       if (!stamps.has(key)) {
         scratch.innerHTML = options.glyph(node, 10);
-        const style = scratch.content.firstElementChild?.style;
+        const glyph = scratch.content.firstElementChild;
+        const style = glyph?.style;
+        const mergePath = glyph?.querySelector('path')?.getAttribute('d');
         const polygon = style?.clipPath.match(/-?\d+(?:\.\d+)?%/g)?.map(value => parseFloat(value) / 100);
         stamps.set(key, {
-          colour: style?.borderTopColor || style?.backgroundColor || accent(model.LANES[node.lane]),
+          colour: record === 'github-merge' ? accent(model.LANES[node.lane])
+            : style?.borderTopColor || style?.backgroundColor || accent(model.LANES[node.lane]),
           hollow: Boolean(style?.borderTopWidth),
           round: style?.borderTopLeftRadius === '50%',
-          polygon,
+          polygon, merge:mergePath ? new Path2D(mergePath) : null,
         });
       }
       return stamps.get(key);
     }
 
-    function drawGlyph(node, point, alpha) {
-      const {colour, hollow, round, polygon} = glyphInfo(node);
+    function drawGlyph(node, point, alpha, colors) {
+      const {colour, hollow, round, polygon, merge} = glyphInfo(node);
       const size = 2 + 7 * clamp(point.scale ?? 1, 0, 1);
       const x = point.x - size / 2, y = point.y - size / 2;
       ctx.globalAlpha = alpha;
+      if (merge) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(size / 16, size / 16);
+        ctx.strokeStyle = colors.text;
+        ctx.lineWidth = 2;
+        ctx.stroke(merge);
+        ctx.restore();
+        return;
+      }
       ctx.fillStyle = colour;
       ctx.strokeStyle = colour;
       ctx.lineWidth = 1.4;
@@ -365,14 +382,21 @@
         const title = options.title(node) || node.title || node.label || id;
         const label = model.laneTitle?.(node.lane) || node.lane;
         el.style.setProperty('--hc-lane', accent(model.LANES[node.lane]));
-        el.setAttribute('aria-label', label + ' · ' + title);
+        el.dataset.recordKind = model.recordKind(node);
+        el.setAttribute('aria-label', [label, model.recordLabel(node), title].join(' · '));
         el.setAttribute('href', statePath(node));
         if (mini) {
           placeMiniature(entry, point, width, height);
           if (miniatures.children[miniIndex] !== el) miniatures.insertBefore(el, miniatures.children[miniIndex] || null);
           miniIndex++;
         } else {
-          entry.content.textContent = height >= 13 && width >= 50 ? title : '';
+          const markup = height >= 13 && width >= 50
+            ? options.glyph(node, 8) + ' ' + escape(title)
+            : '';
+          if (entry.markup !== markup) {
+            entry.content.innerHTML = markup;
+            entry.markup = markup;
+          }
           fullLinks.push(el);
         }
       }
@@ -702,7 +726,7 @@
         if (entry && paneOpacity && (rearLayer.hidden || (entry.paths && movingMiniatures))) {
           drawPane(node, point, headsByLane.get(node.lane), paneOpacity, colors);
         }
-        if (glyphOpacity) drawGlyph(node, point, glyphOpacity * (contains(id) ? .94 : .40));
+        if (glyphOpacity) drawGlyph(node, point, glyphOpacity * (contains(id) ? .94 : .40), colors);
       }
       ctx.globalAlpha = 1;
       drawInspection(active, colors, x, y, width, height, dpr);
@@ -1040,7 +1064,16 @@
       if (!ease) panGlide = null;
       pan(point ? point.x - panAxis : 0, ease, id);
     }
-    return {render, element:scene, startTravel, center, grabPan, pan, focus: focusHead, destroy() {
+    function frameNode(next, id) {
+      const point = next.points.get(id);
+      if (!point) return;
+      // Apply the final framing on the first visible frame of the turn.
+      panGlide = null;
+      panOffset = point.x - next.ground.vx;
+      panWidth = 0;
+      scroll.scrollTop = 0;
+    }
+    return {render, element:scene, startTravel, center, frameNode, grabPan, pan, focus: focusHead, destroy() {
       if (frame) cancelAnimationFrame(frame);
       preview.destroy();
       resize.disconnect();

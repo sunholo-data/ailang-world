@@ -40,9 +40,8 @@
       const laneColour = model.LANES[node.lane]?.colour;
       if (/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(laneColour)) tip.style.setProperty('--hc-lane', laneColour);
       else tip.style.removeProperty('--hc-lane');
-      const status = node.draft ? 'Draft' : node.kind === 'shared' ? 'Merged into the shared world'
-        : node.open?.label || (node.sessionLive ? 'Session live' : node.status || (node.kind === 'step' ? 'Step' : ''));
-      const context = [lane, status !== lane && status].filter(Boolean).join(' · ');
+      const status = node.open?.label || (node.sessionLive ? 'Session live' : node.status);
+      const context = [...new Set([model.recordLabel(node), lane, status].filter(Boolean))].join(' · ');
       const meta = text('div', 'hc-preview-meta', context);
       const stamp = Date.parse(node.at);
       if (Number.isFinite(stamp)) {

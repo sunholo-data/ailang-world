@@ -215,11 +215,11 @@
       // face. Continue from the current stop on the next keypress.
       move(direction, false, flight ? undefined : targetID(target), fast);
     }
-    function update() {
+    function update(anchor) {
       if (space.hidden) return;
       const fresh = hooks.model();
       if (!fresh) return;
-      const trackingTip = Boolean(viewLane) && selected === aim();
+      const trackingTip = !anchor && Boolean(viewLane) && selected === aim();
       const restoreFocus = flight?.focusOnFace || (trackingTip && targetID(document.activeElement) === selected);
       if (graph !== fresh) {
         graph = fresh;
@@ -237,6 +237,7 @@
       cancelTravel();
       base = WorldHeadCamera.layout(graph, layoutOptions());
       layout = slice();
+      if (anchor) scene.frameNode(layout, anchor);
       const tip = trackingTip && aim();
       if (tip && selected !== tip) {
         selected = tip;
@@ -264,19 +265,31 @@
       }
       updateControls();
     }
-    function turn(heads, id, instant, focus) {
-      if (!hooks.model()) return;
+    function turn(heads, id, {instant = false, keyboard:focus = false, frameNode = false} = {}) {
+      const model = hooks.model();
+      if (!model) return;
+      const node = frameNode && model.timeIndex.get(id) <= model.presentIndex && model.N[id];
+      if (node) {
+        viewLane = node.lane;
+        const cut = node.draft ? '' : id;
+        // Returning to the same stop keeps the path back through history.
+        // Entering at another node establishes its exact cut, including ties.
+        if (!layout || layout.time.stop !== cut) {
+          history = cut ? [{scopeStop:'', pinnedStop:''}] : [];
+          scopeStop = pinnedStop = cut;
+        } else pinnedStop = cut;
+      }
       cancelAnimationFrame(frame);
       destination = heads ? 1 : 0;
       selected = id || selected;
-      keyboard = focus;
+      keyboard = focus || Boolean(node);
       if (!heads && space.hidden) return;
       space.hidden = false;
       space.inert = true;
       if (heads) hooks.placeStatus(true);
       stage.dataset.camera = 'turn';
       stage.dataset.view = 'turning';
-      update();
+      update(node && id);
       if (instant || hooks.reduced() || destination === angle) return settle();
       const start = angle, time = performance.now();
       const span = 1250 * Math.abs(destination - start);

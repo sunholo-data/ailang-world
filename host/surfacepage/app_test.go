@@ -360,7 +360,7 @@ for (const S of stacks) {
   assert(html.includes('No view from the agent yet') && html.includes('row 151'), 'the agent band is an honest gap');
   if (!F.files) assert(html.includes('Files: not recorded'), 'absent files are a gap: ' + F.id);
   if (F.kind === 'step' && !F.episode) assert(html.includes('No episode record for this step'), F.id);
-  if (F.kind === 'shared') { assert(html.includes('A merge has no checks of its own.')); assert(!html.includes('Grants')); assert.equal((html.match(/via">parent</g) || []).length, F.parents.length); }
+  if (F.kind === 'shared') { assert(html.includes('No checks are recorded for this shared commit.')); assert(!html.includes('Grants')); assert.equal((html.match(/via">parent</g) || []).length, F.parents.length); }
   if (!F.checks.graders) assert(!/class="ctile"/.test(html), 'no tile invents a check: ' + F.id);
   if (!F.decisions.length) assert(html.includes('None recorded.'));
   const bars = app.stackBars(S.earlier, -1).concat(app.stackBars(S.later, 1));

@@ -43,6 +43,14 @@
     return `<span class="g" style="width:${size}px;height:${size}px;background:${colour};clip-path:${CLIP[shape] || 'none'};border-radius:${shape === 'square' ? '2px' : '0'};${extra}"></span>`;
   }
 
+  const RECORD_LABEL = {
+    'github-merge': 'GitHub merge', 'shared-commit': 'Shared commit',
+    episode: 'World episode', draft: 'World draft', step: 'Work step',
+  };
+  const mergeGlyph = (size, timeline = false) => `<svg class="g merge-glyph" viewBox="0 0 16 16" width="${size}" height="${size}" aria-hidden="true" focusable="false"${timeline ? ' style="color:var(--text)"' : ''}>
+      <path d="M2 4h3c3 0 3 4 6 4h3M2 12h3c3 0 3-4 6-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>`;
+
   // ---------- Time axis: one slot per instant, shared by both views ----------
   const BREAK_H = 72;                           // longer quiet gaps are drawn as an axis break, not as empty weeks
   const LEVELS = [{ name: 'Close', G: 84, P: 0 }, { name: 'Steps', G: 50, P: 0 }, { name: 'Hours', G: 14, P: 16 }, { name: 'Days', G: 3, P: 6 }, { name: 'Weeks', G: 0, P: 2.4 }];
@@ -107,7 +115,21 @@
     const nameOf = key => { const l = LANES[key]; return l ? l.name || l.title || key : String(key); };
     const laneTitle = key => rowLabel(nameOf(key), LANES[key] && LANES[key].row);
     const glyphOf = (key, size) => { const l = LANES[key] || {}; return gl(l.glyph, l.glyph === 'circle' ? SHARED_INK : l.colour, size); };
-    const glyphOfNode = (n, size) => n.kind === 'shared' ? gl('circle', SHARED_INK, size) : isSharedKey(n.lane) ? gl(null, null, size) : glyphOf(n.lane, size);
+    const recordKind = n => {
+      if (n.kind === 'shared') return n.pr && parents[n.id]?.some(id => N[id]?.kind === 'step')
+        ? 'github-merge' : 'shared-commit';
+      if (n.draft) return 'draft';
+      return n.kind === 'open' || n.episode ? 'episode' : 'step';
+    };
+    const recordLabel = n => RECORD_LABEL[recordKind(n)];
+    const glyphOfNode = (n, size) => {
+      if (n.kind === 'shared') return recordKind(n) === 'github-merge' ? mergeGlyph(size) : gl('circle', SHARED_INK, size);
+      if (n.kind === 'open') {
+        const colour = LANES[n.lane]?.colour || SHARED_INK;
+        return gl('circle', colour, size, 'border-style:dashed;background:' + (n.open?.sessionLive ? colour + '55' : 'var(--shellBg)') + ';');
+      }
+      return isSharedKey(n.lane) ? gl(null, null, size) : glyphOf(n.lane, size);
+    };
     const mergeOf = id => (kids[id] || []).find(c => N[c].kind === 'shared');
     const nodes = Object.values(N);
     const STEPS = nodes.filter(n => n.kind === 'step');
@@ -148,7 +170,7 @@
     const aliasOf = {}; (D.aliases || []).forEach(a => { if (N[a.target]) aliasOf[a.id] = a.target; });
     return { D, LANES, N, parents, kids, SH, ...axis, MAXU: axis.LX.length - 1, STEPS, OPEN, above, below, quiet, LY, ROWS,
       GROUPS, multi, GAP, QUIET, groupOf, isDip, isOther, homeRow, aliasOf,
-      nameOf, laneTitle, glyphOf, glyphOfNode, mergeOf, rowOf, rowY, lastStep, lastState };
+      nameOf, laneTitle, glyphOf, glyphOfNode, recordKind, recordLabel, mergeOf, rowOf, rowY, lastStep, lastState };
   }
 
   // ---------- Layout of the visible graph at one zoom (XS) ----------
@@ -195,7 +217,7 @@
   }
 
   // ---------- Brane view: world/surface-stack/v1 as bars, the front card and the rail ----------
-  const tagOf = c => c.kind === 'shared' ? `Merged ${c.pr ? '#' + c.pr : c.label}` : (c.episode || c.label);
+  const tagOf = c => c.kind === 'shared' ? `Shared ${c.pr ? '#' + c.pr : c.label}` : (c.episode || c.label);
   function stackBars(cols, dir) {
     const shown = (cols || []).slice(0, 3), nc = Math.max(1, shown.length), cw = (1180 - (nc - 1) * 12) / nc, out = [];
     shown.forEach((col, c) => {
@@ -291,7 +313,7 @@
     const v = verdict(ck.graders, ck.rounds, F.firstRoundPass, ck.minutes);
     const tiles = [[ck.graders, 'graders'], [ck.rounds, ck.rounds === 1 ? 'round' : 'rounds'], [ck.minutes, 'agent min'], [ck.calls, 'World calls']]
       .filter(([x]) => x != null && x !== '').map(([x, k]) => `<div class="ctile"><div class="v">${esc(x)}</div><div class="k">${k}</div></div>`).join('');
-    const checks = `<div class="col g9"><div class="colh">Checks</div>${v ? `<div class="verdict">${esc(v)}</div>` : none(step ? 'No episode record for this step.' : 'A merge has no checks of its own.')}${tiles ? `<div class="tiles">${tiles}</div>` : ''}</div>`;
+    const checks = `<div class="col g9"><div class="colh">Checks</div>${v ? `<div class="verdict">${esc(v)}</div>` : none(step ? 'No episode record for this step.' : 'No checks are recorded for this shared commit.')}${tiles ? `<div class="tiles">${tiles}</div>` : ''}</div>`;
 
     return bar + `<div class="fbody">${head}${view}<div class="cols">${inputs}${outputs}${decisions}${checks}</div></div>`;
   }
@@ -697,7 +719,13 @@
   let pinnedTimelineState = null;
   function layout() { ({ POS, REP, DISP, LABELED } = layoutGraph(T, XS, pinnedTimelineState)); }
 
-  let fromHeads = false, stackFlight;
+  let fromHeads = false, timelineAnchor = '', stackFlight;
+  function chooseTimelineNode(id) {
+    timelineAnchor = N[id]?.id || DISP[id]?.ids?.at(-1) || '';
+    if (st.focus === id) return;
+    st.focus = id;
+    applyFocus();
+  }
   function sidePoints() {
     const points = new Map(), stageBox = $('stage').getBoundingClientRect();
     const world = $('world')?.getBoundingClientRect();
@@ -775,14 +803,16 @@
     stackFlight?.cancel();
     if (wasStack && heads && !instant && !reduced()) $('stage').classList.add('head-return');
     if (wasStack) {
-      st.focus = N[F.id] ? F.id : st.focus;
+      timelineAnchor = N[F.id]?.id || T.aliasOf[F.id] || '';
       st.d = 0;
       $('root').classList.remove('zoomed');
       $('L1').inert = true;
       renderCrumbs();
     }
-    if (anchor && N[anchor]) st.focus = anchor;
-    if (wasStack && fromHeads && !heads && !camera.active) camera.turn(true, st.focus, true, false);
+    const chosen = anchor || timelineAnchor;
+    const node = N[chosen] || N[T.aliasOf[chosen]];
+    if (node) st.focus = node.id;
+    if (wasStack && fromHeads && !heads && !camera.active) camera.turn(true, st.focus, {instant:true});
     if (!heads && st.focus && REP[st.focus]) {
       pinnedTimelineState = st.focus;
       relayout();
@@ -798,7 +828,10 @@
     $('tip').hidden = true;
     markAngle(heads ? 'heads' : 'timeline');
     if (navigate) cameraURL(heads ? '/surface#heads' : '/surface', true);
-    camera.turn(heads, N[st.focus] ? st.focus : DISP[st.focus]?.ids?.at(-1), instant || wasStack && heads, keyboard);
+    const id = N[st.focus] ? st.focus : DISP[st.focus]?.ids?.at(-1);
+    const frameNode = heads && Boolean(node);
+    if (heads) timelineAnchor = '';
+    camera.turn(heads, id, {instant:instant || wasStack && heads, keyboard, frameNode});
     if (!heads && !camera.active) { setView('timeline'); $('L0').inert = false; }
     if ($('stage').classList.contains('head-return')) {
       const face = faceFor(st.focus)?.getBoundingClientRect();
@@ -831,8 +864,7 @@
   }
   function progressOf(key) {
     const l = LANES[key];
-    if (key === 'shared') return `<div class="prog">${SH.length} merges into dev</div>`;
-    if (isSharedKey(key)) { const g = T.groupOf(key), n = (l.states || []).filter(s => s.kind === 'shared').length; return `<div class="prog">${n} merge${n === 1 ? "" : "s"} into ${esc(g.repo ? g.repo.branch : 'dev')}</div>`; }
+    if (isSharedKey(key)) { const g = T.groupOf(key), n = (l.states || []).filter(s => s.kind === 'shared').length; return `<div class="prog">${n} shared record${n === 1 ? '' : 's'} on ${esc(g.repo ? g.repo.branch : 'dev')}</div>`; }
     const ms = l.milestones;
     if (ms && ms.names) {
       const dots = ms.names.map(nm => {
@@ -890,10 +922,12 @@
       }).join('')}</div>`;
     });
     h += `<div class="legend" aria-label="Legend" style="top:${LEGEND_T}px">
+      <span>${mergeGlyph(11, true)}GitHub merge</span>
+      <span>${gl('square', 'var(--sub)', 10)}World episode or work step</span>
       <span><span class="nb inl">1</span>your decisions</span>
       <span><span style="width:14px;height:14px;border-radius:7px;box-shadow:0 0 0 4px var(--halo)"></span>connected to the step you point at</span>
       <span><span style="width:18px;border-top:2px dotted var(--read)"></span>read</span>
-      <span><span class="bub inl">4</span>several merges or steps · click to open up</span>
+      <span><span class="bub inl">4</span>several records · click to open up</span>
       <span class="off"><span style="width:18px;border-top:2px dashed var(--ran)"></span>ran on <i>· not recorded yet</i></span>
     </div>`;
     $('tl').innerHTML = h;
@@ -963,7 +997,7 @@
       const { x, y } = d;
       if (isCluster(id)) {
         const ns = d.ids.map(k => N[k]), shared = isSharedKey(d.row);
-        const word = shared ? 'merges' : 'steps';
+        const word = shared ? 'shared records' : 'work records';
         const col = shared || T.isDip(d.row) || T.isOther(d.row) ? 'var(--edge)' : LANES[d.row].colour;
         const badge = ns.reduce((a, n) => a + (n.badge || 0), 0);
         h += `<button type="button" class="node bub-n" data-id="${id}" data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${ns.length} ${word}, ${esc(exactOf(ns[0].at))} to ${esc(exactOf(ns[ns.length - 1].at))}"><span class="halo"><span class="bub" style="border-color:${col}">${ns.length}</span></span>${d.ids.map(k => `<span data-state="${esc(k)}" hidden></span>`).join('')}</button>`;
@@ -974,11 +1008,15 @@
       const l = LANES[n.lane];
       const size = shared ? 9 : unfiled ? 9 : l.glyph === 'square' ? 15 : 18;
       // An open episode: a dashed ring in its lane's colour, filled while its session is live. Never a commit glyph.
-      const inner = shared ? `<span class="g ring" style="width:9px;height:9px;border-radius:50%;background:var(--shellBg);border:2px solid var(--edge)"></span>`
-        : opened ? `<span class="g open" data-open="${esc(n.open.state)}" style="width:14px;height:14px;border-radius:50%;border:2px dashed ${l.colour};background:${n.open.sessionLive ? l.colour + '55' : 'var(--shellBg)'}"></span>`
+      const record = T.recordKind(n);
+      const inner = record === 'github-merge' ? mergeGlyph(13, true)
+        : shared ? gl('circle', SHARED_INK, size, 'background:var(--shellBg);')
+        : opened ? glyphOfNode(n, 14)
         : unfiled ? gl(null, null, 9) : gl(l.glyph, l.colour, size);
-      const what = shared ? `Merged ${n.pr ? '#' + n.pr : n.label}` : opened ? `${n.open.label}: ${n.title || n.episode}` : (cleanTitle(n.title) || n.episode || n.label);
-      h += `<button type="button" class="node${shared ? ' sh' : ''}" data-id="${id}" data-state="${esc(id)}" data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${esc((shared ? 'Shared world' : nameOf(n.lane)) + ': ' + what + (n.rel ? ', ' + n.rel : '') + (n.badge ? ', ' + n.badge + ' of your decisions' : ''))}"><span class="halo">${inner}</span></button>`;
+      const title = cleanTitle(n.title) || n.episode || n.label;
+      const pr = n.pr && title !== '#' + n.pr && 'PR #' + n.pr;
+      const what = [T.recordLabel(n), opened && n.open?.label, title, pr].filter(Boolean).join(', ');
+      h += `<button type="button" class="node${shared ? ' sh' : ''}" data-id="${id}" data-state="${esc(id)}" data-record-kind="${record}"${opened ? ` data-open="${esc(n.open?.state || '')}"` : ''} data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${esc(nameOf(n.lane) + ', ' + what + (n.rel ? ', ' + n.rel : '') + (n.badge ? ', ' + n.badge + ' of your decisions' : ''))}"><span class="halo">${inner}</span></button>`;
       if (n.badge > 0) h += `<div class="nb" style="left:${x + 6}px;top:${y - 19}px">${n.badge}</div>`;
       if (LABELED.has(id)) h += `<div class="nlab" data-l="${id}" style="left:${x - 56}px;bottom:${936 - (y - 18)}px"><span class="tx">${esc(opened ? n.episode + ' · ' + n.open.label : shortTitle(n.title || '') || n.episode || n.label)}</span></div>`;
       h += `<div class="nlab" data-r="${id}" style="left:${x - 56}px;top:${y + (shared ? 9 : 14)}px"><div class="rel"></div></div>`;
@@ -1708,7 +1746,7 @@
     openSeq++;
     const id = focusId || (F && F.id);
     if (T && id && POS[id]) {
-      st.focus = id;
+      st.focus = timelineAnchor = id;
       const x = screenX(id); if (x == null || x < PL + 40 || x > PR - 40) panTo(view.L + (x - (PL + PW / 2)), false);
       applyFocus(); setOrigin(screenX(id), DISP[REP[id]].y);
     }
@@ -1792,10 +1830,10 @@
   function nodeCard(id) {
     if (isCluster(id)) {
       const d = DISP[id]; if (!d) return '';
-      const ns = d.ids.map(k => N[k]).sort((a, b) => b.rank - a.rank), shared = d.row === 'shared';
+      const ns = d.ids.map(k => N[k]).sort((a, b) => b.rank - a.rank), shared = ns.every(n => n.kind === 'shared');
       const t0 = ns[ns.length - 1].at, t1 = ns[0].at;
       const span = dayOf(t0) === dayOf(t1) ? `${dayOf(t0)} · ${hm(t0)}–${hm(t1)}` : `${exactOf(t0)} → ${exactOf(t1)}`;
-      return `<div class="hc"><div class="hk">${ns.length} ${shared ? 'merges into the shared world' : 'steps'} · ${esc(span)}</div>` +
+      return `<div class="hc"><div class="hk">${ns.length} ${shared ? 'shared records' : 'work records'} · ${esc(span)}</div>` +
         ns.slice(0, 6).map(n => `<div class="hli">${glyphOfNode(n, 9)}<span>${esc(shortTitle(n.title, 64) || n.episode || n.label)}</span></div>`).join('') +
         `<div class="hid">${ns.length > 6 ? `+${ns.length - 6} more · ` : ''}click or zoom in to open them up</div></div>`;
     }
@@ -1804,14 +1842,14 @@
     const ids = [n.episode, n.pr ? '#' + n.pr : '', String(id).replace(/^.*:commit:/, '').slice(0, 7)].filter(Boolean).join(' · ');
     if (shared) {
       const from = (parents[id] || []).map(p => N[p]).find(p => p.kind === 'step');
-      return `<div class="hc"><div class="hk">${gl('circle', SHARED_INK, 9)}Merged into the shared world · ${esc(n.rel)}</div>
+      return `<div class="hc"><div class="hk">${glyphOfNode(n, 11)}${T.recordLabel(n)} · ${esc(nameOf(n.lane))} · ${esc(n.rel)}</div>
         ${n.title ? `<div class="ht">${esc(cleanTitle(n.title))}</div>` : ''}
         ${from && !isSharedKey(from.lane) ? `<div class="hm">from ${esc(nameOf(from.lane))}${from.episode ? ' · ' + esc(from.episode) : ''}</div>` : ''}
         <div class="hw">${esc(exactOf(n.at))}</div><div class="hid">${esc(ids)}</div></div>`;
     }
     if (n.kind === 'open') {
       const o = n.open || {}, base = o.baseOutsideWindow ? `base ${o.base || 'unrecorded'} is outside the retained window` : o.base ? 'built on ' + o.base : '';
-      return `<div class="hc"><div class="hk">${glyphOfNode(n, 9)}${esc(nameOf(n.lane))} · ${esc(o.label)}</div>
+      return `<div class="hc"><div class="hk">${glyphOfNode(n, 9)}${T.recordLabel(n)} · ${esc(nameOf(n.lane))} · ${esc(o.label)}</div>
         <div class="ht">${esc(n.title || n.episode)}</div>
         ${n.model ? `<div class="hm"><b>${esc(agentLine(n))}</b></div>` : ''}
         <div class="hm">${esc([o.branch, base, n.pr ? 'PR #' + n.pr : ''].filter(Boolean).join(' · '))}</div>
@@ -1819,7 +1857,7 @@
     }
     const s = summaryOf(n);
     const g = n.graders ? `${esc(n.graders)} graders · ${n.firstRoundPass ? 'first round ✓' : `${n.rounds} round${n.rounds === 1 ? '' : 's'}`}` : '';
-    return `<div class="hc"><div class="hk">${glyphOfNode(n, 9)}${esc(n.lane === 'shared' ? 'Straight to the shared world' : nameOf(n.lane))}</div>
+    return `<div class="hc"><div class="hk">${glyphOfNode(n, 9)}${T.recordLabel(n)} · ${esc(nameOf(n.lane))}</div>
       <div class="ht">${esc(cleanTitle(n.title) || n.episode || n.label)}</div>
       ${s ? `<div class="hs">${esc(s)}</div>` : `<div class="hs none">No agent episode recorded.</div>`}
       ${n.model ? `<div class="hm"><b>${esc(agentLine(n))}</b>${g ? ' · ' + g : ''}${n.minutes != null ? ` · ${n.minutes} agent-min` : ''}</div>` : ''}
@@ -1865,10 +1903,12 @@
   });
 
   // ---------- Events ----------
-  $('stage').addEventListener('pointerover', e => {
+  function inspectTimelineNode(e) {
     const n = e.target.closest('#tl .node');
-    if (n && T && st.d === 0 && !dragging && st.focus !== n.dataset.id) { st.focus = n.dataset.id; applyFocus(); }
-  });
+    if (n && T && st.d === 0 && !camera.active && !dragging) chooseTimelineNode(n.dataset.id);
+  }
+  $('stage').addEventListener('pointerover', inspectTimelineNode);
+  $('stage').addEventListener('focusin', inspectTimelineNode);
   let suppressClick = false;
   $('stage').addEventListener('click', e => {
     if (suppressClick) { suppressClick = false; e.stopPropagation(); return; }
@@ -2032,7 +2072,7 @@
         const j = ROWS.indexOf(T.homeRow(d.row)) + (k === 'ArrowUp' ? -1 : 1);
         if (ROWS[j]) { const cand = onRow(ROWS[j]); if (cand.length) nx = cand.reduce((b, id) => Math.abs(DISP[id].x - d.x) < Math.abs(DISP[b].x - d.x) ? id : b); }
       }
-      if (nx && nx !== cur) { st.focus = nx; applyFocus(); ensureVisible(nx); }
+      if (nx && nx !== cur) { chooseTimelineNode(nx); ensureVisible(nx); }
     } else done = false;
     if (done) e.preventDefault();
   });
@@ -2041,7 +2081,7 @@
   // Exposed for the screenshot driver.
   window.World = { open: label => { const n = Object.values(N).find(x => x.id === label || x.episode === label || x.label === label) || (T && N[T.aliasOf[label]]); if (n) open(n.id); return !!n; }, out: () => out(), rail: k => openRail(k),
     poll: () => refresh('poll'), generation: () => shownGen,
-    focus: id => { st.focus = id; applyFocus(); }, zoom: (u, ax) => zoomTo(u, ax == null ? PL + PW / 2 : ax, false), pan: L => panTo(L, false), now: () => goNow(false),
+    focus: chooseTimelineNode, zoom: (u, ax) => zoomTo(u, ax == null ? PL + PW / 2 : ax, false), pan: L => panTo(L, false), now: () => goNow(false),
     view: () => ({ u: view.u, L: view.L, level: levelName(), atNow: atNow() }), screenX: id => screenX(id) };
 
   async function boot() {
