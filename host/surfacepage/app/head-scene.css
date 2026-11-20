@@ -28,7 +28,7 @@
   scrollbar-color: var(--ctl) transparent;
   overscroll-behavior: contain;
 }
-.hc-scene.is-ready .hc-scroll { overflow: auto; pointer-events: auto; }
+.hc-scene.is-ready .hc-scroll { overflow-x: hidden; overflow-y: auto; pointer-events: auto; }
 .hc-space {
   position: relative;
   min-width: 100%;

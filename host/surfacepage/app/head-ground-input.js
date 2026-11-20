@@ -41,12 +41,13 @@
       const worldX = ground.cameraX + (hit.x - ground.vx) * time.depthAt(stop.index);
       hooks.hop(stop, worldX);
     }
-    function cancel() {
+    function finish(released = false) {
+      if (press?.dragged && hooks.view()) hooks.settle(released && press.changedLane);
       scene.classList.remove('is-floor-dragging');
       press = null;
     }
     scene.addEventListener('pointerdown', event => {
-      if (!event.isPrimary) { cancel(); tap = null; return; }
+      if (!event.isPrimary) { finish(); tap = null; return; }
       if (!isGround(event.target) || event.button !== 0 || event.altKey || event.metaKey || event.ctrlKey || event.shiftKey) {
         tap = null;
         return;
@@ -57,12 +58,13 @@
       // The local slope of the ground projection makes a near grab precise
       // and a distant grab faster. Limit the slope at the vanishing point.
       const scale = time.unitsPerZ * Math.min(3.5, hit.depth) ** 2 / (ground.streetY - ground.horizon);
-      press = {id:event.pointerId, x:event.clientX, y:event.clientY, offset:scroll.scrollLeft - ground.vx, lane:ground.centerLane,
-        stops:hit.stops, time, scale, index:time.referenceIndex, dragged:false};
+      press = {id:event.pointerId, x:event.clientX, y:event.clientY, lane:ground.centerLane,
+        stride:Math.max(48, Math.min(80, scroll.clientWidth * .14)),
+        stops:hit.stops, time, scale, index:time.referenceIndex, dragged:false, scrubbing:false, changedLane:false};
     });
     window.addEventListener('pointermove', event => {
       if (event.pointerId !== press?.id) return;
-      if (event.pointerType === 'mouse' && !(event.buttons & 1)) { cancel(); return; }
+      if (event.pointerType === 'mouse' && !(event.buttons & 1)) { finish(); return; }
       const dx = event.clientX - press.x, dy = event.clientY - press.y;
       if (!press.dragged && Math.hypot(dx, dy) < 6) return;
       if (!press.dragged) {
@@ -70,14 +72,38 @@
         scene.classList.add('is-floor-dragging');
       }
       tap = null;
-      const {time} = press;
-      const stop = nearest(press.stops, time.referenceX - dy * press.scale, s => time.xAt(s.index));
-      if (stop.index !== press.index) {
-        press.index = stop.index;
-        hooks.seek(stop.id, press.lane);
+      if (!hooks.view()) { finish(); return; }
+      if (press.scrubbing || Math.abs(dy) > Math.max(6, Math.abs(dx) / 2)) {
+        const {time} = press;
+        const stop = nearest(press.stops, time.referenceX - dy * press.scale, s => time.xAt(s.index));
+        if (stop.index !== press.index) {
+          press.scrubbing = true;
+          press.index = stop.index;
+          hooks.seek(stop.id, press.lane);
+        }
       }
-      const view = hooks.view();
-      if (view) scroll.scrollLeft = view.layout.ground.vx + press.offset - dx;
+      const count = Math.trunc(-dx / press.stride);
+      if (count) {
+        // Grabbing left brings the next lane on the right into focus. Start
+        // subsequent depth motion from the same tip an arrow would select.
+        const lane = hooks.shift(count);
+        press.x -= count * press.stride;
+        if (lane) {
+          const {time} = hooks.view().layout;
+          press.changedLane = true;
+          press.lane = lane;
+          press.time = time;
+          press.index = time.referenceIndex;
+          press.y = event.clientY;
+          press.scrubbing = false;
+        } else {
+          // At an outer lane, discard overtravel so reversing feels immediate.
+          press.x = event.clientX;
+        }
+      }
+      // Follow the hand between lane crossings. Release settles on the selected lane.
+      const {ground} = hooks.view().layout;
+      scroll.scrollLeft = ground.vx - scroll.clientWidth / 2 - (event.clientX - press.x);
       event.preventDefault();
       event.stopPropagation();
     }, {capture:true});
@@ -92,7 +118,7 @@
           tap = null;
         } else tap = {at:now, x:event.clientX, y:event.clientY};
       }
-      cancel();
+      finish(true);
     }, {capture:true});
     scene.addEventListener('dblclick', event => {
       if (!isGround(event.target) || dragged || event.button !== 0 || event.altKey || event.metaKey || event.ctrlKey || event.shiftKey ||
@@ -100,8 +126,8 @@
       event.preventDefault();
       hop(event);
     });
-    window.addEventListener('pointercancel', event => { if (event.pointerId === press?.id) cancel(); }, {capture:true});
-    window.addEventListener('blur', () => { cancel(); tap = null; });
+    window.addEventListener('pointercancel', event => { if (event.pointerId === press?.id) finish(); }, {capture:true});
+    window.addEventListener('blur', () => { finish(); tap = null; });
   }
   window.WorldHeadGroundInput = {create};
 })();

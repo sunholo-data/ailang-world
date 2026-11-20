@@ -1745,7 +1745,7 @@
         ['N', 'What needs you'], [',', 'Appearance'], ['?', 'These keys']];
       $('keys').innerHTML = '<div class="kgrid heads-keys"><strong>Heads</strong>' +
         rows.map(([key, action]) => `<span><span class="kbd">${key}</span></span><span>${action}</span>`).join('') +
-        '</div><p>Hold an arrow to keep moving. Drag the grid to travel, or double-click a place to hop there.</p>';
+        '</div><p>Hold an arrow to keep moving. Drag sideways to switch threads or vertically to travel in time. Double-click the grid to hop there.</p>';
       return;
     }
     $('keys').innerHTML = `<div class="kgrid"><span></span><span style="font-size:12px;font-weight:700;color:${st.d === 0 ? 'var(--text)' : 'var(--faint)'}">Timeline</span><span style="font-size:12px;font-weight:700;color:${st.d === 1 ? 'var(--text)' : 'var(--faint)'}">Brane</span>` +

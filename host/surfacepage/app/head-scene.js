@@ -756,7 +756,7 @@
       const departures = [], sizes = new Map(faceSizes);
       // The destination can have a wider scroll surface. Carry the old
       // screen positions into its coordinates before the first animation frame.
-      const dx = next.ground.vx - layout.ground.vx;
+      const dx = next.ground.vx - (scroll.scrollLeft + scroll.clientWidth / 2);
       const origins = dx ? new Map([...points].map(([id,p]) => [id, {...p, x:p.x + dx}])) : points;
       for (const id of rearLinks.keys()) {
         const pane = points.get(id), node = model.N[id];
@@ -993,9 +993,10 @@
     const appearance = new MutationObserver(repaint);
     appearance.observe(document.documentElement, {attributes:true, attributeFilter:['class', 'data-theme']});
 
-    function center() {
-      panOffset = 0;
-      scroll.scrollLeft = layout.ground.vx - scroll.clientWidth / 2;
+    function center(id) {
+      const x = layout.points.get(id)?.x ?? layout.ground.vx;
+      panOffset = x - layout.ground.vx;
+      scroll.scrollLeft = x - scroll.clientWidth / 2;
     }
     return {render, element:scene, startTravel, center, focus: focusHead, destroy() {
       if (frame) cancelAnimationFrame(frame);

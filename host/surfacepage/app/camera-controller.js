@@ -15,6 +15,13 @@
       view:() => angle === 1 && destination === 1 && !space.hidden && !space.inert && layout ?
         {layout, stops:hooks.stops()} : null,
       seek:(id, lane) => seek(id, lane, false),
+      shift:count => shiftLane(count, true),
+      settle(changedLane) {
+        const head = changedLane ? aim() : undefined;
+        scene.center(head);
+        // A depth seek can interrupt a lane flight before it transfers focus.
+        if (head && !flight && targetID(document.activeElement) !== head) scene.focus(head);
+      },
       hop(stop, worldX) {
         const lanes = layout.laneOrder.filter(lane => laneStates.get(lane)?.some(node =>
           (!stop.id || !node.draft) && graph.timeIndex.get(node.id) <= stop.index));
@@ -50,13 +57,20 @@
         laneStates.get(node.lane)?.find(earlier)?.id ||
         (!node.draft && index < layout.time.referenceIndex ? id : undefined);
     }
-    function neighbor(direction) {
+    // Key presses and ground drags traverse the same lanes at the chosen cutoff.
+    function neighbor(count) {
       if (!scope) return;
       const lanes = scope.laneOrder, center = lanes.indexOf(layout.ground.centerLane);
       if (center < 0) return;
-      for (let i = center + direction; i >= 0 && i < lanes.length; i += direction) {
-        if (scope.heads.some(head => head.lane === lanes[i])) return lanes[i];
+      const direction = Math.sign(count);
+      let remaining = Math.abs(count), target;
+      for (let i = center + direction; remaining && i >= 0 && i < lanes.length; i += direction) {
+        if (scope.heads.some(head => head.lane === lanes[i])) {
+          target = lanes[i];
+          remaining--;
+        }
       }
+      return target;
     }
     function updateControls() {
       const id = layout?.time.stop || '', node = graph?.N[id];
@@ -85,8 +99,7 @@
       return WorldHeadCamera.layout(graph, {...options, viewLane, stop:landing});
     }
     function layoutOptions() {
-      // The native scrollbar can appear as the recorded cut changes. Frame
-      // the street from the scroll box so opening history cannot shift the horizon.
+      // Frame the street from its scroll box, including the reserved travel controls.
       const height = scroll.offsetHeight || stage.clientHeight - toolbar.offsetHeight - (parseFloat(getComputedStyle(scroll).bottom) || 0);
       return {width:stage.clientWidth, height:Math.max(1, height), attention:hooks.attention(), timeXs:hooks.timeXs()};
     }
@@ -121,8 +134,10 @@
         (document.activeElement === document.body && flight?.focusOnFace);
       animateTo(next, center?.id, Boolean(focus), fast);
     }
-    function shiftLane(direction, fast) {
-      selectLane(neighbor(direction), true, fast);
+    function shiftLane(count, fast) {
+      const target = neighbor(count);
+      if (target) selectLane(target, true, fast);
+      return target;
     }
     function selectLane(lane, focusOnFace, fast) {
       if (!layout || angle !== 1 || space.hidden || space.inert || !scope.heads.some(head => head.lane === lane)) return;
