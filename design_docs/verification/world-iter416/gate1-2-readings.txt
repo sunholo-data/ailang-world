@@ -1,0 +1,92 @@
+# World iteration 416 — Gate 0–2 readings (fire world-1795138767-78662), captured 2026-11-20T01:42:16Z
+
+## origin/dev and Gate-1 base
+2b42d26b1f265171bcf9c9b9f0d903023b4c6923
+Gate-1 base: 2b42d26b1f265171bcf9c9b9f0d903023b4c6923 2026-11-20T01:40:32Z
+
+## commits since iteration 415 Gate-1 base 3e5a4664
+2b42d26b Merge pull request #622 from sunholo-data/mission/world-iter415-gate3b
+1dc0613e record: iteration 415 — Gate 3b merge CI; hygiene row 265 (third instance of a race-leg flake)
+1dbf8f0f Merge pull request #621 from sunholo-data/mission/world-iter415-record
+f8ab5d4a record: iteration 415 — judge follow-through (sonnet PASS 96, zero blocking)
+a15551c2 record: iteration 415 — no pick, rule (d) block report (sixth); row 264 prediction confirmed, row 263 count 4
+count=5
+ledger lines changed (| D-WORLD table rows) in 3e5a4664..origin/dev: 0
+paths changed: design_docs/verification/world-iter415/gate1-2-readings.txt design_docs/world-mission-dashboard.md design_docs/world-mission-index.md design_docs/world-mission-log.md design_docs/world-mission-status-archive.md design_docs/world-mission.md 
+
+## ledger
+decision ledger valid: 107 rows
+check rc=0
+D-WORLD-119	OPEN
+D-WORLD-120	OPEN
+
+## dev CI at origin/dev
+checks=3
+  ailang-code verify gate: success
+  go host build + test gate: success
+  go race gate (go test -race, own job): success
+
+## row 150 (attended A1) — subjects in 3e5a4664..origin/dev
+match row ?150|A1|marketing: 0  control record|iteration 415: 4
+
+## row 151 (needs row 188 N2d/N4a)
+subjects since 2026-10-01 matching N2d|N4a: 0  control N2c: 1
+non-test .go files naming file.json (fixed string): 0  control surface: 109
+
+## row 243 V4 design gating
+design=design_docs/planned/w-world-address-bar-verbs-v4.md lines naming D-WORLD-119: 4  D-WORLD-120: 2  design touched in range: 0
+
+## Gate 0 directives
+⚠ mission_directives: watermark file /Users/voightkampff/.ailang/state/mission-574-last-seen is absent — reading every allowlisted comment on #574; the first --mark creates it
+mission_directives: #574 — 0 directive(s) from [MarkEdmondson1234] since 1970-01-01T00:00:00Z inclusive, 0 new, 0 already processed (of 26 comments; the rest are public feedback, never directives)
+⚠ mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-1-last-seen (bare timestamp, no processed ids, written before #981) — the first --mark upgrades it
+mission_directives: #1 — 0 directive(s) from [MarkEdmondson1234] since 2026-09-30T14:19:22Z inclusive, 0 new, 0 already processed (of 25 comments; the rest are public feedback, never directives)
+⚠ mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-world-last-seen (bare timestamp, no processed ids, written before #981) — the first --mark upgrades it
+mission_directives: #524 — 0 directive(s) from [MarkEdmondson1234] since 2026-10-27T09:03:42Z inclusive, 0 new, 0 already processed (of 47 comments; the rest are public feedback, never directives)
+
+## Gate 0 step 6a (self-notices)
+crash: issue=524 at=2026-11-13T09:48:25Z rc=1 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/524#issuecomment-6849577904
+transcript: issue=524 at=2026-11-16T09:37:59Z hits=2 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/524#issuecomment-6912778168 fire=world-1794807071-53892
+control: issue=107 expect=4 got=4 ok
+verdict: 1 crash notice(s) since 1970-01-01T00:00:00Z on #574,#524 — A FIRE DIED (newest rc=1 at 2026-11-13T09:48:25Z on #524): run Gate 2's died-mid-flight traces (a) open PRs (b) worktrees (c) uncommitted state BEFORE picking, and credit the orphan in the 
+rc=1
+
+## inbox (mission-world unread, before ack)
+inbox_1795130260506_186007ff mission-fleet mission-world [harness-resolved] driver:idle-fingerprint-head-ignores-design-docs-verification · world
+
+## open PRs (fleet account)
+619 ui/world-head-on updated 2026-11-19T21:57:40Z
+617 ui/live-branch-heads updated 2026-11-19T13:39:01Z
+615 ui/finish-card-review updated 2026-11-19T08:10:54Z
+
+## idle pre-check and lane state (driver log, this fire)
+[2026-11-20 02:38:18] ration gate: blocked buckets (over ration or unknown quota):codex anthropic 
+[2026-11-20 02:38:27] codex model 'gpt-6.2-sol' unusable: quota-limited
+[2026-11-20 02:38:31] codex planner lane -> falling back to 'opus' for this fire (model 'gpt-6.2-sol')
+[2026-11-20 02:38:36] codex executor lane -> falling back to 'claude:claude-haiku-5-5' for this fire (model 'gpt-6.2-sol')
+[2026-11-20 02:39:27] LANE DEGRADED this fire: - `planner`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`75` — over daily ration) → handed to `opus` - `executor`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`75` — over daily ration) → handed to `claude:claude-haiku-5-5`
+[2026-11-20 02:39:30] world: idle snapshot taken for world-1795138767-78662 (01aae1662f614b44fa9bcc23c7d0588538aa4d65bbab985465b946cc3bab20b4 head=0e9e8d3 ledger=107 open=2 directives=0 inbox=1 red=0)
+unusable lines this fire preflight: 2
+
+## row 264 fix check (harness-resolved ff08818ae, ailang #2431)
+ff08818ae is an ancestor of the pinned driver 226a01056
+78:  ":(exclude)design_docs/verification/${name}-iter*" \
+head, old pathspecs: a15551c2
+head, new pathspecs: 0e9e8d35
+0e9e8d35 subject: test(row 243 V4 S2b M3): the operator judges write nothing
+
+## slot verdicts (last 3)
+2026-11-19T14:31:12Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=3179 stamps=8 controller=claude:claude-opus-5-5
+2026-11-19T18:16:42Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=2309 stamps=5 controller=claude:claude-opus-5-5
+2026-11-19T23:11:37Z verdict=COMPLETED rc=0 attempt=1/3 elapsed_s=5603 stamps=8 controller=claude:claude-opus-5-5
+
+## worktrees iter41x record porcelain
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter410-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter411-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter412-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter413-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter414-record 0
+/Users/voightkampff/dev/sunholo-data/.wt-world-iter415-record 0
+
+## skill drift (resolved symlink + pin, vs ailang origin/dev 226a01056)
+compared=28 drift=0
