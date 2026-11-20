@@ -45,6 +45,7 @@
     let model, layout, sidePoints, angle = 0, selected = '', hovered = '', frame = 0, silentFocus = false;
     let panAxis, panWidth = 0, panOffset = 0, focusedByUser = '', paintedSelection, paintWidth = 0, paintHeight = 0, pixelRatio = 0;
     let floorTravel = 0, cameraX = 0;
+    let timeTicks = [];
     const faceSizes = new Map();
     let points = new Map(), headsByID = new Map(), headsByLane = new Map(), order = [], histories = new Map();
 
@@ -148,16 +149,17 @@
         // distinct instants with enough space for a date and a clock time.
         const addTick = index => {
           if (index < firstIndex || (model.undated && index === 0)) return;
-          const ms = model.TT[index], y = axis.yAt(index);
+          const ms = model.TT[index], y = axis.groundYAt(index);
           if (!Number.isFinite(ms) || !Number.isFinite(y) || y < 0 || y > layout.height ||
               ticks.some(tick => Math.abs(tick.y - y) < 44)) return;
-          ticks.push({ms,y});
+          ticks.push({index,ms,y});
         };
         addTick(lastIndex);
         addTick(firstIndex + Number(model.undated && firstIndex === 0));
         for (let i = lastIndex - 1; i > firstIndex; i--) addTick(i);
       }
       timeAxis.replaceChildren();
+      timeTicks = ticks;
       if (!ticks.length) return;
       ticks.sort((a,b) => a.y - b.y);
       const top = ticks[0].y;
@@ -438,17 +440,13 @@
       ctx.fillText(visible, x + 8, point.y + .5);
     }
 
-    function drawGround(left, right, bottom, opacity, ink) {
+    function drawGround(left, right, top, bottom, opacity, ink) {
       const ground = layout.ground;
-      const {vx, horizon, street, streetY, pitch, focal} = ground;
+      const {vx, horizon, street, streetY, pitch} = ground;
       const eye = streetY - horizon;
       if (bottom <= horizon || eye <= 0) return;
       const project = (x, z) => WorldHeadCamera.project(ground, x, 0, z);
       const near = eye / (bottom - horizon);
-      // A paving slab is square in the world. X is measured in pixels at
-      // Z=1, so the same length along the optical axis is pitch / focal.
-      const slab = pitch / focal;
-      const far = Math.max(near + slab, Math.sqrt(eye * slab / 3));
       const leftCurb = project(-street / 2, near), rightCurb = project(street / 2, near);
       const fade = ctx.createLinearGradient(0, horizon, 0, streetY);
       fade.addColorStop(0, 'transparent');
@@ -485,19 +483,19 @@
       }
       ctx.stroke();
 
-      const first = Math.ceil((near + floorTravel) / slab);
-      const last = Math.floor((far + floorTravel) / slab);
+      // Every transverse line sits on the recorded plane named by its ruler tick.
+      // Continue to project those depths as the camera moves toward the cut.
+      const offset = layout.travelZ - floorTravel;
       ctx.strokeStyle = ink;
-      for (let i = first; i <= last; i++) {
-        const z = i * slab - floorTravel;
-        const y = project(0, z).y;
-        const spacing = y - project(0, z + slab).y;
-        ctx.globalAlpha = opacity * .38 * clamp((spacing - 2) / 13, 0, 1);
-        ctx.beginPath();
+      ctx.globalAlpha = opacity * .38;
+      ctx.beginPath();
+      for (const tick of timeTicks) {
+        const y = offset ? layout.time.groundYAt(tick.index, offset) : tick.y;
+        if (y < top || y > bottom) continue;
         ctx.moveTo(left, y);
         ctx.lineTo(right, y);
-        ctx.stroke();
       }
+      ctx.stroke();
     }
 
     function drawFootprint(head, point, trail, picked, opacity, colors) {
@@ -659,7 +657,7 @@
       ctx.lineCap = 'round';
       const groundOpacity = clamp((angle - .78) / .22, 0, 1);
       if (groundOpacity && layout.ground) {
-        drawGround(x, x + width, y + height, groundOpacity, colors.edge);
+        drawGround(x, x + width, y, y + height, groundOpacity, colors.edge);
         const picked = focus || model.N[selected];
         for (const head of layout.heads) {
           const point = points.get(head.id);

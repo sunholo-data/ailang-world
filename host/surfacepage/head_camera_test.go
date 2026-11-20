@@ -186,7 +186,10 @@ for (const width of [320, 390, 1280]) {
 
 const recentLanes = Array.from({length:12},(_, i)=>lane('recent-'+i,[state('new'+i,200+i,.5)]));
 const threeNear = layout(adaptModel({...model,lanes:recentLanes.slice(0,3),links:[]}),{width:1280,height:780});
-assert.equal(threeNear.width,1280,'all three near faces fit in the desktop frame');
+assert(threeNear.heads.every(h => Math.abs(h.x - threeNear.ground.vx) + h.width/2 <= 640),
+  'all three near faces fit on arrival');
+assert(threeNear.heads.every(h => h.x >= 640 && h.x <= threeNear.width - 640),
+  'dragging can centre each visible head in the frame');
 assert(threeNear.heads.every(h=>h.width*h.depth>=240 && h.width*h.depth<=250));
 const busy = layout(adaptModel({...model,lanes:recentLanes,links:[]}),{width:1280,height:780});
 assert(busy.width>1280 && busy.heads.every(h=>h.width*h.depth>=171.999999),'busy desktop can pan at a readable width');

@@ -4,12 +4,24 @@
   function create(stage, space, hooks) {
     const scene = WorldHeadScene.create(space, hooks);
     const scroll = scene.element.querySelector('.hc-scroll');
-    const lanes = WorldHeadLanes.create(scene.element, lane => selectLane(lane, false, false));
+    const toolbar = space.querySelector('#head-toolbar');
+    const lanes = WorldHeadLanes.create(toolbar, lane => selectLane(lane, false, false));
     const input = WorldHeadTravelInput.create(scene.element, {step, shift:shiftLane, reset:() => move(-1, true)});
     let angle = 0, destination = 0, frame = 0, graph, base, scope, layout, side;
     let selected = '', viewLane = '', keyboard = false;
     let stop = '', followHead = false, history = [], flight, travelFrame = 0;
     const laneStates = new Map();
+    WorldHeadGroundInput.create(scene.element, {
+      view:() => angle === 1 && destination === 1 && !space.hidden && !space.inert && layout ?
+        {layout, stops:hooks.stops()} : null,
+      seek:(id, lane) => seek(id, lane, false),
+      hop(stop, worldX) {
+        const lanes = layout.laneOrder.filter(lane => laneStates.get(lane)?.some(node =>
+          (!stop.id || !node.draft) && graph.timeIndex.get(node.id) <= stop.index));
+        const distance = lane => Math.abs(layout.plan.lanes.get(lane).origin * layout.plan.pitch - worldX);
+        if (lanes.length) seek(stop.id, lanes.reduce((a,b) => distance(a) <= distance(b) ? a : b));
+      }
+    });
     const date = new Intl.DateTimeFormat(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit',timeZone:'UTC',timeZoneName:'short'});
     const paint = () => {
       stage.style.setProperty('--side-visibility', String(Math.max(0, 1 - angle * 2)));
@@ -75,7 +87,7 @@
     function layoutOptions() {
       // The native scrollbar can appear as the recorded cut changes. Frame
       // the street from the scroll box so opening history cannot shift the horizon.
-      const height = scroll.offsetHeight || stage.clientHeight - (parseFloat(getComputedStyle(scroll).bottom) || 0);
+      const height = scroll.offsetHeight || stage.clientHeight - toolbar.offsetHeight - (parseFloat(getComputedStyle(scroll).bottom) || 0);
       return {width:stage.clientWidth, height:Math.max(1, height), attention:hooks.attention(), timeXs:hooks.timeXs()};
     }
     function cancelTravel() {
@@ -119,16 +131,18 @@
       const next = slice();
       animateTo(next, next.heads.find(head => head.lane === lane).id, focusOnFace, fast);
     }
-    function seek(id) {
+    function seek(id, lane = layout?.ground.centerLane, recenter = true) {
       if (!layout || angle !== 1 || space.hidden || space.inert) return;
       const record = graph.N[id], index = graph.timeIndex.get(id);
       if (id && (!record || record.draft || !Number.isInteger(index) || index > graph.presentIndex)) return;
-      if (id === layout.time.stop && !followHead) return;
+      if (id === layout.time.stop && !followHead && lane === layout.ground.centerLane) {
+        if (recenter) scene.center();
+        return;
+      }
       // A ribbon drag sets one absolute cut, regardless of how many pixels it crosses.
       history = id ? [{stop:'', followHead:false}] : [];
       stop = id;
       followHead = false;
-      const lane = layout.ground.centerLane;
       const visible = !id || laneStates.get(lane)?.some(state => !state.draft && graph.timeIndex.get(state.id) <= index);
       viewLane = visible ? lane : record.lane;
       cancelTravel();
@@ -136,7 +150,7 @@
       selected = aim() || id;
       hooks.select(selected);
       paint();
-      scene.center();
+      if (recenter) scene.center();
       updateControls();
     }
     function animateTo(next, id, focusOnFace, fast) {
@@ -208,6 +222,7 @@
         stage.dataset.view = 'heads';
         if (keyboard) scene.focus(selected);
       } else {
+        hooks.placeStatus(false);
         space.hidden = true;
         delete stage.dataset.camera;
         stage.dataset.view = graph ? 'timeline' : stage.dataset.view;
@@ -224,6 +239,7 @@
       if (!heads && space.hidden) return;
       space.hidden = false;
       space.inert = true;
+      if (heads) hooks.placeStatus(true);
       stage.dataset.camera = 'turn';
       stage.dataset.view = 'turning';
       update();
@@ -243,6 +259,7 @@
       cancelAnimationFrame(frame);
       frame = 0;
       space.hidden = space.inert = true;
+      hooks.placeStatus(false);
       delete stage.dataset.camera;
       cancelTravel();
       updateControls();

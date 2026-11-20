@@ -1,84 +1,57 @@
-// Reuse Timeline's lane identities in the Heads projection.
+// Choose a Heads lane from the same repository groups as Timeline.
 (() => {
   'use strict';
   if (typeof window === 'undefined') return;
 
-  function create(scene, chooseLane) {
-    const strip = document.createElement('nav');
+  function create(container, chooseLane) {
+    const strip = document.createElement('div');
     strip.className = 'hc-lanes';
-    strip.setAttribute('aria-label', 'Lanes');
     strip.hidden = true;
-    scene.append(strip);
 
-    let priorGraph, priorOrder = '', priorLane = '', priorWidth = 0;
-    const buttons = new Map();
-    strip.addEventListener('click', event => {
-      const button = event.target.closest('button[data-camera-lane]');
-      if (button) chooseLane(button.dataset.cameraLane);
-    });
+    const select = document.createElement('select');
+    select.setAttribute('aria-label', 'Thread');
+    strip.append(select);
+    container.append(strip);
+
+    select.addEventListener('change', () => chooseLane(select.value));
+    // Keep type-ahead, arrows and Escape inside the native picker.
+    select.addEventListener('keydown', event => event.stopPropagation());
     strip.addEventListener('wheel', event => event.stopPropagation());
 
-    function populate(graph, order) {
-      const focused = document.activeElement?.dataset.cameraLane;
-      const row = document.createDocumentFragment();
-      buttons.clear();
-      let section;
-      for (const lane of order) {
-        const group = graph.groupOf(lane);
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.dataset.cameraLane = lane;
-        button.classList.toggle('hc-lane-group-start', section !== undefined && section !== group.id);
-        button.classList.toggle('hc-lane-shared', lane === group.shared);
-        section = group.id;
-        const glyph = document.createElement('span');
-        glyph.setAttribute('aria-hidden', 'true');
-        glyph.innerHTML = graph.glyphOf(lane, 11);
-        const name = document.createElement('span');
-        name.className = 'hc-lane-name';
-        name.textContent = graph.nameOf(lane);
-        button.append(glyph, name);
-        row.append(button);
-        buttons.set(lane, button);
-      }
-      strip.replaceChildren(row);
-      buttons.get(focused)?.focus({preventScroll:true});
-    }
-
+    let previous = '';
     function update({active, graph, current, heads, historical, order = []}) {
-      const wasHidden = strip.hidden;
       strip.hidden = !active || !heads.length;
       if (strip.hidden) return;
 
       const byLane = new Map(heads.map(head => [head.lane, head]));
-      const sidebarOrder = graph.ROWS.flatMap(row => graph.QUIET[row] || [row]);
-      const lanes = [...new Set([...order, ...sidebarOrder, ...byLane.keys()])].filter(lane => byLane.has(lane));
-      const signature = JSON.stringify(lanes);
-      if (priorGraph !== graph || priorOrder !== signature) populate(graph, lanes);
-
-      for (const [lane, button] of buttons) {
-        const head = byLane.get(lane);
-        const needs = !historical && head.attention;
-        const live = !historical && head.live;
-        const label = [graph.laneTitle(lane), live && 'Running', needs && 'Needs you'].filter(Boolean).join(', ');
-        if (button.title !== label) {
-          button.title = label;
-          button.setAttribute('aria-label', label);
+      const sidebar = graph.ROWS.flatMap(row => graph.QUIET[row] || [row]);
+      const lanes = [...new Set([...sidebar, ...order, ...byLane.keys()])].filter(lane => byLane.has(lane));
+      const shared = new Set(graph.GROUPS.map(group => group.shared));
+      const groups = graph.GROUPS.map(group => ({
+        id: group.id,
+        options: [group.shared, ...lanes.filter(lane => !shared.has(lane) && graph.groupOf(lane) === group)]
+          .filter(lane => byLane.has(lane)).map(lane => {
+            const {live, attention} = byLane.get(lane);
+            const label = [graph.laneTitle(lane), !historical && live && 'Running', !historical && attention && 'Needs you']
+              .filter(Boolean).join(', ');
+            return {lane, label};
+          })
+      })).filter(group => group.options.length);
+      const signature = JSON.stringify(groups);
+      if (signature !== previous) {
+        const row = document.createDocumentFragment();
+        for (const {id, options} of groups) {
+          const target = graph.GROUPS.length > 1 ? document.createElement('optgroup') : row;
+          if (target !== row) {
+            target.label = id;
+            row.append(target);
+          }
+          for (const {lane, label} of options) target.append(new Option(label, lane));
         }
-        button.toggleAttribute('data-running', live);
-        button.toggleAttribute('data-needs-attention', needs);
-        if (lane === current) button.setAttribute('aria-current', 'true');
-        else button.removeAttribute('aria-current');
+        select.replaceChildren(row);
+        previous = signature;
       }
-
-      const width = strip.clientWidth;
-      if (priorOrder !== signature || wasHidden || priorLane !== current || priorWidth !== width) {
-        buttons.get(current)?.scrollIntoView({block:'nearest', inline:'nearest', behavior:'instant'});
-      }
-      priorGraph = graph;
-      priorOrder = signature;
-      priorLane = current;
-      priorWidth = width;
+      if (select.value !== current && byLane.has(current)) select.value = current;
     }
 
     return {update};

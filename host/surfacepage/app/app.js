@@ -634,7 +634,7 @@
   const railIdx = () => F ? Math.max(0, RAIL.findIndex(r => r.id === F.id)) : 0;
   const setView = v => {
     $('stage').dataset.view = v;
-    if (v === 'brane' || !T) showHeadRibbon(false);
+    if (v === 'brane' || !T) { showHeadRibbon(false); placeNow(false); }
   };
 
   const isBreak = i => breakAt(TT, i);
@@ -704,7 +704,7 @@
     if (world) {
       for (const [id, rep] of Object.entries(REP)) {
         const d = DISP[rep];
-        points.set(id, {x:world.left - stageBox.left + d.x * scale, y:world.top - stageBox.top + d.y * scale});
+        points.set(id, {x:world.left - stageBox.left + d.x * scale, y:world.top - stageBox.top - toolbar.offsetHeight + d.y * scale});
       }
     }
     return points;
@@ -726,9 +726,10 @@
   const camera = WorldCameraController.create($('stage'), $('head-space'), {
     model:() => T, timeXs:() => XS, sidePoints, attention:attentionLanes, reduced,
     glyph:(n, size) => glyphOfNode(n, size), title:n => cleanTitle(n.title) || n.episode || n.label || n.id,
-    summary:summaryOf, agent:agentLine, tag:tagOf,
+    summary:summaryOf, agent:agentLine, tag:tagOf, stops:() => miniStops,
     open:id => open(id),
     select:id => { if (N[id]) { st.focus = id; camera.select(id); } },
+    placeStatus:placeNow,
     timeChanged: (index, active) => updateHeadRibbon(index, active && st.d === 0),
     sideVisible:keyboard => {
       $('L0').inert = false;
@@ -879,7 +880,7 @@
         <button type="button" class="cb now-b" id="now-b" aria-label="Back to now" data-tip="k:End · back to the newest state">Now</button>
       </span>
       <span id="timeline-zoom"></span></div>`;
-    h += nowCard();
+    h += '<div id="timeline-now"></div>';
     h += `<div class="mini-lab" style="top:${MINI_T + 2}px">Overview<span>drag the window · click to jump</span></div>`;
     h += '<div id="timeline-mini"></div>';
     ROWS.filter(T.isOther).forEach(row => {
@@ -896,6 +897,7 @@
       <span class="off"><span style="width:18px;border-top:2px dashed var(--ran)"></span>ran on <i>· not recorded yet</i></span>
     </div>`;
     $('tl').innerHTML = h;
+    repaintNow();
     // The plot clips; it must never scroll itself (focus() or scrollIntoView on a node would).
     $('plot').addEventListener('scroll', e => { e.target.scrollTop = 0; e.target.scrollLeft = 0; });
     mini.style.cssText = `left:${PL}px;top:${MINI_T}px;width:${PW}px;height:${MINI_H}px`;
@@ -907,30 +909,30 @@
 
   function nowCard() {
     const ne = D.nowEdge || {}, now = NOW_D, sess = ne.sessions || [], td = ne.today;
-    const healthy = /healthy/i.test(ne.health);
+    const healthy = /\bhealthy\b/i.test(ne.health);
     let today = '';
     if (td) {
       const by = Object.entries(td.byAgent || {}).map(([a, n]) => `${cap(a)} ${n}`).join(', ');
-      today = `<div class="nsec"><div class="nh">Today</div>
+      today = `<div class="nsec" data-today><div class="nh">Today</div>
         <div class="nl"><b>${td.landed} step${td.landed === 1 ? '' : 's'} landed</b>${by ? ` · ${esc(by)}` : ''}</div>
         <div class="nl sub">${td.firstRound} first-round pass${td.firstRound === 1 ? '' : 'es'} · ${td.fixRounds} fix round${td.fixRounds === 1 ? '' : 's'} · ${Math.round(td.agentMinutes)} agent-minutes</div></div>`;
     }
     const run = sess[0], runLane = run && Object.keys(LANES).find(k => LANES[k].row && new RegExp('^w' + LANES[k].row + '[a-z]?$').test(run.episode));
-    const running = ne.open ? openRunningHTML(ne.open) : ne.sessionsUnavailable ? `<div class="nsec"><div class="nh">Running</div><div class="nl sub">${esc(ne.sessionsUnavailable)}</div></div>`
-      : `<div class="nsec"><div class="nh">Running · ${sess.length}</div>
+    const running = ne.open ? openRunningHTML(ne.open) : ne.sessionsUnavailable ? `<div class="nsec" data-running><div class="nh">Running</div><div class="nl sub">${esc(ne.sessionsUnavailable)}</div></div>`
+      : `<div class="nsec" data-running><div class="nh">Running · ${sess.length}</div>
         ${run ? `<div class="nl"><b>${esc(run.episode)}</b>${runLane ? ` · ${esc(nameOf(runLane))}` : ''}</div><div class="nl sub">started ${esc(run.started)}</div>` : '<div class="nl sub">Nothing running</div>'}</div>`;
     const activity = running + needsYouHTML(REQS, REQS ? REQS.now : 0, notifyPermission());
     return `<div class="now" data-now style="left:${PR + 22}px;top:56px">
       <button type="button" class="phone-view" id="activity-back">← Timeline</button>
-      <div><div style="font-size:12px;font-weight:600;color:var(--sub)">Now</div><div style="font-size:15px;font-weight:700">${T.nowKnown ? DOW[now.getUTCDay()] + ' ' + dayOf(now) + ' · ' + hm(now) : 'Time unavailable'}</div></div>
-      <div style="display:flex;gap:9px;align-items:center"><span style="width:9px;height:9px;border-radius:5px;background:${healthy ? 'var(--okDot)' : 'var(--you)'};flex:none"></span><span style="font-weight:700;color:var(--ok)">${healthy ? 'Healthy' : esc(ne.health)}</span><span style="font-size:12.5px;color:var(--sub)">checked ${esc(ne.checked)}</span></div>
-      ${narrow.matches ? activity : ''}
+      <div class="now-overview"><div class="now-clock"><div class="nh">Now</div><div style="font-size:15px;font-weight:700">${T.nowKnown ? DOW[now.getUTCDay()] + ' ' + dayOf(now) + ' · ' + hm(now) : 'Time unavailable'}</div></div>
+      <div class="now-health" style="display:flex;gap:9px;align-items:center"><span style="width:9px;height:9px;border-radius:5px;background:${healthy ? 'var(--okDot)' : 'var(--you)'};flex:none"></span><span data-health style="font-weight:700;color:var(--ok)">${healthy ? 'Healthy' : esc(ne.health)}</span><span style="font-size:12.5px;color:var(--sub)">checked ${esc(ne.checked)}</span></div>
       ${serviceLineHTML(ne.service)}
       <div class="nl sub" data-live>${esc(liveStatus(live))}</div>
       ${poll.note ? `<div class="nl sub" data-poll style="color:var(--you)">${esc(poll.note)}</div>` : ''}
+      </div>
       ${sourcesHTML(D.repos)}
       ${today}
-      ${narrow.matches ? '' : activity}
+      ${activity}
       ${decidedHTML(REQS, decidedAll)}
     </div>`;
   }
@@ -1407,13 +1409,56 @@
     liveRefresh = setTimeout(refreshLive, 300);
   }
   const refreshLive = () => refresh('live');
-  // repaintNow redraws the now card alone: a status change is visible even when the graph did not change.
+  // One live Now card moves between the Timeline sidebar and the Heads header.
+  const toolbar = $('head-toolbar'), statusToggle = $('head-status-toggle'), statusDetail = $('head-status-detail');
+  let statusPreference;
+  try { statusPreference = localStorage.getItem('world.headStatus'); } catch (_) {}
+  function statusExpanded() {
+    return statusPreference == null ? !narrow.matches : statusPreference === 'expanded';
+  }
+  function setStatusExpanded(expanded) {
+    statusPreference = expanded ? 'expanded' : 'compact';
+    try { localStorage.setItem('world.headStatus', statusPreference); } catch (_) {}
+    applyStatusSize();
+  }
+  function applyStatusSize() {
+    const expanded = statusExpanded();
+    statusToggle.setAttribute('aria-expanded', String(expanded));
+    statusToggle.title = expanded ? 'Minimise world status' : 'Expand world status';
+    statusDetail.hidden = !expanded;
+  }
+  statusToggle.addEventListener('click', () => setStatusExpanded(!statusExpanded()));
+  const toolbarResize = new ResizeObserver(() => {
+    if (!toolbar.hidden && !toolbar.closest('[inert]')) camera.update();
+  });
+  toolbarResize.observe(toolbar);
+
+  function placeNow(inHeads) {
+    if (toolbar.hidden === !inHeads) return;
+    toolbar.hidden = !inHeads;
+    const card = document.querySelector('[data-now]');
+    const slot = inHeads ? statusDetail : $('timeline-now');
+    if (card && slot) slot.append(card);
+    applyStatusSize();
+  }
   function repaintNow() {
-    const el = document.querySelector('[data-now]');
-    if (!el || !T) return;
-    const focused = el.contains(document.activeElement) && document.activeElement.id;
-    el.outerHTML = nowCard();
-    if (focused) $(focused)?.focus({ preventScroll: true });
+    if (!T) return;
+    const slot = toolbar.hidden ? $('timeline-now') : statusDetail;
+    if (!slot) return;
+    const focused = slot.contains(document.activeElement) && document.activeElement;
+    slot.innerHTML = nowCard();
+    if (focused) {
+      const action = focused.id ? $(focused.id) : focused.dataset.go &&
+        slot.querySelector('[data-go="' + CSS.escape(focused.dataset.go) + '"]');
+      action?.focus({preventScroll:true});
+    }
+    const card = slot.firstElementChild;
+    $('head-status-health').textContent = card.querySelector('[data-health]')?.textContent || '';
+    const needs = card.querySelector('[data-needs] .nh')?.textContent;
+    const running = card.querySelector('[data-running] .nh')?.textContent;
+    const active = [needs, running].filter(label => label && !/ · 0$/.test(label));
+    $('head-status-activity').textContent = active.join(' · ');
+    applyStatusSize();
   }
   // schedulePoll: follow mode polls the model every 15 s while the page is visible, independently of AG-UI.
   function schedulePoll(delay) {
@@ -1700,7 +1745,7 @@
         ['N', 'What needs you'], [',', 'Appearance'], ['?', 'These keys']];
       $('keys').innerHTML = '<div class="kgrid heads-keys"><strong>Heads</strong>' +
         rows.map(([key, action]) => `<span><span class="kbd">${key}</span></span><span>${action}</span>`).join('') +
-        '</div><p>Hold an arrow to keep moving.</p>';
+        '</div><p>Hold an arrow to keep moving. Drag the grid to travel, or double-click a place to hop there.</p>';
       return;
     }
     $('keys').innerHTML = `<div class="kgrid"><span></span><span style="font-size:12px;font-weight:700;color:${st.d === 0 ? 'var(--text)' : 'var(--faint)'}">Timeline</span><span style="font-size:12px;font-weight:700;color:${st.d === 1 ? 'var(--text)' : 'var(--faint)'}">Brane</span>` +
@@ -1857,7 +1902,8 @@
     const ch = e.target.closest('[data-go]');
     if (ch) {
       const id = ch.dataset.go, k = RAIL.findIndex(r => r.id === id);
-      if (F && id === F.id) return;
+      if (st.d === 1 && F && id === F.id) return;
+      if (ch.closest('#head-status-detail') && N[id]) return open(id);
       const to = T && T.aliasOf[id] ? T.aliasOf[id] : id;
       return k >= 0 ? openRail(k) : N[to] ? openState(N[to].lane, to) : say(`${ch.textContent.trim() || id.slice(0, 7)} is outside the timeline`);
     }
@@ -1956,7 +2002,14 @@
     else if (k === ',') toggle('look');
     else if (k === '/') $('addr').focus();
     else if (k === 'Escape') { if ($('verb')) $('verb').remove(); else if (!$('keys').hidden || !$('look').hidden) { $('keys').hidden = true; $('look').hidden = true; } else out(); }
-    else if (k === 'n' || k === 'N') { if (camera.active) chooseAngle(false, {instant:true}); const a = document.querySelector('[data-needs] a'); if (a) { if (st.d === 1) out(); a.focus(); } }   // design §2.8: N jumps to what needs you
+    else if (k === 'n' || k === 'N') {
+      const a = document.querySelector('[data-needs] a');
+      if (a) {
+        if (st.d === 1) out();
+        if (!toolbar.hidden && statusDetail.hidden) setStatusExpanded(true);
+        a.focus();
+      }
+    }   // design §2.8: N jumps to what needs you
     else if (st.d === 1 && k === 'ArrowUp') openRail(railIdx() - 1);
     else if (st.d === 1 && k === 'ArrowDown') openRail(railIdx() + 1);
     else if (st.d === 1 && k === 'Home') openRail(0);

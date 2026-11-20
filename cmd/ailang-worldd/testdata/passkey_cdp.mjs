@@ -92,13 +92,14 @@ const addAuthenticator = async (uv) => {
     hasResidentKey: true, hasUserVerification: uv, isUserVerified: uv, automaticPresenceSimulation: true } }));
 };
 
-async function tab({ authenticator = null, inject = null }) {
+async function tab({ authenticator = null, inject = null, viewport = null }) {
   if (target) await send('Target.closeTarget', { targetId: target }, null);
   const { targetId } = await send('Target.createTarget', { url: 'about:blank' }, null);
   const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true }, null);
   session = sessionId;
   target = targetId;
   for (const d of ['Page', 'Runtime', 'Log']) await send(d + '.enable');
+  if (viewport) await send('Emulation.setDeviceMetricsOverride', {...viewport, deviceScaleFactor:1, mobile:false});
   await send('Page.addScriptToEvaluateOnNewDocument', { source: watch + (inject ? injections[inject] : '') });
   if (authenticator) {
     await send('WebAuthn.enable', { enableUI: false });
@@ -316,9 +317,16 @@ async function tap({ id }) {
   return {};
 }
 
+// mouse dispatches one real CDP event so a test can inspect the page mid-drag.
+async function mouse({ type, x, y, buttons = 0 }) {
+  const moving = type === 'mouseMoved';
+  await send('Input.dispatchMouseEvent', {type, x, y, buttons, button: moving ? 'none' : 'left', clickCount: moving ? 0 : 1});
+  return {};
+}
+
 const product = (await send('Browser.getVersion', {}, null)).product;
 console.log(JSON.stringify({ ready: true, chrome: product, pid: chrome.pid }));
-const commands = { tab, open, ceremony, uv, advance, fetchRewrite, openCard, press, waitFor, credential, fill, save, card: cardState, key, tap, grantNotifications, notification };
+const commands = { tab, open, ceremony, uv, advance, fetchRewrite, openCard, press, waitFor, credential, fill, save, card: cardState, key, tap, mouse, grantNotifications, notification };
 for await (const line of readline.createInterface({ input: process.stdin })) {
   const { cmd, ...args } = JSON.parse(line);
   try {

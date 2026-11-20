@@ -565,6 +565,12 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 			return rect.top + rect.height / 2;
 		};
 		window.alignedPanes = (a, b) => Math.abs(window.paneTimeY(a) - window.paneTimeY(b)) <= 1;
+		// Revealing the forward stack or focusing its lane can scroll the camera viewport.
+		// Compare physical planes in the same coordinates used by the projection.
+		window.paneWorldY = id => {
+			const scroll = window.timedScene.querySelector('.hc-scroll');
+			return window.paneTimeY(id) - scroll.getBoundingClientRect().top + scroll.scrollTop;
+		};
 		window.lateralStep = (id, key) => {
 			const link = window.paneFor(id);
 			link.focus();
@@ -585,9 +591,38 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 				.filter(tick => tick.checkVisibility());
 			return ticks.at(-1)?.dateTime === instant && ticks.every(tick => Date.parse(tick.dateTime) <= Date.parse(instant));
 		};
+		const canvas = stage.querySelector('.hc-graph');
+		const context = canvas.getContext('2d');
+		let grid = [], start;
+		for (const name of ['clearRect', 'moveTo', 'lineTo']) {
+			const original = context[name];
+			context[name] = function (...args) {
+				if (name === 'clearRect') grid = [];
+				else {
+					const [x, y] = args;
+					const point = this.getTransform().transformPoint({x, y});
+					if (name === 'moveTo') start = point;
+					else if (start && Math.abs(point.y - start.y) < .01 &&
+						Math.abs(point.x - start.x - canvas.width) < 2) grid.push(point.y);
+				}
+				return original.apply(this, args);
+			};
+		}
+		window.gridMatchesTimeAxis = () => {
+			const box = canvas.getBoundingClientRect();
+			const scale = box.height / canvas.height;
+			const ticks = [...axis.querySelectorAll('time')].filter(el => el.checkVisibility()).map(el => {
+				const rect = el.getBoundingClientRect();
+				return rect.top + rect.height / 2;
+			}).filter(y => y >= box.top && y <= box.bottom);
+			return ticks.length > 0 && grid.length === ticks.length &&
+				ticks.every((tick, i) => Math.abs(tick - (box.top + scale * grid[i])) <= 1);
+		};
+		window.dispatchEvent(new Event('resize'));
 		return window.alignedPanes('a-tip', 'b-tip');
 	})()`
 	wait(setupScene)
+	wait(`window.gridMatchesTimeAxis()`)
 	wait(`(() => {
 		const tip = window.paneFor('a-tip');
 		tip.focus();
@@ -645,7 +680,7 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 		CenterY, Height float64
 	}
 	b.do(t, &nearPlane, "waitFor", map[string]any{"expression": `(() => {
-		return {centerY:window.paneTimeY('a-stop'), height:window.paneFor('a-stop').getBoundingClientRect().height};
+		return {centerY:window.paneWorldY('a-stop'), height:window.paneFor('a-stop').getBoundingClientRect().height};
 	})()`})
 	b.do(t, nil, "openCard", map[string]any{"url": origin + "/surface#heads", "raw": true})
 	wait(`document.documentElement.dataset.ready === '1'`)
@@ -664,13 +699,13 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 		const side = start > 0 ? -1 : 1;
 		const face = heads[start + side];
 		if (!face || !['a-tip', 'b-tip'].includes(face.dataset.headState)) return false;
-		window.presentFaceY = window.paneTimeY(face.dataset.headState);
+		window.presentFaceY = window.paneWorldY(face.dataset.headState);
 		window.nearPlaneY = %f;
 		const minHeight = %f / 2;
 		window.atNearPlane = id => {
 			const face = window.paneFor(id);
 			if (!face || !face.checkVisibility()) return false;
-			return Math.abs(window.paneTimeY(id) - window.nearPlaneY) <= 1 &&
+			return Math.abs(window.paneWorldY(id) - window.nearPlaneY) <= 1 &&
 				face.getBoundingClientRect().height >= minHeight;
 		};
 		return {id:face.dataset.headState, lane:face.dataset.headLane,
@@ -678,16 +713,16 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 	})()`, nearPlane.CenterY, nearPlane.Height)})
 	wait(fmt.Sprintf("window.lateralStep('shared-late', %q)", neighbor.Out))
 	wait(fmt.Sprintf(`window.centeredAt(%q, %q) && window.atNearPlane(%q) &&
-		window.paneTimeY(%q) > window.presentFaceY + 1 &&
+		window.paneWorldY(%q) > window.presentFaceY + 1 &&
 		window.axisEndsAt('2026-10-20T14:00:00.000Z') && !window.paneFor('shared-late') &&
-		window.alignedPanes('a-tip', 'b-tip')`, neighbor.ID, neighbor.Lane, neighbor.ID, neighbor.ID))
+		window.alignedPanes('a-tip', 'b-tip') && window.gridMatchesTimeAxis()`, neighbor.ID, neighbor.Lane, neighbor.ID, neighbor.ID))
 
 	// A resize or model refresh can settle the flight before its last frame.
 	// The destination must still receive keyboard focus.
 	wait(fmt.Sprintf("window.lateralStep(%q, %q) && window.dispatchEvent(new Event('resize'))", neighbor.ID, neighbor.Back))
 	wait(`window.centeredAt('shared-late', 'shared') && window.atNearPlane('shared-late') &&
 		window.axisEndsAt('2026-10-20T14:30:00.000Z') &&
-		window.paneTimeY('a-tip') < window.nearPlaneY - 1 &&
+		window.paneWorldY('a-tip') < window.nearPlaneY - 1 &&
 		window.alignedPanes('a-tip', 'b-tip')`)
 
 	// Seeking on the shared ribbon preserves slider focus. Real successors can
@@ -711,7 +746,16 @@ func TestSurfaceHeadOnUsesSharedRecordedTimeInChrome(t *testing.T) {
 	})()`)
 	wait(`(window.timeRibbon.dispatchEvent(new KeyboardEvent('keydown', {key:'End', bubbles:true, cancelable:true})), true)`)
 	wait(`!window.timedScene.dataset.travelState && !window.timedScene.querySelector('[data-lineage-state]') &&
-		window.timeRibbon.getAttribute('aria-valuetext') === 'Present'`)
+		window.timeRibbon.getAttribute('aria-valuetext') === 'Present' && window.gridMatchesTimeAxis()`)
+	b.do(t, nil, "tap", map[string]any{"id": "z-out"})
+	wait(`window.World.view().u === 2 && window.gridMatchesTimeAxis()`)
+	wait(`(() => {
+		const scroll = window.timedScene.querySelector('.hc-scroll');
+		scroll.style.bottom = (scroll.parentElement.clientHeight - scroll.clientHeight + 30) + 'px';
+		window.dispatchEvent(new Event('resize'));
+		return true;
+	})()`)
+	wait(`window.gridMatchesTimeAxis()`)
 	b.do(t, nil, "tap", map[string]any{"id": "timeline-angle"})
 	wait(`document.querySelector('#stage').dataset.view === 'timeline' && document.querySelector('#tl #mini') === window.timeRibbon`)
 }

@@ -1,62 +1,28 @@
 .hc-lanes {
   position: absolute;
-  inset: 0 0 auto;
+  inset: 0 auto auto 0;
   z-index: 4;
-  display: flex;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--ctl) var(--panel);
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
-  padding-inline: max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right));
+  width: var(--hc-thread-width, clamp(115px, 19vw, 230px));
+  height: 44px;
+  padding: 3px 4px 3px max(6px, env(safe-area-inset-left));
   pointer-events: auto;
-  touch-action: pan-x;
 }
 .hc-lanes[hidden] { display: none; }
-.hc-lanes button {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 44px;
-  min-height: 44px;
-  max-width: min(20rem, 82vw);
-  padding: 2px 12px 0;
-  background: transparent;
-  color: var(--sub);
-  border: 0;
-  border-bottom: 2px solid transparent;
-  font: 600 12px/1.15 var(--font);
+.hc-lanes select {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding-inline: 8px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+  color: var(--text);
+  font: 600 13px/1.15 var(--font);
+  text-overflow: ellipsis;
   cursor: pointer;
 }
-.hc-lanes .hc-lane-group-start { border-inline-start: 1px solid var(--line); }
-.hc-lanes .hc-lane-shared { font-weight: 700; }
-.hc-lanes button:hover { background: var(--sel); }
-.hc-lanes button[aria-current] {
-  background: var(--sel);
-  border-bottom-color: var(--text);
-  color: var(--text);
-}
-.hc-lanes button:focus-visible { outline-offset: -4px; }
-.hc-lanes button > [aria-hidden] { display: flex; flex: none; }
-.hc-lanes .hc-lane-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.hc-lanes button[data-running]::after,
-.hc-lanes button[data-needs-attention]::before {
-  content: '';
-  flex: none;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--okDot);
-}
-.hc-lanes button[data-needs-attention]::before {
-  border-radius: 1px;
-  background: var(--youLine);
-  order: 1;
-  transform: rotate(45deg);
+.hc-lanes select:focus-visible { outline: 2px solid var(--you); outline-offset: -2px; }
+@media (pointer: coarse) {
+  .hc-lanes { padding-block: 0; }
+  .hc-lanes select { font-size: 16px; }
 }

@@ -68,7 +68,12 @@ for (const width of [320, 1280]) {
     const index = model.timeIndex.get(id);
     assert(Math.abs(point.depth - (base.points.get(id).depth - slice.travelZ))<1e-8,
       'every surviving record moves through the same physical distance');
-    assert(Math.abs(point.y - slice.time.yAt(index))<1e-8, 'the time ruler marks the actual card center');
+    assert(Math.abs(point.y - slice.time.yAt(index))<1e-8, 'the raised point remains at the actual card center');
+    const floorY = camera.project(slice.ground, 0, 0, point.depth).y;
+    assert.equal(slice.time.groundYAt(index), floorY, 'the grid marks the foot of the same recorded plane');
+    assert(floorY > point.y, 'the ruler lies on the ground below the raised card center');
+    assert(Math.abs(slice.time.groundYAt(index, slice.travelZ) - base.time.groundYAt(index))<1e-8,
+      'the guide projects onto its old plane as the trip starts');
   }
   assert.equal(slice.points.get('a1').y,slice.points.get('a-tied-later').y);
   assert.notEqual(slice.points.get('a1').x,slice.points.get('a-tied-later').x);

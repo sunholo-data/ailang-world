@@ -49,3 +49,7 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+.hc-floor-hit { position: absolute; inset: 0; touch-action: none; cursor: grab; user-select: none; }
+.hc-scene.is-ready .hc-graph { pointer-events: auto; touch-action: none; cursor: grab; }
+.hc-scene.is-floor-dragging { cursor: grabbing; }

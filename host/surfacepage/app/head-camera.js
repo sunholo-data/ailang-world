@@ -190,16 +190,18 @@
         far.down = Math.min(far.down, space-above);
       }
     }
-    let reach = 0;
+    let panRoom = 0;
     for (const card of cards) {
       const z = card.record.z;
       card.halfH = Math.min(card.halfH, card.up*.99, card.down*.99);
       if (card.up < card.y) {
         card.length = Math.min(card.length, z*(card.up-card.halfH)/(card.y-card.up));
       }
-      reach = Math.max(reach, Math.abs(card.x)/z + card.halfW);
+      // A grab can bring any recorded face to the viewport centre, including
+      // a distant lane that was already visible at the edge.
+      panRoom = Math.max(panRoom, Math.abs(card.x)/z);
     }
-    return reach;
+    return panRoom;
   }
 
   function layout(T, options = {}) {
@@ -236,11 +238,14 @@
       pitch: faceWidth * .74, blockDepth, paneHeightRatio: .36, paneWidthRatio: .88,
       paneDepth: blockDepth * .37, eventElevation:nearHeight / 2, worldWidth:nearWidth, worldHeight:nearHeight};
     time.yAt = index => project(ground, 0, ground.eventElevation, time.depthAt(index)).y;
+    time.groundYAt = (index, offset = 0) => {
+      const depth = time.depthAt(index) + offset;
+      return depth > 0 ? project(ground, 0, 0, depth).y : Infinity;
+    };
     const plan = base?.plan || streetPlan(T, members, ground, gap, viewportWidth);
     ground.centerLane = plan.lanes.has(options.viewLane) ? options.viewLane : plan.center;
     ground.cameraX = (plan.lanes.get(ground.centerLane)?.origin || 0) * plan.pitch;
-    const reach = measureCards(members, plan, ground, gap);
-    const margin = reach <= viewportWidth/2 ? 0 : Math.ceil(reach + gutter - viewportWidth/2);
+    const margin = Math.ceil(measureCards(members, plan, ground, gap));
     const width = viewportWidth + 2*margin;
     ground.vx = width / 2;
     let height = viewportHeight;
