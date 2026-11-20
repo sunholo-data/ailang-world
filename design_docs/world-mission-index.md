@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 420 | 2026-11-20 | no pick: rule (d) block report, the eleventh in a row; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); this fire's idle snapshot is ... |
 | 419 | 2026-11-20 | no pick: rule (d) block report, the tenth in a row; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); attended PR #619 moved the idle ... |
 | 418 | 2026-11-20 | no pick: rule (d) block report, the ninth in a row; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); this fire's idle snapshot is byt... |
 | 417 | 2026-11-20 | no pick: rule (d) block report, the eighth in a row; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); the idle snapshot's inputs matc... |
