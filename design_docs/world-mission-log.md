@@ -2071,3 +2071,62 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 - **What it did not check:** the ack and inbox state, skill drift, worktree porcelain, the directive and self-notice readings, the row 243 design gating counts, and whether the index tooling regenerates byte-identically.
 
 **Gate 3b (record PR):** the head CI verdict and the merge commit's CI go in the merge commit body and the Gate-5 report, not a further record commit.
+
+## 417 — 2026-11-20 — no pick: rule (d) block report, the eighth in a row; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); the idle snapshot's inputs match iteration 416's except the inbox, but the fire degraded on the codex ration again, so it cannot record them (row 263, count 5 → 6); dev green at `e7c49228` [ADMIN]
+
+**Kind:** no-pick iteration. Nothing is loop-routable without an answer from Mark, so standing rule (d) applies. The only change since iteration 416 is 416's own record. There is no design, plan, code or product acceptance. The record is the STATUS stamp (414 moved to the archive), the Current route line, row 263's iteration-417 note, this entry, the regenerated index, the dashboard and `verification/world-iter417/gate1-2-readings.txt`. An independent judge reviews the record before merge.
+
+**Pick and why:** none. Clause map at `e7c49228`: 1.0 clauses 1–7 MET, so there is no UNMET clause and no critical-path row.
+- **What moved since iteration 416's Gate-1 base (`2b42d26b`):** only 416's record. 3 commits (`fcc6562d`, `c271ab74`, merge `e7c49228`), all under `design_docs/`. 0 `| D-WORLD` table rows changed.
+- **Ledger:** `--check` valid (rc 0), 107 rows; `--open` → D-WORLD-119, D-WORLD-120, both unchanged since iteration 406 filed them.
+- **Row 243 (D-WORLD-109 granted scope):** V4 design §8 gates S3–S8 on 119 A/B, S9–S11 also on 120 A/B, and S12 on 119 A. S1, S2 and S2b are landed. The design was not touched in range (0 paths; it names D-WORLD-119 on 4 lines and 120 on 2).
+- **Row 150** waits on the attended A1. Subjects in `2b42d26b..e7c49228` matching `row ?150|A1|marketing` → **0**; control `record|iteration 416` → **3**.
+- **Row 151** needs row 188's N2d and N4a. Subjects since 2026-10-01 matching `N2d|N4a` → **0**; control `N2c` → **1**. Non-test `.go` files naming `file.json` on `origin/dev`, fixed-string → **0**; control `surface` → **109**.
+- **Rows 217–219** are on the attended track beside row 188 (D-WORLD-94). **Rows 258, 259, 261, 265** sit under rule (d), below the release rows (D-WORLD-109 (2)). No ledger row changed, so neither placement moved.
+- **External predicates:** no routable row waits on an outside party. Row 263 waits on the fleet; 0 unread on `mission-world`, so no `harness-resolved` reply has arrived.
+
+**Gate 0:**
+- Stamped first. Kill switch armed (`mission-world.disabled` absent). `gh` is `sunholo-voight-kampff`. Billing CLEAN. The env was read by name, then specific non-secret values.
+- Local `dev` was 3 behind `origin/dev` (416's record) with only untracked files in the tree; fast-forwarded with `merge --ff-only`.
+- Directives: 0 allowlisted on #574 (27 comments, read from the epoch because `mission-574-last-seen` is absent), 0 on issue #1 since its legacy watermark, 0 on #524 since `mission-world-last-seen`. Nothing to `--mark`; no watermark moved.
+- Self-notices (step 6a), prescribed form: **rc 1**, the same two #524 notices (crash `2026-11-13T09:48:25Z` rc 1; transcript fire `world-1794807071-53892`, 2 hits), control 107:4 ok. Both credited in entries 393 and 394, so nothing new died. Died-mid-flight traces: the iteration-410 to 416 record worktrees have 0 porcelain lines each; the last three slot verdicts are `COMPLETED rc=0`. Transcript notice count 1, the one entry 394 reported.
+- **Open PRs from the fleet account:** #615, #617 and #619, unchanged since 416 (#619 last updated 2026-11-19T21:57Z). None is a `mission/` branch; all are attended UI work and are left alone (Gate 2 trace (a)).
+- **Inbox:** 0 unread on `mission-world`. The unread `mission-fleet` row titled `[harness] skill:idle-record-barred-on-degraded-no-pick-fire · world#416` is World's own ticket filing from 416, on the fleet's inbox; it is not addressed to this loop.
+- Skill drift: `SKILL.md` and all 13 `resources/*.md`, at both the resolved symlink target and the pin worktree, `cmp` equal to the ailang `origin/dev` `226a0105` after a fresh fetch (28 compared, 0 drift).
+- Dev CI at `e7c49228`: 3/3 check-runs success.
+
+**Gate 1:** `git rev-parse dev origin/dev` both `e7c49228…` after the fast-forward. Gate-1 base `e7c492282b438195064a5fcba23f61f10991e965@2026-11-20T05:40:05Z`. Record written in its own worktree (`mission/world-iter417-record` from `e7c49228`, `mission-worktree.sh add` then `wait` → ready).
+
+**Row 263 — degraded again, and now the only thing in the way:**
+- `MISSION_ROUTING_NOTE` is set. Driver log 06:38:21 `ration gate: blocked buckets (over ration or unknown quota):codex anthropic`; 06:38:30 `gpt-6.2-sol` unusable (quota-limited); the planner fell back to `opus`, the executor to `claude:claude-haiku-5-5`; 06:39:00 `LANE DEGRADED` (probe rc 75). A no-pick fire spawns neither.
+- The driver's snapshot for this fire is `head=0e9e8d3 ledger=107 open=2 directives=0 inbox=0 red=0`. Iteration 416's was the same except `inbox=1` (the row-264 reply, acked by 416). So this is the first fire since row 264's fix whose inputs would hold for the next identical fire, and the degrade alone prevents recording them.
+- Gate 5's IDLE RECORD bars `--record` on a degraded fire. Occurrence filed (`inbox_1795153302039_78e46bc5`), count 5 → 6 (`slots_lost` 6 in `ticket open --json`).
+- The ration line also names `anthropic` as blocked. The controller and the Agent-tool judge still ran; this is recorded as a reading, not acted on.
+
+**Designer / planner / executor:** not spawned. A no-pick iteration has no doc, plan or code, so the routing table sends them nothing. No spawn was attempted, so none failed.
+
+**Independent evaluator (record):** REQUIRED. Agent `sonnet` (`MISSION_EVALUATOR_RESOLVED=sonnet`), fresh foreground read-only context, judging the record commit before merge. Result in the follow-through below.
+
+**Routing evidence:** base=e7c492282b438195064a5fcba23f61f10991e965@2026-11-20T05:42:00Z (Gate 4).
+- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner (`opus`, fallback), executor (`claude:claude-haiku-5-5`, fallback) unused.
+- Evaluator: Agent `sonnet` (tokens in the follow-through). Generator ≠ judge: opus controller, sonnet judge.
+- Quorum: none (no doc). Metered $0.
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at 2 of 12 sprints. Every remaining V4 sprint waits on D-WORLD-119.
+
+**Ruled out:**
+- Picking 150, 151, 217–219, 243, 258, 259, 261 or 265: measured reasons above.
+- Touching PR #615, #617 or #619: attended work outside the loop's rows.
+- Running `idle-fingerprint.sh --record`: the fire is degraded (Gate 5).
+- Treating step 6a's `A FIRE DIED` as a new death: both notices are credited (393, 394), and the traces are clean.
+- Re-asking D-WORLD-119/120 or raising them to `[normal]`: both asks are unchanged since 406, so Gate 5 3d keeps them `[fyi]`.
+- Rotating the log: 28 live entries with this one, below ~40. The index is regenerated with `rotate-log --index-only`.
+
+**Retro:**
+1. No new friction. The loop is blocked on Mark (D-WORLD-119), and the cost of each identical fire now rests on a single fleet ticket (row 263) whose trigger is the codex ration, not anything World does. The report says so once more and does not escalate further.
+- Harness share (2b): **0/20** over entries 398–417 (20 rows, 20 tagged). Bar-moving landings (2c): no UNMET clause exists, so the drift alarm does not apply.
+- No skill edit.
+
+**Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence). Unanswered, another rule-(d) block report. A dev red outranks either way.
+
+**Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16; next boundary Monday 2026-11-23 07:00 local). The weekly external-issue sweep ran this week at 393. Idle record: barred (degraded fire).
