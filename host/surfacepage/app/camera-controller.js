@@ -311,7 +311,15 @@
       cancelTravel();
       updateControls();
     }
-    return {turn, update, hide, seek, present() { history = []; scopeStop = pinnedStop = ''; viewLane = ''; cancelTravel(); },
+    return {turn, update, hide, seek,
+      followLane(lane) {
+        if (!graph?.LANES[lane]) return;
+        history = []; scopeStop = pinnedStop = ''; viewLane = lane;
+        update();
+        const id = aim();
+        if (id) { selected = id; hooks.select(id); paint(); scene.center(); scene.focus(id, false); }
+      },
+      present() { history = []; scopeStop = pinnedStop = ''; viewLane = ''; cancelTravel(); },
       select(id) { if (id !== selected && angle === 1 && !space.hidden) { selected = id; paint(); updateControls(); } },
       get active() { return !space.hidden; },
       get heads() { return destination === 1; }

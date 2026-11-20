@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // Row 220 M3: bounded, read-only keyset pages for the surface follower's
@@ -55,8 +56,8 @@ ORDER BY created_at, credential_id LIMIT ?;`, cursor.CreatedAt, cursor.CreatedAt
 }
 
 // EpisodeStartSummary is the narrow projection of one start record that the
-// overlay needs. Preset bytes and paths, the remote, checks and launch
-// history never leave SQLite: each field is selected with json_extract.
+// overlay needs. The latest launch contributes only its end time and a
+// derived failure flag. Preset bytes, paths, the remote and checks stay in SQLite.
 // Repo is the recorded source path; callers map it to a configured repo and
 // must never serialize it.
 type EpisodeStartSummary struct {
@@ -70,6 +71,9 @@ type EpisodeStartSummary struct {
 	TaskTitle string
 	TTLS      int64
 	Resumes   []EpisodeResume
+
+	RunEndedAt time.Time
+	RunFailed  bool
 }
 
 // ListEpisodeStartSummaries returns up to limit starts with episode > after,
@@ -89,7 +93,17 @@ func (c *Credentials) ListEpisodeStartSummaries(ctx context.Context, after strin
   json_extract(start_json, '$.base.sha'), json_extract(start_json, '$.branch'),
   json_extract(start_json, '$.agent'), json_extract(start_json, '$.model'),
   json_extract(start_json, '$.task.title'), json_extract(start_json, '$.ttl_s'),
-  json_extract(start_json, '$.resumes')
+  json_extract(start_json, '$.resumes'),
+  CASE WHEN json_type(start_json, '$.launches[#-1].ended_at') = 'text'
+    THEN json_extract(start_json, '$.launches[#-1].ended_at') END,
+  CASE WHEN json_type(start_json, '$.launches[#-1].exit') = 'integer' THEN
+    CASE json_extract(start_json, '$.launches[#-1].finish_reason')
+      WHEN 'exit' THEN json_extract(start_json, '$.launches[#-1].exit') != 0
+      WHEN 'canceled' THEN 1
+      WHEN 'timeout' THEN 1
+      WHEN 'signal' THEN 1
+    END
+  END
 FROM episode_starts WHERE episode > ? ORDER BY episode LIMIT ?;`, after, limit)
 	if err != nil {
 		return nil, fmt.Errorf("store: list episode starts: %w", err)
@@ -100,7 +114,9 @@ FROM episode_starts WHERE episode > ? ORDER BY episode LIMIT ?;`, after, limit)
 		var s EpisodeStartSummary
 		var startedAt, repo, base, branch, agent, model, title, resumes sql.NullString
 		var ttl sql.NullInt64
-		if err := rows.Scan(&s.Episode, &startedAt, &repo, &base, &branch, &agent, &model, &title, &ttl, &resumes); err != nil {
+		var runEnded sql.NullString
+		var runFailed sql.NullBool
+		if err := rows.Scan(&s.Episode, &startedAt, &repo, &base, &branch, &agent, &model, &title, &ttl, &resumes, &runEnded, &runFailed); err != nil {
 			return nil, fmt.Errorf("store: list episode starts: scan: %w", err)
 		}
 		s.StartedAt, s.Repo, s.BaseSHA, s.Branch = startedAt.String, repo.String, base.String, branch.String
@@ -108,6 +124,11 @@ FROM episode_starts WHERE episode > ? ORDER BY episode LIMIT ?;`, after, limit)
 		if resumes.Valid && resumes.String != "" {
 			if err := json.Unmarshal([]byte(resumes.String), &s.Resumes); err != nil {
 				return nil, fmt.Errorf("store: list episode starts: %s resumes: %w", s.Episode, err)
+			}
+		}
+		if runFailed.Valid {
+			if ended, err := time.Parse(time.RFC3339, runEnded.String); err == nil {
+				s.RunEndedAt, s.RunFailed = ended.UTC(), runFailed.Bool
 			}
 		}
 		out = append(out, s)

@@ -41,9 +41,11 @@ type Model struct {
 
 // NowEdge is the daemon's live facts and Today.
 type NowEdge struct {
-	Service         *ModelService `json:"service,omitempty"`
-	Live            *LiveCursor   `json:"live,omitempty"`
-	LiveUnavailable string        `json:"liveUnavailable,omitempty"`
+	// ActivityUntil contains only published episode node IDs with recent committed calls.
+	ActivityUntil   map[string]int64 `json:"activityUntil,omitempty"`
+	Service         *ModelService    `json:"service,omitempty"`
+	Live            *LiveCursor      `json:"live,omitempty"`
+	LiveUnavailable string           `json:"liveUnavailable,omitempty"`
 
 	Health  string `json:"health"`
 	Checked string `json:"checked"` // HH:MM UTC

@@ -6,6 +6,7 @@ import (
 	"os"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/authority"
 )
@@ -32,9 +33,43 @@ type activityKey struct {
 	expires int64
 }
 type activityTracker struct {
-	mu       sync.Mutex
-	inFlight int
-	episodes map[activityKey]int64
+	mu          sync.Mutex
+	inFlight    int
+	episodes    map[activityKey]int64
+	commitUntil map[string]time.Time
+}
+
+// Keep a recent call visible through one 15-second surface poll. This clock is
+// ephemeral and independent of credential use and the number of open requests.
+const commitWindow = 20 * time.Second
+
+func (a *activityTracker) recordCommit(episode string, now time.Time) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if a.commitUntil == nil {
+		a.commitUntil = make(map[string]time.Time)
+	}
+	for id, until := range a.commitUntil {
+		if !until.After(now) {
+			delete(a.commitUntil, id)
+		}
+	}
+	until := now.Add(commitWindow)
+	if until.After(a.commitUntil[episode]) {
+		a.commitUntil[episode] = until
+	}
+}
+
+func (a *activityTracker) recentCommits(now time.Time) map[string]time.Time {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	recent := make(map[string]time.Time)
+	for id, until := range a.commitUntil {
+		if until.After(now) {
+			recent[id] = until
+		}
+	}
+	return recent
 }
 
 func (a *activityTracker) begin(episode string, expires, now int64) func() {

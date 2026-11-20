@@ -98,9 +98,11 @@ type ModelOpenState struct {
 	BaseOutsideWindow bool   `json:"baseOutsideWindow"`
 	Branch            string `json:"branch,omitempty"`
 	Ended             string `json:"ended,omitempty"` // RelativeTime
+
+	LastRun *surface.LaunchResult `json:"lastRun,omitempty"`
 }
 
-// ModelOpen is the Running section in follow mode: the overlay's
+// ModelOpen is the session and run summary in follow mode: the overlay's
 // completeness and the live episodes, never a count that could be read as
 // zero after an incomplete read.
 type ModelOpen struct {
@@ -110,6 +112,22 @@ type ModelOpen struct {
 	PROpen int            `json:"prOpen"`
 	Ended  int            `json:"ended"`
 	Failed int            `json:"failed"`
+
+	LastRun *ModelLastRun `json:"lastRun,omitempty"`
+}
+
+// ModelLastRun links the latest visible launch result to its episode.
+type ModelLastRun struct {
+	surface.LaunchResult
+	Episode string `json:"episode"`
+	ID      string `json:"id"`
+}
+
+func (o *ModelOpen) considerRun(run *surface.LaunchResult, episode, id string) {
+	// End times are canonical UTC RFC 3339, so their lexical order is chronological.
+	if run != nil && (o.LastRun == nil || run.EndedAt > o.LastRun.EndedAt) {
+		o.LastRun = &ModelLastRun{LaunchResult: *run, Episode: episode, ID: id}
+	}
 }
 
 // ModelRunning is one live episode: its open state, its landed step, or
@@ -269,6 +287,14 @@ func BuildFollowModel(env surface.FollowIndex, sources []FollowSource, now Now) 
 		m.Lanes[o.lane].States[o.state].Rank = r
 	}
 	m.addOpen(env.Open, sources, at, len(order))
+	if env.Open != nil && len(now.ActivityUntil) > 0 {
+		m.NowEdge.ActivityUntil = make(map[string]int64)
+		for _, ep := range env.Open.Episodes {
+			if until := now.ActivityUntil[ep.Episode]; ep.SessionLive && until.After(at) {
+				m.NowEdge.ActivityUntil[ep.ID] = until.UnixMilli()
+			}
+		}
+	}
 	m.NowEdge.Health = followHealth(m.Repos)
 	return m
 }
@@ -312,10 +338,10 @@ func (m *FollowModel) openLane(repo, branch string) int {
 }
 
 // addOpen adds the overlay: open states on their lanes, anchor links, the
-// aliases, and the Running summary. A missing overlay is "not read yet",
+// aliases, and the session summary. A missing overlay is "not read yet",
 // never zero.
 func (m *FollowModel) addOpen(o *surface.FollowOpen, sources []FollowSource, now time.Time, rank int) {
-	summary := &ModelOpen{Status: surface.OpenUnavailable, Note: "running status not read yet", Live: []ModelRunning{}}
+	summary := &ModelOpen{Status: surface.OpenUnavailable, Note: "session status not read yet", Live: []ModelRunning{}}
 	m.NowEdge.Open = summary
 	if o == nil {
 		return
@@ -358,6 +384,7 @@ func (m *FollowModel) addOpen(o *surface.FollowOpen, sources []FollowSource, now
 			continue // its partition is not published; validation forbids this
 		}
 		li := m.openLane(e.Repo, e.Branch)
+		summary.considerRun(e.LastRun, e.Episode, e.ID)
 		ms := openModelState(e, now)
 		ms.Rank = rank
 		rank++
@@ -381,10 +408,11 @@ func (m *FollowModel) addOpen(o *surface.FollowOpen, sources []FollowSource, now
 	}
 	for _, a := range o.Aliases {
 		m.Aliases = append(m.Aliases, ModelAlias{ID: a.ID, Target: a.Target, SessionLive: a.SessionLive})
+		repo, _, ep, _ := surface.ParseQualifiedID(a.ID)
+		summary.considerRun(a.LastRun, ep, a.ID)
 		if !a.SessionLive {
 			continue
 		}
-		repo, _, ep, _ := surface.ParseQualifiedID(a.ID)
 		r := ModelRunning{Episode: ep, ID: a.Target, Repo: repo, Label: "landed; session live"}
 		for li := range m.Lanes {
 			for si := range m.Lanes[li].States {
@@ -406,7 +434,7 @@ func openModelState(e surface.OpenEpisode, now time.Time) ModelState {
 	ms := ModelState{ID: e.ID, Kind: KindOpen, Label: e.Episode, Title: e.Task, At: started.UTC().Format(time.RFC3339),
 		Rel: RelativeTime(started, now), Episode: e.Episode, Agent: e.Agent, Model: e.Model, PR: e.PR,
 		Open: &ModelOpenState{State: e.State, Label: e.Label, SessionLive: e.SessionLive, Base: short(e.Base),
-			BaseOutsideWindow: e.BaseOutsideWindow, Branch: e.Branch}}
+			BaseOutsideWindow: e.BaseOutsideWindow, Branch: e.Branch, LastRun: e.LastRun}}
 	if e.EndedAt != "" {
 		if ended, err := time.Parse(time.RFC3339, e.EndedAt); err == nil {
 			ms.Open.Ended = RelativeTime(ended, now)

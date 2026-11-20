@@ -68,6 +68,7 @@ func (d *Daemon) followNow(r *http.Request) surfacepage.Now {
 	path, _ := os.Executable()
 	now := surfacepage.Now{At: time.Now().UTC(), Healthy: true, Revision: build.VCSRevision, Modified: build.VCSModified,
 		Build: build.ExecutableSHA256, StartedAt: time.Unix(d.startedAt, 0).UTC(), Supervisor: serviceSupervisor(), InstalledSHA256: installedDigestAt(path)}
+	now.ActivityUntil = d.activity.recentCommits(now.At)
 	latest, err := d.reads.LogEntriesLatest(ctx, 1)
 	if err != nil {
 		now.LiveUnavailable = "the log could not be read"

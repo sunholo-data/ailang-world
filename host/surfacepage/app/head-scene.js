@@ -228,8 +228,9 @@
         const compact = head.height <= 48;
         const rel = node.rel || (Number.isFinite(stamp) ? exactTime.format(stamp) : '');
         const shownTime = compact ? shortAge(rel) : rel;
-        const status = head.attention ? 'Needs you' : head.live ? 'Live' : '';
-        const identity = status || node.open?.label || node.episode ||
+        const status = head.attention ? 'Needs you' : head.live ? 'Session live' : '';
+        const run = options.lastRunLabel?.(node.open?.lastRun);
+        const identity = (head.attention && status) || run || status || node.open?.label || node.episode ||
           (record === 'github-merge' ? 'GitHub merge · #' + node.pr : node.pr ? 'PR #' + node.pr : '');
         const timing = Number.isFinite(stamp)
           ? `<time datetime="${escape(node.at)}" title="${escape(exactTime.format(stamp) + ' UTC')}">${escape(shownTime)}</time>`
@@ -259,7 +260,7 @@
         el.href = statePath(node);
         el.dataset.recordKind = record;
         el.setAttribute('aria-label', [...new Set([label, model.recordLabel(node), title,
-          status || node.open?.label, node.episode, node.pr && 'PR #' + node.pr, rel].filter(Boolean))].join(' · '));
+          status, model.activityLabel?.(node), node.open?.label, options.lastRunDetail?.(node.open?.lastRun), node.episode, node.pr && 'PR #' + node.pr, rel].filter(Boolean))].join(' · '));
         el.style.setProperty('--hc-lane', accent(lane));
         if (space.children[index] !== el) {
           const focused = document.activeElement === el;
@@ -383,7 +384,7 @@
         const label = model.laneTitle?.(node.lane) || node.lane;
         el.style.setProperty('--hc-lane', accent(model.LANES[node.lane]));
         el.dataset.recordKind = model.recordKind(node);
-        el.setAttribute('aria-label', [label, model.recordLabel(node), title].join(' · '));
+        el.setAttribute('aria-label', [label, model.recordLabel(node), title, model.activityLabel?.(node)].filter(Boolean).join(' · '));
         el.setAttribute('href', statePath(node));
         if (mini) {
           placeMiniature(entry, point, width, height);

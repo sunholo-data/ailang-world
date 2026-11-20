@@ -13,6 +13,8 @@
   const hm = iso => { if (iso == null) return ''; const d = new Date(iso); return Number.isFinite(+d) ? pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) : ''; };
   const dayOf = iso => { if (iso == null) return ''; const d = new Date(iso); return Number.isFinite(+d) ? d.getUTCDate() + ' ' + MON[d.getUTCMonth()] : ''; };
   const exactOf = iso => dayOf(iso) ? dayOf(iso) + ' ' + hm(iso) + ' UTC' : 'Time unrecorded';
+  const lastRunLabel = run => run ? (run.failed ? 'Last run failed' : 'Last run finished') : '';
+  const lastRunDetail = run => run ? lastRunLabel(run) + ' · ' + exactOf(run.endedAt) : '';
   const prettyModel = m => (m || '').split('-').filter(Boolean).reduce((a, w, i, all) => {
     if (/^\d+$/.test(w) && /^\d+$/.test(all[i - 1] || '')) return a + '.' + w;
     const word = /^gpt$/i.test(w) ? 'GPT' : /^\d/.test(w) ? w : w[0].toUpperCase() + w.slice(1);
@@ -122,6 +124,7 @@
       return n.kind === 'open' || n.episode ? 'episode' : 'step';
     };
     const recordLabel = n => RECORD_LABEL[recordKind(n)];
+    const activityLabel = n => D.nowEdge?.activityUntil?.[n.id] ? 'Tool activity observed at ' + hm(D.now) + ' UTC' : '';
     const glyphOfNode = (n, size) => {
       if (n.kind === 'shared') return recordKind(n) === 'github-merge' ? mergeGlyph(size) : gl('circle', SHARED_INK, size);
       if (n.kind === 'open') {
@@ -170,7 +173,7 @@
     const aliasOf = {}; (D.aliases || []).forEach(a => { if (N[a.target]) aliasOf[a.id] = a.target; });
     return { D, LANES, N, parents, kids, SH, ...axis, MAXU: axis.LX.length - 1, STEPS, OPEN, above, below, quiet, LY, ROWS,
       GROUPS, multi, GAP, QUIET, groupOf, isDip, isOther, homeRow, aliasOf,
-      nameOf, laneTitle, glyphOf, glyphOfNode, recordKind, recordLabel, mergeOf, rowOf, rowY, lastStep, lastState };
+      nameOf, laneTitle, glyphOf, glyphOfNode, recordKind, recordLabel, activityLabel, mergeOf, rowOf, rowY, lastStep, lastState };
   }
 
   // ---------- Layout of the visible graph at one zoom (XS) ----------
@@ -325,6 +328,7 @@
     const bar = `<div class="fbar"><span id="cb-tag" style="font-weight:700">${esc(F.episode + (F.model ? ' · ' + prettyModel(F.model) : ''))}</span><span class="sub" id="cb-when">${esc(`started ${F.rel} · ${F.exact}`)}</span><span style="flex:1"></span><span class="sub" style="display:inline-flex;align-items:center;gap:7px">${gl(F.glyph, F.colour, 11)}${esc(rowLabel(F.name, F.row))}</span><span class="sub" id="cb-pos" data-open-state="${esc(o.state)}">${esc(o.label)}</span></div>`;
     const head = `<div class="head"><div class="h">${esc(F.title || F.episode)}</div><div class="outcome">${esc(o.label + (o.ended ? ' · ended ' + o.ended : ''))}</div></div>`;
     let grid = '';
+    if (o.lastRun) grid += `<span class="k">Agent run</span><div>${esc(lastRunDetail(o.lastRun))}</div>`;
     if (F.model) grid += `<span class="k">Agent</span><div>${esc(agentLine(F))}</div>`;
     if (F.task) grid += `<span class="k top">Task</span><div class="task"><div class="tl1">${esc(F.task)}</div></div>`;
     if (o.branch) grid += `<span class="k">Branch</span><div>${esc(o.branch)}</div>`;
@@ -424,16 +428,18 @@
     if (!Array.isArray(repos) || !repos.length) return '';
     return `<div class="nsec" data-sources><div class="nh">Sources</div>${repos.map(r => `<div class="nl sub" data-repo="${esc(r.id)}" data-state="${esc(r.state)}"${r.warn ? ' style="color:var(--you)"' : ''}>${esc(r.line)}</div>`).join('')}</div>`;
   }
-  // openRunningHTML is the Running section from the open-episode overlay. An unavailable or incomplete read never says "Nothing running".
+  // Show observed launch history beside the credential count. Only a complete read can confirm zero live sessions.
   function openRunningHTML(o) {
     const live = o.live || [], known = o.status === 'complete' || o.status === 'incomplete';
     const rows = live.slice(0, 4).map(r => r.id
       ? `<button type="button" class="nl run" data-go="${esc(r.id)}"><b>${esc(r.episode)}</b>${r.repo ? ' · ' + esc(r.repo) : ''} · ${esc(r.label)}</button>`
       : `<div class="nl sub"><b>${esc(r.episode)}</b> · ${esc(r.reason)}</div>`).join('');
-    const counts = [o.prOpen ? `${o.prOpen} PR open` : '', o.ended ? `${o.ended} ended, outcome unknown` : '', o.failed ? `${o.failed} finish not landed` : ''].filter(Boolean).join(' · ');
-    const head = known ? `Running · ${live.length}${o.status === 'incomplete' ? '+' : ''}` : 'Running';
-    return `<div class="nsec" data-running><div class="nh">${head}</div>${rows}${live.length > 4 ? `<div class="nl sub">+${live.length - 4} more</div>` : ''}` +
-      `${!live.length && o.status === 'complete' ? '<div class="nl sub">Nothing running</div>' : ''}${counts ? `<div class="nl sub">${esc(counts)}</div>` : ''}${o.note ? `<div class="nl sub">${esc(o.note)}</div>` : ''}</div>`;
+    const counts = [o.prOpen ? `${o.prOpen} PR open` : '', o.ended ? `${o.ended} sessions ended` : '', o.failed ? `${o.failed} finish not landed` : ''].filter(Boolean).join(' · ');
+    const head = known ? `Live sessions · ${live.length}${o.status === 'incomplete' ? '+' : ''}` : 'Live sessions';
+    const run = o.lastRun;
+    const latest = run ? `<button type="button" class="nl run" data-go="${esc(run.id)}"><span><b>${esc(run.episode)}</b> · ${esc(lastRunDetail(run))}</span></button>` : '';
+    return `<div class="nsec" data-running><div class="nh">${head}</div>${latest}${rows}${live.length > 4 ? `<div class="nl sub">+${live.length - 4} more</div>` : ''}` +
+      `${!live.length && o.status === 'complete' ? '<div class="nl sub">No live sessions</div>' : ''}${counts ? `<div class="nl sub">${esc(counts)}</div>` : ''}${o.note ? `<div class="nl sub">${esc(o.note)}</div>` : ''}</div>`;
   }
   // fetchCoherent reads the model and, with a brane open, its stack from ONE generation. "same": the generation on
   // screen, nothing to re-render; "apply": a coherent pair (stack null with missing when the selection is gone);
@@ -630,6 +636,60 @@
   let STEPS = [], TNOW = 0, NOW_D = new Date(), quiet = [], LY = {}, ROWS = [], MXS = [], XS = [];
   let nameOf, laneTitle, glyphOf, glyphOfNode, lastStep, lastState;
   let recordedModel;
+  const arrivals = new Map();
+  const arrivalButton = document.querySelector('#episode-arrivals button');
+  function updateArrivals(model) {
+    if (T && recordedModel && model.generation && model.generation !== recordedModel.generation) {
+      const previous = new Set(T.OPEN.map(n => n.id));
+      const open = model.lanes.flatMap(lane => lane.states).filter(n => n.kind === 'open');
+      const current = new Set(open.map(n => n.id));
+      for (const id of arrivals.keys()) if (!current.has(id)) arrivals.delete(id);
+      for (const node of open) {
+        if (!previous.has(node.id) && node.open?.sessionLive) arrivals.set(node.id, node.at);
+      }
+    }
+    arrivalButton.hidden = !arrivals.size;
+    arrivalButton.textContent = arrivals.size === 1 ? '1 new episode · Show' : arrivals.size + ' new episodes · Show latest';
+  }
+  arrivalButton.addEventListener('click', () => {
+    const latest = [...arrivals].sort((a, b) => b[1].localeCompare(a[1]))[0]?.[0];
+    if (!latest || !N[latest]) return;
+    arrivals.clear();
+    arrivalButton.hidden = true;
+    if (camera.active) {
+      camera.followLane(N[latest].lane);
+    } else {
+      pinnedTimelineState = latest;
+      relayout();
+      chooseTimelineNode(latest);
+      goNow(false);
+      const button = document.querySelector('#tl .node[data-state="' + CSS.escape(latest) + '"]');
+      button?.focus({preventScroll:true});
+      if (narrow.matches && button) button.scrollIntoView({block:'nearest', inline:'nearest'});
+    }
+  });
+  const activityStyle = document.createElement('style');
+  document.head.append(activityStyle);
+  let activityTimer;
+  function showRecentCalls(model) {
+    clearTimeout(activityTimer);
+    // Translate server time to elapsed browser time so device clock skew cannot keep a pulse alive.
+    const serverNow = Date.parse(model.now), received = performance.now();
+    const signals = Object.entries(model.nowEdge?.activityUntil || {});
+    function paint() {
+      const now = serverNow + performance.now() - received;
+      const active = signals.filter(([, until]) => until > now);
+      const selectors = active.flatMap(([id]) => {
+        const value = CSS.escape(id);
+        return [`.node[data-state="${value}"]`, `.node.bub-n:has(>[data-state="${value}"])`,
+          `.hc-face[data-head-state="${value}"]`, `.hc-rear[data-rear-state="${value}"]`];
+      });
+      const rule = selectors.length ? selectors.join(',') + '{--world-call-ring:block;--world-mini-pulse:world-call-mini}' : '';
+      if (activityStyle.textContent !== rule) activityStyle.textContent = rule;
+      if (active.length) activityTimer = setTimeout(paint, Math.max(1, Math.min(...active.map(([, until]) => until)) - now));
+    }
+    paint();
+  }
   const drafts = WorldHeadDrafts.create(({id, parent, discarded}) => {
     if (!recordedModel) return;
     setModel(recordedModel);
@@ -640,6 +700,8 @@
     chooseAngle(true, {instant:true, keyboard:true, anchor:st.focus});
   });
   function setModel(m) {
+    updateArrivals(m);
+    showRecentCalls(m);
     recordedModel = m;
     T = adaptModel(drafts.project(m));
     ({ D, LANES, N, parents, kids, SH, NS, TT, LX, MAXU, STEPS, TNOW, NOW_D, quiet, LY, ROWS, nameOf, laneTitle, glyphOf, glyphOfNode, lastStep, lastState } = T);
@@ -754,7 +816,7 @@
   const camera = WorldCameraController.create($('stage'), $('head-space'), {
     model:() => T, timeXs:() => XS, sidePoints, attention:attentionLanes, reduced,
     glyph:(n, size) => glyphOfNode(n, size), title:n => cleanTitle(n.title) || n.episode || n.label || n.id,
-    summary:summaryOf, agent:agentLine, tag:tagOf, stops:() => miniStops,
+    summary:summaryOf, agent:agentLine, tag:tagOf, lastRunLabel, lastRunDetail, stops:() => miniStops,
     open:id => open(id),
     select:id => { if (N[id]) { st.focus = id; camera.select(id); } },
     placeStatus:placeNow,
@@ -857,7 +919,7 @@
   const lastShared = key => ((LANES[key] && LANES[key].states) || []).filter(s => s.kind === 'shared').reduce((a, s) => !a || s.rank > a.rank ? s : a, null);
   function statusOf(key) {
     const run = T.OPEN.find(n => n.lane === key && n.open && n.open.sessionLive);
-    if (run) return `<span class="stat on" data-tip="node:${esc(run.id)}">running</span>`;
+    if (run) return `<span class="stat on" data-tip="node:${esc(run.id)}">session live</span>`;
     const s = isSharedKey(key) ? (key === 'shared' ? N[SH.at(-1)] : lastShared(key)) : lastStep(key);
     const on = s && dayDiff(s.at) <= 1;
     return `<span class="stat${on ? ' on' : ''}" data-tip="${s ? 'node:' + s.id : ''}">${on ? 'active' : 'quiet'}</span>`;
@@ -952,9 +1014,9 @@
         <div class="nl sub">${td.firstRound} first-round pass${td.firstRound === 1 ? '' : 'es'} · ${td.fixRounds} fix round${td.fixRounds === 1 ? '' : 's'} · ${Math.round(td.agentMinutes)} agent-minutes</div></div>`;
     }
     const run = sess[0], runLane = run && Object.keys(LANES).find(k => LANES[k].row && new RegExp('^w' + LANES[k].row + '[a-z]?$').test(run.episode));
-    const running = ne.open ? openRunningHTML(ne.open) : ne.sessionsUnavailable ? `<div class="nsec" data-running><div class="nh">Running</div><div class="nl sub">${esc(ne.sessionsUnavailable)}</div></div>`
-      : `<div class="nsec" data-running><div class="nh">Running · ${sess.length}</div>
-        ${run ? `<div class="nl"><b>${esc(run.episode)}</b>${runLane ? ` · ${esc(nameOf(runLane))}` : ''}</div><div class="nl sub">started ${esc(run.started)}</div>` : '<div class="nl sub">Nothing running</div>'}</div>`;
+    const running = ne.open ? openRunningHTML(ne.open) : ne.sessionsUnavailable ? `<div class="nsec" data-running><div class="nh">Live sessions</div><div class="nl sub">${esc(ne.sessionsUnavailable)}</div></div>`
+      : `<div class="nsec" data-running><div class="nh">Live sessions · ${sess.length}</div>
+        ${run ? `<div class="nl"><b>${esc(run.episode)}</b>${runLane ? ` · ${esc(nameOf(runLane))}` : ''}</div><div class="nl sub">started ${esc(run.started)}</div>` : '<div class="nl sub">No live sessions</div>'}</div>`;
     const activity = running + needsYouHTML(REQS, REQS ? REQS.now : 0, notifyPermission());
     return `<div class="now" data-now style="left:${PR + 22}px;top:56px">
       <button type="button" class="phone-view" id="activity-back">← Timeline</button>
@@ -1015,10 +1077,10 @@
         : unfiled ? gl(null, null, 9) : gl(l.glyph, l.colour, size);
       const title = cleanTitle(n.title) || n.episode || n.label;
       const pr = n.pr && title !== '#' + n.pr && 'PR #' + n.pr;
-      const what = [T.recordLabel(n), opened && n.open?.label, title, pr].filter(Boolean).join(', ');
+      const what = [T.recordLabel(n), T.activityLabel(n), opened && n.open?.label, lastRunDetail(n.open?.lastRun), title, pr].filter(Boolean).join(', ');
       h += `<button type="button" class="node${shared ? ' sh' : ''}" data-id="${id}" data-state="${esc(id)}" data-record-kind="${record}"${opened ? ` data-open="${esc(n.open?.state || '')}"` : ''} data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${esc(nameOf(n.lane) + ', ' + what + (n.rel ? ', ' + n.rel : '') + (n.badge ? ', ' + n.badge + ' of your decisions' : ''))}"><span class="halo">${inner}</span></button>`;
       if (n.badge > 0) h += `<div class="nb" style="left:${x + 6}px;top:${y - 19}px">${n.badge}</div>`;
-      if (LABELED.has(id)) h += `<div class="nlab" data-l="${id}" style="left:${x - 56}px;bottom:${936 - (y - 18)}px"><span class="tx">${esc(opened ? n.episode + ' · ' + n.open.label : shortTitle(n.title || '') || n.episode || n.label)}</span></div>`;
+      if (LABELED.has(id)) h += `<div class="nlab" data-l="${id}" style="left:${x - 56}px;bottom:${936 - (y - 18)}px"><span class="tx">${esc(opened ? n.episode + ' · ' + (lastRunLabel(n.open.lastRun) || n.open.label) : shortTitle(n.title || '') || n.episode || n.label)}</span></div>`;
       h += `<div class="nlab" data-r="${id}" style="left:${x - 56}px;top:${y + (shared ? 9 : 14)}px"><div class="rel"></div></div>`;
     });
     h += `<div class="nowline" style="left:${XS[T.presentIndex]}px;top:92px;height:${TICK_T + 30 - 92}px"></div>`;
@@ -1494,7 +1556,7 @@
     $('head-status-health').textContent = card.querySelector('[data-health]')?.textContent || '';
     const needs = card.querySelector('[data-needs] .nh')?.textContent;
     const running = card.querySelector('[data-running] .nh')?.textContent;
-    const active = [needs, running].filter(label => label && !/ · 0$/.test(label));
+    const active = [needs, lastRunLabel(D.nowEdge?.open?.lastRun), running].filter(label => label && !/ · 0$/.test(label));
     $('head-status-activity').textContent = active.join(' · ');
     applyStatusSize();
   }
@@ -1851,6 +1913,7 @@
       const o = n.open || {}, base = o.baseOutsideWindow ? `base ${o.base || 'unrecorded'} is outside the retained window` : o.base ? 'built on ' + o.base : '';
       return `<div class="hc"><div class="hk">${glyphOfNode(n, 9)}${T.recordLabel(n)} · ${esc(nameOf(n.lane))} · ${esc(o.label)}</div>
         <div class="ht">${esc(n.title || n.episode)}</div>
+        ${o.lastRun ? `<div class="hm">${esc(lastRunDetail(o.lastRun))}</div>` : ''}
         ${n.model ? `<div class="hm"><b>${esc(agentLine(n))}</b></div>` : ''}
         <div class="hm">${esc([o.branch, base, n.pr ? 'PR #' + n.pr : ''].filter(Boolean).join(' · '))}</div>
         <div class="hw">started ${esc(n.rel)}${o.ended ? ' · ended ' + esc(o.ended) : ''}</div><div class="hid">${esc(n.episode)}</div></div>`;

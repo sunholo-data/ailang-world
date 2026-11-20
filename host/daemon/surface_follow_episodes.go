@@ -9,6 +9,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/surface"
 	"github.com/sunholo-data/ailang-world/host/surfacefollow"
 )
 
@@ -109,9 +110,13 @@ func (e *followEpisodes) ReadEpisodes(ctx context.Context, now time.Time, repos 
 				canon = e.canonical(s.Repo)
 				e.canonCache[s.Repo] = canon
 			}
+			var lastRun *surface.LaunchResult
+			if !s.RunEndedAt.IsZero() {
+				lastRun = &surface.LaunchResult{EndedAt: s.RunEndedAt.Format(time.RFC3339), Failed: s.RunFailed}
+			}
 			facts.Starts = append(facts.Starts, surfacefollow.StartFact{Episode: s.Episode, RepoID: byPath[canon],
 				StartedAt: s.StartedAt, BaseSHA: s.BaseSHA, Branch: s.Branch, Agent: s.Agent, Model: s.Model,
-				TaskTitle: s.TaskTitle, LastExpiry: lastScheduledExpiry(s)})
+				TaskTitle: s.TaskTitle, LastExpiry: lastScheduledExpiry(s), LastRun: lastRun})
 			after = s.Episode
 		}
 		if len(page) < store.MaxOverlayPage {

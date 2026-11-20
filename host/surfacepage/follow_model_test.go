@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/surface"
 )
@@ -385,5 +386,19 @@ func TestFollowModelDeterministic(t *testing.T) {
 		if string(a) != string(b) {
 			t.Fatal("follow model is not deterministic")
 		}
+	}
+}
+
+func TestFollowModelAttributesRecentCallsOnlyToPublishedLiveNodes(t *testing.T) {
+	env := followEnv(t)
+	until := fixedNow.Add(time.Second)
+	now := Now{At: fixedNow, ActivityUntil: map[string]time.Time{"w189z": until, "unpublished": until}}
+	m := BuildFollowModel(env, followSources(), now)
+	if len(m.NowEdge.ActivityUntil) != 1 || m.NowEdge.ActivityUntil["world:episode:w189z"] != until.UnixMilli() {
+		t.Fatalf("published activity = %v", m.NowEdge.ActivityUntil)
+	}
+	now.At = until
+	if calls := BuildFollowModel(env, followSources(), now).NowEdge.ActivityUntil; len(calls) != 0 {
+		t.Fatalf("expired activity = %v", calls)
 	}
 }

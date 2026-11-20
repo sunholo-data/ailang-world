@@ -94,3 +94,19 @@ func TestHomeHealthActivity(t *testing.T) {
 		t.Fatal(serviceSupervisor())
 	}
 }
+
+func TestSurfaceCallActivityExpiresIndependentlyOfCredential(t *testing.T) {
+	var tracker activityTracker
+	t0 := time.Unix(100, 0)
+	done := tracker.begin("idle", 800, t0.Unix())
+	done()
+	tracker.recordCommit("working", t0)
+	tracker.recordCommit("working", t0.Add(time.Second))
+	recent := tracker.recentCommits(t0.Add(commitWindow))
+	if len(recent) != 1 || !recent["working"].Equal(t0.Add(time.Second+commitWindow)) {
+		t.Fatalf("recent calls = %v", recent)
+	}
+	if calls := tracker.recentCommits(t0.Add(time.Second + commitWindow)); len(calls) != 0 {
+		t.Fatalf("expired activity persisted: %v", calls)
+	}
+}
