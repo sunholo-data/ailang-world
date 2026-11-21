@@ -1,7 +1,7 @@
 'use strict';
 // AILANG World's confirmation card (row 243 V3, design §2.5). It reads one stored verb request from
-// the daemon, checks that its bytes hash to its digest, shows EVERY field of the signed bytes through
-// one table (and refuses a request with a field it cannot show), and builds the 86-byte world-verb/v1
+// the daemon, checks that its bytes hash to its digest, shows every field of the signed bytes through
+// the review and signed details (and refuses a request with a field it cannot show), and builds the 86-byte world-verb/v1
 // message itself (never a hash from the server): Save the message and the ssh-keygen line. A state
 // other than pending shows that state and no controls. Text is set with textContent only. The submit
 // half (sprint 4, design §2.6): a passkey whose challenge is the message hash, or a pasted SSH
@@ -25,11 +25,32 @@
     {"key": "committer", "label": "Committer", "type": "string"},
     {"key": "protected", "label": "Protected paths changed", "type": "strings"}
   ]/* /CONFIRM_FIELDS */;
-  const CLOSED = { approved: 'Already confirmed', superseded: 'Superseded by a newer finish of this episode', expired: 'Expired' };
+  const CLOSED = new Map([
+    ['approved', 'Approval recorded'],
+    ['superseded', 'Superseded by a newer finish'],
+    ['expired', 'Request expired']
+  ]);
+  // Match the broker's canonical finish scope. Review fields come from the scope,
+  // since an argv flag may be omitted and the prompt includes free-form text.
+  const FINISH_SCOPE = /^github-pr:([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)#remote=[^&#= \t\n\v\f\r]+&head=([^&#= \t\n\v\f\r]+)&sha=([0-9a-f]{40})&base=([^&#= \t\n\v\f\r]+)&title-sha256=[0-9a-f]{64}&body-sha256=[0-9a-f]{64}&label=ailang-world&draft=(true|false)&create-label=(true|false)&expires=[1-9][0-9]*(?![\s\S])/;
 
   const $ = (id) => document.getElementById(id);
   const setState = (s) => { document.body.dataset.state = s; };
-  const refuse = (state, text) => { setState(state); $('what').textContent = text; $('what').toggleAttribute('data-error', true); };
+  const status = (title, detail = '', error = false) => {
+    $('status').textContent = title;
+    $('what').textContent = detail;
+    $('what').toggleAttribute('data-error', error);
+  };
+  const refuse = (state, detail) => {
+    $('shown').hidden = true;
+    $('overview').hidden = true;
+    $('controls').hidden = true;
+    $('receipt-actions').hidden = true;
+    delete document.body.dataset.requestState;
+    $('review-title').textContent = 'Review pull request';
+    status(state === 'failed' ? 'Request unavailable' : 'Request refused', detail, true);
+    setState(state);
+  };
   const unb64u = (s) => {
     if (typeof s !== 'string' || !/^[A-Za-z0-9_-]*$/.test(s)) throw new Error('not base64url');
     return Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
@@ -96,37 +117,104 @@
     dd.id = id;
     dd.textContent = text;
     dl.append(dt, dd);
-    return dd;
   };
-  function render(r, s, h) {
+  function render(r, s, h, scope) {
+    const [, repository, head, sha, base, draft, createLabel] = scope;
+    const mode = draft === 'true' ? 'Draft' : 'Ready for review';
+    $('action').textContent = draft === 'true' ? 'Open a draft pull request' : 'Open a pull request';
+    $('repository').textContent = repository;
+    $('episode').textContent = r.episode;
+    $('overview').hidden = false;
+    $('review-title').textContent = r.title;
+    $('head').textContent = head;
+    $('head-commit').textContent = sha;
+    $('base').textContent = base;
+    $('pr-state').textContent = mode;
+    $('label').textContent = createLabel === 'true' ? 'ailang-world (will be created)' : 'ailang-world';
+    const paths = $('review-protected');
+    paths.textContent = '';
+    for (const path of r.protected) {
+      const item = document.createElement('li');
+      item.textContent = path;
+      item.dir = 'auto';
+      paths.append(item);
+    }
+    paths.hidden = r.protected.length === 0;
+    $('no-protected').hidden = !paths.hidden;
+    $('f-body').textContent = r.body;
+    $('f-body-size').textContent = `(${new TextEncoder().encode(r.body).length} bytes)`;
     $('argv').textContent = quote(r.argv);
     $('prompt').textContent = r.prompt;
     const dl = $('signed');
     dl.textContent = '';
+    row(dl, 'm-id', 'Request ID', s.id);
     row(dl, 'm-digest', 'Request digest (SHA-256)', s.digest);
     row(dl, 'm-challenge', 'Challenge', s.challenge);
     row(dl, 'm-expires', 'Expires', time(s.expires));
     row(dl, 'm-hash', 'Message hash (the passkey challenge)', hex(h));
     for (const f of CONFIRM_FIELDS) {
       const v = r[f.key];
-      if (f.key === 'body') {
-        const dd = row(dl, 'f-body-size', f.label, `${new TextEncoder().encode(v).length} bytes`);
-        const details = document.createElement('details');
-        const summary = document.createElement('summary');
-        summary.textContent = 'the full body';
-        const pre = document.createElement('pre');
-        pre.id = 'f-body';
-        pre.textContent = v;
-        details.append(summary, pre);
-        dd.append(details);
-        continue;
-      }
+      if (f.key === 'body') continue; // Full PR body is its own disclosure beside the review.
       row(dl, 'f-' + f.key, f.label, f.type === 'strings' ? v.join('\n') : v);
     }
     $('shown').hidden = false;
+    document.body.dataset.requestState = s.state;
+    $('review-facts').open = s.state === 'pending';
+  }
+
+  function verifiedEpisodeHref(href, episode) {
+    if (typeof href !== 'string' || !href.startsWith('/surface?') || href.includes('#') || href.length > 512) return '';
+    const q = new URLSearchParams(href.slice('/surface?'.length));
+    if ([...q].length !== 2 || q.getAll('brane').length !== 1 || q.getAll('at').length !== 1) return '';
+    const brane = q.get('brane'), at = q.get('at');
+    const lane = /^([a-z][a-z0-9-]{0,31}):brane:([^\u0000-\u001f]+)(?![\s\S])/u.exec(brane);
+    if (!lane || at !== lane[1] + ':episode:' + episode) return '';
+    return '/surface?' + new URLSearchParams({brane, at});
+  }
+
+  function renderReceipt(s, episode, repository) {
+    const episodeHref = verifiedEpisodeHref(s.episodeHref, episode);
+    $('receipt-back').href = episodeHref || '/surface';
+    $('receipt-back').textContent = episodeHref ? 'Return to episode' : 'Return to World';
+    const pr = typeof s.prHref === 'string' && /^https:\/\/github\.com\/([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)\/pull\/([1-9][0-9]*)(?![\s\S])/.exec(s.prHref);
+    const prHref = pr && pr[1].toLowerCase() === repository.toLowerCase() ? pr[0] : '';
+    $('receipt-pr').hidden = !prHref;
+    if (prHref) {
+      $('receipt-pr').href = prHref;
+      $('receipt-pr').textContent = `View PR #${pr[2]} on GitHub`;
+    }
+    $('receipt-actions').hidden = false;
+    return prHref;
+  }
+
+  function approverMessage(id) {
+    if (typeof id !== 'string' || !id) return '';
+    const separator = id.indexOf(':');
+    const method = id.slice(0, separator), name = id.slice(separator + 1);
+    if (name && method === 'webauthn') return `${name} approved with a passkey.`;
+    if (name && method === 'ssh') return `${name} approved with an SSH signature.`;
+    return `Approved by ${id}.`;
   }
 
   const id = (location.pathname.match(/^\/surface\/confirm\/(vr-[0-9a-f]{16})$/) || [])[1];
+  try {
+    const theme = JSON.parse(localStorage.getItem('world.appearance') || '{}')?.theme;
+    document.documentElement.dataset.theme = theme === 'night' || theme === 'slate' ||
+      (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches) ? 'slate' : 'paper';
+  } catch (_) { /* Paper is the World default when preferences are unavailable. */ }
+  if (location.hash === '#activity') {
+    $('back').href = '/surface#activity';
+    $('back').textContent = '← Back to Activity';
+  } else if (location.hash) {
+    const place = new URLSearchParams(location.hash.slice(1));
+    const brane = place.get('brane'), at = place.get('at'), view = place.get('view') || '';
+    if (brane && at && brane.length < 256 && at.length < 256) {
+      const fragment = /^(heads(?:\/(?:files|run|trajectory))?|files|run|trajectory)(?![\s\S])/.test(view) ? '#' + view : '';
+      $('back').href = '/surface?' + new URLSearchParams({brane, at}) + fragment;
+      $('back').textContent = '← Return to selected state';
+    }
+  }
+  let submittedReceipt = null;
   let digestHex = '', hash = null, group = null; // the pending card's, for the submit half
   const buttons = (on) => { $('go').disabled = !on || !group; $('post-sig').disabled = !on; };
   async function load() {
@@ -148,10 +236,15 @@
       return refuse('refused', 'The daemon\'s request is not base64url; nothing to confirm.');
     }
     const challenge = unhex(s.challenge);
-    if (s.id !== id || !unhex(s.digest) || !challenge || !Number.isSafeInteger(s.expires) || s.expires < 0 || typeof s.state !== 'string') {
+    if (s.id !== id || !unhex(s.digest) || !challenge || !Number.isSafeInteger(s.expires) || s.expires < 0 || s.expires > 8640000000000 || typeof s.state !== 'string') {
       return refuse('refused', 'The daemon\'s answer is malformed; nothing to confirm.');
     }
-    const digest = await sha256(bytes);
+    let digest;
+    try {
+      digest = await sha256(bytes);
+    } catch (_) {
+      return refuse('failed', 'This browser could not verify the request. Confirm at the terminal.');
+    }
     if (hex(digest) !== s.digest) return refuse('refused', 'The request\'s bytes do not match its digest; nothing to confirm.');
     let r;
     try {
@@ -161,23 +254,44 @@
     }
     const bad = unshown(r);
     if (bad) return refuse('refused', `This request has a field the page cannot show (${bad}); nothing to confirm here; confirm at the terminal.`);
+    const scope = FINISH_SCOPE.exec(r.scope);
+    if (!scope || r.verb !== 'episode finish') {
+      return refuse('refused', 'This request does not describe a recognizable pull request. Confirm at the terminal.');
+    }
     const m = message(digest, challenge, s.expires), h = await sha256(m);
-    render(r, s, h);
-    $('what').textContent = `Confirm request ${id}: ${r.verb} ${r.episode}; expires ${time(s.expires)}; message hash ${hex(h)}`;
+    render(r, s, h, scope);
     if (s.state !== 'pending') {
+      let pullRequest = '';
+      if (s.state === 'approved') {
+        pullRequest = renderReceipt(s, r.episode, scope[1]);
+        const draft = scope[5] === 'true';
+        $('action').textContent = pullRequest ? (draft ? 'Draft pull request' : 'Pull request')
+          : (draft ? 'Requested a draft pull request' : 'Requested a pull request');
+        row($('signed'), 'approval-signer', 'Recorded approver', s.approvedBy);
+        row($('signed'), 'approval-decision', 'Recorded decision', s.decision);
+        if (submittedReceipt && submittedReceipt.approvedBy === s.approvedBy && submittedReceipt.decision === s.decision) $('answer').textContent = '';
+      }
+      const detail = s.state === 'approved'
+        ? [approverMessage(s.approvedBy), pullRequest ? '' : 'The finish command reports the pull request outcome.'].filter(Boolean).join(' ')
+        : s.state === 'superseded' ? 'Return to World for the latest request.'
+        : s.state === 'expired' ? 'Return to the terminal to start a new finish request.'
+        : `Request state: ${s.state}. Check the episode finish at the terminal.`;
+      status(pullRequest ? 'Pull request opened' : CLOSED.get(s.state) || 'Request closed', detail);
       setState('closed');
-      $('status').textContent = `${CLOSED[s.state] || 'This request is ' + s.state}${s.state === 'approved' ? ` by ${s.approvedBy}: decision ${s.decision}` : ''}; nothing to confirm here.`;
       return;
     }
     $('save').href = URL.createObjectURL(new Blob([m], { type: 'application/octet-stream' }));
     $('save').download = `world-verb-${id}.msg`;
     $('sshline').textContent = `ssh-keygen -Y sign -n ${NAMESPACE} -f <key> world-verb-${id}.msg`;
-    $('status').textContent = 'Waiting for your key: save the message and sign it with your enrolled SSH key.';
     digestHex = s.digest;
     hash = h;
     group = (s.passkeys || []).find((g) => g.origin === location.origin) || null;
     $('go').hidden = !group;
+    if (!group) $('ssh-fallback').open = true;
     $('controls').hidden = false;
+    const expiry = new Date(s.expires * 1000).toISOString().slice(11, 16);
+    const fallback = group ? '' : ' Use an SSH signature, or rerun finish at the terminal without --confirm-on-surface.';
+    status('Awaiting approval', 'Expires ' + expiry + ' UTC.' + fallback);
     buttons(true);
     setState('ready');
   }
@@ -186,6 +300,7 @@
   async function submit(format) {
     buttons(false);
     setState('posting');
+    status('Submitting approval…');
     let res;
     try {
       res = await net('/surface/confirm/' + id, { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -195,16 +310,22 @@
       return reread();
     }
     const b = res.body || {};
-    $('answer').textContent = res.status === 200 && b.confirmed === true
-      ? `Confirmed by ${b.approvedBy}: decision ${b.decision}; ${b.next}.`
+    submittedReceipt = res.status === 200 && b.confirmed === true ? b : null;
+    $('answer').textContent = submittedReceipt
+      ? `Approval recorded by ${b.approvedBy}. Decision ${b.decision}. Check the episode finish at the terminal for the PR outcome.`
       : `Not confirmed (HTTP ${res.status} ${b.error || ''}): ${b.reason || 'no reason given'}`;
     return reread();
   }
-  const reread = () => { $('controls').hidden = true; return load(); };
+  const reread = () => {
+    $('controls').hidden = true;
+    status('Checking request status…');
+    return load();
+  };
 
   async function confirmWithPasskey() {
     buttons(false);
     setState('waiting');
+    status('Waiting for your passkey…');
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     let cred;
@@ -220,8 +341,16 @@
     }
     return submit({ webauthn: assertionJSON(cred) });
   }
-  $('go').addEventListener('click', () => { confirmWithPasskey(); });
-  $('post-sig').addEventListener('click', () => { submit({ sshsig: $('sig').value }); });
+  $('go').addEventListener('click', () => {
+    $('answer').textContent = '';
+    confirmWithPasskey();
+    $('status').focus();
+  });
+  $('post-sig').addEventListener('click', () => {
+    $('answer').textContent = '';
+    submit({ sshsig: $('sig').value });
+    $('status').focus();
+  });
 
   load(); // the daemon will serve this page only at /surface/confirm/vr-<16 hex>
 })();

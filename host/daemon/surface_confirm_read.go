@@ -8,11 +8,18 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"net/http"
+	"net/url"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/surface"
 	"github.com/sunholo-data/ailang-world/host/surfacepage"
 )
 
@@ -74,7 +81,10 @@ func (d *Daemon) handleSurfaceConfirmation(w http.ResponseWriter, r *http.Reques
 	for _, e := range active {
 		passkeys = append(passkeys, surfacepage.CardPasskey{Origin: e.Passkey.Origin, RPID: e.Passkey.RPID, CredentialID: e.Passkey.CredentialID})
 	}
-	writeApprovalJSON(w, http.StatusOK, surfacepage.ConfirmationCard(confirmationInput(row, d.approveNow()), passkeys))
+	now := d.approveNow()
+	card := surfacepage.ConfirmationCard(confirmationInput(row, now), passkeys)
+	card.EpisodeHref, card.PRHref = d.confirmationLinks(ctx, ro, row, now)
+	writeApprovalJSON(w, http.StatusOK, card)
 }
 
 // confirmationInput is row as the card reads it at now.
@@ -105,23 +115,97 @@ func (d *Daemon) readConfirmations(ctx context.Context, now int64, out *surfacep
 // not decode as a valid world/verb-request/v1, or carry no finish approval scope.
 func pendingConfirmation(row store.VerbRequestRow) surfacepage.PendingConfirmation {
 	p := surfacepage.PendingConfirmation{ID: row.RequestID, Expires: row.ExpiresAt}
-	if sum := sha256.Sum256(row.Request); hex.EncodeToString(sum[:]) != row.Digest {
-		p.Refused = "the stored request does not match its digest"
+	r, s, refused := storedFinishConfirmation(row)
+	if refused != "" {
+		p.Refused = refused
 		return p
+	}
+	p.Episode, p.Repository, p.Head, p.SHA, p.Draft = r.Episode, s.Repository, s.Head, s.SHA, &s.Draft
+	return p
+}
+
+func storedFinishConfirmation(row store.VerbRequestRow) (approval.VerbRequest, broker.FinishApprovalScope, string) {
+	if sum := sha256.Sum256(row.Request); hex.EncodeToString(sum[:]) != row.Digest {
+		return approval.VerbRequest{}, broker.FinishApprovalScope{}, "the stored request does not match its digest"
 	}
 	r, err := approval.DecodeVerb(row.Request)
 	if err == nil {
 		err = r.Validate()
 	}
 	if err != nil {
-		p.Refused = "the stored request is not a valid verb request: " + err.Error()
-		return p
+		return approval.VerbRequest{}, broker.FinishApprovalScope{}, "the stored request is not a valid verb request: " + err.Error()
 	}
 	s, err := broker.ParseFinishApprovalScope(r.Scope)
 	if err != nil {
-		p.Refused = "the stored request's scope is not a finish approval"
-		return p
+		return approval.VerbRequest{}, broker.FinishApprovalScope{}, "the stored request's scope is not a finish approval"
 	}
-	p.Episode, p.Repository, p.Head, p.SHA, p.Draft = r.Episode, s.Repository, s.Head, s.SHA, &s.Draft
-	return p
+	return r, s, ""
+}
+
+// confirmationLinks decorates the read card with evidence from the configured
+// surface. Neither link contributes to approval or to its signed message.
+func (d *Daemon) confirmationLinks(ctx context.Context, ro *store.Credentials, row store.VerbRequestRow, now int64) (episodeHref, prHref string) {
+	if d.follow == nil {
+		return "", ""
+	}
+	request, scope, refused := storedFinishConfirmation(row)
+	if refused != "" || request.Episode != row.EpisodeID {
+		return "", ""
+	}
+	start, err := ro.EpisodeStart(ctx, request.Episode)
+	slug := strings.ToLower(scope.Repository)
+	if err != nil || start == nil || start.Episode != request.Episode || !filepath.IsAbs(start.Repo) ||
+		start.Branch != scope.Head || start.Base.Branch != scope.Base ||
+		start.Remote.URL != scope.Remote || githubOriginSlug(start.Remote.URL) != slug {
+		return "", ""
+	}
+
+	env := d.followSnapshot().Envelope
+	repo := canonicalRepo(start.Repo)
+	for _, enrolled := range d.follow.config.Repos {
+		if enrolled.Repo != repo {
+			continue
+		}
+		at, err := surface.QualifyID(enrolled.ID, "episode", request.Episode)
+		if err != nil {
+			continue
+		}
+		shared, _ := surface.QualifyID(enrolled.ID, "brane", surfacepage.SharedKey)
+		stack, err := surfacepage.BuildFollowStack(env, shared, at, time.Unix(now, 0))
+		if err != nil || stack.Repo != enrolled.ID || stack.Front.Brane == "" {
+			continue
+		}
+		if episodeHref != "" {
+			return "", "" // ambiguous enrollment
+		}
+		episodeHref = "/surface?" + url.Values{"at": {at}, "brane": {stack.Front.Brane}}.Encode()
+	}
+	if episodeHref == "" || row.Outcome != store.VerbOutcomeApproved || row.DecisionRef == "" {
+		return episodeHref, ""
+	}
+	return episodeHref, d.confirmedPRHref(ctx, row, request.Scope, scope, slug)
+}
+
+func (d *Daemon) confirmedPRHref(ctx context.Context, row store.VerbRequestRow, signedScope string, scope broker.FinishApprovalScope, slug string) string {
+	if d.store == nil {
+		return ""
+	}
+	ref, ok, err := d.store.GetRegistryHead(ctx, finishHead(row.EpisodeID))
+	if err != nil || !ok {
+		return ""
+	}
+	obj, ok, err := d.store.GetObject(ctx, ref)
+	var finish EpisodeFinish
+	if err != nil || !ok || obj.SemanticID != EpisodeFinishV1 || obj.Provenance != finishProvenance ||
+		json.Unmarshal(obj.Payload, &finish) != nil || finish.Episode != row.EpisodeID ||
+		finish.Outcome != "done" || finish.Approval != row.DecisionRef || finish.Scope != signedScope ||
+		finish.Commit != scope.SHA || finish.Branch != scope.Head || finish.Remote != scope.Remote ||
+		finish.PR.Number <= 0 || finish.PR.Draft != scope.Draft {
+		return ""
+	}
+	href := "https://github.com/" + slug + "/pull/" + strconv.Itoa(finish.PR.Number)
+	if !strings.EqualFold(finish.PR.URL, href) {
+		return ""
+	}
+	return href
 }

@@ -139,6 +139,40 @@ func TestConfirmPageAssets(t *testing.T) {
 	if m := regexp.MustCompile(`(?i)\son[a-z]+\s*=|<form|<img|<link|<iframe|https?://`).FindString(page); m != "" {
 		t.Errorf("the page has %q", m)
 	}
+	if !strings.Contains(page, `<header class="world-header">`) || !strings.Contains(page, `class="world-logo"><svg`) ||
+		!strings.Contains(page, `role="group" aria-label="Pull request branch direction"`) {
+		t.Error("the page needs the World brand and pull request direction")
+	}
+	if !strings.Contains(page, `<a id="back" href="/surface">`) ||
+		!strings.Contains(page, `role="status" aria-atomic="true">`) ||
+		!strings.Contains(page, `id="status" tabindex="-1"`) ||
+		!strings.Contains(page, `id="answer" role="status"`) {
+		t.Error("the page needs a World link and focusable, announced status")
+	}
+	for _, pair := range [][2]string{{"overview", "shown"}, {"status", "review"}, {"review", "go"}, {"go", "signed"}} {
+		first := strings.Index(page, `id="`+pair[0]+`"`)
+		second := strings.Index(page, `id="`+pair[1]+`"`)
+		if first < 0 || first >= second {
+			t.Errorf("#%s should precede #%s", pair[0], pair[1])
+		}
+	}
+	verification := regexp.MustCompile(`(?s)<details id="verification">\s*<summary>Verification details</summary>.*?</details>`).FindString(page)
+	for _, id := range []string{"prompt", "argv", "signed"} {
+		if !strings.Contains(verification, `id="`+id+`"`) {
+			t.Errorf("#%s should be in the collapsed verification group", id)
+		}
+	}
+	for _, id := range []string{"f-body", "save", "prompt", "argv", "signed"} {
+		found := false
+		for _, block := range regexp.MustCompile(`(?s)<details(?: id="(?:ssh-fallback|verification)")?>.*?</details>`).FindAllString(page, -1) {
+			if strings.Contains(block, `id="`+id+`"`) {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("#%s should be in a collapsed disclosure", id)
+		}
+	}
 	for _, m := range regexp.MustCompile(`\$\('([a-z-]+)'\)`).FindAllStringSubmatch(string(ConfirmScript), -1) {
 		if !strings.Contains(page, ` id="`+m[1]+`"`) {
 			t.Errorf("confirm.js reads #%s, which the page lacks", m[1])
