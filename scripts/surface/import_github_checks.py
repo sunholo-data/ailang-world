@@ -15,7 +15,8 @@ SCHEMA = "world/surface-github-checks/v1"
 REPO_ID = re.compile(r"[a-z][a-z0-9-]{0,31}")
 SLUG = re.compile(r"[a-zA-Z0-9][a-zA-Z0-9-]{0,38}/[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,99}")
 HEAD = re.compile(r"[0-9a-f]{40}")
-ORIGIN_PREFIXES = ("https://github.com/", "git@github.com:", "ssh://git@github.com/")
+GITHUB_HOST = "github.com"
+ORIGIN_PREFIXES = (f"https://{GITHUB_HOST}/", f"git@{GITHUB_HOST}:", f"ssh://git@{GITHUB_HOST}/")
 STATUS = {
     "EXPECTED", "ERROR", "FAILURE", "PENDING", "SUCCESS",
     "IN_PROGRESS", "QUEUED", "REQUESTED", "WAITING",
