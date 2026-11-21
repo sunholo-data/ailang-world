@@ -588,3 +588,11 @@ button { user-select: none; -webkit-user-select: none; }
   #br .node-tabs button { flex: 1; padding: 0 5px; }
   .node-overview,.node-run-grid,[data-node-panel="trajectory"] [data-trajectory-body] { grid-template-columns: minmax(0,1fr); }
 }
+
+.finish-link {
+  display: block; min-height: 44px; padding: 7px 9px; border-inline-start: 3px solid var(--you);
+  background: var(--youFill); color: var(--youInk); font-weight: 600; overflow-wrap: anywhere;
+}
+.finish-link small { display: block; color: var(--inkSub); font-weight: 400; }
+[data-finish-links] .finish-link + .finish-link { margin-top: 6px; }
+.finish-link:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }

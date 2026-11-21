@@ -165,7 +165,7 @@ const sections = {
     assert.equal(ok.state, 'ready', ok.what);
     assert.equal(ok.fetches.length, 1);
     assert.equal(ok.doc.documentElement.dataset.theme, 'slate');
-    for (const [fragment, target] of [['#activity', '/surface#activity'],
+    for (const [fragment, target] of [['#activity', '/surface#activity'], ['#heads/activity','/surface#heads/activity'], ['#heads','/surface#heads'],
       ['#brane=row-218&at=step%2F1&return=https://elsewhere.invalid', '/surface?brane=row-218&at=step%2F1'],
       ['#brane=world%3Abrane%3Ashared&at=world%3Aepisode%3Aw1&view=heads%2Ftrajectory', '/surface?brane=world%3Abrane%3Ashared&at=world%3Aepisode%3Aw1#heads/trajectory']]) {
       const contextual = await open(card(c), answer(200, c), false, undefined, fragment);

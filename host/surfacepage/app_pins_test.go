@@ -74,7 +74,7 @@ func TestNeedsYouConfirmationEmbeddedNewline(t *testing.T) {
 	runPinHarness(t, `
 assert.equal(real.id, 'vr-00000000000000c4');
 const ok = app.needsYouHTML({confirmations: [real], decisions: [dec]}, 0);
-assert(ok.includes(decLink) && ok.includes('<a id="confirm-' + real.id + '" href="/surface/confirm/' + real.id + '">'), ok);
+assert(ok.includes(decLink) && ok.includes('<a id="confirm-' + real.id + '" href="/surface/confirm/' + real.id + '#activity">'), ok);
 for (const id of [real.id + '\n', real.id + '\njunk', 'junk\n' + real.id, '\n' + real.id, real.id + '\r', real.id + '\r\nx',
   real.id + '\u2028x', 'x\u2029' + real.id, real.id.toUpperCase(), 'VR' + real.id.slice(2), real.id.slice(0, 17) + 'C4']) {
   const h = app.needsYouHTML({confirmations: [{...real, id}], decisions: [dec]}, 0);

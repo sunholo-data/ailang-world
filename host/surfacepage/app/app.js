@@ -536,6 +536,24 @@
       `<li><span>${esc(d.action)}</span><time datetime="${esc(d.at)}">${esc(exactOf(d.at))}</time></li>`).join('') + '</ol></section>';
   }
 
+  const CONFIRM_ID = /^vr-[0-9a-f]{16}$/;
+  const FINISH_NODE_ID = /^([a-z][a-z0-9-]{0,31}):(?:episode|commit):/;
+  const finishEpisode = F => F && FINISH_NODE_ID.test(F.id) && (F.kind === 'open' || F.kind === 'step') ? (F.run?.episode || F.episode || '') : '';
+
+  function finishMatchesNode(href, F, aliases) {
+    const episode = finishEpisode(F);
+    if (!episode || typeof href !== 'string' || !href.startsWith('/surface?')) return false;
+    const place = parseAppQuery(href.slice('/surface'.length));
+    const repo = FINISH_NODE_ID.exec(F.id)?.[1];
+    return !!repo && !!place && place.brane === F.brane && place.brane.startsWith(repo + ':brane:') &&
+      place.at === repo + ':episode:' + episode &&
+      (place.at === F.id || aliases?.[place.at] === F.id);
+  }
+
+  function finishPlaceholder(F) {
+    return finishEpisode(F) ? '<section class="node-decisions" data-node-confirmations hidden><h3>Awaiting approval</h3><div data-finish-links></div></section>' : '';
+  }
+
   function nodeLayout(F, bar, head, overview, tab, activity) {
     const run = inspectionHTML(F);
     const sections = [
@@ -599,8 +617,10 @@
     const totals = [[ck.graders, 'graders'], [ck.rounds, ck.rounds === 1 ? 'round' : 'rounds'], [ck.minutes, 'agent-minutes'], [ck.calls, 'World calls']]
       .filter(([value]) => value != null && value !== '').map(([value, label]) => `${esc(value)} ${label}`).join(' · ');
     const decisions = humanDecisionsHTML(F.run);
-    const happened = acts || totals || decisions
-      ? `<section class="col" aria-labelledby="front-history"><h2 class="colh" id="front-history">What happened</h2>${acts ? `<ol class="front-history">${acts}</ol>` : ''}${totals ? `<div class="check-totals">${totals}</div>` : ''}${decisions}</section>`
+    const finish = finishPlaceholder(F);
+    const hasHistory = acts || totals || decisions;
+    const happened = hasHistory || finish
+      ? `<section class="col" aria-labelledby="front-history"${hasHistory ? '' : ' data-finish-history-only hidden'}><h2 class="colh" id="front-history">What happened</h2>${finish}${acts ? `<ol class="front-history">${acts}</ol>` : ''}${totals ? `<div class="check-totals">${totals}</div>` : ''}${decisions}</section>`
       : '';
 
     return nodeLayout(F, bar, head, overviewHTML(inputs, happened, outputs), tab, activity);
@@ -621,7 +641,8 @@
     const inputs = `<div class="col"><div class="colh">Inputs</div>${taskHTML(F)}${grid ? `<div class="ingrid">${grid}</div>` : ''}${came}</div>`;
     const outputs = `<div class="col g6"><div class="colh">Outputs</div>${commitHTML(F)}${F.pr ? `<div class="prpill">#${F.pr} · waiting for merge</div>` : (F.commits?.length ? none('Nothing has landed yet.') : '')}</div>`;
     const decisions = humanDecisionsHTML(F.run);
-    const history = decisions ? `<section class="col"><h2 class="colh">What happened</h2>${decisions}</section>` : '';
+    const finish = finishPlaceholder(F);
+    const history = decisions || finish ? `<section class="col"${decisions ? '' : ' data-finish-history-only hidden'}><h2 class="colh">What happened</h2>${finish}${decisions}</section>` : '';
     return nodeLayout(F, bar, head, overviewHTML(inputs, history, outputs), tab, activity);
   }
 
@@ -850,7 +871,7 @@
   // its decision card; a reserved one names its typed owner and a refused one its reason, with no link.
   // Row 243 V3 (design §2.5): then the pending finish confirmations, each a link to its card; a refused one
   // shows its reason with no link; confirmationsUnavailable is said, never hidden.
-  function needsYouHTML(r, now, permission) {
+  function needsYouHTML(r, now, permission, fromHeads = false) {
     const p = r && Array.isArray(r.pending) ? r.pending : [];
     const ds = r && Array.isArray(r.decisions) ? r.decisions : [];
     const cs = r && Array.isArray(r.confirmations) ? r.confirmations : [];
@@ -861,7 +882,7 @@
     if (!n) return `<div class="nsec" data-needs>${head}<div class="nl sub">${esc(r && r.unavailable || 'Nothing needs you')}</div>${more}${notifyHTML(permission)}</div>`;
     return `<div class="nsec" data-needs>${head}` + p.map(q => q.refused ? `<div class="nl sub">${esc(q.id)} · refused: ${esc(q.refused)}</div>`
       : `<div class="nl"><a id="needs-${esc(q.id)}" href="/surface/approve/${esc(q.id)}"><b>${esc(q.episode)}</b> · ${esc(q.agent)} · ${q.grants} grant${q.grants === 1 ? '' : 's'} · expires in ${Math.max(0, Math.ceil((q.expires - now) / 60))} min</a>`
-        + (q.recorded ? ` · approved by ${esc(q.recorded)}, waiting for the minter` : '') + '</div>').join('') + ds.map(decisionLineHTML).join('') + cs.map(confirmLineHTML).join('')
+        + (q.recorded ? ` · approved by ${esc(q.recorded)}, waiting for the minter` : '') + '</div>').join('') + ds.map(decisionLineHTML).join('') + cs.map(c => confirmLineHTML(c, fromHeads)).join('')
       + more + notifyHTML(permission) + '</div>';
   }
   // RESERVED_OWNERS is the typed command that owns a reserved decision (design §2.6 L1).
@@ -875,9 +896,9 @@
   }
   // confirmLineHTML is one finish confirmation's Needs-you line (row 243 V3 §2.5): a link to its card only for
   // a summarised row whose id is a confirmation id (store.VerbRequestIDPattern); otherwise its reason, no link.
-  function confirmLineHTML(c) {
-    if (c.refused || !/^vr-[0-9a-f]{16}$/.test(c.id)) return `<div class="nl sub">Confirm · ${esc(c.id)} · refused: ${esc(c.refused || 'not a confirmation id')}</div>`;
-    return `<div class="nl"><a id="confirm-${esc(c.id)}" href="/surface/confirm/${esc(c.id)}">Confirm · episode finish ${esc(c.episode)} · ${esc(c.repository)} ${esc(c.head)}@${esc(String(c.sha || '').slice(0, 12))}`
+  function confirmLineHTML(c, fromHeads) {
+    if (c.refused || !CONFIRM_ID.test(c.id)) return `<div class="nl sub">Confirm · ${esc(c.id)} · refused: ${esc(c.refused || 'not a confirmation id')}</div>`;
+    return `<div class="nl"><a id="confirm-${esc(c.id)}" href="/surface/confirm/${esc(c.id)}#${fromHeads ? 'heads/activity' : 'activity'}">Confirm · episode finish ${esc(c.episode)} · ${esc(c.repository)} ${esc(c.head)}@${esc(String(c.sha || '').slice(0, 12))}`
       + ` · ${c.draft ? 'draft' : 'ready'} · expires ${hm(new Date(c.expires * 1000))}</a></div>`;
   }
   // notifyHTML is the opt-in: "Notify me" while this browser has not been asked (permission "default"),
@@ -999,7 +1020,7 @@
     return el;
   }
 
-  if (typeof module !== 'undefined') module.exports = { needsYouHTML, decidedHTML, notifications, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
+  if (typeof module !== 'undefined') module.exports = { needsYouHTML, decidedHTML, notifications, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, finishMatchesNode, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
     adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, filePath, fileEvidenceHTML, filesTabHTML, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW },
     VERB_ROUTE_BUDGET_MS, verbOutcome, askVerb, verbAct, verbPanel, goWith, addressGo };
   if (typeof document === 'undefined') return;
@@ -1240,6 +1261,7 @@
     stackFlight?.cancel();
     if (wasStack && heads && !instant && !reduced()) $('stage').classList.add('head-return');
     if (wasStack) {
+      resetFinishLinks();
       dismissFilePreview();
       closeFile(false);
       timelineAnchor = N[F.id]?.id || T.aliasOf[F.id] || '';
@@ -1394,7 +1416,7 @@
     const running = ne.open ? openRunningHTML(ne.open) : ne.sessionsUnavailable ? `<div class="nsec" data-running><div class="nh">Live sessions</div><div class="nl sub">${esc(ne.sessionsUnavailable)}</div></div>`
       : `<div class="nsec" data-running><div class="nh">Live sessions · ${sess.length}</div>
         ${run ? `<div class="nl"><b>${esc(run.episode)}</b>${runLane ? ` · ${esc(nameOf(runLane))}` : ''}</div><div class="nl sub">started ${esc(run.started)}</div>` : '<div class="nl sub">No live sessions</div>'}</div>`;
-    const activity = running + needsYouHTML(REQS, REQS ? REQS.now : 0, notifyPermission());
+    const activity = running + needsYouHTML(REQS, REQS ? REQS.now : 0, notifyPermission(), !toolbar.hidden);
     return `<div class="now" data-now style="left:${PR + 22}px;top:56px">
       <button type="button" class="phone-view" id="activity-back">← Timeline</button>
       <div class="now-overview"><div class="now-clock"><div class="nh">Now</div><div style="font-size:15px;font-weight:700">${T.nowKnown ? DOW[now.getUTCDay()] + ' ' + dayOf(now) + ' · ' + hm(now) : 'Time unavailable'}</div></div>
@@ -1993,6 +2015,71 @@
     return appPath(F.brane, F.id) + (fragment ? '#' + fragment : '');
   }
 
+  function finishReturnFragment(F) {
+    const place = new URLSearchParams({brane:F.brane, at:F.id});
+    const view = [fromHeads ? 'heads' : '', selectedNodeTab === 'overview' ? '' : selectedNodeTab].filter(Boolean).join('/');
+    if (view) place.set('view', view);
+    return '#' + place;
+  }
+
+  let finishCheck = null;
+  function resetFinishLinks() {
+    finishCheck?.request?.abort();
+    finishCheck = null;
+  }
+
+  function paintFinishLinks(rows) {
+    const section = $('front')?.querySelector('[data-node-confirmations]');
+    if (!section || st.d !== 1) return;
+    const links = section.querySelector('[data-finish-links]');
+    const href = finishReturnFragment(F);
+    const html = rows.map(c =>
+      `<a class="finish-link" id="node-confirm-${esc(c.id)}" href="/surface/confirm/${esc(c.id)}${esc(href)}">Review ${c.draft ? 'draft pull request' : 'pull request'}<small>${esc(c.repository)} · ${esc(c.head)} @ ${esc(String(c.sha || '').slice(0, 8))}</small></a>`
+    ).join('');
+    if (links.dataset.markup !== html) {
+      links.innerHTML = html;
+      links.dataset.markup = html;
+    }
+    section.hidden = !rows.length;
+    const history = section.closest('[data-finish-history-only]');
+    if (history) history.hidden = section.hidden;
+  }
+
+  async function showFinishRequests(retry = false) {
+    const episode = st.d === 1 && finishEpisode(F);
+    const queue = Array.isArray(REQS?.confirmations) ? REQS.confirmations : [];
+    const rows = episode ? queue.filter(row => row.episode === episode && !row.refused && CONFIRM_ID.test(row.id)).slice(0, 3) : [];
+    if (!rows.length) {
+      resetFinishLinks();
+      paintFinishLinks([]);
+      return;
+    }
+
+    const node = F, key = JSON.stringify([node.brane, node.id, rows.map(row => row.id)]);
+    if (finishCheck?.key === key && (finishCheck.request || finishCheck.rows.length || !retry)) {
+      paintFinishLinks(finishCheck.rows);
+      return;
+    }
+    resetFinishLinks();
+    paintFinishLinks([]);
+    const request = new AbortController();
+    const check = {key, request, rows: []};
+    finishCheck = check;
+    const timer = setTimeout(() => request.abort(), 5000);
+    const results = await Promise.all(rows.map(async row => {
+      try {
+        const res = await getJSON('/surface/confirmations/' + row.id, request.signal);
+        return res.ok && res.body?.id === row.id && res.body.state === 'pending' &&
+          finishMatchesNode(res.body.episodeHref, node, T?.aliasOf) ? row : null;
+      } catch (_) { return null; }
+    }));
+    clearTimeout(timer);
+    if (finishCheck !== check) return;
+    check.request = null;
+    check.rows = results.filter(Boolean);
+    paintFinishLinks(check.rows);
+  }
+
   function resetEpisodeFiles() {
     episodeFiles?.request?.abort();
     episodeFiles = null;
@@ -2057,6 +2144,7 @@
     }
     for (const panel of front.querySelectorAll('[data-node-panel]')) panel.hidden = panel.dataset.nodePanel !== tab;
     selectedNodeTab = tab;
+    if (finishCheck?.rows) paintFinishLinks(finishCheck.rows);
     const summary = front.querySelector('.stack-body');
     summary.scrollTop = 0;
     if (narrow.matches) $('L1').scrollTop = 0;
@@ -2113,6 +2201,7 @@
     fork.addEventListener('click', () => drafts.edit(N[F.id]));
     if (N[F.id]) $('front').querySelector('.fbar')?.append(fork);
     $('front').dataset.front = F.id;
+    showFinishRequests();
     $('front').setAttribute('aria-label', cleanTitle(F.title) || F.label);
     const pos = railIdx();
     if (!$('phone-step-nav')) {
@@ -2148,6 +2237,7 @@
   const notifyPermission = () => typeof Notification === 'undefined' ? '' : Notification.permission;
   async function loadRequests() {
     try { REQS = (await getJSON('/surface/requests.json')).body; } catch (_) { REQS = null; }
+    showFinishRequests(true);
     const n = notifications(REQS, seenIds, notifyPermission());
     seenIds = n.seen;
     n.notes.forEach(x => { const note = new Notification(x.title, { body: x.body, tag: x.tag }); note.onclick = () => { window.focus(); location.assign(x.href); }; });
@@ -2220,12 +2310,26 @@
   });
   toolbarResize.observe(toolbar);
 
+  function focusActivity() {
+    if (!toolbar.hidden && statusDetail.hidden) setStatusExpanded(true);
+    const card = document.querySelector('[data-now]'), needs = card?.querySelector('[data-needs]');
+    if (!needs) return false;
+    needs.tabIndex = -1;
+    needs.focus({preventScroll:true});
+    if (narrow.matches && toolbar.hidden) card.scrollIntoView({block:'start'});
+    else needs.scrollIntoView({block:'nearest', inline:'nearest'});
+    return true;
+  }
+
   function placeNow(inHeads) {
     if (toolbar.hidden === !inHeads) return;
     toolbar.hidden = !inHeads;
     const card = document.querySelector('[data-now]');
     const slot = inHeads ? statusDetail : $('timeline-now');
-    if (card && slot) slot.append(card);
+    if (card && slot) {
+      slot.append(card);
+      for (const link of card.querySelectorAll('a[id^=confirm-]')) link.hash = inHeads ? 'heads/activity' : 'activity';
+    }
     applyStatusSize();
   }
   function repaintNow() {
@@ -2487,6 +2591,7 @@
     return true;
   }
   function out(focusId) {
+    resetFinishLinks();
     resetEpisodeFiles();
     selectedNodeTab = 'overview';
     globalThis.WorldNodeTrajectory?.clear();
@@ -2518,7 +2623,13 @@
   function go(raw) {
     return goWith(raw, { out, address: goAddress,
       ask: q => askVerb(q, { fetch: (u, o) => fetch(u, o), AbortController, setTimeout: (f, ms) => setTimeout(f, ms), clearTimeout: t => clearTimeout(t) }),
-      act: { assign: h => location.assign(h), panel: showVerbPanel, say, clear: () => { if ($('addr').value === raw) $('addr').value = ''; } } });
+      act: { assign: h => {
+        const suffix = !/^\/surface\/confirm\/vr-[0-9a-f]{16}$/.test(h) ? ''
+          : st.d === 1 && F ? finishReturnFragment(F)
+          : camera.active ? (location.hash === '#heads/activity' ? '#heads/activity' : '#heads')
+          : location.hash === '#activity' ? '#activity' : '';
+        location.assign(h + suffix);
+      }, panel: showVerbPanel, say, clear: () => { if ($('addr').value === raw) $('addr').value = ''; } } });
   }
   function showVerbPanel(p) {
     const old = $('verb'), el = verbPanel(document, p);
@@ -2695,10 +2806,11 @@
     if (e.target.closest('#phone-earlier')) return openRail(railIdx() - 1);
     if (e.target.closest('#phone-later')) return openRail(railIdx() + 1);
     if (e.target.closest('#phone-activity')) {
-      $('activity-back').focus({preventScroll:true});
-      return $('tl').querySelector('[data-now]').scrollIntoView({block:'start'});
+      cameraURL('/surface#activity', false);
+      return focusActivity();
     }
     if (e.target.closest('#activity-back')) {
+      cameraURL('/surface', false);
       $('L0').scrollTop = 0;
       return $('phone-activity').focus({preventScroll:true});
     }
@@ -2819,7 +2931,11 @@
   window.addEventListener('popstate', () => {
     const q = parseAppQuery(location.search);
     if (q?.brane) { const place = tabLocation(); fromHeads = place.heads; openState(q.brane, q.at, false, place.tab); }
-    else chooseAngle(location.hash === '#heads', {navigate:false});
+    else {
+      const activity = location.hash === '#activity' || location.hash === '#heads/activity';
+      chooseAngle(location.hash === '#heads' || location.hash === '#heads/activity', {navigate:false, instant:activity});
+      if (activity) focusActivity();
+    }
   });
   $('keys-btn').addEventListener('click', () => toggle('keys'));
   $('look-btn').addEventListener('click', () => toggle('look'));
@@ -2889,7 +3005,9 @@
   async function boot() {
     applyLook();
     $('L1').inert = true;
-    if (location.hash === '#heads' || location.hash.startsWith('#draft=')) $('stage').classList.add('camera-loading');
+    const heads = location.hash === '#heads' || location.hash === '#heads/activity';
+    const activity = location.hash === '#activity' || location.hash === '#heads/activity';
+    if (heads || location.hash.startsWith('#draft=')) $('stage').classList.add('camera-loading');
     try { await document.fonts.ready; } catch (_) {}
     renderCrumbs(); fit();
     const q = parseAppQuery(location.search);
@@ -2897,7 +3015,7 @@
     if (ok) startLive();
     if (followMode) schedulePoll();
     if (ok && q && q.brane != null) await openState(q.brane, q.at, true, tabLocation().tab);   // a deep link, or a reload inside a brane
-    if (ok && !q?.brane && (location.hash === '#heads' || location.hash.startsWith('#draft='))) {
+    if (ok && !q?.brane && (heads || location.hash.startsWith('#draft='))) {
       chooseAngle(true, {navigate:false, instant:true});
       if (location.hash.startsWith('#draft=')) {
         const id = new URLSearchParams(location.hash.slice(1)).get('draft');
@@ -2907,7 +3025,7 @@
     }
     $('stage').classList.remove('camera-loading');
     document.documentElement.dataset.ready = '1';
-    if (!document.querySelector('dialog[open]')) $('root').focus({ preventScroll: true });
+    if (!(ok && !q?.brane && activity && focusActivity()) && !document.querySelector('dialog[open]')) $('root').focus({ preventScroll: true });
   }
   boot();
 })();

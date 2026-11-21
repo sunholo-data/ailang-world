@@ -202,9 +202,9 @@
     document.documentElement.dataset.theme = theme === 'night' || theme === 'slate' ||
       (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches) ? 'slate' : 'paper';
   } catch (_) { /* Paper is the World default when preferences are unavailable. */ }
-  if (location.hash === '#activity') {
-    $('back').href = '/surface#activity';
-    $('back').textContent = '← Back to Activity';
+  if (location.hash === '#activity' || location.hash === '#heads/activity' || location.hash === '#heads') {
+    $('back').href = '/surface' + location.hash;
+    $('back').textContent = location.hash === '#heads' ? '← Back to Heads' : '← Back to Activity';
   } else if (location.hash) {
     const place = new URLSearchParams(location.hash.slice(1));
     const brane = place.get('brane'), at = place.get('at'), view = place.get('view') || '';
