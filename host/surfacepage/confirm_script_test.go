@@ -97,6 +97,7 @@ class El {
   constructor(doc, tag, id, hidden) { Object.assign(this, { doc, tagName: tag, id: id || '', hidden: !!hidden, dataset: {}, attrs: {}, kids: [], text: '', on: {} }); }
   addEventListener(t, f) { (this.on[t] = this.on[t] || []).push(f); }
   click() { if (!this.disabled && !this.hidden) for (const f of this.on.click || []) f(); }
+  focus() { this.doc.activeElement = this; }
   set textContent(v) { this.text = String(v); this.kids = []; }
   get textContent() { return this.text + this.kids.map((k) => k.textContent).join(''); }
   set innerHTML(v) { this.doc.sinks.push(String(v)); }
@@ -108,6 +109,7 @@ class El {
 }
 function makeDoc() {
   const doc = { sinks: [], byId: {} };
+  doc.documentElement = new El(doc, 'html');
   doc.body = new El(doc, 'body');
   doc.body.dataset.state = HTML.match(/<body data-state="([a-z]+)">/)[1];
   for (const m of HTML.matchAll(/<([a-z0-9]+) id="([a-z-]+)"( hidden)?/g)) doc.byId[m[2]] = new El(doc, m[1], m[2], !!m[3]);
@@ -122,9 +124,9 @@ const hang = (init) => new Promise((_, reject) => init.signal.addEventListener('
 // open runs confirm.js at path against fetch and waits, on the wall clock (at most 10 s), until the page leaves
 // 'loading': its SHA-256 digests resolve off the event loop, so no count of ticks bounds them (iteration 401 M7);
 // fire runs the page's stubbed timers once, as soon as it has asked (its fetch made and its abort timer set).
-async function open(path, fetch, fire, navigator) {
+async function open(path, fetch, fire, navigator, hash = '') {
   const doc = makeDoc(), timers = [], blobs = [], fetches = [];
-  vm.runInNewContext(SRC, { document: doc, location: { pathname: path, origin: 'http://localhost:1' }, crypto: globalThis.crypto, TextEncoder, TextDecoder, atob, btoa, Blob, AbortController, console, navigator,
+  vm.runInNewContext(SRC, { document: doc, URLSearchParams, localStorage: {getItem: () => JSON.stringify({theme: 'slate'})}, location: { pathname: path, hash, origin: 'http://localhost:1' }, crypto: globalThis.crypto, TextEncoder, TextDecoder, atob, btoa, Blob, AbortController, console, navigator,
     URL: { createObjectURL: (b) => { blobs.push(b); return 'blob:http://localhost:1/' + blobs.length; } },
     setTimeout: (f, ms) => timers.push({ f, ms, cleared: false }), clearTimeout: (n) => { if (timers[n - 1]) timers[n - 1].cleared = true; },
     fetch: (url, init) => { fetches.push({ url, init }); return fetch(init); } });
@@ -162,6 +164,14 @@ const sections = {
     const ok = await open(card(c), answer(200, c));
     assert.equal(ok.state, 'ready', ok.what);
     assert.equal(ok.fetches.length, 1);
+    assert.equal(ok.doc.documentElement.dataset.theme, 'slate');
+    for (const [fragment, target] of [['#activity', '/surface#activity'], ['#heads/activity','/surface#heads/activity'], ['#heads','/surface#heads'],
+      ['#brane=row-218&at=step%2F1&return=https://elsewhere.invalid', '/surface?brane=row-218&at=step%2F1'],
+      ['#brane=world%3Abrane%3Ashared&at=world%3Aepisode%3Aw1&view=heads%2Ftrajectory', '/surface?brane=world%3Abrane%3Ashared&at=world%3Aepisode%3Aw1#heads/trajectory']]) {
+      const contextual = await open(card(c), answer(200, c), false, undefined, fragment);
+      assert.equal(contextual.$('back').href, target);
+      assert.equal(contextual.fetches[0].url, '/surface/confirmations/' + c.id);
+    }
     assert.equal(ok.fetches[0].url, '/surface/confirmations/' + c.id);
     assert(ok.fetches[0].init.cache === 'no-store' && ok.fetches[0].init.credentials === 'omit' && ok.fetches[0].init.signal);
     assert(ok.timers.length === 1 && ok.timers[0].ms === 10000 && ok.timers[0].cleared, JSON.stringify(ok.timers));
@@ -193,6 +203,10 @@ const sections = {
       ['title a number', Object.assign({}, r, { title: 7 }), 'title'], ['body null', Object.assign({}, r, { body: null }), 'body'], ['an array', [r], 'the request']]) {
       refused(await open(card(c), answer(200, withBytes(c, JSON.stringify(obj)))), 'refused', unshown + key + '); nothing to confirm here; confirm at the terminal.', name);
     }
+    for (const scope of [r.scope + '\n', r.scope.replace('&draft=true', '&draft=false&draft=true')]) {
+      const bad = withBytes(c, JSON.stringify({ ...r, scope }));
+      refused(await open(card(bad), answer(200, bad)), 'refused', 'does not describe a recognizable pull request', 'scope');
+    }
     const lost = await open('/surface/confirm/vr-0123', answer(200, c));
     refused(lost, 'refused', 'This is not a confirmation card\'s address; nothing to confirm.', 'path');
     assert.equal(lost.fetches.length, 0);
@@ -206,7 +220,19 @@ const sections = {
       for (const k of ['schema', 'verb', 'episode', 'prompt', 'scope', 'title', 'committer']) assert.equal(p.$('f-' + k).textContent, r[k], k);
       for (const k of ['argv', 'protected']) assert.equal(p.$('f-' + k).textContent, r[k].join('\n'), k);
       assert.equal(p.$('f-body').textContent, r.body);
-      assert.equal(p.$('f-body-size').textContent, Buffer.byteLength(r.body) + ' bytes' + 'the full body' + r.body);
+      assert.equal(p.$('f-body-size').textContent, '(' + Buffer.byteLength(r.body) + ' bytes)');
+      assert.equal(p.$('review-title').textContent, r.title);
+      assert.equal(p.$('episode').textContent, r.episode);
+      assert.equal(p.$('repository').textContent, 'sunholo-data/ailang-world');
+      assert.equal(p.$('head').textContent, 'world/w1');
+      assert.equal(p.$('head-commit').textContent, 'ab'.repeat(20));
+      assert.equal(p.$('base').textContent, 'dev');
+      assert(p.$('review-facts').open && p.$('receipt-actions').hidden);
+      assert.equal(p.$('action').textContent, name === 'draft' ? 'Open a draft pull request' : 'Open a pull request');
+      assert.equal(p.$('pr-state').textContent, name === 'draft' ? 'Draft' : 'Ready for review');
+      assert.equal(p.$('label').textContent, name === 'draft' ? 'ailang-world' : 'ailang-world (will be created)');
+      assert.deepEqual(p.$('review-protected').kids.map((el) => el.textContent), r.protected);
+      assert.equal(p.$('no-protected').hidden, r.protected.length !== 0);
       assert.equal(p.$('m-digest').textContent, c.digest);
       assert.equal(p.$('m-challenge').textContent, c.challenge);
       assert.equal(p.$('m-expires').textContent, new Date(c.expires * 1000).toISOString() + ' (' + c.expires + ')');
@@ -226,7 +252,7 @@ const sections = {
       const g = G[name], c = g.card, p = await open(card(c), answer(200, c));
       assert.equal(p.state, 'ready', p.what);
       assert.equal(p.$('m-hash').textContent, g.hash);
-      assert(p.what.endsWith('; message hash ' + g.hash), p.what);
+      assert.equal(p.$('status').textContent, 'Awaiting approval');
       assert.equal(p.blobs.length, 1);
       assert.equal(p.blobs[0].type, 'application/octet-stream');
       const m = Buffer.from(await p.blobs[0].arrayBuffer());
@@ -242,22 +268,55 @@ const sections = {
   async states() {
     const ready = await open(card(G.draft.card), answer(200, G.draft.card));
     assert(ready.state === 'ready' && !ready.$('controls').hidden && ready.blobs.length === 1);
-    for (const [c, status] of [[G['draft-approved'].card, 'Already confirmed by webauthn:mark-mac: decision sha256:' + '5e'.repeat(32) + '; nothing to confirm here.'],
-      [G['draft-superseded'].card, 'Superseded by a newer finish of this episode; nothing to confirm here.'],
-      [G['draft-expired'].card, 'Expired; nothing to confirm here.'],
-      [Object.assign({}, G.draft.card, { state: 'odd' }), 'This request is odd; nothing to confirm here.']]) {
+    for (const [c, status] of [[G['draft-approved'].card, 'Approval recorded'],
+      [G['draft-superseded'].card, 'Superseded by a newer finish'],
+      [G['draft-expired'].card, 'Request expired'],
+      [Object.assign({}, G.draft.card, { state: 'odd' }), 'Request closed']]) {
       const p = await open(card(c), answer(200, c));
       assert.equal(p.state, 'closed', c.state + ': ' + p.what);
       assert.equal(p.$('status').textContent, status);
+      if (c.state === 'approved') {
+        assert.equal(p.what, 'mark-mac approved with a passkey. The finish command reports the pull request outcome.');
+        assert.equal(p.$('approval-decision').textContent, c.decision);
+        assert.equal(p.$('approval-signer').textContent, c.approvedBy);
+        assert.equal(p.$('action').textContent, 'Requested a draft pull request');
+        assert.equal(p.$('receipt-back').href, '/surface');
+        assert.equal(p.$('receipt-back').textContent, 'Return to World');
+        assert(!p.$('receipt-actions').hidden && p.$('receipt-pr').hidden);
+      } else assert(p.$('receipt-actions').hidden);
+      assert(!p.$('review-facts').open);
       assert(p.$('controls').hidden && p.blobs.length === 0 && p.$('sshline').textContent === '' && p.$('save').download === undefined, c.state);
       assert(!p.$('shown').hidden && p.$('f-title').textContent === reqOf(c).title, c.state);
     }
     assert.deepEqual([G['draft-approved'].card.state, G['draft-superseded'].card.state, G['draft-expired'].card.state], ['approved', 'superseded', 'expired']);
+    const approved = G['draft-approved'].card;
+    const episodeHref = '/surface?at=world%3Aepisode%3Aw1&brane=world%3Abrane%3Ashared';
+    const prHref = 'https://github.com/sunholo-data/ailang-world/pull/123';
+    const linked = await open(card(approved), answer(200, {...approved, episodeHref, prHref}));
+    assert.equal(linked.$('receipt-back').href, '/surface?brane=world%3Abrane%3Ashared&at=world%3Aepisode%3Aw1');
+    assert.equal(linked.$('receipt-back').textContent, 'Return to episode');
+    assert(!linked.$('receipt-pr').hidden && linked.$('receipt-pr').href === prHref);
+    assert.equal(linked.$('receipt-pr').textContent, 'View PR #123 on GitHub');
+    assert.equal(linked.$('status').textContent, 'Pull request opened');
+    assert.equal(linked.$('action').textContent, 'Draft pull request');
+    assert.equal(linked.what, 'mark-mac approved with a passkey.');
+    const ssh = await open(card(approved), answer(200, {...approved, approvedBy:'ssh:mark', episodeHref, prHref}));
+    assert.equal(ssh.what, 'mark approved with an SSH signature.');
+    assert.equal(ssh.$('approval-signer').textContent, 'ssh:mark');
+    const pendingWithLinks = await open(card(G.draft.card), answer(200, {...G.draft.card, episodeHref, prHref}));
+    assert(pendingWithLinks.$('receipt-actions').hidden && pendingWithLinks.$('receipt-pr').hidden);
+    for (const mismatched of [episodeHref.replace('%3Aw1', '%3Aother'), episodeHref.replace('world%3Aepisode', 'other%3Aepisode'),
+      episodeHref + '&at=world%3Aepisode%3Aw1', 'https://elsewhere.invalid' + episodeHref]) {
+      const refusedLinks = await open(card(approved), answer(200, {...approved, episodeHref:mismatched, prHref:prHref.replace('ailang-world', 'another-repo')}));
+      assert.equal(refusedLinks.$('receipt-back').href, '/surface');
+      assert(refusedLinks.$('receipt-pr').hidden);
+    }
+
   },
   async passkey() {
     const g = G.draft, c = g.card, approved = G['draft-approved'].card, asks = [];
     const nav = { credentials: { get: (o) => { asks.push(o); return Promise.resolve(CRED); } } };
-    const ok = { v: 1, confirmed: true, request: c.id, approvedBy: 'webauthn:mark', decision: 'sha256:' + '5e'.repeat(32), next: 'the waiting episode finish opens the pull request' };
+    const ok = { v: 1, confirmed: true, request: c.id, approvedBy: approved.approvedBy, decision: approved.decision, next: 'the waiting episode finish opens the pull request' };
     const p = await open(card(c), daemon([c, approved], answer(200, ok)), false, nav);
     assert(p.state === 'ready' && !p.$('go').hidden && !p.$('go').disabled, p.what);
     p.$('go').click();
@@ -274,17 +333,21 @@ const sections = {
     assert.equal(sent[0].init.headers['Content-Type'], 'application/json');
     assert.deepEqual(JSON.parse(sent[0].init.body), { v: 1, digest: c.digest, webauthn: { id: 'Bwc', rawId: 'Bwc', type: 'public-key',
       response: { clientDataJSON: 'Y2Q', authenticatorData: 'YWQ', signature: 'c2c', userHandle: null } } });
-    assert.equal(p.$('answer').textContent, 'Confirmed by webauthn:mark: decision sha256:' + '5e'.repeat(32) + '; the waiting episode finish opens the pull request.');
-    assert(p.$('controls').hidden && p.fetches.length === 3 && p.$('status').textContent.startsWith('Already confirmed by webauthn:mark-mac'), p.$('status').textContent);
+    assert.equal(p.$('approval-decision').textContent, approved.decision);
+    assert.equal(p.$('answer').textContent, '');
+    assert(p.$('controls').hidden && p.fetches.length === 3 && p.$('status').textContent === 'Approval recorded', p.$('status').textContent);
+    assert.equal(p.doc.activeElement, p.$('status'));
     const elsewhere = [{ origin: 'https://other.tail0.ts.net', rp: 'other.tail0.ts.net', allow: ['Bwc'] }]; // a group for another origin only
     const none = await open(card(c), answer(200, Object.assign({}, c, { passkeys: elsewhere })), false, nav);
     assert(none.state === 'ready' && none.$('go').hidden && none.$('go').disabled && !none.$('post-sig').disabled);
+    assert(none.$('ssh-fallback').open && none.what.includes('without --confirm-on-surface'));
     for (const [name, get, fire] of [['aborted at 240 s', (o) => new Promise((_, reject) => o.signal.addEventListener('abort', () => reject(new DOMException('The operation was aborted.', 'AbortError')))), true],
       ['refused by the browser', () => Promise.reject(new DOMException('The operation is not allowed.', 'NotAllowedError')), false]]) {
       const q = await open(card(c), daemon([c], answer(500, {})), false, { credentials: { get } });
       q.$('go').click();
       if (fire) {
         await until(() => q.timers.some((t) => t.ms === 240000), name + ' timer');
+        assert.equal(q.$('status').textContent, 'Waiting for your passkey…');
         assert(q.doc.body.dataset.state === 'waiting' && q.$('go').disabled && q.$('post-sig').disabled, name + ': waiting for the passkey');
         for (const t of q.timers) if (t.ms === 240000 && !t.cleared) t.f();
       }
@@ -307,6 +370,7 @@ const sections = {
       p.$('post-sig').click();
       await until(() => posts(p).length === 1 && p.$('answer').textContent !== '' && p.doc.body.dataset.state === 'ready', name);
       assert.equal(p.$('answer').textContent, text, name);
+      assert.equal(p.doc.activeElement, p.$('status'), name);
       assert(!p.$('controls').hidden && !p.$('post-sig').disabled && p.fetches.length === 3, name);
     }
   },
@@ -320,12 +384,13 @@ const sections = {
     p.$('post-sig').click();
     await until(() => posts(p).length === 1, 'sshsig sent');
     assert(p.doc.body.dataset.state === 'posting' && p.$('post-sig').disabled && p.$('go').disabled, 'no second submit while one is in flight');
+    assert.equal(p.$('status').textContent, 'Submitting approval…');
     release();
     await until(() => p.doc.body.dataset.state === 'closed', 'sshsig');
     const sent = posts(p);
     assert(sent.length === 1 && sent[0].url === '/surface/confirm/' + c.id && sent[0].init.credentials === 'omit');
     assert.deepEqual(JSON.parse(sent[0].init.body), { v: 1, digest: c.digest, sshsig: armored });
-    assert.equal(p.$('answer').textContent, 'Confirmed by ssh:mark: decision sha256:' + '6f'.repeat(32) + '; n.');
+    assert.equal(p.$('answer').textContent, 'Approval recorded by ssh:mark. Decision sha256:' + '6f'.repeat(32) + '. Check the episode finish at the terminal for the PR outcome.');
   },
 };
 const which = process.argv[2];

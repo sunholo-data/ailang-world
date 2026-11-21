@@ -33,19 +33,21 @@ type ConfirmationInput struct {
 
 // Confirmation is GET /surface/confirmations/{id} (design §2.5).
 type Confirmation struct {
-	V          int            `json:"v"`
-	ID         string         `json:"id"`
-	Request    string         `json:"request"` // base64url of the stored canonical bytes
-	Digest     string         `json:"digest"`
-	Challenge  string         `json:"challenge"`
-	Created    int64          `json:"created"`
-	Expires    int64          `json:"expires"`
-	Now        int64          `json:"now"`
-	State      string         `json:"state"`
-	ApprovedBy string         `json:"approvedBy"`
-	Decision   string         `json:"decision"`
-	Passkeys   []CardPasskeys `json:"passkeys"`
-	SSH        CardSSH        `json:"ssh"`
+	V           int            `json:"v"`
+	ID          string         `json:"id"`
+	Request     string         `json:"request"` // base64url of the stored canonical bytes
+	Digest      string         `json:"digest"`
+	Challenge   string         `json:"challenge"`
+	Created     int64          `json:"created"`
+	Expires     int64          `json:"expires"`
+	Now         int64          `json:"now"`
+	State       string         `json:"state"`
+	ApprovedBy  string         `json:"approvedBy"`
+	Decision    string         `json:"decision"`
+	Passkeys    []CardPasskeys `json:"passkeys"`
+	SSH         CardSSH        `json:"ssh"`
+	EpisodeHref string         `json:"episodeHref,omitempty"`
+	PRHref      string         `json:"prHref,omitempty"`
 }
 
 // ConfirmationCard is in's card data, its active passkeys grouped by origin as RequestCard groups them.

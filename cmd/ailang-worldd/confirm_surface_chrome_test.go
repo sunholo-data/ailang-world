@@ -22,9 +22,9 @@ import (
 
 // confirmView is the confirmation card after its passkey ceremony settles.
 type confirmView struct {
-	State, Status, Answer string
-	Gets                  []cardGet
-	Violations            []string
+	State, Status, Receipt, Approver string
+	Gets                             []cardGet
+	Violations                       []string
 }
 
 // confirmInChrome opens card, waits until it offers the passkey, clicks it and waits (each step bounded by
@@ -42,7 +42,7 @@ func confirmInChrome(b *passkeyBrowser, card string) (confirmView, error) {
 		return v, err
 	}
 	err := b.call(&v, "waitFor", map[string]any{"ms": 30000, "expression": `document.body.dataset.state === 'closed' && { state: document.body.dataset.state,
-		status: document.getElementById('status').textContent, answer: document.getElementById('answer').textContent, gets: window.__gets || [], violations: window.__cspv || [] }`})
+		status: document.getElementById('status').textContent, receipt: document.getElementById('approval-decision').textContent, approver: document.getElementById('approval-signer').textContent, gets: window.__gets || [], violations: window.__cspv || [] }`})
 	return v, err
 }
 
@@ -77,8 +77,8 @@ func TestConfirmPageConfirmsWithAPasskeyInChrome(t *testing.T) {
 		t.Fatalf("row %+v (%v %v)", row, ok, err)
 	}
 	h, _ := approval.VerbMessageHash(own.digest, own.challenge, own.expires)
-	if v.Answer != "Confirmed by webauthn:mark-key: decision "+row.DecisionRef+"; the waiting episode finish opens the pull request." ||
-		v.Status != "Already confirmed by webauthn:mark-key: decision "+row.DecisionRef+"; nothing to confirm here." || len(v.Violations) != 0 ||
+	if v.Receipt != row.DecisionRef || v.Approver != "webauthn:mark-key" ||
+		v.Status != "Approval recorded" || len(v.Violations) != 0 ||
 		len(v.Gets) != 1 || v.Gets[0].Challenge != base64.RawURLEncoding.EncodeToString(h[:]) || v.Gets[0].UserVerification != "required" {
 		t.Fatalf("the card shows %+v; want the confirmation of %s with challenge %s", v, row.DecisionRef, hex.EncodeToString(h[:]))
 	}
@@ -118,7 +118,7 @@ func TestFinishConfirmOnSurfaceInChrome(t *testing.T) {
 	row := r.row(id)
 	pr := r.f.finishRecords[0].PR.URL // the fake gh's own answer
 	if !strings.Contains(out, "\n  open "+card+"\n") || !strings.Contains(out, fmt.Sprintf("\nconfirmed by webauthn:mark-key (decision %s)\n", row.DecisionRef)) ||
-		!strings.HasSuffix(out, "\n"+pr+"\n") || pr == "" || !strings.HasPrefix(v.Answer, "Confirmed by webauthn:mark-key: decision "+row.DecisionRef) {
+		!strings.HasSuffix(out, "\n"+pr+"\n") || pr == "" || v.Receipt != row.DecisionRef || v.Approver != "webauthn:mark-key" {
 		t.Fatalf("stdout\n%s\ncard %+v; want the link %s, the confirmation and the PR %q last", out, v, card, pr)
 	}
 	if rec := r.f.finishRecords; len(rec) != 1 || rec[0].Approval != row.DecisionRef || rec[0].Outcome != "done" || row.ApprovedBy != "webauthn:mark-key" ||

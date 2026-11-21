@@ -13,6 +13,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -20,11 +21,13 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/approval/approvaltest"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/surface"
 	"github.com/sunholo-data/ailang-world/host/surfacepage"
 )
 
@@ -284,5 +287,109 @@ func setVerbColumn(t *testing.T, path, id, column string, v any) {
 		t.Fatal(err)
 	} else if n, _ := res.RowsAffected(); n != 1 {
 		t.Fatalf("%d rows updated", n)
+	}
+}
+
+func TestConfirmationLinksRequireVerifiedEpisodeAndRecordedFinish(t *testing.T) {
+	cfg, _ := followFixture(t, 2)
+	d := newFollowDaemon(t, cfg)
+	d.approveNow = func() int64 { return apT0 }
+	a := approvalRig{t: t, d: d}
+	snapshot := followSnapshotFor(t, "confirm-links", []string{"repo0", "repo1"}, nil)
+	injectFollow(d, snapshot)
+	const episode = "wa1"
+	const remote = "git@github.com:sunholo-data/ailang-world.git"
+	request := verbFixture(apT0-30, episode, true)
+	scope, err := broker.ParseFinishApprovalScope(request.Scope)
+	if err != nil {
+		t.Fatal(err)
+	}
+	scope.Remote = remote
+	request.Scope = broker.FormatFinishApprovalScope(scope)
+	request.Prompt = broker.FinishPromptText(scope, request.Title, request.Body, request.Protected, request.Committer)
+	row := a.putVerbBytes("vr-0000000000000041", episode, apT0-30, canonVerb(t, request))
+	readCard := func() surfacepage.Confirmation {
+		t.Helper()
+		res := a.serve("GET", "/surface/confirmations/"+row.RequestID, apLoopback, nil)
+		var card surfacepage.Confirmation
+		if res.Code != 200 || json.Unmarshal(res.Body.Bytes(), &card) != nil {
+			t.Fatalf("confirmation: %d %s", res.Code, res.Body)
+		}
+		return card
+	}
+	if card := readCard(); card.EpisodeHref != "" || card.PRHref != "" {
+		t.Fatalf("unverified episode has links: %+v", card)
+	}
+	start := overlayStart(episode, d.follow.config.Repos[0].Repo, time.Unix(apT0, 0))
+	start.Branch, start.Remote.URL = scope.Head, remote
+	mintSurfaceTaskStart(t, d, start)
+	card := readCard()
+	href, err := url.Parse(card.EpisodeHref)
+	if err != nil || href.Path != "/surface" || href.Host != "" || card.PRHref != "" ||
+		href.Query().Get("at") != "repo0:episode:"+episode ||
+		href.Query().Get("brane") != "repo0:brane:row-189" {
+		t.Fatalf("pending confirmation links: episode %q, pull request %q", card.EpisodeHref, card.PRHref)
+	}
+
+	pk := approvaltest.NewPasskey(approval.AlgEdDSA, 62)
+	a.enrolPasskey("links-key", pk, apOrigin)
+	decision := "sha256:" + strings.Repeat("da", 32)
+	a.write(func(ctx context.Context, c *store.Credentials) error {
+		return c.ConsumeVerbRequest(ctx, row.RequestID, row.Digest, store.ApproverUse{Name: "links-key", Format: approval.FormatWebAuthn,
+			PublicKey: pk.Key().Canonical(), Passkey: &store.PasskeyUse{CredentialID: pk.CredentialID(), SignCount: 2}},
+			"webauthn:links-key", []byte("signed artifact"), decision, apT0-10)
+	})
+	if card := readCard(); card.State != surfacepage.ConfirmationApproved || card.EpisodeHref == "" || card.PRHref != "" {
+		t.Fatalf("approval alone should only link to the episode: %+v", card)
+	}
+	const pr = "https://github.com/sunholo-data/ailang-world/pull/631"
+	finish := EpisodeFinish{Episode: episode, Branch: scope.Head, Remote: scope.Remote, Scope: request.Scope,
+		Commit: scope.SHA, Approval: decision, Outcome: "done", PR: FinishPR{URL: pr, Number: 631, Draft: true}}
+	for _, tc := range []struct {
+		name, provenance string
+		edit             func(*EpisodeFinish)
+	}{
+		{"wrong provenance", "agent:fixture", func(f *EpisodeFinish) { f.FinishedAt = "2026-10-21T08:00:00Z" }},
+		{"other commit", finishProvenance, func(f *EpisodeFinish) { f.Commit = strings.Repeat("a", 40) }},
+		{"other repository", finishProvenance, func(f *EpisodeFinish) { f.PR.URL = "https://github.com/other/ailang-world/pull/631" }},
+		{"different approval", finishProvenance, func(f *EpisodeFinish) { f.Approval = "sha256:" + strings.Repeat("ff", 32) }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			wrong := finish
+			tc.edit(&wrong)
+			putFinish(t, d, wrong, tc.provenance)
+			if card := readCard(); card.EpisodeHref == "" || card.PRHref != "" {
+				t.Fatalf("incorrect finish exposed a PR: %+v", card)
+			}
+		})
+	}
+	putFinish(t, d, finish, finishProvenance)
+	if card := readCard(); card.PRHref != pr {
+		t.Fatalf("verified successful finish PR = %q", card.PRHref)
+	}
+	var step surface.State
+	for _, s := range snapshot.Envelope.Repos[0].Index.States {
+		if s.Kind == surface.KindStep && s.Brane != "" {
+			step = s
+			break
+		}
+	}
+	snapshot.Envelope.Open.Episodes = snapshot.Envelope.Open.Episodes[1:]
+	snapshot.Envelope.Open.Aliases = []surface.EpisodeAlias{{ID: "repo0:episode:" + episode, Target: "repo0:commit:" + step.ID}}
+	if err := surface.ValidateFollow(snapshot.Envelope); err != nil {
+		t.Fatal(err)
+	}
+	card = readCard()
+	href, err = url.Parse(card.EpisodeHref)
+	if err != nil || href.Query().Get("at") != "repo0:episode:"+episode ||
+		href.Query().Get("brane") != "repo0:brane:"+step.Brane || card.PRHref != pr {
+		t.Fatalf("landed confirmation lost its qualified episode alias: episode %q, PR %q", card.EpisodeHref, card.PRHref)
+	}
+	scope.Repository = "another-owner/ailang-world"
+	request.Scope = broker.FormatFinishApprovalScope(scope)
+	request.Prompt = broker.FinishPromptText(scope, request.Title, request.Body, request.Protected, request.Committer)
+	row = a.putVerbBytes("vr-0000000000000042", episode, apT0-2, canonVerb(t, request))
+	if card := readCard(); card.EpisodeHref != "" || card.PRHref != "" {
+		t.Fatalf("signed repository mismatch carried links: %+v", card)
 	}
 }

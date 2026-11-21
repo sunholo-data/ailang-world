@@ -3,42 +3,207 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AILANG World: confirm an episode finish</title>
+<title>Review an episode finish · World</title>
 <style>
-body { font: 16px/1.5 system-ui, sans-serif; max-width: 52rem; margin: 2rem auto; padding: 0 1rem; color: #1d1d1f; }
-h1 { font-size: 1.4rem; }
-h2 { font-size: 1.05rem; margin: 1.2rem 0 0.3rem; }
-#what, #status, #answer { white-space: pre-wrap; }
-#what[data-error] { color: #b00020; font-weight: 600; }
-pre { font: 13px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; background: #f5f5f7; padding: 0.6rem; margin: 0; }
-dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.15rem 1rem; margin: 0; }
-dt { color: #555; }
-dd { margin: 0; font: 13px ui-monospace, monospace; white-space: pre-wrap; overflow-wrap: anywhere; }
-#sshline { font: 13px ui-monospace, monospace; overflow-wrap: anywhere; }
+@font-face { font-family: Montserrat; src: url('/surface/fonts/Montserrat-Variable.ttf') format('truetype'); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: 'IBM Plex Mono'; src: url('/surface/fonts/IBMPlexMono-Regular.ttf') format('truetype'); font-display: swap; }
+:root {
+  color-scheme: light;
+  --font: Montserrat, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --stage: #edf1f4; --card: #fff; --text: #2c3e50; --sub: #526677; --line: #dce3e8;
+  --panel: #f6f8fa; --accent: #bd3012; --action: #314352; --on-action: #fff;
+  --good: #2f5f48; --good-panel: #eaf3ee; --edge: #8496a5; --r: 3px;
+  --header: #314352; --header-line: #2c3e50; --header-text: #fff; --header-sub: #dce3e8; --header-focus: #f9a697;
+  font: 14px/1.5 var(--font); background: var(--stage); color: var(--text);
+}
+:root[data-theme="slate"] {
+  color-scheme: dark;
+  --stage: #2c3e50; --card: #314352; --text: #fff; --sub: #dce3e8; --line: #667b8e;
+  --panel: #263544; --accent: #f9a697; --action: #dce3e8; --on-action: #263544;
+  --good: #bce3cc; --good-panel: #263f35;
+}
+* { box-sizing: border-box; }
+body { margin: 0; overflow-wrap: anywhere; }
 [hidden] { display: none !important; }
+.world-header { border-bottom: 1px solid var(--header-line); background: var(--header); color: var(--header-text); }
+.world-header-inner { min-height: 64px; padding: 6px 16px; display: flex; align-items: center; gap: 14px; }
+.world-brand { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; flex: none; color: inherit; text-decoration: none; font-size: 17px; font-weight: 700; }
+.world-logo { display: grid; place-items: center; width: 48px; height: 48px; border: 1px solid #dce3e8; border-radius: var(--r); background: #fff; }
+.world-crumb { min-width: 0; font: 13px/1.3 var(--mono); color: var(--header-sub); }
+.world-header :focus-visible { outline-color: var(--header-focus); }
+#back { color: inherit; margin-left: auto; display: inline-flex; align-items: center; min-height: 44px; font-size: 12px; }
+main { max-width: 872px; margin: clamp(12px, 4vw, 36px) auto; padding-inline: clamp(12px, 3vw, 24px); }
+.review-card { background: var(--card); border: 1px solid var(--edge); border-radius: var(--r); }
+.request-head, #shown { padding: clamp(14px, 3vw, 24px); }
+.request-head { border-bottom: 1px solid var(--line); }
+#shown { padding-top: 0; }
+h1 { font-size: clamp(1.65rem, 4vw, 2.3rem); line-height: 1.2; margin: 0; white-space: pre-wrap; }
+h2 { font-size: 1rem; margin: 0 0 0.5rem; }
+p { margin: 0.45rem 0; }
+a { color: inherit; }
+#overview { color: var(--sub); margin: 8px 0 0; }
+#overview code, #receipt-actions code { font-size: 0.94em; }
+.notice { margin: 14px 0 0; padding: 8px 12px; background: var(--panel); border-left: 3px solid var(--sub); }
+body[data-state="ready"] .notice { border-left-color: var(--accent); }
+body[data-request-state="approved"] .notice { background: var(--good-panel); color: var(--good); border-left-color: var(--good); }
+#status { display: block; }
+#what:empty, #answer:empty { display: none; }
+#what[data-error] { color: var(--accent); }
+.branch-map { display: grid; grid-template-columns: minmax(0, 1fr) minmax(34px, 0.25fr) minmax(0, 1fr); align-items: center; margin: 16px 0; }
+.branch { min-width: 0; padding: 9px; border: 1px solid var(--line); border-radius: var(--r); }
+.branch small { display: block; color: var(--sub); font-size: 11px; }
+.branch code { display: block; font-size: 13px; overflow-wrap: anywhere; }
+.branch code::before { display: inline-block; width: 6px; height: 6px; margin: 0 7px 2px 0; border-radius: 50%; background: var(--edge); content: ''; }
+.branch:first-child code::before { background: var(--accent); }
+.branch-arrow { position: relative; border-top: 1px dashed var(--edge); margin-inline: 5px; }
+.branch-arrow::after { position: absolute; top: -4px; right: 1px; width: 7px; height: 7px; border: solid var(--edge); border-width: 1px 1px 0 0; transform: rotate(45deg); content: ''; }
+dl { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(0, 3fr); gap: 0.3rem 0.8rem; margin: 0; }
+dt { color: var(--sub); }
+dd { margin: 0; min-width: 0; }
+.exact, pre, #signed dd { white-space: pre-wrap; overflow-wrap: anywhere; }
+pre, code, #signed dd { font: 13px/1.5 var(--mono); }
+pre { background: var(--panel); padding: 0.65rem; margin: 0.4rem 0 0; border-radius: var(--r); }
+#review-protected { margin: 0; padding-inline-start: 1.25rem; }
+details { border-top: 1px solid var(--line); }
+summary { cursor: pointer; min-height: 44px; padding: 0.65rem 0; font-weight: 600; }
+details[open] { padding-bottom: 0.7rem; }
+#verification section + section { margin-top: 12px; }
+#verification h3 { font-size: 13px; margin: 0 0 5px; }
+#controls { display: flex; flex-direction: column; align-items: start; margin: 14px 0; }
+#controls details { align-self: stretch; }
+.action { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 7px 14px; background: var(--action); color: var(--on-action); text-decoration: none; border: 1px solid transparent; border-radius: var(--r); font: 650 14px var(--font); cursor: pointer; }
+#go { background: var(--accent); color: var(--card); margin-bottom: 8px; }
+#go:disabled, button:disabled { background: var(--panel); color: var(--sub); cursor: default; }
+#receipt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 12px; }
+#receipt-pr { display: inline-flex; align-items: center; min-height: 44px; }
+#save { display: inline-flex; align-items: center; min-height: 44px; }
+textarea { display: block; width: 100%; min-height: 6rem; padding: 8px; color: var(--text); background: var(--card); border: 1px solid var(--edge); border-radius: var(--r); font: inherit; margin: 0.35rem 0 0.7rem; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 32rem) {
+  .world-header-inner { min-height: 54px; gap: 10px; }
+  .world-logo { width: 38px; height: 38px; }
+  .world-logo svg { width: 26px; height: 26px; }
+  .world-crumb { display: none; }
+  #signed { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  #signed dd + dt { margin-top: 0.55rem; }
+  #controls .action { width: 100%; }
+}
 </style>
 </head>
 <body data-state="loading">
-<h1>Confirm an episode finish</h1>
-<p id="what">Reading the request…</p>
-<div id="shown" hidden>
-<h2>The command</h2>
-<pre id="argv"></pre>
-<h2>The terminal's prompt</h2>
-<pre id="prompt"></pre>
-<h2>Open this pull request?</h2>
-<p id="status"></p>
-<p id="answer"></p>
-<div id="controls" hidden>
-<p><button id="go" hidden type="button" disabled>Approve with your passkey</button></p>
-<p><a id="save">Save the message</a></p>
-<p id="sshline"></p>
-<p><label for="sig">Paste the signature</label><br><textarea id="sig"></textarea></p>
-<p><button id="post-sig" type="button" disabled>Confirm with this signature</button></p>
-</div>
-<h2>What your key signs</h2>
-<dl id="signed"></dl>
-</div>
+<header class="world-header">
+  <nav class="world-header-inner" aria-label="World">
+    <a class="world-brand" href="/surface"><span class="world-logo"><svg viewBox="0 0 512 512" width="32" height="32" aria-hidden="true">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e73c17"/>
+      <stop offset="100%" stop-color="#c08015"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Outer regular hexagon (flat-top, centered at 256,256, radius 232) -->
+  <polygon points="
+    488,256
+    372,457
+    140,457
+    24,256
+    140,55
+    372,55
+  " fill="url(#g1)"/>
+
+  <!-- Inner regular hexagon (radius 200) -->
+  <polygon points="
+    456,256
+    356,429
+    156,429
+    56,256
+    156,83
+    356,83
+  " fill="#0f1420"/>
+
+  <!-- Lambda character — centered in hexagon -->
+  <text
+    x="256"
+    y="252"
+    text-anchor="middle"
+    dominant-baseline="central"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="290"
+    font-weight="400"
+    fill="#fff"
+    opacity="0.95"
+  >&#x03BB;</text>
+
+  <!-- Base accent bar -->
+  <rect x="195" y="398" width="122" height="12" rx="2" fill="#dd6b20" opacity="0.5"/>
+
+  <!-- Corner verification brackets -->
+  <path d="M 163 128 L 163 103 L 188 103" fill="none" stroke="#dd6b20" stroke-width="5" stroke-linecap="square" opacity="0.55"/>
+  <path d="M 349 128 L 349 103 L 324 103" fill="none" stroke="#dd6b20" stroke-width="5" stroke-linecap="square" opacity="0.55"/>
+
+</svg></span><span>World</span></a>
+    <span class="world-crumb" aria-current="page">Episode finish</span>
+    <a id="back" href="/surface">← Back to World</a>
+  </nav>
+</header>
+<main>
+  <article class="review-card" aria-labelledby="review-title">
+    <div class="request-head">
+      <h1 id="review-title" dir="auto">Review pull request</h1>
+      <p id="overview" hidden><strong id="action"></strong> in <span id="repository"></span> · Episode <code id="episode"></code></p>
+      <div class="notice" role="status" aria-atomic="true"><strong id="status" tabindex="-1">Reading the request…</strong><p id="what"></p></div>
+      <p id="answer" role="status"></p>
+      <div id="receipt-actions" hidden><a id="receipt-back" class="action" href="/surface">Return to World</a><a id="receipt-pr" hidden target="_blank" rel="noopener noreferrer">Open pull request on GitHub</a></div>
+    </div>
+    <div id="shown" hidden>
+      <div class="branch-map" role="group" aria-label="Pull request branch direction">
+        <div class="branch"><small>Head branch</small><code id="head" class="exact" dir="auto"></code></div>
+        <div class="branch-arrow" aria-hidden="true"></div>
+        <div class="branch"><small>Base branch</small><code id="base" class="exact" dir="auto"></code></div>
+      </div>
+      <details id="review-facts" open>
+        <summary>Pull request details</summary>
+        <dl id="review">
+          <dt>Head commit</dt><dd><code id="head-commit"></code></dd>
+          <dt>Requested PR state</dt><dd id="pr-state"></dd>
+          <dt>Label</dt><dd id="label"></dd>
+          <dt>Protected paths changed</dt><dd><span id="no-protected" hidden>None</span><ul id="review-protected" hidden></ul></dd>
+        </dl>
+      </details>
+      <details>
+        <summary>Full PR body <span id="f-body-size"></span></summary>
+        <pre id="f-body" dir="auto"></pre>
+      </details>
+      <div id="controls" hidden>
+        <button id="go" class="action" hidden type="button" disabled>Approve with your passkey</button>
+        <details id="ssh-fallback">
+          <summary>Approve with an SSH signature</summary>
+          <a id="save">Download the message to sign</a>
+          <pre id="sshline"></pre>
+          <label for="sig">Paste the SSH signature</label>
+          <textarea id="sig" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+          <button id="post-sig" class="action" type="button" disabled>Approve with this signature</button>
+        </details>
+      </div>
+      <details id="verification">
+        <summary>Verification details</summary>
+        <section>
+          <h3>Terminal prompt</h3>
+          <pre id="prompt" dir="auto"></pre>
+        </section>
+        <section>
+          <h3>Command</h3>
+          <pre id="argv"></pre>
+        </section>
+        <section>
+          <h3>Message hash and signed details</h3>
+          <dl id="signed"></dl>
+        </section>
+      </details>
+    </div>
+  </article>
+</main>
 <script src="/surface/confirm.js"></script>
 </body>
 </html>
