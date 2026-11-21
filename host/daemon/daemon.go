@@ -409,6 +409,9 @@ type Daemon struct {
 	srv       *http.Server
 	ln        net.Listener
 
+	// surfaceUsage bounds verified usage derivation from retained launch evidence.
+	surfaceUsage surfaceUsageMemo
+
 	// resolver maps an inbound Authorization: Bearer session credential to a
 	// binding (w-session-authority D5/D6). New wires it to authority.New over
 	// authority.ReadOnlyAt(credentialsPath): the credentials store is its own
@@ -1139,6 +1142,9 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/fonts/{name...}", d.handleSurfaceFont)
 	mux.HandleFunc("GET /surface/model.json", d.handleSurfaceModel)
 	mux.HandleFunc("GET /surface/stack.json", d.handleSurfaceStack)
+	mux.HandleFunc("GET /surface/file.json", d.handleSurfaceFile)
+	mux.HandleFunc("GET /surface/trajectory.json", d.handleSurfaceTrajectory)
+	mux.HandleFunc("GET /surface/episode-files.json", d.handleSurfaceEpisodeFiles)
 	// The approval routes (row 201 A3): Host-checked against the surface origin set; none under /v1.
 	mux.HandleFunc("GET /surface/requests.json", d.approvalRoute(d.handleSurfaceRequests))
 	mux.HandleFunc("GET /surface/requests/{id}", d.approvalRoute(d.handleSurfaceRequestCard))

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/surface"
 	"github.com/sunholo-data/ailang-world/host/surfacefollow"
 	"github.com/sunholo-data/ailang-world/host/surfacepage"
 )
@@ -107,6 +108,24 @@ func (d *Daemon) handleFollowStack(w http.ResponseWriter, r *http.Request, q url
 		d.writeSurfaceJSON(w, r, http.StatusNotFound, schema, surfaceReason{Schema: schema, Reason: err.Error()})
 		return
 	}
+	ctx, cancel := d.readCtx(r)
+	defer cancel()
+	start := d.readFollowEpisodeStart(ctx, s.Envelope, st)
+	trajectoryStart := start
+	if linked := trajectorySelection(s.Envelope, st); linked.Front.ID != st.Front.ID {
+		trajectoryStart = d.readFollowEpisodeStart(ctx, s.Envelope, linked)
+	}
+	if trajectoryStart != nil {
+		st.Front.TrajectoryEpisode = trajectoryStart.Episode
+	}
+	st.Front.TaskBody, st.Front.TaskRedacted = d.readSurfaceTask(start)
+	var finish *EpisodeFinish
+	st.Front.Run, finish = d.surfaceRun(ctx, start)
+	st.Front.Commits = d.readSurfaceCommits(ctx, st, finish)
+	if start != nil && start.Task != nil && st.Front.Task == "" {
+		st.Front.Task = surface.SanitizeOpenText(start.Task.Title, 120)
+	}
+	st.Front.GitHubChecks = d.readSurfaceGitHubChecks(ctx, s.Envelope, st)
 	d.writeSurfaceJSON(w, r, http.StatusOK, schema, st)
 }
 

@@ -1923,3 +1923,75 @@ ailang-worldd episode finish w1 --preset se-tools --confirm-on-surface
 After the commit, finish shows the prompt's lines at the terminal (without the question) and prints `confirm request vr-<16 hex> on the surface (expires <time>, message hash <16 hex>)`, one `open …/surface/confirm/vr-<16 hex>` line per passkey origin and the daemon's loopback, and `the typed y is not read in this mode`. In the bar, `approve vr-<16 hex>` opens the same card (at a terminal, `ailang-worldd approve vr-<16 hex>` only points at it). The card shows the command, the same prompt and every byte your key signs; check the message hash, then **Approve with passkey**, or sign the saved message with the `ssh-keygen -Y sign -n world-verb@sunholo` line the card shows and paste the signature. Finish waits up to 10 minutes (and 10 seconds' grace), re-checks your signature over its own request, reads back the approval the daemon recorded, prints `confirmed by <approver> (decision sha256:…)` and opens the pull request as a typed `y` would.
 
 Each refusal keeps the commit and opens nothing: with `--dry-run`; a pinned unsandboxed check (it needs its own typed `y`: run finish without the flag); a busy or not-yet-upgraded credentials store (restart `serve` once); no confirmation in time; a newer finish of the same episode; a confirmation that does not verify. Ctrl-C stops waiting and keeps the commit. Run finish again: it resumes the same commit and body and asks afresh.
+
+## 21. Inspect a node and its files
+
+In follow mode, open a shared merge or its linked step and select a path in the
+**Files** tab. World reads that merge and its first parent from the
+enrolled repository. Deleted paths show their first-parent text. The text
+viewer has a 128 KiB file and diff limit and shows metadata for binary files,
+symlinks, submodules, and files above the limit.
+
+To inspect PR #631 from a daemon following ailang-world with that merge in
+its retained window, use the stack's qualified selection and one listed path.
+Point `world_surface_url` at the daemon if it uses a different address.
+
+```sh
+world_surface_url="${world_surface_url:-http://127.0.0.1:7644}"
+world_selection="$(curl -fsS "$world_surface_url/surface/model.json" |
+  jq -cer 'first(.lanes[] as $lane | $lane.states[] |
+    select(.kind == "shared" and .pr == 631 and .landedFileCount > 0) |
+    {brane: $lane.key, at: .id})')"
+world_brane="$(printf '%s' "$world_selection" | jq -r .brane)"
+world_at="$(printf '%s' "$world_selection" | jq -r .at)"
+world_output="$(curl -fsSG "$world_surface_url/surface/stack.json" \
+  --data-urlencode "brane=$world_brane" --data-urlencode "at=$world_at" |
+  jq -er '.front.landedFiles[0].path')"
+curl -fsSG "$world_surface_url/surface/file.json" \
+  --data-urlencode "brane=$world_brane" --data-urlencode "at=$world_at" \
+  --data-urlencode "path=$world_output" | jq '{path, status, kind, merge, size}'
+```
+
+The file route accepts one qualified brane, one qualified commit, and one
+exact path listed on that selection. Successful responses include the
+qualified merge and the available sizes. A text result includes `text` and
+can include `diff` and `truncated`. An absent path or selection returns
+`404`.
+
+**Overview** shows the full formatted task when its retained text matches the start
+record. It also shows recorded human decisions and the commit message when
+available. An inspection-only episode can end with tool calls and no commit.
+
+**Files** lists reads and writes recorded by World, changes observed after
+commands, and files in the selected commit or merge. Filter by path or activity.
+Hover or focus a previewable path for an excerpt, or select it to open the file.
+Committed changes have a numbered diff. For an episode read or write, the viewer
+labels the version it could verify. An episode-start or episode-finish snapshot
+is identified as such. A recorded operation can have a path and count even when
+its contents are unavailable.
+
+**Run** shows the harness, runtime, grants, recorded usage and checks. A Git
+node with only check evidence calls this tab **Checks**. A completed Codex
+headless transcript can supply a turn count. A Claude headless result can
+also supply its reported USD cost. Episodes using an external coordinator
+can have World tool calls with zero World-launched runs.
+
+Open **Trajectory** to see retained harness events and committed
+World tool calls. If a private transcript is available, **View raw transcript
+locally** shows its filename and lets you select a copy on your device. The
+browser checks its SHA-256 against the launch record before showing the JSONL.
+The World service returns event metadata. The selected transcript stays in
+your browser. World finish checks show the recorded check names and results.
+
+To display GitHub CI on a PR node, import its check snapshot on the operator
+machine. Use the repository ID in the follow config and the directory holding
+the daemon's World database. For example, this captures PR #631 for the home
+service when run from the World checkout:
+
+```sh
+python3 scripts/surface/import_github_checks.py --repo "$PWD" --repo-id world \
+  --state-dir "$HOME/.ailang/world" --pr 631
+```
+
+The card shows when the checks were captured and links to GitHub. Rerun the
+import to refresh a pending result. Receipts attach to the exact PR head.

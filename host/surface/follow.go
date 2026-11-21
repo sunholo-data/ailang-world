@@ -33,12 +33,13 @@ type FollowFailure struct {
 
 // FollowPartition is one accepted, pinned v1 projection and its freshness.
 type FollowPartition struct {
-	ID          string         `json:"id"`
-	Head        string         `json:"head"`
-	BuiltAt     string         `json:"built_at"`
-	CheckedAt   string         `json:"checked_at"`
-	LastFailure *FollowFailure `json:"last_failure,omitempty"`
-	Index       Index          `json:"index"`
+	ID                 string         `json:"id"`
+	Head               string         `json:"head"`
+	BuiltAt            string         `json:"built_at"`
+	CheckedAt          string         `json:"checked_at"`
+	LastFailure        *FollowFailure `json:"last_failure,omitempty"`
+	Index              Index          `json:"index"`
+	LandedFilesChecked bool           `json:"landed_files_checked,omitempty"` // backfill marker for older caches
 }
 
 // QualifyID uses the same three-part form for all kinds, including branes.

@@ -170,6 +170,8 @@ type ModelState struct {
 	// landed step whose episode's session is still live.
 	Open        *ModelOpenState `json:"open,omitempty"`
 	SessionLive bool            `json:"sessionLive,omitempty"`
+	// LandedFileCount describes the shared merge, including on its linked step.
+	LandedFileCount *int `json:"landedFileCount,omitempty"`
 }
 
 var (
@@ -245,6 +247,10 @@ func (b *modelBuilder) state(s surface.State, n Node) ModelState {
 	at, _ := time.Parse(time.RFC3339, s.At) // Validate has checked it
 	ms := ModelState{ID: s.ID, Kind: s.Kind, Label: short(s.ID), At: at.UTC().Format(time.RFC3339),
 		Rel: RelativeTime(at, b.now), Rank: n.Rank, Badge: n.Badge, PR: s.PR}
+	if files, ok := b.landedFiles(s); ok {
+		count := len(files.Changes) + files.Truncated
+		ms.LandedFileCount = &count
+	}
 	switch s.Kind {
 	case surface.KindStep:
 		ms.Title = DisplayTitle(s.Title)
@@ -272,6 +278,16 @@ func (b *modelBuilder) state(s surface.State, n Node) ModelState {
 		}
 	}
 	return ms
+}
+
+// landedFiles uses the shared commit as provenance for both node kinds.
+func (b *modelBuilder) landedFiles(s surface.State) (surface.FileChanges, bool) {
+	id := s.ID
+	if s.Kind == surface.KindStep {
+		id = s.Merge
+	}
+	files, ok := b.ix.LandedFiles[id]
+	return files, ok
 }
 
 // BuildModel is the world/surface-model/v1 document for ix as of now. It is
@@ -364,14 +380,36 @@ type StackFront struct {
 	Parents    []ModelState `json:"parents"` // a shared state's parents in the index
 	// Reads, ReadCalls and ReadFiles are absent when the index holds no
 	// reads for the state; Files and FilesTruncated when it holds no files.
-	Reads          *[]ReadGroup      `json:"reads,omitempty"`
-	ReadCalls      *int              `json:"readCalls,omitempty"`
-	ReadFiles      *int              `json:"readFiles,omitempty"`
-	Task           string            `json:"task,omitempty"`
-	Files          *[]surface.Change `json:"files,omitempty"`
-	FilesTruncated *int              `json:"filesTruncated,omitempty"`
-	Decisions      []FrontDecision   `json:"decisions"`
-	Checks         Checks            `json:"checks"`
+	Reads             *[]ReadGroup      `json:"reads,omitempty"`
+	ReadCalls         *int              `json:"readCalls,omitempty"`
+	ReadFiles         *int              `json:"readFiles,omitempty"`
+	Task              string            `json:"task,omitempty"`
+	TaskBody          string            `json:"taskBody,omitempty"`
+	TaskRedacted      bool              `json:"taskRedacted,omitempty"`
+	Run               *NodeRun          `json:"run,omitempty"`
+	TrajectoryEpisode string            `json:"trajectoryEpisode,omitempty"`
+	Commits           []NodeCommit      `json:"commits,omitempty"`
+	GitHubChecks      *GitHubChecks     `json:"githubChecks,omitempty"`
+	Files             *[]surface.Change `json:"files,omitempty"`
+	LandedFiles       []surface.Change  `json:"landedFiles,omitempty"`
+	FilesTruncated    *int              `json:"filesTruncated,omitempty"`
+	Decisions         []FrontDecision   `json:"decisions"`
+	Checks            Checks            `json:"checks"`
+}
+
+// GitHubChecks is an operator-imported snapshot for a landed PR's exact head.
+type GitHubChecks struct {
+	PR         int           `json:"pr"`
+	Head       string        `json:"head"`
+	URL        string        `json:"url"`
+	CapturedAt string        `json:"capturedAt"`
+	Checks     []GitHubCheck `json:"checks"`
+}
+
+type GitHubCheck struct {
+	Name       string `json:"name"`
+	Status     string `json:"status"`
+	Conclusion string `json:"conclusion,omitempty"`
 }
 
 // ReadGroup is the files read from one source, in first-read order.
@@ -468,6 +506,9 @@ func BuildStack(ix surface.Index, brane, at string, now time.Time) (StackModel, 
 		}
 		files := len(reads)
 		f.Reads, f.ReadCalls, f.ReadFiles = &groups, &calls, &files
+	}
+	if files, ok := b.landedFiles(x); ok {
+		f.LandedFiles = append([]surface.Change(nil), files.Changes...)
 	}
 	if fc, ok := ix.Files[at]; ok {
 		changes := append([]surface.Change{}, fc.Changes...)

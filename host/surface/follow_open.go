@@ -146,14 +146,35 @@ func SanitizeOpenText(s string, bound int) string {
 		return r
 	}, s)
 	s = strings.Join(strings.Fields(s), " ")
-	s = openURL.ReplaceAllString(s, "[url]")
-	s = openEmail.ReplaceAllString(s, "[email]")
-	s = openPath.ReplaceAllString(s, "${1}[path]")
-	s = openToken.ReplaceAllString(s, "[redacted]")
+	s = redactOpenText(s)
 	if r := []rune(s); len(r) > bound {
 		s = string(r[:bound-1]) + "…"
 	}
 	return s
+}
+
+// SanitizeTaskBody keeps the layout of a retained task and applies the
+// surface text redactions before the task reaches the browser.
+func SanitizeTaskBody(s string) string {
+	s = strings.ReplaceAll(s, "\r\n", "\n")
+	s = strings.Map(func(r rune) rune {
+		switch {
+		case r == '\r':
+			return '\n'
+		case r == '\n' || r == '\t' || unicode.IsPrint(r):
+			return r
+		default:
+			return -1
+		}
+	}, s)
+	return redactOpenText(s)
+}
+
+func redactOpenText(s string) string {
+	s = openURL.ReplaceAllString(s, "[url]")
+	s = openEmail.ReplaceAllString(s, "[email]")
+	s = openPath.ReplaceAllString(s, "${1}[path]")
+	return openToken.ReplaceAllString(s, "[redacted]")
 }
 
 func safeOpenText(s string, bound int, empty bool) bool {

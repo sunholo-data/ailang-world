@@ -402,3 +402,55 @@ func TestFollowModelAttributesRecentCallsOnlyToPublishedLiveNodes(t *testing.T) 
 		t.Fatalf("expired activity = %v", calls)
 	}
 }
+
+func TestFollowLandedFilesUseTheSelectedReposSharedMerge(t *testing.T) {
+	env := followEnv(t)
+	step := stateWithPrefix(t, env.Repos[0].Index, "f36428a")
+	changes := []surface.Change{{Path: "merge-only.go", Status: "A"}}
+	env.Repos[0].Index.LandedFiles = map[string]surface.FileChanges{
+		step.Merge: {Changes: changes, Truncated: 2},
+	}
+	env.Repos[1].Index.LandedFiles = map[string]surface.FileChanges{step.Merge: {}}
+	m := BuildFollowModel(env, followSources(), Now{At: fixedNow})
+	counts := map[string]*int{}
+	for _, lane := range m.Lanes {
+		for _, state := range lane.States {
+			counts[state.ID] = state.LandedFileCount
+		}
+	}
+	for _, target := range []struct {
+		repo, brane, id string
+		count           int
+	}{
+		{"world", step.Brane, step.ID, 3},
+		{"world", SharedKey, step.Merge, 3},
+		{"tools", step.Brane, step.ID, 0},
+		{"tools", SharedKey, step.Merge, 0},
+	} {
+		id := qualify(target.repo, "commit", target.id)
+		stack, err := BuildFollowStack(env, qualify(target.repo, "brane", target.brane), id, fixedNow)
+		if err != nil {
+			t.Fatal(err)
+		}
+		count := counts[id]
+		front := stack.Front
+		if count == nil || *count != target.count || front.LandedFileCount == nil || *front.LandedFileCount != target.count {
+			t.Fatalf("%s lost landed file count in follow model or stack", id)
+		}
+		if target.count == 0 {
+			if len(front.LandedFiles) != 0 {
+				t.Fatalf("zero-file merge leaked changes from another repo: %+v", front.LandedFiles)
+			}
+		} else if !reflect.DeepEqual(front.LandedFiles, changes) {
+			t.Fatalf("landed changes = %+v, want %+v", front.LandedFiles, changes)
+		}
+		if target.id == step.ID {
+			if front.MergedInto == nil || front.MergedInto.ID != qualify(target.repo, "commit", step.Merge) {
+				t.Fatalf("step %s lost merge provenance", id)
+			}
+			if expected, ok := env.Repos[0].Index.Files[step.ID]; !ok || front.Files == nil || !reflect.DeepEqual(*front.Files, expected.Changes) {
+				t.Fatalf("step %s lost episode file evidence", id)
+			}
+		}
+	}
+}

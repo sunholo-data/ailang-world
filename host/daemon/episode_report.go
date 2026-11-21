@@ -217,20 +217,20 @@ type budgetState struct {
 }
 
 type reportBuilder struct {
-	rep      EpisodeReport
-	effects  map[[2]string]int
-	budgets  map[budgetKey]*budgetState
-	written  map[string]*ReportWrite
-	produced map[string]*ReportRead
-	reads    map[string]*ReportRead
-	firstAt  int64
-	lastAt   int64
+	filesOnly       bool
+	filesIncomplete bool
+	rep             EpisodeReport
+	effects         map[[2]string]int
+	budgets         map[budgetKey]*budgetState
+	written         map[string]*ReportWrite
+	produced        map[string]*ReportRead
+	reads           map[string]*ReportRead
+	firstAt         int64
+	lastAt          int64
 }
 
-// buildEpisodeReport scans episode's journal key ranges and aggregates its
-// committed calls. ok is false when the episode has no committed call.
-func buildEpisodeReport(ctx context.Context, intents intentReader, reads objectWorldReader, episode string) (EpisodeReport, bool, error) {
-	b := &reportBuilder{
+func newReportBuilder(episode string) *reportBuilder {
+	return &reportBuilder{
 		rep: EpisodeReport{Episode: episode, CallsByTool: map[string]int{}, BySurface: map[string]int{},
 			Effects: []ReportEffect{}, Budgets: []ReportBudget{},
 			PlanRefusals:    ReportRefusals{ByTool: map[string]int{}, First: []ReportRefusal{}},
@@ -243,6 +243,12 @@ func buildEpisodeReport(ctx context.Context, intents intentReader, reads objectW
 		budgets: map[budgetKey]*budgetState{},
 		reads:   map[string]*ReportRead{},
 	}
+}
+
+// buildEpisodeReport scans episode's journal key ranges and aggregates its
+// committed calls. ok is false when the episode has no committed call.
+func buildEpisodeReport(ctx context.Context, intents intentReader, reads objectWorldReader, episode string) (EpisodeReport, bool, error) {
+	b := newReportBuilder(episode)
 	for _, surface := range reportSurfaces {
 		prefix := string(surface) + ":" + episode + ":"
 		after := int64(0)
@@ -300,9 +306,13 @@ func (b *reportBuilder) add(ctx context.Context, reads objectWorldReader, surfac
 	entry, tool := w.Revision, rec.SkillID
 	b.call(entry, tool, surface, it.Intent.LogicalTime)
 	if recObj.SemanticID != coordinator.RecordV2 {
+		b.filesIncomplete = b.filesOnly
 		return nil
 	}
 	if len(rec.Effects) == 0 {
+		if b.filesOnly {
+			return nil
+		}
 		return b.planRefusal(ctx, reads, entry, tool, rec.Plan)
 	}
 	handlerRefused := ""
@@ -328,7 +338,9 @@ func (b *reportBuilder) add(ctx context.Context, reads objectWorldReader, surfac
 		if err != nil {
 			return fmt.Errorf("entry %d: %w", entry, err)
 		}
-		b.effect(entry, pos, d)
+		if !b.filesOnly {
+			b.effect(entry, pos, d)
+		}
 		if d.Effect == broker.EffectWorkspaceWrite || d.Effect == broker.EffectWorkspaceDelete {
 			writeEffect = true
 		}
@@ -348,7 +360,9 @@ func (b *reportBuilder) add(ctx context.Context, reads objectWorldReader, surfac
 		}
 	}
 	if handlerRefused != "" {
-		addRefusal(&b.rep.HandlerRefusals, entry, tool, handlerRefused)
+		if !b.filesOnly {
+			addRefusal(&b.rep.HandlerRefusals, entry, tool, handlerRefused)
+		}
 		return nil
 	}
 	if isWrite && writeEffect {

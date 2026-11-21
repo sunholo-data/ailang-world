@@ -292,7 +292,6 @@ func (p *Publisher) overlayFor(states map[string]Status, facts *EpisodeFacts, fa
 func (p *Publisher) makeSnapshot(states map[string]Status, open *surface.FollowOpen) *Snapshot {
 	s := &Snapshot{Envelope: surface.FollowIndex{Schema: surface.FollowSchema},
 		Status: StatusDocument{Schema: StatusSchema, Mode: "follow", Repos: []RepoStatus{}}}
-	keys := make([][3]string, 0, len(p.config.Repos))
 	for _, r := range p.config.Repos {
 		st := states[r.ID]
 		s.Status.Repos = append(s.Status.Repos, repoStatus(st))
@@ -300,27 +299,42 @@ func (p *Publisher) makeSnapshot(states map[string]Status, open *surface.FollowO
 			part := *st.Partition
 			part.CheckedAt, part.LastFailure = st.CheckedAt, st.LastFailure
 			s.Envelope.Repos = append(s.Envelope.Repos, part)
-			keys = append(keys, [3]string{part.ID, part.Head, part.BuiltAt})
 		}
 	}
 	s.Envelope.Open = open
+	if open != nil {
+		s.Status.Open = &OpenStatus{Status: open.Status, Reason: open.Reason, CheckedAt: open.CheckedAt,
+			Episodes: len(open.Episodes), Running: len(open.Running), Omitted: open.Omitted, RemainderUnknown: open.RemainderUnknown}
+	}
+	stampGeneration(s)
+	return s
+}
+
+func stampGeneration(s *Snapshot) {
+	keys := make([][3]string, 0, len(s.Envelope.Repos))
+	landed := map[string]bool{}
+	for _, part := range s.Envelope.Repos {
+		keys = append(keys, [3]string{part.ID, part.Head, part.BuiltAt})
+		if part.LandedFilesChecked || len(part.Index.LandedFiles) > 0 {
+			landed[part.ID] = len(part.Index.LandedFiles) > 0
+		}
+	}
+	open := s.Envelope.Open
 	var overlayKey []byte
 	if open != nil {
 		// checked_at advances every reconcile; it is not a new generation.
 		o := *open
 		o.CheckedAt = ""
 		overlayKey, _ = json.Marshal(o)
-		s.Status.Open = &OpenStatus{Status: open.Status, Reason: open.Reason, CheckedAt: open.CheckedAt,
-			Episodes: len(open.Episodes), Running: len(open.Running), Omitted: open.Omitted, RemainderUnknown: open.RemainderUnknown}
 	}
 	b, _ := json.Marshal(struct {
-		Keys [][3]string
-		Open json.RawMessage `json:",omitempty"`
-	}{keys, overlayKey})
+		Keys   [][3]string
+		Open   json.RawMessage `json:",omitempty"`
+		Landed map[string]bool `json:",omitempty"`
+	}{keys, overlayKey, landed})
 	h := sha256.Sum256(b)
 	s.Envelope.Generation = "g" + hex.EncodeToString(h[:8])
 	s.Status.Generation = s.Envelope.Generation
-	return s
 }
 
 // encodeSnapshot validates before serialization and classifies publication
@@ -329,15 +343,43 @@ func encodeSnapshot(s *Snapshot) string {
 	if len(s.Envelope.Repos) > 0 && surface.ValidateFollow(s.Envelope) != nil {
 		return "candidate"
 	}
-	data, err := json.Marshal(s.Envelope)
-	if err != nil {
-		return "candidate"
-	}
-	if len(data) > surface.MaxBytes {
-		return "oversize"
+	data, class, dropped := boundedManifest(&s.Envelope)
+	if class == "" && dropped {
+		stampGeneration(s)
+		data, class, _ = boundedManifest(&s.Envelope)
 	}
 	s.Bytes = data
-	return ""
+	return class
+}
+
+// Optional file evidence never forces rejection of an otherwise valid graph.
+// Repos is a candidate-owned slice. Copying its partitions never mutates the
+// retained indexes or the previous published snapshot.
+func boundedManifest(ix *surface.FollowIndex) ([]byte, string, bool) {
+	data, err := json.Marshal(ix)
+	if err != nil {
+		return nil, "candidate", false
+	}
+	if len(data) <= surface.MaxBytes {
+		return data, "", false
+	}
+	dropped := false
+	for i := range ix.Repos {
+		if len(ix.Repos[i].Index.LandedFiles) > 0 {
+			ix.Repos[i].Index.LandedFiles = nil
+			dropped = true
+		}
+	}
+	if dropped {
+		data, err = json.Marshal(ix)
+		if err != nil {
+			return nil, "candidate", false
+		}
+		if len(data) <= surface.MaxBytes {
+			return data, "", true
+		}
+	}
+	return nil, "oversize", false
 }
 
 func (p *Publisher) publish() {

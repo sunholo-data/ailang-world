@@ -59,6 +59,8 @@ type Index struct {
 	Files     map[string]FileChanges `json:"files,omitempty"` // step id → its changes
 	Reads     map[string][]Read      `json:"reads,omitempty"` // step id → its reads
 	Decisions []Decision             `json:"decisions,omitempty"`
+	// LandedFiles is a merge commit against its actual first parent, keyed by shared state.
+	LandedFiles map[string]FileChanges `json:"landed_files,omitempty"`
 }
 
 // Source says what the index was built from. It never holds a filesystem

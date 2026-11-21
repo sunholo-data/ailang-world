@@ -54,7 +54,7 @@
       tip.replaceChildren(text('strong', 'hc-preview-title', heading), meta);
       const episode = node.episode && !heading.toLowerCase().includes(node.episode.toLowerCase()) ? node.episode : '';
       const agent = options.agent?.(node) || node.agent;
-      const identity = [episode, node.pr && 'PR #' + node.pr, agent].filter(Boolean).join(' · ');
+      const identity = [episode, node.pr && 'PR #' + node.pr, agent, options.mergeFileSummary?.(node)].filter(Boolean).join(' · ');
       if (identity) tip.append(text('div', 'hc-preview-meta', identity));
       const summary = options.summary?.(node) ?? (node.summary || '').trim();
       if (summary && summary.toLowerCase() !== heading.toLowerCase()) tip.append(text('p', 'hc-preview-summary', summary));
