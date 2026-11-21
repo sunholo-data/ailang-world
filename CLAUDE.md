@@ -36,6 +36,8 @@ AILANG. It is built by an autonomous mission loop with human ratification gates.
 
 Build/run/commit/read walkthrough (executed-verbatim, S7-maintained): [docs/QUICKSTART.md](docs/QUICKSTART.md).
 
+For a command that asks the operator to type `y`, follow the [attended Herdr workflow](AGENTS.md#attended-world-commands-in-herdr).
+
 ## Pushing dev — automatic, fast-forward only
 
 `scripts/hooks/push_dev_on_stop.sh` runs as a `Stop` hook and pushes when local `dev` is
