@@ -15,6 +15,12 @@
   const exactOf = iso => dayOf(iso) ? dayOf(iso) + ' ' + hm(iso) + ' UTC' : 'Time unrecorded';
   const lastRunLabel = run => run ? (run.failed ? 'Last run failed' : 'Last run finished') : '';
   const lastRunDetail = run => run ? lastRunLabel(run) + ' · ' + exactOf(run.endedAt) : '';
+  function mergeFileSummary(node) {
+    const n = node.landedFileCount;
+    if (!Number.isSafeInteger(n) || n < 0) return '';
+    if (n === 0) return 'No file changes in merge';
+    return n + (n === 1 ? ' file changed in merge' : ' files changed in merge');
+  }
   const prettyModel = m => (m || '').split('-').filter(Boolean).reduce((a, w, i, all) => {
     if (/^\d+$/.test(w) && /^\d+$/.test(all[i - 1] || '')) return a + '.' + w;
     const word = /^gpt$/i.test(w) ? 'GPT' : /^\d/.test(w) ? w : w[0].toUpperCase() + w.slice(1);
@@ -259,27 +265,315 @@
     return s + (minutes != null ? ` · ${minutes} agent-minutes` : '');
   }
 
+  const FILE_STATUS = new Map([['A', 'Added'], ['M', 'Modified'], ['D', 'Deleted']]);
+
+  function pathAttribute(path) {
+    // HTML normalizes literal CR before tokenizing attributes.
+    return esc(path).replace(/\r/g, '&#13;');
+  }
+
+  function filePathHTML(path, source, origin = '') {
+    const name = `<code>${esc(path)}</code>`;
+    if (!source) return name;
+    const version = source === 'episode-read' ? 'recorded read' : source === 'episode-write' ? 'recorded write' : '';
+    return `<button type="button" class="file-path" data-file-path="${pathAttribute(path)}" data-file-source="${source}"${origin ? ` data-file-origin="${esc(origin)}"` : ''}${version ? ` aria-label="Preview ${version} of ${pathAttribute(path)}"` : ''}>${name}</button>`;
+  }
+
+  function filesTabHTML(F, activity) {
+    const groups = [], options = [];
+    const episode = F.trajectoryEpisode || F.run?.episode;
+    const addGroup = (kind, title, rows, describe, source = '') => {
+      if (!rows.length) return;
+      const list = rows.map((row, index) => {
+        const metadata = describe(row);
+        return `<li class="file-change file-activity-row" data-file-row="${pathAttribute(row.path)}">
+          <span class="file-activity-meta">${esc(metadata)}</span>${filePathHTML(row.path, source, kind + ':' + index)}</li>`;
+      }).join('');
+      options.push(`<option value="${kind}">${title}</option>`);
+      groups.push(`<section class="file-activity-group" data-file-group="${kind}"><h3>${title} <span>${rows.length}</span></h3><ul class="file-list">${list}</ul></section>`);
+    };
+    const mentions = (row, word) => Number.isSafeInteger(row.count) && row.count > 0 ? `${row.count} ${word}${row.count === 1 ? '' : 's'}` : '';
+    const writeActions = new Map([['workspace-write', 'write'], ['workspace-edit', 'edit'], ['write', 'write'], ['edit', 'edit'], ['patch', 'patch']]);
+    const writeDescription = row => {
+      const action = writeActions.get(row.op);
+      return [mentions(row, 'write'), action ? 'Last: ' + action : ''].filter(Boolean).join(' · ');
+    };
+    let message = '';
+    if (episode) {
+      if (activity == null) {
+        message = '<p class="muted" role="status">Loading episode file activity…</p>';
+      } else if (activity.status === 'complete' || activity.status === 'partial') {
+        const reads = activity.reads || [], writes = activity.writes || [], produced = activity.produced || [];
+        addGroup('reads', 'Read', reads, row => mentions(row, 'read'), 'episode-read');
+        addGroup('writes', 'Written', writes, writeDescription, 'episode-write');
+        addGroup('produced', 'Changes observed after commands', produced, row => mentions(row, 'observation'));
+        if (activity.status === 'partial') {
+          const omitted = Object.values(activity.omitted || {}).reduce((a,n) => a + (Number(n) || 0), 0);
+          message = `<p class="muted">Episode file activity is partial.${omitted ? ' Some path records were omitted.' : ''}${activity.deltaGaps ? ' Some command changes could not be enumerated.' : ''}</p>`;
+        } else if (!reads.length && !writes.length && !produced.length) {
+          message = '<p class="muted">No file activity was recorded for this episode.</p>';
+        } else if (reads.length && !writes.length && !produced.length) {
+          message = '<p class="muted">No writes recorded.</p>';
+        }
+      } else {
+        message = '<p class="muted">Episode file activity is unavailable.</p>';
+      }
+    }
+
+    const landed = F.landedFiles || [];
+    const merge = F.kind === 'step' || F.parents?.length > 1 || F.commits?.some(commit => commit.kinds?.includes('merge'));
+    addGroup('committed', merge ? 'In the merge' : 'In the commit', landed, row => FILE_STATUS.get(row.status) || 'Changed', 'committed');
+    const historical = !episode || activity?.status === 'unavailable';
+    const recordedReads = historical ? (F.reads || []).flatMap(group => (group.files || []).map(file => ({...file, from: group.label}))) : [];
+    addGroup('recorded-reads', 'Recorded step reads', recordedReads, row => [mentions(row, 'read'), row.from].filter(Boolean).join(' · '));
+    const recordedWrites = historical && Array.isArray(F.files);
+    if (recordedWrites) addGroup('recorded', 'Recorded step changes', F.files, row => FILE_STATUS.get(row.status) || 'Changed');
+    const missing = Math.max(0, (F.landedFileCount || 0) - landed.length);
+    const landedGap = missing ? `<p class="muted">${missing} committed file path${missing === 1 ? '' : 's'} unavailable.</p>`
+      : F.landedFileCount === 0 ? '<p class="muted">No committed file changes.</p>' : '';
+
+    const recordedGap = recordedWrites
+      ? F.filesTruncated > 0 ? `<p class="muted">${F.filesTruncated} recorded step file path${F.filesTruncated === 1 ? '' : 's'} unavailable.</p>`
+        : !F.files.length ? '<p class="muted">No recorded step file changes.</p>' : ''
+      : '';
+    const filters = groups.length ? `<div class="file-activity-filters">
+        <label>Filter paths <input type="search" data-file-filter spellcheck="false" autocomplete="off"></label>
+        ${options.length > 1 ? `<label>Activity <select data-file-kind><option value="">All activity</option>${options.join('')}</select></label>` : ''}
+      </div><p class="muted" data-file-empty role="status" hidden>No paths match these filters.</p>` : '';
+    return `<div class="node-files-tab">${filters}${message}${landedGap}${recordedGap}${groups.join('')}${!groups.length && !message && !landedGap && !recordedGap ? '<p class="muted">No file records are available for this node.</p>' : ''}</div>`;
+  }
+
+  // Render the recorded request as a document. Text is escaped before any markup is added.
+  // Links, images and embedded HTML remain inert in an agent-supplied request.
+  function taskDocument(text) {
+    const inline = line => line.split(/(`[^`\n]+`|\*\*[^*\n]+\*\*)/g).map(part => {
+      if (part.startsWith('`') && part.endsWith('`') && part.length > 2) return '<code>' + esc(part.slice(1,-1)) + '</code>';
+      if (part.startsWith('**') && part.endsWith('**') && part.length > 4) return '<strong>' + esc(part.slice(2,-2)) + '</strong>';
+      return esc(part);
+    }).join('');
+    const lines = text.replace(/\r\n?/g, '\n').split('\n'), blocks = [];
+    const fence = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+    const heading = /^ {0,3}(#{1,6})\s+(.*)$/;
+    const list = /^\s*(?:(\d+)\.|[-*+])\s+(.*)$/;
+    for (let i = 0; i < lines.length;) {
+      const line = lines[i++];
+      if (!line.trim()) continue;
+      const marker = line.match(fence);
+      if (marker) {
+        const code = [];
+        while (i < lines.length) {
+          const next = lines[i++], closing = next.match(fence);
+          if (closing && closing[1][0] === marker[1][0] && closing[1].length >= marker[1].length && !closing[2].trim()) break;
+          code.push(next);
+        }
+        blocks.push('<pre><code>' + esc(code.join('\n')) + '</code></pre>');
+        continue;
+      }
+      const h = line.match(heading);
+      if (h) {
+        const level = Math.min(6, 3 + h[1].length);
+        blocks.push('<h' + level + '>' + inline(h[2]) + '</h' + level + '>');
+        continue;
+      }
+      const item = line.match(list);
+      if (item) {
+        const tag = item[1] ? 'ol' : 'ul';
+        const items = [item[2]];
+        while (i < lines.length) {
+          const next = lines[i].match(list);
+          if (!next || Boolean(next[1]) !== Boolean(item[1])) break;
+          items.push(next[2]); i++;
+        }
+        const start = item[1] && item[1] !== '1' ? ' start="' + Number(item[1]) + '"' : '';
+        blocks.push('<' + tag + start + '>' + items.map(v => '<li>' + inline(v) + '</li>').join('') + '</' + tag + '>');
+        continue;
+      }
+      const paragraph = [line];
+      while (i < lines.length && lines[i].trim() && !heading.test(lines[i]) && !list.test(lines[i]) && !fence.test(lines[i])) paragraph.push(lines[i++]);
+      blocks.push('<p>' + paragraph.map(inline).join('\n') + '</p>');
+    }
+    return blocks.join('');
+  }
+
+  function taskHTML(F) {
+    const text = F.taskBody || F.task;
+    if (!text) return '';
+    return `<section class="task-request"><h3>${F.taskBody ? 'Task request' : 'Task title'}</h3>
+      <div class="task-document">${taskDocument(text)}</div>
+      ${F.taskRedacted ? '<p class="muted">Sensitive task text was redacted.</p>' : ''}</section>`;
+  }
+
+  function commitHTML(F) {
+    if (!F.commits?.length) return F.kind === 'open' && !F.pr ? '<div class="muted">No finish commit recorded for this episode.</div>' : '';
+    return F.commits.map(c => {
+      const kind = c.kinds.includes('episode-finish') ? 'Episode finish commit' : c.kinds.includes('branch-tip') ? 'Branch tip commit' : 'Merge commit';
+      return `<section class="commit-message"><h3>${kind} <code>${esc(c.id.split(':').pop().slice(0, 8))}</code></h3>
+        <p class="commit-subject">${esc(c.subject)}</p>${c.body ? `<div class="commit-body">${esc(c.body)}</div>` : ''}
+        ${c.redacted ? '<p class="muted">Sensitive commit text was redacted.</p>' : ''}</section>`;
+    }).join('');
+  }
+
+  function recordedHeadingHTML(F, title, summary) {
+    const rawTitle = F.fullTitle || F.title || '';
+    const rawSummary = F.fullSummary || F.summary || '';
+    const fullTitle = rawTitle && (rawTitle !== title || rawTitle.length > 60);
+    const fullSummary = rawSummary && (rawSummary !== summary || rawSummary.length > 100);
+    const titleLabel = F.kind === 'shared' ? (F.pr ? 'Recorded merge title' : 'Recorded commit title') : 'Recorded title';
+    if (!fullTitle && !fullSummary) return '';
+    return `<details class="stack-disclosure recorded-heading"><summary>${fullTitle && fullSummary ? titleLabel + ' and summary' : fullTitle ? titleLabel : 'Recorded summary'}</summary>
+      ${fullTitle ? `<div class="recorded-text">${esc(rawTitle)}</div>` : ''}
+      ${fullSummary ? `<div class="recorded-text">${esc(rawSummary)}</div>` : ''}</details>`;
+  }
+
+  function runTime(seconds) {
+    if (seconds < 60) return seconds + ' s';
+    const h = Math.floor(seconds / 3600), m = Math.floor(seconds / 60) % 60;
+    return h ? h + ' h ' + m + ' min' : m + ' min ' + (seconds % 60) + ' s';
+  }
+
+  function permissionsHTML(permissions) {
+    if (!permissions) return '';
+    const sessions = permissions.sessions || [];
+    const byScope = new Map();
+    let overlapping = false;
+    const names = { 'Workspace.Read': 'Read files', 'Workspace.Write': 'Write files', 'Workspace.Exec': 'Run commands' };
+    const label = effect => Object.hasOwn(names, effect) ? names[effect] : effect;
+    const number = n => n.toLocaleString('en-US');
+    const key = g => JSON.stringify([g.effect, g.scopeKey ?? g.scope]);
+    // One episode spends against a shared counter for each permission and scope.
+    // Simultaneous credentials offer alternative ceilings, never additive credit.
+    for (const session of sessions) {
+      for (const grant of session.grants || []) {
+        const id = key(grant), prev = byScope.get(id), active = (grant.state || session.state) === 'active';
+        if (prev?.active && active) overlapping = true;
+        if (!prev || (active && !prev.active) || (active === prev.active &&
+            (active ? grant.budget > prev.grant.budget : (session.createdAt || '') > (prev.session.createdAt || '')))) {
+          byScope.set(id, {grant, session, active});
+        }
+      }
+    }
+    for (const grant of permissions.observed || []) {
+      if (!byScope.has(key(grant))) byScope.set(key(grant), {grant, session: {}, active:false});
+    }
+    const list = [...byScope.values()].sort((a,b) => a.grant.effect.localeCompare(b.grant.effect) || a.grant.scope.localeCompare(b.grant.scope));
+    const stateLabel = state => ({active:'Active',expired:'Expired',revoked:'Revoked',unavailable:'Grant details unavailable',observed:'Historical use','revoked-or-unavailable':'Credential unavailable'})[state] || 'Recorded';
+    const grantRows = list.map(({grant:g,session,active}) => {
+      const metrics = [];
+      metrics.push(g.used != null ? number(g.used) + ' used' : 'Usage unavailable');
+      if (g.budget != null) metrics.push('limit ' + number(g.budget));
+      if (g.reserved) metrics.push(number(g.reserved) + ' reserved');
+      if (active && g.remaining != null) metrics.push(number(g.remaining) + ' left');
+      if (!active) {
+        if (g.ledgerRemaining != null) metrics.push(number(g.ledgerRemaining) + ' unused');
+        metrics.push(stateLabel(g.state || session.state));
+      }
+      return `<li><span><b>${esc(label(g.effect))}</b> <small class="muted">${esc(g.scope)}</small></span><span>${esc(metrics.join(' · '))}</span></li>`;
+    }).join('');
+    const history = sessions.map(session => {
+      const when = [];
+      if (session.createdAt) when.push('Issued ' + exactOf(session.createdAt));
+      if (session.expiresAt) when.push((session.state === 'expired' ? 'expired ' : 'expires ') + exactOf(session.expiresAt));
+      const grants = (session.grants || []).map(g => {
+        const expires = g.expiresAt && g.expiresAt !== session.expiresAt ? ' · expires ' + exactOf(g.expiresAt) : '';
+        return `<li><span>${esc(g.effect)} · ${esc(g.scope)}</span><span>${g.budget != null ? 'Limit ' + esc(number(g.budget)) : 'Limit unavailable'}${esc(expires)}</span></li>`;
+      }).join('');
+      return `<section class="sect"><b>${esc(stateLabel(session.state))}</b>${when.length ? `<span class="muted">${esc(when.join(' · '))}</span>` : ''}${grants ? `<ol>${grants}</ol>` : ''}</section>`;
+    }).join('');
+    return `<div class="node-decisions node-permissions">
+      ${grantRows ? `<ol class="permission-totals">${grantRows}</ol>` : '<p class="muted">Grant details unavailable.</p>'}
+      ${history ? `<details class="stack-disclosure" data-detail="grant-history"><summary>Grant history · ${sessions.length}</summary>${overlapping ? '<p class="muted">Active grants for the same permission and scope share one usage counter. The summary shows the highest active limit. Each credential enforces its own limit.</p>' : ''}${history}</details>` : ''}
+      ${permissions.truncated ? '<p class="muted">Only part of the grant history is available.</p>' : ''}</div>`;
+  }
+
+  function inspectionHTML(F) {
+    const run = F.run, github = F.githubChecks;
+    const section = (label, body) => `<section class="col node-run-section"><h2 class="colh">${esc(label)}</h2>${body}</section>`;
+    const rows = items => `<dl class="node-facts">${items.map(([k,v,note]) => `<dt>${esc(k)}</dt><dd>${esc(v)}${note ? `<div class="muted">${esc(note)}</div>` : ''}</dd>`).join('')}</dl>`;
+    let html = '';
+    if (run) {
+      const harness = [prettyModel(run.harness), prettyModel(run.model)].filter(Boolean).join(' · ');
+      const metrics = [['Harness', harness || 'Unrecorded'], ['Recorded launches', run.launches]];
+      if (run.launches) {
+        metrics.push(['Completed turns', run.turns ?? 'Unreported']);
+        if (run.tokens) {
+          const tokens = run.tokens, count = n => n.toLocaleString('en-US');
+          const cache = [];
+          if (tokens.cacheRead != null) cache.push(count(tokens.cacheRead) + ' read from cache');
+          if (tokens.cacheWrite != null) cache.push(count(tokens.cacheWrite) + ' written to cache');
+          if (tokens.input != null) metrics.push(['Input tokens', count(tokens.input), cache.join(' · ')]);
+          else if (cache.length) metrics.push(['Input cache', cache.join(' · ')]);
+          if (tokens.output != null) metrics.push(['Output tokens', count(tokens.output), tokens.reasoning != null ? count(tokens.reasoning) + ' reasoning' : '']);
+          else if (tokens.reasoning != null) metrics.push(['Reasoning tokens', count(tokens.reasoning)]);
+        }
+        metrics.push(['Provider cost', run.costUsd == null ? 'Unreported' : new Intl.NumberFormat('en-US', {style:'currency',currency:'USD',maximumFractionDigits:6}).format(run.costUsd)]);
+      }
+      if (run.runtime != null) metrics.push(['Harness runtime',runTime(run.runtime)]);
+      if (run.elapsed != null) metrics.push(['Start to finish',runTime(run.elapsed)]);
+      let usageNote = '';
+      if (!run.launches) usageNote = 'World has no recorded harness launch for this episode.';
+      else if (run.turns == null && run.costUsd == null && !run.tokens) usageNote = 'World has no verified usage totals for this run.';
+      else if (run.costUsd == null) usageNote = 'The retained run record supplies no USD amount.';
+      html += section('Run details', rows(metrics) + (usageNote ? `<p class="muted">${usageNote}</p>` : ''));
+      if (run.permissions) html += section('Permissions & budgets', permissionsHTML(run.permissions));
+      if (run.checks?.length) {
+        html += section('World finish checks · ' + run.checks.length, rows(run.checks.map(c => [c.name, c.result === 'PASS' ? 'Passed' : 'Failed'])));
+      }
+    }
+    if (github) {
+      const checks = github.checks || [];
+      const passed = checks.filter(c => (c.conclusion || c.status || '').toUpperCase() === 'SUCCESS').length;
+      const label = checks.length ? `GitHub checks · ${passed}/${checks.length} passed` : 'GitHub checks';
+      const url = /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/pull\/[0-9]+(?:\/checks)?$/.test(github.url) ? github.url.replace(/(?:\/checks)?$/, '/checks') : '';
+      const detail = checks.length ? rows(checks.map(c => [c.name, cap(String(c.conclusion || c.status || 'Unknown').toLowerCase().replace(/_/g,' '))])) : '<p>No checks in this snapshot.</p>';
+      html += section(label, detail + `<p>Captured ${esc(exactOf(github.capturedAt))}${url ? ` · <a href="${esc(url)}" target="_blank" rel="noopener noreferrer">Open on GitHub</a>` : ''}</p>`);
+    }
+    return html;
+  }
+
+  function humanDecisionsHTML(run) {
+    if (!run?.decisions?.length) return '';
+    return '<section class="node-decisions"><h3>Human decisions</h3><ol>' + run.decisions.map(d =>
+      `<li><span>${esc(d.action)}</span><time datetime="${esc(d.at)}">${esc(exactOf(d.at))}</time></li>`).join('') + '</ol></section>';
+  }
+
+  function nodeLayout(F, bar, head, overview, tab, activity) {
+    const run = inspectionHTML(F);
+    const sections = [
+      ['overview', 'Overview', overview],
+      ['files', 'Files', filesTabHTML(F, activity)],
+    ];
+    if (run) sections.push(['run', F.run ? 'Run' : 'Checks', `<div class="node-run-grid">${run}</div>`]);
+    if (F.trajectoryEpisode || F.run?.episode) {
+      const label = F.kind === 'shared' ? 'Linked episode trajectory' : 'Agent trajectory';
+      sections.push(['trajectory', 'Trajectory', `<h2 class="node-panel-title">${label}</h2><div data-trajectory-body></div>`]);
+    }
+    if (!sections.some(([id]) => id === tab)) tab = 'overview';
+    const buttons = sections.map(([id,label]) =>
+      `<button type="button" role="tab" data-node-tab="${id}" id="node-tab-${id}" aria-controls="node-panel-${id}" aria-selected="${tab === id}" tabindex="${tab === id ? 0 : -1}">${label}</button>`).join('');
+    const panels = sections.map(([id,,content]) =>
+      `<section role="tabpanel" tabindex="0" data-node-panel="${id}" id="node-panel-${id}" aria-labelledby="node-tab-${id}"${tab === id ? '' : ' hidden'}>${content}</section>`).join('');
+    return bar + `<nav class="node-tabs" role="tablist" aria-label="Node sections">${buttons}</nav><div class="fbody stack-body" tabindex="0" role="region" aria-label="Node summary">${head}${panels}</div>`;
+  }
+
+  function overviewHTML(inputs, history, outputs) {
+    return `<div class="node-overview">${inputs}${history || outputs ? `<div class="node-outcome">${history}${outputs}</div>` : ''}</div>`;
+  }
+
   // frontHTML is the front card for the stack's front state. T (the adapted model) only names
   // and glyphs other states; every value on the card is the stack's own, or an honest gap.
-  function frontHTML(S, T) {
+  function frontHTML(S, T, tab = 'overview', activity = null) {
     const F = S.front, step = F.kind === 'step';
     const none = t => `<div class="muted">${esc(t)}</div>`;
-    if (F.kind === 'open') return openFrontHTML(S, T, none);
+    if (F.kind === 'open') return openFrontHTML(S, T, none, tab, activity);
     const tag = F.episode ? F.episode + (F.model ? ' · ' + prettyModel(F.model) : '') : F.label;
     const bar = `<div class="fbar"><span id="cb-tag" style="font-weight:700">${esc(tag)}</span><span class="sub" id="cb-when">${esc(`${F.rel} · ${F.exact}`)}</span><span style="flex:1"></span><span class="sub" style="display:inline-flex;align-items:center;gap:7px">${gl(F.glyph, F.glyph === 'circle' ? SHARED_INK : F.colour, 11)}${esc(rowLabel(F.name, F.row))}</span><span class="sub" id="cb-pos">${esc(F.position)}</span></div>`;
     const summ = summaryOf(F);
-    const head = `<div class="head"><div class="h">${esc(cleanTitle(F.title) || F.label)}</div>${summ ? `<div class="outcome">${esc(summ)}</div>` : ''}</div>`;
-    const view = `<section class="view" aria-label="From the agent"><b>From the agent</b><span>No view from the agent yet</span><span style="flex:1"></span><span class="pill">A2UI · World catalog</span><span class="pill" style="border-style:dashed;border-color:var(--ctlCard)">row 151</span></section>`;
-
+    const title = cleanTitle(F.title) || F.label;
+    const head = `<div class="head"><div class="h">${esc(title)}</div>${summ ? `<div class="outcome">${esc(summ)}</div>` : ''}${recordedHeadingHTML(F, title, summ)}</div>`;
     // Inputs: the agent, the task, then what it came from and read.
     let grid = '';
-    if (F.model) {
-      const other = /^codex/i.test(F.agent || '') ? 'Claude' : 'Codex';
-      const agents = [[prettyModel(F.model), true], [other, false]].map(([a, on]) => `<button type="button" class="sbtn" aria-pressed="${on}" disabled style="cursor:default;color:var(--ink)">${esc(a)}</button>`).join('');
-      grid += `<span class="k">Agent</span><div class="seg" role="group" aria-label="Agent">${agents}</div>`;
-    }
-    if (F.task) grid += `<span class="k top">Task</span><div class="task"><div class="tl1">${esc(F.task)}</div></div>`;
-    const gaps = !step ? [] : F.episode ? ['Grants: not recorded yet.'] : ['No episode record for this step: its agent, task, grants and reads are not recorded.'];
+    if (F.model) grid += `<span class="k">Agent</span><div>${esc(agentLine(F))}</div>`;
+    const gaps = !step || F.run ? [] : F.episode ? ['Grants: not recorded yet.'] : ['No episode record for this step: its agent, task, grants and reads are not recorded.'];
     const came = [];
     if (F.builtOn) came.push(stateChip(T, F.builtOn, 'built on'));
     (F.parents || []).forEach(p => came.push(stateChip(T, p, 'parent')));
@@ -288,57 +582,47 @@
       came.push(chip(rd.fromId, rd.label, g, 'read', rd.via === 'commit', 'reads:' + rd.via + ':' + rd.fromId, ` data-read="${esc(rd.fromId)}"`));
     });
     const reads = F.readCalls != null ? ` · ${F.readCalls} read${F.readCalls === 1 ? '' : 's'} over ${F.readFiles} file${F.readFiles === 1 ? '' : 's'}` : '';
-    const readGap = step && F.episode && !F.reads ? none('Reads: not recorded for this step.') : '';
-    const inputs = `<div class="col"><div class="colh">Inputs</div>${grid ? `<div class="ingrid">${grid}</div>` : ''}${gaps.map(none).join('')}
-      ${came.length || reads ? `<div class="sect"><div class="l">↑ Came from${reads}</div><div class="chips">${came.join('')}</div></div>` : ''}${readGap}</div>`;
+    const readGap = step && F.episode && !F.reads && !F.run ? none('Reads: not recorded for this step.') : '';
+    const inputs = F.taskBody || F.task || grid || gaps.length || came.length || reads || readGap ? `<section class="col" aria-labelledby="front-inputs"><h2 class="colh" id="front-inputs">Inputs</h2>${taskHTML(F)}${grid ? `<div class="ingrid">${grid}</div>` : ''}${gaps.map(none).join('')}
+      ${came.length || reads ? `<div class="sect"><div class="l">↑ Came from${reads}</div><div class="chips">${came.join('')}</div></div>` : ''}${readGap}</section>` : '';
 
-    // Outputs: the files changed, the PR, and the merge it led to.
-    const fl = F.files || [];
-    const uniq = p => { const parts = p.split('/'); for (let k = 1; k <= parts.length; k++) { const suf = parts.slice(-k).join('/'); if (fl.filter(g => g.path === suf || g.path.endsWith('/' + suf)).length === 1) return suf; } return p; };
-    const files = fl.map(f => {
-      const tag = f.status === 'A' ? 'new' : f.status === 'D' ? 'del' : 'edit';
-      const tc = tag === 'new' ? 'var(--ink)' : tag === 'del' ? 'var(--youInk)' : 'var(--inkSub)';
-      return `<button type="button" class="file" data-tip="path:${esc(f.path)}" aria-label="${esc(f.path + ', ' + tag)}"><span class="nm">${esc(uniq(f.path))}</span><span class="tg" style="color:${tc}">${tag}</span></button>`;
-    }).join('');
-    const more = F.filesTruncated > 0 ? none(`and ${F.filesTruncated} more not listed`) : '';
-    const fileGap = F.files ? '' : none(`Files: not recorded for this ${step ? 'step' : 'state'}.`);
-    const pr = F.pr ? `<div class="prpill">#${F.pr}${F.files ? ` · ${fl.length} file${fl.length === 1 ? '' : 's'}` : ''}</div>` : '';
-    const led = F.mergedInto ? `<div class="sect" style="margin-top:auto"><div class="l">↓ Led to</div><div class="chips">${stateChip(T, F.mergedInto, '')}</div></div>` : '';
-    const outputs = `<div class="col g6"><div class="colh">Outputs</div>${files}${more}${fileGap}${pr}${led}</div>`;
+    const pr = F.pr ? `<div class="prpill">PR #${F.pr}</div>` : '';
+    const led = F.mergedInto ? `<div class="sect"><div class="l">↓ Led to</div><div class="chips">${stateChip(T, F.mergedInto, '')}</div></div>` : '';
+    const outputBody = commitHTML(F) + pr + led;
+    const outputs = outputBody ? `<section class="col" aria-labelledby="front-outputs"><h2 class="colh" id="front-outputs">Outputs</h2>${outputBody}</section>` : '';
 
     const acts = (F.decisions || []).map(a => {
       const [bg, fg, bd] = ACT[a.actor] || ACT.world;
-      return `<div class="act"${a.source ? ` data-tip="src:${esc(a.source)}"` : ''}><span class="who" style="background:${bg};color:${fg};border-color:${bd}">${WHO[a.actor] || esc(a.actor)}</span><span class="tx">${esc(a.text)}<span class="tm">${esc(a.rel)}</span></span></div>`;
+      return `<li class="act"${a.source ? ` data-tip="src:${esc(a.source)}"` : ''}><span class="who" style="background:${bg};color:${fg};border-color:${bd}">${WHO[a.actor] || esc(a.actor)}</span><span class="tx">${esc(a.text)}<span class="tm">${esc(a.rel)}</span></span></li>`;
     }).join('');
-    const decisions = `<div class="col g9"><div class="colh">Decisions</div>${acts || none('None recorded.')}</div>`;
-
     const ck = F.checks || {};
-    const v = verdict(ck.graders, ck.rounds, F.firstRoundPass, ck.minutes);
-    const tiles = [[ck.graders, 'graders'], [ck.rounds, ck.rounds === 1 ? 'round' : 'rounds'], [ck.minutes, 'agent min'], [ck.calls, 'World calls']]
-      .filter(([x]) => x != null && x !== '').map(([x, k]) => `<div class="ctile"><div class="v">${esc(x)}</div><div class="k">${k}</div></div>`).join('');
-    const checks = `<div class="col g9"><div class="colh">Checks</div>${v ? `<div class="verdict">${esc(v)}</div>` : none(step ? 'No episode record for this step.' : 'No checks are recorded for this shared commit.')}${tiles ? `<div class="tiles">${tiles}</div>` : ''}</div>`;
+    const totals = [[ck.graders, 'graders'], [ck.rounds, ck.rounds === 1 ? 'round' : 'rounds'], [ck.minutes, 'agent-minutes'], [ck.calls, 'World calls']]
+      .filter(([value]) => value != null && value !== '').map(([value, label]) => `${esc(value)} ${label}`).join(' · ');
+    const decisions = humanDecisionsHTML(F.run);
+    const happened = acts || totals || decisions
+      ? `<section class="col" aria-labelledby="front-history"><h2 class="colh" id="front-history">What happened</h2>${acts ? `<ol class="front-history">${acts}</ol>` : ''}${totals ? `<div class="check-totals">${totals}</div>` : ''}${decisions}</section>`
+      : '';
 
-    return bar + `<div class="fbody">${head}${view}<div class="cols">${inputs}${outputs}${decisions}${checks}</div></div>`;
+    return nodeLayout(F, bar, head, overviewHTML(inputs, happened, outputs), tab, activity);
   }
 
   // openFrontHTML is an open episode's minimal card (row 220 M4): what it is, what it was built on,
   // its lifecycle label. Nothing has landed, so outputs and checks are honest gaps; N2d owns the richer card.
-  function openFrontHTML(S, T, none) {
+  function openFrontHTML(S, T, none, tab, activity) {
     const F = S.front, o = F.open || {};
     const bar = `<div class="fbar"><span id="cb-tag" style="font-weight:700">${esc(F.episode + (F.model ? ' · ' + prettyModel(F.model) : ''))}</span><span class="sub" id="cb-when">${esc(`started ${F.rel} · ${F.exact}`)}</span><span style="flex:1"></span><span class="sub" style="display:inline-flex;align-items:center;gap:7px">${gl(F.glyph, F.colour, 11)}${esc(rowLabel(F.name, F.row))}</span><span class="sub" id="cb-pos" data-open-state="${esc(o.state)}">${esc(o.label)}</span></div>`;
     const head = `<div class="head"><div class="h">${esc(F.title || F.episode)}</div><div class="outcome">${esc(o.label + (o.ended ? ' · ended ' + o.ended : ''))}</div></div>`;
     let grid = '';
     if (o.lastRun) grid += `<span class="k">Agent run</span><div>${esc(lastRunDetail(o.lastRun))}</div>`;
     if (F.model) grid += `<span class="k">Agent</span><div>${esc(agentLine(F))}</div>`;
-    if (F.task) grid += `<span class="k top">Task</span><div class="task"><div class="tl1">${esc(F.task)}</div></div>`;
     if (o.branch) grid += `<span class="k">Branch</span><div>${esc(o.branch)}</div>`;
     const came = F.builtOn ? `<div class="sect"><div class="l">↑ Came from</div><div class="chips">${stateChip(T, F.builtOn, 'built on')}</div></div>`
       : none(o.baseOutsideWindow ? `Built on ${o.base || 'an unrecorded base'}, outside the retained window.` : 'Base not recorded.');
-    const inputs = `<div class="col"><div class="colh">Inputs</div>${grid ? `<div class="ingrid">${grid}</div>` : ''}${came}</div>`;
-    const outputs = `<div class="col g6"><div class="colh">Outputs</div>${F.pr ? `<div class="prpill">#${F.pr} · waiting for merge</div>` : none('Nothing has landed yet.')}</div>`;
-    const decisions = `<div class="col g9"><div class="colh">Decisions</div>${none('None recorded.')}</div>`;
-    const checks = `<div class="col g9"><div class="colh">Checks</div>${none('No checks until it lands.')}</div>`;
-    return bar + `<div class="fbody">${head}<div class="cols">${inputs}${outputs}${decisions}${checks}</div></div>`;
+    const inputs = `<div class="col"><div class="colh">Inputs</div>${taskHTML(F)}${grid ? `<div class="ingrid">${grid}</div>` : ''}${came}</div>`;
+    const outputs = `<div class="col g6"><div class="colh">Outputs</div>${commitHTML(F)}${F.pr ? `<div class="prpill">#${F.pr} · waiting for merge</div>` : (F.commits?.length ? none('Nothing has landed yet.') : '')}</div>`;
+    const decisions = humanDecisionsHTML(F.run);
+    const history = decisions ? `<section class="col"><h2 class="colh">What happened</h2>${decisions}</section>` : '';
+    return nodeLayout(F, bar, head, overviewHTML(inputs, history, outputs), tab, activity);
   }
 
   // railHTML is the whole brane, newest at the top; a long lane shows a window around the front.
@@ -358,6 +642,97 @@
   // ---------- Places: the URL follows the view; the address bar is M4a's grammar ----------
   const appPath = (brane, at) => brane == null ? '/surface' : '/surface?brane=' + encodeURIComponent(brane) + '&at=' + encodeURIComponent(at);
   const stackPath = (brane, at) => '/surface/stack.json?brane=' + encodeURIComponent(brane) + '&at=' + encodeURIComponent(at);
+  const filePath = (brane, at, path, source = 'committed') => '/surface/file.json?brane=' + encodeURIComponent(brane) + '&at=' + encodeURIComponent(at) + '&path=' + encodeURIComponent(path) +
+    (source === 'committed' ? '' : '&source=' + encodeURIComponent(source));
+
+  function patchLines(source) {
+    const lines = source.split('\n');
+    if (lines.at(-1) === '') lines.pop();
+    let old = 0, next = 0, oldLeft = 0, newLeft = 0;
+    return lines.map(text => {
+      const hunk = /^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/.exec(text);
+      if (hunk) {
+        old = Number(hunk[1]); oldLeft = Number(hunk[2] ?? 1);
+        next = Number(hunk[3]); newLeft = Number(hunk[4] ?? 1);
+        return { text, type: 'hunk' };
+      }
+      const marker = text[0];
+      if (oldLeft > 0 && marker === '-') {
+        oldLeft--;
+        return { text, type: 'removed', before: old++ };
+      }
+      if (newLeft > 0 && marker === '+') {
+        newLeft--;
+        return { text, type: 'added', after: next++ };
+      }
+      if (oldLeft > 0 && newLeft > 0 && marker === ' ') {
+        oldLeft--; newLeft--;
+        return { text, type: 'context', before: old++, after: next++ };
+      }
+      return { text, type: 'meta' };
+    });
+  }
+
+  function fileSizeLabel(bytes) {
+    if (!Number.isSafeInteger(bytes) || bytes < 0) return '';
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KiB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MiB';
+  }
+
+  function filePreviewHTML(evidence) {
+    const patch = typeof evidence.diff === 'string' ? patchLines(evidence.diff) : [];
+    const first = patch.findIndex(line => line.type === 'added' || line.type === 'removed');
+    const status = evidence.sourceLabel ? '' : FILE_STATUS.get(evidence.status);
+    const size = fileSizeLabel(evidence.status === 'D' ? evidence.size?.before : evidence.size?.after);
+    const meta = [status, size].filter(Boolean).join(' · ');
+    const sample = first >= 0 ? patch.slice(Math.max(0, first - 1), first + 6)
+      : evidence.text && typeof evidence.text === 'string' ? evidence.text.split('\n', 6).map(text => ({text, type: 'context'})) : [];
+    const lines = sample.map(({text, type}) => `<span class="patch-${type}">${esc(text) || ' '}</span>`).join('\n');
+    return `<div class="file-preview-label">${esc(evidence.sourceLabel || 'Committed file preview')}${meta ? ' · ' + meta : ''}</div>
+      ${lines ? `<pre>${lines}</pre>` : evidence.text === '' ? '<div>Empty file.</div>' : evidence.kind === 'unavailable' ? '<div>Retained file contents unavailable.</div>' : '<div>Open for file details.</div>'}`;
+  }
+
+  function fileEvidenceHTML(evidence, mode) {
+    const messages = {
+      binary: 'Binary content has no text preview.',
+      symlink: 'This path is a symbolic link.',
+      submodule: 'This path is a Git submodule.',
+      'too-large': 'This file exceeds the preview limit.',
+      unavailable: 'Retained file contents unavailable.',
+    };
+    const hasText = evidence.kind === 'text' && typeof evidence.text === 'string';
+    const hasDiff = typeof evidence.diff === 'string' && evidence.diff.length > 0;
+    const diff = hasDiff && (mode !== 'file' || !hasText);
+    const controls = hasText && hasDiff ? `<div class="file-modes" role="group" aria-label="File view">
+      <button type="button" data-file-mode="diff" aria-pressed="${diff}">Diff</button>
+      <button type="button" data-file-mode="file" aria-pressed="${!diff}">File</button>
+      </div>` : '';
+    const rev = evidence.commit || evidence.merge;
+    const origin = evidence.sourceLabel || (evidence.merge ? 'Merge' : '');
+    const commit = origin || rev ? `<span>${esc(origin)}${rev ? ` <code>${esc(rev)}</code>` : ''}</span>` : '';
+    const before = fileSizeLabel(evidence.size?.before), after = fileSizeLabel(evidence.size?.after);
+    const size = before && after ? `${before} → ${after}` : before || after;
+    const patch = diff ? patchLines(evidence.diff) : [];
+    const visiblePatch = patch.slice(0, 5000);
+    const clippedPatch = evidence.truncated || visiblePatch.length < patch.length;
+    const added = visiblePatch.filter(line => line.type === 'added').length;
+    const removed = visiblePatch.filter(line => line.type === 'removed').length;
+    const changes = added || removed ? `<span class="patch-count"><span class="patch-added">+${added}</span> <span class="patch-removed">−${removed}</span>${clippedPatch ? ' shown' : ''}</span>` : '';
+    const facts = commit || size || changes ? `<div class="file-evidence-facts muted">${commit}${size ? `<span>${size}</span>` : ''}${changes}</div>` : '';
+    const content = diff ? evidence.diff : hasText ? evidence.text : null;
+    const hint = diff ? (clippedPatch ? 'Only part of the diff is shown.' : '') :
+      evidence.status === 'D' && hasText ? 'Deleted in this merge. Showing the first-parent version.' : hasText && !evidence.sourceLabel ? 'Version at the merge.' : '';
+    const details = hint ? `<div class="muted">${hint}</div>` : '';
+    const preview = content === null ? `<div class="muted">${Object.hasOwn(messages, evidence.kind) ? messages[evidence.kind] : 'File preview unavailable.'}</div>`
+      : content === '' ? '<div class="muted">Empty file.</div>'
+      : diff ? `<pre class="file-evidence-code rich-patch" aria-label="Git diff"><code>${visiblePatch.map(line =>
+        `<span class="patch-row patch-${line.type}" data-before="${line.before ?? ''}" data-after="${line.after ?? ''}">${esc(line.text) || ' '}</span>`
+      ).join('\n')}</code></pre>`
+      : `<pre class="file-evidence-code" aria-label="File contents"><code>${esc(content)}</code></pre>`;
+    return facts + controls + details + preview;
+  }
+
   // parseAppQuery is /surface's query grammar: none ({}), or exactly one brane and one at; else null.
   function parseAppQuery(search) {
     const p = new URLSearchParams(String(search || '').replace(/^\?/, ''));
@@ -625,7 +1000,7 @@
   }
 
   if (typeof module !== 'undefined') module.exports = { needsYouHTML, decidedHTML, notifications, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
-    adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW },
+    adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, filePath, fileEvidenceHTML, filesTabHTML, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW },
     VERB_ROUTE_BUDGET_MS, verbOutcome, askVerb, verbAct, verbPanel, goWith, addressGo };
   if (typeof document === 'undefined') return;
 
@@ -816,7 +1191,7 @@
   const camera = WorldCameraController.create($('stage'), $('head-space'), {
     model:() => T, timeXs:() => XS, sidePoints, attention:attentionLanes, reduced,
     glyph:(n, size) => glyphOfNode(n, size), title:n => cleanTitle(n.title) || n.episode || n.label || n.id,
-    summary:summaryOf, agent:agentLine, tag:tagOf, lastRunLabel, lastRunDetail, stops:() => miniStops,
+    summary:summaryOf, agent:agentLine, tag:tagOf, lastRunLabel, lastRunDetail, mergeFileSummary, stops:() => miniStops,
     open:id => open(id),
     select:id => { if (N[id]) { st.focus = id; camera.select(id); } },
     placeStatus:placeNow,
@@ -865,6 +1240,8 @@
     stackFlight?.cancel();
     if (wasStack && heads && !instant && !reduced()) $('stage').classList.add('head-return');
     if (wasStack) {
+      dismissFilePreview();
+      closeFile(false);
       timelineAnchor = N[F.id]?.id || T.aliasOf[F.id] || '';
       st.d = 0;
       $('root').classList.remove('zoomed');
@@ -1414,11 +1791,321 @@
     have.forEach((el, k) => { if (!keep.has(k)) { if (animate) { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); } else el.remove(); } });
   }
 
+  let selectedFile = null, filePreview = null, restoringFileFocus = false;
+
+  function dismissFilePreview() {
+    if (!filePreview) return;
+    const { button, timer, leave, request, bubble } = filePreview;
+    filePreview = null;
+    clearTimeout(timer);
+    clearTimeout(leave);
+    request.abort();
+    button.removeAttribute('aria-describedby');
+    bubble?.remove();
+  }
+
+  function leaveFilePreview(target) {
+    const preview = filePreview;
+    if (!preview || preview.button === document.activeElement || preview.button.contains(target) ||
+        preview.bubble?.contains(target)) return;
+    clearTimeout(preview.leave);
+    preview.leave = setTimeout(() => { if (filePreview === preview) dismissFilePreview(); }, 120);
+  }
+
+  function placeFilePreview() {
+    if (!filePreview?.bubble) return;
+    const { button, bubble } = filePreview;
+    const rect = button.getBoundingClientRect();
+    const visible = button.closest('.stack-body')?.getBoundingClientRect();
+    if (!visible || rect.bottom <= Math.max(0, visible.top) ||
+        rect.top >= Math.min(window.innerHeight, visible.bottom)) {
+      dismissFilePreview();
+      return;
+    }
+    const width = bubble.offsetWidth, height = bubble.offsetHeight;
+    const x = rect.left - width >= 16 ? rect.left - width - 8 :
+      Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+    const y = rect.left - width >= 16 ? rect.top : rect.bottom + 8;
+    bubble.style.left = x + 'px';
+    bubble.style.top = Math.max(8, Math.min(y, window.innerHeight - height - 8)) + 'px';
+  }
+
+  function fileSelection(button) {
+    const { filePath: path, fileSource: source = 'committed', fileOrigin: origin = '' } = button.dataset;
+    const tab = button.closest('[data-node-panel]')?.dataset.nodePanel || '';
+    if (source === 'committed' && F.landedFiles?.some(file => file.path === path)) return {path, source, tab, origin};
+    if (tab === 'files' && (source === 'episode-read' || source === 'episode-write')) return {path, source, tab, origin};
+    return null;
+  }
+
+  function applyFileFilters(root) {
+    const query = (root.querySelector('[data-file-filter]')?.value || '').trim().toLowerCase();
+    const kind = root.querySelector('[data-file-kind]')?.value || '';
+    let visible = 0;
+    for (const group of root.querySelectorAll('[data-file-group]')) {
+      let matches = 0;
+      for (const row of group.querySelectorAll('[data-file-row]')) {
+        row.hidden = (kind && kind !== group.dataset.fileGroup) || !row.dataset.fileRow.toLowerCase().includes(query);
+        if (!row.hidden) matches++;
+      }
+      group.hidden = !matches;
+      visible += matches;
+    }
+    const empty = root.querySelector('[data-file-empty]');
+    if (empty) empty.hidden = visible !== 0;
+    if (filePreview?.button.closest('[hidden]')) dismissFilePreview();
+  }
+
+  function startFilePreview(button) {
+    if (!button || restoringFileFocus || selectedFile || st.d !== 1 || !$('front')?.contains(button)) return;
+    if (filePreview?.button === button) {
+      clearTimeout(filePreview.leave);
+      return;
+    }
+    dismissFilePreview();
+    const selection = fileSelection(button);
+    if (!selection) return;
+    const {path, source} = selection;
+    const request = new AbortController();
+    const preview = { button, request };
+    filePreview = preview;
+    preview.timer = setTimeout(async () => {
+      if (filePreview !== preview || !button.isConnected) return;
+      const bubble = document.createElement('aside');
+      bubble.id = 'file-hover-preview';
+      bubble.className = 'file-hover-preview';
+      bubble.setAttribute('role', 'tooltip');
+      bubble.addEventListener('pointerenter', () => clearTimeout(preview.leave));
+      bubble.addEventListener('pointerleave', event => leaveFilePreview(event.relatedTarget));
+      bubble.textContent = 'Loading file preview…';
+      preview.bubble = bubble;
+      document.body.append(bubble);
+      button.setAttribute('aria-describedby', bubble.id);
+      placeFilePreview();
+      if (filePreview !== preview) return;
+      try {
+        const result = await getJSON(filePath(F.brane, F.id, path, source), request.signal);
+        if (filePreview !== preview) return;
+        if (!result.ok || result.body?.path !== path) {
+          bubble.textContent = 'File preview unavailable.';
+        } else {
+          preview.evidence = result.body;
+          bubble.innerHTML = filePreviewHTML(result.body);
+        }
+      } catch (_) {
+        if (filePreview === preview) bubble.textContent = 'File preview unavailable.';
+      }
+      if (filePreview === preview) placeFilePreview();
+    }, 220);
+  }
+
+  function fileButton(front, selection) {
+    const buttons = Array.from(front.querySelectorAll('[data-file-path]')).filter(button =>
+      button.dataset.filePath === selection.path && (button.dataset.fileSource || 'committed') === selection.source &&
+      (button.closest('[data-node-panel]')?.dataset.nodePanel || '') === selection.tab);
+    return buttons.find(button => (button.dataset.fileOrigin || '') === selection.origin) || buttons[0];
+  }
+
+  function focusFileSource(element) {
+    restoringFileFocus = true;
+    element.focus({preventScroll:true});
+    restoringFileFocus = false;
+  }
+
+  function closeFile(restoreFocus = true) {
+    if (!selectedFile) return;
+    const closing = selectedFile;
+    const { panel, sectionTop, layerTop, request } = closing;
+    selectedFile = null;
+    request.abort();
+    panel.remove();
+    if ($('phone-back')) $('phone-back').textContent = fromHeads ? '← Heads' : '← Timeline';
+    const front = $('front'), summary = front.querySelector('.stack-body');
+    if (summary) {
+      summary.hidden = false;
+      if (restoreFocus) {
+        const button = fileButton(front, closing);
+        focusFileSource(button || summary);
+        summary.scrollTop = sectionTop;
+        if (narrow.matches) $('L1').scrollTop = layerTop;
+      }
+    }
+  }
+
+  async function openFile(button) {
+    if (st.d !== 1 || !F || !$('front').contains(button) || selectedFile) return;
+    const selection = fileSelection(button);
+    if (!selection) return;
+    const {path, source, tab} = selection;
+    const previewed = filePreview?.button === button && filePreview.evidence;
+    dismissFilePreview();
+
+    const front = $('front'), summary = front.querySelector('.stack-body');
+    const panel = document.createElement('section');
+    panel.className = 'fbody file-evidence';
+    panel.setAttribute('aria-labelledby', 'file-evidence-path');
+    panel.tabIndex = 0;
+    panel.innerHTML = '<div class="file-evidence-head"><button type="button" data-file-summary>Back to summary</button><h2 id="file-evidence-path"></h2></div>' +
+      '<div role="status" class="muted">Loading file…</div><div class="file-evidence-body"></div>';
+    panel.querySelector('#file-evidence-path').textContent = path;
+    if (tab === 'files') panel.querySelector('[data-file-summary]').textContent = 'Back to files';
+    const request = new AbortController();
+    const selected = { ...selection, node: F.id, brane: F.brane, panel, request, sectionTop: summary.scrollTop, layerTop: $('L1').scrollTop };
+    selectedFile = selected;
+    summary.hidden = true;
+    front.append(panel);
+    $('phone-back').textContent = tab === 'files' ? '← Files' : '← Summary';
+    if (narrow.matches) $('L1').scrollTop = 0;
+    panel.querySelector('[data-file-summary]').focus({preventScroll:true});
+
+    const loading = panel.querySelector('[role="status"]'), body = panel.querySelector('.file-evidence-body');
+    try {
+      const result = previewed ? {ok: true, body: previewed} :
+        await getJSON(filePath(selected.brane, selected.node, path, source), request.signal);
+      if (selectedFile !== selected) return;
+      if (!result.ok || result.body?.path !== path) {
+        loading.textContent = 'File preview unavailable.';
+        return;
+      }
+      loading.textContent = '';
+      body.innerHTML = fileEvidenceHTML(result.body, 'diff');
+      body.addEventListener('click', event => {
+        const mode = event.target.closest('[data-file-mode]')?.dataset.fileMode;
+        if (mode !== 'file' && mode !== 'diff') return;
+        body.innerHTML = fileEvidenceHTML(result.body, mode);
+        body.querySelector(`[data-file-mode="${mode}"]`)?.focus({preventScroll:true});
+      });
+    } catch (_) {
+      if (selectedFile === selected) loading.textContent = 'File preview unavailable.';
+    }
+  }
+
+  let selectedNodeTab = 'overview';
+  let episodeFiles = null;
+
+  function tabLocation() {
+    const parts = location.hash.slice(1).split('/');
+    return {heads: parts[0] === 'heads', tab: (parts[0] === 'heads' ? parts[1] : parts[0]) || 'overview'};
+  }
+
+  function nodeURL() {
+    const fragment = [fromHeads ? 'heads' : '', selectedNodeTab === 'overview' ? '' : selectedNodeTab].filter(Boolean).join('/');
+    return appPath(F.brane, F.id) + (fragment ? '#' + fragment : '');
+  }
+
+  function resetEpisodeFiles() {
+    episodeFiles?.request?.abort();
+    episodeFiles = null;
+  }
+
+  function fileFilters(panel) {
+    return {path: panel?.querySelector('[data-file-filter]')?.value || '', kind: panel?.querySelector('[data-file-kind]')?.value || ''};
+  }
+
+  function restoreFilters(panel, saved) {
+    const root = panel?.querySelector('.node-files-tab');
+    if (!root) return;
+    const path = root.querySelector('[data-file-filter]'), kind = root.querySelector('[data-file-kind]');
+    if (path) path.value = saved.path;
+    if (kind) kind.value = saved.kind;
+    applyFileFilters(root);
+  }
+
+  async function loadEpisodeFiles(front) {
+    const episode = F.trajectoryEpisode || F.run?.episode;
+    if (!episode || selectedNodeTab !== 'files') return;
+    if (!episodeFiles) episodeFiles = {id:F.id, brane:F.brane, episode, checked:0};
+    const state = episodeFiles;
+    if (state.request || Date.now() - state.checked < 10000) return;
+    const request = new AbortController();
+    state.request = request;
+    let data;
+    try {
+      const query = new URLSearchParams({brane: state.brane, at: state.id});
+      const response = await getJSON('/surface/episode-files.json?' + query, request.signal);
+      if (response.ok && response.body?.schema === 'world/surface-episode-files/v1' && response.body.episode === episode) data = response.body;
+    } catch (_) { /* The manifest can still supply committed paths. */ }
+    if (episodeFiles !== state || request.signal.aborted) return;
+    state.request = null;
+    state.checked = Date.now();
+    data ||= {status:'unavailable'};
+    if (JSON.stringify(state.data) === JSON.stringify(data)) return;
+    state.data = data;
+    const panel = front.querySelector('[data-node-panel=files]');
+    if (!panel || F.id !== state.id || F.brane !== state.brane) return;
+    const focused = document.activeElement;
+    const pathControl = focused.matches?.('[data-file-filter]'), kindControl = focused.matches?.('[data-file-kind]');
+    const focusedFile = panel.contains(focused) && focused.matches?.('[data-file-path]') ? fileSelection(focused) : null;
+    const filters = fileFilters(panel);
+    if (filePreview && panel.contains(filePreview.button)) dismissFilePreview();
+    panel.innerHTML = filesTabHTML(F, data);
+    restoreFilters(panel, filters);
+    if (focusedFile) focusFileSource(fileButton(front, focusedFile) || panel);
+    else if (pathControl || kindControl) panel.querySelector(pathControl ? '[data-file-filter]' : '[data-file-kind]')?.focus({preventScroll:true});
+  }
+
+  function selectNodeTab(tab) {
+    const front = $('front'), chosen = front?.querySelector(`[data-node-tab="${tab}"]`);
+    if (!chosen || st.d !== 1) return;
+    const wasFile = Boolean(selectedFile);
+    if (wasFile) closeFile(false);
+    dismissFilePreview();
+    for (const button of front.querySelectorAll('[data-node-tab]')) {
+      const selected = button === chosen;
+      button.setAttribute('aria-selected', String(selected));
+      button.tabIndex = selected ? 0 : -1;
+    }
+    for (const panel of front.querySelectorAll('[data-node-panel]')) panel.hidden = panel.dataset.nodePanel !== tab;
+    selectedNodeTab = tab;
+    const summary = front.querySelector('.stack-body');
+    summary.scrollTop = 0;
+    if (narrow.matches) $('L1').scrollTop = 0;
+    if (wasFile && narrow.matches) $('phone-back').textContent = fromHeads ? '← Heads' : '← Timeline';
+    cameraURL(nodeURL(), false);
+    globalThis.WorldNodeTrajectory?.mount(front, F, getJSON, tab === 'trajectory');
+    loadEpisodeFiles(front);
+  }
+
   function renderBrane(animate) {
+    dismissFilePreview();
     if (!$('bstage')) {
       $('br').innerHTML = `<div class="bstage" id="bstage"><article class="front" id="front"></article></div><nav class="rail" id="rail" aria-label="Brane timeline"></nav>`;
     }
-    $('front').innerHTML = frontHTML(S, T);
+    const front = $('front');
+    if (selectedFile && (selectedFile.node !== F.id || selectedFile.brane !== F.brane)) closeFile(false);
+    const activeFileControl = selectedFile?.panel.contains(document.activeElement) ? document.activeElement : null;
+    const detailKey = el => el.dataset.detail || el.querySelector('summary')?.textContent;
+    const sameNode = front.dataset.front === F.id;
+    const openDetails = sameNode ? new Set([...front.querySelectorAll('details[open]')].map(detailKey)) : new Set();
+    const focusedDetail = sameNode && document.activeElement?.matches('#front summary') ? detailKey(document.activeElement.parentElement) : null;
+    const activeFileButton = sameNode && document.activeElement?.closest('#front [data-file-path]');
+    const focusedFile = activeFileButton ? fileSelection(activeFileButton) : null;
+    const readingPosition = sameNode ? front.querySelector('.stack-body')?.scrollTop : 0;
+    if (episodeFiles && (episodeFiles.id !== F.id || episodeFiles.brane !== F.brane)) resetEpisodeFiles();
+    const savedFilters = fileFilters(sameNode && front.querySelector('[data-node-panel=files]') || null);
+    const focusedTab = sameNode && document.activeElement?.dataset.nodeTab;
+    const oldFilter = sameNode && document.activeElement?.matches?.('[data-file-filter], [data-file-kind]') ? document.activeElement : null;
+    front.innerHTML = frontHTML(S, T, selectedNodeTab, episodeFiles?.data);
+    selectedNodeTab = front.querySelector('[data-node-tab][aria-selected=true]').dataset.nodeTab;
+    restoreFilters(front.querySelector('[data-node-panel=files]'), savedFilters);
+    if (focusedTab) front.querySelector(`[data-node-tab="${focusedTab}"]`)?.focus({preventScroll:true});
+    if (oldFilter) front.querySelector(oldFilter.matches('[data-file-kind]') ? '[data-file-kind]' : '[data-file-filter]')?.focus({preventScroll:true});
+    for (const detail of front.querySelectorAll('details')) {
+      const key = detailKey(detail);
+      if (openDetails.has(key)) detail.open = true;
+      if (key === focusedDetail) detail.querySelector('summary')?.focus({preventScroll:true});
+    }
+    globalThis.WorldNodeTrajectory?.mount(front, F, getJSON, selectedNodeTab === 'trajectory');
+    loadEpisodeFiles(front);
+    if (readingPosition) front.querySelector('.stack-body').scrollTop = readingPosition;
+    if (focusedFile && !selectedFile) focusFileSource(fileButton(front, focusedFile) || front.querySelector('.stack-body'));
+    if (selectedFile) {
+      if (fileButton(front, selectedFile) || (selectedFile.tab === 'files' && front.querySelector('[data-node-panel=files]'))) {
+        front.querySelector('.stack-body').hidden = true;
+        front.append(selectedFile.panel);
+        activeFileControl?.focus({preventScroll:true});
+      } else closeFile();
+    }
     const fork = document.createElement('button');
     fork.type = 'button'; fork.className = 'state-branch'; fork.textContent = 'Branch…';
     fork.setAttribute('aria-label', 'Draft a branch from this state');
@@ -1431,7 +2118,7 @@
     if (!$('phone-step-nav')) {
       $('br').insertAdjacentHTML('afterbegin', '<nav id="phone-step-nav" class="phone-view" aria-label="State navigation"><button type="button" id="phone-back">← Timeline</button><button type="button" id="phone-earlier">Earlier</button><button type="button" id="phone-later">Later</button></nav>');
     }
-    $('phone-back').textContent = fromHeads ? '← Heads' : '← Timeline';
+    $('phone-back').textContent = selectedFile ? (selectedFile.tab === 'files' ? '← Files' : '← Summary') : fromHeads ? '← Heads' : '← Timeline';
     $('phone-earlier').disabled = pos === 0;
     $('phone-later').disabled = pos >= RAIL.length - 1;
     placeBars(animate);
@@ -1449,8 +2136,8 @@
   function follow(path) { try { if (location.pathname + location.search !== path) history.replaceState(null, '', path); } catch (_) { /* the view still moves */ } }
 
   // ---------- Live data ----------
-  async function getJSON(url) {
-    const r = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+  async function getJSON(url, signal) {
+    const r = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store', signal });
     let body = null;
     try { body = await r.json(); } catch (_) { body = null; }
     return { ok: r.ok, status: r.status, body };
@@ -1596,7 +2283,7 @@
       if (!r.stack) { say(r.missing || 'the selection is no longer on the surface'); out(); return; }
       setStack(r.stack); renderBrane(false); $('rail').scrollTop = railTop;
       if (N[F.id]) st.focus = F.id;
-      follow(appPath(F.brane, F.id)); renderCrumbs();
+      cameraURL(nodeURL(), false); renderCrumbs();
     }
     st.d = depth;
     setView(depth === 1 ? 'brane' : camera.active ? 'heads' : 'timeline');
@@ -1759,7 +2446,7 @@
   }
   // openState fetches the state's stack and zooms into it; a newer open supersedes an older one.
   let openSeq = 0;
-  async function openState(brane, at, navigate = true) {
+  async function openState(brane, at, navigate = true, tab) {
     if (N[at]?.draft) return drafts.edit(N[N[at].parent], at);
     const seq = ++openSeq;
     let res;
@@ -1770,7 +2457,8 @@
     const was = st.d === 1;
     $('stage').classList.remove('head-return');
     const face = camera.active && faceFor(b.front.id)?.getBoundingClientRect();
-    if (!was) fromHeads = camera.heads && camera.active || location.hash === '#heads';
+    if (!was) fromHeads = camera.heads && camera.active || tabLocation().heads;
+    if (tab != null || !was) selectedNodeTab = tab || 'overview';
     setStack(b);
     if (!was && T) { const sx = screenX(F.id), d = DISP[REP[F.id]]; setOrigin(sx != null ? Math.max(PL, Math.min(PR, sx)) : PL, d ? d.y : LY[T.GROUPS[0].shared]); }
     st.d = 1; st.focus = F.id; $('tip').hidden = true;
@@ -1793,17 +2481,22 @@
     }
     renderCrumbs();
     if (fromHeads) {
-      if (navigate) cameraURL(appPath(F.brane, F.id) + '#heads', !was);
-    } else follow(appPath(F.brane, F.id));
+      if (navigate) cameraURL(nodeURL(), !was);
+    } else cameraURL(nodeURL(), false);
     $('root').focus({ preventScroll: true });
     return true;
   }
   function out(focusId) {
+    resetEpisodeFiles();
+    selectedNodeTab = 'overview';
+    globalThis.WorldNodeTrajectory?.clear();
     if (st.d === 0) {
       if (camera.active) chooseAngle(false, {keyboard:headRibbon.contains(document.activeElement)});
       return;
     }
     if (fromHeads) { chooseAngle(true, {keyboard:true}); return; }
+    dismissFilePreview();
+    closeFile(false);
     $('L0').inert = false; $('L1').inert = true; markAngle('timeline');
     openSeq++;
     const id = focusId || (F && F.id);
@@ -1836,7 +2529,7 @@
   function goAddress(raw, current) { return addressGo(raw, current, { parse: SEAMS.parseAddress, loadIndex, out, openState, say }); }
 
   // ---------- Popovers ----------
-  const KEYROWS = [['← →', 'back · forward a page', '—'], ['⇧← ⇧→', 'previous · next state', '—'], ['↑ ↓', 'lane above · below', 'back in time · toward now'], ['+ −', 'zoom in · out', '—'], ['End', 'back to now', 'most recent'], ['Home', 'the oldest state', 'earliest'], ['Enter', 'open brane', '—'], ['Esc', '—', 'back to timeline'], ['N', 'what needs you', 'what needs you'], ['/', 'address bar', 'address bar'], ['Enter', 'in the bar: a place, episode report E, why T, approve ID', 'the same'], [',', 'appearance', 'appearance'], ['?', 'these keys', 'these keys']];
+  const KEYROWS = [['← →', 'back · forward a page', '—'], ['⇧← ⇧→', 'previous · next state', '—'], ['↑ ↓', 'lane above · below', 'back in time · toward now'], ['+ −', 'zoom in · out', '—'], ['End', 'back to now', 'most recent'], ['Home', 'the oldest state', 'earliest'], ['Enter', 'open brane', '—'], ['Esc', '—', 'close the file view or return to the timeline'], ['N', 'what needs you', 'what needs you'], ['/', 'address bar', 'address bar'], ['Enter', 'in the bar: a place, episode report E, why T, approve ID', 'the same'], [',', 'appearance', 'appearance'], ['?', 'these keys', 'these keys']];
   function renderKeys() {
     if (camera.heads && camera.active && st.d === 0) {
       const rows = [['← →', 'Bring the neighboring lane’s latest entry forward'], ['↑ / +', 'Move into history'],
@@ -1901,11 +2594,14 @@
     }
     const n = N[id]; if (!n) return '';
     const shared = n.kind === 'shared';
+    const fileSummary = mergeFileSummary(n);
+    const files = fileSummary ? `<div class="hm">${esc(fileSummary)}</div>` : '';
     const ids = [n.episode, n.pr ? '#' + n.pr : '', String(id).replace(/^.*:commit:/, '').slice(0, 7)].filter(Boolean).join(' · ');
     if (shared) {
       const from = (parents[id] || []).map(p => N[p]).find(p => p.kind === 'step');
       return `<div class="hc"><div class="hk">${glyphOfNode(n, 11)}${T.recordLabel(n)} · ${esc(nameOf(n.lane))} · ${esc(n.rel)}</div>
         ${n.title ? `<div class="ht">${esc(cleanTitle(n.title))}</div>` : ''}
+        ${files}
         ${from && !isSharedKey(from.lane) ? `<div class="hm">from ${esc(nameOf(from.lane))}${from.episode ? ' · ' + esc(from.episode) : ''}</div>` : ''}
         <div class="hw">${esc(exactOf(n.at))}</div><div class="hid">${esc(ids)}</div></div>`;
     }
@@ -1922,7 +2618,8 @@
     const g = n.graders ? `${esc(n.graders)} graders · ${n.firstRoundPass ? 'first round ✓' : `${n.rounds} round${n.rounds === 1 ? '' : 's'}`}` : '';
     return `<div class="hc"><div class="hk">${glyphOfNode(n, 9)}${T.recordLabel(n)} · ${esc(nameOf(n.lane))}</div>
       <div class="ht">${esc(cleanTitle(n.title) || n.episode || n.label)}</div>
-      ${s ? `<div class="hs">${esc(s)}</div>` : `<div class="hs none">No agent episode recorded.</div>`}
+      ${s ? `<div class="hs">${esc(s)}</div>` : ''}
+      ${files}
       ${n.model ? `<div class="hm"><b>${esc(agentLine(n))}</b>${g ? ' · ' + g : ''}${n.minutes != null ? ` · ${n.minutes} agent-min` : ''}</div>` : ''}
       ${n.badge ? `<div class="hm"><span class="nb inl">${n.badge}</span> ${n.badge === 1 ? 'decision' : 'decisions'} of yours</div>` : ''}
       ${n.sessionLive ? '<div class="hm">its episode\'s session is still live</div>' : ''}
@@ -1972,10 +2669,29 @@
   }
   $('stage').addEventListener('pointerover', inspectTimelineNode);
   $('stage').addEventListener('focusin', inspectTimelineNode);
+  $('stage').addEventListener('pointerover', event => {
+    if (event.pointerType !== 'touch') startFilePreview(event.target.closest('[data-file-path]'));
+  });
+  $('stage').addEventListener('pointerout', event => {
+    if (filePreview?.button.contains(event.target)) leaveFilePreview(event.relatedTarget);
+  });
+  $('stage').addEventListener('focusin', event => startFilePreview(event.target.closest('[data-file-path]')));
+  function filterNodeFiles(event) {
+    const filter = event.target.closest('[data-file-filter], [data-file-kind]');
+    if (filter) applyFileFilters(filter.closest('.node-files-tab'));
+  }
+  $('stage').addEventListener('input', filterNodeFiles);
+  $('stage').addEventListener('change', filterNodeFiles);
+  $('stage').addEventListener('focusout', event => {
+    const button = filePreview?.button;
+    if (button?.contains(event.target) && !button.contains(event.relatedTarget)) dismissFilePreview();
+  });
+  $('stage').addEventListener('scroll', placeFilePreview, true);
+  window.addEventListener('resize', placeFilePreview);
   let suppressClick = false;
   $('stage').addEventListener('click', e => {
     if (suppressClick) { suppressClick = false; e.stopPropagation(); return; }
-    if (e.target.closest('#phone-back')) return out();
+    if (e.target.closest('#phone-back')) return selectedFile ? closeFile() : out();
     if (e.target.closest('#phone-earlier')) return openRail(railIdx() - 1);
     if (e.target.closest('#phone-later')) return openRail(railIdx() + 1);
     if (e.target.closest('#phone-activity')) {
@@ -2002,6 +2718,9 @@
     const rr = e.target.closest('.rrow'); if (rr) return openRail(+rr.dataset.k);
     const bar = e.target.closest('.strip');
     if (bar) return openState(bar.dataset.lane, bar.dataset.id);
+    if (e.target.closest('[data-file-summary]')) return closeFile();
+    const file = e.target.closest('[data-file-path]');
+    if (file) return openFile(file);
     const ch = e.target.closest('[data-go]');
     if (ch) {
       const id = ch.dataset.go, k = RAIL.findIndex(r => r.id === id);
@@ -2080,9 +2799,26 @@
       chooseAngle(heads, {keyboard:event.detail === 0});
     });
   }
+  $('br').addEventListener('click', event => {
+    const tab = event.target.closest('[data-node-tab]');
+    if (tab) selectNodeTab(tab.dataset.nodeTab);
+  });
+  $('br').addEventListener('keydown', event => {
+    const tab = event.target.closest('[data-node-tab]');
+    if (!tab) return;
+    if (event.key === 'Enter' || event.key === ' ') { event.stopPropagation(); return; }
+    const tabs = Array.from(tab.parentElement.querySelectorAll('[data-node-tab]'));
+    const index = tabs.indexOf(tab);
+    const next = {Home:0, End:tabs.length - 1, ArrowLeft:(index + tabs.length - 1) % tabs.length, ArrowRight:(index + 1) % tabs.length}[event.key];
+    if (next == null) return;
+    event.stopPropagation();
+    event.preventDefault();
+    selectNodeTab(tabs[next].dataset.nodeTab);
+    tabs[next].focus({preventScroll:true});
+  });
   window.addEventListener('popstate', () => {
     const q = parseAppQuery(location.search);
-    if (q?.brane) { fromHeads = location.hash === '#heads'; openState(q.brane, q.at, false); }
+    if (q?.brane) { const place = tabLocation(); fromHeads = place.heads; openState(q.brane, q.at, false, place.tab); }
     else chooseAngle(location.hash === '#heads', {navigate:false});
   });
   $('keys-btn').addEventListener('click', () => toggle('keys'));
@@ -2095,16 +2831,19 @@
   });
   const onRow = row => Object.keys(DISP).filter(id => DISP[id].row === row).sort((a, b) => DISP[a].x - DISP[b].x);
   document.addEventListener('keydown', e => {
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.closest?.('dialog, #compose-btn, .state-branch'))) return;
+    if (e.target && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT' || e.target.closest?.('dialog, #compose-btn, .state-branch'))) return;
     const k = e.key; let done = true;
     if (e.target.closest?.('.camera-angles') && k === 'Enter') return;
+    if (e.target.closest?.('.stack-disclosure summary, .file-path, .file-evidence button') && k === 'Enter') return;
+    if (e.target.closest?.('.file-evidence') && ['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(k)) return;
+    if (e.target.matches?.('.stack-body, [role=tabpanel]') && ['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(k)) return;
     if (camera.active && st.d === 0 && !['Escape','?',',','/','n','N'].includes(k)) return;
     if (k === 'Enter' && e.target && e.target.id === 'home') return;   // the link's own activation: its click goes home
     if (k === 'Enter' && e.target && e.target.closest && e.target.closest('[data-now]')) return;   // the now card's links and buttons activate themselves
     if (k === '?') toggle('keys');
     else if (k === ',') toggle('look');
     else if (k === '/') $('addr').focus();
-    else if (k === 'Escape') { if ($('verb')) $('verb').remove(); else if (!$('keys').hidden || !$('look').hidden) { $('keys').hidden = true; $('look').hidden = true; } else out(); }
+    else if (k === 'Escape') { if ($('verb')) $('verb').remove(); else if (!$('keys').hidden || !$('look').hidden) { $('keys').hidden = true; $('look').hidden = true; } else if (selectedFile) closeFile(); else if (filePreview) dismissFilePreview(); else out(); }
     else if (k === 'n' || k === 'N') {
       const a = document.querySelector('[data-needs] a');
       if (a) {
@@ -2157,7 +2896,7 @@
     const ok = await loadModel();
     if (ok) startLive();
     if (followMode) schedulePoll();
-    if (ok && q && q.brane != null) await openState(q.brane, q.at);   // a deep link, or a reload inside a brane
+    if (ok && q && q.brane != null) await openState(q.brane, q.at, true, tabLocation().tab);   // a deep link, or a reload inside a brane
     if (ok && !q?.brane && (location.hash === '#heads' || location.hash.startsWith('#draft='))) {
       chooseAngle(true, {navigate:false, instant:true});
       if (location.hash.startsWith('#draft=')) {

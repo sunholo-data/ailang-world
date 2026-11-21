@@ -184,10 +184,13 @@ func (c *Collector) Collect(ctx context.Context, r Repo, previous *surface.Follo
 	if err != nil {
 		return surface.FollowPartition{}, err
 	}
-	if previous != nil && previous.Head == head {
+	if previous != nil && previous.ID == r.ID && previous.Index.Source.Rev == r.Branch && previous.Head == head {
 		p := *previous
 		p.CheckedAt = c.Clock.Now().UTC().Format(time.RFC3339)
 		p.LastFailure = nil
+		if !p.LandedFilesChecked {
+			p = c.withLandedFiles(ctx, r, p)
+		}
 		return p, nil
 	}
 	return c.BuildPinned(ctx, r, head)
@@ -248,7 +251,8 @@ func (c *Collector) BuildPinned(ctx context.Context, r Repo, head string) (surfa
 	}
 	p := surface.FollowPartition{ID: r.ID, Head: head, BuiltAt: ix.BuiltAt,
 		CheckedAt: now.UTC().Format(time.RFC3339), Index: ix}
-	data, err := surface.Marshal(ix)
+	p = c.withLandedFiles(ctx, r, p)
+	data, err := surface.Marshal(p.Index)
 	if err != nil || len(data) > surface.MaxBytes {
 		return surface.FollowPartition{}, fmt.Errorf("candidate bytes refused")
 	}

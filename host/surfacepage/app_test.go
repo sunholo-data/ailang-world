@@ -171,7 +171,7 @@ const seams = require('./surface.js');
 const model = JSON.parse(fs.readFileSync('model.json', 'utf8'));
 const stacks = JSON.parse(fs.readFileSync('stacks.json', 'utf8'));
 const index = JSON.parse(fs.readFileSync('index.json', 'utf8'));
-assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'applyDelta', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'decidedHTML', 'esc', 'fetchCoherent', 'frontHTML',
+assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'applyDelta', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'decidedHTML', 'esc', 'fetchCoherent', 'filePath', 'fileEvidenceHTML', 'filesTabHTML', 'frontHTML',
   'geometry', 'isSharedKey', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'needsYouHTML', 'nextBackoff', 'notifications', 'openRunningHTML', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'serviceLineHTML', 'shortTitle', 'sourcesHTML', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict',
   'VERB_ROUTE_BUDGET_MS', 'askVerb', 'verbAct', 'verbOutcome', 'verbPanel', 'goWith', 'addressGo'].sort());
 
@@ -357,12 +357,13 @@ for (const S of stacks) {
   assert(html.includes(app.esc(app.cleanTitle(F.title) || F.label)), 'headline ' + F.id);
   assert(html.includes(app.esc(F.position)) && html.includes(app.esc(F.exact)));
   assert.equal((html.match(/data-read="/g) || []).length, (F.reads || []).length, 'one chip per read source');
-  assert(html.includes('No view from the agent yet') && html.includes('row 151'), 'the agent band is an honest gap');
-  if (!F.files) assert(html.includes('Files: not recorded'), 'absent files are a gap: ' + F.id);
+  assert(!html.includes('From the agent') && !html.includes('row 151'), 'no output advertises an absent view');
+  if (!F.files && !F.landedFiles && F.landedFileCount == null) assert(app.filesTabHTML(F).includes('No file records are available'), 'absent files are a gap: ' + F.id);
   if (F.kind === 'step' && !F.episode) assert(html.includes('No episode record for this step'), F.id);
-  if (F.kind === 'shared') { assert(html.includes('No checks are recorded for this shared commit.')); assert(!html.includes('Grants')); assert.equal((html.match(/via">parent</g) || []).length, F.parents.length); }
-  if (!F.checks.graders) assert(!/class="ctile"/.test(html), 'no tile invents a check: ' + F.id);
-  if (!F.decisions.length) assert(html.includes('None recorded.'));
+  if (F.kind === 'shared') { assert(!html.includes('Grants')); assert.equal((html.match(/via">parent</g) || []).length, F.parents.length); }
+  if (!F.decisions.length && !Object.values(F.checks).some(value => value != null && value !== '')) {
+    assert(!html.includes('What happened'), 'no empty history column: ' + F.id);
+  }
   const bars = app.stackBars(S.earlier, -1).concat(app.stackBars(S.later, 1));
   const want = [S.earlier, S.later].reduce((a, cols) => a + cols.slice(0, 3).reduce((b, c) => b + Math.min(3, c.cards.length), 0), 0);
   assert.equal(bars.length, want); assert.equal(new Set(bars.map(b => b.key)).size, bars.length);
@@ -373,23 +374,140 @@ for (const S of stacks) {
   assert.equal((rail.match(/class="rrow"/g) || []).length, Math.min(15, S.rail.length));
 }
 const dh = app.frontHTML(w189d, T);
-assert(dh.includes('Passed all 4 checks after 2 rounds · 13.5 agent-minutes'), 'w189d verdict');
+assert(dh.includes('4/4 graders · 2 rounds · 13.5 agent-minutes'), 'w189d measured checks');
+assert(dh.indexOf('>Inputs<') < dh.indexOf('>What happened<') && dh.indexOf('>What happened<') < dh.indexOf('>Outputs<'));
+const decisionPositions = w189d.front.decisions.map(d => dh.indexOf(app.esc(d.text)));
+assert(decisionPositions.every((p, i) => p >= 0 && (i === 0 || p > decisionPositions[i - 1])), 'recorded events retain chronological order');
 assert(dh.includes('↑ Came from · 8 reads over 4 files'));
 assert.equal((dh.match(/data-read="/g) || []).length, 4);
-assert(dh.includes('Task</span><div class="task"><div class="tl1">row-189-M5-plugin</div>'));
+assert(dh.includes('Task title</h3>') && dh.includes('<p>row-189-M5-plugin</p>'));
 assert(dh.includes('Grants: not recorded yet.'), 'grants are not in the records');
 assert(dh.includes('data-go="0ee1945ffba795812f06dce95998b646adfac343"') && dh.includes('via">built on<'));
 assert(dh.includes('data-go="90035557b2012895551867c0ebe2f36b853aac09"'), 'led to its merge');
 assert.equal((dh.match(/class="act"/g) || []).length, w189d.front.decisions.length);
-assert.equal((dh.match(/class="file"/g) || []).length, w189d.front.files.length);
+const legacyFiles = app.filesTabHTML(w189d.front);
+assert(legacyFiles.includes('Recorded step reads') && legacyFiles.includes('Recorded step changes'));
+assert.equal((legacyFiles.match(/data-file-row=/g) || []).length,
+  w189d.front.files.length + w189d.front.reads.reduce((n, group) => n + group.files.length, 0));
 // Absent stays absent: a stack without the optional fields renders gaps, not values.
 const bare = JSON.parse(JSON.stringify(w189d));
-for (const k of ['reads', 'readCalls', 'readFiles', 'files', 'filesTruncated', 'task', 'model', 'summary', 'mergedInto', 'builtOn']) delete bare.front[k];
+for (const k of ['reads', 'readCalls', 'readFiles', 'files', 'filesTruncated', 'landedFiles', 'landedFileCount', 'task', 'model', 'summary', 'mergedInto', 'builtOn']) delete bare.front[k];
 bare.front.checks = {}; bare.front.decisions = [];
 const bh = app.frontHTML(bare, T);
 hollow(bh);
-for (const gap of ['Reads: not recorded for this step.', 'Files: not recorded for this step.', 'No episode record for this step.', 'None recorded.', 'Grants: not recorded yet.']) assert(bh.includes(gap), gap);
-assert(!bh.includes('class="ctile"') && !bh.includes('Agent</span>') && !bh.includes('Came from'));
+for (const gap of ['Reads: not recorded for this step.', 'Grants: not recorded yet.']) assert(bh.includes(gap), gap);
+assert(!bh.includes('What happened') && !bh.includes('Agent</span>') && !bh.includes('Task title</span>') && !bh.includes('Came from'));
+
+// The merge's Git paths provide a fallback, with their own provenance and no invented grading.
+const gitFiles = [
+  {path: 'asset/scene & <room>.tscn', status: 'A'},
+  {path: 'src/a/same.go', status: 'M'},
+  {path: 'src/b/same.go', status: 'D'},
+  ...Array.from({length: 5}, (_, n) => ({path: 'docs/deep/file-' + n + '.md', status: 'M'})),
+];
+function detailWith(fields) {
+  const html = app.frontHTML({...bare, front: {...bare.front, ...fields}}, T);
+  hollow(html);
+  return html;
+}
+// The Files tab keeps historical step changes separate from committed paths and actual episode evidence.
+const filesWith = (fields, activity) => app.filesTabHTML({...bare.front, ...fields}, activity);
+const merged = filesWith({landedFiles: gitFiles, landedFileCount: 8});
+assert(merged.includes('In the merge <span>8</span>'));
+assert(merged.includes('>Added<') && merged.includes('>Modified<') && merged.includes('>Deleted<'));
+assert(merged.includes('data-file-path="asset/scene &amp; &lt;room&gt;.tscn"') && merged.includes('src/a/same.go') && merged.includes('src/b/same.go'));
+const carriageReturn = filesWith({landedFiles: [{path: 'docs/line\rbreak.md', status: 'M'}], landedFileCount: 1});
+assert(carriageReturn.includes('data-file-path="docs/line&#13;break.md"'));
+assert(app.filePath('world:brane:shared', 'world:commit:abc', 'docs/line\rbreak.md').endsWith('path=docs%2Fline%0Dbreak.md'));
+assert(!merged.includes('file-more') && merged.includes('docs/deep/file-4.md'));
+assert.equal((merged.match(/data-file-row=/g) || []).length, gitFiles.length);
+const sharedFiles = filesWith({kind: 'shared', episode: '', parents: [], landedFiles: gitFiles, landedFileCount: 10});
+assert(sharedFiles.includes('In the commit <span>8</span>') && sharedFiles.includes('2 committed file paths unavailable.'));
+assert(!sharedFiles.includes('In the merge'));
+const emptyStep = filesWith({files: [], filesTruncated: 0, landedFiles: gitFiles, landedFileCount: 8});
+assert(emptyStep.includes('No recorded step file changes.') && emptyStep.includes('In the merge') && emptyStep.includes('src/a/same.go'));
+const partialStep = filesWith({files: [gitFiles[0]], filesTruncated: 1, landedFiles: gitFiles, landedFileCount: 8});
+assert(partialStep.includes('Recorded step changes <span>1</span>') && partialStep.includes('1 recorded step file path unavailable.'));
+assert(partialStep.includes('In the merge') && partialStep.includes('src/a/same.go'));
+assert(filesWith({landedFileCount: 0, landedFiles: []}).includes('No committed file changes.'));
+const evidencePath = 'docs/a & b.md';
+const episodeFiles = filesWith({trajectoryEpisode:'e1', landedFiles: [{path:evidencePath,status:'M'}], landedFileCount:1}, {
+  status:'partial', reads:[{path:evidencePath,count:2}], writes:[{path:evidencePath,count:1,op:'workspace-edit'}],
+  produced:[{path:'reports/log.txt',count:1}], omitted:{writes:1}, deltaGaps:1
+});
+for (const source of ['episode-read','episode-write','committed']) assert(episodeFiles.includes('data-file-path="docs/a &amp; b.md" data-file-source="' + source + '"'));
+assert(episodeFiles.includes('2 reads') && episodeFiles.includes('Last: edit') && episodeFiles.includes('Changes observed after commands'));
+assert(!episodeFiles.includes('data-file-path="reports/log.txt"') && episodeFiles.includes('Some path records were omitted.'));
+assert(filesWith({trajectoryEpisode:'e1'}, {status:'complete', reads:[],writes:[],produced:[]}).includes('No file activity was recorded'));
+assert(filesWith({trajectoryEpisode:'e1'}, {status:'unavailable'}).includes('Episode file activity is unavailable'));
+assert(app.filePath('world:brane:shared','world:commit:abc',evidencePath,'episode-write').endsWith('path=docs%2Fa%20%26%20b.md&source=episode-write'));
+const fullTask = '# Inspect the run\n\nUse <room> & preserve the next line.\n\n- First file\n- **Second file**\n\nLast line.';
+const task = detailWith({task: 'Short recorded task', taskBody: fullTask, taskRedacted: true});
+assert(task.includes('<h4>Inspect the run</h4>') && task.includes('<p>Use &lt;room&gt; &amp; preserve the next line.</p>'));
+assert(task.includes('<ul><li>First file</li><li><strong>Second file</strong></li></ul>') && task.includes('<p>Last line.</p>'));
+assert(!task.includes('Read full task') && !task.includes('Short recorded task') && task.includes('Sensitive task text was redacted.'));
+const sameTask = detailWith({task: 'Already short', taskBody: 'Already short'});
+assert(sameTask.includes('Task request</h3>') && sameTask.includes('<p>Already short</p>'));
+const liveTask = detailWith({kind: 'open', pr: 0, open: {label: 'Session live'}, taskBody: fullTask});
+assert(liveTask.includes('<h4>Inspect the run</h4>') && liveTask.includes('<p>Last line.</p>') && liveTask.includes('No finish commit recorded'));
+const reviewed = detailWith({commits: [{id: 'world:commit:123456789', kinds: ['episode-finish'],subject:'A <change>', body:'Detailed summary.'}],
+  run: {episode:'ep-1',launches:1,turns:2,costUsd:0,decisions:[{action:'Approved pull request creation',at:'2026-11-21T12:00:00Z'}]}});
+assert(reviewed.includes('Episode finish commit <code>12345678</code>') && reviewed.includes('A &lt;change&gt;') && reviewed.includes('Detailed summary.'));
+assert(reviewed.includes('Human decisions</h3><ol>') && reviewed.includes('Approved pull request creation'));
+assert(reviewed.includes('Agent trajectory</h2>') && reviewed.includes('Completed turns</dt><dd>2') && reviewed.includes('Provider cost</dt><dd>$0.00'));
+
+const metered = detailWith({run:{launches:1, tokens:{input:258254,cacheRead:198784,cacheWrite:0,output:1883,reasoning:24}}});
+assert(metered.includes('<dt>Input tokens</dt><dd>258,254') && metered.includes('198,784 read from cache · 0 written to cache'));
+assert(metered.includes('<dt>Output tokens</dt><dd>1,883') && metered.includes('24 reasoning'));
+assert(!metered.includes('no verified usage totals'));
+const partialUsage = detailWith({run:{launches:1,tokens:{cacheRead:0,reasoning:0}}});
+assert(partialUsage.includes('0 read from cache') && partialUsage.includes('<dt>Reasoning tokens</dt><dd>0</dd>') && !partialUsage.includes('<dt>Input tokens</dt>'));
+const permission = (state,budget,used,remaining) => ({state, grants:[{effect:'Workspace.Write',scope:'worktree',budget,used,remaining}]});
+const grants = detailWith({run:{launches:0,permissions:{sessions:[permission('active',80,78,2),permission('active',8,78,0),permission('active',86,78,8)]}}});
+assert(grants.includes('Permissions &amp; budgets') && grants.includes('78 used · limit 86 · 8 left') && grants.includes('Grant history · 3'));
+assert.equal((grants.match(/<b>Write files<\/b>/g)||[]).length,1);
+const expired = detailWith({run:{launches:0,permissions:{sessions:[permission('expired',80,17,63)]}}});
+assert(expired.includes('17 used · limit 80 · Expired') && !expired.includes('63 left'));
+const unused = detailWith({run:{launches:0,permissions:{sessions:[permission('active',8,0,8)]}}});
+assert(unused.includes('0 used · limit 8 · 8 left'));
+const privateGrants = detailWith({run:{launches:0,permissions:{sessions:[{state:'active',grants:[
+  {effect:'Workspace.Read',scope:'[private scope]',scopeKey:1,budget:5,used:2,remaining:3},
+  {effect:'Workspace.Read',scope:'[private scope]',scopeKey:2,budget:6,used:4,remaining:2}
+]}]}}});
+assert(privateGrants.includes('2 used · limit 5 · 3 left') && privateGrants.includes('4 used · limit 6 · 2 left'));
+const linkedTrace = detailWith({kind:'shared',trajectoryEpisode:'ep-1'});
+assert(linkedTrace.includes('Linked episode trajectory</h2>') && !linkedTrace.includes('Run details</h2>'));
+
+const sections = app.frontHTML({...bare,front:{...bare.front,run:{episode:'scope',launches:0}}},T,'files');
+assert(sections.includes('aria-label="Node sections"') && sections.includes('id="node-tab-files" aria-controls="node-panel-files" aria-selected="true"'));
+assert(sections.includes('id="node-panel-overview" aria-labelledby="node-tab-overview" hidden') && sections.includes('data-node-tab="run"') && sections.includes('data-node-tab="trajectory"'));
+const gitOnly = detailWith({kind:'shared',githubChecks:{checks:[]}});
+assert(gitOnly.includes('>Checks</button>') && !gitOnly.includes('data-node-tab="trajectory"'));
+
+const rawMerge = 'An original merge title with a suffix — made through World (w999) & <proof>';
+const mergeTitle = detailWith({kind: 'shared', episode: '', pr: 631, fullTitle: rawMerge, title: 'An original merge title'});
+assert(mergeTitle.includes('<summary>Recorded merge title</summary>') && mergeTitle.includes(app.esc(rawMerge)));
+assert(!mergeTitle.includes('Task title') && !mergeTitle.includes('Read full task'));
+
+// File content is pinned to a node's exact qualified locator and treated as plain text.
+assert.equal(app.filePath('world:brane:shared', 'world:commit:abc', 'docs/a+b #.md'),
+  '/surface/file.json?brane=world%3Abrane%3Ashared&at=world%3Acommit%3Aabc&path=docs%2Fa%2Bb%20%23.md');
+const proof = {kind: 'text', merge: 'world:commit:abc', status: 'D', text: '<script>bad</script>\nBefore', diff: '-<script>bad</script>', truncated: true};
+const patchView = app.fileEvidenceHTML(proof, 'diff');
+hollow(patchView);
+assert(patchView.includes('data-file-mode="diff" aria-pressed="true"') && patchView.includes('Only part of the diff is shown.'));
+assert(patchView.includes('-&lt;script&gt;bad&lt;/script&gt;') && !patchView.includes('Before'));
+const fileView = app.fileEvidenceHTML(proof, 'file');
+hollow(fileView);
+assert(fileView.includes('data-file-mode="file" aria-pressed="true"') && fileView.includes('Showing the first-parent version.'));
+assert(fileView.includes('&lt;script&gt;bad&lt;/script&gt;\nBefore') && !fileView.includes('Only part of the diff'));
+assert(app.fileEvidenceHTML({kind: 'text', status: 'A', text: ''}).includes('Empty file.'));
+for (const kind of ['binary', 'symlink', 'submodule', 'too-large', 'unexpected']) {
+  const html = app.fileEvidenceHTML({kind, text: 'unexpected text'});
+  assert(html.includes('class="muted"') && !html.includes('<pre') && !html.includes('unexpected text'));
+}
+
+
 assert.equal(app.verdict('8/8', 1, undefined, 3.5), 'Passed all 8 checks in one round · 3.5 agent-minutes');
 assert.equal(app.verdict('7/8', 3, false, 18.4), '7 of 8 checks passed after 3 rounds · 18.4 agent-minutes');
 assert.equal(app.verdict('5/5', 1, true, null), 'Passed all 5 checks on the first round');

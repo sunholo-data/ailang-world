@@ -141,7 +141,7 @@ assert(!T1.multi); assert.equal(T1.LY['world:brane:shared'], 320); assert(T1.ROW
 // ---- The open card and the landed alias (minimal; N2d owns the richer card).
 const oh = app.frontHTML(open, T);
 hollow(oh);
-for (const want of ['w189z', 'session live', 'Last run finished · 21 Oct 08:55 UTC', 'Polish the plugin docs', 'Nothing has landed yet.', 'No checks until it lands.', 'via">built on<', 'trial/row189-m7']) assert(oh.includes(want), want);
+for (const want of ['w189z', 'session live', 'Last run finished · 21 Oct 08:55 UTC', 'Polish the plugin docs', 'No finish commit recorded for this episode.', 'via">built on<', 'trial/row189-m7']) assert(oh.includes(want), want);
 assert(!oh.includes('A merge has no checks'), 'an open episode is not a merge');
 const ch = app.frontHTML(commit, T);
 hollow(ch); assert(ch.includes('data-go="tools:commit:'), 'commit stack chips stay in their repo');

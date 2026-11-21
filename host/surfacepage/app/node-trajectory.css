@@ -1,0 +1,10 @@
+[data-trajectory-body] { display: grid; gap: 10px; margin-top: 8px; }
+.trajectory-source h3 { margin: 0 0 4px; font-size: inherit; }
+.trajectory-source p, .trajectory-raw p { margin: 4px 0; }
+.trajectory-source ol { margin: 4px 0 0; padding-inline-start: 24px; }
+.trajectory-source li { margin-block: 3px; overflow-wrap: anywhere; }
+.trajectory-raw { min-width: 0; }
+.trajectory-raw code { overflow-wrap: anywhere; }
+.trajectory-raw input { display: block; max-width: 100%; margin-block: 4px; }
+.trajectory-raw pre { margin: 6px 0 0; padding: 8px; max-height: 18em; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.trajectory-pagination { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }

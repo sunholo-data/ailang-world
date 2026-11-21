@@ -9,15 +9,21 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/surfacefollow"
+	"github.com/sunholo-data/ailang-world/host/surfacepage"
 )
 
 type surfaceFollow struct {
-	config    surfacefollow.Config
-	publisher *surfacefollow.Publisher
-	collector *surfacefollow.Collector
+	config          surfacefollow.Config
+	publisher       *surfacefollow.Publisher
+	collector       *surfacefollow.Collector
+	fileReads       atomic.Int32
+	trajectoryReads atomic.Int32
+	commitReads     atomic.Int32
+	commitMessages  map[string]surfacepage.NodeCommit
 	// episodes is the open-episode source; nil selects the daemon's
 	// credentials store and finish records at start.
 	episodes surfacefollow.EpisodeSource

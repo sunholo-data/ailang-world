@@ -1109,3 +1109,54 @@ func (s *Store) EffectSpend(ctx context.Context, episodeID string) (map[EffectKe
 	}
 	return spend, nil
 }
+
+// EpisodeEffectReceipts reads one bounded prefix of an episode's effect journal
+// in ledger order. A missing outcome remains an unconfirmed debit.
+func (s *Store) EpisodeEffectReceipts(ctx context.Context, episodeID string, limit int) ([]Receipt, error) {
+	if err := s.checkQuarantine(); err != nil {
+		return nil, err
+	}
+	if err := requireDeadline(ctx); err != nil {
+		return nil, err
+	}
+	if episodeID == "" || limit < 1 || limit > MaxPendingIntentsPage {
+		return nil, fmt.Errorf("store: invalid episode effect receipt query")
+	}
+	prefix := "effect:" + episodeID + ":"
+	rows, err := s.db.QueryContext(ctx, `SELECT o.payload, oc.payload
+		FROM journal j JOIN objects o ON o.hash_ref = j.object_ref
+		LEFT JOIN journal jo ON jo.invocation_id = j.invocation_id AND jo.kind = 'outcome'
+		LEFT JOIN objects oc ON oc.hash_ref = jo.object_ref AND oc.semantic_id = ?
+		WHERE j.kind = 'intent' AND j.invocation_id >= ? AND j.invocation_id < ?
+		AND o.semantic_id = ? AND instr(substr(j.invocation_id, length(?) + 1), ':') = 0
+		ORDER BY j.seq LIMIT ?`,
+		EffectOutcomeV1, prefix, "effect:"+episodeID+";", EffectIntentV1, prefix, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var receipts []Receipt
+	for rows.Next() {
+		var intentBytes, outcomeBytes []byte
+		if err := rows.Scan(&intentBytes, &outcomeBytes); err != nil {
+			return nil, err
+		}
+		intent, err := decodeEffectIntent(intentBytes)
+		if err != nil {
+			return nil, err
+		}
+		if intent.EpisodeID != episodeID {
+			continue
+		}
+		receipt := Receipt{EffectIntent: &intent}
+		if outcomeBytes != nil {
+			outcome, err := decodeEffectOutcome(outcomeBytes)
+			if err != nil || outcome.InvocationID != intent.InvocationID {
+				return nil, fmt.Errorf("store: invalid episode effect outcome")
+			}
+			receipt.EffectOutcome = &outcome
+		}
+		receipts = append(receipts, receipt)
+	}
+	return receipts, rows.Err()
+}

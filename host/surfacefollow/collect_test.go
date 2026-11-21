@@ -92,6 +92,8 @@ func (g *fakeGit) Git(ctx context.Context, a []string) (string, error) {
 	case "log":
 		h := a[len(a)-1]
 		return h + "\t" + sha(1) + " " + sha(2) + "\t2026-10-29T10:00:00Z\tMerge pull request #7 from owner/trial/row220\n", nil
+	case "--no-lazy-fetch":
+		return a[len(a)-2] + "\x00\nA\x00landed.md\x00", nil
 	case "cat-file":
 		return "220. **surface-follow** · goal\n", nil
 	case "merge-base":
@@ -137,7 +139,7 @@ func until(t *testing.T, pred func() bool) {
 func countCommand(g *fakeGit, command string) int {
 	n := 0
 	for _, a := range g.recorded() {
-		if a[3] == command {
+		if a[3] == command || (command == "show" && len(a) > 5 && a[3] == "--no-lazy-fetch" && a[5] == "show") {
 			n++
 		}
 	}
@@ -353,6 +355,10 @@ func TestOnlyReadCommands(t *testing.T) {
 			valid = valid && reflect.DeepEqual(a[3:], []string{"rev-parse", "--verify", "refs/heads/dev^{commit}"})
 		case "log":
 			valid = valid && len(a) == 10 && reflect.DeepEqual(a[3:9], []string{"log", "--first-parent", "--merges", "--format=%x1e%H%x1f%P%x1f%cI%x1f%s%x1f%b", "-n", strconv.Itoa(testRepo().Limit)}) && validHead(a[9])
+		case "--no-lazy-fetch":
+			valid = valid && reflect.DeepEqual(a[3:], []string{"--no-lazy-fetch", "--no-replace-objects", "show", "--format=%H", "--name-status", "-z", "--diff-merges=first-parent",
+				"--no-renames", "--no-ext-diff", "--no-textconv", "--no-notes", "--no-show-signature",
+				"--no-color", "--no-relative", "--ignore-submodules=none", sha(3), "--"})
 		case "merge-base":
 			valid = valid && len(a) == 6 && validHead(a[4]) && validHead(a[5])
 		case "cat-file":

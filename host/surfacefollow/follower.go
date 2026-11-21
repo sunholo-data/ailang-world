@@ -2,7 +2,6 @@ package surfacefollow
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"sync"
@@ -50,10 +49,11 @@ type repoState struct {
 }
 
 type job struct {
-	repo   int
-	head   string
-	queued time.Time
-	cancel context.CancelFunc
+	repo     int
+	head     string
+	queued   time.Time
+	backfill *surface.FollowPartition
+	cancel   context.CancelFunc
 }
 
 type event struct {
@@ -93,7 +93,7 @@ func (f *Follower) Run(ctx context.Context) error {
 	states := make([]repoState, len(f.Config.Repos))
 	for i, r := range f.Config.Repos {
 		states[i].status.ID = r.ID
-		if p, ok := f.Seed[r.ID]; ok {
+		if p, ok := f.Seed[r.ID]; ok && p.ID == r.ID && p.Index.Source.Rev == r.Branch {
 			states[i].status = Status{ID: r.ID, Head: p.Head, BuiltAt: p.BuiltAt,
 				CheckedAt: p.CheckedAt, LastFailure: p.LastFailure, Partition: &p}
 		}
@@ -216,6 +216,8 @@ func (f *Follower) Run(ctx context.Context) error {
 				var err error
 				if remaining <= 0 {
 					err = context.DeadlineExceeded
+				} else if j.backfill != nil {
+					p = c.withLandedFiles(jobCtx, f.Config.Repos[j.repo], *j.backfill)
 				} else {
 					p, err = c.BuildPinned(jobCtx, f.Config.Repos[j.repo], j.head)
 				}
@@ -283,14 +285,17 @@ func (f *Follower) Run(ctx context.Context) error {
 					}
 					s.pending = nil
 				}
-				accepted := s.status.Partition != nil && s.status.Partition.Head == e.head
-				if accepted {
+				sameHead := s.status.Partition != nil && s.status.Partition.Head == e.head
+				if sameHead && s.status.Partition.LandedFilesChecked {
 					s.status.LastFailure = nil
 					s.status.RetryAt = time.Time{}
 					s.failures, s.retryAt = 0, time.Time{}
 				} else if (changed || !now.Before(s.retryAt)) && s.pending == nil &&
 					(s.active == nil || s.active.head != e.head) {
 					s.pending = &job{repo: e.repo, head: e.head, queued: now}
+					if sameHead {
+						s.pending.backfill = s.status.Partition
+					}
 				}
 				emit(s)
 				continue
@@ -317,7 +322,7 @@ func (f *Follower) Run(ctx context.Context) error {
 				}
 				if err := surface.ValidateFollow(candidate); err != nil {
 					e.err = fmt.Errorf("candidate aggregate validation refused")
-				} else if b, err := json.Marshal(candidate); err != nil || len(b) > surface.MaxBytes {
+				} else if _, class, _ := boundedManifest(&candidate); class != "" {
 					e.err = fmt.Errorf("candidate aggregate bytes refused")
 				}
 			}
@@ -329,6 +334,9 @@ func (f *Follower) Run(ctx context.Context) error {
 				s.status.RetryAt = time.Time{}
 				s.status.LastFailure = nil
 				s.failures, s.retryAt = 0, time.Time{}
+				if !e.partition.LandedFilesChecked {
+					s.retryAt = now.Add(landedFilesRetry)
+				}
 				emit(s)
 			}
 			dispatch()

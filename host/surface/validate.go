@@ -3,6 +3,7 @@ package surface
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -94,6 +95,21 @@ func Validate(ix Index) error {
 		if s.Kind == KindStep {
 			if err := validateStep(ix, byID, branes, times, i); err != nil {
 				return err
+			}
+		}
+	}
+	for id, fc := range ix.LandedFiles {
+		i, ok := byID[id]
+		if !ok || ix.States[i].Kind != KindShared {
+			return fmt.Errorf("surface index: landed_files[%s] is not a shared state", id)
+		}
+		if len(fc.Changes) > MaxChanges || fc.Truncated < 0 || fc.Truncated > MaxBytes*2 {
+			return fmt.Errorf("surface index: landed_files[%s] has invalid counts", id)
+		}
+		for _, c := range fc.Changes {
+			if (c.Status != "A" && c.Status != "M" && c.Status != "D") ||
+				!filepath.IsLocal(c.Path) || strings.ContainsRune(c.Path, 0) {
+				return fmt.Errorf("surface index: landed_files[%s] has an invalid change", id)
 			}
 		}
 	}
