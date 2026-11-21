@@ -27,6 +27,7 @@ func TestQuickstartSection18CardMatchesThePage(t *testing.T) {
 	if !ok {
 		t.Fatal("QUICKSTART has no §18")
 	}
+	section, _, _ = strings.Cut(section, "\n## ")
 	_, card, ok := strings.Cut(section, "**From the surface.**")
 	if !ok {
 		t.Fatal("§18 has no card paragraph")
