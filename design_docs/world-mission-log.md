@@ -2814,7 +2814,11 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 
 **Gate 3b (iteration 427):** record PR #638, head `bd79f488`, run 45248255013. Attempt 1 went red on two jobs, one known flake in each, with no code in the diff (6 `design_docs/` files; the same code at `ef3d1476` is 3/3 green on dev):
 - `go race gate`: `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision`, "1 decisions (1 named sha256:bb84936e…)". This is row 266's fourth instance.
-- `go host build + test gate`: `TestMarketingCaptureFakeChromeSixShots/scheme` hit its fixed 120 s deadline with 5 of 6 shots done. This is a further row 247 instance, folded into 258.
+- `go host build + test gate`: `TestMarketingCaptureFakeChromeSixShots/scheme` hit its fixed 120 s deadline (`rc=-1`) after both six-shot passes printed 6/6. This is a further row 247 instance, folded into 258.
 - Each job had exactly one `FAIL` package line. The `WARNING: DATA RACE` lines in both come from the intentional `racecontrol` positive control.
 
 `gh run rerun --failed` gave attempt 2: 3/3 success. Both rows got an instance note. Neither is routable (rule (d)). Evidence: `design_docs/verification/world-iter427/ci-flakes.txt`.
+
+**Judge follow-through (Gate 3b delta, iteration 427):** fresh Agent `sonnet`, foreground, read-only, judged `d2bb6028`. Verdict **PASS 86/100, zero blocking** (correctness 32/40, integrity 25/25, traceability 18/20, completeness 11/15). It used 35,204 subagent tokens, 6 tool uses and 36 s. It re-derived the six-file `design_docs/`-only diff, `ef3d1476` 3/3 green, each job's single `--- FAIL` and single package `FAIL`, the racecontrol origin of every `DATA RACE` line, attempt 2 3/3 success, and charter integrity (6361 lines, 107 rows, only rows 247 and 266 appended).
+- **Non-blocking note 1, reproduced and fixed:** the controller wrote "5 of 6 shots done" for the `scheme` deadline. The stderr at `capture_test.go:458` shows `progress: 1/6`…`6/6` twice, so both passes finished before the 120 s deadline fired. Row 247's note and the Gate 3b paragraph are corrected in the next commit.
+- **Not checked:** row 266's earlier instances against their original runs; attempt-2 job logs (conclusions only).
