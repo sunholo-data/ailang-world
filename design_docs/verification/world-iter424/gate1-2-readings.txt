@@ -1,0 +1,99 @@
+# World iteration 424 — Gate 0–2 readings (fire world-1795418198-51109), captured 2026-11-23T07:20:30Z
+
+## origin/dev and Gate-1 base
+95a8775a7c9eabd849fd8d463dc6fe324753998a
+1795418249	2026-11-23T07:17:29Z	base-gate1	1	ca4d738e1f654b5f9a9118603edbbdb602acdd98
+1795418253	2026-11-23T07:17:33Z	base-gate1	1	95a8775a7c9eabd849fd8d463dc6fe324753998a
+note: the first of these two rows (ailang sha ca4d738e1) was a controller slip — record gate1 run from the driver root (ailang checkout) instead of the World clone; the second row (95a8775a) is the World base. Local dev == origin/dev (0/0).
+
+## commits since iteration 422 Gate-1 base 284e1ace
+95a8775a Merge pull request #615 from sunholo-data/ui/finish-card-review
+a57150ab Merge pull request #633 from sunholo-data/world/world-node-details-1121
+4211b082 Merge branch 'approved-node-inspector' into ui/finish-receipt-review
+da81c58f Integrate the reviewed finish card with World Activity, Heads and node tabs
+ee4b1e08 Merge pull request #632 from sunholo-data/docs/herdr-attended-prompts
+6e58efac Share the GitHub host across accepted repository remote forms
+7b734004 Show the signed finish and its recorded pull request in World
+52c2df08 Limit the approval-card documentation check to its own section
+007bebb7 Inspect World nodes with tabbed task, file, run and trajectory evidence
+f0a3b433 Document attended World commands in Herdr for agents
+ce2e1dc1 Merge pull request #631 from sunholo-data/mission/world-iter422-record
+9cb122b6 record: iteration 422 — judge follow-through (sonnet PASS 93, zero blocking)
+bebb4dad record: iteration 422 — no pick, rule (d) block report (thirteenth); first undegraded no-pick fire, idle snapshot identical to 421's, Gate 5 records the idle fingerprint
+746f6ae7 Return finish reviews to their place in World and follow its appearance
+65c55ba3 Merge remote-tracking branch 'origin/dev' into ui/finish-card-review
+083d2b76 Clarify finish approvals and link back to the selected brane
+count=16
+files changed outside design_docs/: 66 (of 72 files)
+ledger lines changed (| D-WORLD rows): 0
+PR #615 mergedAt 2026-11-21T15:05:35Z
+PR #632 mergedAt 2026-11-21T14:51:01Z
+PR #633 mergedAt 2026-11-21T15:05:16Z
+
+## ledger
+decision ledger valid: 107 rows
+check rc=0
+D-WORLD-119	OPEN
+D-WORLD-120	OPEN
+
+## dev CI at origin/dev
+checks=3
+  go host build + test gate: success
+  go race gate (go test -race, own job): success
+  ailang-code verify gate: success
+
+## row 150
+match row ?150|A1|marketing: 0  control record|iteration 42: 4
+
+## row 151 (needs row 188 N2d/N4a)
+subjects since 2026-10-01 matching N2d|N4a: 0  control N2c: 1
+non-test .go files naming file.json (fixed string): 1  control surface: 126
+origin/dev:host/daemon/daemon.go:1145:	mux.HandleFunc("GET /surface/file.json", d.handleSurfaceFile)
+introduced by: 007bebb7 Inspect World nodes with tabbed task, file, run and trajectory evidence
+non-test .go files naming /surface/blob (N2d second route): 0  control /surface/stack.json: 5
+"What happened" in app.js: 284e1ace=0 (no match) origin/dev=2
+
+## row 243 V4 design gating
+lines naming D-WORLD-119: 4  D-WORLD-120: 2  touched in range: 0
+
+## open PRs (fleet account)
+617 ui/live-branch-heads CONFLICTING updated 2026-11-19T13:39:01Z
+
+## fires since iteration 422 (driver log, slot verdicts and idle exits)
+[2026-11-21 03:11:40] slot-verdict: COMPLETED rc=0 attempt=1/3 stamps=9 last_age_s=26 elapsed_s=2003 mission=world hb=/Users/voightkampff/.ailang/state/mission-world-hear
+[2026-11-21 06:38:19] world: nothing changed since the last no-pick fire (c3c1a8b1458bb8805ec188fc1e4c2194c7143da419a9da1a90c2ddf7365ec5c0 head=a51307d ledger=107 open=2 
+[2026-11-21 10:38:23] world: nothing changed since the last no-pick fire (c3c1a8b1458bb8805ec188fc1e4c2194c7143da419a9da1a90c2ddf7365ec5c0 head=a51307d ledger=107 open=2 
+[2026-11-21 14:38:21] world: nothing changed since the last no-pick fire (c3c1a8b1458bb8805ec188fc1e4c2194c7143da419a9da1a90c2ddf7365ec5c0 head=a51307d ledger=107 open=2 
+[2026-11-21 16:23:19] slot-verdict: PAUSED-NO-CAPACITY at=gate-2 rc=1 attempt=1/3 stamps=4 last_age_s=177 elapsed_s=443 mission=world hb=/Users/voightkampff/.ailang/state
+[2026-11-21 20:22:51] slot-verdict: PAUSED-NO-CAPACITY at=gate-2 rc=1 attempt=1/3 stamps=4 last_age_s=136 elapsed_s=423 mission=world hb=/Users/voightkampff/.ailang/state
+[2026-11-22 00:18:21] slot-verdict: PAUSED-NO-CAPACITY at=fired rc=1 attempt=1/3 stamps=1 last_age_s=28 elapsed_s=153 mission=world hb=/Users/voightkampff/.ailang/state/m
+[2026-11-22 04:18:29] slot-verdict: PAUSED-NO-CAPACITY at=fired rc=1 attempt=1/3 stamps=1 last_age_s=29 elapsed_s=160 mission=world hb=/Users/voightkampff/.ailang/state/m
+[2026-11-22 08:18:21] slot-verdict: PAUSED-NO-CAPACITY at=fired rc=1 attempt=1/3 stamps=1 last_age_s=25 elapsed_s=151 mission=world hb=/Users/voightkampff/.ailang/state/m
+[2026-11-22 12:18:13] slot-verdict: PAUSED-NO-CAPACITY at=fired rc=1 attempt=1/3 stamps=1 last_age_s=28 elapsed_s=143 mission=world hb=/Users/voightkampff/.ailang/state/m
+[2026-11-22 16:18:50] slot-verdict: PAUSED-NO-CAPACITY at=fired rc=1 attempt=1/3 stamps=1 last_age_s=28 elapsed_s=179 mission=world hb=/Users/voightkampff/.ailang/state/m
+[2026-11-22 20:18:20] slot-verdict: PAUSED-NO-CAPACITY at=fired rc=1 attempt=1/3 stamps=1 last_age_s=28 elapsed_s=149 mission=world hb=/Users/voightkampff/.ailang/state/m
+[2026-11-23 00:18:22] slot-verdict: PAUSED-NO-CAPACITY at=fired rc=1 attempt=1/3 stamps=1 last_age_s=27 elapsed_s=151 mission=world hb=/Users/voightkampff/.ailang/state/m
+[2026-11-23 04:27:19] slot-verdict: PAUSED-NO-CAPACITY at=gate-2 rc=1 attempt=1/3 stamps=4 last_age_s=269 elapsed_s=688 mission=world hb=/Users/voightkampff/.ailang/state
+
+## this fire: lane state (driver log)
+134746:[2026-11-23 08:15:57] Codex quota window: state=over window=10080m used=39.0% allowed=32.9% start_margin=2.0pp observed=2026-11-23T07:15:52Z
+134747:[2026-11-23 08:15:57] ration gate: blocked buckets (over ration or unknown quota):codex anthropic 
+134761:[2026-11-23 08:16:36] LANE DEGRADED this fire: - `planner`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`75` — over daily ration) → handed to `opus` - `executor`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`75` — over daily ration) → handed to `claude:claude-haiku-5-5`
+134762:[2026-11-23 08:16:40] world: idle snapshot taken for world-1795418198-51109 (1ac80c011e237ee3a1fd5e616305f077a8c0acdfe598a101501a6393d586faaf head=95a8775 ledger=107 open=2 directives=0 inbox=0 red=0)
+134763:[2026-11-23 08:16:41] === mission iteration starting (controller=claude:claude-opus-5-5 via probe ok, timeout=21600s | bg-wait-ceiling=0ms | roles: designer=claude:claude-opus-5-5 planner=opus executor=claude:claude-haiku-5-5 evaluator=sonnet) ===
+MISSION_ROUTING_NOTE: controller pi:ollama/glm-5.3:cloud → claude:claude-opus-5-5 (probe ok); lanes degraded: ; `planner`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`75` — over daily ration) → handed to `opus`; `executor`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`75` — over daily ration) → handed to `claude:claude-haiku-5-5`
+
+## orphan iteration 423 (died-mid-flight trace (b))
+../.wt-world-iter423-record branch=mission/world-iter423-record head=d1e2ead0 porcelain=0
+../.wt-world-iter423-judge branch=mission/world-iter423-judge head=d1e2ead0 porcelain=0
+remote refs naming iter423: 0  control iter422 merged PR #631: MERGED
+patch-id orphan d1e2ead0 vs cherry-pick: identical (14f61515a4494b37…)
+
+## inbox
+unread mission-world: No messages found.
+
+## weekly external-issue sweep (first fire after Monday 2026-11-23 07:00 local)
+open issues enumerated: 1 (wc cross-check 1); #574 charter 4 log 78 archive 11 dashboard 1 (the bookkeeping thread itself); orphans 0 of 1; negative control fired (fresh literal, 0 across the four files)
+
+## harness ticket row 263
+11  none   skill:idle-record-barred-on-degraded-no-pick-fire  (world; first 2026-11-09 08:55)

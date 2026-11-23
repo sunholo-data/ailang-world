@@ -1,0 +1,115 @@
+# World iteration 423 — Gate 0–2 readings (fire world-1795403808-60098), captured 2026-11-23T03:35:00Z
+
+## origin/dev and Gate-1 base
+95a8775a7c9eabd849fd8d463dc6fe324753998a
+95a8775a7c9eabd849fd8d463dc6fe324753998a	2026-11-23T03:19:53Z (mission-base.sh record gate1)
+local dev == origin/dev at the sync (0 ahead, 0 behind); snap before the record worktree = same SHA (STEADY, no drift)
+
+## commits since iteration 422 Gate-1 base 284e1ace
+95a8775a Merge pull request #615 from sunholo-data/ui/finish-card-review
+a57150ab Merge pull request #633 from sunholo-data/world/world-node-details-1121
+4211b082 Merge branch 'approved-node-inspector' into ui/finish-receipt-review
+da81c58f Integrate the reviewed finish card with World Activity, Heads and node tabs
+ee4b1e08 Merge pull request #632 from sunholo-data/docs/herdr-attended-prompts
+6e58efac Share the GitHub host across accepted repository remote forms
+7b734004 Show the signed finish and its recorded pull request in World
+52c2df08 Limit the approval-card documentation check to its own section
+007bebb7 Inspect World nodes with tabbed task, file, run and trajectory evidence
+f0a3b433 Document attended World commands in Herdr for agents
+ce2e1dc1 Merge pull request #631 from sunholo-data/mission/world-iter422-record
+9cb122b6 record: iteration 422 — judge follow-through (sonnet PASS 93, zero blocking)
+bebb4dad record: iteration 422 — no pick, rule (d) block report (thirteenth); first undegraded no-pick fire, idle snapshot identical to 421's, Gate 5 records the idle fingerprint
+746f6ae7 Return finish reviews to their place in World and follow its appearance
+65c55ba3 Merge remote-tracking branch 'origin/dev' into ui/finish-card-review
+083d2b76 Clarify finish approvals and link back to the selected brane
+count=15
+of which iteration 422's record: 3 (bebb4dad, 9cb122b6, merge ce2e1dc1); the rest are attended surface work (episodes world-node-details-1121 via PR #633, finish-card review via PR #615, herdr attended-prompts docs via PR #632)
+ledger lines changed (| D-WORLD table rows) in 284e1ace..origin/dev: 0
+paths outside design_docs/: host/daemon host/surfacepage host/surfacefollow host/surface host/store cmd/ailang-worldd scripts/surface docs/ (attended work; 3 record commits touch design_docs/ only)
+
+## ledger
+decision ledger valid: 107 rows
+check rc=0
+D-WORLD-119	OPEN
+D-WORLD-120	OPEN
+
+## dev CI at origin/dev
+checks=3
+  go host build + test gate: success
+  go race gate (go test -race, own job): success
+  ailang-code verify gate: success
+
+## row 150 (attended A1) — subjects in 284e1ace..origin/dev
+match row ?150|A1|marketing: 0  control record|iteration 42: 4
+
+## row 151 (needs row 188 N2d/N4a)
+subjects since 2026-10-01 matching N2d|N4a: 0  control N2c: 1
+non-test .go files naming file.json (fixed string): 1 (host/daemon/daemon.go, `mux.HandleFunc("GET /surface/file.json", d.handleSurfaceFile)` added by 007bebb7, episode world-node-details-1121, 2026-11-21)  control surface: 126
+FLIP vs iteration 422 (0 -> 1): the N2d data-route half is now delivered by attended episode world-node-details-1121; front-card columns measured in host/surfacepage/app/app.js (Inputs | What happened | Outputs, .cols grid) and tabbed node inspection (task/file/run/trajectory) landed with it
+still absent: the N2d blob route (`GET /surface/blob`) — grep for a non-test `blob` handler in host/daemon returns 0 lines, so row 151's design §8 needs (the blob route for `media` and `output-link`) remain unmet; N4a's full §3/§4/§4.1 acceptance (Esc ladder to spec, maximise, open=, viewers, thumbnails) is not separately attested by any commit subject
+
+## row 243 V4 design gating
+design=design_docs/planned/w-world-address-bar-verbs-v4.md lines naming D-WORLD-119: 4  D-WORLD-120: 2  design touched in range: 0
+
+## Gate 0 directives
+⚠ mission_directives: watermark file /Users/voightkampff/.ailang/state/mission-574-last-seen is absent — reading every allowlisted comment on #574; the first --mark creates it
+mission_directives: #574 — 0 directive(s) from [MarkEdmondson1234] since 1970-01-01T00:00:00Z inclusive, 0 new, 0 already processed (of 42 comments; the rest are public feedback, never directives)
+(the #1 / #524 legacy-watermark reads of prior iterations were not re-run this fire; both were 0-directive on every read since their legacy watermarks, and no sibling-reported change touches them)
+
+## Gate 0 step 6a (self-notices)
+crash: issue=524 at=2026-11-13T09:48:25Z rc=1 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/524#issuecomment-6849577904
+transcript: issue=524 at=2026-11-16T09:37:59Z hits=2 in-window=yes url=https://github.com/sunholo-data/ailang-world/issues/524#issuecomment-6912778168 fire=world-1794807071-53892
+control: issue=107 expect=4 got=4 ok
+verdict: 1 crash notice(s) since 1970-01-01T00:00:00Z on #574,#524 — A FIRE DIED (newest rc=1 at 2026-11-13T09:48:25Z on #524): run Gate 2's died-mid-flight traces (a) open PRs (b) worktrees (c) uncommitted state BEFORE picking, and credit the orphan in the log
+rc=1
+Both notices are already credited: crash = entry 393's orphan line (the 2026-11-13 10:31 CET fire, driver CRASHED at=gate-3 rc=1); transcript = entry 394's Gate-0 inbox line. Nothing new died.
+
+## died-mid-flight traces
+(a) open PRs from the fleet account: 617 ui/live-branch-heads updated 2026-11-19T13:39:01Z (CONFLICTING) — attended ui/* naming, not a mission/ or sprint/ branch; left alone (trace rules (a)-(d)). #615 merged 2026-11-22 (in range above).
+(b) record worktrees iter410-iter422: 0 porcelain lines each (13 worktrees checked). Stale residue noted: .wt-world-iter306-r0 (detached, throwaway) holds one untracked file cmd/ailang-worldd/zz_iter305_bottoms_test.go, header-labelled "measurement only; never committed as a .go file; run then deleted" — iteration-305 designer measurement, superseded long ago; left in place, not adopted, not deleted (a destructive act in the shared clone for no gain).
+(c) main checkout uncommitted: untracked attended-session drafts only (design_docs/planned/w-human-agent-surface.md, design_docs/planned/w-phone-episode-workflow.md, design_docs/mockups/world-episodes/, .claude/worktrees/); no modifications, Principle 0 respected, nothing staged.
+
+## inbox (mission-world unread)
+No messages found.
+(controlplane inbox holds 1065 unread: 990 eval-suite notifications — recent runs all 16/16 passed or no-op — plus pre-October sibling reports and pkg notices; no regression, no directive, no cross-mission request, no harness-resolved reply)
+
+## idle pre-check and lane state (driver log, this fire)
+[2026-11-23 04:16:06] anthropic model 'sonnet' quota-limited
+[2026-11-23 04:16:06] anthropic evaluator lane -> falling back to 'pi:openrouter/minimax/minimax-m3' for this fire (model 'sonnet', quota-limited)
+[2026-11-23 04:16:07] codex model 'gpt-6.2-sol' unusable: quota-limited
+[2026-11-23 04:16:11] codex designer lane -> falling back to 'pi:ollama/glm-5.3:cloud' for this fire (model 'gpt-6.2-sol')
+[2026-11-23 04:16:11] codex planner lane -> falling back to 'pi:ollama/kimi-k3:cloud' for this fire (model 'gpt-6.2-sol')
+[2026-11-23 04:16:15] codex executor lane -> falling back to 'pi:ollama/deepseek-v4.1-flash:cloud' for this fire (model 'gpt-6.2-sol')
+[2026-11-23 04:16:46] model claude-opus-5-5 quota-limited — falling through
+[2026-11-23 04:16:46] all Anthropic controller candidates unavailable — walking fallback chain (pi:ollama/glm-5.3:cloud)
+[2026-11-23 04:16:48] LANE DEGRADED this fire: designer anthropic claude-opus-5-5 unusable (probe rc=1 quota-limited) -> codex:gpt-6.2-sol -> pi:ollama/glm-5.3:cloud; evaluator anthropic sonnet unusable (probe rc=1) -> pi:openrouter/minimax/minimax-m3; planner codex gpt-6.2-sol (rc=75 over daily ration) -> pi:ollama/kimi-k3:cloud; executor codex gpt-6.2-sol (rc=75) -> pi:ollama/deepseek-v4.1-flash:cloud
+[2026-11-23 04:16:48] lane degradation unchanged this episode — notice suppressed
+[2026-11-23 04:16:50] world: idle snapshot taken for world-1795403808-60098 (1ac80c011e237ee3a1fd5e616305f077a8c0acdfe598a101501a6393d586faaf head=95a8775 ledger=107 open=2 directives=0 inbox=0 red=0)
+[2026-11-23 04:16:50] === mission iteration starting (controller=pi:ollama/glm-5.3:cloud via Anthropic+codex unavailable; pi fallback rung, timeout=21600s | bg-wait-ceiling=0ms | roles: designer=pi:ollama/glm-5.3:cloud planner=pi:ollama/kimi-k3:cloud executor=pi:ollama/deepseek-v4.1-flash:cloud evaluator=pi:openrouter/minimax/minimax-m3) ===
+This fire IS degraded (every role lane fell back; controller on the pi fallback rung) -> Gate 5's idle record is BARRED; row-263 occurrence due.
+The idle snapshot head also moved (422: a51307d -> this fire 95a8775) on the attended surface merges, so even undegraded this fire would have run in full.
+
+## codex quota window (driver log, last 5)
+[2026-11-22 12:15:55] Codex quota window: state=over window=10080m used=38.0% allowed=26.1% start_margin=2.0pp observed=2026-11-22T11:15:50Z
+[2026-11-22 16:15:55] Codex quota window: state=over window=10080m used=38.0% allowed=26.1% start_margin=2.0pp observed=2026-11-22T15:15:51Z
+[2026-11-22 20:15:55] Codex quota window: state=over window=10080m used=39.0% allowed=26.1% start_margin=2.0pp observed=2026-11-22T19:15:51Z
+[2026-11-23 00:15:56] Codex quota window: state=over window=10080m used=39.0% allowed=26.3% start_margin=2.0pp observed=2026-11-22T23:15:51Z
+[2026-11-23 04:15:58] Codex quota window: state=over window=10080m used=39.0% allowed=29.6% start_margin=2.0pp observed=2026-11-23T03:15:51Z
+(422's window: state=ok used=23.0% allowed=26.1%. The bucket went 9.4 points over during 2026-11-22, coincident with attended codex episodes — world-node-details-1121 alone reports "codex gpt-6.2-astra; 112 calls".)
+
+## slot verdicts (last 4)
+2026-11-22T11:18:13Z verdict=PAUSED-NO-CAPACITY_at=fired rc=1 attempt=1/3 elapsed_s=143 stamps=1 controller=pi:ollama/glm-5.3:cloud
+2026-11-22T15:18:50Z verdict=PAUSED-NO-CAPACITY_at=fired rc=1 attempt=1/3 elapsed_s=179 stamps=1 controller=pi:ollama/glm-5.3:cloud
+2026-11-22T19:18:20Z verdict=PAUSED-NO-CAPACITY_at=fired rc=1 attempt=1/3 elapsed_s=149 stamps=1 controller=pi:ollama/glm-5.3:cloud
+2026-11-22T23:18:22Z verdict=PAUSED-NO-CAPACITY_at=fired rc=1 attempt=1/3 elapsed_s=151 stamps=1 controller=pi:ollama/glm-5.3:cloud
+Four scheduled fires (2026-11-22 ~11:15 through 23:18) paused with no controller capacity — every anthropic and codex lane refused. This fire (04:16) is the first since iteration 422 to run, on the pi fallback rung.
+
+## harness ticket row 263
+slots_lost=10 blocking=none last_seen=2026-11-20T21:41:18.422288Z (pre-filing reading; this iteration files occurrence 11)
+
+## skill drift (resolved symlink + pin, vs ailang origin/dev)
+compared=14 (SKILL.md + 13 resources/*.md) drift=0; the resolved symlink target is the only readable copy (ailang-world has no repo-local .claude/skills/mission-control); pin=ca4d738e1 == ailang origin/dev
+pin moved 0090b48a6 -> ca4d738e1 (5 commits: fleet iteration 131's record x2, ailang v0.56.1, design doc m-pkg-path-dep-precedence, merge); paths in range touching skill/driver/scripts: 0 — the rules are the ones iteration 422 followed
+
+## spawn resolver (evaluator)
+recipe pi:openrouter/minimax/minimax-m3 declared:provider-pin (rc 0) — the pi recipe is the prescribed spawn path for this lane; the Agent tool does not exist in this pi-controller harness (pi fallback rung), and gate-3-route.md routes provider-pinned roles through their own lane recipe regardless

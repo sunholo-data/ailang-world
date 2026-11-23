@@ -2496,3 +2496,136 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
   2. "UNREADABLE anthropic bucket, probed" is not named by the IDLE RECORD rule either way. The judge reads it as not a degradation, as 421 did, because the driver probed, logged no failure and resolved every role as configured. No change.
   3. A recorded fingerprint forces one full fire after 24 h; the entry already says so.
 - **What it did not check:** the readings file line by line, the Gate-0 directive, inbox and skill-drift readings, the archive beyond the 419 stamp, the 0/20 harness share, and whether a mid-run ruling wakes the next fire.
+
+## 423 — 2026-11-23 — no pick: rule (d) block report, the fourteenth in a row; the fire degraded on every lane (controller and all four roles on pi lanes after four PAUSED-NO-CAPACITY fires), so the idle record is barred and row 263's count 10 → 11; row 151's N2d `file.json` predicate flipped 0 → 1 on attended episode world-node-details-1121 (the blob route still absent); dev green at `95a8775a` [ADMIN]
+
+**Kind:** no-pick iteration. Nothing is loop-routable without an answer from Mark, so standing rule (d) applies. Since iteration 422's Gate-1 base, 422's record and three attended surface merges landed (episode `world-node-details-1121`, the finish-card review, the herdr attended-prompts docs). There is no design, plan, code or product acceptance from the loop. The record is the STATUS stamp (420 moved to the archive), the Current route line, row 263's iteration-423 note, this entry, the regenerated index, the dashboard and `verification/world-iter423/gate1-2-readings.txt`. An independent judge reviews the record before merge. After the reports, Gate 5 does NOT record the idle fingerprint (degraded fire).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at 2 of 12 sprints. Every remaining V4 sprint waits on D-WORLD-119. The release tail's N2d prerequisite moved half a step: the `file.json` data route and the front card's Inputs | What happened | Outputs columns are now in `host/daemon`/`host/surfacepage` (measured at `95a8775a`), but the N2d blob route is still absent.
+
+**Pick and why:** none. Clause map at `95a8775a`: 1.0 clauses 1–7 MET (row 93 LANDED, clause-4 MET confirmed first-party), so there is no UNMET clause and no critical-path row.
+- **What moved since iteration 422's Gate-1 base (`284e1ace`):** 15 commits — iteration 422's record (3: `bebb4dad`, `9cb122b6`, merge `ce2e1dc1`) and attended surface work (episode `world-node-details-1121` via PR #633: tabbed node inspection with task/file/run/trajectory evidence, `GET /surface/file.json`, episode file previews; the finish-card review via PR #615; herdr attended-prompts docs via PR #632). 12 paths outside `design_docs/`, all attended surface code and docs; 0 `| D-WORLD` table rows changed.
+- **Ledger:** `--check` valid (rc 0), 107 rows; `--open` → D-WORLD-119, D-WORLD-120, both unchanged since iteration 406 filed them.
+- **Row 243 (D-WORLD-109 granted scope):** V4 design §8 gates S3–S8 on 119 A/B, S9–S11 also on 120 A/B, and S12 on 119 A. S1, S2 and S2b are landed. The design was not touched in range (0 paths; it names D-WORLD-119 on 4 lines and 120 on 2).
+- **Row 150** waits on the attended A1. Subjects in `284e1ace..95a8775a` matching `row ?150|A1|marketing` → **0**; control `record|iteration 42` → **4**.
+- **Row 151** needs row 188's N2d and N4a. Subjects since 2026-10-01 matching `N2d|N4a` → **0**; control `N2c` → **1**. Non-test `.go` files naming `file.json` on `origin/dev`, fixed-string → **1** (`host/daemon/daemon.go:1145`, `GET /surface/file.json`, added by `007bebb7` = episode `world-node-details-1121`), control `surface` → **126**. **This is a FLIP (0 → 1) and the first movement in this predicate since row 151 filed it:** the N2d data route and the front card's three columns (Inputs | What happened | Outputs; `.cols` grid, measured in `host/surfacepage/app/app.js`) are delivered. Still unroutable: the N2d **blob route** (`GET /surface/blob` — 0 non-test `blob` matches in `host/daemon`) is what row 151's design §8 needs for `media` and `output-link`, and no commit attests N4a's full §3/§4/§4.1 acceptance (Esc ladder to spec, maximise, `open=`, viewers, thumbnails). The predicate stays on every block report; the next flip to watch for is a `blob` handler.
+- **Rows 217–219** are on the attended track beside row 188 (D-WORLD-94). **Rows 258, 259, 261, 265** sit under rule (d), below the release rows (D-WORLD-109 (2)). No ledger row changed, so neither placement moved.
+- **External predicates:** no routable row waits on an outside party. Row 263 waits on the fleet; 0 unread on `mission-world`, so no `harness-resolved` reply has arrived.
+- **Lane parks:** none active (every `PARKED-ON-LANE` mention in the charter is on a resolved or landed row).
+
+**Gate 0:**
+- Stamped first. Kill switch armed (`mission-world.disabled` absent). `gh` is `sunholo-voight-kampff`. Billing CLEAN (`ANTHROPIC_API_KEY`/`ANTHROPIC_AUTH_TOKEN` both unset). The env was read by name, then specific non-secret values.
+- Local `dev` == `origin/dev` at the sync (`95a8775a`, 0 ahead/0 behind; only untracked attended drafts in the tree).
+- Directives: 0 allowlisted on #574 (42 comments, read from the epoch because `mission-574-last-seen` is absent). Nothing to `--mark`; no watermark moved.
+- Self-notices (step 6a), prescribed form: **rc 1**, the same two #524 notices (crash `2026-11-13T09:48:25Z` rc 1; transcript fire `world-1794807071-53892`, 2 hits), control 107:4 ok. Both credited in entries 393 and 394, so nothing new died. Died-mid-flight traces: the iteration-410 to 422 record worktrees have 0 porcelain lines each (13 checked); stale residue noted and left alone (`.wt-world-iter306-r0`'s `zz_iter305_bottoms_test.go` — a self-labelled iteration-305 measurement-only probe, superseded); the main checkout holds only untracked attended-session drafts (planned mockups and two planned docs), left untouched per Principle 0.
+- **Open PRs from the fleet account:** #617 (`ui/live-branch-heads`, CONFLICTING, untouched since 2026-11-19) — attended `ui/*` naming, not a `mission/` or `sprint/` branch; left alone (Gate 2 trace (a)–(d): `--author` is a fleet filter; the branch's worktree belongs to an attended session, and the safe default for unattributable work is no action). #615 merged 2026-11-22.
+- **Inbox:** 0 unread on `mission-world`.
+- Skill drift: `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target (the only readable copy; ailang-world has no repo-local `.claude/skills/mission-control`) `cmp` equal to the ailang `origin/dev` `ca4d738e1` after a fresh fetch (14 compared, 0 drift). The pin moved `0090b48a6` → `ca4d738e1` (5 commits: fleet iteration 131's record, ailang v0.56.1, the `m-pkg-path-dep-precedence` design doc and merges); 0 paths in range touch skill/driver/scripts, so the rules are the ones iteration 422 followed.
+- Dev CI at `95a8775a`: 3/3 check-runs success (go host build + test gate; go race gate; ailang-code verify gate).
+
+**Gate 1:** `origin/dev` is `95a8775a…`. Gate-1 base `95a8775a7c9eabd849fd8d463dc6fe324753998a@2026-11-23T03:19:53Z` (`mission-base.sh record gate1`); snap before the record worktree read the same SHA (STEADY, no drift). Record written in its own worktree (`mission/world-iter423-record` from `95a8775a`, `mission-worktree.sh add` then `wait` → ready).
+
+**Row 263 — this fire is degraded on every lane, so the idle record is barred:**
+- `MISSION_ROUTING_NOTE` names five fallbacks: anthropic `claude-opus-5-5` and `sonnet` probes rc 1 (quota-limited) for designer and evaluator; codex `gpt-6.2-sol` unusable rc 75 (over daily ration) for designer, planner and executor. Roles resolved: designer `pi:ollama/glm-5.3:cloud`, planner `pi:ollama/kimi-k3:cloud`, executor `pi:ollama/deepseek-v4.1-flash:cloud`, evaluator `pi:openrouter/minimax/minimax-m3`; the driver logged a `LANE DEGRADED` line and ran the controller on the pi fallback rung (`pi:ollama/glm-5.3:cloud`) — the first World fire on a non-anthropic, non-codex controller lane.
+- **Codex window:** `used=39.0% allowed=29.6%` (`state=over`, 9.4 points over) against 422's `used=23.0% allowed=26.1%` (`state=ok`). The bucket went 16 points of use during 2026-11-22, coincident with attended codex episodes (`world-node-details-1121` alone reports `codex gpt-6.2-astra; 112 calls`).
+- **Four scheduled fires ended PAUSED-NO-CAPACITY** (`2026-11-22T11:18:13Z`, `15:18:50Z`, `19:18:20Z`, `23:18:22Z`, all rc 1, elapsed ~150 s, stamps=1) — no controller lane had capacity from ~11:15 to ~23:18 local. This fire (04:16) is the first to run since iteration 422, on the pi rung.
+- The driver's snapshot for this fire is `1ac80c01…` (`head=95a8775 ledger=107 open=2 directives=0 inbox=0 red=0`); its head MOVED from 421/422's `a51307d` on the attended surface merges, so even an undegraded fire would have run in full.
+- Occurrence filed (`inbox_1795404296951_40d30714`), count **10 → 11**, `--blocking none`. Gate 5 bars `--record`.
+
+**Designer / planner / executor:** not spawned. A no-pick iteration has no doc, plan or code, so the routing table sends them nothing. No spawn was attempted, so none failed. (The standing operator request to spawn roles via the Agent tool is satisfied where it binds: the routing table spawns roles for PICKED work, and no work was picked. This harness — the pi controller rung — has no Agent tool; the roles' resolved lanes are `pi:` recipes anyway, which gate-3-route.md routes through `mission_pi_run.sh`, not the Agent tool.)
+
+**Independent evaluator (record):** REQUIRED. The spawn resolver read `recipe pi:openrouter/minimax/minimax-m3 declared:provider-pin` (rc 0), so the record judge runs as a separate pinned pi session through `mission_pi_run.sh` with the PI EVALUATOR SESSION HANDSHAKE preamble — a different model family from the controller's (controller glm-5.3, judge minimax-m3), so generator ≠ judge holds on both the agent and the vendor axis. Result in the follow-through below.
+
+**Routing evidence:** base=95a8775a7c9eabd849fd8d463dc6fe324753998a@2026-11-23T03:19:53Z (Gate 1).
+- Controller `pi:ollama/glm-5.3:cloud` (pi fallback rung; anthropic and codex controller lanes both unavailable). Designer `pi:ollama/glm-5.3:cloud`, planner `pi:ollama/kimi-k3:cloud`, executor `pi:ollama/deepseek-v4.1-flash:cloud` (all fallback lanes) unused.
+- Evaluator: `pi:openrouter/minimax/minimax-m3` via `mission_pi_run.sh` (tokens in the follow-through). Generator ≠ judge: glm-5.3 controller, minimax-m3 judge.
+- Quorum: none (no doc). Metered $0 pre-judge.
+
+**Ruled out:**
+- Picking 150, 151, 217–219, 243, 258, 259, 261 or 265: measured reasons above.
+- Treating the `file.json` flip as unblocking row 151: the design's §8 need is the blob route, which is absent (0 non-test matches); a data route without bytes cannot carry `media` or `output-link`.
+- Treating the four PAUSED-NO-CAPACITY fires as died-mid-flight orphans: the driver paused them at `fired` with rc 1 and stamps=1 before any gate ran; there is no work to adopt, and the driver's own slot-verdict log records the pauses (the opposite of a silent skip).
+- Treating step 6a's `A FIRE DIED` as a new death: both notices are credited (393, 394), and the traces are clean.
+- Re-asking D-WORLD-119/120 or raising them to `[normal]`: both asks are unchanged since 406, so Gate 5 3d keeps them `[fyi]`.
+- Rotating the log: 34 live entries with this one, below ~40. The index is regenerated with `rotate-log --index-only`.
+
+**Retro:**
+1. One friction, recorded as process observation rather than a skill edit: the four PAUSED-NO-CAPACITY fires plus this fire's total-lane degradation are a routing-capacity event the loop can observe but not act on (the ration is the fleet's ask, D-FLEET-47; row 263 records the cost). The codex bucket's 16-point use jump in one day is the largest single-window move on record here; if it recurs, the digest should say so plainly — the loop cannot pace attended episodes, but Mark can.
+- Harness share (2b): **0/20** over entries 404–423 (20 rows, 20 tagged; [ADMIN] block reports, no [HARNESS] rows). Bar-moving landings (2c): no UNMET clause exists, so the drift alarm does not apply.
+- No skill edit.
+
+**Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence). Unanswered, the next fire with unchanged inputs should exit at the idle pre-check if it runs undegraded; a record older than 24 h forces a full fire. A dev red outranks either way. Watch for the N2d blob route (the row-151 predicate's next flip).
+
+**Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16; next boundary Monday 2026-11-23 07:00 local — the first fire after it rotates and runs the weekly external-issue sweep). Idle record: BARRED (degraded fire; row 263 count 11).
+
+**Landing note (iteration 424):** this entry was written by the 04:16 fire (`world-1795403808-60098`) and committed as `d1e2ead0` at 04:26:24. It was never pushed (0 remote refs naming `iter423`), and its judge never ran, so there is no follow-through above. The driver log shows why: at 04:27:10 the pi controller (`pi:ollama/glm-5.3:cloud`) got an Ollama `429` ("session usage limit"), the driver demoted that rung, found no other controller rung with capacity, and paused the slot (`PAUSED-NO-CAPACITY at=gate-2 rc=1`, transcript scan clean). Iteration 424 found the commit in `.wt-world-iter423-record`, cherry-picked it unchanged (patch-id `14f61515…` on both sides) and landed it with its own record. Its verdict (no pick, rule (d)) and its row-151 finding (`file.json` 0 → 1, `/surface/blob` absent) re-measure the same at `95a8775a`. Four statements are wrong, corrected here rather than edited above:
+1. **Commits in `284e1ace..95a8775a`:** 16, not 15. Its own readings file lists 16 lines above `count=15`.
+2. **Paths outside `design_docs/`:** 66 of 72 changed files, not 12 (12 is roughly the number of directories).
+3. **PR #615 merged** 2026-11-21T15:05:35Z, not 2026-11-22. #632 and #633 merged the same afternoon (14:51:01Z and 15:05:16Z).
+4. **Paused fires:** nine fires between iteration 422 and this one ended `PAUSED-NO-CAPACITY`, not four: 2026-11-21 16:23 and 20:22 (at gate-2), then 2026-11-22 00:18, 04:18, 08:18, 12:18, 16:18, 20:18 and 2026-11-23 00:18 (at `fired`). This fire was the tenth. It was also not "the first World fire on a non-anthropic, non-codex controller": the two 2026-11-21 gate-2 pauses ran on the same pi rung.
+
+## 424 — 2026-11-23 — no pick: rule (d) block report, the fifteenth in a row; lands the orphaned iteration-423 record (an Ollama 429 stopped its pi controller one minute after the commit, before push or judge) with four corrections; degraded on codex, so the idle record is barred (row 263 count 11 → 12); weekly sweep 0 orphans of 1; dev green at `95a8775a` [ADMIN]
+
+**Kind:** no-pick iteration. Nothing is loop-routable without an answer from Mark, so standing rule (d) applies. Nothing has landed since iteration 423's readings: same head `95a8775a`, same snapshot. The deliverable is landing iteration 423's orphaned record (Gate 2's died-mid-flight trace (b)) plus this record: the STATUS stamp (421 moved to the archive), the 423 stamp's landing corrections, the Current route line, row 263's iteration-424 note, the 423 landing note and this entry, the regenerated index, the dashboard and `verification/world-iter424/gate1-2-readings.txt`. An independent judge reviews both commits before merge. Gate 5 rotates the bookkeeping thread and does NOT record the idle fingerprint (degraded fire).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at 2 of 12 sprints; every remaining V4 sprint waits on D-WORLD-119.
+
+**Pick and why:** none. Clause map at `95a8775a`: clauses 1–7 MET, so no UNMET clause and no critical-path row.
+- **Since iteration 423's readings:** 0 commits. `origin/dev` = local `dev` = `95a8775a7c9eabd849fd8d463dc6fe324753998a`. Over 422's range (`284e1ace..95a8775a`): 16 commits, 66 of 72 files outside `design_docs/`, 0 `| D-WORLD` rows changed.
+- **Ledger:** `--check` valid (rc 0), 107 rows; `--open` → D-WORLD-119, D-WORLD-120.
+- **Row 243:** the V4 design names D-WORLD-119 on 4 lines and 120 on 2; not touched in range.
+- **Row 150:** subjects in range matching `row ?150|A1|marketing` → 0; control `record|iteration 42` → 4.
+- **Row 151:** subjects since 2026-10-01 matching `N2d|N4a` → 0 (control `N2c` 1). Non-test `.go` files naming `file.json` → 1 (`host/daemon/daemon.go:1145`, added by `007bebb7`; control `surface` 126). **New this iteration, a sharper predicate:** non-test `.go` files naming `/surface/blob`, N2d's second route (design §4 "The routes (N2d)") → **0**, control `/surface/stack.json` → 5. N2d is "`file.json` and `blob`" (§8 step 1), so it is half-delivered, and row 151 stays behind row 188 N2d and N4a (both on the attended track). The front card's `What happened` column is new in range (0 matches in `app.js` at `284e1ace`, 2 at `95a8775a`). No commit attests N4a's full acceptance.
+- **Rows 217–219** attended-track; **258, 259, 261, 265** under rule (d). No external predicate is routable; row 263 waits on the fleet, and no `harness-resolved` reply arrived (0 unread).
+
+**Gate 0:**
+- Stamped first. Kill switch armed (`mission-world.disabled` absent). `gh` is `sunholo-voight-kampff`. Billing CLEAN. The env was read by name, then specific non-secret values.
+- Directives: 0 allowlisted on #574 (43 comments; `mission-574-last-seen` absent, so read from the epoch). Nothing to `--mark`.
+- Step 6a (prescribed form): **rc 1**, the same two #524 notices (crash `issuecomment-6849577904`, transcript fire `world-1794807071-53892`), control 107:4 ok. Both credited in 393/394, so nothing new died there. The real orphan is the one the notices cannot see: a **pause** posts no crash notice, so iteration 423's unpushed record was found only by trace (b), `git worktree list`.
+- **Weekly external-issue sweep** (first fire after Monday 2026-11-23 07:00 local): 1 open issue enumerated (cross-checked by a second `gh issue list` count, 1). #574 → charter 4, log 78, archive 11, dashboard 1 (it is the bookkeeping thread). **0 orphans of 1 enumerated**; negative control fired (fresh literal, 0 across the four files).
+- Open PRs from the fleet account: #617 only (`ui/live-branch-heads`, CONFLICTING, untouched since 2026-11-19) — attended UI work, left alone.
+- Inbox: 0 unread on `mission-world`.
+- Skill drift: `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target `cmp` equal to ailang `origin/dev` (14 compared, 0 drift). The pin `$MISSION_DRIVER_ROOT` is at `ca4d738e1`, drift 0.
+- Dev CI at `95a8775a`: 3/3 check-runs success.
+
+**Gate 1:** Gate-1 base `95a8775a7c9eabd849fd8d463dc6fe324753998a@2026-11-23T07:17:33Z`. One slip, recorded: the first `mission-base.sh record gate1` ran from the driver root, so `~/.ailang/state/mission-world-base` also holds a `base-gate1` row at 07:17:29Z carrying the ailang SHA `ca4d738e1…`. The row 4 s later is the World base. Gate 4's `record gate4` read the same World SHA (STEADY).
+
+**Died-mid-flight (iteration 423):** see the landing note above. Verified rather than adopted: every load-bearing count in its stamp and entry was re-measured here (above and in the readings file); the four wrong statements are corrected in the note and in a bracket on its STATUS stamp. Its row-263 occurrence (`inbox_1795404296951_40d30714`, count 10 → 11) is real: the ticket read 11 before this fire filed.
+
+**Row 263 — this fire is degraded, so the idle record is barred:** codex window `used=39.0% allowed=32.9%` (`state=over`); `gpt-6.2-sol` probe rc 75; planner → `opus`, executor → `claude:claude-haiku-5-5`; controller `claude:claude-opus-5-5` (probe ok), evaluator `sonnet`. The driver logged `LANE DEGRADED`. Neither degraded role is spawned in a no-pick fire. Occurrence filed (`inbox_1795418443750_1004eee2`), count **11 → 12**, `--blocking none`. In about 53 hours (2026-11-21 03:11 to this fire) no fire ran to a landed record: three idle exits, nine capacity pauses, and one fire (423) that wrote its record and was paused before landing it.
+
+**Designer / planner / executor:** not spawned. A no-pick iteration has no doc, plan or code, so the routing table sends them nothing. No spawn was attempted, so none failed.
+
+**Independent evaluator (record):** REQUIRED. Agent `sonnet` (`MISSION_EVALUATOR_RESOLVED=sonnet`, `MISSION_EVALUATOR_PATH=agent-tool`), fresh foreground read-only context, judging both commits (the cherry-picked 423 record and this record) before merge. Result in the follow-through below.
+
+**Routing evidence:** base=95a8775a7c9eabd849fd8d463dc6fe324753998a@2026-11-23T07:20:49Z (Gate 4).
+- Controller `claude:claude-opus-5-5` (tok: not reported to the controller). Designer `claude:claude-opus-5-5`, planner `opus`, executor `claude:claude-haiku-5-5`: not spawned (0 tok).
+- Evaluator: Agent `sonnet` (tokens in the follow-through). Generator ≠ judge: opus controller, sonnet judge. Iteration 423's own record was generated by `pi:ollama/glm-5.3:cloud`, so its judge is a third model.
+- Quorum: none (no doc). Metered $0.
+
+**Ruled out:**
+- Picking 150, 151, 217–219, 243, 258, 259, 261 or 265: measured reasons above.
+- Treating `file.json` as N2d delivered: §8 defines N2d as `file.json` **and** `blob`; `/surface/blob` is 0.
+- Redoing iteration 423 from scratch: its commit is a complete record whose verdict re-measures the same. Gate 2 says verify and land it, not redo it.
+- Editing the 423 entry's wrong numbers in place: corrections are appended (log note, stamp bracket), so the record shows what the pi controller wrote and what was wrong with it.
+- Treating the nine pauses as died-mid-flight orphans: those nine left no worktree, branch or commit (checked: the only iter-423 traces are the two worktrees on `d1e2ead0`); the driver logged each one.
+- Rotating the log: 35 live entries with this one, below ~40; index regenerated with `--index-only`.
+
+**Retro:**
+1. **Friction (instance 1): a capacity pause can strand a finished record, and nothing that reports deaths sees it.** Step 6a reads crash notices; a pause is "not a crash" and posts none. The 423 record was found only because Gate 2's worktree trace was run by hand against branch names. That is the trace working as designed, so no skill change on one instance; recorded so a second instance can cite it.
+2. **Friction (instance 1): controller slip on `mission-base.sh`.** The helper records whatever repo the CWD is in; run from the driver root it wrote the ailang SHA into World's base file. Recorded in Gate 1 above; no change.
+- Harness share (2b): **0/20** over entries 405–424 (20 rows, 20 tagged). Bar-moving landings (2c): no UNMET clause, so the drift alarm does not apply.
+- No skill edit.
+
+**Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS). Unanswered, idle fires until an input changes; this fire's landing PR moves only record paths, so the next undegraded fire can record the idle fingerprint. A dev red outranks either way. Watch for N2d's `/surface/blob` route (row 151's next flip).
+
+**Gate 5 bookkeeping:** rotation DUE (#574 created 2026-11-16, before the 2026-11-23 07:00 local boundary): new thread, weekly report, "continues in" comment, close #574, state files. Idle record: BARRED (degraded fire; row 263 count 12).
+
+**Judge follow-through (iteration 424):** Agent `sonnet` (resolver `agent-tool sonnet declared:alias-pin`), fresh foreground read-only context, judged both commits: `24c6b753` (the cherry-picked iteration-423 record) and `1312c7b8` (this record). Verdict **PASS 90/100, zero blocking** (correctness 36/40, integrity 24/25, traceability 18/20, completeness 12/15). It used 44,837 subagent tokens, 8 tool uses and 40 s. Generator ≠ judge: opus controller (424), glm-5.3 controller (423), sonnet judge. The directive gave it the files and ten checks, not the controller's numbers.
+- **What it re-measured:** range `284e1ace..95a8775a` = 16 commits, 66 files outside `design_docs/`, 0 `| D-WORLD` lines; PR merge times (#615 15:05:35Z, #632 14:51:01Z, #633 15:05:16Z on 2026-11-21); `--check` 107 rows, `--open` 119 and 120; `file.json` 1 file, `/surface/blob` 0, design line 218 "N2d … `file.json` and `blob`", `What happened` first added by `007bebb7`; 10 `PAUSED-NO-CAPACITY` verdicts from 2026-11-21 03:11 through 2026-11-23 04:27:19 inclusive (nine before 423's), 3 idle exits, the 04:27 Ollama `429`; this fire's `state=over 39.0/32.9`, rc 75, `LANE DEGRADED`; three STATUS stamps, 421 once in the archive, rows 263 and 265 present, the stamp regex; patch-id `14f61515…` on both sides; no auto-close keyword in either message.
+- **Non-blocking notes, checked by the controller:**
+  1. "nine capacity pauses, and one fire (423) that … was paused" could be read as nine pauses in total. Read it as: nine pauses before 423, and 423's own pause was the tenth (the landing note says so). No edit.
+  2. The 423 entry still carries its wrong numbers; that is deliberate (corrections appended, not edited in place).
+- **What it did not check:** the readings files line by line, the dashboard and index contents, dev CI, the weekly sweep, the #574 comment count, skill drift, #617, the row-150 and `N2d|N4a` greps, the remote-ref claim and the 0/20 harness share.
+
+**Gate 3b (record PR #634) and row 266:** head `56b99b11` run 45130842779 attempt 1 read **2/3**. `ailang-code verify gate` and `go host build + test gate` passed. `go race gate` failed on `cmd/ailang-worldd` `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision` (`episode_finish_surface_rig_test.go:410`, "1 decisions (1 named sha256:ec9a…); the record names sha256:ec9a…"; the test wants 2). The two `DATA RACE` warnings in that job are the gate's own positive control (`racecontrol/main.go`). The PR changes only `design_docs/` (0 other paths), and the same code was green at `95a8775a`, so the PR did not cause it. This is the test's **third** recorded instance (411 on `9b24ee8c`; 415 on merge `1dbf8f0f`; this one). Under D-WORLD-109 (2) that makes it a 258-class row, filed as **row 266** `w-finish-confirm-named-decision-race-flake` below row 265, under rule (d), unrouted. `rerun --failed` was fired on run 45130842779. The row filing is a new head, so the PR is polled again on it before merge.
