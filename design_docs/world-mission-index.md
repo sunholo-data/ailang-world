@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 426 | 2026-11-23 | no pick: rule (d) block report, the seventeenth in a row; inputs identical to 423's, 424's and 425's (driver snapshot `1ac80c01…` at 04:16, 08:16, ... |
 | 425 | 2026-11-23 | no pick: rule (d) block report, the sixteenth in a row; inputs identical to 423's and 424's (driver snapshot `1ac80c01…` at 04:16, 08:16 and 12:17)... |
 | 424 | 2026-11-23 | no pick: rule (d) block report, the fifteenth in a row; lands the orphaned iteration-423 record (an Ollama 429 stopped its pi controller one minute... |
 | 423 | 2026-11-23 | no pick: rule (d) block report, the fourteenth in a row; the fire degraded on every lane (controller and all four roles on pi lanes after four PAUS... |

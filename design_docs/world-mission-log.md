@@ -2690,3 +2690,63 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
   2. "The 04:16 snapshot belongs to 423's fire": confirmed by 424's landing note (the 04:16 fire's pi controller wrote the 423 record and paused at 04:27). No edit.
   3. Ticket `slots_lost` 13 and `inbox_1795432887694_08f512e1` were read from the same ticket object by the controller's readings (`latest.iteration` 425). No edit.
 - **What it did not check:** the readings file line by line, row 150, the `file.json` count, Gate 0 claims (#635 comments, dev CI, skill drift, traces, untracked mtimes), the harness share, the live-entry count (36).
+
+## 426 — 2026-11-23 — no pick: rule (d) block report, the seventeenth in a row; inputs identical to 423's, 424's and 425's (driver snapshot `1ac80c01…` at 04:16, 08:16, 12:17 and 16:16); degraded on codex again, 1.4 points short of the start margin, so the idle record is barred a fourth time on the same inputs (row 263 count 13 → 14); dev green at `062782fd` [ADMIN]
+
+**Kind:** no-pick iteration. Nothing is loop-routable without an answer from Mark, so standing rule (d) applies. The deliverable is this record: the STATUS stamp (423 moved to the archive), the Current route line, row 263's iteration-426 note, this entry, the regenerated index, the dashboard and `verification/world-iter426/gate1-2-readings.txt`. An independent judge reviews the commit before merge. Gate 5 does NOT record the idle fingerprint (degraded fire) and does not rotate (#635 is this week's thread).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at 2 of 12 sprints; every remaining V4 sprint waits on D-WORLD-119.
+
+**Pick and why:** none. Clause map at `062782fd`: clauses 1–7 MET, so no UNMET clause and no critical-path row.
+- **Since iteration 425's Gate-1 base `0854586d`:** 3 commits (`abc481db`, `af4d431d`, merge `062782fd` of #636), all iteration 425 record commits; 0 of 6 changed files outside `design_docs/`; 0 `| D-WORLD` lines changed. Local `dev` is 8 behind `origin/dev` and 0 ahead; the record is written in a worktree on `origin/dev`.
+- **Ledger:** `--check` valid (rc 0), 107 rows; `--open` → D-WORLD-119, D-WORLD-120.
+- **Row 150:** subjects in range matching `row ?150|A1|marketing` → 0; control `record|iteration 42` → 3.
+- **Row 151:** subjects since 2026-10-01 matching `N2d|N4a` → 1 raw (423's own record subject quoting the predicate), non-record → 0 (control non-record `N2c` 1). Non-test `.go` files naming `/surface/blob` → 0 (control `/surface/stack.json` 5); `file.json` → 1 (unchanged). Row 151 stays behind row 188 N2d and N4a.
+- **Rows 217–219** attended-track; **258, 259, 261, 265, 266** under rule (d). No external predicate is routable; row 263 waits on the fleet, and no `harness-resolved` reply arrived (0 unread).
+
+**Gate 0:**
+- Stamped first. Kill switch armed (`mission-world.disabled` absent). `gh` is `sunholo-voight-kampff`. Billing CLEAN. The env was read by name, then specific non-secret values.
+- Directives: 0 allowlisted on #635 (3 comments, all the fleet account's reports; the watermark file is a legacy bare timestamp, read from 2026-08-17). Nothing to `--mark`.
+- Step 6a (prescribed form): **rc 0**. #635 3 comments, #574 44, all from the fleet account, 0 crash and 0 transcript notices; control 107:4 ok. `mission-574-last-seen` is absent, so the read was single-watermark (DEGRADED in the script's own words), as at 425.
+- Weekly external-issue sweep: not due (424 ran it for this week).
+- Open PRs: #617 only (`ui/live-branch-heads`, untouched since 2026-11-19) — attended UI work, left alone.
+- Inbox: 0 unread on `mission-world`.
+- Skill drift: 28 files compared (`SKILL.md` and every `resources/*.md`, at both the resolved symlink target and the pin `$MISSION_DRIVER_ROOT`) against ailang `origin/dev`, 0 `DRIFT` lines. Two fleet skill commits landed today after 425 (`7e195ba84`, `8d3ea615a`, the `agy` lane, wired in no chain); both copies carry them. The ailang main checkout is 3 commits ahead of its origin (V1 docs work, no skill paths), which is why the driver logged `skill-sync=skip:ahead`.
+- Dev CI at `062782fd`: 3/3 check-runs success.
+
+**Gate 1:** Gate-1 base `062782fd506682d904c05f5035c02113ca0af1a0@2026-11-23T15:17:12Z`, recorded from the World clone.
+
+**Died-mid-flight:** none. 0 worktrees and 0 remote branches name `iter426` (control `iter425` 1 each). The 12:17 fire (425) ended `COMPLETED rc=0` at 12:52, and no fire ran between it and this one. The main checkout's five untracked paths are attended residue last modified 2026-11-18 or earlier.
+
+**Row 263 — this fire is degraded, so the idle record is barred:** codex window `used=39.0% allowed=39.6%` (`state=over`, because admission needs allowed to exceed used by the 2.0-point start margin: 41.0 needed, 1.4 short); `gpt-6.2-sol` probe rc 75; planner → `opus`, executor → `claude:claude-haiku-5-5`; controller `claude:claude-opus-5-5` (probe ok), evaluator `sonnet`. The driver logged `LANE DEGRADED`. Neither degraded role is spawned in a no-pick fire. Occurrence filed (`inbox_1795447105537_40ad8c3a`), count **13 → 14**, `--blocking none`. 425 predicted this fire would still be over at about 39.7; it read 39.6. Allowed rose 3.3 points in 4 h with use flat, so the 20:15 fire should read about 42.9 against 41.0 and run undegraded.
+
+**Designer / planner / executor:** not spawned. A no-pick iteration has no doc, plan or code, so the routing table sends them nothing. No spawn was attempted, so none failed.
+
+**Independent evaluator (record):** REQUIRED. Agent `sonnet` (`MISSION_EVALUATOR_RESOLVED=sonnet`, `MISSION_EVALUATOR_PATH=agent-tool`), fresh foreground read-only context, judging this record commit before merge. Result in the follow-through below.
+
+**Routing evidence:** base=062782fd506682d904c05f5035c02113ca0af1a0@2026-11-23T15:18:56Z (Gate 4).
+- Controller `claude:claude-opus-5-5` (tok: not reported to the controller). Designer `claude:claude-opus-5-5`, planner `opus`, executor `claude:claude-haiku-5-5`: not spawned (0 tok).
+- Evaluator: Agent `sonnet` (tokens in the follow-through). Generator ≠ judge: opus controller, sonnet judge.
+- Quorum: none (no doc). Metered $0.
+
+**Ruled out:**
+- Picking 150, 151, 217–219, 243, 258, 259, 261, 265 or 266: measured reasons above.
+- Recording the idle fingerprint by hand or "because nothing changed": Gate 5 bars it on a degraded fire, and the fix belongs to the fleet (row 263).
+- Treating today's `agy` skill commits as an input: they add a lane in no chain and change no World route.
+- Rotating the log: 37 live entries with this one, below ~40; index regenerated with `--index-only`.
+
+**Retro:**
+- No new friction. The 425 readings script was reused with only the range base changed, and its raw/non-record split for the row 151 grep held.
+- Harness share (2b): **0/20** over entries 407–426 (20 rows, 20 tagged). Bar-moving landings (2c): no UNMET clause, so the drift alarm does not apply.
+- No skill edit.
+
+**Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS). Unanswered, idle fires until an input changes; the 20:15 fire should be the first undegraded one and can record the idle fingerprint. A dev red outranks either way.
+
+**Gate 5 bookkeeping:** rotation not due (#635 created this morning; next Monday 2026-11-30 07:00 local). Idle record: BARRED (degraded fire; row 263 count 14).
+
+**Judge follow-through (iteration 426):** Agent `sonnet` (`MISSION_EVALUATOR_PATH=agent-tool`), fresh foreground read-only context, judged `0b6656ab`. Verdict **PASS 96/100, zero blocking** (correctness 38/40, integrity 25/25, traceability 19/20, completeness 14/15). It used 45,086 subagent tokens, 6 tool uses and 35 s. Generator ≠ judge: opus controller, sonnet judge. The directive gave it the files and eleven checks, not the controller's numbers.
+- **What it re-measured:** 6 files, all `design_docs/`; charter 6361 lines before and after; three stamps 426/425/424; 423's stamp once in the archive, byte-identical to the parent's line (`grep -Fx`); `--check` 107 rows, `--open` 119 and 120, 0 `^[-+]| D-WORLD` lines; range 3 commits, 0 of 6 files outside `design_docs/`; snapshot `1ac80c01` at 04:16, 12:17 and 16:16 in full; codex `39.0/39.6` with `state=over` and margin 2.0 at 16:16:03; the 16:16:33 `LANE DEGRADED` line; 425's `COMPLETED rc=0` at 12:52:04 with no fire between; the codex arithmetic (41.0 − 39.6 = 1.4; 36.3 → 39.6 = 3.3; 39.6 + 3.3 = 42.9); ticket `slots_lost` 14 at iteration 426 with `inbox_1795447105537_40ad8c3a`; `/surface/blob` 0, control 5; dev CI 3/3 at `062782fd`; #635 3 comments; cross-file counts; no addresses or closing keywords.
+- **Non-blocking notes, checked by the controller:**
+  1. It read the 08:16 snapshot hash only by prefix. The controller printed all of today's `idle snapshot taken` lines: 00:17, 04:16, 08:16, 12:17 and 16:16 all carry the full `1ac80c011e237ee3…586faaf` with `head=95a8775`. No edit.
+  2. The 42.9 projection is linear with use flat, and the record already says "about" and "should". No edit.
+- **What it did not check:** row 150 and the row 151 subject counts, step 6a, the sweep state, the untracked mtimes, the readings file against live output, and the full prose of the dashboard and index.

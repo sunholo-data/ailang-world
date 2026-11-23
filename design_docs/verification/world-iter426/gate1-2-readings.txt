@@ -1,0 +1,92 @@
+# World iteration 426 — Gate 0–2 readings (fire world-1795446993-95284), captured 2026-11-23T15:17:23Z
+
+## origin/dev and Gate-1 base
+062782fd506682d904c05f5035c02113ca0af1a0
+1795447032	2026-11-23T15:17:12Z	base-gate1	1	062782fd506682d904c05f5035c02113ca0af1a0
+local dev 95a8775a is 8 behind, 0 ahead origin/dev (local dev never fast-forwarded by the loop; origin is truth)
+
+## commits since iteration 425 Gate-1 base 0854586d
+062782fd Merge pull request #636 from sunholo-data/mission/world-iter425-record
+af4d431d record: iteration 425 — judge follow-through (sonnet PASS 93, zero blocking)
+abc481db record: iteration 425 — no pick, rule (d) block report (sixteenth); inputs identical to 423 and 424 (snapshot 1ac80c01); degraded on codex again, idle record barred, row 263 count 12 to 13
+count=3
+files changed outside design_docs/: 0 (of 6 files)
+ledger lines changed (| D-WORLD rows): 0
+
+## ledger
+decision ledger valid: 107 rows
+check rc=0
+D-WORLD-119	OPEN
+D-WORLD-120	OPEN
+
+## directives (#635)
+⚠ mission_directives: LEGACY watermark file /Users/voightkampff/.ailang/state/mission-635-last-seen (bare timestamp, no processed ids, written before #981) — the first --mark upgrades it
+mission_directives: #635 — 0 directive(s) from [MarkEdmondson1234] since 2026-08-17T06:15:12Z inclusive, 0 new, 0 already processed (of 3 comments; the rest are public feedback, never directives)
+issue #635 comments: 3
+
+## dev CI at origin/dev
+checks=3
+  ailang-code verify gate: success
+  go race gate (go test -race, own job): success
+  go host build + test gate: success
+
+## row 150
+match row ?150|A1|marketing in 0854586d..origin/dev: 0  control record|iteration 42: 3
+
+## row 151 (needs row 188 N2d/N4a)
+subjects since 2026-10-01 matching N2d|N4a: all 1 (the one hit is 24c6b753, iteration 423's own record subject quoting the predicate); non-record 0  control non-record N2c: 1
+non-test .go files naming /surface/blob: 0  control /surface/stack.json: 5
+non-test .go files naming file.json: 1
+
+## row 243 V4 design gating
+D-WORLD-119 OPEN rows: 1  D-WORLD-120 OPEN rows: 1
+
+## open PRs (sunholo-data/ailang-world)
+617 ui/live-branch-heads UNKNOWN updated 2026-11-19T13:39:01Z sunholo-voight-kampff
+
+## died-mid-flight traces
+(b) worktrees naming iter426: 0  control iter425: 1
+(a) remote branches naming iter426: 0  control iter425: 1
+(c) main checkout porcelain:
+?? .claude/worktrees/
+?? .wt-world-iter306-r0/
+?? design_docs/mockups/world-episodes/
+?? design_docs/planned/w-human-agent-surface.md
+?? design_docs/planned/w-phone-episode-workflow.md
+    newest mtime among untracked: 2026-10-26T16:36 .wt-world-iter306-r0;2026-11-18T10:15 design_docs/planned/w-phone-episode-workflow.md;2026-11-18T10:57 design_docs/planned/w-human-agent-surface.md;2026-11-18T11:05 design_docs/mockups/world-episodes;2026-11-18T18:49 .claude/worktrees;
+    iter425 record worktree porcelain: 0
+
+## fires since iteration 425 (driver log)
+[2026-11-23 12:52:04] slot-verdict: COMPLETED rc=0 attempt=1/3 stamps=9 last_age_s=16 elapsed_s=2171 mission=world hb=/Users/voightkampff/.ailang/state/mission-world-heartbeat
+[2026-11-23 16:16:03] Codex quota window: state=over window=10080m used=39.0% allowed=39.6% start_margin=2.0pp observed=2026-11-23T15:15:54Z
+[2026-11-23 16:16:33] LANE DEGRADED this fire: - `planner`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`75` — over daily ration) → handed to `opus` - `executor`: **codex** lane `gpt-6.2-sol` unusable (probe rc=`75` — over daily ration) → handed to `claude:claude-haiku-5-5`
+[2026-11-23 16:16:35] world: idle snapshot taken for world-1795446993-95284 (1ac80c011e237ee3a1fd5e616305f077a8c0acdfe598a101501a6393d586faaf head=95a8775 ledger=107 open=2 directives=0 inbox=0 red=0)
+[2026-11-23 16:16:35] === mission iteration starting (controller=claude:claude-opus-5-5 via probe ok, timeout=21600s | bg-wait-ceiling=0ms | roles: designer=claude:claude-opus-5-5 planner=opus executor=claude:claude-haiku-5-5 evaluator=sonnet) ===
+
+## inbox
+unread mission-world (json): null
+
+## harness ticket row 263
+{'signature': 'skill:idle-record-barred-on-degraded-no-pick-fire', 'slots_lost': 13, 'blocking': 'none', 'missions': ['world'], 'first_seen': '2026-11-09T08:55:19.50773Z', 'last_seen': '2026-11-23T11:21:27.694334Z'} message_ids: 13
+
+## skill drift (every readable copy vs ailang origin/dev)
+files compared=28
+ailang main checkout: 3 ahead, 0 behind origin/dev
+
+## step 6a self-notices
+gate0_self_notices: repo=sunholo-data/ailang-world self=sunholo-voight-kampff issues=635,574
+watermark: /Users/voightkampff/.ailang/state/mission-635-last-seen = 2026-08-17T06:15:12Z ok
+watermark: /Users/voightkampff/.ailang/state/mission-574-last-seen ABSENT — DEGRADED: single-watermark read (iter-52 rule wants two)
+since: 2026-08-17T06:15:12Z (older of 1 readable watermark(s) of 2)
+issue: 635 comments=3 self=3 crash=0 transcript=0 other=3
+issue: 574 comments=44 self=44 crash=0 transcript=0 other=44
+control: issue=107 expect=4 got=4 ok
+signature-source: /Users/voightkampff/.ailang-driver-pin/world/tools/launchd/mission-control.sh ok
+verdict: 0 crash notice(s) since 2026-08-17T06:15:12Z on #635,#574 — no death signal from the driver; Gate 2's traces (a)-(c) still run [mission_gate0_self_notices.sh, control 107:4, watermarks 1/2]; transcript notice(s) since watermark: 0
+rc=0
+
+## billing tripwire
+CLEAN
+kill switch: armed
+  ✓ Logged in to github.com account sunholo-voight-kampff (/Users/voightkampff/.config/gh/hosts.yml)
+  - Active account: true
