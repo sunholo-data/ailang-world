@@ -1,0 +1,20 @@
+# World iteration 427 — record PR #638 CI reds (head bd79f4882667f4e4c36ee5e19a14b951ff37ae7c), captured 2026-11-23T19:47:20Z
+diff vs origin/dev ef3d1476: 6 files, outside design_docs/: 0
+ef3d1476 (same code) dev CI: success,success,success
+
+## run 45248255013 attempt 1
+job 137950666016 go race gate: FAIL cmd/ailang-worldd 142.366s; sole failing test:
+--- FAIL: TestFinishConfirmOnSurfaceDispatchesTheNamedDecision (0.41s)
+    episode_finish_surface_rig_test.go:410: 1 decisions (1 named sha256:bb84936ecd449a2c2304aa29b9c9877d29fd78ecb3750eee0c907830b2820f7a); the record names sha256:bb84936ecd449a2c2304aa29b9c9877d29fd78ecb3750eee0c907830b2820f7a
+  (same job: ok scripts/marketingcheck 143.579s)
+job 137950665914 go host build + test gate: FAIL scripts/marketingcheck 147.821s; sole failing test:
+--- FAIL: TestMarketingCaptureFakeChromeSixShots (125.24s)
+    --- FAIL: TestMarketingCaptureFakeChromeSixShots/scheme (120.00s)
+        capture_test.go:458: capture must succeed: rc=-1 stderr="progress: 1/6 workbench-light.png ok\nprogress: 2/6 workbench-dark.png ok\nprogress: 3/6 packet.png ok\nprogress: 4/6 graph.png ok\nprogress: 5/6 provenance
+FAIL package lines per job (race, host): 1, 1
+WARNING: DATA RACE lines in both jobs come from design_docs/verification/w-race-gate-blindspot/racecontrol/main.go (the intentional race-gate positive control), not from a failing test.
+
+## run 45248255013 attempt 2 (gh run rerun --failed)
+go race gate (go test -race, own job): success
+go host build + test gate: success
+ailang-code verify gate: success

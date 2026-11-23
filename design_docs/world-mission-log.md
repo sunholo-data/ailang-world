@@ -2811,3 +2811,10 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
   2. It could not verify the Gate-5 `--record`, which runs after the reports and outside a read-only judge's reach. Its rc is in the report. No edit.
   3. The step 6a read is single-watermark (`mission-574-last-seen` absent), as the entry already says. No edit.
 - **What it did not check:** skill drift, the open-PR line, the died-mid-flight traces, the kill switch and billing tripwire, and the full row-263 note text.
+
+**Gate 3b (iteration 427):** record PR #638, head `bd79f488`, run 45248255013. Attempt 1 went red on two jobs, one known flake in each, with no code in the diff (6 `design_docs/` files; the same code at `ef3d1476` is 3/3 green on dev):
+- `go race gate`: `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision`, "1 decisions (1 named sha256:bb84936e…)". This is row 266's fourth instance.
+- `go host build + test gate`: `TestMarketingCaptureFakeChromeSixShots/scheme` hit its fixed 120 s deadline with 5 of 6 shots done. This is a further row 247 instance, folded into 258.
+- Each job had exactly one `FAIL` package line. The `WARNING: DATA RACE` lines in both come from the intentional `racecontrol` positive control.
+
+`gh run rerun --failed` gave attempt 2: 3/3 success. Both rows got an instance note. Neither is routable (rule (d)). Evidence: `design_docs/verification/world-iter427/ci-flakes.txt`.
