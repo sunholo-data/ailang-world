@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 424 | 2026-11-23 | no pick: rule (d) block report, the fifteenth in a row; lands the orphaned iteration-423 record (an Ollama 429 stopped its pi controller one minute... |
 | 423 | 2026-11-23 | no pick: rule (d) block report, the fourteenth in a row; the fire degraded on every lane (controller and all four roles on pi lanes after four PAUS... |
 | 422 | 2026-11-21 | no pick: rule (d) block report, the thirteenth in a row; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); the first undegraded no-pic... |
 | 421 | 2026-11-20 | no pick: rule (d) block report, the twelfth in a row; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); World-episode PR #629 moved th... |
