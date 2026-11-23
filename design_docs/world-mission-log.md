@@ -2629,3 +2629,56 @@ V2b also fixes the V1 judge's empty-submit supersession gap (A4).
 - **What it did not check:** the readings files line by line, the dashboard and index contents, dev CI, the weekly sweep, the #574 comment count, skill drift, #617, the row-150 and `N2d|N4a` greps, the remote-ref claim and the 0/20 harness share.
 
 **Gate 3b (record PR #634) and row 266:** head `56b99b11` run 45130842779 attempt 1 read **2/3**. `ailang-code verify gate` and `go host build + test gate` passed. `go race gate` failed on `cmd/ailang-worldd` `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision` (`episode_finish_surface_rig_test.go:410`, "1 decisions (1 named sha256:ec9a…); the record names sha256:ec9a…"; the test wants 2). The two `DATA RACE` warnings in that job are the gate's own positive control (`racecontrol/main.go`). The PR changes only `design_docs/` (0 other paths), and the same code was green at `95a8775a`, so the PR did not cause it. This is the test's **third** recorded instance (411 on `9b24ee8c`; 415 on merge `1dbf8f0f`; this one). Under D-WORLD-109 (2) that makes it a 258-class row, filed as **row 266** `w-finish-confirm-named-decision-race-flake` below row 265, under rule (d), unrouted. `rerun --failed` was fired on run 45130842779. The row filing is a new head, so the PR is polled again on it before merge.
+
+## 425 — 2026-11-23 — no pick: rule (d) block report, the sixteenth in a row; inputs identical to 423's and 424's (driver snapshot `1ac80c01…` at 04:16, 08:16 and 12:17); degraded on codex again, so the idle record is barred a third time on the same inputs (row 263 count 12 → 13); dev green at `0854586d` [ADMIN]
+
+**Kind:** no-pick iteration. Nothing is loop-routable without an answer from Mark, so standing rule (d) applies. The deliverable is this record: the STATUS stamp (422 moved to the archive), the Current route line, row 263's iteration-425 note, this entry, the regenerated index, the dashboard and `verification/world-iter425/gate1-2-readings.txt`. An independent judge reviews the commit before merge. Gate 5 does NOT record the idle fingerprint (degraded fire) and does not rotate (#635 is this week's thread).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at 2 of 12 sprints; every remaining V4 sprint waits on D-WORLD-119.
+
+**Pick and why:** none. Clause map at `0854586d`: clauses 1–7 MET, so no UNMET clause and no critical-path row.
+- **Since iteration 424's Gate-1 base `95a8775a`:** 5 commits (`24c6b753`, `1312c7b8`, `56b99b11`, `81797855`, merge `0854586d` of #634), all record commits; 0 of 7 changed files outside `design_docs/`; 0 `| D-WORLD` lines changed. Local `dev` is 5 behind `origin/dev` and 0 ahead; the record is written in a worktree on `origin/dev`.
+- **Ledger:** `--check` valid (rc 0), 107 rows; `--open` → D-WORLD-119, D-WORLD-120.
+- **Row 150:** subjects in range matching `row ?150|A1|marketing` → 0; control `record|iteration 42` → 5.
+- **Row 151:** subjects since 2026-10-01 matching `N2d|N4a` → 1 raw, and that one is `24c6b753`, iteration 423's own record subject quoting the predicate; non-record subjects → 0 (control non-record `N2c` 1). Non-test `.go` files naming `/surface/blob` → 0 (control `/surface/stack.json` 5); `file.json` → 1 (unchanged). Row 151 stays behind row 188 N2d and N4a.
+- **Rows 217–219** attended-track; **258, 259, 261, 265, 266** under rule (d). No external predicate is routable; row 263 waits on the fleet, and no `harness-resolved` reply arrived (0 unread).
+
+**Gate 0:**
+- Stamped first. Kill switch armed (`mission-world.disabled` absent). `gh` is `sunholo-voight-kampff`. Billing CLEAN. The env was read by name, then specific non-secret values.
+- Directives: 0 allowlisted on #635 (2 comments; the watermark file is a legacy bare timestamp, read from 2026-08-17). Nothing to `--mark`.
+- Step 6a (prescribed form): **rc 0**. #635 2 comments, #574 44, all from the fleet account, 0 crash and 0 transcript notices; control 107:4 ok. The `mission-574-last-seen` watermark is absent, so the read was single-watermark (DEGRADED in the script's own words). The two #524 notices that 411–424 re-saw are gone now that #524 has left `-prev`.
+- Weekly external-issue sweep: not due (424 ran it for this week).
+- Open PRs: #617 only (`ui/live-branch-heads`, untouched since 2026-11-19) — attended UI work, left alone.
+- Inbox: 0 unread on `mission-world`.
+- Skill drift: `SKILL.md` and all 13 `resources/*.md` at the resolved symlink target `cmp` equal to ailang `origin/dev` (14 compared, 0 drift; negative control fired). The pin `$MISSION_DRIVER_ROOT` is at `05a03541f`, equal to ailang `origin/dev`.
+- Dev CI at `0854586d`: 3/3 check-runs success.
+
+**Gate 1:** Gate-1 base `0854586d7eb3b23fff0d78babefaa6902b08cbad@2026-11-23T11:18:33Z`, recorded from the World clone (424's driver-root slip not repeated).
+
+**Died-mid-flight:** none. 0 worktrees and 0 remote branches name `iter425` (control `iter424` 1 each). The 08:16 fire (424) ended `COMPLETED rc=0`, and no fire ran between it and this one. The main checkout's five untracked paths (`.claude/worktrees/`, `.wt-world-iter306-r0/`, two planned design docs, a mockups directory) are attended residue last modified 2026-11-18 or earlier; not a predecessor's work.
+
+**Row 263 — this fire is degraded, so the idle record is barred:** codex window `used=39.0% allowed=36.3%` (`state=over`); `gpt-6.2-sol` probe rc 75; planner → `opus`, executor → `claude:claude-haiku-5-5`; controller `claude:claude-opus-5-5` (probe ok), evaluator `sonnet`. The driver logged `LANE DEGRADED`. Neither degraded role is spawned in a no-pick fire. Occurrence filed (`inbox_1795432887694_08f512e1`), count **12 → 13**, `--blocking none`. This is the cleanest instance yet: the snapshot is byte-identical across three consecutive fires, 424's landing moved only record paths, and this fire still had to run in full because 424 was degraded too. Codex shortfall went 6.1 → 2.7 points in 4 h with use flat at 39.0%; at the allowance's 3.4 points per 4 h it should clear the 2.0-point start margin around the 20:15 fire, which could then record the fingerprint.
+
+**Designer / planner / executor:** not spawned. A no-pick iteration has no doc, plan or code, so the routing table sends them nothing. No spawn was attempted, so none failed.
+
+**Independent evaluator (record):** REQUIRED. Agent `sonnet` (`MISSION_EVALUATOR_RESOLVED=sonnet`, `MISSION_EVALUATOR_PATH=agent-tool`), fresh foreground read-only context, judging this record commit before merge. Result in the follow-through below.
+
+**Routing evidence:** base=0854586d7eb3b23fff0d78babefaa6902b08cbad@2026-11-23T11:21:12Z (Gate 4).
+- Controller `claude:claude-opus-5-5` (tok: not reported to the controller). Designer `claude:claude-opus-5-5`, planner `opus`, executor `claude:claude-haiku-5-5`: not spawned (0 tok).
+- Evaluator: Agent `sonnet` (tokens in the follow-through). Generator ≠ judge: opus controller, sonnet judge.
+- Quorum: none (no doc). Metered $0.
+
+**Ruled out:**
+- Picking 150, 151, 217–219, 243, 258, 259, 261, 265 or 266: measured reasons above.
+- Reading the raw `N2d|N4a` hit as N2d progress: it is 423's record subject, not a code commit.
+- Recording the idle fingerprint by hand or "because nothing changed": Gate 5 bars it on a degraded fire, and the fix belongs to the fleet (row 263).
+- Rotating the log: 36 live entries with this one, below ~40; index regenerated with `--index-only`.
+
+**Retro:**
+1. **Friction (instance 2 of the readings-instrument class): a predicate grep matched the loop's own record.** The `N2d|N4a` subject grep, reused from 424, read 1 because 423's record subject quotes the predicate. Caught by printing the hit; the readings file now reports raw and non-record counts. Same shape as Gate 4's "a control you record is a control you spend", aimed at a predicate instead of a control. No skill edit: the World-local readings script is the fix.
+- Harness share (2b): **0/20** over entries 406–425 (20 rows, 20 tagged). Bar-moving landings (2c): no UNMET clause, so the drift alarm does not apply.
+- No skill edit.
+
+**Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS). Unanswered, idle fires until an input changes; the first undegraded fire (expected around 20:15 if codex use stays flat) can record the idle fingerprint. A dev red outranks either way.
+
+**Gate 5 bookkeeping:** rotation not due (#635 created this morning; next Monday 2026-11-30 07:00 local). Idle record: BARRED (degraded fire; row 263 count 13).
