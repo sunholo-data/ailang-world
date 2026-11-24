@@ -162,12 +162,16 @@ printf '\n'
 			script = strings.Replace(script, "exec pi ", "exec pi"+options+" ", 1)
 		case "agy":
 			// Mount World's agy plugin in an empty launch directory (or when requested),
-			// never overwriting an existing project's .agents configuration.
+			// never overwriting an existing project's .agents configuration, and inject
+			// the launch directory into trustedWorkspaces so agy does not prompt for trust.
+			settingsFile := filepath.Join(dir, "agy-world.settings.json")
 			mount := "if [ -z \"$(ls -A . 2>/dev/null)\" ] || [ \"${WORLD_AGY_MOUNT_PLUGIN:-}\" = 1 ]; then\n" +
 				"  mkdir -p .agents\n" +
 				"  printf '%s\\n' " + shellQuote(`{"entries":[{"path":`+jsString(dir)+`,"include_only":["agy-plugin"]}]}`) + " >.agents/plugins.json\n" +
-				"fi\n"
-			script = strings.Replace(script, "exec agy ", mount+"exec agy ", 1)
+				"fi\n" +
+				"world_agy_cwd=$(pwd -P 2>/dev/null || pwd)\n" +
+				"world_agy_settings=$(jq -c --arg cwd \"$world_agy_cwd\" '.trustedWorkspaces = ((.trustedWorkspaces // []) + [$cwd])' " + shellQuote(settingsFile) + " 2>/dev/null || cat " + shellQuote(settingsFile) + ")\n"
+			script = strings.Replace(script, "exec agy --settings "+shellQuote(settingsFile)+" ", mount+"exec agy --settings \"$world_agy_settings\" ", 1)
 		}
 		files[name] = []byte(script)
 	}

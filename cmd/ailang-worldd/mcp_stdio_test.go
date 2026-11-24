@@ -141,7 +141,7 @@ func TestAgyHostInitLauncherGateAndStage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("agy-world: %v", err)
 	}
-	if !strings.Contains(string(out), filepath.Join(dir, "agy-world.settings.json")) || !strings.Contains(string(out), "--model\ngemini") {
+	if !strings.Contains(string(out), `"trustedWorkspaces"`) || !strings.Contains(string(out), `"mcp(world/*)"`) || !strings.Contains(string(out), "--model\ngemini") {
 		t.Fatalf("unexpected agy-world argv: %s", out)
 	}
 	pluginsJSON, err := os.ReadFile(filepath.Join(emptyDir, ".agents", "plugins.json"))

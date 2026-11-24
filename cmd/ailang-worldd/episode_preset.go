@@ -93,6 +93,7 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 	agent, model, ttl, branch := p.Preset.Agent, p.Preset.Model, p.Preset.TTLS, "world/"+ep
 	overrides := []string{}
 	overrideLines := []string{}
+	modelOverridden := false
 	fs.Visit(func(f *flag.Flag) {
 		switch f.Name {
 		case "agent":
@@ -101,6 +102,7 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 		case "model":
 			overrideLines = append(overrideLines, "model "+f.Value.String()+" (preset: "+model+")")
 			model = f.Value.String()
+			modelOverridden = true
 		case "ttl":
 			overrideLines = append(overrideLines, "ttl "+f.Value.String()+" (preset: "+strconv.FormatInt(ttl, 10)+")")
 			ttl, _ = strconv.ParseInt(f.Value.String(), 10, 64)
@@ -112,6 +114,10 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 		}
 		overrides = append(overrides, f.Name)
 	})
+	if agent != p.Preset.Agent && !modelOverridden && model != "" {
+		overrideLines = append(overrideLines, "model <default for "+agent+"> (cleared preset "+p.Preset.Agent+" model: "+model+")")
+		model = ""
+	}
 	if agent != "claude" && agent != "codex" && agent != "agy" {
 		return fail(errors.New("agent must be claude, codex or agy"))
 	}
