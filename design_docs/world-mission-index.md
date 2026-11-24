@@ -12,8 +12,9 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
-| 429 | 2026-11-24 | row 243 V4 sprint 4 LANDED (PR #651, merge `ee8ef1c0`): the opt-in operator-runner companion (typed `service runner` lifecycle, liveness-only heartbeat, inert... |
-| 428 | 2026-11-24 | row 243 V4 sprint 3 LANDED (PR #643, merge `e83d1717`): credentials schema 10 (`operator_actions`, `operator_runner_state`, `operator_action_steps`, finish shape incl... |
+| 430 | 2026-11-24 | row 243 V4 sprint 4b LANDED (PR #654, merge `fa3ad190`): terminal episode exclusion for start, preset start, resume, launch and the F1 finish; boun... |
+| 429 | 2026-11-24 | row 243 V4 sprint 4 LANDED (PR #651, merge `ee8ef1c0`): the opt-in operator-runner companion (typed `service runner` lifecycle, liveness-only heart... |
+| 428 | 2026-11-24 | row 243 V4 sprint 3 LANDED (PR #643, merge `e83d1717`): credentials schema 10 (`operator_actions`, `operator_runner_state`, `operator_action_steps`... |
 | 427 | 2026-11-23 | no pick: rule (d) block report, the eighteenth in a row; inputs identical to 423's–426's (driver snapshot `1ac80c01…` at 04:16, 08:16, 12:17, 16:16... |
 | 426 | 2026-11-23 | no pick: rule (d) block report, the seventeenth in a row; inputs identical to 423's, 424's and 425's (driver snapshot `1ac80c01…` at 04:16, 08:16, ... |
 | 425 | 2026-11-23 | no pick: rule (d) block report, the sixteenth in a row; inputs identical to 423's and 424's (driver snapshot `1ac80c01…` at 04:16, 08:16 and 12:17)... |
