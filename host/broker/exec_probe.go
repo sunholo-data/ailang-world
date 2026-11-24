@@ -44,6 +44,8 @@ import (
 	"syscall"
 	"time"
 	"unicode/utf8"
+
+	"github.com/sunholo-data/ailang-world/host/procbound"
 )
 
 // The legacy seven arms (§4.6), then the optional protected-write arm.
@@ -311,11 +313,18 @@ func ProbeExecProfilesEach(ctx context.Context, cfg ExecProbeConfig, profiles []
 	for i := range profiles {
 		net6[i] = newProbeListener()
 	}
+	// Bound concurrent profile probes below procbound.MaxOutstanding so
+	// installations with more than MaxOutstanding profiles do not exhaust
+	// subprocess admission slots and spuriously exclude healthy profiles.
+	limit := max(1, procbound.MaxOutstanding/2)
+	sem := make(chan struct{}, limit)
 	var wg sync.WaitGroup
 	for i, p := range profiles {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
 			errs[i] = probeExecProfile(ctx, cfg, env, p, net6[i])
 		}()
 	}
