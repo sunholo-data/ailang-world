@@ -189,8 +189,10 @@ LEG1_MODULES=(
   packages/se-tools/se_tools/edit.ail
   packages/se-tools/se_tools/examples_search.ail
   packages/se-tools/se_tools/exec.ail
+  packages/se-tools/se_tools/list.ail
   packages/se-tools/se_tools/read.ail
   packages/se-tools/se_tools/run.ail
+  packages/se-tools/se_tools/search.ail
   packages/se-tools/se_tools/write.ail
   world/contracts.ail
   world/logepoch.ail
@@ -367,6 +369,9 @@ REQUIRED_VERIFIED = {
     "packages/se-tools/se_tools/builtins_search.ail": SE_CORE | {"entryMatches", "isEffectTag", "untag",
                                                                  "isHeader", "isTruncated"},
     "packages/se-tools/se_tools/cli.ail":             SE_CORE | {"cliOpAllowed", "writeFlag"},
+    # Row 228: native workspace discovery tools.
+    "packages/se-tools/se_tools/list.ail":            SE_CORE | {"depthOk", "maxEntriesOk"},
+    "packages/se-tools/se_tools/search.ail":          SE_CORE | {"maxResultsOk", "patternLenOk"},
 }
 try:
     with open(sys.argv[2]) as fh:
@@ -546,7 +551,7 @@ PY
 # status pass, failed_tests==0, and len(tests[]) equal to the sum (no extra, none missing).
 # `main_test_*` pins each tool's exact plan / refusal / finish bytes.
 echo "── Leg 2b: se-tools named inline tests (per module)"
-SE_TEST_MODULES=(builtins_search check cli delete edit examples_search exec read run write)
+SE_TEST_MODULES=(builtins_search check cli delete edit examples_search exec list read run search write)
 se_tests_total=0
 for se_mod in "${SE_TEST_MODULES[@]}"; do
   ( cd packages/se-tools && run_bounded "$GATE_TEST_TIMEOUT_S" "$tmp_test_json" "$AILANG_BIN" test --format json "se_tools/$se_mod.ail" )
@@ -570,9 +575,11 @@ SE_TESTS = {  # per module: function -> number of named inline tests
     "examples_search": dict(SE_CORE_TESTS, argKeyAllowed=3, main=6),
     "exec":            dict(SE_CORE_TESTS, argKeyAllowed=6, commandIdByteOk=13, commandIdOk=8, argOk=5,
                             argsOk=4, main=23),
+    "list":            dict(SE_CORE_TESTS, argKeyAllowed=7, depthOk=5, maxEntriesOk=5, main=7),
     "read":            dict(SE_CORE_TESTS, argKeyAllowed=9, lineArgOk=5, maxCharsOk=5, main=17),
     "run":             dict(SE_CORE_TESTS, argKeyAllowed=8, capAllowed=8, runEffect=3, stdinBytesOk=3,
                             argvCountOk=3, argBytesOk=3, main=30),
+    "search":          dict(SE_CORE_TESTS, argKeyAllowed=10, maxResultsOk=5, patternLenOk=4, main=8),
     "write":           dict(SE_CORE_TESTS, argKeyAllowed=4, main=8),
 }
 mod = sys.argv[2]
@@ -604,7 +611,7 @@ PY
   ) || exit 1
   se_tests_total=$((se_tests_total + se_n))
 done
-EXACT_SE_TESTS=503
+EXACT_SE_TESTS=594
 if [ "$se_tests_total" -ne "$EXACT_SE_TESTS" ]; then
   echo "✗ se-tools test leg: expected exactly $EXACT_SE_TESTS named tests across ${#SE_TEST_MODULES[@]} modules, got $se_tests_total" >&2
   exit 1

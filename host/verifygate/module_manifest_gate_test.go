@@ -93,8 +93,8 @@ func buildIsolatedGateRoot(root string) error {
 	if err != nil {
 		return err
 	}
-	if files != 26 || ailFiles != 24 {
-		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 26 / 24", files, ailFiles)
+	if files != 28 || ailFiles != 26 {
+		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 28 / 26", files, ailFiles)
 	}
 	return nil
 }
@@ -218,7 +218,7 @@ func requirePristineControl(t *testing.T, root string) string {
 	return out
 }
 
-const pristineMarker = "✓ 16/16 required world/ identities verified across 24 module(s)"
+const pristineMarker = "✓ 16/16 required world/ identities verified across 26 module(s)"
 
 // pristineControlCovers is requirePristineControl's contract as a predicate: it returns the shared
 // control's output only when that run carries the marker AND root is digest-identical to the root

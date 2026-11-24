@@ -390,7 +390,7 @@ func TestEpisodeStartDefaultGrantsAndAllowedTools(t *testing.T) {
 	}
 	// Explicit grants are taken exactly, as session new takes them.
 	only, _ := episodeStartGrants("", []string{"Workspace.Read=worktree:3"}, 50, true)
-	if len(only) != 1 || strings.Join(allowedTools(only), ",") != "mcp__world__ailang-read" {
+	if len(only) != 1 || strings.Join(allowedTools(only), ",") != "mcp__world__ailang-read,mcp__world__workspace-search,mcp__world__workspace-list" {
 		t.Fatalf("explicit grants = %v, tools %v", only, allowedTools(only))
 	}
 }
