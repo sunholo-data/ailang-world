@@ -257,14 +257,17 @@ printf '{"decision":"deny","reason":"Confined to AILANG World: use World MCP too
 	readyScript := []byte(`#!/bin/sh
 payload=$(cat)
 inv=$(printf '%s' "$payload" | jq -r '.invocationNum // 0' 2>/dev/null)
-if [ "$inv" = "1" ] && [ -n "${WORLD_AGY_MCP_READY:-}" ]; then
-  i=0
-  while [ "$i" -lt 50 ] && [ ! -f "$WORLD_AGY_MCP_READY" ]; do
-    sleep 0.1
-    i=$((i + 1))
-  done
-  if [ -f "$WORLD_AGY_MCP_READY" ]; then
-    sleep 0.3
+if [ "$inv" = "0" ] || [ "$inv" = "1" ]; then
+  if [ -n "${WORLD_AGY_MCP_READY:-}" ] && [ ! -f "${WORLD_AGY_MCP_READY}.waited" ]; then
+    i=0
+    while [ "$i" -lt 50 ] && [ ! -f "$WORLD_AGY_MCP_READY" ]; do
+      sleep 0.1
+      i=$((i + 1))
+    done
+    if [ -f "$WORLD_AGY_MCP_READY" ]; then
+      sleep 0.5
+      : >"${WORLD_AGY_MCP_READY}.waited" 2>/dev/null || :
+    fi
   fi
 fi
 printf '{}\n'
