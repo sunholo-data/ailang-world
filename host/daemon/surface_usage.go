@@ -111,7 +111,7 @@ func (e surfaceUsageEntry) usage() (turns *int, costUSD *float64, tokens *surfac
 // launch records. Only metrics common to all launches are returned.
 func (d *Daemon) surfaceRunUsage(start *store.EpisodeStart) (*int, *float64, *surfacepage.NodeTokens) {
 	if start == nil || !surface.EpisodeGrammar.MatchString(start.Episode) || d.cfg.DBPath == "" ||
-		(start.Agent != "claude" && start.Agent != "codex") ||
+		(start.Agent != "claude" && start.Agent != "codex" && start.Agent != "agy") ||
 		len(start.Launches) == 0 || len(start.Launches) > maxSurfaceUsageLaunches {
 		return nil, nil, nil
 	}
@@ -349,6 +349,19 @@ func decodeRunTokens(agent string, raw json.RawMessage) tokenTotals {
 		// Claude's input_tokens excludes cache reads and cache creation.
 		cacheRead, cacheWrite := counter("cache_read_input_tokens"), counter("cache_creation_input_tokens")
 		return tokenTotals{input.plus(cacheRead).plus(cacheWrite), output, cacheRead, cacheWrite, {}}
+	case "agy":
+		cacheRead := counter("cache_read_input_tokens")
+		if !cacheRead.reported {
+			cacheRead = counter("cache_read_tokens")
+		}
+		cacheWrite := counter("cache_creation_input_tokens")
+		if cacheWrite.reported {
+			return tokenTotals{input.plus(cacheRead).plus(cacheWrite), output, cacheRead, cacheWrite, {}}
+		}
+		if cacheRead.reported {
+			return tokenTotals{input.plus(cacheRead), output, cacheRead, {}, {}}
+		}
+		return tokenTotals{input, output, {}, {}, {}}
 	default:
 		return tokenTotals{}
 	}

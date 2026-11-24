@@ -165,3 +165,73 @@ func TestAgyHostInitLauncherGateAndStage(t *testing.T) {
 		t.Fatalf("headless mcp_config.json: %v %s", err, mcpBytes)
 	}
 }
+
+func TestAgyInteractiveTranscriptCaptureAndGuards(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	root := t.TempDir()
+	hostsDir := filepath.Join(root, "hosts")
+	if code, out := hostsInitTest(t, hostsDir); code != 0 {
+		t.Fatalf("%d: %s", code, out)
+	}
+	launchDir := filepath.Join(root, "launch-ep")
+	if err := os.MkdirAll(filepath.Join(launchDir, ".agents"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	brainFile := filepath.Join(home, ".gemini", "antigravity-cli", "brain", "conv-123", ".system_generated", "logs", "transcript.jsonl")
+	if err := os.MkdirAll(filepath.Dir(brainFile), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(brainFile, []byte("{\"type\":\"USER_INPUT\"}\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	// Run agy-world-session-start hook and confirm it records .world-session-meta.json.
+	hook := filepath.Join(hostsDir, "bin", "agy-world-session-start")
+	payload, _ := json.Marshal(map[string]string{
+		"conversationId": "conv-123",
+		"transcriptPath": brainFile,
+		"cwd":            launchDir,
+	})
+	wrapper := filepath.Join(t.TempDir(), "run-start")
+	if err := os.WriteFile(wrapper, []byte("#!/bin/sh\nprintf '%s' "+shellQuote(string(payload))+" | "+shellQuote(hook)+"\n"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := budgetContext(5 * time.Second)
+	out, err := toolprobe.OutputEnv(ctx, wrapper, "", []string{"PATH=" + os.Getenv("PATH"), "HOME=" + home})
+	cancel()
+	if err != nil {
+		t.Fatalf("session-start hook: %v", err)
+	}
+	if !strings.Contains(string(out), `"injectSteps"`) {
+		t.Fatalf("unexpected hook output: %s", out)
+	}
+	env := []string{"HOME=" + home}
+	got := agyTranscriptPath(launchDir, env)
+	if got.path != brainFile || got.id != "conv-123" || got.reason != "" {
+		t.Fatalf("agyTranscriptPath = %+v", got)
+	}
+	// Refuse a transcript path outside agy's brain directory.
+	outside := filepath.Join(root, "outside.jsonl")
+	if err := os.WriteFile(outside, []byte("{}\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	badMeta, _ := json.Marshal(map[string]string{"conversationId": "conv-123", "transcriptPath": outside})
+	if err := os.WriteFile(filepath.Join(launchDir, ".agents", ".world-session-meta.json"), badMeta, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if refused := agyTranscriptPath(launchDir, env); refused.path != "" || !strings.Contains(refused.reason, "outside agy brain root") {
+		t.Fatalf("expected outside path refusal, got %+v", refused)
+	}
+	// Refuse a symlink transcript inside agy's brain directory.
+	linkPath := filepath.Join(home, ".gemini", "antigravity-cli", "brain", "conv-123", "link.jsonl")
+	if err := os.Symlink(brainFile, linkPath); err != nil {
+		t.Fatal(err)
+	}
+	linkMeta, _ := json.Marshal(map[string]string{"conversationId": "conv-123", "transcriptPath": linkPath})
+	if err := os.WriteFile(filepath.Join(launchDir, ".agents", ".world-session-meta.json"), linkMeta, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if refused := agyTranscriptPath(launchDir, env); refused.path != "" || !strings.Contains(refused.reason, "not a regular file") {
+		t.Fatalf("expected symlink refusal, got %+v", refused)
+	}
+}

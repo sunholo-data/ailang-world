@@ -156,7 +156,7 @@ func (d *Daemon) readTrajectoryHarness(ctx context.Context, start *store.Episode
 	if trajectoryThrough(through, last.EndedAt) {
 		raw = &trajectoryRawTranscript{Filename: filename, SHA256: finalDigest.Digest()}
 	}
-	if !utf8.Valid(data) || (start.Agent != "claude" && start.Agent != "codex") {
+	if !utf8.Valid(data) || (start.Agent != "claude" && start.Agent != "codex" && start.Agent != "agy") {
 		return empty, raw
 	}
 	digests := make([]hashref.HashRef, 0, len(start.Launches))
@@ -223,9 +223,11 @@ func trajectoryPrefixMatches(prefix []byte, want hashref.HashRef) bool {
 
 func harnessTrajectoryEvent(line []byte) trajectoryEvent {
 	var e struct {
-		Type      string `json:"type"`
-		Subtype   string `json:"subtype"`
-		Timestamp string `json:"timestamp"`
+		Type      string            `json:"type"`
+		Subtype   string            `json:"subtype"`
+		Timestamp string            `json:"timestamp"`
+		CreatedAt string            `json:"created_at"`
+		ToolCalls []json.RawMessage `json:"tool_calls"`
 		Payload   struct {
 			Type string `json:"type"`
 		} `json:"payload"`
@@ -241,7 +243,7 @@ func harnessTrajectoryEvent(line []byte) trajectoryEvent {
 		if e.Subtype == "init" {
 			kind = "session-started"
 		}
-	case "turn.started":
+	case "turn.started", "USER_INPUT":
 		kind = "turn-started"
 	case "turn.completed":
 		kind = "turn-completed"
@@ -251,6 +253,14 @@ func harnessTrajectoryEvent(line []byte) trajectoryEvent {
 		kind = "item-completed"
 	case "assistant":
 		kind = "assistant-event"
+	case "PLANNER_RESPONSE":
+		if len(e.ToolCalls) > 0 {
+			kind = "tool-called"
+		} else {
+			kind = "assistant-event"
+		}
+	case "GENERIC":
+		kind = "tool-result"
 	case "result":
 		kind = "run-result"
 	case "event_msg":
@@ -271,7 +281,11 @@ func harnessTrajectoryEvent(line []byte) trajectoryEvent {
 		}
 	}
 	event := trajectoryEvent{Kind: kind}
-	if stamp, err := time.Parse(time.RFC3339, e.Timestamp); err == nil {
+	ts := e.Timestamp
+	if ts == "" {
+		ts = e.CreatedAt
+	}
+	if stamp, err := time.Parse(time.RFC3339, ts); err == nil {
 		event.At = stamp.UTC().Format(time.RFC3339)
 	}
 	return event
