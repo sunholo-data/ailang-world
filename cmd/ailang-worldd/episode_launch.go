@@ -250,12 +250,12 @@ func runEpisodeLaunch(args []string, stdout, stderr io.Writer) int {
 	if len(pos) != 1 || !workspaceEpisodePattern.MatchString(pos[0]) || *name == "" || *name == "se-tools" {
 		return fail(errors.New("episode and --preset <name> are required"))
 	}
-	return launchEpisode(pos[0], *name, *dir, *headless, stdout, stderr, *hostsDir)
+	return launchEpisode(pos[0], *name, *dir, *headless, stdout, stderr, nil, *hostsDir)
 }
 
 // launchEpisode is shared by episode launch and the post-mint start path.
 // Its preflight has no writes; only a fully validated launch takes the lock.
-func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io.Writer, hostsDirs ...string) int {
+func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io.Writer, held *os.File, hostsDirs ...string) int {
 	fail := func(err error) int {
 		msg := err.Error()
 		if !strings.Contains(msg, "\n  why:") {
@@ -276,6 +276,22 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 	}
 	if same, _ := store.SameDatabase(h.DBPath, p.DB); !same {
 		return fail(presetRefusal(fmt.Sprintf("the daemon serves store %s; preset %s names %s (F6)", h.DBPath, name, p.DB), "a preset must bind the served store", "fix the preset daemon, or run service status"))
+	}
+	credsPath, err := credentialsFor(p.DB, p.CredentialsDB)
+	if err != nil {
+		return fail(err)
+	}
+	if same, _ := store.SameDatabase(h.CredentialsDB, credsPath); !same {
+		return fail(presetRefusal("daemon credentials store differs from the preset (F6)", "a preset must bind the served credentials store", "fix the preset daemon, or run service status"))
+	}
+	// Check a present owner before report I/O. An unmanaged preflight may
+	// refuse without leaving a new sidecar behind.
+	effectLock, err := openTerminalEpisodeLock(credsPath, ep, held, 0)
+	if err != nil {
+		return fail(err)
+	}
+	if effectLock != nil {
+		defer effectLock.Close()
 	}
 	c := launchClient(p.Addr)
 	_, rep, err := fetchReport(ctx, c, ep)
@@ -421,10 +437,6 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 			return fail(errors.New("launch argv would carry the session token"))
 		}
 	}
-	credsPath, err := credentialsFor(p.DB, p.CredentialsDB)
-	if err != nil {
-		return fail(err)
-	}
 	// Check local history before starting; persistence uses the writer lock
 	// only after exit, so the daemon can continue reading while the agent runs.
 	ro, err := store.OpenCredentialsReadOnly(credsPath)
@@ -438,6 +450,14 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 	}
 	if localStart == nil {
 		return fail(errors.New("local credentials store has no start record"))
+	}
+	if effectLock == nil && held == nil {
+		// The runner may have acquired ownership while preflight was reading.
+		effectLock, err = terminalEpisodeLock(credsPath, ep, nil)
+		if err != nil {
+			return fail(err)
+		}
+		defer effectLock.Close()
 	}
 	f, err := os.OpenFile(lock, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {

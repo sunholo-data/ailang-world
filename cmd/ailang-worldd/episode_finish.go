@@ -125,6 +125,11 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	if same, _ := store.SameDatabase(h.CredentialsDB, credentials); !same {
 		return fail(fmt.Sprintf("the daemon serves credentials store %s; preset %s names %s (F6)", h.CredentialsDB, *preset, credentials), "the operator proof must be beside the served credentials store", "fix the preset daemon")
 	}
+	effectLock, err := terminalEpisodeLock(credentials, ep, nil)
+	if err != nil {
+		return fail(err.Error(), "the terminal could not acquire exclusive access to the episode", "ailang-worldd service runner status")
+	}
+	defer effectLock.Close()
 	_, rep, err := fetchReport(ctx, c, ep)
 	if err != nil && !errors.Is(err, errNoCalls) {
 		return fail(err.Error(), "finish needs the episode report", "ailang-worldd episode report "+ep)

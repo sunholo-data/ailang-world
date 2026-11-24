@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime/debug"
 	"strings"
 	"testing"
 	"time"
@@ -67,7 +68,9 @@ func newLaunchFixture(t *testing.T, agent string) *launchFixture {
 	oldClient, oldHealth := launchClient, fetchDaemonHealth
 	t.Cleanup(func() { launchClient, fetchDaemonHealth = oldClient, oldHealth })
 	launchClient = func(string) *client { return memoryDaemon(f.serve) }
-	fetchDaemonHealth = func(string) (daemon.HealthResponse, error) { return daemon.HealthResponse{DBPath: f.db}, nil }
+	fetchDaemonHealth = func(string) (daemon.HealthResponse, error) {
+		return daemon.HealthResponse{DBPath: f.db, CredentialsDB: f.creds}, nil
+	}
 	return f
 }
 
@@ -163,6 +166,9 @@ func (f *launchFixture) contents(path string) string {
 }
 
 func TestLaunchHeadlessClaudeAC9AndSecondLaunch(t *testing.T) {
+	// Keep a leaked lock descriptor observable instead of letting GC close it.
+	gc := debug.SetGCPercent(-1)
+	t.Cleanup(func() { debug.SetGCPercent(gc) })
 	f := newLaunchFixture(t, "claude")
 	// The stale mint config is a regular private file and must be replaced.
 	mcp := filepath.Join(f.sessions, "ep.mcp.json")
@@ -234,6 +240,11 @@ func TestLaunchHeadlessClaudeAC9AndSecondLaunch(t *testing.T) {
 	if code, _, errOut := f.run(); code != 0 {
 		t.Fatal(code, errOut)
 	}
+	effectLock, lockErr := terminalEpisodeLock(f.creds, "ep", nil)
+	if lockErr != nil || effectLock == nil {
+		t.Fatalf("standalone launch retained the episode lock: %v", lockErr)
+	}
+	effectLock.Close()
 	second := f.read()
 	if len(second.Launches) != 2 || !reflect.DeepEqual(first.Launches[0], second.Launches[0]) {
 		t.Fatal("earlier launch changed", second)

@@ -361,6 +361,11 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	if err := checkDaemon(health, req, hostPort, self); err != nil {
 		return fail("refusing: %v", err)
 	}
+	effectLock, err := terminalEpisodeLock(req.credPath, episode, nil)
+	if err != nil {
+		return fail("refusing: %v", err)
+	}
+	defer effectLock.Close()
 	if *request {
 		return createMintRequest(req, health.Build, hostPort, *agent, *model, taskPath, mcpFile, stdout, stderr, env)
 	}

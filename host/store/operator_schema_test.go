@@ -1,8 +1,10 @@
 package store
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -83,5 +85,69 @@ func TestOperatorSchema10(t *testing.T) {
 	got, ok, err := ro.ResolveSession(testCtx(t), row.CredentialID)
 	if err != nil || !ok || got != row {
 		t.Fatalf("lost v9 credential: %+v %v %v", got, ok, err)
+	}
+}
+
+func TestOperatorEpisodeOwnerReadSchema(t *testing.T) {
+	ctx := testCtx(t)
+	path := filepath.Join(t.TempDir(), CredentialsFileName)
+	if id, err := ReadOperatorEpisodeOwner(ctx, path, "ep"); id != "" || err != nil {
+		t.Fatalf("absent store: %q %v", id, err)
+	}
+	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("absent store changed: %v", err)
+	}
+	if _, err := ReadOperatorEpisodeOwner(ctx, "", "ep"); err == nil {
+		t.Fatal("accepted an empty database path")
+	}
+	if _, err := ReadOperatorEpisodeOwner(ctx, filepath.Dir(path), "ep"); err == nil || err.Error() != "expected a regular operator credentials file" {
+		t.Fatal("accepted a directory as a database")
+	}
+	raw := rawDB(t, path)
+	if _, err := raw.Exec(credentialsSchemaSQL); err != nil {
+		t.Fatal(err)
+	}
+	setPositiveFixtureVersion(t, raw, 9)
+	if id, err := ReadOperatorEpisodeOwner(ctx, path, "ep"); id != "" || err != nil {
+		t.Fatalf("v9 owner lookup: %q %v", id, err)
+	}
+	if _, err := UpgradeCredentials(path); err != nil {
+		t.Fatal(err)
+	}
+	if id, err := ReadOperatorEpisodeOwner(ctx, path, "ep"); id != "" || err != nil {
+		t.Fatalf("empty v10 owner lookup: %q %v", id, err)
+	}
+	ro, _, err := openOperatorReadOnly(ctx, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var busy int
+	busyErr := ro.QueryRowContext(ctx, "PRAGMA busy_timeout").Scan(&busy)
+	_, writeErr := ro.ExecContext(ctx, "DELETE FROM operator_actions")
+	ro.Close()
+	if busyErr != nil || busy != 0 || writeErr == nil {
+		t.Fatalf("deadline or read-only open drift: busy=%d %v write=%v", busy, busyErr, writeErr)
+	}
+	setPositiveFixtureVersion(t, raw, 11)
+	if _, err := ReadOperatorEpisodeOwner(ctx, path, "ep"); err == nil || userVersion(t, path) != 11 {
+		t.Fatalf("future schema accepted or changed: %v", err)
+	}
+	corrupt := filepath.Join(t.TempDir(), "corrupt.db")
+	if _, err := UpgradeCredentials(corrupt); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(corrupt)
+	if err != nil || len(data) == 0 {
+		t.Fatalf("read migrated fixture: %v", err)
+	}
+	data[0] ^= 0xff
+	if err := os.WriteFile(corrupt, data, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ReadOperatorEpisodeOwner(ctx, corrupt, "ep"); err == nil {
+		t.Fatal("corrupt database accepted")
+	}
+	if got, err := os.ReadFile(corrupt); err != nil || !bytes.Equal(got, data) {
+		t.Fatalf("corrupt database changed: %v", err)
 	}
 }

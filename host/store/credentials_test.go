@@ -308,6 +308,9 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	_, errs["PendingVerbRequests"] = c.PendingVerbRequests(ctx, 1000, 0)
 	errs["ConsumeVerbRequest"] = c.ConsumeVerbRequest(ctx, "x", "y", ApproverUse{}, "", nil, "", 1000)
 	_, errs["OperatorAction"] = c.OperatorAction(ctx, "x", 1000)
+	_, errs["OperatorHeartbeat"] = c.OperatorHeartbeat(ctx)
+	_, errs["ReadOperatorHeartbeat"] = ReadOperatorHeartbeat(ctx, "")
+	_, errs["ReadOperatorEpisodeOwner"] = ReadOperatorEpisodeOwner(ctx, c.display, "ep")
 	for name, err := range errs {
 		if !errors.Is(err, ErrNoDeadline) {
 			t.Errorf("%s(Background) = %v, want ErrNoDeadline", name, err)

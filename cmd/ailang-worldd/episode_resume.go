@@ -172,6 +172,11 @@ func runEpisodeResume(fs *flag.FlagSet, pos []string, ep, name, presetsDir, prof
 	if err := checkDaemon(h, req, p.Addr, episodeSelfBuild()); err != nil {
 		return fail(err)
 	}
+	effectLock, err := terminalEpisodeLock(req.credPath, ep, nil)
+	if err != nil {
+		return fail(err)
+	}
+	defer effectLock.Close()
 	presetPath, err := expandPresetPath(filepath.Join(presetsDir, name+".json"))
 	if err != nil {
 		return fail(err)
