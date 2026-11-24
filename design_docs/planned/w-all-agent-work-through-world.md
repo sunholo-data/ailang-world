@@ -6,6 +6,11 @@ the sequence sits beside row 188). **r1 (attended 2026-10-27):** adds §5, the a
 already use, and rows 223–225, with **D-WORLD-96** (RESOLVED 2026-10-27, defaults: the standing allowance's bounds). This is a roadmap, not a build design: each row gets its own
 design at pick time, and nothing here waives a gate.
 
+> **Status audit (2026-11-24, verified against code and git history):**
+> - **Built:** 219 (home service, PRs #409/#418/#435/#453/#455), 217 (presets + headless/interactive launch + resume, PRs #416/#438/#454), 218 (`episode finish`, PRs #408/#415/#437), 220 (surface follow + live activity/heads/node tabs/finish card, PRs #615/#629/#633), 201 (key/passkey approvals), 223 stage A (`hosts init` for `claude`/`codex`/`pi`/`agy` + `mcp-stdio` bridge + Herdr plugin), and 243 V1–V3 + V4 S1–S2b.
+> - **Partial / Design only:** 228 (M1 `read_cap.go` + `whoami` base/lag landed; M2 `workspace-search`/`workspace-list` open), 221 (design r0 PR #414, waiting on D-WORLD-104).
+> - **Still open:** 243 V4 S3–S12 (browser/phone start & finish runner; blocked on `D-WORLD-119`/`D-WORLD-120`), 224 (standing session allowances), 225 (`ailang-worldd run` wrapper), 226 (value scorecard), 206/207 (live agent tab & full agent states), 196 (mission loop executors through World).
+
 ## §0 What Mark said
 
 > *"I can view these runs in AILANG World? Are we close to where I just put all agent work through
