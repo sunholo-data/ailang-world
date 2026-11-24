@@ -216,15 +216,24 @@ func stageAgyHeadlessPlugin(dir, addr, contextText string) error {
 	}
 	gatePath := filepath.Join(pluginDir, "gate.sh")
 	gateScript := []byte(`#!/bin/sh
-name=$(jq -r '.toolCall.name // ""' 2>/dev/null)
+payload=$(cat)
+name=$(printf '%s' "$payload" | jq -r '.toolCall.name // ""' 2>/dev/null)
+server=$(printf '%s' "$payload" | jq -r '.toolCall.args.ServerName // .toolCall.args.server_name // ""' 2>/dev/null)
 case "$name" in
-  mcp_world_*|mcp__world__*|world_*|mcp:world/*|update_steps)
-    printf '{"decision":"allow"}\n'
+  call_mcp_tool)
+    case "$server" in
+      ailang-world_world|world)
+        printf '{"decision":"allow"}\n'
+        exit 0
+        ;;
+    esac
     ;;
-  *)
-    printf '{"decision":"deny","reason":"Confined to AILANG World: use World MCP tools (ailang-read, ailang-edit, ailang-write, workspace-exec)."}\n'
+  mcp_ailang-world_world_*|ailang-world_world_*|mcp_world_*|mcp__world__*|world_*|mcp:world/*|mcp:ailang-world_world/*|ailang-read|ailang-write|ailang-edit|ailang-delete|ailang-check|ailang-run|ailang-cli|workspace-exec|builtins-search|examples-search|update_steps)
+    printf '{"decision":"allow"}\n'
+    exit 0
     ;;
 esac
+printf '{"decision":"deny","reason":"Confined to AILANG World: use World MCP tools (ailang-read, ailang-edit, ailang-write, workspace-exec)."}\n'
 `)
 	if err := os.WriteFile(gatePath, gateScript, 0o700); err != nil {
 		return err

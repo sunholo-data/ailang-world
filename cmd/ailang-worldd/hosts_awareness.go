@@ -161,13 +161,15 @@ printf '\n'
 			}
 			script = strings.Replace(script, "exec pi ", "exec pi"+options+" ", 1)
 		case "agy":
-			// Mount World's agy plugin in an empty launch directory (or when requested),
-			// never overwriting an existing project's .agents configuration, and inject
-			// the launch directory into trustedWorkspaces so agy does not prompt for trust.
+			// Copy World's static agy-plugin into .agents/plugins/ailang-world inside an
+			// empty launch directory (agy rejects plugins.json paths outside the workspace
+			// root), and inject the launch directory into trustedWorkspaces.
 			settingsFile := filepath.Join(dir, "agy-world.settings.json")
+			agyPluginSrc := filepath.Join(dir, "agy-plugin")
 			mount := "if [ -z \"$(ls -A . 2>/dev/null)\" ] || [ \"${WORLD_AGY_MOUNT_PLUGIN:-}\" = 1 ]; then\n" +
-				"  mkdir -p .agents\n" +
-				"  printf '%s\\n' " + shellQuote(`{"entries":[{"path":`+jsString(dir)+`,"include_only":["agy-plugin"]}]}`) + " >.agents/plugins.json\n" +
+				"  mkdir -p .agents/plugins\n" +
+				"  rm -rf .agents/plugins/ailang-world\n" +
+				"  cp -R " + shellQuote(agyPluginSrc) + " .agents/plugins/ailang-world\n" +
 				"fi\n" +
 				"world_agy_cwd=$(pwd -P 2>/dev/null || pwd)\n" +
 				"world_agy_settings=$(jq -c --arg cwd \"$world_agy_cwd\" '.trustedWorkspaces = ((.trustedWorkspaces // []) + [$cwd])' " + shellQuote(settingsFile) + " 2>/dev/null || cat " + shellQuote(settingsFile) + ")\n"
@@ -191,15 +193,24 @@ printf '\n'
 	}})
 	files["bin/agy-world-session-start"] = []byte("#!/bin/sh\ncontext=$(" + shellQuote(context) + ")\njq -nc --arg msg \"$context\" '{injectSteps:[{systemMessage:{systemMessage:$msg}}]}'\n")
 	files["bin/agy-world-gate"] = []byte(`#!/bin/sh
-name=$(jq -r '.toolCall.name // ""' 2>/dev/null)
+payload=$(cat)
+name=$(printf '%s' "$payload" | jq -r '.toolCall.name // ""' 2>/dev/null)
+server=$(printf '%s' "$payload" | jq -r '.toolCall.args.ServerName // .toolCall.args.server_name // ""' 2>/dev/null)
 case "$name" in
-  mcp_world_*|mcp__world__*|world_*|mcp:world/*|update_steps)
-    printf '{"decision":"allow"}\n'
+  call_mcp_tool)
+    case "$server" in
+      ailang-world_world|world)
+        printf '{"decision":"allow"}\n'
+        exit 0
+        ;;
+    esac
     ;;
-  *)
-    printf '{"decision":"deny","reason":"Confined to AILANG World: use World MCP tools (ailang-read, ailang-edit, ailang-write, workspace-exec)."}\n'
+  mcp_ailang-world_world_*|ailang-world_world_*|mcp_world_*|mcp__world__*|world_*|mcp:world/*|mcp:ailang-world_world/*|ailang-read|ailang-write|ailang-edit|ailang-delete|ailang-check|ailang-run|ailang-cli|workspace-exec|builtins-search|examples-search|update_steps)
+    printf '{"decision":"allow"}\n'
+    exit 0
     ;;
 esac
+printf '{"decision":"deny","reason":"Confined to AILANG World: use World MCP tools (ailang-read, ailang-edit, ailang-write, workspace-exec)."}\n'
 `)
 	files["pi/world-status.ts"] = []byte(`import { execFile } from "node:child_process";
 export default function (pi: any) {
