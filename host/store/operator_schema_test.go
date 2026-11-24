@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"errors"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -38,6 +39,10 @@ func TestOperatorSchema10(t *testing.T) {
 	old, err := OpenCredentials(path)
 	if err != nil {
 		t.Fatal(err)
+	}
+	_, err = old.OperatorAction(testCtx(t), "missing", 1000)
+	if oldSchema, ok := errors.AsType[*OlderCredentialsStoreError](err); !ok || oldSchema.Version != 9 || oldSchema.Need != 10 {
+		t.Fatalf("schema 9 operator read: %v", err)
 	}
 	row := oneBoundRow()
 	if old.Version() != 9 || old.MintSession(testCtx(t), row) != nil {
