@@ -444,3 +444,49 @@ func TestPresetVerbsAndService(t *testing.T) {
 		t.Fatal("init overwrote")
 	}
 }
+
+func TestPresetInitSeToolsModeAndModel(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	repo := t.TempDir()
+	runGit := func(args ...string) {
+		t.Helper()
+		ctx, cancel := budgetContext(5 * time.Second)
+		defer cancel()
+		if _, err := worktree.Output(ctx, "git", append([]string{"-C", repo}, args...)); err != nil {
+			t.Fatalf("git %v: %v", args, err)
+		}
+	}
+	runGit("init", "-b", "dev")
+	runGit("config", "user.name", "Test")
+	runGit("config", "user.email", "test@example.com")
+	runGit("remote", "add", "origin", "https://github.com/example/repo.git")
+	if err := os.WriteFile(filepath.Join(repo, "README.md"), []byte("hi\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGit("add", "README.md")
+	runGit("commit", "-m", "init")
+
+	presetsDir := filepath.Join(t.TempDir(), "presets")
+	var out, errOut bytes.Buffer
+	code := runPreset([]string{"init", "my-agy", "--presets-dir", presetsDir, "--repo", repo, "--base", "dev", "--agent", "agy", "--model", "gemini-4-neon-medium", "--se-tools", "--mode", "headless"}, &out, &errOut)
+	if code != exitOK {
+		t.Fatalf("init exit %d: %s %s", code, out.String(), errOut.String())
+	}
+	b, err := os.ReadFile(filepath.Join(presetsDir, "my-agy.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got launchPreset
+	if err := json.Unmarshal(b, &got); err != nil {
+		t.Fatal(err)
+	}
+	if got.Agent != "agy" || got.Model != "gemini-4-neon-medium" || got.Launch == nil || got.Launch.Mode != "headless" || len(got.Grants) != 9 {
+		t.Fatalf("unexpected preset: %+v", got)
+	}
+	// Invalid mode must refuse.
+	errOut.Reset()
+	if code := runPreset([]string{"init", "bad-mode", "--presets-dir", presetsDir, "--repo", repo, "--base", "dev", "--mode", "bogus"}, &out, &errOut); code == exitOK {
+		t.Fatal("invalid --mode accepted")
+	}
+}

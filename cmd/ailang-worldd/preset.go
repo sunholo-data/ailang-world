@@ -26,7 +26,9 @@ const presetHelp = `usage: ailang-worldd preset list|show|check|init [name] [--p
   show name [--json]                file, digest and derived values
   check name [--no-daemon] [--exec-profiles-dir D]
                                    read-only validation; never runs checks
-  init name --repo D --base B [--remote origin] [--agent codex] [--profile P]
+  init name --repo D --base B [--remote origin] [--agent codex|claude|agy]
+                                   [--model M] [--profile P] [--se-tools]
+                                   [--mode interactive|headless]
                                    creates a private file once; never overwrites
 
 Presets default to ~/.ailang-world/presets. Checks use trial.py's grader
@@ -528,7 +530,10 @@ func runPreset(args []string, out, errOut io.Writer) int {
 	base := fs.String("base", "", "local base branch")
 	remote := fs.String("remote", "origin", "remote name")
 	agent := fs.String("agent", "codex", "agent")
+	model := fs.String("model", "", "agent model")
 	profile := fs.String("profile", "", "exec profile")
+	seTools := fs.Bool("se-tools", false, "include full se-tools coding grants (plus Workspace.Exec when --profile is set)")
+	mode := fs.String("mode", "", "launch mode (interactive or headless)")
 	pos, err := verbs.ParseInterleaved(fs, args[1:])
 	fail := func(err error) int { fmt.Fprintln(errOut, err); return exitUsage }
 	if errors.Is(err, flag.ErrHelp) {
@@ -549,8 +554,32 @@ func runPreset(args []string, out, errOut io.Writer) int {
 		if name == "se-tools" || !workspaceEpisodePattern.MatchString(name) || len(name) > maxPresetNameLen {
 			return fail(errors.New("invalid or reserved preset name"))
 		}
-		p := launchPreset{Schema: "world/preset/v1", Name: name, Repo: *repo, Base: *base, Remote: *remote, Agent: *agent, Profile: *profile, TTLS: 43200,
-			Grants: []presetGrant{{Effect: broker.EffectWorkspaceRead, Scope: "worktree", Budget: 5000}}, Daemon: json.RawMessage("\"service\"")}
+		grants := []presetGrant{{Effect: broker.EffectWorkspaceRead, Scope: "worktree", Budget: 5000}}
+		if *seTools {
+			grants = []presetGrant{
+				{Effect: broker.EffectWorkspaceRead, Scope: "worktree", Budget: 5000},
+				{Effect: broker.EffectWorkspaceWrite, Scope: "worktree", Budget: 5000},
+				{Effect: broker.EffectWorkspaceDelete, Scope: "worktree", Budget: 200},
+				{Effect: broker.EffectAilangCheck, Scope: "worktree", Budget: 5000},
+				{Effect: broker.EffectAilangRun, Scope: "worktree", Budget: 5000},
+				{Effect: broker.EffectAilangRunEnv, Scope: "worktree", Budget: 5000},
+				{Effect: broker.EffectAilangRunNet, Scope: "worktree", Budget: 5000},
+				{Effect: broker.EffectAilangDiscover, Scope: "worktree", Budget: 5000},
+				{Effect: broker.EffectAilangCLI, Scope: "worktree", Budget: 5000},
+			}
+			if *profile != "" {
+				grants = append(grants, presetGrant{Effect: broker.EffectWorkspaceExec, Scope: "worktree", Budget: 600})
+			}
+		}
+		var launch *presetLaunch
+		if *mode != "" {
+			if *mode != "interactive" && *mode != "headless" {
+				return fail(errors.New("mode must be interactive or headless"))
+			}
+			launch = &presetLaunch{Mode: *mode, DeadlineS: 7200}
+		}
+		p := launchPreset{Schema: "world/preset/v1", Name: name, Repo: *repo, Base: *base, Remote: *remote, Agent: *agent, Model: *model, Profile: *profile, Launch: launch, TTLS: 43200,
+			Grants: grants, Daemon: json.RawMessage("\"service\"")}
 		if *agent != "codex" && *agent != "claude" && *agent != "agy" {
 			return fail(errors.New("agent must be codex, claude or agy"))
 		}
