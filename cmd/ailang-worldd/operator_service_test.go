@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/verbs"
@@ -245,6 +246,99 @@ func TestOperatorServiceStartup(t *testing.T) {
 	if c, s := f.command("start"); c != 0 || !f.ctl.loaded {
 		t.Fatalf("%d %s", c, s)
 	}
+}
+
+func TestOperatorServiceUpgradePairFence(t *testing.T) {
+	for _, tc := range []struct{ arm, want string }{
+		{"installed", "operator runner is still installed"},
+		{"plist-only", "operator runner is still installed"},
+		{"registered", "cannot verify that the operator runner is unloaded"},
+		{"locked", "operator runner lifecycle is busy or unavailable"},
+	} {
+		t.Run(tc.arm, func(t *testing.T) {
+			f := operatorService(t)
+			f.mustInstall(t)
+			p := f.env.runnerPaths()
+			switch tc.arm {
+			case "installed":
+				if err := os.Remove(p.Plist); err != nil {
+					t.Fatal(err)
+				}
+			case "plist-only":
+				if err := os.Remove(p.Record); err != nil {
+					t.Fatal(err)
+				}
+			default:
+				if c, msg := f.command("uninstall"); c != 0 {
+					t.Fatal(c, msg)
+				}
+			}
+			f.env.controller = f.homeJob
+			f.homeJob.runner = tc.arm == "registered"
+			f.homeJob.onKick = func() error {
+				f.health.Build.ExecutableSHA256 = f.homeJob.running
+				return nil
+			}
+			if tc.arm == "locked" {
+				lock, err := runnerLifecycleLock(filepath.Dir(f.env.paths.Record))
+				if err != nil {
+					t.Fatal(err)
+				}
+				defer lock.Close()
+			}
+			if err := os.WriteFile(f.source, []byte("upgrade candidate"), 0700); err != nil {
+				t.Fatal(err)
+			}
+			before := serviceFileHash(f.env.paths.Binary)
+			f.writes = nil
+			c, msg := f.run("upgrade", "--binary", f.source)
+			after := serviceFileHash(f.env.paths.Binary)
+			if c != 1 || !strings.Contains(msg, tc.want) || f.homeJob.kicks != 0 || after != before || len(f.writes) != 0 {
+				t.Fatalf("want refusal %q; got %d %s kicks=%d binary=%s → %s writes=%v", tc.want, c, msg, f.homeJob.kicks, before, after, f.writes)
+			}
+		})
+	}
+}
+
+func TestOperatorServiceCancelConfirmation(t *testing.T) {
+	f := operatorService(t)
+	f.mustInstall(t)
+	action := approval.OperatorAction{Schema: approval.OperatorActionSchema,
+		ID: "oa-00000000000000000000000000000001", Kind: "start", Episode: "pending",
+		Store: f.config.Credentials, Review: "review", Task: "test task",
+		Options:    approval.OperatorOptions{Preset: "sol", Headless: true},
+		Resolution: []approval.OperatorResolved{{Name: "agent", Value: "codex"}}}
+	action.Argv = approval.OperatorArgv(action.Kind, action.Episode, action.Options)
+	ctx, cancel := budgetContext(5 * time.Second)
+	defer cancel()
+	now := f.env.terminal.now()
+	if err := runnerWrite(f.config.Credentials, func(c *store.Credentials) error {
+		_, err := c.RequestOperatorAction(ctx, store.OperatorRequest{Action: action,
+			OperationID: "00000000000000000000000000000001", CreatedAt: now, ExpiresAt: now + 600}, now)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	ro := openCredsReadOnly(t, f.config.World)
+	defer ro.Close()
+	checkState := func(want string) {
+		t.Helper()
+		row, err := ro.OperatorAction(ctx, action.ID, now)
+		if err != nil || row.State != want {
+			t.Fatalf("action state = %q, want %q: %v", row.State, want, err)
+		}
+	}
+	checkState("requested")
+	f.env.terminal.openTerminal = func() (io.ReadWriteCloser, error) { return &fakeTerm{r: strings.NewReader("n\n")}, nil }
+	if c, msg := f.command("cancel", action.ID); c != 1 || !strings.Contains(msg, "aborted (not confirmed)") {
+		t.Errorf("declined cancel: %d %s", c, msg)
+	}
+	checkState("requested")
+	f.env.terminal.openTerminal = func() (io.ReadWriteCloser, error) { return &fakeTerm{r: strings.NewReader("y\n")}, nil }
+	if c, msg := f.command("cancel", action.ID); c != 0 {
+		t.Fatalf("confirmed cancel: %d %s", c, msg)
+	}
+	checkState("cancelled")
 }
 
 func TestOperatorRunnerKernelLock(t *testing.T) {

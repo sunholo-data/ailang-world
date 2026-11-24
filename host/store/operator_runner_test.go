@@ -142,3 +142,19 @@ func TestOperatorCancelInflight(t *testing.T) {
 	}
 	refuse(ctx, pending.ID, 1591, ErrOperatorConflict)
 }
+
+func TestOperatorCancelConfirmed(t *testing.T) {
+	c := openTestCredentials(t)
+	cas, _ := operatorClaimFixture(t, c)
+	const now = 1591
+	before := getOperator(t, c, cas.ID, now)
+	if before.State != "confirmed" || before.Owner != "" || before.ExpiresAt <= now {
+		t.Fatalf("expected confirmed, unclaimed and unexpired action: %+v", before)
+	}
+	if err := c.CancelUnstartedOperatorAction(testCtx(t), cas.ID, now); err != nil {
+		t.Fatal(err)
+	}
+	if got := getOperator(t, c, cas.ID, now); got.State != "cancelled" || got.Generation != before.Generation+1 || got.TerminalAt != now {
+		t.Fatalf("cancellation readback: %+v", got)
+	}
+}
