@@ -1,0 +1,180 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s4",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1, iteration 406 quorum r2 3/3 PROCEED and audit PASS 81",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s4-sprint-plan.md",
+ "previous_sprint": "S3, PR #643, merge e83d1717, judge PASS 86",
+ "base_commit": "f074dd49e8fe1f281792de4fb475e20b53cd1d92",
+ "design_measured_at": "f074dd49, plan §1.2",
+ "queue_row": 243,
+ "iteration": 429,
+ "phase": "V4",
+ "sprint": "S4, typed isolated runner, status and inert heartbeat/catalogue",
+ "sprint_number": "4",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter429-row243-v4s4",
+ "branch": "sprint/world-iter429-row243-v4s4",
+ "authority": [
+  "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004",
+  "D-WORLD-109 fixture stores and keys",
+  "Controller E1 PASS and E3 PASS, UID 501"
+ ],
+ "behaviour": "Inert companion. No daemon route or effect dispatch.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat f074dd49 HEAD -- cmd host docs app",
+  "measured": 1400,
+  "unfiltered_product": 1400,
+  "unfiltered_if_plans_recorded": 4854,
+  "margin": 0,
+  "fired": "Terminal exclusion and recovery follow-up",
+  "moved_out": {
+   "S4b": 366,
+   "S3b": 132,
+   "S4c-replay": 13
+  }
+ },
+ "planner_decisions": {
+  "rollback": "Schema-maximum and exact previous-file verification. Unknown compatibility retains installed candidate and .prev.",
+  "pair": "Installed companion fences unpaired upgrade. Paired restart/drain before dispatch.",
+  "catalogue": "Inert generation of approved preset names. Finish readiness false pending E2.",
+  "terminal": "S4b measured and compiled; exact action ID and persistent store ownership."
+ },
+ "scope": [
+  "compatible rollback guard",
+  "typed runner install/start/stop/status/cancel/uninstall and private process",
+  "kernel singleton and companion status",
+  "heartbeat, inert catalogue, per-verb claim gate and unstarted cancel"
+ ],
+ "executor_lane": "M1 M2 M3 via patch only in workspace-write; no Chrome",
+ "executor_form": "Appendix P unified diffs, §2 awk and /usr/bin/patch -p1 -E; §7 cumulative snapshots",
+ "estimate_loc": {
+  "design_raw": 880,
+  "design_calibrated": 1188,
+  "compiled_landed": 1400,
+  "production": 796,
+  "test": 604,
+  "parked": {
+   "S4b": 366,
+   "S3b": 132,
+   "S4c-replay": 13
+  }
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "compatible rollback",
+   "expected_cumulative_numstat": 114,
+   "increment": 114,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M1 fast"
+  },
+  {
+   "id": "M2",
+   "title": "companion lifecycle and inert heartbeat",
+   "expected_cumulative_numstat": 1232,
+   "increment": 1118,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M2 fast"
+  },
+  {
+   "id": "M3",
+   "title": "kernel and durable admission pins",
+   "expected_cumulative_numstat": 1400,
+   "increment": 238,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M3 fast"
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "4/0/4",
+  "M2": "17/0/17",
+  "M3": "18/0/18",
+  "format": "STATUS / DELETED / MANIFEST"
+ },
+ "design_premises_found_false": [
+  "§1.4 F1–F10"
+ ],
+ "existing_tests_edited": [
+  "cmd/ailang-worldd/cli_credential_writers_test.go",
+  "cmd/ailang-worldd/help_test.go",
+  "cmd/ailang-worldd/keyguard_test.go",
+  "cmd/ailang-worldd/quickstart_service_test.go",
+  "cmd/ailang-worldd/service_test.go"
+ ],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [
+  "cmd/ailang-worldd/doctor_service.go",
+  "cmd/ailang-worldd/keyguard.go",
+  "cmd/ailang-worldd/main.go",
+  "cmd/ailang-worldd/service.go",
+  "cmd/ailang-worldd/service_upgrade.go",
+  "cmd/ailang-worldd/version.go",
+  "docs/QUICKSTART.md"
+ ],
+ "not_touched": [
+  ".ail",
+  "daemon routes or served code",
+  "app.js",
+  "surfaceCSP",
+  "open PR collision surface",
+  "scripts",
+  "tools/launchd",
+  "skills",
+  "packages",
+  "plugins",
+  "integrations",
+  "cmd/world-publish"
+ ],
+ "mutants": {
+  "total": 156,
+  "killed": 31,
+  "named_equivalents": 2,
+  "survivors": 2,
+  "unmeasured_in_sandbox": 121,
+  "named_killed": 80,
+  "named_survived": 76,
+  "whole_package_raw": {
+   "NM": 121,
+   "K": 31,
+   "S": 4
+  },
+  "named_survived_whole_nm": 72,
+  "named_equivalence_ids": [
+   "HB-SINGLETON-WHERE",
+   "CANCEL-OWNER"
+  ],
+  "invalid_or_skipped_excluded": [],
+  "control": {
+   "LIVE-COMMENT": "S/S"
+  },
+  "parked": {
+   "NM": 11,
+   "K": 1
+  },
+  "mutant_report_complete": true
+ },
+ "mutant_ledger": "$HOME/.ailang/state/world-iter429/plan-scratch/mutants/ledger.txt",
+ "race_added_seconds": {
+  "host/store": -6.699,
+  "cmd/ailang-worldd": 1.284,
+  "note": "Store whole 39.955→33.256s. CLI focused 3.698→4.982s. Whole CLI denied bind under sandbox. CI timeout 480s."
+ },
+ "gates_script": "$HOME/.ailang/state/world-iter429/gates.sh, byte-equal to §6",
+ "controller_decisions_requested": [
+  "Add docs to the round-trip comparison; keep M1 M2 M3.",
+  "Run outside-sandbox gate and mutant legs.",
+  "Route S4b and S3b before activation, exact replay before S7."
+ ],
+ "verification": {
+  "base_gates": "§1.1",
+  "final_gates": "§1.5 and §6",
+  "accept": "§3",
+  "roundtrip": "M1 full-tree diff empty; snapshot 4/0/4\nM2 full-tree diff empty; snapshot 17/0/17\nM3 full-tree diff empty; snapshot 18/0/18\nS4b full-tree diff empty against its independent follow-up stage\nS3b full-tree diff empty against its independent follow-up stage\nS4c-replay full-tree diff empty against its independent follow-up stage\nPASS full-tree plan extraction round trip, including docs; artifacts /Users/voightkampff/.ailang/state/world-iter429/plan-scratch/roundtrip.dGdmDa"
+ }
+}
