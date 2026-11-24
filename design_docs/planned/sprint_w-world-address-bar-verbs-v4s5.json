@@ -1,0 +1,138 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s5",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1, iteration 406 quorum r2 PROCEED 3/3, no absent seats",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s5-sprint-plan.md",
+ "previous_sprint": "S4b, PR #654, merge fa3ad190, judge PASS 85, 0 blocking",
+ "base_commit": "cd06d9500ec2d34e975d7566f8bbdb14b1529527",
+ "design_measured_at": "cd06d950, plan §1.2 and §1.4",
+ "queue_row": 243,
+ "iteration": 431,
+ "phase": "V4",
+ "sprint": "S5, pinned-start read seam and terminal provision exclusion",
+ "sprint_number": "5",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter431-row243-v4s5",
+ "branch": "sprint/world-iter431-row243-v4s5",
+ "authority": [
+  "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004",
+  "D-WORLD-109 fixture stores and keys"
+ ],
+ "behaviour": "Shared typed preset resolution preserves terminal start semantics. Session new and mint-request approve honor the canonical episode lock. Exact artifact replay is idempotent. Operator effect dispatch remains inert.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat cd06d950 HEAD -- cmd host docs app",
+  "measured": 743,
+  "unfiltered_product": 743,
+  "margin": 657,
+  "unfiltered_if_plans_recorded": 2599,
+  "moved_out": {
+   "S5b_raw_design": 510,
+   "S5b_calibrated_design": 689,
+   "S3b_bank_measured": 132
+  }
+ },
+ "planner_decisions": {
+  "terminal": "Close the gap in shared provision after the tty or verified-signature fence. Existing terminal holders transfer the original descriptor.",
+  "resolution": "Typed read-only preset resolution and task bytes feed the existing terminal effects. S5b compares signed inputs independently.",
+  "scope_split": "S5b keeps the minted-start proof, worktree/file recovery, uncertain-action resolver and dispatch gates together.",
+  "replay": "Confirmed rows return only for identical artifact bytes."
+ },
+ "scope": [
+  "episode-lock gaps on session new and approve",
+  "QUICKSTART stable sidecar prose",
+  "shared pinned-start read seam, terminal semantic parity and local refusal fixtures",
+  "S4c-replay"
+ ],
+ "executor_lane": "M1 M2 M3 via patch only",
+ "executor_form": "Appendix P unified diffs, §2 extraction and §7 cumulative snapshots",
+ "estimate_loc": {
+  "compiled_landed": 743,
+  "parked": {
+   "S3b": 132
+  }
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "terminal episode exclusion and sidecar documentation",
+   "expected_cumulative_numstat": 163,
+   "increment": 163,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M1 fast"
+  },
+  {
+   "id": "M2",
+   "title": "shared pinned-start read seam and semantic parity",
+   "expected_cumulative_numstat": 730,
+   "increment": 567,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M2 fast"
+  },
+  {
+   "id": "M3",
+   "title": "exact confirm replay",
+   "expected_cumulative_numstat": 743,
+   "increment": 13,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M3 fast"
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "7/0/7",
+  "M2": "8/0/8",
+  "M3": "10/0/10",
+  "format": "STATUS / DELETED / MANIFEST"
+ },
+ "design_premises_found_false": [
+  "§1.4 F1–F6, including the distinction between existing unstarted cancel and owned uncertain resolution"
+ ],
+ "existing_tests_edited": [
+  "host/authority/operator_store_test.go"
+ ],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [
+  "cmd/ailang-worldd/approve.go",
+  "cmd/ailang-worldd/episode.go",
+  "cmd/ailang-worldd/episode_preset.go",
+  "cmd/ailang-worldd/episode_resume.go",
+  "cmd/ailang-worldd/session_new.go",
+  "host/store/operator_cas.go"
+ ],
+ "not_touched": [
+  ".ail",
+  "daemon routes and serving code",
+  "app.js",
+  "surfaceCSP",
+  "CLI help text and flag set",
+  "scripts",
+  "tools/launchd",
+  "skills",
+  "go.mod"
+ ],
+ "mutants": {
+  "total": 79,
+  "named_killed": 79,
+  "named_survived": 0,
+  "unmeasured_in_sandbox": 77,
+  "whole_killed": 2,
+  "mutant_report_complete": true
+ },
+ "mutant_ledger": "$HOME/.ailang/state/world-iter431/plan-scratch/mutants/ledger.json",
+ "gates_script": "$HOME/.ailang/state/world-iter431/plan-scratch/gates.sh, embedded in §6",
+ "controller_decisions_requested": [
+  "Run CLI whole-package variants, full Go and Linux race gates outside sandbox.",
+  "Route S5b before S6 with resolver, receipt and paired-process admission gates in Appendix C."
+ ],
+ "verification": {
+  "base_gates": "§1.1",
+  "final_gates": "§6",
+  "accept": "§3",
+  "roundtrip": "§7 and plan-scratch/roundtrip-status.txt"
+ }
+}
