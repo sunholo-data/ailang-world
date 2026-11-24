@@ -114,6 +114,25 @@ func pythonJSONString(s string) string {
 
 const claudeLaunchIsolation = `{"enabledPlugins":{"cc-plugin-agents-md@builtin":false,"cc-plugin-telemetry@builtin":false,"cc-plugin-plugin-authoring@builtin":false},"autoMemoryEnabled":false}`
 
+const agyLaunchSettings = `{"permissions":{"allow":["mcp(world/*)"],"deny":["command(*)","write_file(*)","edit_file(*)","read_file(*)","read_url(*)","execute_url(*)"]}}`
+
+func agyLaunchSettingsFor(dir string) string {
+	if dir == "" {
+		return agyLaunchSettings
+	}
+	b, err := json.Marshal(map[string]any{
+		"trustedWorkspaces": []string{dir},
+		"permissions": map[string]any{
+			"allow": []string{"mcp(world/*)"},
+			"deny":  []string{"command(*)", "write_file(*)", "edit_file(*)", "read_file(*)", "read_url(*)", "execute_url(*)"},
+		},
+	})
+	if err != nil {
+		return agyLaunchSettings
+	}
+	return string(b)
+}
+
 func launchArgv(agent, model, prompt, dir, mcp, addr, context, budget string, grants []broker.Capability) []string {
 	if agent == "claude" {
 		a := []string{"claude", "-p", prompt}
@@ -128,6 +147,13 @@ func launchArgv(agent, model, prompt, dir, mcp, addr, context, budget string, gr
 		}
 		if context != "" {
 			a = append(a, "--append-system-prompt", context)
+		}
+		return a
+	}
+	if agent == "agy" {
+		a := []string{"agy", "-p", prompt, "--output-format", "stream-json", "--disable-slash-commands", "--settings", agyLaunchSettingsFor(dir)}
+		if model != "" {
+			a = append(a, "--model", model)
 		}
 		return a
 	}

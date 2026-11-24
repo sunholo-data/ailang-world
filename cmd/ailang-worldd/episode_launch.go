@@ -149,8 +149,8 @@ func validateLaunchDir(dir, root, wt, sessions string) error {
 }
 
 func launchBinary(agent string) (string, error) {
-	if agent != "claude" && agent != "codex" {
-		return "", presetRefusal("unknown agent "+agent, "headless supports claude and codex", "choose claude or codex in a new preset")
+	if agent != "claude" && agent != "codex" && agent != "agy" {
+		return "", presetRefusal("unknown agent "+agent, "launch supports claude, codex and agy", "choose claude, codex or agy in a new preset")
 	}
 	path, err := exec.LookPath(agent)
 	if err == nil {
@@ -484,6 +484,12 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 	} else {
 		mcp = ""
 	}
+	if mode == "headless" && start.Agent == "agy" {
+		if err := stageAgyHeadlessPlugin(dir, p.Addr, contextText); err != nil {
+			return fail(err)
+		}
+		defer os.RemoveAll(filepath.Join(dir, ".agents"))
+	}
 	outStage, err := os.CreateTemp(p.SessionsDir, "."+ep+".stdout-*")
 	if err != nil {
 		return fail(err)
@@ -502,7 +508,7 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 			childEnv = append(childEnv, kv)
 		}
 	}
-	if mode == "interactive" || start.Agent == "codex" {
+	if mode == "interactive" || start.Agent == "codex" || start.Agent == "agy" {
 		childEnv = append(childEnv, "WORLD_SESSION="+token)
 	}
 	redacted := redactLaunchArgv(argv, prompt, token)
@@ -535,11 +541,14 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 	var keepErr, stderrErr error
 	var source hostTranscript
 	if mode == "interactive" {
-		if start.Agent == "claude" {
+		switch start.Agent {
+		case "claude":
 			source = claudeTranscriptPath(dir, sessionID, childEnv)
-		} else {
+		case "codex":
 			source = codexTranscriptPath(hostsDir, dir, startTime, endTime)
 			sessionID = source.id
+		case "agy":
+			source = hostTranscript{reason: "interactive agy transcript capture not yet mapped"}
 		}
 		state = "missing"
 		if source.path != "" {

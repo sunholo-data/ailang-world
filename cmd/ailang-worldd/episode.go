@@ -204,7 +204,7 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	profile := fs.String("profile", "", "bind the session to this exec profile's project")
 	profilesDir := fs.String("exec-profiles-dir", defaultExecProfilesDir(), "where --profile looks")
 	task := fs.String("task", "", "the task file to hand the agent")
-	agent := fs.String("agent", "claude", "claude or codex")
+	agent := fs.String("agent", "claude", "claude, codex or agy")
 	model := fs.String("model", "", "the agent's model")
 	ttl := fs.Int64("ttl", 3600, "session lifetime in seconds")
 	preset := fs.String("preset", "", "launch preset, or se-tools grant set")
@@ -281,8 +281,8 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	if !workspaceEpisodePattern.MatchString(episode) {
 		return fail("episode %q does not match %s", episode, workspaceEpisodePattern)
 	}
-	if *agent != "claude" && *agent != "codex" {
-		return fail("--agent %q: want claude or codex", *agent)
+	if *agent != "claude" && *agent != "codex" && *agent != "agy" {
+		return fail("--agent %q: want claude, codex or agy", *agent)
 	}
 	hostPort, err := loopbackAddr(*addr)
 	if err != nil {
@@ -600,6 +600,12 @@ func printLaunch(w io.Writer, l launchInfo) {
 	fmt.Fprintln(w, "launch the agent from an empty directory, never the worktree: it reaches the worktree only through World's tools.")
 	var argv []string
 	switch l.agent {
+	case "agy":
+		argv = []string{"WORLD_SESSION=\"$(cat " + shellQuote(l.sessionFile) + ")\"",
+			shellQuote(filepath.Join(defaultHostsDir(), "bin", "agy-world"))}
+		if l.model != "" {
+			argv = append(argv, "--model", shellQuote(l.model))
+		}
 	case "codex":
 		url := "http://" + l.addr + "/mcp/"
 		argv = []string{"WORLD_SESSION=\"$(cat " + shellQuote(l.sessionFile) + ")\"", "codex", "exec", "--ignore-user-config",

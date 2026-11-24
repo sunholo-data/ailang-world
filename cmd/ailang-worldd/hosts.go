@@ -18,9 +18,10 @@ const hostsHelp = `usage: ailang-worldd hosts init [--out-dir <dir>] [--addr <ur
 Write private World launch settings (directories 0700, configs 0600, launchers 0700).
 Files: claude-world.settings.json, claude-world.mcp.json, codex/config.toml,
 codex/auth.json (symlink only, when ~/.codex/auth.json exists), pi-world-mcp.json,
-bin/claude-world, bin/codex-world, bin/pi-world, hosts.json;
-bin/world-context, bin/world-statusline, claude-plugin/, codex/AGENTS.md,
-codex/hooks.json, pi/world-status.ts. Runtime status caches live under state/.
+agy-world.settings.json, bin/claude-world, bin/codex-world, bin/pi-world,
+bin/agy-world, hosts.json; bin/world-context, bin/world-statusline,
+bin/agy-world-session-start, bin/agy-world-gate, claude-plugin/, agy-plugin/,
+codex/AGENTS.md, codex/hooks.json, pi/world-status.ts. Runtime status caches live under state/.
 Changed files refuse unless --replace; unchanged bytes are a no-op.
 With an installed service, scripts call its stable installed binary path.
 Defaults: --out-dir ~/.ailang-world/hosts; --addr http://127.0.0.1:7644 or service.json's address.
@@ -57,10 +58,15 @@ func hostFiles(dir, addr string, adapters ...string) map[string][]byte {
 	files["codex/config.toml"] = []byte(fmt.Sprintf("sandbox_mode = \"read-only\"\napproval_policy = \"never\"\nweb_search = \"disabled\"\n[features]\nhooks = true\nshell_tool = false\nunified_exec = false\n[mcp_servers.world]\nurl = %q\nbearer_token_env_var = \"WORLD_SESSION\"\nrequired = true\ndefault_tools_approval_mode = \"approve\"\n", mcp))
 	putJSON("pi-world-mcp.json", map[string]any{"mcpServers": map[string]any{"world": map[string]any{
 		"url": mcp, "auth": "bearer", "bearerTokenEnv": "WORLD_SESSION", "lifecycle": "eager"}}})
+	putJSON("agy-world.settings.json", map[string]any{"permissions": map[string]any{
+		"allow": []string{"mcp(world/*)"},
+		"deny":  []string{"command(*)", "write_file(*)", "edit_file(*)", "read_file(*)", "read_url(*)", "execute_url(*)"},
+	}})
 	commands := map[string]string{
 		"claude": "claude --settings " + shellQuote(filepath.Join(dir, "claude-world.settings.json")) + " --strict-mcp-config --mcp-config " + shellQuote(filepath.Join(dir, "claude-world.mcp.json")),
 		"codex":  "env CODEX_HOME=" + shellQuote(filepath.Join(dir, "codex")) + " codex",
 		"pi":     "pi --no-builtin-tools --no-extensions -e " + shellQuote(adapter) + " --mcp-config " + shellQuote(filepath.Join(dir, "pi-world-mcp.json")),
+		"agy":    "agy --settings " + shellQuote(filepath.Join(dir, "agy-world.settings.json")),
 	}
 	for host, command := range commands {
 		files["bin/"+host+"-world"] = []byte("#!/bin/sh\nif [ -z \"${WORLD_SESSION:-}\" ]; then\n  cat >&2 <<'WORLD_ERROR'\n" + host + "-world: no World session (WORLD_SESSION is unset).\n  why: World agents need a session you approved.\n  next: start one with `ailang-worldd episode start …`, then export WORLD_SESSION=\"$(cat <session file>)\"\nWORLD_ERROR\n  exit 3\nfi\nexec " + command + " \"$@\"\n")

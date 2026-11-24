@@ -84,13 +84,24 @@ func launchSessionUUID() (string, error) {
 
 func interactiveLaunchArgv(host, agent, model, sessionID, context, prompt, dir string, grants []broker.Capability) []string {
 	a := []string{host}
-	if agent == "claude" {
+	switch agent {
+	case "claude":
 		a = append(a, "--session-id", sessionID, "--allowedTools", strings.Join(allowedTools(grants), ","))
 		if model != "" {
 			a = append(a, "--model", model)
 		}
 		a = append(a, "--append-system-prompt", context)
-	} else {
+		if prompt != "" {
+			a = append(a, prompt)
+		}
+	case "agy":
+		if model != "" {
+			a = append(a, "--model", model)
+		}
+		if prompt != "" {
+			a = append(a, "-i", prompt)
+		}
+	default:
 		if model != "" {
 			a = append(a, "-m", model)
 		}
@@ -100,9 +111,9 @@ func interactiveLaunchArgv(host, agent, model, sessionID, context, prompt, dir s
 			real = filepath.Clean(dir)
 		}
 		a = append(a, "-c", "projects={ "+tomlBasicString(real)+` = { trust_level = "trusted" } }`)
-	}
-	if prompt != "" {
-		a = append(a, prompt)
+		if prompt != "" {
+			a = append(a, prompt)
+		}
 	}
 	return a
 }

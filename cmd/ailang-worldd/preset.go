@@ -386,8 +386,8 @@ func loadLaunchPreset(ctx context.Context, name, dir, profilesDir, workspaceRoot
 	if _, _, err := worktree.ParseCommitter(p.Committer); err != nil {
 		return nil, err
 	}
-	if p.Agent != "claude" && p.Agent != "codex" {
-		return nil, errors.New("preset agent must be claude or codex")
+	if p.Agent != "claude" && p.Agent != "codex" && p.Agent != "agy" {
+		return nil, errors.New("preset agent must be claude, codex or agy")
 	}
 	if p.TTLS <= 0 || len(p.Grants) == 0 {
 		return nil, errors.New("preset needs positive ttl_s and a non-empty grants list")
@@ -551,8 +551,8 @@ func runPreset(args []string, out, errOut io.Writer) int {
 		}
 		p := launchPreset{Schema: "world/preset/v1", Name: name, Repo: *repo, Base: *base, Remote: *remote, Agent: *agent, Profile: *profile, TTLS: 43200,
 			Grants: []presetGrant{{Effect: broker.EffectWorkspaceRead, Scope: "worktree", Budget: 5000}}, Daemon: json.RawMessage("\"service\"")}
-		if *agent != "codex" && *agent != "claude" {
-			return fail(errors.New("agent must be codex or claude"))
+		if *agent != "codex" && *agent != "claude" && *agent != "agy" {
+			return fail(errors.New("agent must be codex, claude or agy"))
 		}
 		resolvedRepo, err := expandPresetPath(*repo)
 		if err != nil {

@@ -103,8 +103,8 @@ func doctorHost(r *doctorReport, host, dir string) {
 	if absolute, err := filepath.Abs(dir); err == nil {
 		dir = absolute
 	}
-	if host != "claude" && host != "codex" && host != "pi" {
-		r.add(markFail, "host", "unknown host "+host, "pass --host claude, --host codex or --host pi")
+	if host != "claude" && host != "codex" && host != "pi" && host != "agy" {
+		r.add(markFail, "host", "unknown host "+host, "pass --host claude, --host codex, --host pi or --host agy")
 		return
 	}
 	bin, err := exec.LookPath(host)

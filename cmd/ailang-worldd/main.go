@@ -108,6 +108,7 @@ Usage:
   ailang-worldd [--addr <url>] commit --file <commit.json> [--session <file|token>]
   ailang-worldd [--addr <url>] outcome record --file <outcome.json|-> [--session <file|token>]
   ailang-worldd [--addr <url>] tools list [--session <file|token>] [--json]
+  ailang-worldd [--addr <url>] mcp-stdio [--session <file|token>]
   ailang-worldd [--addr <url>] call <tool> [--session <file|token>]
                     [--arg k=v]... [--arg-json k=<json>]... | --json <obj>|@file|-
                     [--json-out] [--strict]
@@ -422,6 +423,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 	// the log tail and the PR trailer.
 	case "tools":
 		return runTools(*addr, rest[1:], stdout, stderr)
+
+	case "mcp-stdio":
+		return runMCPStdio(*addr, rest[1:], cliStdin, stdout, stderr)
 
 	case "call":
 		return runCall(*addr, rest[1:], cliStdin, stdout, stderr)

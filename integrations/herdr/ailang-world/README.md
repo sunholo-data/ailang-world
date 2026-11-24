@@ -38,7 +38,7 @@ The plugin uses only `ailang-worldd hosts init`'s launchers, `doctor --quick --j
    - `WORLD_PROFILE`, `WORLD_TTL`, `WORLD_GRANTS`: the mint's default exec profile, lifetime
      and ten `--grant` flags (check the budgets against your rig);
    - `WORLD_REPOS`: one line per herdr workspace, `<workspace label>=<repo path>[:<exec profile>]`;
-   - `WORLD_MODELS`: `claude=… codex=… pi=…`.
+   - `WORLD_MODELS`: `claude=… codex=… pi=… agy=…`.
 
    Every command refuses, saying what, why and what next, while `world.env` is missing.
 5. Show the labels in herdr's sidebar. Add the tokens to your own herdr config (the plugin
