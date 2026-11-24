@@ -85,6 +85,16 @@ func TestOperatorConfirmReplay(t *testing.T) {
 		if err != nil || !reflect.DeepEqual(got, want) {
 			t.Fatalf("confirm replay changed the row or refused: %v", err)
 		}
+		other := bytes.Clone(r.artifact)
+		other[len(other)-1] ^= 1
+		_, mismatch := c.ConfirmOperatorAction(ctx, r.cas, other, r.proof, 1021)
+		if !errors.Is(mismatch, store.ErrOperatorConflict) {
+			t.Errorf("different replay artifact returned %v", mismatch)
+		}
+		after, err := c.OperatorAction(ctx, r.cas.ID, 1021)
+		if err != nil || !reflect.DeepEqual(after, want) {
+			t.Fatal("invalid replay changed durable approval")
+		}
 		name := "mark-ssh"
 		if passkey {
 			name = "mark-mac"
