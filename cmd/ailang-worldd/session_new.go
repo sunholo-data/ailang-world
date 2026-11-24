@@ -378,7 +378,7 @@ func checkBindingFits(credPath, episode string, p *broker.ExecProfile) error {
 		return nil // a store this can't read yet (pre-split): the mint moves it first
 	}
 	defer func() { _ = ro.Close() }()
-	if ro.Version() < store.CredentialsSchemaVersion {
+	if ro.Version() < store.CredentialsBindingWriteVersion {
 		return &store.UnboundCredentialsStoreError{Path: credPath}
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

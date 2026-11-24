@@ -98,16 +98,16 @@ func tableInfo(t *testing.T, db *sql.DB) (out []string) {
 	return out
 }
 
-// CS1, CS2, CS7(b): a fresh store is schema 9; a real schema-8 store (makeV6Credentials, then the
+// CS1, CS2, CS7(b): a real schema-8 store (makeV6Credentials, then the
 // version 7 and 8 tables) opens at 8 and refuses every verb request method naming the serve
-// restart; UpgradeCredentials takes it to 9, and then every table's columns, and verb_requests'
+// restart; UpgradeCredentials takes it through 9 to the current version, and every table's columns and verb_requests'
 // whole DDL, equal the fresh store's.
 func TestCredentialsSchema9VerbRequests(t *testing.T) {
 	fresh := openTestCredentials(t)
 	if got, want := credentialsTables(9), []string{"approvers", "episode_starts", "key_decisions", "mint_requests", "session_credentials", "surface_approvals", "verb_requests", "webauthn_credentials"}; !reflect.DeepEqual(got, want) {
 		t.Fatalf("credentialsTables(9) = %v", got)
 	}
-	if fresh.Version() != 9 || CredentialsSchemaVersion != 9 || MaxVerbRequestBytes != approval.MaxVerbRequestBytes {
+	if fresh.Version() != CredentialsSchemaVersion || MaxVerbRequestBytes != approval.MaxVerbRequestBytes {
 		t.Fatalf("fresh version %d, constant %d", fresh.Version(), CredentialsSchemaVersion)
 	}
 	path := filepath.Join(t.TempDir(), CredentialsFileName)
@@ -134,14 +134,14 @@ func TestCredentialsSchema9VerbRequests(t *testing.T) {
 		}
 	}
 	_ = v8.Close()
-	if upgraded, err := UpgradeCredentials(path); err != nil || !upgraded || userVersion(t, path) != 9 {
+	if upgraded, err := UpgradeCredentials(path); err != nil || !upgraded || userVersion(t, path) != CredentialsSchemaVersion {
 		t.Fatalf("UpgradeCredentials: %v %v, version %d", upgraded, err, userVersion(t, path))
 	}
 	if again, err := UpgradeCredentials(path); err != nil || again {
 		t.Fatalf("second UpgradeCredentials: %v %v", again, err)
 	}
 	up := rawDB(t, path)
-	requireExactTableNames(t, "upgraded v8 store", tableDDL(t, up), credentialsTables(9))
+	requireExactTableNames(t, "upgraded v8 store", tableDDL(t, up), credentialsTables(CredentialsSchemaVersion))
 	if got, want := tableInfo(t, up), tableInfo(t, fresh.db); !reflect.DeepEqual(got, want) || strings.Count(strings.Join(want, "\n"), "verb_requests.") != 12 {
 		t.Fatalf("upgraded columns differ from a fresh store's:\n got: %v\nwant: %v", got, want)
 	}
@@ -150,9 +150,9 @@ func TestCredentialsSchema9VerbRequests(t *testing.T) {
 	}
 }
 
-// CS7(a): a store newer than this binary (user_version 10) is refused by both opens with the
-// existing "newer than this binary's" text, now at 9, and the refusal changes nothing.
-func TestCredentialsNewerThanNineIsRefused(t *testing.T) {
+// CS7(a): a store newer than this binary (user_version 11) is refused by both opens with the
+// existing "newer than this binary's" text, now at 10, and the refusal changes nothing.
+func TestCredentialsNewerThanTenIsRefused(t *testing.T) {
 	path := filepath.Join(t.TempDir(), CredentialsFileName)
 	c, err := OpenCredentials(path)
 	if err != nil {
@@ -160,7 +160,7 @@ func TestCredentialsNewerThanNineIsRefused(t *testing.T) {
 	}
 	_ = c.Close()
 	db := rawDB(t, path)
-	setPositiveFixtureVersion(t, db, 10)
+	setPositiveFixtureVersion(t, db, 11)
 	before, _ := schemaState(t, db)
 	for name, open := range map[string]func(string) (*Credentials, error){"writable": OpenCredentials, "read-only": OpenCredentialsReadOnly, "upgrade": func(p string) (*Credentials, error) { _, err := UpgradeCredentials(p); return nil, err }} {
 		c, err := open(path)
@@ -168,11 +168,11 @@ func TestCredentialsNewerThanNineIsRefused(t *testing.T) {
 			_ = c.Close()
 		}
 		var se *CredentialsSchemaError
-		if !errors.As(err, &se) || !strings.Contains(err.Error(), "user_version 10 is newer than this binary's 9; use a compatible binary") {
-			t.Errorf("%s open of a v10 store: %v", name, err)
+		if !errors.As(err, &se) || !strings.Contains(err.Error(), "user_version 11 is newer than this binary's 10; use a compatible binary") {
+			t.Errorf("%s open of a v11 store: %v", name, err)
 		}
 	}
-	if after, v := schemaState(t, db); !reflect.DeepEqual(after, before) || v != 10 {
+	if after, v := schemaState(t, db); !reflect.DeepEqual(after, before) || v != 11 {
 		t.Fatalf("refused opens changed the store: %v -> %v (version %d)", before, after, v)
 	}
 }
