@@ -114,3 +114,19 @@ func (v *VerifiedOperatorAction) PasskeyUse() ([]byte, uint32, bool) {
 }
 
 func (v *VerifiedOperatorAction) Rechecked() bool { return v != nil && v.signed != nil && v.rechecked }
+
+// OperatorConfirmation transports the sealed approval law proof to the store
+// without making store import authority. The store rechecks its enrollment.
+func (v *VerifiedOperatorAction) OperatorConfirmation() *approval.SignedOperatorAction {
+	if v == nil {
+		return nil
+	}
+	return v.signed
+}
+
+// RecheckClaimedOperatorAction uses the runner's frozen inputs. The receipt
+// supplies only the artifact and the identity to compare after verification.
+func RecheckClaimedOperatorAction(ctx context.Context, ro *store.Credentials, frozen approval.OperatorAction, challenge [32]byte,
+	expiry, now int64, row store.OperatorActionRow) (*VerifiedOperatorAction, error) {
+	return RecheckOperatorAction(ctx, ro, frozen, challenge, expiry, now, row.Artifact, row.ApprovedBy)
+}
