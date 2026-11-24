@@ -43,12 +43,18 @@ import (
 	"github.com/sunholo-data/ailang-world/host/toolprobe"
 )
 
-const profileHelp = `usage: ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
+const profileHelp = `usage: ailang-worldd profile <init|list|activate> [flags]
 
-Propose an exec profile (` + broker.ExecProfileVersion + `) for a repo from its
-own toolchain files, and write it to <profiles-dir>/<project>.proposed.json. It
-never activates the profile: serve skips *.proposed.json. Review the file, then
-run the mv it prints. serve validates and probes the profile at startup.
+  ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
+  ailang-worldd profile list [--profiles-dir <dir>] [--json]
+  ailang-worldd profile activate <project> [--profiles-dir <dir>] [--dry-run]
+
+Propose, inspect, and activate exec profiles (` + broker.ExecProfileVersion + `).
+
+profile init proposes an exec profile for a repo from its own toolchain files
+and writes it to <profiles-dir>/<project>.proposed.json. It never activates the
+profile: serve skips *.proposed.json. Review the file, then run profile activate
+(or the mv it prints). serve validates and probes the profile at startup.
 
 Detection (at the repo root first; with no marker there, one directory down,
 and that directory becomes the profile's root):
@@ -56,12 +62,14 @@ and that directory becomes the profile's root):
   pyproject.toml or uv.lock  pytest-file, ruff-file
   package.json               vitest-file or jest-file, whichever its
                              devDependencies name (neither: skipped)
+  ailang.toml                ailang-check, ailang-test
   Makefile                   its targets are listed; no command is proposed
 Each command has the shape (argv, flags, positional, max_args) of the measured
 profile's command of the same name. Every path comes from this machine, never a
 guess: go env GOROOT GOMODCACHE GOVERSION run in the root, the venv's python
-(<root>/.venv/bin/python, else uv python find) and its link chain, and node on
-PATH. A toolchain that does not resolve is skipped, and the reason is printed.
+(<root>/.venv/bin/python, else uv python find) and its link chain, node on PATH,
+and ailang on PATH. A toolchain that does not resolve is skipped, and the reason
+is printed.
 
 The proposal must pass the profile parser before it is written. If it does not,
 nothing is written and the parser's error is printed. Refused: a --project
@@ -69,10 +77,12 @@ outside ` + broker.ExecProjectGrammar + `, an output file that already exists
 (the file is written once, O_EXCL, and never overwritten), an --out naming the
 active <profiles-dir>/<project>.json, and a repo with no detectable toolchain.
 
-  --repo <dir>          the repository to read (required)
-  --project <name>      the profile's project (required)
+  --repo <dir>          the repository to read (required for init)
+  --project <name>      the profile's project (required for init)
   --out <file>          default <profiles-dir>/<project>.proposed.json
   --profiles-dir <dir>  default ~/.ailang-world-exec/profiles
+  --json                emit JSON (list)
+  --dry-run             validate proposal without activating (activate)
 `
 
 // initFlag is one flags entry: a class, or {"class", "form"} when it has a form.
@@ -143,6 +153,12 @@ var initShapes = map[string]initShape{
 	"jest-file": {initCommand{Argv: []string{"node", "node_modules/jest/bin/jest.js"},
 		Positional: broker.ExecPositionalTestfile, Suffixes: []string{".test.js", ".test.jsx", ".test.ts", ".test.tsx"}, MaxArgs: 4},
 		"vitest-file's shape with jest's entry point (no jest profile is measured)"},
+	"ailang-check": {initCommand{Argv: []string{"ailang", "check"},
+		Positional: broker.ExecPositionalRelpath, MaxArgs: 8},
+		"ailang check over relative paths"},
+	"ailang-test": {initCommand{Argv: []string{"ailang", "test"},
+		Positional: broker.ExecPositionalRelpath, MaxArgs: 8},
+		"ailang test over relative paths"},
 }
 
 // initProposal is the written profile, in the measured profiles' key order.
@@ -169,9 +185,10 @@ const (
 	initKindGo     = "go"
 	initKindPython = "python"
 	initKindNode   = "node"
+	initKindAilang = "ailang"
 )
 
-var initKindRank = map[string]int{initKindGo: 0, initKindPython: 1, initKindNode: 2}
+var initKindRank = map[string]int{initKindGo: 0, initKindPython: 1, initKindNode: 2, initKindAilang: 3}
 
 // initDetected is one toolchain found in one directory of the repo.
 type initDetected struct {
@@ -204,6 +221,10 @@ func runProfile(args []string, stdout, stderr io.Writer) int {
 	switch args[0] {
 	case "init":
 		return runProfileInit(args[1:], stdout, stderr)
+	case "list":
+		return runProfileList(args[1:], stdout, stderr)
+	case "activate":
+		return runProfileActivate(args[1:], stdout, stderr)
 	case "--help", "-help", "-h", "help":
 		fmt.Fprint(stdout, profileHelp)
 		return exitOK
@@ -368,7 +389,7 @@ func proposeProfile(ctx context.Context, repoAbs, project string) (initProposal,
 	}
 	if len(found) == 0 {
 		return initProposal{}, nil, fmt.Errorf("no detectable toolchain in %s: looked for go.mod, pyproject.toml, uv.lock, "+
-			"and a package.json whose devDependencies name vitest or jest, at the root and one directory down%s",
+			"ailang.toml, and a package.json whose devDependencies name vitest or jest, at the root and one directory down%s",
 			repoAbs, joinNotes(notes))
 	}
 	home, _ := os.UserHomeDir()
@@ -385,6 +406,8 @@ func proposeProfile(ctx context.Context, repoAbs, project string) (initProposal,
 			r, err = resolveInitPython(ctx, repoAbs, rootAbs)
 		case initKindNode:
 			r, err = resolveInitNode(home)
+		case initKindAilang:
+			r, err = resolveInitAilang(home)
 		}
 		if err != nil {
 			skipped = append(skipped, fmt.Sprintf("skipped %s (%s): %v", strings.Join(d.commands, ", "), strings.Join(d.markers, " + "), err))
@@ -520,6 +543,10 @@ func detectInitIn(repoAbs, dir string) ([]initDetected, []string) {
 		default:
 			found = append(found, initDetected{kind: initKindNode, dir: dir, markers: []string{rel("package.json")}, commands: cmds})
 		}
+	}
+	if has("ailang.toml") {
+		found = append(found, initDetected{kind: initKindAilang, dir: dir, markers: []string{rel("ailang.toml")},
+			commands: []string{"ailang-check", "ailang-test"}})
 	}
 	return found, notes
 }
@@ -683,6 +710,225 @@ func resolveInitNode(home string) (initResolved, error) {
 		r.note += fmt.Sprintf(" resolves under HOME to %s, so %s is a read root", real, dir)
 	}
 	return r, nil
+}
+
+// resolveInitAilang puts ailang's directory on the path; an ailang binary under
+// the operator's HOME (e.g. ~/go/bin/ailang) also needs its directory as a read root.
+func resolveInitAilang(home string) (initResolved, error) {
+	bin, err := exec.LookPath("ailang")
+	if err != nil {
+		return initResolved{}, fmt.Errorf("no ailang on PATH: %v", err)
+	}
+	abs, err := filepath.Abs(bin)
+	if err != nil {
+		return initResolved{}, err
+	}
+	r := initResolved{
+		path:  []string{filepath.Dir(abs)},
+		probe: []string{"ailang", "--version"},
+		note:  fmt.Sprintf("ailang: %s on PATH", abs),
+	}
+	if home != "" {
+		homeReal := realpathOrSelf(home)
+		if pathInsideOrEqual(abs, homeReal) {
+			r.readRoots = append(r.readRoots, filepath.Dir(abs))
+		}
+		if real, err := filepath.EvalSymlinks(abs); err == nil && pathInsideOrEqual(real, homeReal) {
+			r.readRoots = append(r.readRoots, filepath.Dir(real))
+		}
+		r.readRoots = uniqueStrings(r.readRoots)
+		if len(r.readRoots) > 0 {
+			r.note += fmt.Sprintf(" resolves under HOME, so %s is a read root", strings.Join(r.readRoots, ", "))
+		}
+	}
+	return r, nil
+}
+
+type profileListEntry struct {
+	Project  string   `json:"project"`
+	State    string   `json:"state"`
+	Root     string   `json:"root,omitempty"`
+	Commands []string `json:"commands,omitempty"`
+	Digest   string   `json:"digest,omitempty"`
+	File     string   `json:"file"`
+	Error    string   `json:"error,omitempty"`
+}
+
+func runProfileList(args []string, stdout, stderr io.Writer) int {
+	fs := flag.NewFlagSet("ailang-worldd profile list", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	fs.Usage = func() {}
+	profilesDir := fs.String("profiles-dir", defaultExecProfilesDir(), "the exec profiles directory")
+	asJSON := fs.Bool("json", false, "emit JSON")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			fmt.Fprint(stdout, profileHelp)
+			return exitOK
+		}
+		fmt.Fprint(stderr, profileHelp)
+		return exitUsage
+	}
+	if fs.NArg() > 0 {
+		fmt.Fprintf(stderr, "ailang-worldd profile list: unexpected argument %q\n", fs.Arg(0))
+		return exitUsage
+	}
+	dirAbs, err := filepath.Abs(*profilesDir)
+	if err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd profile list: %v\n", err)
+		return exitUsage
+	}
+	ents, err := os.ReadDir(dirAbs)
+	if err != nil && !os.IsNotExist(err) {
+		fmt.Fprintf(stderr, "ailang-worldd profile list: %v\n", err)
+		return exitUsage
+	}
+	var rows []profileListEntry
+	for _, e := range ents {
+		if e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		var project, state string
+		switch {
+		case strings.HasSuffix(name, broker.ExecProposedSuffix):
+			project = strings.TrimSuffix(name, broker.ExecProposedSuffix)
+			state = "proposed"
+		case strings.HasSuffix(name, broker.ExecProfileSuffix):
+			project = strings.TrimSuffix(name, broker.ExecProfileSuffix)
+			state = "active"
+		default:
+			continue
+		}
+		full := filepath.Join(dirAbs, name)
+		row := profileListEntry{Project: project, State: state, File: full}
+		raw, err := os.ReadFile(full)
+		if err != nil {
+			row.Error = err.Error()
+		} else if parsed, err := broker.ParseExecProfile(raw); err != nil {
+			row.Error = err.Error()
+		} else {
+			row.Root = parsed.Root
+			row.Digest = parsed.Digest
+			for cmdName := range parsed.Commands {
+				row.Commands = append(row.Commands, cmdName)
+			}
+			sort.Strings(row.Commands)
+		}
+		rows = append(rows, row)
+	}
+	sort.Slice(rows, func(i, j int) bool {
+		if rows[i].Project != rows[j].Project {
+			return rows[i].Project < rows[j].Project
+		}
+		return rows[i].State < rows[j].State
+	})
+	if *asJSON {
+		if rows == nil {
+			rows = []profileListEntry{}
+		}
+		enc := json.NewEncoder(stdout)
+		enc.SetIndent("", "  ")
+		_ = enc.Encode(rows)
+		return exitOK
+	}
+	if len(rows) == 0 {
+		fmt.Fprintf(stdout, "no exec profiles in %s\n", dirAbs)
+		return exitOK
+	}
+	for _, r := range rows {
+		if r.Error != "" {
+			fmt.Fprintf(stdout, "%-20s %-8s ERROR: %s\n", r.Project, r.State, r.Error)
+			continue
+		}
+		fmt.Fprintf(stdout, "%-20s %-8s root=%-10s cmds=[%s]\n", r.Project, r.State, r.Root, strings.Join(r.Commands, ", "))
+	}
+	return exitOK
+}
+
+func runProfileActivate(args []string, stdout, stderr io.Writer) int {
+	fs := flag.NewFlagSet("ailang-worldd profile activate", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+	fs.Usage = func() {}
+	profilesDir := fs.String("profiles-dir", defaultExecProfilesDir(), "the exec profiles directory")
+	dryRun := fs.Bool("dry-run", false, "validate proposal without activating")
+	// Allow positional <project> before or after flags.
+	var project string
+	var flagArgs []string
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if strings.HasPrefix(a, "-") {
+			flagArgs = append(flagArgs, a)
+			if a == "--profiles-dir" || a == "-profiles-dir" {
+				if i+1 < len(args) {
+					i++
+					flagArgs = append(flagArgs, args[i])
+				}
+			}
+		} else if project == "" {
+			project = a
+		} else {
+			flagArgs = append(flagArgs, a)
+		}
+	}
+	if err := fs.Parse(flagArgs); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			fmt.Fprint(stdout, profileHelp)
+			return exitOK
+		}
+		fmt.Fprint(stderr, profileHelp)
+		return exitUsage
+	}
+	if fs.NArg() > 0 {
+		if project == "" {
+			project = fs.Arg(0)
+		} else {
+			fmt.Fprintf(stderr, "ailang-worldd profile activate: unexpected argument %q\n", fs.Arg(0))
+			return exitUsage
+		}
+	}
+	fail := func(format string, a ...any) int {
+		fmt.Fprintf(stderr, "ailang-worldd profile activate: refused: "+format+"\n", a...)
+		return exitUsage
+	}
+	if project == "" {
+		return fail("<project> is required")
+	}
+	if !broker.ExecProjectOk(project) {
+		return fail("project %q is outside the profile grammar %s", project, broker.ExecProjectGrammar)
+	}
+	dirAbs, err := filepath.Abs(*profilesDir)
+	if err != nil {
+		return fail("--profiles-dir %s: %v", *profilesDir, err)
+	}
+	proposed := filepath.Join(dirAbs, project+broker.ExecProposedSuffix)
+	active := filepath.Join(dirAbs, project+broker.ExecProfileSuffix)
+	raw, err := os.ReadFile(proposed)
+	if err != nil {
+		return fail("cannot read proposal %s: %v", proposed, err)
+	}
+	parsed, err := broker.ParseExecProfile(raw)
+	if err != nil {
+		return fail("proposal %s is invalid: %v", proposed, err)
+	}
+	if parsed.Project != project {
+		return fail("proposal %s declares project %q, want %q", proposed, parsed.Project, project)
+	}
+	var cmds []string
+	for name := range parsed.Commands {
+		cmds = append(cmds, name)
+	}
+	sort.Strings(cmds)
+	if *dryRun {
+		fmt.Fprintf(stdout, "dry-run: %s (%s, root %s, cmds [%s]) is valid; would activate %s -> %s\n",
+			project, parsed.Digest, parsed.Root, strings.Join(cmds, ", "), proposed, active)
+		return exitOK
+	}
+	if err := os.Rename(proposed, active); err != nil {
+		return fail("activate %s -> %s: %v", proposed, active, err)
+	}
+	fmt.Fprintf(stdout, "activated exec profile %q (%s, root %s, cmds [%s]): %s\n",
+		project, parsed.Digest, parsed.Root, strings.Join(cmds, ", "), active)
+	return exitOK
 }
 
 var makeTargetLine = regexp.MustCompile(`^([A-Za-z0-9][A-Za-z0-9_./-]*)\s*:([^=]|$)`)
