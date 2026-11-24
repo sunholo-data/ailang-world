@@ -503,3 +503,78 @@ func TestProfileInitHelp(t *testing.T) {
 		}
 	}
 }
+
+func TestProfileInitAilangAndLifecycle(t *testing.T) {
+	base := t.TempDir()
+	binDir := filepath.Join(base, "bin")
+	writeExe(t, filepath.Join(binDir, "ailang"), "echo AILANG v0.60.0\n")
+	t.Setenv("PATH", binDir)
+	t.Setenv("HOME", base)
+
+	repo := filepath.Join(base, "docparse")
+	writeFile(t, filepath.Join(repo, "ailang.toml"), "[package]\nname = \"sunholo/docparse\"\n")
+
+	profilesDir := filepath.Join(base, "profiles")
+	code, out, errs := runProfileInitCLI("--repo", repo, "--project", "docparse", "--profiles-dir", profilesDir)
+	if code != exitOK {
+		t.Fatalf("init exit %d, stdout %q, stderr %q", code, out, errs)
+	}
+	proposed := filepath.Join(profilesDir, "docparse.proposed.json")
+	_, parsed := readParsed(t, proposed)
+	if parsed.Root != "." {
+		t.Fatalf("root = %q, want .", parsed.Root)
+	}
+	if _, ok := parsed.Commands["ailang-check"]; !ok {
+		t.Fatalf("missing ailang-check command: %v", parsed.Commands)
+	}
+	if _, ok := parsed.Commands["ailang-test"]; !ok {
+		t.Fatalf("missing ailang-test command: %v", parsed.Commands)
+	}
+
+	// profile list --json reports the proposed profile.
+	var listOut, listErr bytes.Buffer
+	if code := run([]string{"profile", "list", "--profiles-dir", profilesDir, "--json"}, &listOut, &listErr); code != exitOK {
+		t.Fatalf("list exit %d, stderr %q", code, listErr.String())
+	}
+	var rows []profileListEntry
+	if err := json.Unmarshal(listOut.Bytes(), &rows); err != nil {
+		t.Fatalf("list json: %v\n%s", err, listOut.String())
+	}
+	if len(rows) != 1 || rows[0].Project != "docparse" || rows[0].State != "proposed" {
+		t.Fatalf("list rows = %+v, want 1 proposed docparse", rows)
+	}
+
+	// profile activate --dry-run validates without moving.
+	var actOut, actErr bytes.Buffer
+	if code := run([]string{"profile", "activate", "docparse", "--profiles-dir", profilesDir, "--dry-run"}, &actOut, &actErr); code != exitOK {
+		t.Fatalf("activate --dry-run exit %d, stderr %q", code, actErr.String())
+	}
+	if _, err := os.Stat(proposed); err != nil {
+		t.Fatalf("dry-run removed proposal: %v", err)
+	}
+
+	// profile activate moves proposed -> active.
+	actOut.Reset()
+	actErr.Reset()
+	if code := run([]string{"profile", "activate", "docparse", "--profiles-dir", profilesDir}, &actOut, &actErr); code != exitOK {
+		t.Fatalf("activate exit %d, stderr %q", code, actErr.String())
+	}
+	active := filepath.Join(profilesDir, "docparse.json")
+	if _, err := os.Stat(active); err != nil {
+		t.Fatalf("active profile missing: %v", err)
+	}
+	if _, err := os.Stat(proposed); !os.IsNotExist(err) {
+		t.Fatalf("proposal still present after activate: %v", err)
+	}
+
+	// Subdirectory AILANG repo (e.g. daneel/tools/ailang.toml) sets root = "tools".
+	subRepo := filepath.Join(base, "daneel")
+	writeFile(t, filepath.Join(subRepo, "tools", "ailang.toml"), "[package]\nname = \"sunholo/daneel_tools\"\n")
+	if code, _, errs := runProfileInitCLI("--repo", subRepo, "--project", "daneel", "--profiles-dir", profilesDir); code != exitOK {
+		t.Fatalf("subrepo init exit %d, stderr %q", code, errs)
+	}
+	_, subParsed := readParsed(t, filepath.Join(profilesDir, "daneel.proposed.json"))
+	if subParsed.Root != "tools" {
+		t.Fatalf("subrepo root = %q, want tools", subParsed.Root)
+	}
+}
