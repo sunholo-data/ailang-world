@@ -20,6 +20,7 @@ import (
 
 type fakeServiceController struct {
 	loaded       bool
+	runner       bool
 	boots, stops int
 	key          string
 	bootErr      error
@@ -50,7 +51,7 @@ func (f *fakeServiceController) Bootout(domain, label string) error {
 	return nil
 }
 func (f *fakeServiceController) Print(domain, label string) (string, error) {
-	if !f.loaded {
+	if !f.loaded || (label == runnerLabel && !f.runner) {
 		return "not loaded", errServiceNotLoaded
 	}
 	return "pid = 123\nruns = 1\nlast exit code = 0", nil
@@ -73,14 +74,18 @@ type serviceFixture struct {
 
 func newServiceFixture(t *testing.T) *serviceFixture {
 	t.Helper()
-	f := &serviceFixture{home: t.TempDir(), serving: true}
+	home, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := &serviceFixture{home: home, serving: true}
 	f.env = serviceEnv{paths: homeServicePaths(f.home), controller: nil, terminal: sessionEnv{
 		openTerminal: func() (io.ReadWriteCloser, error) { return &fakeTerm{r: strings.NewReader("y\n")}, nil }, now: func() int64 { return 123 }},
 		goos: "darwin", domain: "gui/123", label: worldServiceLabel, wait: 0, portFree: func(string) error { return nil }}
 	f.ctl = &fakeServiceController{binary: f.env.paths.Binary}
 	f.env.controller = f.ctl
 	f.env.probe = func(binary, home string) ([]byte, error) {
-		return json.Marshal(serviceVersion{Build: daemon.BuildIdentity{ExecutableSHA256: serviceFileHash(binary)}, Platform: runtime.GOOS + "/" + runtime.GOARCH, ToolRelease: toolRelease(), InterpreterRelease: interpreterRelease})
+		return json.Marshal(serviceVersion{Build: daemon.BuildIdentity{ExecutableSHA256: serviceFileHash(binary)}, Platform: runtime.GOOS + "/" + runtime.GOARCH, ToolRelease: toolRelease(), InterpreterRelease: interpreterRelease, CredentialsSchema: store.CredentialsSchemaVersion})
 	}
 	f.env.observe = func(p string) { f.writes = append(f.writes, p) }
 	f.env.client = &http.Client{Transport: serviceTransport(func(r *http.Request) (*http.Response, error) {
@@ -399,7 +404,8 @@ func TestHomeVersionJSON(t *testing.T) {
 			t.Fatalf("%s = %s, want %s", key, got, want)
 		}
 	}
-	if v.Build.ExecutableSHA256 == "" || v.Build.GoVersion == "" {
+	expectedSchema, _ := json.Marshal(store.CredentialsSchemaVersion)
+	if v.Build.ExecutableSHA256 == "" || v.Build.GoVersion == "" || !bytes.Equal(raw["credentials_schema"], expectedSchema) {
 		t.Fatal(b.String())
 	}
 }

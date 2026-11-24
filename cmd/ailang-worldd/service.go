@@ -34,6 +34,7 @@ const serviceHelp = `usage: ailang-worldd service install|status|upgrade|stop|st
     [--examples-dir DIR] [--surface-index PATH] [--surface-follow PATH]
     [--surface-origin https://<host>.ts.net[:port]]... [--binary PATH] [--replace]
   status [--json] [--verbose]
+  runner install|start|stop|status|cancel|uninstall (see service runner --help)
   upgrade [--binary FILE] [--pause]
 Install, stop and uninstall require a typed y at the controlling terminal.
 Start uses the approved plist; edited plists require confirmation.
@@ -78,8 +79,9 @@ type serviceEnv struct {
 	client              *http.Client
 	portFree            func(string) error
 	// observe records every intended filesystem mutation, including temp paths.
-	observe func(string)
-	probe   func(string, string) ([]byte, error)
+	observe     func(string)
+	probe       func(string, string) ([]byte, error)
+	runnerLogin func() (int, string, error)
 }
 
 func realServiceEnv() serviceEnv {
@@ -183,7 +185,7 @@ func serviceXML(s string) string {
 	_ = xml.EscapeText(&b, []byte(s))
 	return b.String()
 }
-func renderServicePlist(label string, p servicePaths, args []string, working string) string {
+func renderServicePlist(label string, p servicePaths, args []string, working string, environment ...[2]string) string {
 	var b strings.Builder
 	b.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\"><dict>\n")
 	fmt.Fprintf(&b, "<key>Label</key><string>%s</string>\n<key>ProgramArguments</key><array>\n", serviceXML(label))
@@ -192,7 +194,14 @@ func renderServicePlist(label string, p servicePaths, args []string, working str
 	}
 	b.WriteString("</array>\n<key>RunAtLoad</key><true/>\n<key>KeepAlive</key><true/>\n<key>ThrottleInterval</key><integer>30</integer>\n<key>ExitTimeOut</key><integer>30</integer>\n<key>ProcessType</key><string>Standard</string>\n<key>Umask</key><integer>63</integer>\n")
 	fmt.Fprintf(&b, "<key>WorkingDirectory</key><string>%s</string>\n", serviceXML(working))
-	b.WriteString("<key>EnvironmentVariables</key><dict><key>PATH</key><string>/usr/bin:/bin:/usr/sbin:/sbin</string></dict>\n")
+	b.WriteString("<key>EnvironmentVariables</key><dict>")
+	if len(environment) == 0 {
+		environment = [][2]string{{"PATH", runnerSystemPath}}
+	}
+	for _, item := range environment {
+		fmt.Fprintf(&b, "<key>%s</key><string>%s</string>", serviceXML(item[0]), serviceXML(item[1]))
+	}
+	b.WriteString("</dict>\n")
 	fmt.Fprintf(&b, "<key>StandardOutPath</key><string>%s</string>\n<key>StandardErrorPath</key><string>%s</string>\n</dict></plist>\n", serviceXML(p.Log), serviceXML(p.Log))
 	return b.String()
 }
@@ -283,6 +292,9 @@ func runServiceWith(args []string, out, errOut io.Writer, e serviceEnv) int {
 	if verb == "--help" || verb == "-h" {
 		fmt.Fprint(out, serviceHelp)
 		return 0
+	}
+	if verb == "runner" {
+		return runServiceRunner(args[1:], out, errOut, e)
 	}
 	fs := flag.NewFlagSet("service "+verb, flag.ContinueOnError)
 	fs.SetOutput(errOut)

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -42,6 +44,21 @@ func doctorService(report *doctorReport, addr string) {
 	if cli != installed {
 		report.add(markWarn, "service", fmt.Sprintf("this ailang-worldd (%s, sha %s) is not the installed one (%s)", path, pointerSHA7(cli), pointerSHA7(installed)),
 			fmt.Sprintf("run %s, or install this one: %s service upgrade", r.Binary, path))
+	}
+	if serviceAddressMatches(addr, r) {
+		var status bytes.Buffer
+		switch _, err := os.Lstat(e.runnerPaths().Record); {
+		case errors.Is(err, os.ErrNotExist):
+			report.add(markWarn, "operator runner", "companion absent", "ailang-worldd service runner install --help")
+		case err != nil:
+			report.add(markWarn, "operator runner", "companion configuration inaccessible", "ailang-worldd service runner status")
+		default:
+			if err := e.runnerStatus(&status); err != nil {
+				report.add(markWarn, "operator runner", status.String()+runnerDiagnostic(err), "ailang-worldd service runner status")
+			} else {
+				report.add(markOK, "operator runner", status.String(), "")
+			}
+		}
 	}
 	if info, err := os.Stat(e.paths.Log); err == nil && info.Size() > 100<<20 {
 		report.add(markWarn, "service", "the service log is over 100 MiB: "+e.paths.Log, "rotate the log while the service is stopped")
