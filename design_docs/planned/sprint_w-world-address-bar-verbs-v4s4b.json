@@ -1,0 +1,145 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s4b",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1, iteration 406 quorum r2 PROCEED 3/3 and audit PASS 81",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s4b-sprint-plan.md",
+ "previous_sprint": "S4, PR #651, merge ee8ef1c0, judge FAIL 72 → PASS 81 → PASS 81",
+ "base_commit": "c42fe69888ce0c7f37a2ef967738085b1a27c1e6",
+ "design_measured_at": "c42fe698, plan §1.2 and §1.4",
+ "queue_row": 243,
+ "iteration": 430,
+ "phase": "V4",
+ "sprint": "S4b, terminal episode exclusion and bounded fresh-generation startup",
+ "sprint_number": "4b",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter430-row243-v4s4b",
+ "branch": "sprint/world-iter430-row243-v4s4b",
+ "authority": [
+  "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004",
+  "D-WORLD-109 fixture stores and keys"
+ ],
+ "behaviour": "Terminal start, launch and finish exclude the canonical episode lock and preserve action ownership. Runner startup is bounded and inert.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat c42fe698 HEAD -- cmd host docs app",
+  "measured": 978,
+  "unfiltered_product": 978,
+  "margin": 422,
+  "unfiltered_if_plans_recorded": 3137,
+  "moved_out": {
+   "S3b": 132,
+   "S4c-replay": 13
+  }
+ },
+ "planner_decisions": {
+  "terminal": "Always take the episode lock before effects, including before first companion startup. Preserve durable owners independently of liveness.",
+  "lookup": "One read-only deadline-scoped connection with SQLite busy retries disabled.",
+  "startup": "Bootstrap requires a newer compatible ready heartbeat. Only a job bootstrapped by this invocation is stopped on timeout.",
+  "pair": "Retain all four landed fence arms. Add supervisor-query-failure coverage."
+ },
+ "scope": [
+  "terminal exclusion and nested lock transfer",
+  "preset and resume fixtures and first-managed transition",
+  "bounded startup and upgrade pair refusal",
+  "judge r1 admissible survivor tests"
+ ],
+ "executor_lane": "M1 M2 M3 via patch only",
+ "executor_form": "Appendix P unified diffs, §2 extraction and §7 cumulative snapshots",
+ "estimate_loc": {
+  "compiled_landed": 978,
+  "parked": {
+   "S3b": 132,
+   "S4c-replay": 13
+  }
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "terminal episode exclusion",
+   "expected_cumulative_numstat": 638,
+   "increment": 638,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M1 fast"
+  },
+  {
+   "id": "M2",
+   "title": "fresh companion generation",
+   "expected_cumulative_numstat": 878,
+   "increment": 240,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M2 fast"
+  },
+  {
+   "id": "M3",
+   "title": "survivor pins",
+   "expected_cumulative_numstat": 978,
+   "increment": 100,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M3 fast"
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "11/0/11",
+  "M2": "16/0/16",
+  "M3": "18/0/18",
+  "format": "STATUS / DELETED / MANIFEST"
+ },
+ "design_premises_found_false": [
+  "§1.4 F1–F8"
+ ],
+ "existing_tests_edited": [
+  "cmd/ailang-worldd/episode_launch_test.go",
+  "cmd/ailang-worldd/operator_service_test.go",
+  "cmd/ailang-worldd/service_test.go",
+  "host/store/credentials_test.go",
+  "host/store/operator_schema_test.go"
+ ],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [
+  "cmd/ailang-worldd/episode.go",
+  "cmd/ailang-worldd/episode_finish.go",
+  "cmd/ailang-worldd/episode_launch.go",
+  "cmd/ailang-worldd/episode_preset.go",
+  "cmd/ailang-worldd/episode_resume.go",
+  "cmd/ailang-worldd/operator_runner.go",
+  "cmd/ailang-worldd/operator_service.go",
+  "cmd/ailang-worldd/service.go",
+  "host/store/operator_runner.go"
+ ],
+ "not_touched": [
+  ".ail",
+  "daemon routes and serving code",
+  "app.js",
+  "surfaceCSP",
+  "QUICKSTART and help text",
+  "scripts",
+  "tools/launchd",
+  "skills",
+  "go.mod"
+ ],
+ "mutants": {
+  "total": 72,
+  "named_killed": 72,
+  "named_survived": 0,
+  "unmeasured_in_sandbox": 55,
+  "whole_killed": 14,
+  "mutant_report_complete": true
+ },
+ "mutant_ledger": "$HOME/.ailang/state/world-iter430/plan-scratch/mutants/ledger.json",
+ "gates_script": "$HOME/.ailang/state/world-iter430/plan-scratch/gates.sh, embedded in §6",
+ "controller_decisions_requested": [
+  "Run sandbox-unmeasured whole package mutants and §6 gate legs on Linux CI/outside the sandbox.",
+  "Keep dispatch disabled until the Appendix C paired admission, drain and recovery gates are complete."
+ ],
+ "verification": {
+  "base_gates": "§1.1",
+  "final_gates": "§6",
+  "accept": "§3",
+  "roundtrip": "§7 and plan-scratch/roundtrip-status.txt"
+ }
+}
