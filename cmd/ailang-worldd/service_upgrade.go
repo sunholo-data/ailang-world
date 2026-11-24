@@ -198,6 +198,19 @@ func (e serviceEnv) upgrade(candidate string, pause bool, out, errOut io.Writer)
 	if !e.confirm(errOut, change) {
 		return 1
 	}
+	pairLock, err := runnerLifecycleLock(filepath.Dir(e.paths.Record))
+	if err != nil {
+		return refuse("operator runner lifecycle is busy or unavailable", "inspect service runner status and retry")
+	}
+	defer pairLock.Close()
+	for _, path := range []string{e.runnerPaths().Record, e.runnerPaths().Plist} {
+		if _, err := os.Lstat(path); !errors.Is(err, os.ErrNotExist) {
+			return refuse("operator runner is still installed", "stop and uninstall the companion; upgrade World, then review and reinstall the runner")
+		}
+	}
+	if _, err := e.controller.Print(e.domain, runnerLabel); !errors.Is(err, errServiceNotLoaded) {
+		return refuse("cannot verify that the operator runner is unloaded", "inspect service runner status")
+	}
 	lock, err := e.lock()
 	if err != nil {
 		return serviceMessage(errOut, "a service change is in progress", err.Error(), "wait and retry", 1)

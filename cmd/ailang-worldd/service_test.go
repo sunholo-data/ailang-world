@@ -20,6 +20,7 @@ import (
 
 type fakeServiceController struct {
 	loaded       bool
+	runner       bool
 	boots, stops int
 	key          string
 	bootErr      error
@@ -50,7 +51,7 @@ func (f *fakeServiceController) Bootout(domain, label string) error {
 	return nil
 }
 func (f *fakeServiceController) Print(domain, label string) (string, error) {
-	if !f.loaded {
+	if !f.loaded || (label == runnerLabel && !f.runner) {
 		return "not loaded", errServiceNotLoaded
 	}
 	return "pid = 123\nruns = 1\nlast exit code = 0", nil
@@ -73,7 +74,11 @@ type serviceFixture struct {
 
 func newServiceFixture(t *testing.T) *serviceFixture {
 	t.Helper()
-	f := &serviceFixture{home: t.TempDir(), serving: true}
+	home, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	f := &serviceFixture{home: home, serving: true}
 	f.env = serviceEnv{paths: homeServicePaths(f.home), controller: nil, terminal: sessionEnv{
 		openTerminal: func() (io.ReadWriteCloser, error) { return &fakeTerm{r: strings.NewReader("y\n")}, nil }, now: func() int64 { return 123 }},
 		goos: "darwin", domain: "gui/123", label: worldServiceLabel, wait: 0, portFree: func(string) error { return nil }}

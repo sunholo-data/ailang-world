@@ -55,6 +55,30 @@ Uninstall keeps the binary, databases, sessions, worktrees and logs.
 An upgrade refuses active sessions unless you explicitly pass `--pause`.
 Linux service support is a later milestone.
 
+### Run the operator companion
+
+With World running, fill in the login UID, canonical paths, preset and `sha256:`-prefixed digest of its installed binary.
+```json
+{
+  "home": "/Users/operator", "uid": 501, "address": "127.0.0.1:7644",
+  "world": "/Users/operator/.ailang/world/world.db", "credentials": "/Users/operator/.ailang/world/credentials.db",
+  "executables": {"/Users/operator/.ailang-world/bin/ailang-worldd": "sha256:<digest>"},
+  "preset_names": ["sol"], "tool_dirs": [], "backend": "headless"
+}
+```
+```sh
+ailang-worldd service runner install --config /absolute/path/to/runner.json
+ailang-worldd service runner start
+ailang-worldd service runner status
+ailang-worldd service runner stop
+ailang-worldd service runner uninstall
+```
+Review and type `y` for install, stop and uninstall. Uninstall before upgrading or replacing the config. Spool and action records are retained.
+Run the checked example with a fake supervisor and disposable stores:
+```sh
+AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./cmd/ailang-worldd -run '^TestOperatorServiceWriteScope$' -count=1 -v
+```
+
 ## Run your agents through World
 
 World launchers now tell Claude Code, Codex and pi their episode, worktree, session

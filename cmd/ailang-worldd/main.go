@@ -83,6 +83,7 @@ Usage:
   ailang-worldd hosts init [--out-dir <dir>] [--addr <url>] [--replace]
   ailang-worldd version [--json]
   ailang-worldd service install|status|upgrade|stop|start|uninstall [flags; upgrade: --binary FILE --pause]
+  ailang-worldd service runner install|start|stop|status|cancel|uninstall
   ailang-worldd serve --db <path> [--credentials-db <path>] [--bind host:port] [--ailang-bin <path>]
                       [--workbench-still]
                       [--workspace-root <dir> --tool-ailang-bin <path>]
@@ -378,6 +379,12 @@ func run(args []string, stdout, stderr io.Writer) int {
 		return exitOK
 	}
 
+	if rest[0] == "operator-runner" {
+		if addrGiven {
+			return exitUsage
+		}
+		return runOperatorRunner(rest[1:], stderr, realServiceEnv())
+	}
 	switch verb := rest[0]; verb {
 	case "version":
 		return runVersion(rest[1:], stdout, stderr)

@@ -70,6 +70,11 @@ func helpOnly(args []string) (string, bool) {
 // byte with what the verb itself prints, for every verb line.
 func ownVerbHelp(rest []string) (string, bool) {
 	switch rest[0] {
+	case "service":
+		if len(rest) > 1 && rest[1] == "runner" {
+			return runnerHelp, true
+		}
+		return serviceHelp, true
 	case "tools":
 		return toolsHelp, true
 	case "call":

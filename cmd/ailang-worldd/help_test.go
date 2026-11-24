@@ -12,12 +12,14 @@ var everyVerb = [][]string{
 	{"log", "get"}, {"log", "range"}, {"log", "tail"}, {"registry", "get"}, {"commit"},
 	{"tools", "list"}, {"call"}, {"why"}, {"provenance"}, {"setup"}, {"doctor"}, {"hosts", "init"},
 	{"session"}, {"session", "new"}, {"session", "list"}, {"session", "revoke"}, {"session", "mint"},
-	{"approve"}, {"approver"}, {"approver", "list"}, {"approver", "enroll"}, {"approver", "revoke"},
+	{"approve"}, {"service", "runner"}, {"service", "runner", "install"}, {"service", "runner", "start"},
+	{"service", "runner", "stop"}, {"service", "runner", "status"}, {"service", "runner", "cancel"}, {"service", "runner", "uninstall"}, {"approver"}, {"approver", "list"}, {"approver", "enroll"}, {"approver", "revoke"},
 }
 
 // AC5.7: `<verb> --help` and `help <verb>` exit 0 with that verb's help on
 // stdout for every verb, and the top-level usage is complete.
 func TestEveryVerbHasHelp(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	for _, verb := range everyVerb {
 		name := strings.Join(verb, " ")
 		for _, argv := range [][]string{append(append([]string{}, verb...), "--help"), append([]string{"help"}, verb...)} {

@@ -30,6 +30,7 @@ func helpForms() [][]string {
 // without the key (the negative control is the same argv, key absent), and
 // neither stream carries the value.
 func TestHelpIsNeverBlockedByTheRegistryKeyGuard(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	for _, argv := range helpForms() {
 		name := strings.Join(argv, " ")
 		t.Setenv(broker.RegistryCredentialVariable, "")

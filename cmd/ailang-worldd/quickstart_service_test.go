@@ -13,6 +13,7 @@ func quickstartServiceLines(md string) []plugindoc.Line {
 }
 
 func TestQuickstartServiceSectionMatchesTheCLIHelp(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	raw, err := os.ReadFile("../../docs/QUICKSTART.md")
 	if err != nil {
 		t.Fatal(err)
@@ -33,7 +34,7 @@ func TestQuickstartServiceSectionMatchesTheCLIHelp(t *testing.T) {
 	if len(base) != 0 {
 		t.Fatal(base)
 	}
-	for _, mutant := range []string{"ailang-worldd frobnicate", "ailang-worldd why 3 --expect-shop x", "ailang-worldd service status --bogus"} {
+	for _, mutant := range []string{"ailang-worldd frobnicate", "ailang-worldd why 3 --expect-shop x", "ailang-worldd service status --bogus", "ailang-worldd service runner status --bogus"} {
 		for _, form := range []string{"\n```sh\n" + mutant + "\n```\n", "\n`" + mutant + "`\n"} {
 			errs := useWorldErrors(quickstartServiceLines(md + form))
 			if len(errs) != len(base)+1 || !strings.Contains(strings.Join(errs, "\n"), mutant) {
