@@ -66,7 +66,8 @@ func bridgeMCPStdio(stdin io.Reader, stdout io.Writer, client *http.Client, endp
 			continue
 		}
 		var envelope struct {
-			ID json.RawMessage `json:"id"`
+			ID     json.RawMessage `json:"id"`
+			Method string          `json:"method"`
 		}
 		_ = json.Unmarshal(line, &envelope)
 		hasID := len(envelope.ID) > 0 && !bytes.Equal(bytes.TrimSpace(envelope.ID), []byte("null"))
@@ -125,6 +126,9 @@ func bridgeMCPStdio(stdin io.Reader, stdout io.Writer, client *http.Client, endp
 			if err := writeSSEDataLines(stdout, body); err != nil {
 				return err
 			}
+			if envelope.Method == "tools/list" {
+				markMCPStdioReady()
+			}
 			continue
 		}
 		var compact bytes.Buffer
@@ -137,11 +141,22 @@ func bridgeMCPStdio(stdin io.Reader, stdout io.Writer, client *http.Client, endp
 		if _, err := fmt.Fprintf(stdout, "%s\n", compact.Bytes()); err != nil {
 			return err
 		}
+		if envelope.Method == "tools/list" {
+			markMCPStdioReady()
+		}
 	}
 	if err := scanner.Err(); err != nil && !errors.Is(err, io.EOF) {
 		return err
 	}
 	return nil
+}
+
+func markMCPStdioReady() {
+	ready := os.Getenv("WORLD_AGY_MCP_READY")
+	if ready == "" || !filepath.IsAbs(ready) {
+		return
+	}
+	_ = os.WriteFile(ready, []byte("ready\n"), 0o600)
 }
 
 func writeSSEDataLines(w io.Writer, body []byte) error {
@@ -238,7 +253,27 @@ printf '{"decision":"deny","reason":"Confined to AILANG World: use World MCP too
 	if err := os.WriteFile(gatePath, gateScript, 0o700); err != nil {
 		return err
 	}
+	readyPath := filepath.Join(pluginDir, "ready.sh")
+	readyScript := []byte(`#!/bin/sh
+payload=$(cat)
+inv=$(printf '%s' "$payload" | jq -r '.invocationNum // 0' 2>/dev/null)
+if [ "$inv" = "1" ] && [ -n "${WORLD_AGY_MCP_READY:-}" ]; then
+  i=0
+  while [ "$i" -lt 50 ] && [ ! -f "$WORLD_AGY_MCP_READY" ]; do
+    sleep 0.1
+    i=$((i + 1))
+  done
+  if [ -f "$WORLD_AGY_MCP_READY" ]; then
+    sleep 0.3
+  fi
+fi
+printf '{}\n'
+`)
+	if err := os.WriteFile(readyPath, readyScript, 0o700); err != nil {
+		return err
+	}
 	hooksCfg, err := json.Marshal(map[string]any{"ailang-world": map[string]any{
+		"PreInvocation": []any{map[string]any{"type": "command", "command": shellQuote(readyPath), "timeout": 10}},
 		"PreToolUse": []any{map[string]any{"matcher": "*", "hooks": []any{
 			map[string]any{"type": "command", "command": shellQuote(gatePath), "timeout": 10},
 		}}},
@@ -253,6 +288,7 @@ printf '{"decision":"deny","reason":"Confined to AILANG World: use World MCP too
 	if rules == "" {
 		rules = "You are working inside AILANG World (confined).\n" + worldToolMap + worldBoundary
 	}
+	rules += "\nWorld's MCP tools are served by MCP server `ailang-world_world` (if listed as lazy tools, call them via `call_mcp_tool` with `ServerName: \"ailang-world_world\"`).\n"
 	if !strings.HasSuffix(rules, "\n") {
 		rules += "\n"
 	}

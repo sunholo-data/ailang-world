@@ -172,6 +172,10 @@ printf '\n'
 				"  cp -R " + shellQuote(agyPluginSrc) + " .agents/plugins/ailang-world\n" +
 				"fi\n" +
 				"world_agy_cwd=$(pwd -P 2>/dev/null || pwd)\n" +
+				"if [ -d \"$world_agy_cwd/.agents\" ] && [ ! -L \"$world_agy_cwd/.agents\" ]; then\n" +
+				"  export WORLD_AGY_MCP_READY=\"$world_agy_cwd/.agents/.world-mcp-ready\"\n" +
+				"  rm -f \"$WORLD_AGY_MCP_READY\"\n" +
+				"fi\n" +
 				"world_agy_settings=$(jq -c --arg cwd \"$world_agy_cwd\" '.trustedWorkspaces = ((.trustedWorkspaces // []) + [$cwd])' " + shellQuote(settingsFile) + " 2>/dev/null || cat " + shellQuote(settingsFile) + ")\n"
 			script = strings.Replace(script, "exec agy --settings "+shellQuote(settingsFile)+" ", mount+"exec agy --settings \"$world_agy_settings\" ", 1)
 		}
@@ -182,15 +186,32 @@ printf '\n'
 		"command": worldd,
 		"args":    []string{"mcp-stdio", "--addr", addr},
 	}}})
-	files["agy-plugin/rules/AGENTS.md"] = []byte("You are working inside AILANG World (confined).\n" + worldToolMap + worldBoundary + "\n")
+	files["agy-plugin/rules/AGENTS.md"] = []byte("You are working inside AILANG World (confined).\n" + worldToolMap + "World's MCP tools are served by MCP server `ailang-world_world` (if listed as lazy tools, call them via `call_mcp_tool` with `ServerName: \"ailang-world_world\"`).\n" + worldBoundary + "\n")
 	agySessionStart := filepath.Join(dir, "bin", "agy-world-session-start")
+	agyReady := filepath.Join(dir, "bin", "agy-world-ready")
 	agyGate := filepath.Join(dir, "bin", "agy-world-gate")
 	putJSON("agy-plugin/hooks.json", map[string]any{"ailang-world": map[string]any{
-		"SessionStart": []any{map[string]any{"type": "command", "command": shellQuote(agySessionStart), "timeout": 10}},
+		"SessionStart":  []any{map[string]any{"type": "command", "command": shellQuote(agySessionStart), "timeout": 10}},
+		"PreInvocation": []any{map[string]any{"type": "command", "command": shellQuote(agyReady), "timeout": 10}},
 		"PreToolUse": []any{map[string]any{"matcher": "*", "hooks": []any{
 			map[string]any{"type": "command", "command": shellQuote(agyGate), "timeout": 10},
 		}}},
 	}})
+	files["bin/agy-world-ready"] = []byte(`#!/bin/sh
+payload=$(cat)
+inv=$(printf '%s' "$payload" | jq -r '.invocationNum // 0' 2>/dev/null)
+if [ "$inv" = "1" ] && [ -n "${WORLD_AGY_MCP_READY:-}" ]; then
+  i=0
+  while [ "$i" -lt 50 ] && [ ! -f "$WORLD_AGY_MCP_READY" ]; do
+    sleep 0.1
+    i=$((i + 1))
+  done
+  if [ -f "$WORLD_AGY_MCP_READY" ]; then
+    sleep 0.3
+  fi
+fi
+printf '{}\n'
+`)
 	files["bin/agy-world-session-start"] = []byte("#!/bin/sh\numask 077\npayload=$(cat)\ncwd=$(printf '%s' \"$payload\" | jq -r '.cwd // \"\"' 2>/dev/null)\ntpath=$(printf '%s' \"$payload\" | jq -r '.transcriptPath // \"\"' 2>/dev/null)\ncid=$(printf '%s' \"$payload\" | jq -r '.conversationId // \"\"' 2>/dev/null)\nif [ -n \"$cwd\" ] && [ -d \"$cwd/.agents\" ] && [ ! -L \"$cwd/.agents\" ] && [ -n \"$tpath\" ] && [ -n \"$cid\" ]; then\n  jq -nc --arg conversationId \"$cid\" --arg transcriptPath \"$tpath\" '{conversationId:$conversationId,transcriptPath:$transcriptPath}' >\"$cwd/.agents/.world-session-meta.json\" 2>/dev/null || :\nfi\ncontext=$(" + shellQuote(context) + ")\njq -nc --arg msg \"$context\" '{injectSteps:[{systemMessage:{systemMessage:$msg}}]}'\n")
 	files["bin/agy-world-gate"] = []byte(`#!/bin/sh
 payload=$(cat)

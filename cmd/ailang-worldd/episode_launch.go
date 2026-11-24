@@ -513,6 +513,9 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 	if mode == "interactive" || start.Agent == "codex" || start.Agent == "agy" {
 		childEnv = append(childEnv, "WORLD_SESSION="+token)
 	}
+	if mode == "headless" && start.Agent == "agy" {
+		childEnv = append(childEnv, "WORLD_AGY_MCP_READY="+filepath.Join(dir, ".agents", ".world-mcp-ready"))
+	}
 	redacted := redactLaunchArgv(argv, prompt, token)
 	argv[0] = host
 	runCtx, runCancel := context.WithTimeout(context.Background(), wall+time.Minute)
