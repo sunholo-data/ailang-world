@@ -35,7 +35,7 @@ const Binary = "ailang-worldd"
 var (
 	OperatorWords = []string{"why", "episode", "approve"}
 	NeverWords    = []string{"approver", "session", "service", "serve", "setup"}
-	OtherWords    = []string{"commit", "outcome", "call", "demo", "doctor", "head", "health", "help", "hosts", "log", "object",
+	OtherWords    = []string{"commit", "outcome", "call", "demo", "doctor", "head", "health", "help", "hosts", "log", "mcp-stdio", "object",
 		"preset", "profile", "provenance", "registry", "surface-index", "tools", "version", "whoami"}
 )
 

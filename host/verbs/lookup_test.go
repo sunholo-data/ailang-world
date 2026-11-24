@@ -64,10 +64,10 @@ func TestLookup(t *testing.T) {
 			t.Errorf("Lookup(%q) = %+v, %q", c.line, v, rest)
 		}
 	}
-	// The shadow set: every one of the 27 words is a verb, bare and with an argument; never an address.
+	// The shadow set: every one of the 28 words is a verb, bare and with an argument; never an address.
 	all := append(append(append([]string{}, OperatorWords...), NeverWords...), OtherWords...)
-	if len(all) != 27 {
-		t.Fatalf("shadow set has %d words, want 27", len(all))
+	if len(all) != 28 {
+		t.Fatalf("shadow set has %d words, want 28", len(all))
 	}
 	for _, w := range all {
 		for _, argv := range [][]string{{w}, {w, "zzz"}, {Binary, w, "zzz"}} {
