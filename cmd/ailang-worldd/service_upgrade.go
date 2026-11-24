@@ -24,6 +24,7 @@ type serviceUpgrade struct {
 }
 
 type serviceVersion struct {
+	CredentialsSchema  int                  `json:"credentials_schema,omitempty"`
 	Build              daemon.BuildIdentity `json:"build"`
 	Platform           string               `json:"platform"`
 	ToolRelease        string               `json:"tool_release"`
@@ -237,12 +238,21 @@ func (e serviceEnv) upgrade(candidate string, pause bool, out, errOut io.Writer)
 		}
 		// A healthy but unrecorded swap is not a successful upgrade.
 	}
-	return e.rollbackUpgrade(r, from, to, candidate, errOut)
+	// A candidate can migrate before reporting health, or while health is
+	// unavailable. The highest schema it could open is the safe comparison.
+	// Older version outputs omitted this field and cannot prove compatibility.
+	return e.rollbackUpgrade(r, from, to, candidate, installed.CredentialsSchema, v.CredentialsSchema, errOut)
 }
 
-func (e serviceEnv) rollbackUpgrade(r serviceRecord, from, to, candidate string, w io.Writer) int {
+func (e serviceEnv) rollbackUpgrade(r serviceRecord, from, to, candidate string, previousSchema, candidateSchema int, w io.Writer) int {
 	tail := serviceTail(e.paths.Log, 20)
 	failed, previous := e.paths.Binary+".failed", e.paths.Binary+".prev"
+	previousInfo, previousErr := os.Lstat(previous)
+	if candidateSchema <= 0 || previousSchema < candidateSchema || previousErr != nil ||
+		!previousInfo.Mode().IsRegular() || serviceFileHash(previous) != from {
+		return serviceMessage(w, "automatic rollback refused", "the previous binary cannot be verified compatible with the possibly migrated credentials store; both builds were retained",
+			"inspect service status and recover at the terminal with a verified schema-compatible binary", 3)
+	}
 	restored := false
 	e.note(failed)
 	err := os.Remove(failed)

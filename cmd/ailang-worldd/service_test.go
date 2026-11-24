@@ -80,7 +80,7 @@ func newServiceFixture(t *testing.T) *serviceFixture {
 	f.ctl = &fakeServiceController{binary: f.env.paths.Binary}
 	f.env.controller = f.ctl
 	f.env.probe = func(binary, home string) ([]byte, error) {
-		return json.Marshal(serviceVersion{Build: daemon.BuildIdentity{ExecutableSHA256: serviceFileHash(binary)}, Platform: runtime.GOOS + "/" + runtime.GOARCH, ToolRelease: toolRelease(), InterpreterRelease: interpreterRelease})
+		return json.Marshal(serviceVersion{Build: daemon.BuildIdentity{ExecutableSHA256: serviceFileHash(binary)}, Platform: runtime.GOOS + "/" + runtime.GOARCH, ToolRelease: toolRelease(), InterpreterRelease: interpreterRelease, CredentialsSchema: store.CredentialsSchemaVersion})
 	}
 	f.env.observe = func(p string) { f.writes = append(f.writes, p) }
 	f.env.client = &http.Client{Transport: serviceTransport(func(r *http.Request) (*http.Response, error) {
@@ -399,7 +399,8 @@ func TestHomeVersionJSON(t *testing.T) {
 			t.Fatalf("%s = %s, want %s", key, got, want)
 		}
 	}
-	if v.Build.ExecutableSHA256 == "" || v.Build.GoVersion == "" {
+	expectedSchema, _ := json.Marshal(store.CredentialsSchemaVersion)
+	if v.Build.ExecutableSHA256 == "" || v.Build.GoVersion == "" || !bytes.Equal(raw["credentials_schema"], expectedSchema) {
 		t.Fatal(b.String())
 	}
 }

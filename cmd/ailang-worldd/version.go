@@ -8,6 +8,7 @@ import (
 	"runtime"
 
 	"github.com/sunholo-data/ailang-world/host/daemon"
+	"github.com/sunholo-data/ailang-world/host/store"
 )
 
 const versionHelp = "usage: ailang-worldd version [--json]\n"
@@ -23,12 +24,11 @@ func runVersion(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprint(stderr, versionHelp)
 		return exitUsage
 	}
-	v := struct {
-		Build              daemon.BuildIdentity `json:"build"`
-		Platform           string               `json:"platform"`
-		ToolRelease        string               `json:"tool_release"`
-		InterpreterRelease string               `json:"interpreter_release"`
-	}{daemon.CurrentBuild(), runtime.GOOS + "/" + runtime.GOARCH, toolRelease(), interpreterRelease}
+	v := serviceVersion{
+		Build: daemon.CurrentBuild(), Platform: runtime.GOOS + "/" + runtime.GOARCH,
+		ToolRelease: toolRelease(), InterpreterRelease: interpreterRelease,
+		CredentialsSchema: store.CredentialsSchemaVersion,
+	}
 	if *asJSON {
 		if err := json.NewEncoder(stdout).Encode(v); err != nil {
 			return exitUsage
