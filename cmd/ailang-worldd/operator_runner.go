@@ -99,6 +99,32 @@ func (e serviceEnv) runnerTick(c runnerConfig, h *store.OperatorHeartbeat) error
 	})
 }
 
+func runnerHeartbeat(path string, budget time.Duration) (store.OperatorHeartbeat, error) {
+	ctx, cancel := budgetContext(budget)
+	defer cancel()
+	return store.ReadOperatorHeartbeat(ctx, path)
+}
+
+func (e serviceEnv) waitForRunner(c runnerConfig, previous int64) bool {
+	deadline := e.runnerNow().Add(e.wait)
+	for {
+		remaining := deadline.Sub(e.runnerNow())
+		if remaining <= 0 {
+			return false
+		}
+		h, err := runnerHeartbeat(c.Credentials, min(remaining, time.Second))
+		now := e.runnerNow()
+		if !now.Before(deadline) {
+			return false
+		}
+		if err == nil && h.Owner.Generation > previous &&
+			h.Available(c.Executables[e.paths.Binary], "start", now.Unix()) {
+			return true
+		}
+		e.runnerSleep(min(deadline.Sub(now), 100*time.Millisecond))
+	}
+}
+
 func (e serviceEnv) runnerStatus(w io.Writer) error {
 	c, _, err := e.installedRunner()
 	if err != nil {

@@ -19,21 +19,27 @@ import (
 )
 
 type fakeServiceController struct {
-	loaded       bool
-	runner       bool
-	boots, stops int
-	key          string
-	bootErr      error
-	kicks        int
-	binary       string
-	running      string
-	onKick       func() error
+	loaded         bool
+	runner         bool
+	boots, stops   int
+	key            string
+	bootErr        error
+	kicks          int
+	binary         string
+	running        string
+	onKick         func() error
+	onBoot         func() error
+	stopErr        error
+	runnerPrintErr error
 }
 
 func (f *fakeServiceController) Bootstrap(domain, plist string) error {
 	f.boots++
 	f.loaded = true
 	f.running = serviceFileHash(f.binary)
+	if f.bootErr == nil && f.onBoot != nil {
+		return f.onBoot()
+	}
 	return f.bootErr
 }
 func (f *fakeServiceController) Kickstart(domain, label string) error {
@@ -47,10 +53,15 @@ func (f *fakeServiceController) Kickstart(domain, label string) error {
 }
 func (f *fakeServiceController) Bootout(domain, label string) error {
 	f.stops++
-	f.loaded = false
-	return nil
+	if f.stopErr == nil || errors.Is(f.stopErr, errServiceNotLoaded) {
+		f.loaded = false
+	}
+	return f.stopErr
 }
 func (f *fakeServiceController) Print(domain, label string) (string, error) {
+	if label == runnerLabel && f.runnerPrintErr != nil {
+		return "", f.runnerPrintErr
+	}
 	if !f.loaded || (label == runnerLabel && !f.runner) {
 		return "not loaded", errServiceNotLoaded
 	}

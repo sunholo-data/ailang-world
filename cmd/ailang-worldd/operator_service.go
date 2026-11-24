@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/verbs"
@@ -431,13 +432,25 @@ func (e serviceEnv) changeRunner(verb string, args []string) error {
 	_, err = e.controller.Print(e.domain, runnerLabel)
 	switch {
 	case errors.Is(err, errServiceNotLoaded):
+		previous, err := runnerHeartbeat(c.Credentials, time.Second)
+		if err != nil && !errors.Is(err, store.ErrOperatorRunner) {
+			return errors.New("cannot determine the previous runner lease")
+		}
 		if err := e.controller.Bootstrap(e.domain, p.Plist); err != nil {
 			_ = e.controller.Bootout(e.domain, runnerLabel)
 
 			return errors.New("could not bootstrap the companion")
 		}
+		if !e.waitForRunner(c, previous.Owner.Generation) {
+			if err := e.controller.Bootout(e.domain, runnerLabel); err != nil && !errors.Is(err, errServiceNotLoaded) {
+				return errors.New("runner readiness timed out and companion could not be stopped")
+			}
+			return errors.New("runner readiness timed out; companion stopped")
+		}
 	case err != nil:
 		return errors.New("could not inspect the companion")
+	case !e.waitForRunner(c, 0):
+		return errors.New("loaded companion heartbeat unavailable")
 	}
 	return nil
 }

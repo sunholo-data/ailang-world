@@ -108,6 +108,20 @@ func ReadOperatorEpisodeOwner(ctx context.Context, path, episode string) (string
 	return id, err
 }
 
+// ReadOperatorHeartbeat bounds opening and reading by the same context.
+func ReadOperatorHeartbeat(ctx context.Context, path string) (OperatorHeartbeat, error) {
+	if err := requireDeadline(ctx); err != nil {
+		return OperatorHeartbeat{}, err
+	}
+	db, version, err := openOperatorReadOnly(ctx, path)
+	if err != nil {
+		return OperatorHeartbeat{}, err
+	}
+	defer db.Close()
+	c := Credentials{db: db, version: version, display: path}
+	return c.OperatorHeartbeat(ctx)
+}
+
 func openOperatorReadOnly(ctx context.Context, path string) (*sql.DB, int, error) {
 	canonical, _, err := resolveDSN(path)
 	if err != nil {

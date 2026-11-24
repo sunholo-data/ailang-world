@@ -55,6 +55,14 @@ func operatorService(t *testing.T) *operatorServiceFixture {
 		health:    daemon.HealthResponse{Status: "ok", DBPath: world, CredentialsDB: creds, Build: daemon.BuildIdentity{ExecutableSHA256: r.BinarySHA256}}}
 	f.ctl = &fakeServiceController{runner: true, binary: r.Binary}
 	f.env.controller = f.ctl
+	f.env.wait = 250 * time.Millisecond
+	clock := time.Unix(f.env.terminal.now(), 0)
+	f.env.runnerNow = func() time.Time { return clock }
+	f.env.runnerSleep = func(d time.Duration) { clock = clock.Add(d) }
+	f.ctl.onBoot = func() error {
+		o.heartbeat.Owner.Generation = 0
+		return f.env.runnerTick(o.config, &o.heartbeat)
+	}
 	f.env.client = &http.Client{Transport: serviceTransport(func(req *http.Request) (*http.Response, error) {
 		if req.URL.Host != r.Address || req.URL.Path != "/v1/health" {
 			t.Fatalf("unexpected health URL: %s", req.URL)
@@ -275,6 +283,7 @@ func TestOperatorServiceStartup(t *testing.T) {
 	if c, s := f.command("start"); c != 0 || !f.ctl.loaded {
 		t.Fatalf("%d %s", c, s)
 	}
+	t.Run("gate", testOperatorServiceStartupGate)
 }
 
 func TestOperatorServiceUpgradePairFence(t *testing.T) {
@@ -283,6 +292,7 @@ func TestOperatorServiceUpgradePairFence(t *testing.T) {
 		{"plist-only", "operator runner is still installed"},
 		{"registered", "cannot verify that the operator runner is unloaded"},
 		{"locked", "operator runner lifecycle is busy or unavailable"},
+		{"inspect error", "cannot verify that the operator runner is unloaded"},
 	} {
 		t.Run(tc.arm, func(t *testing.T) {
 			f := operatorService(t)
@@ -304,6 +314,9 @@ func TestOperatorServiceUpgradePairFence(t *testing.T) {
 			}
 			f.env.controller = f.homeJob
 			f.homeJob.runner = tc.arm == "registered"
+			if tc.arm == "inspect error" {
+				f.homeJob.runnerPrintErr = errors.New("supervisor query failed")
+			}
 			f.homeJob.onKick = func() error {
 				f.health.Build.ExecutableSHA256 = f.homeJob.running
 				return nil
@@ -414,7 +427,11 @@ func TestOperatorServiceWriteScope(t *testing.T) {
 	if info, err := os.Stat(filepath.Dir(p.Log)); err != nil || info.Mode().Perm() != 0700 {
 		t.Fatalf("spool: %v %v", info, err)
 	}
-	for _, verb := range []string{"start", "stop", "uninstall"} {
+	if c, s := f.command("start"); c != 0 {
+		t.Fatalf("start: %d %s", c, s)
+	}
+	want[4] = serviceFileHash(f.config.Credentials)
+	for _, verb := range []string{"stop", "uninstall"} {
 		if c, s := f.command(verb); c != 0 {
 			t.Fatalf("%s: %d %s", verb, c, s)
 		}

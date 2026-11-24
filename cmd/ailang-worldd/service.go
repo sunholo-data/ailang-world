@@ -82,13 +82,15 @@ type serviceEnv struct {
 	observe     func(string)
 	probe       func(string, string) ([]byte, error)
 	runnerLogin func() (int, string, error)
+	runnerNow   func() time.Time
+	runnerSleep func(time.Duration)
 }
 
 func realServiceEnv() serviceEnv {
 	home, _ := os.UserHomeDir()
 	return serviceEnv{paths: homeServicePaths(home), controller: systemServiceController{}, terminal: realSessionEnv(),
 		goos: runtime.GOOS, domain: "gui/" + strconv.Itoa(os.Getuid()), label: worldServiceLabel,
-		wait: 30 * time.Second, client: &http.Client{Timeout: time.Second, CheckRedirect: func(*http.Request, []*http.Request) error {
+		wait: 30 * time.Second, runnerNow: time.Now, runnerSleep: time.Sleep, client: &http.Client{Timeout: time.Second, CheckRedirect: func(*http.Request, []*http.Request) error {
 			return errors.New("health redirects are refused")
 		}}}
 }
