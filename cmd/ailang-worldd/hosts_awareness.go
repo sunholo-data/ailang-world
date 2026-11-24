@@ -34,7 +34,7 @@ var hostsWorlddPath = func() string {
 
 func hostDirectories(dir string) []string {
 	out := []string{dir}
-	for _, rel := range []string{"bin", "codex", "state", "claude-plugin", "claude-plugin/.claude-plugin", "claude-plugin/hooks", "pi"} {
+	for _, rel := range []string{"bin", "codex", "state", "claude-plugin", "claude-plugin/.claude-plugin", "claude-plugin/hooks", "pi", "agy-plugin", "agy-plugin/rules"} {
 		out = append(out, filepath.Join(dir, rel))
 	}
 	return out
@@ -142,7 +142,7 @@ if [ -n "$user_command" ]; then
 fi
 printf '\n'
 `)
-	for _, host := range []string{"claude", "codex", "pi"} {
+	for _, host := range []string{"claude", "codex", "pi", "agy"} {
 		name := "bin/" + host + "-world"
 		script := string(files[name])
 		switch host {
@@ -160,9 +160,43 @@ printf '\n'
 				options += " -e " + shellQuote(piHook)
 			}
 			script = strings.Replace(script, "exec pi ", "exec pi"+options+" ", 1)
+		case "agy":
+			// Mount World's agy plugin in an empty launch directory (or when requested),
+			// never overwriting an existing project's .agents configuration.
+			mount := "if [ -z \"$(ls -A . 2>/dev/null)\" ] || [ \"${WORLD_AGY_MOUNT_PLUGIN:-}\" = 1 ]; then\n" +
+				"  mkdir -p .agents\n" +
+				"  printf '%s\\n' " + shellQuote(`{"entries":[{"path":`+jsString(dir)+`,"include_only":["agy-plugin"]}]}`) + " >.agents/plugins.json\n" +
+				"fi\n"
+			script = strings.Replace(script, "exec agy ", mount+"exec agy ", 1)
 		}
 		files[name] = []byte(script)
 	}
+	putJSON("agy-plugin/plugin.json", map[string]string{"name": "ailang-world"})
+	putJSON("agy-plugin/mcp_config.json", map[string]any{"mcpServers": map[string]any{"world": map[string]any{
+		"command": worldd,
+		"args":    []string{"mcp-stdio", "--addr", addr},
+	}}})
+	files["agy-plugin/rules/AGENTS.md"] = []byte("You are working inside AILANG World (confined).\n" + worldToolMap + worldBoundary + "\n")
+	agySessionStart := filepath.Join(dir, "bin", "agy-world-session-start")
+	agyGate := filepath.Join(dir, "bin", "agy-world-gate")
+	putJSON("agy-plugin/hooks.json", map[string]any{"ailang-world": map[string]any{
+		"SessionStart": []any{map[string]any{"type": "command", "command": shellQuote(agySessionStart), "timeout": 10}},
+		"PreToolUse": []any{map[string]any{"matcher": "*", "hooks": []any{
+			map[string]any{"type": "command", "command": shellQuote(agyGate), "timeout": 10},
+		}}},
+	}})
+	files["bin/agy-world-session-start"] = []byte("#!/bin/sh\ncontext=$(" + shellQuote(context) + ")\njq -nc --arg msg \"$context\" '{injectSteps:[{systemMessage:{systemMessage:$msg}}]}'\n")
+	files["bin/agy-world-gate"] = []byte(`#!/bin/sh
+name=$(jq -r '.toolCall.name // ""' 2>/dev/null)
+case "$name" in
+  mcp_world_*|mcp__world__*|world_*|mcp:world/*|update_steps)
+    printf '{"decision":"allow"}\n'
+    ;;
+  *)
+    printf '{"decision":"deny","reason":"Confined to AILANG World: use World MCP tools (ailang-read, ailang-edit, ailang-write, workspace-exec)."}\n'
+    ;;
+esac
+`)
 	files["pi/world-status.ts"] = []byte(`import { execFile } from "node:child_process";
 export default function (pi: any) {
   pi.on("session_start", async (_event: any, ctx: any) => {

@@ -114,6 +114,8 @@ func pythonJSONString(s string) string {
 
 const claudeLaunchIsolation = `{"enabledPlugins":{"cc-plugin-agents-md@builtin":false,"cc-plugin-telemetry@builtin":false,"cc-plugin-plugin-authoring@builtin":false},"autoMemoryEnabled":false}`
 
+const agyLaunchSettings = `{"permissions":{"allow":["mcp(world/*)"],"deny":["command(*)","write_file(*)","edit_file(*)","read_file(*)","read_url(*)","execute_url(*)"]}}`
+
 func launchArgv(agent, model, prompt, dir, mcp, addr, context, budget string, grants []broker.Capability) []string {
 	if agent == "claude" {
 		a := []string{"claude", "-p", prompt}
@@ -128,6 +130,13 @@ func launchArgv(agent, model, prompt, dir, mcp, addr, context, budget string, gr
 		}
 		if context != "" {
 			a = append(a, "--append-system-prompt", context)
+		}
+		return a
+	}
+	if agent == "agy" {
+		a := []string{"agy", "-p", prompt, "--output-format", "stream-json", "--disable-slash-commands", "--settings", agyLaunchSettings}
+		if model != "" {
+			a = append(a, "--model", model)
 		}
 		return a
 	}

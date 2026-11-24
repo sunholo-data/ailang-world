@@ -151,10 +151,10 @@ func (r MintRequest) Validate() error {
 	if (r.Profile.Project == "") != (r.Profile.Digest == "") {
 		return fmt.Errorf("%w: profile needs both project and digest", ErrHalfProfile)
 	}
-	if r.Agent != "claude" && r.Agent != "codex" {
+	if r.Agent != "claude" && r.Agent != "codex" && r.Agent != "agy" {
 		return fmt.Errorf("%w: agent %q", ErrAgent, r.Agent)
 	}
-	if (r.Agent == "claude" && r.MCPConfig == "") || (r.Agent == "codex" && r.MCPConfig != "") {
+	if (r.Agent == "claude" && r.MCPConfig == "") || ((r.Agent == "codex" || r.Agent == "agy") && r.MCPConfig != "") {
 		return fmt.Errorf("%w: mcp_config is %q for agent %q", ErrMCPConfig, r.MCPConfig, r.Agent)
 	}
 	return nil

@@ -112,8 +112,8 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 		}
 		overrides = append(overrides, f.Name)
 	})
-	if agent != "claude" && agent != "codex" {
-		return fail(errors.New("agent must be claude or codex"))
+	if agent != "claude" && agent != "codex" && agent != "agy" {
+		return fail(errors.New("agent must be claude, codex or agy"))
 	}
 	if launching {
 		if _, err := launchBinary(agent); err != nil {
