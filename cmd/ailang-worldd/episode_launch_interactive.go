@@ -256,6 +256,40 @@ func codexTranscriptPath(hostsDir, dir string, start, end time.Time) hostTranscr
 	return hostTranscript{reason: fmt.Sprintf("%d rollouts under %s for %s", len(matches), root, dir)}
 }
 
+func agyTranscriptPath(dir string, env []string) hostTranscript {
+	metaPath := filepath.Join(dir, ".agents", ".world-session-meta.json")
+	if !regularHostTranscript(metaPath) {
+		return hostTranscript{reason: "no " + metaPath}
+	}
+	b, err := os.ReadFile(metaPath)
+	if err != nil {
+		return hostTranscript{reason: fmt.Sprintf("read %s: %v", metaPath, err)}
+	}
+	var meta struct {
+		ConversationID string `json:"conversationId"`
+		TranscriptPath string `json:"transcriptPath"`
+	}
+	if err := json.Unmarshal(b, &meta); err != nil || meta.ConversationID == "" || meta.TranscriptPath == "" {
+		return hostTranscript{reason: "invalid agy session metadata in " + metaPath}
+	}
+	home := launchEnvValue(env, "HOME")
+	if home == "" {
+		home, _ = os.UserHomeDir()
+	}
+	brainRoot := filepath.Join(home, ".gemini", "antigravity-cli", "brain")
+	cleanPath := filepath.Clean(meta.TranscriptPath)
+	if !filepath.IsAbs(cleanPath) || !launchInside(cleanPath, filepath.Clean(brainRoot)) {
+		return hostTranscript{reason: "transcript path outside agy brain root: " + cleanPath}
+	}
+	if !regularHostTranscript(cleanPath) {
+		if _, err := os.Lstat(cleanPath); err == nil {
+			return hostTranscript{reason: "not a regular file: " + cleanPath}
+		}
+		return hostTranscript{reason: "no " + cleanPath}
+	}
+	return hostTranscript{path: cleanPath, id: meta.ConversationID}
+}
+
 func copyHostTranscript(source hostTranscript, stage *os.File) error {
 	if !regularHostTranscript(source.path) {
 		return fmt.Errorf("host transcript is not a regular file: %s", source.path)

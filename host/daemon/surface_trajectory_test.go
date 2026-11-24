@@ -179,3 +179,46 @@ func TestSurfaceTrajectoryHarnessCapsProjectedEvents(t *testing.T) {
 		t.Fatalf("harness count %d, available %v, truncated %v", len(got.Events), got.Available, got.Truncated)
 	}
 }
+
+func TestSurfaceTrajectoryAgyTranscriptProjectsWithoutPrivateContent(t *testing.T) {
+	cfg, _ := followFixture(t, 1)
+	d := newFollowDaemon(t, cfg)
+	injectFollow(d, followSnapshotFor(t, "trajectory-agy", []string{"repo0"}, nil))
+	start := overlayStart("wa1", d.follow.config.Repos[0].Repo, time.Now())
+	start.Agent = "agy"
+	const secret = "agy-private-thinking-secret"
+	const raw = `{"step_index":0,"type":"USER_INPUT","created_at":"2026-11-24T10:00:00Z","content":"` + secret + `"}
+{"step_index":1,"type":"PLANNER_RESPONSE","created_at":"2026-11-24T10:00:01Z","thinking":"` + secret + `","tool_calls":[{"name":"call_mcp_tool"}]}
+{"step_index":2,"type":"GENERIC","created_at":"2026-11-24T10:00:02Z","content":"tool output"}
+{"step_index":3,"type":"PLANNER_RESPONSE","created_at":"2026-11-24T10:00:03Z","content":"done"}
+`
+	digest := hashref.SumSHA256([]byte(raw))
+	start.Launches = []store.EpisodeLaunch{{Mode: "interactive", TranscriptState: "kept",
+		Transcript: "/must/not/leak/transcript.jsonl", TranscriptSHA256: digest.String()}}
+	mintSurfaceTaskStart(t, d, start)
+	dir := filepath.Join(filepath.Dir(d.cfg.DBPath), "sessions")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "wa1.transcript.jsonl"), []byte(raw), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	q := url.Values{"brane": {"repo0:brane:shared"}, "at": {"repo0:episode:wa1"}}
+	res := followRequest(d, "/surface/trajectory.json?"+q.Encode())
+	if res.Code != 200 || strings.Contains(res.Body.String(), secret) || strings.Contains(res.Body.String(), "/must/") {
+		t.Fatalf("status %d or unsanitized body: %s", res.Code, res.Body.String())
+	}
+	var out surfaceTrajectory
+	if err := json.Unmarshal(res.Body.Bytes(), &out); err != nil {
+		t.Fatal(err)
+	}
+	wantKinds := []string{"turn-started", "tool-called", "tool-result", "assistant-event"}
+	if !out.Harness.Available || len(out.Harness.Events) != len(wantKinds) {
+		t.Fatalf("unexpected agy trajectory: %+v", out.Harness)
+	}
+	for i, want := range wantKinds {
+		if out.Harness.Events[i].Kind != want || out.Harness.Events[i].At == "" {
+			t.Errorf("event[%d] = %+v, want kind %q with timestamp", i, out.Harness.Events[i], want)
+		}
+	}
+}

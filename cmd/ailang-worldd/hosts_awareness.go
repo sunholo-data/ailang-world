@@ -191,7 +191,7 @@ printf '\n'
 			map[string]any{"type": "command", "command": shellQuote(agyGate), "timeout": 10},
 		}}},
 	}})
-	files["bin/agy-world-session-start"] = []byte("#!/bin/sh\ncontext=$(" + shellQuote(context) + ")\njq -nc --arg msg \"$context\" '{injectSteps:[{systemMessage:{systemMessage:$msg}}]}'\n")
+	files["bin/agy-world-session-start"] = []byte("#!/bin/sh\numask 077\npayload=$(cat)\ncwd=$(printf '%s' \"$payload\" | jq -r '.cwd // \"\"' 2>/dev/null)\ntpath=$(printf '%s' \"$payload\" | jq -r '.transcriptPath // \"\"' 2>/dev/null)\ncid=$(printf '%s' \"$payload\" | jq -r '.conversationId // \"\"' 2>/dev/null)\nif [ -n \"$cwd\" ] && [ -d \"$cwd/.agents\" ] && [ ! -L \"$cwd/.agents\" ] && [ -n \"$tpath\" ] && [ -n \"$cid\" ]; then\n  jq -nc --arg conversationId \"$cid\" --arg transcriptPath \"$tpath\" '{conversationId:$conversationId,transcriptPath:$transcriptPath}' >\"$cwd/.agents/.world-session-meta.json\" 2>/dev/null || :\nfi\ncontext=$(" + shellQuote(context) + ")\njq -nc --arg msg \"$context\" '{injectSteps:[{systemMessage:{systemMessage:$msg}}]}'\n")
 	files["bin/agy-world-gate"] = []byte(`#!/bin/sh
 payload=$(cat)
 name=$(printf '%s' "$payload" | jq -r '.toolCall.name // ""' 2>/dev/null)

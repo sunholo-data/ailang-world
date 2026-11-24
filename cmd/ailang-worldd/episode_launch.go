@@ -550,7 +550,8 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 			source = codexTranscriptPath(hostsDir, dir, startTime, endTime)
 			sessionID = source.id
 		case "agy":
-			source = hostTranscript{reason: "interactive agy transcript capture not yet mapped"}
+			source = agyTranscriptPath(dir, childEnv)
+			sessionID = source.id
 		}
 		state = "missing"
 		if source.path != "" {
