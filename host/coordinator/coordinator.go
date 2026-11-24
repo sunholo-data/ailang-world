@@ -67,6 +67,11 @@ type Coordinator struct {
 	// enforced by the store's flock (V42), so an in-process lock serialises
 	// every spend-seeding reader against every effect-intent writer.
 	episodeLocks sync.Map
+	// commitMu serialises the read-head → plan → AppendIntent → Commit tail of
+	// effectful invocations across concurrent episodes so two episodes running
+	// on the same daemon do not collide on SelectedHead after their effects
+	// have already run.
+	commitMu sync.Mutex
 	// planBudget and finishBudget are the per-phase caps. New sets them to
 	// PlanPhaseBudget/FinishPhaseBudget; only in-package tests scale them
 	// (row 153 P1: no exported knob, so no production surface).
@@ -378,21 +383,30 @@ func (c *Coordinator) loadSourceAndWorld(ctx context.Context, d transitionreg.De
 	if sum, err := hashref.Sum(d.TransitionFn.Algo(), src.Payload); err != nil || sum != d.TransitionFn {
 		return store.Object{}, store.World{}, &SourceError{Kind: "corrupt"}
 	}
+	world, err := c.loadWorld(ctx)
+	if err != nil {
+		return store.Object{}, store.World{}, err
+	}
+	return src, world, nil
+}
+
+// loadWorld reads the selected world head (R7).
+func (c *Coordinator) loadWorld(ctx context.Context) (store.World, error) {
 	head, ok, err := c.cfg.Store.SelectedHead(ctx) // R7
 	if err != nil {
-		return store.Object{}, store.World{}, fmt.Errorf("coordinator: read head: %w", err)
+		return store.World{}, fmt.Errorf("coordinator: read head: %w", err)
 	}
 	if !ok {
-		return store.Object{}, store.World{}, &WorldAbsentError{}
+		return store.World{}, &WorldAbsentError{}
 	}
 	world, ok, err := c.cfg.Store.GetWorld(ctx, head)
 	if err != nil {
-		return store.Object{}, store.World{}, fmt.Errorf("coordinator: read world: %w", err)
+		return store.World{}, fmt.Errorf("coordinator: read world: %w", err)
 	}
 	if !ok { // a head naming no world row is store damage, not "no world"
-		return store.Object{}, store.World{}, fmt.Errorf("coordinator: selected head %s has no world row", head)
+		return store.World{}, fmt.Errorf("coordinator: selected head %s has no world row", head)
 	}
-	return src, world, nil
+	return world, nil
 }
 
 // appendAndCommit is the durable tail (R13–R16) shared by every invocation:

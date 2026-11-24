@@ -391,6 +391,62 @@ func TestEffectConflictUnrecorded(t *testing.T) {
 	r.assertHead(w.Ref)
 }
 
+// Two concurrent episodes running effectful calls on the same Coordinator
+// observe the same initial head during their handlers, yet both must commit
+// sequentially without a CAS conflict or any orphaned uncommitted intent.
+func TestConcurrentEffectfulEpisodesDoNotConflict(t *testing.T) {
+	r, w := fxRig(t, false)
+	bothInHandler := make(chan struct{})
+	var entered atomic.Int32
+	h := &probe{delay: func(ctx context.Context) error {
+		if entered.Add(1) == 2 {
+			close(bothInHandler)
+		}
+		select {
+		case <-bothInHandler:
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}}
+	c := r.fxCoordinator(r.st, &phaseRunner{plan: readPlan(false)}, broker.Registry{fxRead: h})
+
+	type outcome struct {
+		res Result
+		err error
+	}
+	ch := make(chan outcome, 2)
+	for _, ep := range []string{"ep-concurrent-a", "ep-concurrent-b"} {
+		ep := ep
+		go func() {
+			call := r.call("fx", "t1", fxGrants(5))
+			call.EpisodeID = ep
+			res, err := c.Dispatch(boundedTestContext(t), call)
+			ch <- outcome{res: res, err: err}
+		}()
+	}
+	var got [2]outcome
+	for i := range got {
+		got[i] = <-ch
+		if got[i].err != nil {
+			t.Fatalf("concurrent dispatch %d failed: %v", i, got[i].err)
+		}
+	}
+	if got[0].res.EntryIndex == got[1].res.EntryIndex {
+		t.Fatalf("both calls committed at the same EntryIndex %d", got[0].res.EntryIndex)
+	}
+	if got[0].res.EntryIndex != w.Revision+1 && got[1].res.EntryIndex != w.Revision+1 {
+		t.Fatalf("expected one commit at revision %d, got %d and %d", w.Revision+1, got[0].res.EntryIndex, got[1].res.EntryIndex)
+	}
+	pending, err := r.st.PendingIntents(boundedTestContext(t), 10, 0)
+	if err != nil {
+		t.Fatalf("PendingIntents: %v", err)
+	}
+	if len(pending) != 0 {
+		t.Fatalf("pending intents = %d, want 0 (no orphaned conflict intents)", len(pending))
+	}
+}
+
 // AC2.5 (MUT-NO-HEADROOM): a handler that sleeps past its cap is recorded
 // failed, and the call still commits inside the caller's deadline.
 func TestEffectHandlerCapCommitsFailed(t *testing.T) {
