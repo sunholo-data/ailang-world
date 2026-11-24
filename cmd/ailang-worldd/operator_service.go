@@ -70,12 +70,12 @@ func runnerPath(home, path string, uid int, directory bool, private os.FileMode)
 		if !ok || (int(owner.Uid) != uid && (within(home, p) || p == home || owner.Uid != 0)) {
 			return errors.New("path ownership mismatch")
 		}
-		if st.Mode().Perm()&0022 != 0 {
-			return errors.New("path writable by others")
-		}
 		wantDir := p != path || directory
 		if wantDir && !st.IsDir() || !wantDir && !st.Mode().IsRegular() {
 			return errors.New("path has wrong type or is a symlink")
+		}
+		if st.Mode().Perm()&0022 != 0 {
+			return errors.New("path writable by others")
 		}
 		if p == path && private != 0 && st.Mode().Perm() != private {
 			return errors.New("path permissions are not private")

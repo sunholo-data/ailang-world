@@ -171,6 +171,35 @@ func TestOperatorServiceOwnership(t *testing.T) {
 	}
 }
 
+func TestRunnerPathRefusalClasses(t *testing.T) {
+	home, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	uid := os.Getuid()
+	if err := runnerPath(home, home, uid, true, 0); err != nil {
+		t.Fatalf("valid target directory refused: %v", err)
+	}
+	link := filepath.Join(home, "linked-dir")
+	if err := os.Symlink(home, link); err != nil {
+		t.Fatal(err)
+	}
+	if err := runnerPath(home, link, uid, true, 0); err == nil || err.Error() != "path has wrong type or is a symlink" {
+		t.Errorf("symlink refusal = %v, want wrong type", err)
+	}
+
+	file := filepath.Join(home, "writable-file")
+	if err := os.WriteFile(file, nil, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(file, 0666); err != nil {
+		t.Fatal(err)
+	}
+	if err := runnerPath(home, file, uid, false, 0); err == nil || err.Error() != "path writable by others" {
+		t.Errorf("regular file refusal = %v, want writable by others", err)
+	}
+}
+
 func TestOperatorServiceConfig(t *testing.T) {
 	f := operatorService(t)
 	var b bytes.Buffer
