@@ -114,7 +114,7 @@ func pythonJSONString(s string) string {
 
 const claudeLaunchIsolation = `{"enabledPlugins":{"cc-plugin-agents-md@builtin":false,"cc-plugin-telemetry@builtin":false,"cc-plugin-plugin-authoring@builtin":false},"autoMemoryEnabled":false}`
 
-const agyLaunchSettings = `{"permissions":{"allow":["mcp(world/*)"],"deny":["command(*)","write_file(*)","edit_file(*)","read_file(*)","read_url(*)","execute_url(*)"]}}`
+const agyLaunchSettings = `{"permissions":{"allow":["mcp(ailang-world_world/*)","mcp(world/*)"],"deny":["command(*)","write_file(*)","edit_file(*)","read_file(*)","read_url(*)","execute_url(*)"]}}`
 
 func agyLaunchSettingsFor(dir string) string {
 	if dir == "" {
@@ -123,7 +123,7 @@ func agyLaunchSettingsFor(dir string) string {
 	b, err := json.Marshal(map[string]any{
 		"trustedWorkspaces": []string{dir},
 		"permissions": map[string]any{
-			"allow": []string{"mcp(world/*)"},
+			"allow": []string{"mcp(ailang-world_world/*)", "mcp(world/*)"},
 			"deny":  []string{"command(*)", "write_file(*)", "edit_file(*)", "read_file(*)", "read_url(*)", "execute_url(*)"},
 		},
 	})

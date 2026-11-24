@@ -94,32 +94,36 @@ func TestAgyHostInitLauncherGateAndStage(t *testing.T) {
 	if code, out := hostsInitTest(t, dir); code != 0 {
 		t.Fatalf("%d: %s", code, out)
 	}
-	// Verify agy-world-gate allows World MCP tools and denies built-ins.
+	// Verify agy-world-gate allows World MCP tools (including call_mcp_tool targeting
+	// ailang-world_world / world) and denies built-ins and non-World MCP servers.
 	gate := filepath.Join(dir, "bin", "agy-world-gate")
 	for _, tc := range []struct {
-		tool string
-		want string
+		label   string
+		payload string
+		want    string
 	}{
-		{"mcp_world_ailang_read", `"decision":"allow"`},
-		{"mcp__world__workspace-exec", `"decision":"allow"`},
-		{"update_steps", `"decision":"allow"`},
-		{"run_command", `"decision":"deny"`},
-		{"write_file", `"decision":"deny"`},
-		{"read_file", `"decision":"deny"`},
+		{"call_mcp_tool world plugin", `{"toolCall":{"name":"call_mcp_tool","args":{"ServerName":"ailang-world_world","ToolName":"ailang-read"}}}`, `"decision":"allow"`},
+		{"call_mcp_tool world", `{"toolCall":{"name":"call_mcp_tool","args":{"ServerName":"world","ToolName":"ailang-read"}}}`, `"decision":"allow"`},
+		{"call_mcp_tool foreign server", `{"toolCall":{"name":"call_mcp_tool","args":{"ServerName":"other-mcp","ToolName":"shell"}}}`, `"decision":"deny"`},
+		{"mcp_world_ailang_read", `{"toolCall":{"name":"mcp_world_ailang_read"}}`, `"decision":"allow"`},
+		{"mcp__world__workspace-exec", `{"toolCall":{"name":"mcp__world__workspace-exec"}}`, `"decision":"allow"`},
+		{"update_steps", `{"toolCall":{"name":"update_steps"}}`, `"decision":"allow"`},
+		{"run_command", `{"toolCall":{"name":"run_command"}}`, `"decision":"deny"`},
+		{"write_file", `{"toolCall":{"name":"write_file"}}`, `"decision":"deny"`},
+		{"read_file", `{"toolCall":{"name":"read_file"}}`, `"decision":"deny"`},
 	} {
 		wrapper := filepath.Join(t.TempDir(), "run-gate")
-		payload := `{"toolCall":{"name":"` + tc.tool + `"}}`
-		if err := os.WriteFile(wrapper, []byte("#!/bin/sh\nprintf '%s' "+shellQuote(payload)+" | "+shellQuote(gate)+"\n"), 0o700); err != nil {
+		if err := os.WriteFile(wrapper, []byte("#!/bin/sh\nprintf '%s' "+shellQuote(tc.payload)+" | "+shellQuote(gate)+"\n"), 0o700); err != nil {
 			t.Fatal(err)
 		}
 		ctx, cancel := budgetContext(5 * time.Second)
 		out, err := toolprobe.OutputEnv(ctx, wrapper, "", []string{"PATH=" + os.Getenv("PATH")})
 		cancel()
 		if err != nil {
-			t.Fatalf("%s: %v", tc.tool, err)
+			t.Fatalf("%s: %v", tc.label, err)
 		}
 		if !strings.Contains(string(out), tc.want) {
-			t.Errorf("gate(%s) = %s, want %s", tc.tool, out, tc.want)
+			t.Errorf("gate(%s) = %s, want %s", tc.label, out, tc.want)
 		}
 	}
 	// Verify agy-world mounts .agents/plugins.json when started in an empty dir.
@@ -144,9 +148,9 @@ func TestAgyHostInitLauncherGateAndStage(t *testing.T) {
 	if !strings.Contains(string(out), `"trustedWorkspaces"`) || !strings.Contains(string(out), `"mcp(world/*)"`) || !strings.Contains(string(out), "--model\ngemini") {
 		t.Fatalf("unexpected agy-world argv: %s", out)
 	}
-	pluginsJSON, err := os.ReadFile(filepath.Join(emptyDir, ".agents", "plugins.json"))
-	if err != nil || !strings.Contains(string(pluginsJSON), `"agy-plugin"`) {
-		t.Fatalf("plugins.json: %v %s", err, pluginsJSON)
+	pluginMCP, err := os.ReadFile(filepath.Join(emptyDir, ".agents", "plugins", "ailang-world", "mcp_config.json"))
+	if err != nil || !strings.Contains(string(pluginMCP), `"mcp-stdio"`) {
+		t.Fatalf("staged plugin mcp_config.json: %v %s", err, pluginMCP)
 	}
 	// Verify headless staging writes no secrets and valid plugin files.
 	headlessDir := filepath.Join(root, "headless-launch")

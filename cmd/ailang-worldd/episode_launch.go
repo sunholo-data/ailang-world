@@ -484,9 +484,11 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 	} else {
 		mcp = ""
 	}
-	if mode == "headless" && start.Agent == "agy" {
-		if err := stageAgyHeadlessPlugin(dir, p.Addr, contextText); err != nil {
-			return fail(err)
+	if start.Agent == "agy" {
+		if mode == "headless" {
+			if err := stageAgyHeadlessPlugin(dir, p.Addr, contextText); err != nil {
+				return fail(err)
+			}
 		}
 		defer os.RemoveAll(filepath.Join(dir, ".agents"))
 	}

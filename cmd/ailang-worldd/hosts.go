@@ -59,7 +59,7 @@ func hostFiles(dir, addr string, adapters ...string) map[string][]byte {
 	putJSON("pi-world-mcp.json", map[string]any{"mcpServers": map[string]any{"world": map[string]any{
 		"url": mcp, "auth": "bearer", "bearerTokenEnv": "WORLD_SESSION", "lifecycle": "eager"}}})
 	putJSON("agy-world.settings.json", map[string]any{"permissions": map[string]any{
-		"allow": []string{"mcp(world/*)"},
+		"allow": []string{"mcp(ailang-world_world/*)", "mcp(world/*)"},
 		"deny":  []string{"command(*)", "write_file(*)", "edit_file(*)", "read_file(*)", "read_url(*)", "execute_url(*)"},
 	}})
 	commands := map[string]string{
