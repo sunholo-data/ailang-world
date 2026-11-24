@@ -47,9 +47,14 @@ func TestMCPStdioBridgeSSEJSONSessionAndRedaction(t *testing.T) {
 		`{"jsonrpc":"2.0","id":3,"method":"tools/call"}`,
 	}, "\n") + "\n"
 
+	readyFile := filepath.Join(t.TempDir(), ".world-mcp-ready")
+	t.Setenv("WORLD_AGY_MCP_READY", readyFile)
 	var stdout bytes.Buffer
 	if err := bridgeMCPStdio(strings.NewReader(input), &stdout, client, "http://127.0.0.1:7644/mcp/", token); err != nil {
 		t.Fatalf("bridgeMCPStdio: %v", err)
+	}
+	if _, err := os.Stat(readyFile); err != nil {
+		t.Fatalf("WORLD_AGY_MCP_READY was not written after tools/list: %v", err)
 	}
 	if strings.Contains(stdout.String(), token) {
 		t.Fatalf("token leaked in output: %s", stdout.String())
