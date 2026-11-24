@@ -1,17 +1,15 @@
-# World mission dashboard — iteration 427 (2026-11-23)
+# World mission dashboard — iteration 428 (2026-11-24)
 
-- **Done this fire:** nothing built. Eighteenth rule-(d) block report in a row (410–427). No row can move without an answer from Mark.
-  - Row 243 V4 sprints 3–12 all need **D-WORLD-119** (9–11 also need **D-WORLD-120**).
-  - Release rows 150 and 151 are not routable. 150 waits on your attended A1. 151 waits on row 188's N2d and N4a; N2d's `/surface/blob` route is still absent.
-- **Nothing changed since 426:** the only commits are 426's record. The driver's input snapshot is the same at 04:16, 08:16, 12:17, 16:16 and 20:16.
-- **Idle record now runs:** this fire is undegraded, so Gate 5 records the idle fingerprint. The next fire on unchanged inputs exits before any probe; an answer to D-WORLD-119/120, a directive, an inbox message, a red check or a non-record commit wakes it. A record older than 24 h forces a full fire.
-- **DECISIONS FOR MARK (open, unchanged since iteration 406):**
-  - **D-WORLD-119:** may the app start and launch a confined episode through the runner after a key approval? Recommendation A. Every remaining V4 sprint waits on it.
-  - **D-WORLD-120:** may finish run without a terminal (key for local prep, then key for the exact PR)? Recommendation A. Sprints 9–11 also wait on it.
-- **Capacity:** codex is back under its ration (`used=39.0% allowed=42.9%`, `state=ok`, 3.9 points of headroom against the 2.0-point margin). Every role resolved to its configured lane. Fleet ticket row 263 stays at 14 (no occurrence this fire).
-- **Next loop work:** with D-WORLD-119 = A or B, **V4 sprint 3** (schema 10 for operator actions, receipts and CAS). Unanswered, idle fires.
-- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Goal unmoved.
-- **Open PR #617** is attended UI work (untouched since 2026-11-19), not the loop's; left alone.
-- **Routing this fire:** controller `claude:claude-opus-5-5`; designer/planner/executor not needed; record judge Agent `sonnet` (generator ≠ judge). Metered $0.
-- **Dev CI:** 3/3 green at `ef3d1476`.
+- **Done this fire:** row 243 **V4 sprint 3 LANDED** (PR #643, merge `e83d1717`, judge **PASS 86**, 0 blocking).
+  - Credentials **schema 10**: `operator_actions`, `operator_runner_state` and `operator_action_steps`, including the finish shape so S9–S11 need no second one-way bump.
+  - The durable operator-action store law: admission with dedup, a 16-action pending cap, one active action per episode, strict expiry, prune with tombstones; confirm CAS consuming the key-verified proof; claim CAS.
+  - Unregistered: no route, no production caller, no `.ail`. 1,396 changed lines (cap 1,400).
+- **Why it moved:** your attended rulings **D-WORLD-119 = A** and **D-WORLD-120 = A** (`82f05004`) ended the 18-fire rule-(d) run. Acknowledged; nothing re-asked.
+- **Before your next `service upgrade` of the home World service:** schema 10 is one-way. If that upgrade's health check fails after the migration, the automatic rollback restores the v9 binary, which refuses the v10 store — the service stops (data intact, candidate kept as `.failed`). Back up `credentials.db` first. S4's upgrade seam owns a v10-safe rollback.
+- **DECISIONS FOR MARK:** none open (ledger 107 rows, 0 OPEN).
+- **Next loop work:** **V4 sprint 4** — runner install, isolated process/status/upgrade seam, heartbeat (E1/E3), carrying S3b (132-line step-receipt slice), the rollback fix and judge-428's test gaps. Then S5–S12 in design §8 order.
+- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Goal unmoved; row 243 serves D-WORLD-94.
+- **Routing this fire:** controller `claude:claude-opus-5-5`; planner and executor `codex:gpt-6.2-sol` (479k / 80k tok); judge Agent `sonnet` (137k tok), cross-vendor. Metered $0. Codex window `used=41.0% allowed=56.3%`.
+- **Open PRs:** #617 attended UI work (not the loop's; left alone). Attended agy PRs #641/#642 merged mid-sprint, no shared files.
+- **Dev CI:** 3/3 green at merge `e83d1717`.
 - **Bookkeeping thread:** #635 (next rotation Monday 2026-11-30 07:00 local).
