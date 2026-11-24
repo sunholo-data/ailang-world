@@ -402,7 +402,7 @@ func checkBindingFits(credPath, episode string, p *broker.ExecProfile) error {
 // provisionEpisode is steps 2-7: the fence, the y/N, the credentials lock,
 // the worktree, the mint and the rollback, in that order, for both session
 // new and episode start. It returns the exit code.
-func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) int {
+func provisionEpisode(r *mintRequest, held *os.File, stdout, stderr io.Writer, env sessionEnv) int {
 	prefix := "ailang-worldd " + r.verb + ": "
 	// 2. The mint fence, unchanged, before any side effect, unless a verified signature approved
 	// this request (row 201 A1b §2.8: Signed is set only by approve, from ApproveBySignature).
@@ -416,6 +416,17 @@ func provisionEpisode(r *mintRequest, stdout, stderr io.Writer, env sessionEnv) 
 			return exitUsage
 		}
 		defer func() { _ = term.Close() }()
+	}
+
+	// Start and resume already hold the lock. Session new and mint-request
+	// approval acquire it here, after the terminal fence and before the prompt.
+	if held == nil {
+		lock, err := terminalEpisodeLock(r.credPath, r.episode, nil)
+		if err != nil {
+			fmt.Fprintf(stderr, "%srefusing: %v\n", prefix, err)
+			return exitUsage
+		}
+		defer lock.Close()
 	}
 
 	// 3. y/N naming the worktree, every grant and the exec profile binding.
@@ -646,7 +657,7 @@ func runSessionNew(args []string, stdout, stderr io.Writer, env sessionEnv) int 
 	if req.prof != nil && !hasGrant(grants, broker.EffectWorkspaceExec) {
 		fmt.Fprintf(stderr, "ailang-worldd session new: note: --profile %s binds workspace-exec, but no Workspace.Exec grant is minted\n", req.prof.Project)
 	}
-	return provisionEpisode(req, stdout, stderr, env)
+	return provisionEpisode(req, nil, stdout, stderr, env)
 }
 
 // hasGrant reports whether grants hold effect at any scope.

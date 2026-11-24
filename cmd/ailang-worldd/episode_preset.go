@@ -309,7 +309,7 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 		}
 		return nil
 	}
-	if code := provisionEpisode(req, out, errOut, env); code != exitOK {
+	if code := provisionEpisode(req, effectLock, out, errOut, env); code != exitOK {
 		return code
 	}
 	if launching {
