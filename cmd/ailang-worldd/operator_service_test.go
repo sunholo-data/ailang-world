@@ -153,6 +153,16 @@ func TestOperatorServiceOwnership(t *testing.T) {
 			}
 			f.config.ToolDirs = []string{p}
 		}},
+		{"other writable", "writable by others", func(t *testing.T, f *operatorServiceFixture) {
+			p := filepath.Join(f.home, "other-writable")
+			if err := os.Mkdir(p, 0700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Chmod(p, 0702); err != nil {
+				t.Fatal(err)
+			}
+			f.config.ToolDirs = []string{p}
+		}},
 		{"symlink tool", "wrong type", func(t *testing.T, f *operatorServiceFixture) {
 			p := filepath.Join(f.home, "linked")
 			if err := os.Symlink(f.env.paths.Binary, p); err != nil {
@@ -240,13 +250,16 @@ func TestOperatorServicePair(t *testing.T) {
 		{"credentials", "credentials store mismatch", func(f *operatorServiceFixture) { f.health.CredentialsDB = f.config.World }},
 		{"build", "restart pending", func(f *operatorServiceFixture) { f.health.Build.ExecutableSHA256 = "sha256:other" }},
 		{"loopback", "numeric loopback", func(f *operatorServiceFixture) { f.config.Address = "192.0.2.1:7644" }},
+		{"named loopback", "numeric loopback", func(f *operatorServiceFixture) { f.config.Address = "localhost:7644" }},
+		{"distinct", "distinct canonical files", func(f *operatorServiceFixture) { f.config.Credentials = f.config.World }},
+		{"health status", "daemon unavailable", func(f *operatorServiceFixture) { f.health.Status = "starting" }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			f := operatorService(t)
 			f.mustInstall(t)
 			f.writes = nil
 			tc.change(f)
-			if tc.name == "loopback" {
+			if tc.name == "loopback" || tc.name == "named loopback" || tc.name == "distinct" {
 				c, msg := f.install(t)
 				f.refused(t, tc.want, c, msg)
 				return
