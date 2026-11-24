@@ -279,6 +279,11 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 	if err := checkPresetDaemon(h, req, p, p.Daemon.Addr); err != nil {
 		return fail(err)
 	}
+	effectLock, err := terminalEpisodeLock(req.credPath, ep, nil)
+	if err != nil {
+		return fail(err)
+	}
+	defer effectLock.Close()
 	req.afterToken = func(token string) error {
 		if taskRecord != nil {
 			f, err := os.OpenFile(taskCopy, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
@@ -308,7 +313,7 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 		return code
 	}
 	if launching {
-		return launchEpisode(ep, name, dir, headless, out, errOut, fs.Lookup("hosts-dir").Value.String())
+		return launchEpisode(ep, name, dir, headless, out, errOut, effectLock, fs.Lookup("hosts-dir").Value.String())
 	}
 	taskPath := ""
 	if taskRecord != nil {

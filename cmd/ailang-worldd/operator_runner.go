@@ -19,7 +19,11 @@ import (
 const runnerPoll = 2 * time.Second
 
 func runnerKernelLock(path string) (*os.File, error) {
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0600)
+	return openRunnerLock(path, os.O_CREATE)
+}
+
+func openRunnerLock(path string, flags int) (*os.File, error) {
+	f, err := os.OpenFile(path, flags|os.O_RDWR|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0600)
 	if err != nil {
 		return nil, err
 	}

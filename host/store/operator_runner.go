@@ -4,9 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"net/url"
+	"os"
 )
 
 const OperatorRunnerProtocol = 1
+const operatorSchemaVersion = 10
 
 type OperatorHeartbeat struct {
 	Owner                       OperatorOwner
@@ -77,4 +80,58 @@ func (c *Credentials) CancelUnstartedOperatorAction(ctx context.Context, id stri
 		AND owner IS NULL AND expires_at>? AND NOT EXISTS (SELECT 1 FROM operator_action_steps
 			WHERE action_id=? AND kind<>'operation')`, now, id, now, id)
 	return operatorChangedOne(result, err)
+}
+
+// ReadOperatorEpisodeOwner reads exclusion independently of lease liveness.
+// The caller holds the episode lock or has just received a non-waiting
+// contention error. A missing store or older schema has no operator rows.
+func ReadOperatorEpisodeOwner(ctx context.Context, path, episode string) (string, error) {
+	if err := requireDeadline(ctx); err != nil {
+		return "", err
+	}
+	db, version, err := openOperatorReadOnly(ctx, path)
+	if errors.Is(err, os.ErrNotExist) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	defer db.Close()
+	if version < operatorSchemaVersion {
+		return "", nil
+	}
+	var id string
+	err = db.QueryRowContext(ctx, `SELECT id FROM operator_actions WHERE episode_id=? AND owner IS NOT NULL`, episode).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	return id, err
+}
+
+func openOperatorReadOnly(ctx context.Context, path string) (*sql.DB, int, error) {
+	canonical, _, err := resolveDSN(path)
+	if err != nil {
+		return nil, 0, err
+	}
+	st, err := os.Stat(canonical)
+	if err != nil {
+		return nil, 0, err
+	}
+	if !st.Mode().IsRegular() {
+		return nil, 0, errors.New("expected a regular operator credentials file")
+	}
+	db, err := sql.Open("sqlite", readOnlyDSN(canonical, url.Values{"_pragma": {"busy_timeout(0)"}}))
+	if err != nil {
+		return nil, 0, err
+	}
+	var version int
+	if err := db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil {
+		db.Close()
+		return nil, 0, err
+	}
+	if version > credentialsSchemaVersion {
+		db.Close()
+		return nil, 0, &CredentialsSchemaError{Path: canonical, Detail: "unsupported operator credentials schema"}
+	}
+	return db, version, nil
 }
