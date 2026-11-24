@@ -8,7 +8,7 @@ All readings taken by the controller (`claude:claude-opus-5-5`) on the Studio, o
 
 ## Plan
 - Planner round trip (`ctl_roundtrip.sh`, loop M1 M2 M3, `docs` added to the comparison per plan F9): every `diff -r` of `cmd`, `host`, `docs` against `st-M*` rc 0 on a fresh `git archive f074dd49`. The two `.orig` files under `design_docs/verification/world-iter362/` are committed at base.
-- Planner mutant ledger (`plan-scratch/mutants/ledger.txt`, 176 rows): K|NM|NM 60, S|NM|NM 73, K|K|K 32, S|S|S 8, S|S|E 3, control 1 — i.e. 73 named-test survivors whose whole-package verdict the sandbox could not take.
+- Planner mutant ledger (`plan-scratch/mutants/ledger.txt`, 177 rows incl. repeated ids; the plan text reports 156 scoped / 80 named kills): K|NM|NM 60, S|NM|NM 73, K|K|K 32, S|S|S 8, S|S|E 3, control 1 — i.e. 73 named-test survivors whose whole-package verdict the sandbox could not take.
 
 ## Commits (numstat `git diff -M --numstat f074dd49 HEAD -- cmd host docs app`)
 M1 `36bc27c1` 114 · M2 `af1a36bb` 1,232 · M3 `22473391` 1,400 · M4 `976f4028` 1,510 (test-only, judge r1 B1) · M5 `4fc443cd` 1,539 (Linux symlink order fix + test). Each committed by `commit_ms.sh` from the executor's snapshot after gofmt/build/vet/acceptance; snapshot M3 vs planner `st-M3` 18/18 `cmp`-equal; committed tree vs snapshot 0 differ.
@@ -22,5 +22,5 @@ At `22473391`, with the supervisor check in `service_upgrade.go` and `|| verb ==
 
 ## PR #651 CI
 - `976f4028`: build+test and race FAIL — `TestOperatorServiceOwnership/symlink_tool` on ubuntu-24.04 in both (`refusal "wrong type": 1 runner refused`; Linux lstat reports a symlink as 0777, so the writable-by-others check fired first). Race also: `host/broker` `TestWorktreeSnapshotRefusesAConfiguredFilter`, `host/daemon` 8 m timeout (dev's own run at `212a87ba` hit the identical timeout).
-- `4fc443cd` attempt 1: symlink arm fixed; remaining reds all in untouched packages — `scripts/marketingcheck` `TestMarketingCaptureFakeChromeSixShots/single-pass` 120 s timeout; `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision` (also red on branch `world/row228-search-h1` today; identical hashes on both sides of its message); `host/daemon` 8 m timeout. `gh run rerun --failed` once → attempt 2 **3/3 success**.
+- `4fc443cd` attempt 1: symlink arm fixed; remaining reds on tests the sprint did not touch — `scripts/marketingcheck` `TestMarketingCaptureFakeChromeSixShots/single-pass` 120 s timeout; `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision` (untouched test file in the sprint's own `cmd/ailang-worldd`; also red on PR #650's CI, branch `world/row228-search-h1`, today; identical hashes on both sides of its message); `host/daemon` 8 m timeout. `gh run rerun --failed` once → attempt 2 **3/3 success**.
 - Merge `ee8ef1c0` (`--match-head-commit 4fc443cd`; `origin/dev` had moved to `af7a610c`, 0 files shared): CI **3/3 success**.

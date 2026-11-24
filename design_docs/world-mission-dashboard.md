@@ -11,5 +11,5 @@
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Goal unmoved; row 243 serves D-WORLD-94.
 - **Routing this fire:** controller `claude:claude-opus-5-5`; planner and executor `codex:gpt-6.2-sol` (511k / 53k+82k+67k tok over three rounds); judge Agent `sonnet` (three rounds), cross-vendor. Metered $0. Codex window at start `used=42.0% allowed=59.6%`.
 - **Open PRs:** #617 attended UI work (not the loop's; left alone). Attended #646–#649 merged during the sprint, no shared files.
-- **Dev CI:** 3/3 green at merge `ee8ef1c0`. Known flaky on Linux CI this week: `host/daemon` race timeout (also on dev `212a87ba`), `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision`, marketingcheck Chrome timeout.
+- **Dev CI:** 3/3 green at merge `ee8ef1c0`. Red elsewhere on Linux CI recently (1–2 sightings each, not yet a flake ledger): `host/daemon` race timeout (also on dev `212a87ba`), `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision`, marketingcheck Chrome timeout.
 - **Bookkeeping thread:** #635 (next rotation Monday 2026-11-30 07:00 local).
