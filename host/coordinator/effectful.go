@@ -284,7 +284,7 @@ func (c *Coordinator) dispatchEffectful(ctx context.Context, surface Surface, id
 	if missing := bound.Unhandled(); len(missing) != 0 {
 		return Result{}, &EffectsUnsupportedError{ID: d.ID, Effects: missing}
 	}
-	src, world, err := c.loadSourceAndWorld(ctx, d)
+	src, _, err := c.loadSourceAndWorld(ctx, d)
 	if err != nil {
 		return Result{}, err
 	}
@@ -304,8 +304,7 @@ func (c *Coordinator) dispatchEffectful(ctx context.Context, surface Surface, id
 		if err != nil {
 			return Result{}, err
 		}
-		p := planEffectInvocation(world, surface, id, episodeID, d, input, outBytes, pl.Canonical, nil, now)
-		return c.appendAndCommit(ctx, id, p, outBytes, outObj)
+		return c.commitEffectInvocation(ctx, surface, id, episodeID, d, input, outBytes, outObj, pl.Canonical, nil, now, nil)
 	}
 
 	hctx, cancelHandler := context.WithTimeout(ctx, handlerBudget(ctx))
@@ -347,17 +346,35 @@ func (c *Coordinator) dispatchEffectful(ctx context.Context, surface Surface, id
 		}
 		packet = &obj
 	}
-	p := planEffectInvocation(world, surface, id, episodeID, d, input, outBytes, pl.Canonical, records, now)
-	if packet != nil {
-		p = withPacket(p, *packet)
-	}
 	pctx, cancelPost := detached(ctx, PostEffectBudget)
 	defer cancelPost()
-	res, err := c.appendAndCommit(pctx, id, p, outBytes, outObj)
+	res, err := c.commitEffectInvocation(pctx, surface, id, episodeID, d, input, outBytes, outObj, pl.Canonical, records, now, packet)
 	if err != nil {
 		return unrecorded(err)
 	}
 	return res, nil
+}
+
+// commitEffectInvocation serialises the fresh-head read, intent append, and
+// CAS commit across concurrent episodes so an effectful call that ran alongside
+// another episode chains cleanly onto the current head instead of failing with
+// a stale-head conflict and leaving an uncommitted intent in the journal.
+func (c *Coordinator) commitEffectInvocation(
+	ctx context.Context, surface Surface, id, episodeID string,
+	d transitionreg.Descriptor, input, outBytes []byte, outObj map[string]any,
+	planCanonical []byte, records []hashref.HashRef, now int64, packet *store.Object,
+) (Result, error) {
+	c.commitMu.Lock()
+	defer c.commitMu.Unlock()
+	world, err := c.loadWorld(ctx)
+	if err != nil {
+		return Result{}, err
+	}
+	p := planEffectInvocation(world, surface, id, episodeID, d, input, outBytes, planCanonical, records, now)
+	if packet != nil {
+		p = withPacket(p, *packet)
+	}
+	return c.appendAndCommit(ctx, id, p, outBytes, outObj)
 }
 
 // ReplayBinderFor opens a replay binder over a committed invocation's effect
