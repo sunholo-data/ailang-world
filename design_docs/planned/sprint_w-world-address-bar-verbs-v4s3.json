@@ -1,0 +1,199 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s3",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1, iteration 406 quorum r2 3/3 PROCEED and audit PASS 81",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s3-sprint-plan.md",
+ "previous_sprint": "S2b, PR #611, merge 07b30a5e, judge PASS 92",
+ "base_commit": "92e1c44ebd8dbbdb2b962ef54aed0dd9a0bf2456",
+ "design_measured_at": "92e1c44e, plan section 1.2",
+ "queue_row": 243,
+ "iteration": 428,
+ "phase": "V4",
+ "sprint": "S3, credentials schema 10 and inert durable action state",
+ "sprint_number": "3",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter428-row243-v4s3",
+ "branch": "sprint/world-iter428-row243-v4s3",
+ "authority": [
+  "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004",
+  "D-WORLD-109=A, only test stores and test keys"
+ ],
+ "behaviour": "One-way credentials schema 10. Unregistered durable request/confirm/claim/prune store methods. No route or effect dispatch.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat 92e1c44e HEAD -- cmd host docs app",
+  "measured": 1396,
+  "unfiltered_product": 1396,
+  "margin": 4,
+  "fired": "S3b receipt APIs and restart proof",
+  "moved_out": {
+   "S3b": 132,
+   "S4": "actual terminal command vs live runner and daemon-status recheck"
+  }
+ },
+ "planner_decisions": {
+  "finish_shape": "Schema 10 includes finish action kind, awaiting-pr-confirmation, v3_id and finish effect step kinds. Section 1.4 F1",
+  "proof": "Sealed law proof via VerifiedOperatorAction, transactional enrollment and exact bytes binding. Section 1.3 S3-D3"
+ },
+ "judges": {
+  "package": "host/authority",
+  "file": "host/authority/judge_operator.go",
+  "api": "VerifiedOperatorAction.OperatorConfirmation and RecheckClaimedOperatorAction",
+  "proof_type": "VerifiedOperatorAction wraps the sealed SignedOperatorAction consumed by the store",
+  "approver_source": "Read-only enrolled key in the judges, with exact key and passkey metadata compared inside the store transaction",
+  "production_callers": "none"
+ },
+ "scope": [
+  "schema and parity",
+  "inert admission/dedup/expiry/prune",
+  "confirmation and claim CAS, scoped locks, claimed-row recheck",
+  "fd silence and exact approver identity"
+ ],
+ "executor_lane": "M1 M2 M3 via patch only in workspace-write; no Chrome",
+ "executor_form": "Appendix P unified diffs, \u00a72 awk and /usr/bin/patch -p1 -E; \u00a77 cumulative snapshots",
+ "estimate_loc": {
+  "design_raw": 890,
+  "design_calibrated": 1202,
+  "compiled_landed": 1396,
+  "parked": 132,
+  "production": 491,
+  "test": 905
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "schema 10 and parity",
+   "production": 101,
+   "test": 140,
+   "expected_cumulative_numstat": 241,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M1 fast"
+  },
+  {
+   "id": "M2",
+   "title": "inert admission and dedup/prune",
+   "production": 181,
+   "test": 316,
+   "expected_cumulative_numstat": 738,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M2 fast"
+  },
+  {
+   "id": "M3",
+   "title": "confirm/claim proof and fd silence",
+   "production": 209,
+   "test": 449,
+   "expected_cumulative_numstat": 1396,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "bash $T/accept.sh $W M3 fast"
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "19/0/19",
+  "M2": "21/0/21",
+  "M3": "28/0/28",
+  "format": "STATUS lines / DELETED lines / MANIFEST lines"
+ },
+ "design_premises_found_false": [
+  "\u00a71.4 F1\u2013F11"
+ ],
+ "existing_tests_edited": [
+  "cmd/ailang-worldd/approve_await_refusals_test.go",
+  "cmd/ailang-worldd/approve_passkey_refusals_test.go",
+  "cmd/ailang-worldd/approve_passkey_test.go",
+  "cmd/ailang-worldd/approve_sig_test.go",
+  "cmd/ailang-worldd/approver_label_test.go",
+  "cmd/ailang-worldd/approver_passkey_test.go",
+  "cmd/ailang-worldd/approver_rig_test.go",
+  "cmd/ailang-worldd/episode_finish_surface_test.go",
+  "host/authority/judge_operator_silent_test.go",
+  "host/authority/judge_operator_test.go",
+  "host/authority/judge_test.go",
+  "host/daemon/surface_approve_rig_test.go",
+  "host/store/approvers_test.go",
+  "host/store/credentials_test.go",
+  "host/store/mint_requests_test.go",
+  "host/store/verb_requests_test.go"
+ ],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [
+  "host/store/credentials.go",
+  "host/approval/operator_signed.go",
+  "host/authority/judge_operator.go",
+  "cmd/ailang-worldd/episode_preset.go",
+  "cmd/ailang-worldd/session_new.go"
+ ],
+ "files_outside_design_section_7": [
+  "cmd/ailang-worldd/session_new.go | v9 compatibility floor"
+ ],
+ "not_touched": [
+  ".ail",
+  "host/daemon",
+  "host/surfacepage/app/app.js",
+  "surfaceCSP",
+  "scripts",
+  "tools/launchd",
+  "skills",
+  "packages",
+  "plugins",
+  "integrations",
+  "cmd/world-publish",
+  "open PR collision surface"
+ ],
+ "judge409_notes": {
+  "a": "dup2 fd 1/2 and builtin println control",
+  "b": "exact storable identity and claimed-row recheck with fixture keys"
+ },
+ "mutants": {
+  "total": 138,
+  "killed": 129,
+  "named_equivalents": 9,
+  "survivors": 0,
+  "nm": 0,
+  "pending": 0,
+  "unmeasured_in_sandbox": 0,
+  "equivalents": {
+   "CONFIRM-SQL-ID": "A valid signature digest contains the action id, so distinct valid rows cannot match this digest. The mandatory read-by-id and affected-row check remain.",
+   "CONFIRM-SQL-STATE": "The same transaction already refused non-requested state. The production statements between read and write only touch enrollment and counter rows. The CAS check retains a second fence.",
+   "CLAIM-PRE-OWNER": "The v10 CHECK makes a non-NULL owner invalid on a confirmed row. The SQL owner predicate still refuses a malformed owned row.",
+   "CLAIM-SQL-ID": "A valid signature digest uniquely identifies the signed action id. The read-by-id, digest check and affected-row fence remain.",
+   "CLAIM-SQL-STATE": "The same transaction previously read and required confirmed. No statement writes the action between read and update.",
+   "CLAIM-SQL-GEN": "The exact phase generation was read and compared in the same transaction before the update.",
+   "CLAIM-SQL-OWNER": "The same transaction required an empty owner before the update. The schema also requires NULL on confirmed rows.",
+   "CLAIM-SQL-EXPIRY-CMP": "The precheck rejects now at or after expiry with the same injected time in the same transaction. The SQL comparison stays strict.",
+   "CLAIM-SQL-DIGEST": "The same transaction already compared the exact digest. No write can change that row between its own read and update."
+  },
+  "native_whole_package": {
+   "S": 28
+  },
+  "base_control": "BASE-LOG-IN-JUDGE-NOFAIL survived named and whole host/authority",
+  "verdict_source": "Named behavioral test and its whole package, plus the modified source package if different"
+ },
+ "mutant_ledger": "$HOME/.ailang/state/world-iter428/plan-scratch/mutants/ledger.txt",
+ "race_added_seconds": {
+  "host/store": -3.319,
+  "host/authority": 2.284,
+  "host/approval": -0.015,
+  "cmd/ailang-worldd": 0.489,
+  "host/daemon": 1.117,
+  "note": "Whole race was sandbox-uninformative in cmd/ailang-worldd and host/daemon. Socket-free legacy fixture and inventory selectors measured for those two. CI per-package timeout 8m."
+ },
+ "gates_script": "$HOME/.ailang/state/world-iter428/gates.sh, byte-equal to section 6",
+ "controller_decisions_requested": [
+  "Attended compatible v10 recovery plan before live upgrade; current automatic rollback can stop service",
+  "Route S3b receipt gates before runner effect activation"
+ ],
+ "verification": {
+  "base_gates": "\u00a71.1",
+  "final_gates": "\u00a71.5 and \u00a76",
+  "accept": "\u00a73",
+  "roundtrip": "Extracted from the plan with \u00a72 awk and applied to a fresh archive. M1, M2, M3 and S3b full-tree diff -r all empty. No patch rejects or backups under cmd or host. Snapshot manifests verified (M1 19, M2 21, M3 28 files, zero deletions).",
+  "snapshot_rehearsal": "\u00a77",
+  "pinned": "$HOME/.pinned-ailang/ailang"
+ }
+}

@@ -238,7 +238,7 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 		}
 		version := ro.Version()
 		_ = ro.Close()
-		if version < store.CredentialsSchemaVersion {
+		if version < store.CredentialsBindingWriteVersion {
 			return fail(&store.UnboundCredentialsStoreError{Path: req.credPath})
 		}
 	}

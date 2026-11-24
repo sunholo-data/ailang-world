@@ -250,7 +250,7 @@ func TestPutFinishVerbRequestRefusals(t *testing.T) {
 	if got := putFinishVerbRequest(creds, row, sfT0); got != "cannot store request vr-00000000000000f1: "+store.ErrTooManyPendingVerbRequests.Error() {
 		t.Fatalf("cap: %q", got)
 	}
-	credSQL(t, creds, `DROP TABLE verb_requests`, `PRAGMA user_version = 8`)
+	credSQL(t, creds, `DROP TABLE IF EXISTS operator_action_steps; DROP TABLE IF EXISTS operator_actions; DROP TABLE IF EXISTS operator_runner_state; DROP TABLE verb_requests`, `PRAGMA user_version = 8`)
 	if got := putFinishVerbRequest(creds, row, sfT0); !strings.Contains(got, "verb requests need schema 9") || !strings.Contains(got, "restart `ailang-worldd serve`") {
 		t.Fatalf("v8: %q", got)
 	}

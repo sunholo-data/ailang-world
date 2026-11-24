@@ -173,6 +173,7 @@ func TestOperatorJudgeReadsTheStore(t *testing.T) {
 
 // TestOperatorRunnerRechecks: the runner trusts no row digest, stored approver or daemon status.
 func TestOperatorRunnerRechecks(t *testing.T) {
+	t.Run("claimed store row", testOperatorClaimedRecheck)
 	in, ssh, pk := ojIn(t)
 	moved := `UPDATE webauthn_credentials SET sign_count = 2 WHERE name = 'mark-mac'`
 	for by, c := range map[string]struct {

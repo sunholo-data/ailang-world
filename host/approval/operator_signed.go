@@ -7,6 +7,7 @@ package approval
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"time"
@@ -21,6 +22,8 @@ type SignedOperatorAction struct {
 	name, format      string
 	credentialID      []byte
 	signCount         uint32
+	confirmation      *OperatorApprovalBinding
+	artifactHash      [32]byte
 }
 
 // OperatorConfirmInput is what ConfirmOperatorAction judges: the stored action (strictly decoded), the
@@ -96,6 +99,10 @@ func operatorProof(d, challenge [32]byte, expiry, now int64, artifact []byte, fo
 		return nil, err
 	}
 	s := &SignedOperatorAction{ok: true, digest: d, challenge: challenge, expiry: expiry, name: ap.Name, format: format}
+	if confirm {
+		s.confirmation = &OperatorApprovalBinding{Name: ap.Name, Format: format, PublicKey: string(ap.Key.Blob)}
+		s.artifactHash = sha256.Sum256(artifact)
+	}
 	if format == FormatSSH {
 		sig, err := ParseSSHSIG(artifact)
 		if err != nil {
@@ -122,6 +129,10 @@ func operatorProof(d, challenge [32]byte, expiry, now int64, artifact []byte, fo
 	}
 	if !confirm && ad.SignCount > p.SignCount { // R2
 		return nil, fmt.Errorf("%w: enrolled %d, this assertion %d", ErrOperatorCounter, p.SignCount, ad.SignCount)
+	}
+	if confirm {
+		s.confirmation.PublicKey = string(p.Key.Canonical())
+		s.confirmation.RPID, s.confirmation.Origin, s.confirmation.BackupEligible = p.RPID, p.Origin, p.BackupEligible
 	}
 	s.credentialID, s.signCount = bytes.Clone(p.CredentialID), ad.SignCount
 	return s, nil
@@ -161,4 +172,20 @@ func (s *SignedOperatorAction) PasskeyUse() (credentialID []byte, signCount uint
 		return nil, 0, false
 	}
 	return bytes.Clone(s.credentialID), s.signCount, true
+}
+
+// OperatorApprovalBinding describes the verified enrollment snapshot for the
+// store's transactional comparison. It is obtained from a signed proof.
+type OperatorApprovalBinding struct {
+	Name, Format, PublicKey, RPID, Origin string
+	BackupEligible                        bool
+}
+
+// ConfirmationFor binds the proof to the exact artifact to be stored and
+// distinguishes initial confirmation from a runner recheck.
+func (s *SignedOperatorAction) ConfirmationFor(artifact []byte) (OperatorApprovalBinding, error) {
+	if s == nil || !s.ok || s.confirmation == nil || sha256.Sum256(artifact) != s.artifactHash {
+		return OperatorApprovalBinding{}, ErrNotVerified
+	}
+	return *s.confirmation, nil
 }

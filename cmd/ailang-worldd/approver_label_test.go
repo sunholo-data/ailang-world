@@ -82,7 +82,7 @@ func TestApproverListAndRevokeShowPasskeys(t *testing.T) {
 	db5, creds5 := approverStore(t)
 	seedApprover(t, creds5, "s", fixtureKeyOf(t, "ed25519.pub"), approveT0)
 	raw = rawCredentials(t, creds5)
-	for _, stmt := range []string{`DROP TABLE verb_requests`, `DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`} {
+	for _, stmt := range []string{`DROP TABLE IF EXISTS operator_action_steps; DROP TABLE IF EXISTS operator_actions; DROP TABLE IF EXISTS operator_runner_state; DROP TABLE verb_requests`, `DROP TABLE key_decisions`, `DROP TABLE surface_approvals`, `DROP TABLE webauthn_credentials`, `PRAGMA user_version = 5`} {
 		if _, err := raw.Exec(stmt); err != nil {
 			t.Fatal(err)
 		}

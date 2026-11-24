@@ -57,6 +57,9 @@ func jgExec(t *testing.T, path string, stmts ...string) {
 	}
 	defer func() { _ = db.Close() }()
 	for _, s := range stmts {
+		if strings.HasPrefix(s, "DROP TABLE verb_requests") {
+			s = `DROP TABLE IF EXISTS operator_action_steps; DROP TABLE IF EXISTS operator_actions; DROP TABLE IF EXISTS operator_runner_state; ` + s
+		}
 		if _, err := db.Exec(s); err != nil {
 			t.Fatal(err)
 		}
