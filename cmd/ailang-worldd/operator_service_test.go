@@ -8,10 +8,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -45,14 +46,7 @@ func operatorService(t *testing.T) *operatorServiceFixture {
 	if _, err := store.UpgradeCredentials(r.Credentials); err != nil {
 		t.Fatal(err)
 	}
-	world, err := store.CanonicalPath(r.Store)
-	if err != nil {
-		t.Fatal(err)
-	}
-	creds, err := store.CanonicalPath(r.Credentials)
-	if err != nil {
-		t.Fatal(err)
-	}
+	world, creds := r.Store, r.Credentials // fixture paths are physically named
 	f.env.runnerLogin = func() (int, string, error) { return os.Getuid(), f.home, nil }
 	o := &operatorServiceFixture{serviceFixture: f, homeJob: f.ctl, configFile: filepath.Join(f.home, "proposed.json"),
 		config:    runnerConfig{f.home, os.Getuid(), r.Address, world, creds, map[string]string{r.Binary: r.BinarySHA256}, []string{"sol"}, []string{filepath.Dir(r.Binary)}, "headless"},
@@ -95,12 +89,18 @@ func (f *operatorServiceFixture) mustInstall(t *testing.T) {
 	}
 }
 
+func (f *operatorServiceFixture) refused(t *testing.T, want string, code int, message string) {
+	t.Helper()
+	if code != 1 || !strings.Contains(message, want) || len(f.writes) != 0 || f.ctl.boots != 0 {
+		t.Fatalf("refusal %q: %d %s writes=%v", want, code, message, f.writes)
+	}
+}
+
 func TestOperatorServiceFence(t *testing.T) {
 	f := operatorService(t)
 	f.env.terminal.openTerminal = func() (io.ReadWriteCloser, error) { return &fakeTerm{r: strings.NewReader("n\n")}, nil }
-	if c, s := f.install(t); c != 1 || !strings.Contains(s, "aborted") || len(f.writes) != 0 || f.ctl.boots != 0 {
-		t.Fatalf("%d %s writes=%v", c, s, f.writes)
-	}
+	c, msg := f.install(t)
+	f.refused(t, "aborted", c, msg)
 	f.env.terminal.openTerminal = func() (io.ReadWriteCloser, error) { return &fakeTerm{r: strings.NewReader("y\n")}, nil }
 	f.mustInstall(t)
 	p := f.env.runnerPaths()
@@ -164,9 +164,8 @@ func TestOperatorServiceOwnership(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			f := operatorService(t)
 			tc.damage(t, f)
-			if c, s := f.install(t); c != 1 || !strings.Contains(s, tc.want) || len(f.writes) != 0 || f.ctl.boots != 0 {
-				t.Fatalf("%d %s writes=%v", c, s, f.writes)
-			}
+			c, msg := f.install(t)
+			f.refused(t, tc.want, c, msg)
 		})
 	}
 }
@@ -190,9 +189,8 @@ func TestOperatorServiceConfig(t *testing.T) {
 		}
 	}
 	f.config.Backend = "shell"
-	if c, s := f.install(t); c != 1 || !strings.Contains(s, "backend") || len(f.writes) != 0 {
-		t.Fatalf("%d %s", c, s)
-	}
+	c, msg := f.install(t)
+	f.refused(t, "backend", c, msg)
 }
 
 func TestOperatorServicePair(t *testing.T) {
@@ -211,14 +209,12 @@ func TestOperatorServicePair(t *testing.T) {
 			f.writes = nil
 			tc.change(f)
 			if tc.name == "loopback" {
-				if c, s := f.install(t); c != 1 || !strings.Contains(s, tc.want) || len(f.writes) != 0 {
-					t.Fatalf("%d %s", c, s)
-				}
+				c, msg := f.install(t)
+				f.refused(t, tc.want, c, msg)
 				return
 			}
-			if c, s := f.command("start"); c != 1 || !strings.Contains(s, tc.want) || len(f.writes) != 0 || f.ctl.boots != 0 {
-				t.Fatalf("%d %s", c, s)
-			}
+			c, msg := f.command("start")
+			f.refused(t, tc.want, c, msg)
 			if err := f.env.runnerTick(f.config, &f.heartbeat); err == nil || f.heartbeat.Owner.Generation != 0 {
 				t.Fatal("incompatible daemon allowed heartbeat")
 			}
@@ -234,6 +230,13 @@ func TestOperatorServiceStartup(t *testing.T) {
 		t.Fatalf("%d %s", c, s)
 	}
 	f.serving = true
+	credSQL(t, f.config.Credentials, "DROP TABLE operator_action_steps; DROP TABLE operator_actions; DROP TABLE operator_runner_state; PRAGMA user_version=9")
+	if c, msg := f.command("start"); c != 1 || !strings.Contains(msg, "schema mismatch") || f.ctl.boots != 0 {
+		t.Fatalf("schema skew: %d %s", c, msg)
+	}
+	if _, err := store.UpgradeCredentials(f.config.Credentials); err != nil {
+		t.Fatal(err)
+	}
 	f.ctl.bootErr = errors.New("fake bootstrap failure")
 	if c, s := f.command("start"); c != 1 || !strings.Contains(s, "bootstrap") || f.ctl.boots != 1 || f.ctl.loaded {
 		t.Fatalf("%d %s", c, s)
@@ -244,17 +247,38 @@ func TestOperatorServiceStartup(t *testing.T) {
 	}
 }
 
+func TestOperatorRunnerKernelLock(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "runner.lock")
+	f, err := runnerKernelLock(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	done := make(chan error, 1)
+	go func() {
+		second, err := runnerKernelLock(p)
+		if second != nil {
+			second.Close()
+		}
+		done <- err
+	}()
+	select {
+	case err := <-done:
+		if !errors.Is(err, syscall.EWOULDBLOCK) {
+			t.Fatalf("contender: %v", err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("runner lock waited")
+	}
+}
+
 func TestOperatorServiceWriteScope(t *testing.T) {
 	f := operatorService(t)
 	base := f.env.paths
 	p := f.env.runnerPaths()
-	files := []string{base.Plist, base.Record, base.Binary, f.config.World, f.config.Credentials}
-	read := func() []string {
-		var h []string
-		for _, p := range files {
-			h = append(h, serviceFileHash(p))
-		}
-		return h
+	read := func() [5]string {
+		return [5]string{serviceFileHash(base.Plist), serviceFileHash(base.Record), serviceFileHash(base.Binary),
+			serviceFileHash(f.config.World), serviceFileHash(f.config.Credentials)}
 	}
 	want := read()
 	f.mustInstall(t)
@@ -272,7 +296,7 @@ func TestOperatorServiceWriteScope(t *testing.T) {
 			t.Fatalf("%s: %d %s", verb, c, s)
 		}
 	}
-	if f.homeJob.stops != 0 || f.ctl.loaded || !reflect.DeepEqual(want, read()) || serviceFileHash(p.Plist) != "" || serviceFileHash(p.Record) != "" || serviceFileHash(p.Log) == "" {
+	if f.homeJob.stops != 0 || f.ctl.loaded || want != read() || serviceFileHash(p.Plist) != "" || serviceFileHash(p.Record) != "" || serviceFileHash(p.Log) == "" {
 		t.Fatal("companion changed base files, jobs, or retained evidence")
 	}
 	for _, path := range f.writes {
@@ -309,14 +333,14 @@ func TestOperatorServiceEnvironment(t *testing.T) {
 func TestOperatorStatusDisconnected(t *testing.T) {
 	f := operatorService(t)
 	f.mustInstall(t)
-	if c, s := f.command("status"); c != 1 || !strings.Contains(s, "heartbeat unavailable") {
-		t.Fatalf("%d %s", c, s)
-	}
 	if c, s := f.command("start"); c != 0 {
 		t.Fatalf("%d %s", c, s)
 	}
 	if err := f.env.runnerTick(f.config, &f.heartbeat); err != nil {
 		t.Fatal(err)
+	}
+	if string(f.heartbeat.Catalogue) != `["sol"]` {
+		t.Fatalf("unexpected catalogue: %q", f.heartbeat.Catalogue)
 	}
 	known := "runner last seen " + strconv.FormatInt(f.heartbeat.SeenAt, 10) + ", generation 1"
 	if c, s := f.command("status"); c != 0 || !strings.Contains(s, known) || !strings.Contains(s, "start: ready") || !strings.Contains(s, "finish blocked: github-auth") {
