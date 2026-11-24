@@ -138,7 +138,7 @@ func foldClassPattern(name string) string {
 // Ailang.CLI's allowlist is the policy summary's `cli` list (V40), read at
 // construction; Ailang.Run never reaches policy-tool (it refuses `run`, V16).
 var fixedToolOps = map[string][]string{
-	EffectWorkspaceRead:   {"read"},
+	EffectWorkspaceRead:   {"read", "search", "list"},
 	EffectWorkspaceWrite:  {"write", "edit"},
 	EffectWorkspaceDelete: {"delete"},
 	EffectAilangCheck:     {"ai_check"},
@@ -462,6 +462,12 @@ func (h *AilangToolHandler) Execute(ctx context.Context, req EffectRequest, payl
 		// caller sees why instead of an empty search.
 		refused, _ := json.Marshal(NoExamplesCorpusRefusal)
 		return h.stamp(map[string]json.RawMessage{"ok": json.RawMessage(`false`), "refused": refused})
+	}
+	if req.Effect == EffectWorkspaceRead && op == "search" {
+		return h.executeSearch(ctx, fields)
+	}
+	if req.Effect == EffectWorkspaceRead && op == "list" {
+		return h.executeList(ctx, fields)
 	}
 	readCap := defaultReadMaxChars
 	if req.Effect == EffectWorkspaceRead {

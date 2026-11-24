@@ -258,14 +258,15 @@ func TestAilangToolOpAllowlistIsFixedPerEffect(t *testing.T) {
 	// Row 191a: delete is Workspace.Delete's only op and no other effect's,
 	// Workspace.Write's included (deleting is its own authority).
 	allowed := map[string][]string{
-		EffectWorkspaceRead:   {"read"},
+		EffectWorkspaceRead:   {"read", "search", "list"},
 		EffectWorkspaceWrite:  {"write", "edit"},
 		EffectWorkspaceDelete: {"delete"},
 		EffectAilangCheck:     {"ai_check"},
 		EffectAilangDiscover:  {"builtins_list", "examples_search"},
 		EffectAilangCLI:       {"check", "tree", "fmt"}, // the fake summary's cli list
 	}
-	universe := []string{"read", "write", "edit", "delete", "ai_check", "builtins_list", "examples_search",
+	brokerNative := map[string]bool{"search": true, "list": true}
+	universe := []string{"read", "search", "list", "write", "edit", "delete", "ai_check", "builtins_list", "examples_search",
 		"check", "tree", "summary", "run", "fmt", "policy_check", ""}
 	want, refusals := 0, 0
 	for effect, ops := range allowed {
@@ -280,8 +281,12 @@ func TestAilangToolOpAllowlistIsFixedPerEffect(t *testing.T) {
 			dispatched := tool.dispatches(t) - before
 			if in[op] {
 				want++
-				if err != nil || dispatched != 1 {
-					t.Errorf("%s op %q: err=%v dispatched=%d, want admitted", effect, op, err, dispatched)
+				wantDispatched := 1
+				if brokerNative[op] {
+					wantDispatched = 0
+				}
+				if err != nil || dispatched != wantDispatched {
+					t.Errorf("%s op %q: err=%v dispatched=%d, want admitted (dispatched=%d)", effect, op, err, dispatched, wantDispatched)
 				}
 				var resp map[string]any
 				if json.Unmarshal(out, &resp) != nil || resp["tool"] != fakeBinRef(t).String() || resp["policy_digest"] != "fakedigest" {
@@ -297,7 +302,7 @@ func TestAilangToolOpAllowlistIsFixedPerEffect(t *testing.T) {
 		}
 	}
 	t.Logf("op allowlist: %d admitted, %d refused", want, refusals)
-	if want != 10 || refusals != 6*len(universe)-10 {
+	if want != 12 || refusals != 6*len(universe)-12 {
 		t.Fatalf("matrix counted %d admitted / %d refused", want, refusals)
 	}
 }

@@ -195,10 +195,10 @@ func TestCLIAgainstSeToolsDaemon(t *testing.T) {
 	t.Logf("$ ailang-worldd tools list --session <file>")
 	code, stdout, stderr := runCLI(t, r.url, "tools", "list", "--session", r.session)
 	t.Logf("%s", stdout)
-	if code != exitOK || !strings.HasSuffix(stdout, "10 tool(s)\n") {
+	if code != exitOK || !strings.HasSuffix(stdout, "12 tool(s)\n") {
 		t.Fatalf("AC1.3 tools list: exit %d %q %q", code, stdout, stderr)
 	}
-	for _, name := range []string{"ailang-check", "ailang-cli", "ailang-delete", "ailang-edit", "ailang-read", "ailang-run", "ailang-write", "builtins-search", "examples-search", "workspace-exec"} {
+	for _, name := range []string{"ailang-check", "ailang-cli", "ailang-delete", "ailang-edit", "ailang-read", "ailang-run", "ailang-write", "builtins-search", "examples-search", "workspace-exec", "workspace-list", "workspace-search"} {
 		if !strings.Contains(stdout, name+" ") {
 			t.Fatalf("tools list lacks %s", name)
 		}

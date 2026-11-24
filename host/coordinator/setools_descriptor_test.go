@@ -20,8 +20,9 @@ const descriptorBaselineSHA = "240840ca9a0f8f4c60ac159dd78fce26a6c681200e8a10c64
 var descriptorFloorIDs = []string{"ailang-check", "ailang-cli", "ailang-edit", "ailang-read", "ailang-run", "ailang-write", "builtins-search", "examples-search"}
 
 // descriptorAddedIDs are the tools added after the baseline: row 191a's
-// ailang-delete. Each is checked field by field in TestSeToolsDescriptorCompaction.
-var descriptorAddedIDs = []string{"ailang-delete"}
+// ailang-delete and row 228 M2's workspace-search / workspace-list. Each is
+// checked field by field in TestSeToolsDescriptorCompaction.
+var descriptorAddedIDs = []string{"ailang-delete", "workspace-list", "workspace-search"}
 
 // applyPostBaselineRows patches the immutable baseline with the reviewed
 // non-description changes made after it, each written out here independently
@@ -48,28 +49,61 @@ func applyPostBaselineRows(t *testing.T, base []map[string]any) {
 	}
 }
 
-// checkAddedDescriptor is row 191a's descriptor: ailang-delete takes exactly
-// the baseline read's {path} schema, answers the baseline write's {ok,
-// refused, world}, and declares only its own Workspace.Delete triple.
+// checkAddedDescriptor validates tools added after the immutable baseline:
+// row 191a's ailang-delete and row 228 M2's workspace-search / workspace-list.
 func checkAddedDescriptor(t *testing.T, e map[string]any, byID map[string]map[string]any) {
 	t.Helper()
-	want := map[string]any{
-		"id": "ailang-delete", "title": "Delete (sandboxed)", "transitionFnFile": "packages/se-tools/se_tools/delete.ail",
-		"inputSchema": byID["ailang-read"]["inputSchema"], "outputSchema": byID["ailang-write"]["outputSchema"],
-		"access":          map[string]any{"effect": "Workspace.Delete", "scope": "worktree", "cost": float64(0)},
-		"declaredEffects": []any{map[string]any{"effect": "Workspace.Delete", "scope": "worktree", "cost": float64(1)}},
-	}
-	if desc, ok := e["description"].(string); !ok || !strings.Contains(desc, "Workspace.Delete") {
-		t.Errorf("ailang-delete description %q does not name its effect", e["description"])
-	}
-	got := map[string]any{}
-	for k, v := range e {
-		if k != "description" {
-			got[k] = v
+	id, _ := e["id"].(string)
+	switch id {
+	case "ailang-delete":
+		want := map[string]any{
+			"id": "ailang-delete", "title": "Delete (sandboxed)", "transitionFnFile": "packages/se-tools/se_tools/delete.ail",
+			"inputSchema": byID["ailang-read"]["inputSchema"], "outputSchema": byID["ailang-write"]["outputSchema"],
+			"access":          map[string]any{"effect": "Workspace.Delete", "scope": "worktree", "cost": float64(0)},
+			"declaredEffects": []any{map[string]any{"effect": "Workspace.Delete", "scope": "worktree", "cost": float64(1)}},
 		}
-	}
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("ailang-delete descriptor %v, want %v", got, want)
+		if desc, ok := e["description"].(string); !ok || !strings.Contains(desc, "Workspace.Delete") {
+			t.Errorf("ailang-delete description %q does not name its effect", e["description"])
+		}
+		got := map[string]any{}
+		for k, v := range e {
+			if k != "description" {
+				got[k] = v
+			}
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("ailang-delete descriptor %v, want %v", got, want)
+		}
+	case "workspace-search", "workspace-list":
+		wantFile := "packages/se-tools/se_tools/search.ail"
+		wantProps := []string{"ignore_case", "include", "max_results", "path", "pattern", "regex"}
+		if id == "workspace-list" {
+			wantFile = "packages/se-tools/se_tools/list.ail"
+			wantProps = []string{"depth", "include", "max_entries", "path"}
+		}
+		if e["transitionFnFile"] != wantFile {
+			t.Errorf("%s transitionFnFile=%v, want %s", id, e["transitionFnFile"], wantFile)
+		}
+		if desc, ok := e["description"].(string); !ok || !strings.Contains(desc, "Workspace.Read") {
+			t.Errorf("%s description %q does not name Workspace.Read", id, e["description"])
+		}
+		wantAccess := map[string]any{"effect": "Workspace.Read", "scope": "worktree", "cost": float64(0)}
+		wantDeclared := []any{map[string]any{"effect": "Workspace.Read", "scope": "worktree", "cost": float64(1)}}
+		if !reflect.DeepEqual(e["access"], wantAccess) || !reflect.DeepEqual(e["declaredEffects"], wantDeclared) {
+			t.Errorf("%s access/declaredEffects mismatch: %v / %v", id, e["access"], e["declaredEffects"])
+		}
+		schema, _ := e["inputSchema"].(map[string]any)
+		propsMap, _ := schema["properties"].(map[string]any)
+		var gotProps []string
+		for k := range propsMap {
+			gotProps = append(gotProps, k)
+		}
+		sort.Strings(gotProps)
+		if schema["additionalProperties"] != false || !reflect.DeepEqual(gotProps, wantProps) {
+			t.Errorf("%s inputSchema props=%v additionalProperties=%v, want %v / false", id, gotProps, schema["additionalProperties"], wantProps)
+		}
+	default:
+		t.Errorf("unexpected added descriptor %q", id)
 	}
 }
 
