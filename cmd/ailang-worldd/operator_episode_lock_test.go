@@ -24,6 +24,10 @@ import (
 const fixtureActionID = "oa-0123456789abcdef0123456789abcdef"
 
 func claimFixtureEpisode(t *testing.T, creds, episode string) *os.File {
+	return claimFixtureEpisodeAction(t, creds, episode, func(*approval.OperatorAction) {})
+}
+
+func claimFixtureEpisodeAction(t *testing.T, creds, episode string, prepare func(*approval.OperatorAction)) *os.File {
 	t.Helper()
 	canonical, err := store.CanonicalPath(creds)
 	if err != nil {
@@ -52,6 +56,7 @@ func claimFixtureEpisode(t *testing.T, creds, episode string) *os.File {
 	a := approval.OperatorAction{Schema: approval.OperatorActionSchema, ID: fixtureActionID, Kind: "start", Episode: episode,
 		Store: canonical, Options: approval.OperatorOptions{Preset: "p", Headless: true}, Task: "fixture", Review: "fixture",
 		Resolution: []approval.OperatorResolved{{Name: "agent", Value: "codex"}}}
+	prepare(&a)
 	a.Argv = approval.OperatorArgv(a.Kind, a.Episode, a.Options)
 	req := store.OperatorRequest{Action: a, OperationID: strings.Repeat("1", 32), Challenge: sha256.Sum256([]byte(t.Name())), CreatedAt: 1000, ExpiresAt: 1600}
 	row, err := db.RequestOperatorAction(ctx, req, 1000)

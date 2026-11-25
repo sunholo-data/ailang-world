@@ -22,7 +22,8 @@ type SignedOperatorAction struct {
 	name, format      string
 	credentialID      []byte
 	signCount         uint32
-	confirmation      *OperatorApprovalBinding
+	binding           OperatorApprovalBinding
+	confirmed         bool
 	artifactHash      [32]byte
 }
 
@@ -99,10 +100,9 @@ func operatorProof(d, challenge [32]byte, expiry, now int64, artifact []byte, fo
 		return nil, err
 	}
 	s := &SignedOperatorAction{ok: true, digest: d, challenge: challenge, expiry: expiry, name: ap.Name, format: format}
-	if confirm {
-		s.confirmation = &OperatorApprovalBinding{Name: ap.Name, Format: format, PublicKey: string(ap.Key.Blob)}
-		s.artifactHash = sha256.Sum256(artifact)
-	}
+	s.confirmed = confirm
+	s.binding = OperatorApprovalBinding{Name: ap.Name, Format: format, PublicKey: string(ap.Key.Blob)}
+	s.artifactHash = sha256.Sum256(artifact)
 	if format == FormatSSH {
 		sig, err := ParseSSHSIG(artifact)
 		if err != nil {
@@ -130,10 +130,8 @@ func operatorProof(d, challenge [32]byte, expiry, now int64, artifact []byte, fo
 	if !confirm && ad.SignCount > p.SignCount { // R2
 		return nil, fmt.Errorf("%w: enrolled %d, this assertion %d", ErrOperatorCounter, p.SignCount, ad.SignCount)
 	}
-	if confirm {
-		s.confirmation.PublicKey = string(p.Key.Canonical())
-		s.confirmation.RPID, s.confirmation.Origin, s.confirmation.BackupEligible = p.RPID, p.Origin, p.BackupEligible
-	}
+	s.binding.PublicKey = string(p.Key.Canonical())
+	s.binding.RPID, s.binding.Origin, s.binding.BackupEligible = p.RPID, p.Origin, p.BackupEligible
 	s.credentialID, s.signCount = bytes.Clone(p.CredentialID), ad.SignCount
 	return s, nil
 }
@@ -184,8 +182,34 @@ type OperatorApprovalBinding struct {
 // ConfirmationFor binds the proof to the exact artifact to be stored and
 // distinguishes initial confirmation from a runner recheck.
 func (s *SignedOperatorAction) ConfirmationFor(artifact []byte) (OperatorApprovalBinding, error) {
-	if s == nil || !s.ok || s.confirmation == nil || sha256.Sum256(artifact) != s.artifactHash {
+	if s == nil || !s.ok || !s.confirmed || sha256.Sum256(artifact) != s.artifactHash {
 		return OperatorApprovalBinding{}, ErrNotVerified
 	}
-	return *s.confirmation, nil
+	return s.binding, nil
+}
+
+// OperatorMintProof seals a runner recheck for the start transaction.
+type OperatorMintProof struct{ signed *SignedOperatorAction }
+
+func (s *SignedOperatorAction) MintProof() *OperatorMintProof {
+	if s == nil || !s.ok || s.confirmed {
+		return nil
+	}
+	return &OperatorMintProof{signed: s}
+}
+
+// Bind verifies the exact stored action and artifact and returns the enrollment
+// that the transaction must still find current.
+func (p *OperatorMintProof) Bind(a OperatorAction, challenge [32]byte, expiry int64, artifact []byte) (OperatorApprovalBinding, error) {
+	if p == nil || p.signed == nil || sha256.Sum256(artifact) != p.signed.artifactHash {
+		return OperatorApprovalBinding{}, ErrNotVerified
+	}
+	if err := p.signed.Binds(a, challenge, expiry); err != nil {
+		return OperatorApprovalBinding{}, err
+	}
+	return p.signed.binding, nil
+}
+
+func (p *OperatorMintProof) PasskeyUse() ([]byte, uint32, bool) {
+	return p.signed.PasskeyUse()
 }

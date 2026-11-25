@@ -263,6 +263,17 @@ func runSessionMint(args []string, stdout, stderr io.Writer, env sessionEnv) int
 	}
 	defer func() { _ = term.Close() }()
 
+	// Legacy session mint accepts opaque episode IDs. Operator admission
+	// rejects them, and only admitted IDs are safe as sidecar components.
+	if workspaceEpisodePattern.MatchString(*episode) {
+		lock, err := terminalEpisodeLock(credPath, *episode, nil)
+		if err != nil {
+			fmt.Fprintf(stderr, "ailang-worldd session mint: %v\n", err)
+			return exitUsage
+		}
+		defer lock.Close()
+	}
+
 	now := env.now()
 	// Each CLI-minted grant expires WITH the session (row 134 break 1): the
 	// broker's liveness rule is now < ExpiresAt in Unix seconds, so a grant left

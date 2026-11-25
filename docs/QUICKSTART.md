@@ -83,6 +83,19 @@ Run the checked example with a fake supervisor and disposable stores:
 AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./cmd/ailang-worldd -run '^TestOperatorServiceWriteScope$' -count=1 -v
 ```
 
+For an owned start with a committed mint and a missing token, use the
+attended remedy with its action ID. The disposable example uses this ID.
+
+```sh
+ailang-worldd service runner reconcile-mint oa-0123456789abcdef0123456789abcdef
+```
+
+Review the credential hash and type `y` to revoke that one orphaned
+credential. The start and worktree remain. A matching, unexpired private
+token is retained for file reconciliation with the episode owner still
+held. A conflicting file or later effect reservation keeps the owner in
+place. Run the disposable example with `AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./cmd/ailang-worldd -run '^TestOperatorMintRecovery/revocation$' -count=1 -v`.
+
 ## Run your agents through World
 
 World launchers now tell Claude Code, Codex and pi their episode, worktree, session

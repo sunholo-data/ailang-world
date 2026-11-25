@@ -134,3 +134,87 @@ func requireProvisionLockReleased(t *testing.T, cred, ep string) {
 	}
 	fd.Close()
 }
+
+func TestOperatorSessionMintEpisodeExclusion(t *testing.T) {
+	gc := debug.SetGCPercent(-1)
+	t.Cleanup(func() { debug.SetGCPercent(gc) })
+	r := newEpisodeRun(t)
+	creds, err := credentialsFor(r.f.db, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	owned := "ep1"
+	held := claimFixtureEpisode(t, creds, owned)
+	token := filepath.Join(r.sessions, "legacy.session")
+	if err := os.Mkdir(r.sessions, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(token, []byte("existing handoff"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	args := func(ep string, extra ...string) []string {
+		return append([]string{"--db", r.f.db, "--episode", ep, "--grant", "fs.read=repo:1"}, extra...)
+	}
+	for _, name := range []string{"tty", "contended", "durably_owned"} {
+		t.Run(name, func(t *testing.T) {
+			ep := owned
+			if name == "tty" {
+				ep = "tty-required"
+			}
+			if name == "durably_owned" {
+				if err := held.Close(); err != nil {
+					t.Fatal(err)
+				}
+			}
+			before := observeProvision(t, r, creds)
+			var out, stderr bytes.Buffer
+			term := &promptTerm{in: strings.NewReader("y\n")}
+			env := testMintEnv("y\n", 1800)
+			env.openTerminal = func() (io.ReadWriteCloser, error) { return term, nil }
+			if name == "tty" {
+				env = noTerminalEnv(1800)
+			}
+			code := runSessionMint(args(ep, "--out", token), &out, &stderr, env)
+			if name == "tty" {
+				if code != exitUsage || !strings.Contains(stderr.String(), "no controlling terminal") {
+					t.Fatalf("terminal refusal: %d %s", code, &stderr)
+				}
+				if _, err := os.Lstat(operatorEpisodeLockPath(creds, ep)); !os.IsNotExist(err) {
+					t.Fatalf("terminal fence sidecar: %v", err)
+				}
+			} else {
+				expectEpisodeRefusal(t, code, stderr.String(), before.credentials, creds)
+			}
+			if out.Len() != 0 || term.out.Len() != 0 || !reflect.DeepEqual(before, observeProvision(t, r, creds)) {
+				t.Fatal("refusal changed prompt, output, credentials, worktree, refs or files")
+			}
+		})
+	}
+	t.Run("declined", func(t *testing.T) {
+		before := observeProvision(t, r, creds)
+		var out, stderr bytes.Buffer
+		if code := runSessionMint(args("declined"), &out, &stderr, testMintEnv("n\n", 1800)); code != exitUsage ||
+			out.Len() != 0 || !strings.Contains(stderr.String(), "not confirmed") ||
+			!reflect.DeepEqual(before, observeProvision(t, r, creds)) {
+			t.Fatalf("decline: %d %s", code, &stderr)
+		}
+		requireProvisionLockReleased(t, creds, "declined")
+	})
+	t.Run("free_and_opaque", func(t *testing.T) {
+		for _, ep := range []string{"free", "legacy/opaque"} {
+			var out, stderr bytes.Buffer
+			if code := runSessionMint(args(ep), &out, &stderr, testMintEnv("y\n", 1800)); code != exitOK || len(strings.TrimSpace(out.String())) != 64 {
+				t.Fatalf("mint %q: %d %s", ep, code, &stderr)
+			}
+			rows := r.f.rows(t)
+			found := false
+			for _, row := range rows {
+				found = found || row.EpisodeID == ep
+			}
+			if !found {
+				t.Fatalf("missing persisted session for %q", ep)
+			}
+		}
+		requireProvisionLockReleased(t, creds, "free")
+	})
+}

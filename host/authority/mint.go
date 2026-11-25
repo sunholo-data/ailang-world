@@ -198,3 +198,26 @@ func clampGrantExpiry(grants []broker.Capability, sessionExpiry int64) []broker.
 	}
 	return out
 }
+
+// MintOperatorStart uses only an independently reconstructed action for the
+// runner recheck. The transaction revalidates proof, time and enrollment.
+func MintOperatorStart(ctx context.Context, st, ro *store.Credentials, in store.OperatorMintInput,
+	current approval.OperatorAction, row store.OperatorActionRow, clock func() int64) (string, error) {
+	if len(row.Challenge) != 32 {
+		return "", approval.ErrNotVerified
+	}
+	rechecked, err := RecheckClaimedOperatorAction(ctx, ro, current, [32]byte(row.Challenge), row.ExpiresAt, clock(), row)
+	if err != nil {
+		return "", err
+	}
+	var raw [32]byte
+	if _, err := rand.Read(raw[:]); err != nil {
+		return "", err
+	}
+	token := hex.EncodeToString(raw[:])
+	in.CredentialID = hashHexToken(token)
+	if err := st.CommitOperatorMint(ctx, in, rechecked.OperatorConfirmation().MintProof(), clock); err != nil {
+		return "", err
+	}
+	return token, nil
+}
