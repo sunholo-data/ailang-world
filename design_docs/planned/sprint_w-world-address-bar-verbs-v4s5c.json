@@ -1,0 +1,158 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s5c",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1, iteration 406 quorum r2 PROCEED 3/3, no absent seats",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s5c-sprint-plan.md",
+ "previous_sprint": "S5b, PR #659, merge 5d3b0581, sonnet PASS 84, 0 blocking",
+ "base_commit": "606f6e2c57c79e98975153f055e213df143638d0",
+ "design_measured_at": "606f6e2c, plan \u00a71.2 and \u00a71.4",
+ "queue_row": 243,
+ "iteration": 433,
+ "phase": "V4",
+ "sprint": "S5c, survivor pins and live-input reconstruction of a signed headless start",
+ "sprint_number": "5c",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter433-row243-v4s5c",
+ "branch": "sprint/world-iter433-row243-v4s5c",
+ "authority": [
+  "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004",
+  "D-WORLD-109 fixture stores and keys"
+ ],
+ "behaviour": "Tests pin five judge-432 survivors and two S5 parity survivors. An inert reconstruction re-reads a signed headless start's live preset, Git, profile, daemon, tool and path inputs through the S5 seam and refuses any changed fact before any effect. No production caller.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat 606f6e2c HEAD -- cmd host docs app",
+  "measured": 401,
+  "unfiltered_product": 401,
+  "margin": 999,
+  "moved_out": {
+   "S5d_worktree_readback_probe": 59,
+   "S5d_S3b_bank_measured": 132,
+   "S5e_file_readback_probe": 53,
+   "S5f_process_fd_test_probe": 72,
+   "measured_floor_after_S5c": 316,
+   "S5d_S5e_S5f_full_size": "unmeasured beyond probes",
+   "S6_design_raw": 890,
+   "S8_design_raw": 860,
+   "S12_design_raw": 700
+  }
+ },
+ "planner_decisions": {
+  "cut": "Ship two complete effect-free milestones (401 lines); worktree reservation with its attended disposition, file publication and the paired-process consumer each need their own injected-failure and resolver matrix and go to S5d/S5e/S5f.",
+  "reconstruction": "operatorStartFacts projects the S5 seam (signed preset, episode, task bytes; launch+headless) into OperatorMintInput and 12 ordered facts; reconstructOperatorStart requires exact equality with the signed resolution and the served store.",
+  "survivors": "E-TX-STORE-ID, E-TX-KIND, E-RES-STORE-ID, E-RES-TOKENPATH-BASE, E-RES-REGULAR killed in M1; E-RES-EPISODE-CONFLICT and E-RES-REREAD need an interleaving harness and are carried, no test claimed.",
+  "activation": "Zero production callers of MintOperatorStart, reconstructOperatorStart, claim/reserve/observe; caller fence with positive control in \u00a76."
+ },
+ "scope": [
+  "judge-432 survivor killing tests (5 of 7)",
+  "S5 parity survivors J-PRINT-AGENT and J-DOUBLE-OVERRIDE-APPEND",
+  "live-input reconstruction of a signed headless start (TestOperatorStartChanged)",
+  "reviewed fact projection contract (TestOperatorStartFacts)"
+ ],
+ "executor_lane": "M1 M2 via patch only",
+ "executor_form": "Appendix P unified diffs, \u00a72 extraction and \u00a77 cumulative snapshots",
+ "estimate_loc": {
+  "compiled_landed": 401,
+  "parked": {
+   "S5d_worktree_readback_probe": 59,
+   "S5d_S3b_bank_measured": 132,
+   "S5e_file_readback_probe": 53,
+   "S5f_process_fd_test_probe": 72
+  }
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "survivor and parity pins, tests only",
+   "expected_cumulative_numstat": 91,
+   "added": 90,
+   "deleted": 1,
+   "increment": 91,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M1 fast",
+   "expected_snapshot": "3/0/3"
+  },
+  {
+   "id": "M2",
+   "title": "live-input reconstruction of a signed headless start",
+   "expected_cumulative_numstat": 401,
+   "added": 400,
+   "deleted": 1,
+   "increment": 310,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M2 fast",
+   "expected_snapshot": "5/0/5"
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "3/0/3",
+  "M2": "5/0/5",
+  "format": "STATUS / DELETED / MANIFEST"
+ },
+ "design_premises_found_false": [
+  "\u00a71.4 F1-F5",
+  "E-TX-KIND is killable only by refusal ordering; with a current runner approval O8b makes it equivalent",
+  "E-RES-EPISODE-CONFLICT and E-RES-REREAD are unkillable without an interleaving harness",
+  "no producer of signed resolution facts exists yet; M2 defines the projection the catalogue must sign"
+ ],
+ "existing_tests_edited": [
+  "cmd/ailang-worldd/episode_preset_read_test.go",
+  "cmd/ailang-worldd/operator_mint_test.go",
+  "host/authority/operator_mint_test.go"
+ ],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [],
+ "new_files": [
+  "cmd/ailang-worldd/operator_start_input.go",
+  "cmd/ailang-worldd/operator_start_input_test.go"
+ ],
+ "not_touched": [
+  ".ail",
+  "docs",
+  "app",
+  "daemon routes and serving code",
+  "host/store",
+  "host/approval",
+  "driver",
+  "go.mod",
+  "S3b bank",
+  "production writers"
+ ],
+ "mutants": {
+  "total_specs": 42,
+  "named_claimed": 40,
+  "named_killed": 40,
+  "named_survived_claimed": 0,
+  "survived_unclaimed": [
+   "E-RES-EPISODE-CONFLICT",
+   "E-RES-REREAD"
+  ],
+  "whole_killed": 2,
+  "whole_unmeasured_cli": 38,
+  "whole_unmeasured_command": "python3 \"$S/mutate.py\" --whole-only --jobs 3 <38 cmd ids from mutants.json>",
+  "mutant_report_complete": true
+ },
+ "mutant_ledger": "$HOME/.ailang/state/world-iter433/plan-scratch/mutation-ledger.jsonl",
+ "mutant_specs": "$HOME/.ailang/state/world-iter433/plan-scratch/mutants.json",
+ "gates_script": "$HOME/.ailang/state/world-iter433/plan-scratch/gates.sh, embedded in \u00a76",
+ "roundtrip": {
+  "M1": "diff -r cmd/host/docs rc=0",
+  "M2": "diff -r cmd/host/docs rc=0",
+  "fenced_scripts_identical": true
+ },
+ "controller_decisions_requested": [
+  "Run the 38 CLI whole-package mutant rows (\u00a74.1).",
+  "Run \u00a76 final gates in the committed checkout with verify_go, and Linux race in CI.",
+  "Keep every Appendix C gate with activation; S5d must ship the attended worktree disposition in the same patch as the first worktree reservation."
+ ],
+ "verification": {
+  "base_gates": "\u00a71.1/\u00a76",
+  "final_gates": "\u00a76",
+  "accept": "\u00a73",
+  "roundtrip": "\u00a77",
+  "mutant_replay": "\u00a74"
+ }
+}
