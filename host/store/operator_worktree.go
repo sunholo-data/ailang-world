@@ -28,14 +28,14 @@ func (c *Credentials) ReserveOperatorWorktree(ctx context.Context, at OperatorMi
 	if now >= row.ExpiresAt {
 		return key, ErrOperatorExpired
 	}
-	if row.State != "claimed" || row.Owner != at.Runner.Nonce || len(row.Challenge) != 32 || identity == "" {
+	if row.Kind != "start" || row.State != "claimed" || row.Owner != at.Runner.Nonce || len(row.Challenge) != 32 || identity == "" {
 		return key, ErrOperatorConflict
 	}
 	action, err := decodeOperatorMintAction(row)
 	if err != nil {
 		return key, err
 	}
-	if c.lock == nil || action.Store != c.lock.dbPath || action.Kind != "start" || !action.Options.Headless {
+	if c.lock == nil || action.Store != c.lock.dbPath || !action.Options.Headless {
 		return key, ErrOperatorConflict
 	}
 	b, err := proof.Bind(action, [32]byte(row.Challenge), row.ExpiresAt, row.Artifact)

@@ -45,7 +45,8 @@ func readRunnerWorktree(credentials, id string) (store.OperatorStepKey, operator
 	return key, target, signed.Episode, nil
 }
 
-func (e serviceEnv) reconcileRunnerWorktree(id string, out, stderr io.Writer) int {
+func (e serviceEnv) reconcileRunnerWorktree(id string, out, stderr io.Writer,
+	readReservation func(string, string) (store.OperatorStepKey, operatorWorktreeTarget, string, error)) int {
 	remedy := reconcileWorktreeCommand(id)
 	refuse := func(err error) int {
 		return serviceMessage(stderr, "worktree recovery refused", err.Error(), remedy, exitUsage)
@@ -54,7 +55,7 @@ func (e serviceEnv) reconcileRunnerWorktree(id string, out, stderr io.Writer) in
 	if err != nil {
 		return refuse(err)
 	}
-	key, target, episode, err := readRunnerWorktree(c.Credentials, id)
+	key, target, episode, err := readReservation(c.Credentials, id)
 	if err != nil {
 		return refuse(err)
 	}
@@ -63,7 +64,7 @@ func (e serviceEnv) reconcileRunnerWorktree(id string, out, stderr io.Writer) in
 		return refuse(errors.New("episode recovery lock held or unavailable"))
 	}
 	defer lock.Close()
-	current, _, currentEpisode, err := readRunnerWorktree(c.Credentials, id)
+	current, _, currentEpisode, err := readReservation(c.Credentials, id)
 	if err != nil {
 		return refuse(err)
 	}
