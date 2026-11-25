@@ -72,6 +72,9 @@ func TestPresetStartReadParity(t *testing.T) {
 		t.Fatal("the attended path did not use the resolved review and bytes")
 	}
 	got := readPresetStart(t, f, "ep")
+	if got == nil || !reflect.DeepEqual(got.Overrides, []string{"agent", "branch", "ttl"}) {
+		t.Fatal("persisted overrides differ from explicit flags")
+	}
 	want := *req.start
 	dir := filepath.Join(f.r.f.ws, "ep")
 	head, err := worktree.Output(presetTestContext(t), f.r.f.git, []string{"-C", dir, "rev-parse", "HEAD"})
@@ -112,6 +115,11 @@ func TestPresetStartReadHeadless(t *testing.T) {
 	}
 	if _, err := os.Lstat(filepath.Join(bin, "ran")); !os.IsNotExist(err) {
 		t.Fatal("a read started the executable")
+	}
+	var out bytes.Buffer
+	if code := runEpisodeStart(f.args("ep", "--task", f.task), &out, &out, presetEnv(&promptTerm{in: strings.NewReader("y\n")})); code != exitOK ||
+		!strings.Contains(out.String(), " codex exec --ignore-user-config ") {
+		t.Fatalf("Codex start did not print its confined launch: %d %s", code, &out)
 	}
 }
 

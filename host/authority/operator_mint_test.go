@@ -381,3 +381,43 @@ func TestOperatorMintReceiptWindow(t *testing.T) {
 	}
 	r.unchanged(t, got, err, store.ErrOperatorConflict)
 }
+
+// TestOperatorMintScope pins the transaction's own scope guards. A signed
+// action mints only in the store it names, and only as a start.
+func TestOperatorMintScope(t *testing.T) {
+	t.Run("store_copy", func(t *testing.T) {
+		r := operatorMintRig(t, false, nil)
+		seal := r.seal(t)
+		other := filepath.Join(t.TempDir(), "copy.db")
+		jgExec(t, r.path, fmt.Sprintf("VACUUM INTO '%s'", other))
+		copied := operatorStoreOpen(t, other, store.OpenCredentials)
+		before := r.snapshot(t)
+		err := copied.CommitOperatorMint(r.ctx, r.in, seal, mintAt(1014))
+		sessions, listErr := copied.ListSessions(r.ctx, "", 20)
+		start, startErr := copied.EpisodeStart(r.ctx, r.action.Episode)
+		if listErr != nil || startErr != nil || len(sessions) != 0 || start != nil {
+			t.Fatalf("a copied store minted: %v %v %d %v", listErr, startErr, len(sessions), start)
+		}
+		r.unchanged(t, before, err, store.ErrOperatorConflict)
+	})
+	t.Run("finish_kind", func(t *testing.T) {
+		// No runner row exists, so only the kind refusal can answer conflict.
+		s := newOperatorStoreRigAction(t, false, func(a *approval.OperatorAction) {
+			a.Kind, a.Task, a.Options.Headless = "finish", "", false
+			a.Argv = approval.OperatorArgv(a.Kind, a.Episode, a.Options)
+		})
+		ctx := boundedTestContext(t)
+		s.confirm(t)
+		jgExec(t, s.path, `UPDATE operator_actions SET state = 'running', owner = 'fresh-runner'`,
+			fmt.Sprintf(`INSERT INTO operator_action_steps (kind, identity, action_id, phase, version, owner, created_at)
+			VALUES ('mint', '%s', '%s', 'reserved', 7, 'fresh-runner', 1012)`, s.cas.ID, s.cas.ID))
+		row, err := s.OperatorAction(ctx, s.cas.ID, 1012)
+		if err != nil {
+			t.Fatal(err)
+		}
+		r := mintRig{s, store.OperatorMintInput{Attempt: store.OperatorMintAttempt{CAS: s.cas, StepVersion: 7,
+			Runner: store.OperatorOwner{Nonce: "fresh-runner"}, Catalogue: 1}}, row, operatorStoreOpen(t, s.path, store.OpenCredentialsReadOnly), ctx}
+		before := r.snapshot(t)
+		r.unchanged(t, before, r.CommitOperatorMint(ctx, r.in, nil, mintAt(1014)), store.ErrOperatorConflict)
+	})
+}

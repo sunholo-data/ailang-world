@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
@@ -108,6 +109,26 @@ func (r recoveryFixture) exec(t *testing.T, query string, args ...any) {
 	}
 }
 
+// rewriteAction replaces the stored action and its digest together, so only
+// the resolver's own store and token-path identity checks can refuse it.
+func (r recoveryFixture) rewriteAction(t *testing.T, edit func(*approval.OperatorAction)) {
+	t.Helper()
+	var raw []byte
+	if err := r.db.QueryRowContext(boundedTestContext(t), "SELECT action FROM operator_actions").Scan(&raw); err != nil {
+		t.Fatal(err)
+	}
+	a, err := approval.DecodeOperatorAction(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	edit(&a)
+	if raw, err = approval.CanonicalOperatorAction(a); err != nil {
+		t.Fatal(err)
+	}
+	digest := sha256.Sum256(raw)
+	r.exec(t, "UPDATE operator_actions SET action=?, digest=?", raw, digest[:])
+}
+
 func (r recoveryFixture) run(t *testing.T, command string) (int, string) {
 	t.Helper()
 	args := strings.Fields(command)
@@ -137,6 +158,8 @@ func TestOperatorMintRecovery(t *testing.T) {
 		{"receipt_changed", "operator action conflicts"},
 		{"missing_credential", "mint start or credential unavailable"},
 		{"abort_rollback", "injected abort failure"},
+		{"store_identity", "mint token path or store identity differs"},
+		{"token_name", "mint token path or store identity differs"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := newRecoveryFixture(t)
@@ -188,6 +211,18 @@ func TestOperatorMintRecovery(t *testing.T) {
 				r.exec(t, "DELETE FROM session_credentials WHERE credential_id=?", r.receipt.CredentialID)
 			case "abort_rollback":
 				r.exec(t, "CREATE TRIGGER failed_abort AFTER UPDATE ON operator_actions BEGIN SELECT RAISE(ABORT,'injected abort failure'); END")
+			case "store_identity", "token_name":
+				r.rewriteAction(t, func(a *approval.OperatorAction) {
+					if tc.name == "store_identity" {
+						a.Store = filepath.Join(filepath.Dir(a.Store), "other.db")
+						return
+					}
+					for i := range a.Resolution {
+						if a.Resolution[i].Name == "mint_token_path" {
+							a.Resolution[i].Value = filepath.Join(filepath.Dir(r.path), "other.session")
+						}
+					}
+				})
 			}
 			before := serviceFileHash(r.config.Credentials)
 			files := provisionFiles(t, filepath.Dir(r.path))
@@ -269,7 +304,7 @@ func TestOperatorMintRecovery(t *testing.T) {
 }
 
 func TestOperatorMintTokenReadback(t *testing.T) {
-	for _, name := range []string{"uid", "mode", "link", "symlink", "symlink_valid", "directory", "bytes", "length", "short"} {
+	for _, name := range []string{"uid", "mode", "link", "symlink", "symlink_valid", "directory", "fifo", "bytes", "length", "short"} {
 		t.Run(name, func(t *testing.T) {
 			dir := t.TempDir()
 			p := filepath.Join(dir, "token")
@@ -287,6 +322,8 @@ func TestOperatorMintTokenReadback(t *testing.T) {
 				err = os.Symlink(target, p)
 			case "directory":
 				err = os.Mkdir(p, 0700)
+			case "fifo":
+				err = syscall.Mkfifo(p, 0600)
 			default:
 				data := token
 				switch name {
@@ -314,6 +351,10 @@ func TestOperatorMintTokenReadback(t *testing.T) {
 			present, err := readMintToken(p, uid, fmt.Sprintf("%x", sha256.Sum256([]byte(token))))
 			if present || err == nil || !reflect.DeepEqual(before, provisionFiles(t, dir)) {
 				t.Fatalf("unsafe file evidence changed or accepted: present=%v err=%v", present, err)
+			}
+			// The file type is refused as a type, before any mode or owner check.
+			if (name == "directory" || name == "fifo") && err.Error() != "mint token is not a regular file" {
+				t.Fatalf("%s refused for the wrong reason: %v", name, err)
 			}
 		})
 	}
