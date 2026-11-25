@@ -11,7 +11,7 @@ import (
 )
 
 func TestReserveOperatorWorktreeGuards(t *testing.T) {
-	for _, name := range []string{"valid", "kind", "headless", "store", "approver", "challenge", "claimed"} {
+	for _, name := range []string{"valid", "kind", "headless", "store", "approver", "challenge", "claimed", "owner", "identity", "expiry"} {
 		t.Run(name, func(t *testing.T) {
 			c := openTestCredentials(t)
 			ctx := testCtx(t)
@@ -60,7 +60,15 @@ func TestReserveOperatorWorktreeGuards(t *testing.T) {
 			proof := signed.MintProof()
 			cas.Digest, cas.Generation = digest, row.Generation
 			operatorExec(t, c, "UPDATE operator_actions SET action=?, digest=?, kind=?, artifact=?, approved_by=?", body, digest[:], action.Kind, artifact, signed.ApprovedBy())
+			identity, now, want := "fixture", int64(1590), ErrOperatorConflict
 			switch name {
+			case "owner":
+				operatorExec(t, c, "UPDATE operator_actions SET owner='other'")
+			case "identity":
+				identity = ""
+			case "expiry":
+				now, want = row.ExpiresAt, ErrOperatorExpired
+				operatorExec(t, c, "UPDATE operator_runner_state SET seen_at=?", now)
 			case "kind", "claimed":
 				if name == "claimed" {
 					// The SQL CAS also rejects running. Make reaching Bind observable.
@@ -81,7 +89,7 @@ func TestReserveOperatorWorktreeGuards(t *testing.T) {
 				operatorExec(t, c, "PRAGMA ignore_check_constraints = OFF")
 			}
 			before := getOperator(t, c, cas.ID, 1590)
-			key, err := c.ReserveOperatorWorktree(ctx, OperatorMintAttempt{CAS: cas, Runner: runner, Catalogue: 1}, "fixture", proof, func() int64 { return 1590 })
+			key, err := c.ReserveOperatorWorktree(ctx, OperatorMintAttempt{CAS: cas, Runner: runner, Catalogue: 1}, identity, proof, func() int64 { return now })
 			if name == "valid" {
 				if err != nil {
 					t.Fatal(err)
@@ -93,7 +101,7 @@ func TestReserveOperatorWorktreeGuards(t *testing.T) {
 				}
 				return
 			}
-			if !errors.Is(err, ErrOperatorConflict) || key != (OperatorStepKey{}) ||
+			if !errors.Is(err, want) || key != (OperatorStepKey{}) ||
 				!reflect.DeepEqual(before, getOperator(t, c, cas.ID, 1590)) {
 				t.Fatalf("refusal changed action or returned the wrong class: %v", err)
 			}
@@ -108,7 +116,7 @@ func TestReserveOperatorWorktreeGuards(t *testing.T) {
 }
 
 func TestDisposeOperatorUncertainStepGuards(t *testing.T) {
-	for _, name := range []string{"kind", "owner", "version"} {
+	for _, name := range []string{"kind", "owner", "version", "action_kind"} {
 		t.Run(name, func(t *testing.T) {
 			c := openTestCredentials(t)
 			ctx := testCtx(t)
@@ -133,6 +141,9 @@ func TestDisposeOperatorUncertainStepGuards(t *testing.T) {
 				key.Owner = "different"
 			case "version":
 				bad.Version++
+			case "action_kind":
+				operatorExec(t, c, "UPDATE operator_actions SET kind='finish'")
+				before = getOperator(t, c, cas.ID, 1590)
 			}
 			if err := c.DisposeOperatorWorktree(ctx, bad, OperatorWorktreeUncertain, 1591); !errors.Is(err, want) ||
 				!reflect.DeepEqual(before, getOperator(t, c, cas.ID, 1590)) {
@@ -163,5 +174,50 @@ func TestOperatorStepReceiptAtLimit(t *testing.T) {
 	after, err := c.OperatorStep(ctx, key)
 	if err != nil || !reflect.DeepEqual(after, OperatorStepReceipt{"observed", key.Owner, 2, body}) {
 		t.Fatalf("at-limit receipt was not stored exactly: %v, size %d", err, len(after.Receipt))
+	}
+}
+
+func TestReadOperatorWorktreeGuards(t *testing.T) {
+	for _, name := range []string{"uncertain", "duplicate"} {
+		t.Run(name, func(t *testing.T) {
+			c := openTestCredentials(t)
+			ctx := testCtx(t)
+			cas, runner := operatorClaimFixture(t, c)
+			if err := c.ClaimOperatorAction(ctx, cas, runner, 1590); err != nil {
+				t.Fatal(err)
+			}
+			cas.Generation++
+			key := OperatorStepKey{cas, runner.Nonce, "worktree", "first", 1}
+			if err := c.ReserveOperatorStep(ctx, key, 1590); err != nil {
+				t.Fatal(err)
+			}
+			operatorExec(t, c, "UPDATE operator_actions SET state='running'")
+			var second OperatorStepKey
+			var want error
+			if name == "uncertain" {
+				if err := c.DisposeOperatorWorktree(ctx, key, OperatorWorktreeUncertain, 1591); err != nil {
+					t.Fatal(err)
+				}
+				key.Action.Generation++
+				key.Version++
+			} else {
+				second = key
+				second.Identity = "second"
+				if err := c.ReserveOperatorStep(ctx, second, 1590); err != nil {
+					t.Fatal(err)
+				}
+				want = ErrOperatorMissing
+			}
+			before := getOperator(t, c, cas.ID, 1591)
+			got, signed, err := c.ReadOperatorWorktree(ctx, cas.ID)
+			if !errors.Is(err, want) || !reflect.DeepEqual(before, getOperator(t, c, cas.ID, 1591)) ||
+				(want == nil && (got != key || signed.ID != cas.ID || signed.Kind != "start")) {
+				t.Fatalf("wrong reservation read or action changed: %+v, %v", got, err)
+			}
+			assertReservedOperatorStep(t, c, key)
+			if name == "duplicate" {
+				assertReservedOperatorStep(t, c, second)
+			}
+		})
 	}
 }

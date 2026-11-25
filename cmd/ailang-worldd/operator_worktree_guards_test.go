@@ -13,6 +13,7 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/worktree"
 )
 
 func TestOperatorWorktreeSurvivors(t *testing.T) {
@@ -46,7 +47,7 @@ func TestOperatorWorktreeSurvivors(t *testing.T) {
 }
 
 func TestOperatorWorktreeRecoveryGuards(t *testing.T) {
-	for _, name := range []string{"store", "branch", "path", "action", "basename", "headless", "observed"} {
+	for _, name := range []string{"store", "branch", "path", "action", "basename", "headless", "observed", "signed_kind", "repo_abs", "common_abs"} {
 		t.Run(name, func(t *testing.T) {
 			r := newWorktreeStartRig(t, false)
 			crash := errors.New("before add")
@@ -83,6 +84,16 @@ func TestOperatorWorktreeRecoveryGuards(t *testing.T) {
 					target.Path += "-other"
 				case "action":
 					target.Action += "-other"
+				case "signed_kind":
+					a.Kind, a.Task, a.Options.Headless = "finish", "", false
+					a.Argv = approval.OperatorArgv(a.Kind, a.Episode, a.Options)
+					if err := a.Validate(); err != nil {
+						t.Fatal(err)
+					}
+				case "repo_abs":
+					target.Repo = strings.TrimPrefix(target.Repo, string(filepath.Separator))
+				case "common_abs":
+					target.Common = strings.TrimPrefix(target.Common, string(filepath.Separator))
 				case "headless":
 					a.Options.Headless = false
 					a.Argv = approval.OperatorArgv(a.Kind, a.Episode, a.Options)
@@ -105,7 +116,7 @@ func TestOperatorWorktreeRecoveryGuards(t *testing.T) {
 					t.Fatal(err)
 				}
 				// Both reads see the same damaged rows. The CAS can agree with them.
-				r.exec(t, "UPDATE operator_actions SET action=?, digest=?", body, digest[:])
+				r.exec(t, "UPDATE operator_actions SET action=?, digest=?, kind=?", body, digest[:], a.Kind)
 				r.exec(t, "UPDATE operator_action_steps SET identity=? WHERE kind='worktree'", string(encoded))
 			}
 			before := observeProvision(t, r.f.r, r.creds)
@@ -126,7 +137,7 @@ func TestOperatorWorktreeRecoveryGuards(t *testing.T) {
 }
 
 func TestOperatorWorktreeReadbackGuards(t *testing.T) {
-	for _, name := range []string{"repo_common", "checkout_common", "link_regular", "link_prefix", "registration_count", "directory", "physical"} {
+	for _, name := range []string{"repo_common", "checkout_common", "link_regular", "link_prefix", "registration_count", "relative_registration", "directory", "physical"} {
 		t.Run(name, func(t *testing.T) {
 			f := newEpisodeRun(t)
 			ctx := presetTestContext(t)
@@ -201,6 +212,33 @@ func TestOperatorWorktreeReadbackGuards(t *testing.T) {
 					seedStartFixtureFile(t, link, []byte("interrupted gitfile\n"))
 					wrapper("if [ \"$2\" = " + shellQuote(target.Path) + " ]; then cp " + shellQuote(saved) + " " + shellQuote(link) + " || exit 1; fi")
 				}
+			case "relative_registration":
+				cwd, err := os.Getwd()
+				if err != nil {
+					t.Fatal(err)
+				}
+				cwd, err = filepath.EvalSymlinks(cwd)
+				if err != nil {
+					t.Fatal(err)
+				}
+				relative, err := filepath.Rel(cwd, target.Path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				list, err := worktree.Output(ctx, git, []string{"-C", repo, "worktree", "list", "--porcelain", "-z"})
+				if err != nil || !strings.Contains(list, "worktree "+target.Path+"\x00") {
+					t.Fatalf("cannot read real registration: %v", err)
+				}
+				list = strings.Replace(list, "worktree "+target.Path+"\x00", "worktree "+relative+"\x00", 1)
+				capture := filepath.Join(root, "porcelain")
+				seedStartFixtureFile(t, capture, []byte(list))
+				wrapper(`if [ "$3" = worktree ]; then exec cat ` + shellQuote(capture) + "; fi")
+				before := launchFileSnapshot(t, target.Path)
+				e, err := target.inspect(ctx, git)
+				if err == nil || err.Error() != "invalid Git worktree registration" || e.state == treeExact ||
+					!reflect.DeepEqual(before, launchFileSnapshot(t, target.Path)) {
+					t.Fatalf("relative registration admitted or checkout changed: %+v %v", e, err)
+				}
 			case "registration_count":
 				second := filepath.Join(root, "second")
 				presetGit(t, f.f, "worktree", "add", "--detach", second, target.SHA)
@@ -230,9 +268,13 @@ func TestOperatorWorktreeReadbackGuards(t *testing.T) {
 				wrapper("if [ \"$3\" = for-each-ref ]; then mv " + shellQuote(victim) + " " + shellQuote(moved) + " && " + replacement + " || exit 1; fi")
 			}
 			e, err := target.inspect(ctx, git)
-			if name == "physical" {
-				if err == nil || err.Error() != "worktree physical path differs" {
-					t.Fatalf("redirected ancestor not refused: %v", err)
+			if name == "physical" || name == "relative_registration" {
+				want := "worktree physical path differs"
+				if name == "relative_registration" {
+					want = "invalid Git worktree registration"
+				}
+				if err == nil || err.Error() != want {
+					t.Fatalf("registration or path not refused: %v", err)
 				}
 			} else if err != nil || e.state != treePartial {
 				t.Fatalf("attribution accepted or wrong refusal: state=%d %v", e.state, err)
@@ -281,35 +323,46 @@ func TestOperatorReadbackErrorIsNeverCreated(t *testing.T) {
 }
 
 func TestOperatorWorktreeLockedReread(t *testing.T) {
-	r := newWorktreeStartRig(t, false)
-	crash := errors.New("before add")
-	if err := r.start(t, func(step string) error {
-		if step == "before add" {
-			return crash
-		}
-		return nil
-	}); !errors.Is(err, crash) {
-		t.Fatalf("expected reserved worktree: %v", err)
-	}
-	var before provisionSnapshot
-	calls := 0
-	read := func(path, id string) (store.OperatorStepKey, operatorWorktreeTarget, string, error) {
-		key, target, episode, err := readRunnerWorktree(path, id)
-		calls++
-		if calls == 1 && err == nil {
-			r.exec(t, "UPDATE operator_actions SET generation=generation+1")
-			before = observeProvision(t, r.f.r, r.creds)
-		}
-		return key, target, episode, err
-	}
-	r.env.terminal.openTerminal = func() (io.ReadWriteCloser, error) {
-		t.Error("a changed reservation reached the prompt")
-		return nil, errors.New("unexpected prompt")
-	}
-	var stderr strings.Builder
-	code := r.env.reconcileRunnerWorktree(r.action.ID, io.Discard, &stderr, read)
-	if code != exitUsage || calls != 2 || !strings.Contains(stderr.String(), store.ErrOperatorConflict.Error()) ||
-		!reflect.DeepEqual(before, observeProvision(t, r.f.r, r.creds)) {
-		t.Fatalf("reread did not preserve the replacement row and its evidence: %d %s", code, &stderr)
+	for _, name := range []string{"generation", "error"} {
+		t.Run(name, func(t *testing.T) {
+			r := newWorktreeStartRig(t, false)
+			crash := errors.New("before add")
+			if err := r.start(t, func(step string) error {
+				if step == "before add" {
+					return crash
+				}
+				return nil
+			}); !errors.Is(err, crash) {
+				t.Fatalf("expected reserved worktree: %v", err)
+			}
+			before := observeProvision(t, r.f.r, r.creds)
+			want := store.ErrOperatorConflict
+			if name == "error" {
+				want = errors.New("fixture locked read error")
+			}
+			calls := 0
+			read := func(path, id string) (store.OperatorStepKey, operatorWorktreeTarget, string, error) {
+				key, target, episode, err := readRunnerWorktree(path, id)
+				calls++
+				if name == "error" && calls == 2 && err == nil {
+					return key, target, episode, want
+				}
+				if name == "generation" && calls == 1 && err == nil {
+					r.exec(t, "UPDATE operator_actions SET generation=generation+1")
+					before = observeProvision(t, r.f.r, r.creds)
+				}
+				return key, target, episode, err
+			}
+			r.env.terminal.openTerminal = func() (io.ReadWriteCloser, error) {
+				t.Error("a changed reservation reached the prompt")
+				return nil, errors.New("unexpected prompt")
+			}
+			var stderr strings.Builder
+			code := r.env.reconcileRunnerWorktree(r.action.ID, io.Discard, &stderr, read)
+			if code != exitUsage || calls != 2 || !strings.Contains(stderr.String(), want.Error()) ||
+				!reflect.DeepEqual(before, observeProvision(t, r.f.r, r.creds)) {
+				t.Fatalf("reread did not preserve the replacement row and its evidence: %d %s", code, &stderr)
+			}
+		})
 	}
 }
