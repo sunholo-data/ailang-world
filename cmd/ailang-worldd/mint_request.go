@@ -217,6 +217,7 @@ var mintRequestFieldMap = map[string]string{
 	"beforeToken":        "nil: set only by episode_resume.go",
 	"resumeRollback":     "nil: set only by episode_resume.go",
 	"start":              "nil: set only by episode_preset.go; --request refuses launch presets",
+	"fromAllowance":      "nil: set only by episode_preset.go --from-allowance; --request refuses launch presets",
 	"startPoint":         "fixed: \"\" (set only by episode_preset.go)",
 	"existingBranch":     "fixed: false (set only by episode_preset.go)",
 	"presetPrompt":       "excluded: display only; approve sets renderRequest(request)",

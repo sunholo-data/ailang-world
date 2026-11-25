@@ -49,7 +49,7 @@ func TestCLICredentialWriterSites(t *testing.T) {
 			})
 		}
 	}
-	want := map[string]string{"runnerWrite": "OpenCredentials", "openCredentialsForSession": "OpenCredentials", "launchEpisode": "OpenCredentials", "finishRevoke": "OpenCredentials", "putFinishVerbRequest": "OpenCredentials"}
+	want := map[string]string{"runnerWrite": "OpenCredentials", "openCredentialsForSession": "OpenCredentials", "launchEpisode": "OpenCredentials", "finishRevoke": "OpenCredentials", "putFinishVerbRequest": "OpenCredentials", "runAllowanceGrant": "OpenCredentials", "runAllowanceRevoke": "OpenCredentials"}
 	if !reflect.DeepEqual(sites, want) || readOnly < 20 {
 		t.Fatalf("writer sites %v (read-only opens %d), want exactly %v and at least 20 read-only opens", sites, readOnly, want)
 	}
