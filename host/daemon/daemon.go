@@ -288,6 +288,9 @@ type Config struct {
 	// every other profile serves; the --exec-profile flags keep their
 	// all-or-nothing rule.
 	ExecProfilesDir     string
+	// PresetsDir (row 269) is a read-only directory of <name>.json launch
+	// presets surfaced on GET /surface/presets.json; World never writes here.
+	PresetsDir          string
 	ExecEpisodeProjects []string
 	ExecSandbox         string
 	ExecNode            string
@@ -411,6 +414,10 @@ type Daemon struct {
 
 	// surfaceUsage bounds verified usage derivation from retained launch evidence.
 	surfaceUsage surfaceUsageMemo
+	// execProfilesDir and presetsDir are read-only operator directories surfaced
+	// on GET /surface/profiles.json and GET /surface/presets.json (row 269).
+	execProfilesDir string
+	presetsDir      string
 
 	// resolver maps an inbound Authorization: Bearer session credential to a
 	// binding (w-session-authority D5/D6). New wires it to authority.New over
@@ -854,6 +861,8 @@ func newDaemon(ctx, phaseParent context.Context, registryBudget time.Duration, c
 	if err := workspace.configureExec(ctx, cfg); err != nil {
 		return nil, d.abort(StageConfig, "the exec configuration is refused", err)
 	}
+	d.execProfilesDir = cfg.ExecProfilesDir
+	d.presetsDir = cfg.PresetsDir
 	if (cfg.WorkspaceRoot == "") != (cfg.ToolAilangBin == "") {
 		fmt.Fprintln(d.errLog, "ailang-worldd: workspace tools disabled: --workspace-root and --tool-ailang-bin must both be set; "+
 			"every effect-declaring transition is refused")
@@ -1160,6 +1169,8 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/confirm.js", d.approvalRoute(d.handleSurfaceConfirmScript))
 	mux.HandleFunc("GET /surface/confirmations/{id}", d.approvalRoute(d.handleSurfaceConfirmation))
 	mux.HandleFunc("GET /surface/verb.json", d.approvalRoute(d.handleSurfaceVerb)) // row 243 V1: the bar's verbs, read-only
+	mux.HandleFunc("GET /surface/profiles.json", d.approvalRoute(d.handleSurfaceProfiles)) // row 269 Phase 1: read-only exec profiles
+	mux.HandleFunc("GET /surface/presets.json", d.approvalRoute(d.handleSurfacePresets))   // row 269 Phase 1: read-only launch presets
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)
 	// are ADDITIVE: the frozen /v1/ table above is untouched, and the routes
 	// are NOT in isProtected — the projection handler resolves the session

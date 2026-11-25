@@ -651,6 +651,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		ExamplesDir:    resolveExamplesDefault(*examplesDir, os.UserHomeDir),
 		RunAllowCaps:   runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP,
 		ExecProfiles: execProfiles, ExecProfilesDir: resolveProfilesDirDefault(*execProfilesDir, execProfiles, *execSandbox),
+		PresetsDir:          defaultPresetsDir(),
 		ExecEpisodeProjects: execEpisodeProjects, ExecSandbox: *execSandbox,
 		ExecNode: *execNode, ExecMaxOutputBytes: execMaxOutput,
 		WorkspaceModuleRoot: moduleRoot, WorkspaceEpisodeModuleRoots: episodeModuleRoots, WorkspacePackageCache: *packageCache,
