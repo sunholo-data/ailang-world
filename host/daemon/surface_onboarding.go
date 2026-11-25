@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,11 +12,13 @@ import (
 	"strings"
 
 	"github.com/sunholo-data/ailang-world/host/broker"
+	"github.com/sunholo-data/ailang-world/host/surfacepage"
 )
 
 // Row 269 Phase 1 (design_docs/planned/w-ui-profile-preset-onboarding.md):
-// read-only surface endpoints listing active/proposed exec profiles (joined
-// with the daemon's live probe status) and configured launch presets.
+// read-only surface endpoints and address-bar verbs listing active/proposed
+// exec profiles (joined with the daemon's live probe status) and configured
+// launch presets, plus the standalone /surface/repos UI page.
 const (
 	SurfaceProfilesSchema = "world/surface-profiles/v1"
 	SurfacePresetsSchema  = "world/surface-presets/v1"
@@ -58,14 +61,7 @@ type surfacePresetsResponse struct {
 	Presets []surfacePresetEntry `json:"presets"`
 }
 
-// handleSurfaceProfiles serves GET /surface/profiles.json behind approvalRoute.
-// It reads the configured exec profiles directory (never writes) and joins each
-// entry with the daemon's live loaded/excluded probe status.
-func (d *Daemon) handleSurfaceProfiles(w http.ResponseWriter, r *http.Request, _ []string) {
-	if r.URL.RawQuery != "" {
-		writeApprovalRefusal(w, http.StatusBadRequest, "BadRequest", unknownSurfaceKeyMessage)
-		return
-	}
+func (d *Daemon) readSurfaceProfiles() []surfaceProfileEntry {
 	loaded, excluded := d.workspace.healthProfiles()
 	loadedByProj := make(map[string]HealthExecProfile, len(loaded))
 	for _, p := range loaded {
@@ -141,19 +137,10 @@ func (d *Daemon) handleSurfaceProfiles(w http.ResponseWriter, r *http.Request, _
 		}
 		return rows[i].State < rows[j].State
 	})
-	writeApprovalJSON(w, http.StatusOK, surfaceProfilesResponse{
-		Schema:   SurfaceProfilesSchema,
-		Profiles: rows,
-	})
+	return rows
 }
 
-// handleSurfacePresets serves GET /surface/presets.json behind approvalRoute.
-// It reads configured preset metadata from d.presetsDir (never writes).
-func (d *Daemon) handleSurfacePresets(w http.ResponseWriter, r *http.Request, _ []string) {
-	if r.URL.RawQuery != "" {
-		writeApprovalRefusal(w, http.StatusBadRequest, "BadRequest", unknownSurfaceKeyMessage)
-		return
-	}
+func (d *Daemon) readSurfacePresets() []surfacePresetEntry {
 	rows := []surfacePresetEntry{}
 	if d.presetsDir != "" {
 		if ents, err := os.ReadDir(d.presetsDir); err == nil {
@@ -214,8 +201,117 @@ func (d *Daemon) handleSurfacePresets(w http.ResponseWriter, r *http.Request, _ 
 		}
 	}
 	sort.Slice(rows, func(i, j int) bool { return rows[i].Name < rows[j].Name })
+	return rows
+}
+
+// handleSurfaceProfiles serves GET /surface/profiles.json behind approvalRoute.
+func (d *Daemon) handleSurfaceProfiles(w http.ResponseWriter, r *http.Request, _ []string) {
+	if r.URL.RawQuery != "" {
+		writeApprovalRefusal(w, http.StatusBadRequest, "BadRequest", unknownSurfaceKeyMessage)
+		return
+	}
+	writeApprovalJSON(w, http.StatusOK, surfaceProfilesResponse{
+		Schema:   SurfaceProfilesSchema,
+		Profiles: d.readSurfaceProfiles(),
+	})
+}
+
+// handleSurfacePresets serves GET /surface/presets.json behind approvalRoute.
+func (d *Daemon) handleSurfacePresets(w http.ResponseWriter, r *http.Request, _ []string) {
+	if r.URL.RawQuery != "" {
+		writeApprovalRefusal(w, http.StatusBadRequest, "BadRequest", unknownSurfaceKeyMessage)
+		return
+	}
 	writeApprovalJSON(w, http.StatusOK, surfacePresetsResponse{
 		Schema:  SurfacePresetsSchema,
-		Presets: rows,
+		Presets: d.readSurfacePresets(),
 	})
+}
+
+// handleSurfaceReposPage serves GET /surface/repos behind approvalRoute.
+func (d *Daemon) handleSurfaceReposPage(w http.ResponseWriter, r *http.Request, _ []string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(surfacepage.ReposPage)
+}
+
+// handleSurfaceReposScript serves GET /surface/repos.js behind approvalRoute.
+func (d *Daemon) handleSurfaceReposScript(w http.ResponseWriter, r *http.Request, _ []string) {
+	w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(surfacepage.ReposScript)
+}
+
+func parseListJSONFlag(verb string, args []string) (asJSON bool, reason string) {
+	for _, arg := range args {
+		if arg == "--json" {
+			asJSON = true
+			continue
+		}
+		return false, fmt.Sprintf("%s accepts only --json (unexpected %q)", verb, arg)
+	}
+	return asJSON, ""
+}
+
+func (d *Daemon) verbProfileList(args []string, a *verbAnswer) {
+	asJSON, reason := parseListJSONFlag("profile list", args)
+	if reason != "" {
+		a.Reason = reason
+		return
+	}
+	rows := d.readSurfaceProfiles()
+	a.Outcome = "result"
+	if asJSON {
+		raw, _ := json.MarshalIndent(rows, "", "  ")
+		a.JSON = string(raw) + "\n"
+		return
+	}
+	if len(rows) == 0 {
+		a.Text = "no exec profiles configured\n"
+		return
+	}
+	var sb strings.Builder
+	for _, r := range rows {
+		if r.Error != "" {
+			fmt.Fprintf(&sb, "%-20s %-8s %-8s ERROR: %s\n", r.Project, r.State, r.ProbeStatus, r.Error)
+			continue
+		}
+		fmt.Fprintf(&sb, "%-20s %-8s %-8s root=%-10s cmds=[%s]\n",
+			r.Project, r.State, r.ProbeStatus, r.Root, strings.Join(r.Commands, ", "))
+	}
+	a.Text = sb.String()
+}
+
+func (d *Daemon) verbPresetList(args []string, a *verbAnswer) {
+	asJSON, reason := parseListJSONFlag("preset list", args)
+	if reason != "" {
+		a.Reason = reason
+		return
+	}
+	rows := d.readSurfacePresets()
+	a.Outcome = "result"
+	if asJSON {
+		raw, _ := json.MarshalIndent(rows, "", "  ")
+		a.JSON = string(raw) + "\n"
+		return
+	}
+	if len(rows) == 0 {
+		a.Text = "no launch presets configured\n"
+		return
+	}
+	var sb strings.Builder
+	for _, p := range rows {
+		if p.Error != "" {
+			fmt.Fprintf(&sb, "%-20s ERROR: %s\n", p.Name, p.Error)
+			continue
+		}
+		fmt.Fprintf(&sb, "%-20s %-6s %-11s profile=%-16s base=%-6s %s\n",
+			p.Name, p.Agent, p.Mode, p.Profile, p.Base, p.Repo)
+	}
+	a.Text = sb.String()
 }

@@ -98,6 +98,12 @@ func Lookup(argv []string) (Verb, []string) {
 				Reason: "episode launch needs a host process. The app cannot run it yet."}, argv[2:]
 		}
 	}
+	if first == "profile" && len(argv) > 1 && argv[1] == "list" { // row 269 Phase 1: read-only
+		return Verb{Words: "profile list", Class: Read, CLI: cli}, argv[2:]
+	}
+	if first == "preset" && len(argv) > 1 && argv[1] == "list" { // row 269 Phase 1: read-only
+		return Verb{Words: "preset list", Class: Read, CLI: cli}, argv[2:]
+	}
 	switch { // 4: the one-word rows
 	case first == "why":
 		return Verb{Words: "why", Class: Read, CLI: cli}, argv[1:]
