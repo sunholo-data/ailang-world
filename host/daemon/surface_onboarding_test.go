@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -108,5 +109,36 @@ func TestSurfaceOnboardingProfilesAndPresets(t *testing.T) {
 	d.handleSurfacePresets(rec, req, nil)
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("query param status = %d, want 400", rec.Code)
+	}
+
+	// 4. Address-bar Read verbs: profile list and preset list (text and --json).
+	for _, q := range []string{"profile list", "profile list --json", "preset list", "preset list --json"} {
+		req = httptest.NewRequest(http.MethodGet, "http://127.0.0.1:7644/surface/verb.json?q="+url.QueryEscape(q), nil)
+		rec = httptest.NewRecorder()
+		d.handleSurfaceVerb(rec, req, nil)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("verb %q status = %d, body = %s", q, rec.Code, rec.Body.String())
+		}
+		var ans verbAnswer
+		if err := json.Unmarshal(rec.Body.Bytes(), &ans); err != nil {
+			t.Fatalf("decode verb %q: %v", q, err)
+		}
+		if ans.Outcome != "result" || ans.Class != "read" {
+			t.Errorf("verb %q = %+v, want outcome=result class=read", q, ans)
+		}
+	}
+
+	// 5. Standalone /surface/repos page and script.
+	req = httptest.NewRequest(http.MethodGet, "http://127.0.0.1:7644/surface/repos", nil)
+	rec = httptest.NewRecorder()
+	d.handleSurfaceReposPage(rec, req, nil)
+	if rec.Code != http.StatusOK || rec.Body.Len() == 0 {
+		t.Fatalf("repos page status = %d len = %d", rec.Code, rec.Body.Len())
+	}
+	req = httptest.NewRequest(http.MethodGet, "http://127.0.0.1:7644/surface/repos.js", nil)
+	rec = httptest.NewRecorder()
+	d.handleSurfaceReposScript(rec, req, nil)
+	if rec.Code != http.StatusOK || rec.Body.Len() == 0 {
+		t.Fatalf("repos script status = %d len = %d", rec.Code, rec.Body.Len())
 	}
 }
