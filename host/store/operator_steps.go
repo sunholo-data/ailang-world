@@ -21,7 +21,15 @@ func (c *Credentials) ReserveOperatorStep(ctx context.Context, key OperatorStepK
 	if key.Kind == "operation" || key.Identity == "" || key.Owner == "" || key.Version != 1 {
 		return ErrOperatorInput
 	}
-	result, err := c.db.ExecContext(ctx, `INSERT INTO operator_action_steps
+	return reserveOperatorStep(ctx, c.db, key, now)
+}
+
+type operatorStepWriter interface {
+	ExecContext(context.Context, string, ...any) (sql.Result, error)
+}
+
+func reserveOperatorStep(ctx context.Context, db operatorStepWriter, key OperatorStepKey, now int64) error {
+	result, err := db.ExecContext(ctx, `INSERT INTO operator_action_steps
 		(kind, identity, action_id, phase, version, owner, created_at)
 		SELECT ?, ?, id, 'reserved', ?, owner, ? FROM operator_actions
 		WHERE id = ? AND digest = ? AND generation = ? AND owner = ?
@@ -41,7 +49,11 @@ func (c *Credentials) ObserveOperatorStep(ctx context.Context, key OperatorStepK
 	if len(receipt) == 0 || len(receipt) > MaxSurfaceApprovalArtifactBytes {
 		return ErrOperatorInput
 	}
-	result, err := c.db.ExecContext(ctx, `UPDATE operator_action_steps
+	return observeOperatorStep(ctx, c.db, key, receipt)
+}
+
+func observeOperatorStep(ctx context.Context, db operatorStepWriter, key OperatorStepKey, receipt []byte) error {
+	result, err := db.ExecContext(ctx, `UPDATE operator_action_steps
 		SET phase = 'observed', version = version + 1, receipt = ?
 		WHERE action_id = ? AND kind = ? AND identity = ? AND version = ? AND owner = ? AND phase = 'reserved'
 		AND EXISTS (SELECT 1 FROM operator_actions WHERE id = ? AND digest = ? AND generation = ? AND owner = ?)`,

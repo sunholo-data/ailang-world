@@ -96,6 +96,17 @@ token is retained for file reconciliation with the episode owner still
 held. A conflicting file or later effect reservation keeps the owner in
 place. Run the disposable example with `AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./cmd/ailang-worldd -run '^TestOperatorMintRecovery/revocation$' -count=1 -v`.
 
+For an owned start with an unresolved worktree reservation, run the attended
+disposition with its action ID. The disposable example uses this ID.
+
+```sh
+ailang-worldd service runner reconcile-worktree oa-0123456789abcdef0123456789abcdef
+```
+
+Review whether Git evidence is absent or retained, then type `y` to stop the
+action and release its owner. Any worktree, branch or files stay in place.
+Run the disposable example with `AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./cmd/ailang-worldd -run '^TestOperatorWorktreeWindow$' -count=1 -v`.
+
 ## Run your agents through World
 
 World launchers now tell Claude Code, Codex and pi their episode, worktree, session
