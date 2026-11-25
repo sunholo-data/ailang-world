@@ -327,7 +327,7 @@ func TestOperatorWorktreeWindow(t *testing.T) {
 	if err != nil || !strings.Contains(string(md), "\n"+worktreeExample+"\n") {
 		t.Fatalf("missing executable QUICKSTART example: %v", err)
 	}
-	for _, window := range []string{"before reservation", "before add", "before readback", "before observe", "git refused", "path only", "ref changed", "head changed", "readback error", "observe error", "add error after checkout", "redirected checkout", "registration locked", "ref read skew"} {
+	for _, window := range []string{"before reservation", "before add", "before readback", "before observe", "git refused", "success then absent", "path only", "ref changed", "head changed", "readback error", "observe error", "add error after checkout", "redirected checkout", "registration locked", "ref read skew"} {
 		t.Run(window, func(t *testing.T) {
 			r := newWorktreeStartRig(t, false)
 			initial := observeProvision(t, r.f.r, r.creds)
@@ -343,6 +343,11 @@ func TestOperatorWorktreeWindow(t *testing.T) {
 					}
 				case window == "add error after checkout" && step == "before readback":
 					r.state(t, "running", "reserved", "", 1, true)
+					atFailure = observeProvision(t, r.f.r, r.creds)
+				case window == "success then absent" && step == "before readback":
+					r.state(t, "running", "reserved", "", 1, true)
+					presetGit(t, r.f.r.f, "worktree", "remove", r.path())
+					presetGit(t, r.f.r.f, "branch", "-D", "world/ep")
 					atFailure = observeProvision(t, r.f.r, r.creds)
 				case window == "git refused" && step == "before add":
 					dir := filepath.Join(r.f.r.f.repo, ".git", "refs", "heads", "world")
@@ -433,6 +438,13 @@ func TestOperatorWorktreeWindow(t *testing.T) {
 					t.Fatal(err)
 				}
 				r.exec(t, "DROP TRIGGER fail_observe")
+			case "success then absent":
+				r.state(t, "uncertain", "reserved", "", 2, false)
+				got := observeProvision(t, r.f.r, r.creds)
+				got.credentials = atFailure.credentials
+				if !reflect.DeepEqual(atFailure, got) || err == nil || err.Error() != "worktree outcome uncertain; "+worktreeExample {
+					t.Fatalf("successful add with absent readback lost uncertainty or evidence: %v", err)
+				}
 			case "path only", "ref changed", "head changed", "readback error", "add error after checkout", "redirected checkout", "registration locked", "ref read skew":
 				r.rows(t, "uncertain", "reserved", "", 2)
 				got := observeProvision(t, r.f.r, r.creds)
@@ -472,6 +484,8 @@ func TestOperatorWorktreeWindow(t *testing.T) {
 			}
 			receipt, version := "stopped: retained", 2
 			switch window {
+			case "success then absent":
+				receipt, version = "stopped: absent", 3
 			case "before add":
 				receipt = "stopped: absent"
 			case "path only", "ref changed", "head changed", "readback error", "add error after checkout", "redirected checkout", "registration locked", "ref read skew":
