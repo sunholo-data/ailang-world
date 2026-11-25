@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 433 | 2026-11-25 | row 243 V4 sprint 5c LANDED (PR #661, merge `3a6e98a7`): killing tests for five of the seven judge-432 survivors and both S5 parity survivors, and ... |
 | 432 | 2026-11-25 | row 243 V4 sprint 5b LANDED (PR #659, merge `5d3b0581`): the terminal `session mint` takes the per-episode lock, an atomic operator mint (sealed ru... |
 | 431 | 2026-11-25 | row 243 V4 sprint 5 LANDED (PR #657, merge `ab520385`): terminal provision exclusion on `session new` and signed `approve`, a shared read-only pres... |
 | 430 | 2026-11-24 | row 243 V4 sprint 4b LANDED (PR #654, merge `fa3ad190`): terminal episode exclusion for start, preset start, resume, launch and the F1 finish; boun... |
