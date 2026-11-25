@@ -287,7 +287,7 @@ func runServiceRunner(args []string, out, errOut io.Writer, e serviceEnv) int {
 		return e.reconcileRunnerMint(args[1], out, errOut)
 	}
 	if verb == "reconcile-worktree" {
-		return e.reconcileRunnerWorktree(args[1], out, errOut)
+		return e.reconcileRunnerWorktree(args[1], out, errOut, readRunnerWorktree)
 	}
 	p := e.runnerPaths()
 	if verb == "status" {

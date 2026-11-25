@@ -1,0 +1,145 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s5e",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1, quorum r2 PROCEED 3/3, no absent seats",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s5e-sprint-plan.md",
+ "previous_sprint": "S5d #666, merge bb214516, judge Sonnet PASS 84 and 0 blocking",
+ "base_commit": "ec4565ec5eedfed693f9ea5f2c78b89b63bf432e",
+ "design_measured_at": "ec4565ec, §1.2 and §1.4",
+ "queue_row": 243,
+ "iteration": 435,
+ "phase": "V4",
+ "sprint_number": "5e",
+ "sprint": "S5e reservation-path survivor tests before a file effect caller",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter435-row243-v4s5e",
+ "branch": "sprint/world-iter435-row243-v4s5e",
+ "authority": [
+  "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004",
+  "D-WORLD-109 fixture stores and keys"
+ ],
+ "behaviour": "Refuse non-start rows before decode and pin the existing worktree reservation/readback and attended disposition. Production effect activation stays closed.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat ec4565ec HEAD -- cmd host docs app",
+  "measured": 495,
+  "unfiltered_product": 495,
+  "margin": 905,
+  "moved_out": {
+   "file_publication_and_disposition_probe": 967,
+   "file_probe_cumulative_with_M1": 1462,
+   "S5f_prior_process_probe": 72,
+   "S6_design_raw": 890,
+   "S8_design_raw": 860,
+   "S12_design_raw": 700
+  }
+ },
+ "planner_decisions": {
+  "cut": "M1 only. The compiled file slice plus M1 is 62 lines over the cap before full mutation coverage.",
+  "disposition": "Park all signed file outputs and attended stop together.",
+  "activation": "No new live start caller, new CLI subcommand or file effect."
+ },
+ "scope": [
+  "store reserve guard pins",
+  "independent Git readback pins",
+  "early worktree disposition and step CAS pins",
+  "at-limit receipt"
+ ],
+ "executor_lane": "M1 via patch only",
+ "executor_form": "Appendix P incremental patch, §2 application, §7 snapshot",
+ "estimate_loc": {
+  "compiled_landed": 495,
+  "parked": {
+   "file_publication_and_disposition_probe": 967,
+   "full_branch_and_linux_cost": "UNMEASURED"
+  }
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "Reservation-path pre-caller pins",
+   "expected_cumulative_numstat": 495,
+   "added": 489,
+   "deleted": 6,
+   "increment": 495,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang /bin/bash \"$T/accept.sh\" \"$W\" M1 fast",
+   "expected_snapshot": "5/0/5",
+   "unfiltered_product": 495
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "5/0/5",
+  "format": "STATUS / DELETED / MANIFEST"
+ },
+ "design_premises_found_false": [
+  "§1.4 F1–F6",
+  "The reviewed design does not give a literal file disposition subcommand name."
+ ],
+ "existing_tests_edited": [],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [
+  "cmd/ailang-worldd/operator_service.go",
+  "cmd/ailang-worldd/operator_worktree_reconcile.go",
+  "host/store/operator_worktree.go"
+ ],
+ "new_files": [
+  "cmd/ailang-worldd/operator_worktree_guards_test.go",
+  "host/store/operator_worktree_guards_test.go"
+ ],
+ "not_touched": [
+  ".ail",
+  "app",
+  "daemon routes and serves",
+  "driver",
+  "go.mod",
+  "credentials schema",
+  "host/daemon and host/verifygate tests",
+  "row 271"
+ ],
+ "mutants": {
+  "total_specs": 35,
+  "named_claimed": 31,
+  "named_killed": 31,
+  "named_survived_claimed": 0,
+  "base_judge_survivors_reproduced": 30,
+  "survived_unclaimed": [
+   "J-R-CURRENTEP",
+   "J-W-CREATEDREAD",
+   "N-STORE-RAW-CRED",
+   "N-RES-ABS"
+  ],
+  "whole_killed": 10,
+  "whole_unmeasured_cli": 25,
+  "whole_unmeasured_command": "/bin/bash \"$S/whole-mutants.sh\" \"$W\" \"$S/pkg-cmd-ailang-worldd.base-fails\"",
+  "mutant_report_complete": true,
+  "other_unresolved": []
+ },
+ "mutant_ledger": "$HOME/.ailang/state/world-iter435/plan-scratch/mutation-ledger.jsonl",
+ "mutant_specs": "$HOME/.ailang/state/world-iter435/plan-scratch/mutants.json",
+ "gates_script": "$HOME/.ailang/state/world-iter435/plan-scratch/gates.sh, §6",
+ "roundtrip": {
+  "M1": "Controller full archive diff -r rc=0. cmd/host/docs rc=0, app absent. Snapshot 5/0/5 and five hashes verified.",
+  "fenced_scripts_identical": true,
+  "snapshot_rehearsal": {
+   "M1": "5/0/5"
+  }
+ },
+ "controller_decisions_requested": [
+  "Record the real-binary base fail sets in §7.",
+  "Run §4.1 and §6 on the committed checkout, then Linux CI.",
+  "Carry Appendix C as one file milestone before activation."
+ ],
+ "verification": {
+  "base_gates": "§1.1 and §6",
+  "final_gates": "Archive final 190 s with zero informative failures. CLI race batch 7.668 s, +6.020 s over empty selector.",
+  "accept": "§3 and §7",
+  "roundtrip": "§7",
+  "mutant_replay": "§4",
+  "phase_5_5": "§3.2 and Appendix C"
+ },
+ "unfiltered_branch_with_plan": {
+  "M1": 1854
+ }
+}
