@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/daemon"
 )
 
 func runGit(t *testing.T, dir string, args ...string) {
@@ -92,7 +94,7 @@ func TestEpisodeGCFailSafeAndReclaims(t *testing.T) {
 	if code != exitOK {
 		t.Fatalf("dry-run exit %d, stderr %q", code, errw.String())
 	}
-	var dryRep gcReport
+	var dryRep daemon.EpisodeGCReport
 	if err := json.Unmarshal(out.Bytes(), &dryRep); err != nil {
 		t.Fatalf("decode dry-run: %v\n%s", err, out.String())
 	}
