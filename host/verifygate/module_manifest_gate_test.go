@@ -332,8 +332,8 @@ func TestModuleManifestRejectsStrayModule(t *testing.T) {
 	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	control := requirePristineControl(t, root)
-	if got := strings.Count(control, "\n   ai-check "); got != 24 {
-		t.Fatalf("pristine control emitted %d ai-check lines, want 24", got)
+	if got := strings.Count(control, "\n   ai-check "); got != 26 {
+		t.Fatalf("pristine control emitted %d ai-check lines, want 26", got)
 	}
 	probe := filepath.Join(root, "world", "_stray_manifest_probe.ail")
 	const source = "module world/_stray_manifest_probe\n\nexport func strayId(x: int) -> int = x\n"
@@ -579,8 +579,10 @@ func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
   packages/se-tools/se_tools/edit.ail
   packages/se-tools/se_tools/examples_search.ail
   packages/se-tools/se_tools/exec.ail
+  packages/se-tools/se_tools/list.ail
   packages/se-tools/se_tools/read.ail
   packages/se-tools/se_tools/run.ail
+  packages/se-tools/se_tools/search.ail
   packages/se-tools/se_tools/write.ail
   world/contracts.ail
   world/logepoch.ail
