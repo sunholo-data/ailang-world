@@ -1,7 +1,7 @@
 # World mission dashboard — iteration 431 (2026-11-25)
 
 - **Done this fire:** row 243 **V4 sprint 5 LANDED** (PR #657, merge `ab520385`, merge CI 3/3; judge **PASS 86**, 0 blocking).
-  - **Lock gap closed:** `session new` and the signed mint-request `approve` now take the per-episode lock before provisioning and refuse an operator-owned episode by exact action id, consuming nothing.
+  - **Lock gap closed on `session new` and `approve`:** `session new` and the signed mint-request `approve` now take the per-episode lock before provisioning and refuse an operator-owned episode by exact action id, consuming nothing.
   - **Read seam:** a read-only preset-start resolver shared by the terminal `episode start --preset` and the future operator start. Terminal behaviour unchanged.
   - **Confirm replay is exact:** a replay with different artifact bytes is refused (S4c).
   - QUICKSTART now documents the `credentials.db.operator-episode-<id>.lock` sidecars. 743 changed lines. Nothing dispatches yet.

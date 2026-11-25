@@ -1401,8 +1401,10 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 **Retro:**
 - **The planner retro rule held again** (79/79 named kills; 0 blocking). Instance 2 of the rule working; keep it.
 - **Sequencing the judge behind the gate sweep worked** (iteration 430's retro, instance 1): no load-only red in `verify_go` this time.
-- **Row 267 now reaches PRs whose package list excludes `host/daemon`** (instance 5): every rerun costs ~13 min of CI wall time. It stays a rule-(d) hygiene row; the count is the signal for Mark.
+- **Row 267 hits sprint PRs whose changes exclude `host/daemon`** (instances 2 and 5, #651 and #657; five instances in ~9 h of run creation): every rerun costs ~13 min of CI wall time. It stays a rule-(d) hygiene row; the count is the signal for Mark.
 
 **Next:** V4 S5b planner — design §5.3's atomic minted-start rows per the S5 plan's Appendix C (signed revalidation, complete collision checks, atomic mint, token/task/MCP file recovery, attended resolver before any new uncertain outcome, paired-process lock consumer/drain), carrying `session mint`'s lock gap, the judge's three survivors, S3b and J-OWN-UID.
 
 **Gate 5 bookkeeping:** rotation not due (#635 opened 2026-11-23T07:34Z; next 2026-11-30). Weekly external-issue sweep not due (424 ran it for this week). Idle fingerprint NOT recorded (this fire picked and landed). Harness share last 20: 0/20 (20 tagged). Last 3 landings (431, 430, 429) move no clause; no clause is UNMET → no DRIFT line. Log not rotated (21 entries, under the ~40 threshold); index regenerated.
+
+**Record judge** (Agent `sonnet`, ~1.5 min, 74,050 tok): **FAIL** on two facts in the first draft (`53b08d0f`), both in my row 267 text — "five instances in about thirty hours" (the span is ~9 h: run 45425824922 created 2026-11-24T15:28Z, run 45520125603 2026-11-25T00:42Z) and "instance 5 the first on a sprint whose package list excludes `host/daemon`" (PR #651, instance 2, also changed only `cmd/ailang-worldd`, `host/store` and docs). Both corrected in the follow-up commit, plus the dashboard's "lock gap closed" scoped to `session new`/`approve` and row 267's `TestWorkspacePackageCache*` sentence scoped to instances 1–3 (it was already inaccurate for instance 4).
