@@ -74,6 +74,10 @@ ailang-worldd service runner stop
 ailang-worldd service runner uninstall
 ```
 Review and type `y` for install, stop and uninstall. Uninstall before upgrading or replacing the config. Spool and action records are retained.
+Terminal episode operations use private mode-0600 sidecars named
+`<creds>.operator-episode-<ep>.lock` beside the canonical credentials database.
+Keep these sidecars in place across stop and uninstall. Independent opens need
+the same file to coordinate access to the episode.
 Run the checked example with a fake supervisor and disposable stores:
 ```sh
 AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./cmd/ailang-worldd -run '^TestOperatorServiceWriteScope$' -count=1 -v

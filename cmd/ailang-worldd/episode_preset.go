@@ -50,108 +50,124 @@ func checkPresetDaemon(h daemon.HealthResponse, req *mintRequest, p *resolvedPre
 	return checkDaemon(h, req, addr, episodeSelfBuild())
 }
 
-func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDir, task string, specs []string, out, errOut io.Writer, env sessionEnv) int {
-	fail := func(err error) int {
-		fmt.Fprintln(errOut, "ailang-worldd episode start: "+err.Error())
-		return exitUsage
-	}
-	if len(specs) != 0 {
-		return fail(presetRefusal("grants come from preset "+name+" (F7)", "grants and checks are closed", "edit the preset, or drop --preset"))
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
-	defer cancel()
-	p, err := loadLaunchPreset(ctx, name, dir, profilesDir, defaultWorldPaths().workspaceRoot)
+type presetStartOverride struct {
+	name, value string
+}
+
+type presetStartInput struct {
+	episodes                []string
+	workspaceRoot, hostsDir string
+	launching, headless     bool
+	overrides               []presetStartOverride
+	readTask                func() (source string, data []byte, err error)
+}
+
+type presetStartRead struct {
+	mint          *mintRequest
+	preset        *resolvedPreset
+	health        daemon.HealthResponse
+	taskCopy, mcp string
+	task          []byte
+	launchMode    string
+	launchWall    time.Duration
+	launchBinary  string
+}
+
+// resolvePresetStart reads the local preset, Git, credential and daemon inputs
+// for review. It does not lock, prompt, provision files, mint or launch. The
+// terminal supplies a task-file reader. A runner can supply frozen inline bytes.
+func resolvePresetStart(ctx context.Context, name, dir, profilesDir string, input presetStartInput, now func() int64) (*presetStartRead, error) {
+	p, err := loadLaunchPreset(ctx, name, dir, profilesDir, input.workspaceRoot)
 	if err != nil {
-		return fail(err)
+		return nil, err
 	}
-	launching := fs.Lookup("launch") != nil && fs.Lookup("launch").Value.String() == "true"
-	headless := fs.Lookup("headless") != nil && fs.Lookup("headless").Value.String() == "true"
-	if launching {
-		if _, _, err := launchMode(p.Preset, headless); err != nil {
-			return fail(err)
+	var mode string
+	var wall time.Duration
+	if input.launching {
+		mode, wall, err = launchMode(p.Preset, input.headless)
+		if err != nil {
+			return nil, err
 		}
-		mode, _, _ := launchMode(p.Preset, headless)
-		if mode == "headless" && task == "" {
-			return fail(presetRefusal("--launch needs --task", "headless launch runs the pinned task", "add --task <file>"))
+		if mode == "headless" && input.readTask == nil {
+			return nil, presetRefusal("--launch needs --task", "headless launch runs the pinned task", "add --task <file>")
 		}
 	}
-	if len(pos) > 1 {
-		return fail(errors.New("expected at most one episode id"))
+	if len(input.episodes) > 1 {
+		return nil, errors.New("expected at most one episode id")
 	}
 	ep := ""
-	if len(pos) == 1 {
-		ep = pos[0]
+	if len(input.episodes) == 1 {
+		ep = input.episodes[0]
 	} else {
-		ep, err = derivePresetEpisode(name, p.Daemon.WorkspaceRoot, p.Daemon.SessionsDir, env.now())
+		ep, err = derivePresetEpisode(name, p.Daemon.WorkspaceRoot, p.Daemon.SessionsDir, now())
 		if err != nil {
-			return fail(err)
+			return nil, err
 		}
 	}
 	if !workspaceEpisodePattern.MatchString(ep) {
-		return fail(fmt.Errorf("episode %q does not match %s", ep, workspaceEpisodePattern))
+		return nil, fmt.Errorf("episode %q does not match %s", ep, workspaceEpisodePattern)
 	}
 	agent, model, ttl, branch := p.Preset.Agent, p.Preset.Model, p.Preset.TTLS, "world/"+ep
 	overrides := []string{}
 	overrideLines := []string{}
 	modelOverridden := false
-	fs.Visit(func(f *flag.Flag) {
-		switch f.Name {
+	for _, override := range input.overrides {
+		switch override.name {
 		case "agent":
-			overrideLines = append(overrideLines, "agent "+f.Value.String()+" (preset: "+agent+")")
-			agent = f.Value.String()
+			overrideLines = append(overrideLines, "agent "+override.value+" (preset: "+agent+")")
+			agent = override.value
 		case "model":
-			overrideLines = append(overrideLines, "model "+f.Value.String()+" (preset: "+model+")")
-			model = f.Value.String()
+			overrideLines = append(overrideLines, "model "+override.value+" (preset: "+model+")")
+			model = override.value
 			modelOverridden = true
 		case "ttl":
-			overrideLines = append(overrideLines, "ttl "+f.Value.String()+" (preset: "+strconv.FormatInt(ttl, 10)+")")
-			ttl, _ = strconv.ParseInt(f.Value.String(), 10, 64)
+			overrideLines = append(overrideLines, "ttl "+override.value+" (preset: "+strconv.FormatInt(ttl, 10)+")")
+			ttl, _ = strconv.ParseInt(override.value, 10, 64)
 		case "branch":
-			overrideLines = append(overrideLines, "branch "+f.Value.String()+" (preset: "+branch+")")
-			branch = f.Value.String()
-		default:
-			return
+			overrideLines = append(overrideLines, "branch "+override.value+" (preset: "+branch+")")
+			branch = override.value
 		}
-		overrides = append(overrides, f.Name)
-	})
+		overrides = append(overrides, override.name)
+	}
 	if agent != p.Preset.Agent && !modelOverridden && model != "" {
 		overrideLines = append(overrideLines, "model <default for "+agent+"> (cleared preset "+p.Preset.Agent+" model: "+model+")")
 		model = ""
 	}
 	if agent != "claude" && agent != "codex" && agent != "agy" {
-		return fail(errors.New("agent must be claude, codex or agy"))
+		return nil, errors.New("agent must be claude, codex or agy")
 	}
-	if launching {
-		if _, err := launchBinary(agent); err != nil {
-			return fail(err)
+	var binary string
+	if input.launching {
+		binary, err = launchBinary(agent)
+		if err != nil {
+			return nil, err
 		}
-		mode, _, _ := launchMode(p.Preset, headless)
 		if mode == "interactive" {
-			if _, err := launchLauncher(agent, fs.Lookup("hosts-dir").Value.String(), p.Daemon.Addr); err != nil {
-				return fail(err)
+			if _, err := launchLauncher(agent, input.hostsDir, p.Daemon.Addr); err != nil {
+				return nil, err
 			}
 		}
 		launchDir := filepath.Join(filepath.Dir(p.Daemon.SessionsDir), "launch", ep)
 		if err := validateLaunchDir(launchDir, p.Daemon.WorkspaceRoot, filepath.Join(p.Daemon.WorkspaceRoot, ep), p.Daemon.SessionsDir); err != nil {
-			return fail(err)
+			return nil, err
 		}
 		if err := launchLockCheck(filepath.Join(p.Daemon.SessionsDir, ep+".launch.lock")); err != nil {
-			return fail(err)
+			return nil, err
 		}
 	}
 	if ttl < 0 {
-		return fail(errors.New("ttl must be non-negative"))
+		return nil, errors.New("ttl must be non-negative")
 	}
 	git, err := sessionGit()
 	if err != nil {
-		return fail(err)
+		return nil, err
 	}
 	query := func(args ...string) (string, error) {
 		s, err := worktree.Output(ctx, git, append([]string{"-C", p.Preset.Repo}, args...))
 		return strings.TrimSpace(s), err
 	}
 	if _, err := query("check-ref-format", "refs/heads/"+branch); err != nil {
-		return fail(err)
+		return nil, err
 	}
 	existing := false
 	if _, err := query("show-ref", "--verify", "refs/heads/"+branch); err == nil {
@@ -164,15 +180,15 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 		}
 	}
 	if existing && !branchOverridden {
-		return fail(errors.New("derived branch already exists; pass --branch explicitly or choose another episode"))
+		return nil, errors.New("derived branch already exists; pass --branch explicitly or choose another episode")
 	}
 	if existing {
 		list, err := query("worktree", "list", "--porcelain")
 		if err != nil {
-			return fail(err)
+			return nil, err
 		}
 		if strings.Contains("\n"+list+"\n", "\nbranch refs/heads/"+branch+"\n") {
-			return fail(fmt.Errorf("existing branch %s is checked out in another worktree; choose a free branch", branch))
+			return nil, fmt.Errorf("existing branch %s is checked out in another worktree; choose a free branch", branch)
 		}
 	}
 	sessionFile := filepath.Join(p.Daemon.SessionsDir, ep+".session")
@@ -181,69 +197,55 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 	if agent == "claude" {
 		mcp = filepath.Join(p.Daemon.SessionsDir, ep+".mcp.json")
 	}
-	if launching {
-		mode, _, _ := launchMode(p.Preset, headless)
-		if mode == "interactive" {
-			mcp = ""
-		}
+	if mode == "interactive" {
+		mcp = ""
 	}
 	for _, path := range []string{sessionFile, taskCopy, mcp} {
 		if path == "" {
 			continue
 		}
 		if _, err := os.Lstat(path); err == nil {
-			return fail(fmt.Errorf("%s already exists; choose another episode", path))
+			return nil, fmt.Errorf("%s already exists; choose another episode", path)
 		} else if !errors.Is(err, os.ErrNotExist) {
-			return fail(err)
+			return nil, err
 		}
 	}
 	var taskData []byte
 	var taskRecord *store.StartTask
-	if task != "" {
-		path, err := filepath.Abs(task)
+	if input.readTask != nil {
+		var path string
+		path, taskData, err = input.readTask()
 		if err != nil {
-			return fail(err)
+			return nil, err
 		}
-		info, err := os.Stat(path)
-		if err != nil {
-			return fail(err)
-		}
-		if !info.Mode().IsRegular() {
-			return fail(errors.New("task must be a regular file"))
-		}
-		taskData, err = os.ReadFile(path)
-		if err != nil {
-			return fail(err)
-		}
-		title := taskTitle(taskData)
-		taskRecord = &store.StartTask{Path: path, SHA256: serviceHash(taskData), Title: title}
+		taskRecord = &store.StartTask{Path: path, SHA256: serviceHash(taskData), Title: taskTitle(taskData)}
 	}
 	req, err := prepareMint(mintOptions{verb: "episode start", episode: ep, db: p.Daemon.DB, credsDB: p.Daemon.CredentialsDB,
 		wsRoot: p.Daemon.WorkspaceRoot, repo: p.Preset.Repo, branch: branch, grants: p.Grants, ttl: ttl,
 		outPath: sessionFile, outDirCreate: true, profile: p.Preset.Profile, profilesDir: profilesDir})
 	if err != nil {
-		return fail(err)
+		return nil, err
 	}
 	if req.prof != nil && req.prof.Digest != p.ProfileDigest {
-		return fail(errors.New("exec profile changed during validation; run episode start again"))
+		return nil, errors.New("exec profile changed during validation; run episode start again")
 	}
 	if req.reuse {
-		return fail(errors.New("launch preset episode already has a worktree; choose another episode"))
+		return nil, errors.New("launch preset episode already has a worktree; choose another episode")
 	}
 	// A CLI never upgrades an older credentials store.
 	if _, err := os.Stat(req.credPath); err == nil {
 		ro, err := store.OpenCredentialsReadOnly(req.credPath)
 		if err != nil {
-			return fail(err)
+			return nil, err
 		}
 		version := ro.Version()
 		_ = ro.Close()
 		if version < store.CredentialsBindingWriteVersion {
-			return fail(&store.UnboundCredentialsStoreError{Path: req.credPath})
+			return nil, &store.UnboundCredentialsStoreError{Path: req.credPath}
 		}
 	}
 	req.startPoint, req.existingBranch = p.BaseSHA, existing
-	req.start = &store.EpisodeStart{Schema: "world/episode-start/v1", Episode: ep, StartedAt: time.Unix(env.now(), 0).Format(time.RFC3339),
+	req.start = &store.EpisodeStart{Schema: "world/episode-start/v1", Episode: ep, StartedAt: time.Unix(now(), 0).Format(time.RFC3339),
 		Preset: store.StartPreset{Name: name, Path: p.Path, SHA256: p.SHA256, Bytes: p.File}, Repo: p.Preset.Repo,
 		Remote: store.StartRemote{Name: p.Preset.Remote, URL: p.RemoteURL}, Base: store.StartBase{Branch: p.Preset.Base, SHA: p.BaseSHA},
 		Branch: branch, BranchExisted: existing, Agent: agent, Model: model, Overrides: overrides, Task: taskRecord, Checks: p.Checks, TTLS: ttl}
@@ -274,16 +276,67 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 	req.presetPrompt = prompt.String()
 	h, err := fetchDaemonHealth(p.Daemon.Addr)
 	if err != nil {
-		return fail(err)
+		return nil, err
 	}
 	if err := checkPresetDaemon(h, req, p, p.Daemon.Addr); err != nil {
+		return nil, err
+	}
+	return &presetStartRead{mint: req, preset: p, health: h, taskCopy: taskCopy, mcp: mcp,
+		task: taskData, launchMode: mode, launchWall: wall, launchBinary: binary}, nil
+}
+
+func readPresetStartTask(task string) (string, []byte, error) {
+	path, err := filepath.Abs(task)
+	if err != nil {
+		return "", nil, err
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		return "", nil, err
+	}
+	if !info.Mode().IsRegular() {
+		return "", nil, errors.New("task must be a regular file")
+	}
+	data, err := os.ReadFile(path)
+	return path, data, err
+}
+
+func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDir, task string, specs []string, out, errOut io.Writer, env sessionEnv) int {
+	fail := func(err error) int {
+		fmt.Fprintln(errOut, "ailang-worldd episode start: "+err.Error())
+		return exitUsage
+	}
+	if len(specs) != 0 {
+		return fail(presetRefusal("grants come from preset "+name+" (F7)", "grants and checks are closed", "edit the preset, or drop --preset"))
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	defer cancel()
+
+	input := presetStartInput{
+		episodes: pos, workspaceRoot: defaultWorldPaths().workspaceRoot, hostsDir: fs.Lookup("hosts-dir").Value.String(),
+		launching: fs.Lookup("launch").Value.String() == "true", headless: fs.Lookup("headless").Value.String() == "true",
+	}
+	fs.Visit(func(f *flag.Flag) {
+		switch f.Name {
+		case "agent", "model", "ttl", "branch":
+			input.overrides = append(input.overrides, presetStartOverride{f.Name, f.Value.String()})
+		}
+	})
+	if task != "" {
+		input.readTask = func() (string, []byte, error) { return readPresetStartTask(task) }
+	}
+	read, err := resolvePresetStart(ctx, name, dir, profilesDir, input, env.now)
+	if err != nil {
 		return fail(err)
 	}
+	req, p := read.mint, read.preset
+	ep := req.episode
 	effectLock, err := terminalEpisodeLock(req.credPath, ep, nil)
 	if err != nil {
 		return fail(err)
 	}
 	defer effectLock.Close()
+	taskRecord, taskCopy, taskData, mcp := req.start.Task, read.taskCopy, read.task, read.mcp
 	req.afterToken = func(token string) error {
 		if taskRecord != nil {
 			f, err := os.OpenFile(taskCopy, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
@@ -309,17 +362,17 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 		}
 		return nil
 	}
-	if code := provisionEpisode(req, out, errOut, env); code != exitOK {
+	if code := provisionEpisode(req, effectLock, out, errOut, env); code != exitOK {
 		return code
 	}
-	if launching {
-		return launchEpisode(ep, name, dir, headless, out, errOut, effectLock, fs.Lookup("hosts-dir").Value.String())
+	if input.launching {
+		return launchEpisode(ep, name, dir, input.headless, out, errOut, effectLock, input.hostsDir)
 	}
 	taskPath := ""
 	if taskRecord != nil {
 		taskPath = taskRecord.Path
 	}
-	printLaunch(out, launchInfo{episode: ep, agent: agent, model: model, addr: p.Daemon.Addr, worktree: req.dir,
-		branch: branch, sessionFile: sessionFile, mcpFile: mcp, task: taskPath, grants: p.Grants})
+	printLaunch(out, launchInfo{episode: ep, agent: req.start.Agent, model: req.start.Model, addr: p.Daemon.Addr, worktree: req.dir,
+		branch: req.branch, sessionFile: req.outPath, mcpFile: mcp, task: taskPath, grants: p.Grants})
 	return exitOK
 }

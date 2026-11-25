@@ -374,7 +374,7 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	}
 
 	// 2.-3. session new's path, unchanged.
-	if code := provisionEpisode(req, stdout, stderr, env); code != exitOK {
+	if code := provisionEpisode(req, effectLock, stdout, stderr, env); code != exitOK {
 		return code
 	}
 

@@ -212,7 +212,7 @@ func runEpisodeResume(fs *flag.FlagSet, pos []string, ep, name, presetsDir, prof
 		}
 		return resumeAfterRename()
 	}
-	if code := provisionEpisode(req, out, errOut, env); code != exitOK {
+	if code := provisionEpisode(req, effectLock, out, errOut, env); code != exitOK {
 		return code
 	}
 	fmt.Fprintf(out, "next: ailang-worldd episode launch %s --preset %s\n", ep, name)

@@ -395,7 +395,7 @@ func runApprove(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	req.answerBy = row.ExpiresAt
 	req.consume = &authority.RequestMint{Request: mr, RequestCreatedAt: row.CreatedAt, Challenge: [32]byte(challenge),
 		ExpiresAt: row.ExpiresAt, Signed: signed, Consume: store.RequestConsume{ID: row.RequestID, Digest: row.Digest, Clock: env.now}}
-	if code := provisionEpisode(req, stdout, stderr, env); code != exitOK {
+	if code := provisionEpisode(req, nil, stdout, stderr, env); code != exitOK {
 		return code
 	}
 	printLaunch(stdout, launchInfo{episode: mr.Episode, agent: mr.Agent, model: mr.Model, addr: mr.Daemon.Addr,

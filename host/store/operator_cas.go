@@ -56,6 +56,9 @@ func (c *Credentials) ConfirmOperatorAction(ctx context.Context, cas OperatorCAS
 		return OperatorActionRow{}, ErrOperatorConflict
 	}
 	if row.ApprovedBy != "" {
+		if !bytes.Equal(row.Artifact, artifact) {
+			return OperatorActionRow{}, ErrOperatorConflict
+		}
 		return row, nil
 	}
 	if row.State != "requested" || row.Generation != cas.Generation {
