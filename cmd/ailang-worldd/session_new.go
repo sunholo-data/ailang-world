@@ -228,6 +228,9 @@ type mintRequest struct {
 	// consume is set only by approve (row 201): the stored request this mint consumes, in the
 	// mint's own transaction.
 	consume *authority.RequestMint
+	// fromAllowance is set only by episode start --from-allowance (row 224): draws from an
+	// approved standing allowance without prompting /dev/tty.
+	fromAllowance *authority.AllowanceMintRequest
 	// answerBy bounds the y/N to this Unix time; 0 (every caller but approve) is unbounded.
 	answerBy int64
 }
@@ -406,7 +409,7 @@ func provisionEpisode(r *mintRequest, held *os.File, stdout, stderr io.Writer, e
 	prefix := "ailang-worldd " + r.verb + ": "
 	// 2. The mint fence, unchanged, before any side effect, unless a verified signature approved
 	// this request (row 201 A1b §2.8: Signed is set only by approve, from ApproveBySignature).
-	signed := r.consume != nil && r.consume.Signed != nil
+	signed := (r.consume != nil && r.consume.Signed != nil) || r.fromAllowance != nil
 	var term io.ReadWriteCloser
 	if !signed { // V1
 		var err error
@@ -527,7 +530,14 @@ func provisionEpisode(r *mintRequest, held *os.File, stdout, stderr io.Writer, e
 	mintCtx, cancelMint := context.WithTimeout(ctx, 3*time.Second)
 	var rawToken, credentialID string
 	var row store.SessionRow
-	if r.consume != nil {
+	if r.fromAllowance != nil {
+		var drawNum int
+		var allowanceID string
+		rawToken, credentialID, row, drawNum, allowanceID, err = authority.MintFromAllowance(mintCtx, st, r.episode, binding, grants, r.ttl, now, out, *r.fromAllowance)
+		if err == nil {
+			fmt.Fprintf(stderr, "%sdrew session #%d today from standing allowance %s\n", prefix, drawNum, allowanceID)
+		}
+	} else if r.consume != nil {
 		rawToken, credentialID, row, err = authority.MintForRequest(mintCtx, st, r.episode, binding, grants, r.ttl, now, out, *r.consume)
 	} else if r.resume != nil {
 		rawToken, credentialID, row, err = authority.MintResumed(mintCtx, st, r.episode, binding, grants, r.ttl, now, out, *r.resume)

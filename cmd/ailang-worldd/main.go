@@ -139,6 +139,9 @@ Usage:
   ailang-worldd approver enroll --name <name> --format webauthn --origin <origin> --registration <file> [--db <path>] [--credentials-db <path>]
   ailang-worldd approver list [--db <path>] [--credentials-db <path>]
   ailang-worldd approver revoke <name> [--db <path>] [--credentials-db <path>]
+  ailang-worldd allowance grant --preset <name> [--max-per-day 10] [--valid-days 30] [--credentials-db <path>]
+  ailang-worldd allowance list [--all] [--json] [--credentials-db <path>]
+  ailang-worldd allowance revoke <allowance-id|preset> [--reason <text>] [--credentials-db <path>]
   ailang-worldd [--addr <url>] episode report <episode> [--json | --markdown] [--follow] [--interval 2s] [--addr <url>]
   ailang-worldd episode finish <episode> --preset <name> [--presets-dir D] [--title TEXT]
                         [--allow-failing CHECK]... [--include-unattributed] [--dry-run]
@@ -488,6 +491,15 @@ func run(args []string, stdout, stderr io.Writer) int {
 		}
 		return runApprover(rest[1:], stdout, stderr, realSessionEnv())
 
+	case "allowance":
+		// Row 224 (D-WORLD-96): standing session allowances live in the credentials store beside --db.
+		if addrGiven {
+			fmt.Fprintln(stderr, "ailang-worldd: --addr is a client flag and is not valid for 'allowance'; "+
+				"standing allowances live in the credentials store beside --db, not on a running daemon")
+			return exitUsage
+		}
+		return runAllowance(rest[1:], stdout, stderr, realSessionEnv())
+
 	// Row 189 M3: one attended act starts an episode on a serving daemon.
 	// Row 198: `episode report` is a client verb like why, so it takes the
 	// global --addr; `episode start` keeps its own --addr only.
@@ -723,7 +735,7 @@ func serveResult(err error, stderr io.Writer) int {
 var ownHelpVerbs = map[string]bool{
 	"version": true, "service": true,
 	"tools": true, "call": true, "why": true, "provenance": true,
-	"setup": true, "doctor": true, "session": true, "approve": true, "approver": true, "episode": true,
+	"setup": true, "doctor": true, "session": true, "approve": true, "approver": true, "allowance": true, "episode": true,
 	"profile": true, "surface-index": true, "hosts": true, "whoami": true,
 }
 

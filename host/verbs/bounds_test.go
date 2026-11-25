@@ -19,8 +19,8 @@ func TestNeverAndOtherReasonsEndWithTheCLILine(t *testing.T) {
 			n++
 		}
 	}
-	if n != 50 {
-		t.Fatalf("%d rows, want 50 (25 words, bare and with an argument)", n)
+	if n != 52 {
+		t.Fatalf("%d rows, want 52 (26 words, bare and with an argument)", n)
 	}
 }
 

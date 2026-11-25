@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/worktree"
@@ -301,7 +302,7 @@ func readPresetStartTask(task string) (string, []byte, error) {
 	return path, data, err
 }
 
-func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDir, task string, specs []string, out, errOut io.Writer, env sessionEnv) int {
+func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDir, task string, specs []string, fromAllowance bool, out, errOut io.Writer, env sessionEnv) int {
 	fail := func(err error) int {
 		fmt.Fprintln(errOut, "ailang-worldd episode start: "+err.Error())
 		return exitUsage
@@ -330,6 +331,14 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 		return fail(err)
 	}
 	req, p := read.mint, read.preset
+	if fromAllowance {
+		req.fromAllowance = &authority.AllowanceMintRequest{
+			PresetName:   name,
+			PresetSHA256: strings.TrimPrefix(p.SHA256, "sha256:"),
+			Repo:         filepath.Clean(p.Preset.Repo),
+			Start:        *req.start,
+		}
+	}
 	ep := req.episode
 	effectLock, err := terminalEpisodeLock(req.credPath, ep, nil)
 	if err != nil {

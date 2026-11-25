@@ -33,8 +33,19 @@ type EpisodeStart struct {
 	Task          *StartTask      `json:"task,omitempty"`
 	Checks        []StartCheck    `json:"checks"`
 	TTLS          int64           `json:"ttl_s"`
+	Allowance     *StartAllowance `json:"allowance,omitempty"`
 	Resumes       []EpisodeResume `json:"resumes,omitempty"`
 	Launches      []EpisodeLaunch `json:"launches,omitempty"`
+}
+
+// StartAllowance links an episode started via --from-allowance back to its
+// standing allowance and draw ledger entry (row 224, D-WORLD-96).
+type StartAllowance struct {
+	AllowanceID string `json:"allowance_id"`
+	DrawID      string `json:"draw_id"`
+	ApprovedBy  string `json:"approved_by"`
+	DayKey      string `json:"day_key"`
+	DrawNumber  int    `json:"draw_number"`
 }
 type StartPreset struct {
 	Name   string `json:"name"`
