@@ -179,6 +179,8 @@ func runEpisode(addr string, args []string, stdout, stderr io.Writer) int {
 		return runEpisodeFinish(args[1:], stdout, stderr, realSessionEnv())
 	case "report":
 		return runEpisodeReport(addr, args[1:], stdout, stderr)
+	case "gc":
+		return runEpisodeGC(args[1:], stdout, stderr)
 	case "--help", "-help", "-h", "help":
 		fmt.Fprint(stdout, episodeHelp)
 		return exitOK
