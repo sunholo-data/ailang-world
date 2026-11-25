@@ -498,15 +498,8 @@ func (c *Credentials) mintSession(ctx context.Context, row SessionRow, start *Ep
 		return err
 	}
 	if start != nil {
-		if start.Episode != row.EpisodeID || start.Schema != "world/episode-start/v1" {
-			return fmt.Errorf("store: mint session: invalid start record")
-		}
-		data, err := json.Marshal(start)
-		if err != nil {
+		if _, err := insertEpisodeStart(ctx, tx, row.EpisodeID, *start); err != nil {
 			return err
-		}
-		if _, err := tx.ExecContext(ctx, `INSERT INTO episode_starts (episode, start_json) VALUES (?, ?)`, row.EpisodeID, string(data)); err != nil {
-			return fmt.Errorf("store: mint start: %w", err)
 		}
 	}
 	if resume != nil {
@@ -518,6 +511,20 @@ func (c *Credentials) mintSession(ctx context.Context, row SessionRow, start *Ep
 		return fmt.Errorf("store: mint session: commit: %w", err)
 	}
 	return nil
+}
+
+func insertEpisodeStart(ctx context.Context, tx *sql.Tx, episode string, start EpisodeStart) ([]byte, error) {
+	if start.Episode != episode || start.Schema != "world/episode-start/v1" {
+		return nil, fmt.Errorf("store: mint session: invalid start record")
+	}
+	data, err := json.Marshal(start)
+	if err != nil {
+		return nil, err
+	}
+	if _, err := tx.ExecContext(ctx, `INSERT INTO episode_starts (episode, start_json) VALUES (?, ?)`, episode, string(data)); err != nil {
+		return nil, fmt.Errorf("store: mint start: %w", err)
+	}
+	return data, nil
 }
 
 // insertSessionRow writes one session_credentials row inside tx. An unbound row names only the

@@ -22,6 +22,10 @@ type operatorStoreRig struct {
 }
 
 func newOperatorStoreRig(t *testing.T, passkey bool) operatorStoreRig {
+	return newOperatorStoreRigAction(t, passkey, func(*approval.OperatorAction) {})
+}
+
+func newOperatorStoreRigAction(t *testing.T, passkey bool, prepare func(*approval.OperatorAction)) operatorStoreRig {
 	t.Helper()
 	path, _ := jgRig(t)
 	ctx := boundedTestContext(t)
@@ -32,6 +36,7 @@ func newOperatorStoreRig(t *testing.T, passkey bool) operatorStoreRig {
 	}
 	a := ojAction()
 	a.Store = canonical
+	prepare(&a)
 	req := store.OperatorRequest{Action: a, OperationID: "1234567890abcdef1234567890abcdef", CreatedAt: 1000, ExpiresAt: 1600, Challenge: sha256.Sum256([]byte(t.Name()))}
 	row, err := c.RequestOperatorAction(ctx, req, 1000)
 	if err != nil {
