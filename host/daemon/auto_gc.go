@@ -1,13 +1,15 @@
 package daemon
 
 import (
+	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/sunholo-data/ailang-world/host/toolprobe"
 )
 
 // EpisodeGCItem describes one worktree or cache directory removed or skipped by RunEpisodeGC.
@@ -160,7 +162,7 @@ func RunEpisodeGC(opts EpisodeGCOptions) EpisodeGCReport {
 	}
 	if !opts.DryRun {
 		for commonDir := range reposToPrune {
-			_ = exec.Command("git", "--git-dir", commonDir, "worktree", "prune").Run()
+			_, _ = toolprobe.Output(context.Background(), "git", "", "--git-dir", commonDir, "worktree", "prune")
 		}
 	}
 
@@ -237,7 +239,8 @@ func checkWorktreeUnsafe(wtPath string) string {
 	if err != nil || gitMeta.IsDir() {
 		return "not a linked git worktree"
 	}
-	out, err := exec.Command("git", "-C", wtPath, "status", "--porcelain").Output()
+	ctx := context.Background()
+	out, err := toolprobe.Output(ctx, "git", wtPath, "status", "--porcelain")
 	if err != nil {
 		return "git status failed"
 	}
@@ -245,7 +248,7 @@ func checkWorktreeUnsafe(wtPath string) string {
 		return "dirty worktree (uncommitted or untracked files)"
 	}
 	for _, ref := range []string{"@{u}", "origin/dev", "origin/main", "dev", "main"} {
-		if exec.Command("git", "-C", wtPath, "merge-base", "--is-ancestor", "HEAD", ref).Run() == nil {
+		if _, err := toolprobe.Output(ctx, "git", wtPath, "merge-base", "--is-ancestor", "HEAD", ref); err == nil {
 			return ""
 		}
 	}
@@ -253,7 +256,7 @@ func checkWorktreeUnsafe(wtPath string) string {
 }
 
 func gitCommonDir(wtPath string) string {
-	out, err := exec.Command("git", "-C", wtPath, "rev-parse", "--path-format=absolute", "--git-common-dir").Output()
+	out, err := toolprobe.Output(context.Background(), "git", wtPath, "rev-parse", "--path-format=absolute", "--git-common-dir")
 	if err != nil {
 		return ""
 	}
@@ -262,7 +265,7 @@ func gitCommonDir(wtPath string) string {
 
 func removeWorktree(wtPath, commonDir string) error {
 	if commonDir != "" {
-		if err := exec.Command("git", "--git-dir", commonDir, "worktree", "remove", wtPath).Run(); err == nil {
+		if _, err := toolprobe.Output(context.Background(), "git", "", "--git-dir", commonDir, "worktree", "remove", wtPath); err == nil {
 			return nil
 		}
 	}
