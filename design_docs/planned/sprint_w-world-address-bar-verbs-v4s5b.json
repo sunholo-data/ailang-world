@@ -1,0 +1,169 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s5b",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1, iteration 406 quorum r2 PROCEED 3/3, no absent seats",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s5b-sprint-plan.md",
+ "previous_sprint": "S5, PR #657, merge ab520385, sonnet PASS 86, 0 blocking",
+ "base_commit": "f8d8e3ad27b8442e1cd62674052b0392f03089a6",
+ "design_measured_at": "f8d8e3ad, plan §1.2 and §1.4",
+ "queue_row": 243,
+ "iteration": 432,
+ "phase": "V4",
+ "sprint": "S5b, atomic minted-start proof and attended recovery",
+ "sprint_number": "5b",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter432-row243-v4s5b",
+ "branch": "sprint/world-iter432-row243-v4s5b",
+ "authority": [
+  "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004",
+  "D-WORLD-109 fixture stores and keys"
+ ],
+ "behaviour": "Terminal session mint shares the canonical episode lock. Inert runner mint binds fresh time and the current approval to a session, start and receipt in one transaction. An attended command can preserve an exact live token or revoke one committed orphan with current-owner/step CAS.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat f8d8e3ad HEAD -- cmd host docs app",
+  "measured": 1400,
+  "unfiltered_product": 1400,
+  "margin": 0,
+  "unfiltered_if_plans_recorded": 3912,
+  "moved_out": {
+   "S5c_mint_input_projection_probe": 54,
+   "S5c_worktree_readback_probe": 59,
+   "S5c_file_readback_probe": 53,
+   "S5c_process_fd_test_probe": 72,
+   "S5c_legacy_J_PRINT_AGENT_test_probe": 5,
+   "S5c_legacy_J_DOUBLE_OVERRIDE_APPEND_test_probe": 3,
+   "S5c_S3b_bank_measured": 132,
+   "S5c_measured_sizing_floor": 378,
+   "J_OWN_UID_mutation_hunk_lines": 2,
+   "J_OWN_UID_alternate_owner_fixture": "unmeasured",
+   "S6_design_raw": 890,
+   "S8_design_raw": 860,
+   "S12_design_raw": 700
+  }
+ },
+ "planner_decisions": {
+  "terminal": "Acquire after tty open and before review for operator-admissible IDs. Retain legacy opaque IDs.",
+  "proof": "Recheck a separately reconstructed action, then consume only a sealed runner mint proof in the SQLite transaction.",
+  "recovery": "Read observed mint, exact live session and start evidence under the canonical episode descriptor. Typed approval and second readback authorize only an orphan revoke.",
+  "activation": "Zero production claim, reserve, observe or mint callers. S5c carries integrated worktree and file reconciliation, live-resolution and drain/fd gates."
+ },
+ "scope": [
+  "session mint episode exclusion",
+  "atomic credential, start and mint receipt",
+  "orphan token recovery and exact terminal remedy",
+  "existing private token inspection",
+  "QUICKSTART sidecar documentation pin"
+ ],
+ "executor_lane": "M1 M2 via patch only",
+ "executor_form": "Appendix P unified diffs, §2 extraction and §7 cumulative snapshots",
+ "estimate_loc": {
+  "compiled_landed": 1400,
+  "parked": {
+   "S5c_mint_input_projection_probe": 54,
+   "S5c_worktree_readback_probe": 59,
+   "S5c_file_readback_probe": 53,
+   "S5c_process_fd_test_probe": 72,
+   "S5c_legacy_J_PRINT_AGENT_test_probe": 5,
+   "S5c_legacy_J_DOUBLE_OVERRIDE_APPEND_test_probe": 3,
+   "S5c_S3b_bank_measured": 132,
+   "S5c_measured_sizing_floor": 378,
+   "J_OWN_UID_mutation_hunk_lines": 2,
+   "J_OWN_UID_alternate_owner_fixture": "unmeasured",
+   "S6_design_raw": 890,
+   "S8_design_raw": 860,
+   "S12_design_raw": 700
+  }
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "terminal session mint episode exclusion",
+   "expected_cumulative_numstat": 95,
+   "added": 95,
+   "deleted": 0,
+   "increment": 95,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M1 fast",
+   "expected_snapshot": "2/0/2",
+   "expected_unfiltered_with_plan_records": 2607
+  },
+  {
+   "id": "M2",
+   "title": "sealed atomic mint and attended orphan recovery",
+   "expected_cumulative_numstat": 1400,
+   "added": 1376,
+   "deleted": 24,
+   "increment": 1305,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang bash \"$T/accept.sh\" \"$W\" M2 fast",
+   "expected_snapshot": "15/0/15",
+   "expected_unfiltered_with_plan_records": 3912
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "2/0/2",
+  "M2": "15/0/15",
+  "format": "STATUS / DELETED / MANIFEST"
+ },
+ "design_premises_found_false": [
+  "§1.4 F1–F6",
+  "session mint accepts opaque legacy IDs",
+  "the prior agent-print mutation changes the selection of launch command, which has no literal agent: line",
+  "verify_go needs Git metadata absent in baseline archive"
+ ],
+ "existing_tests_edited": [
+  "cmd/ailang-worldd/operator_episode_lock_test.go",
+  "cmd/ailang-worldd/operator_provision_test.go",
+  "host/authority/operator_store_test.go",
+  "host/store/credentials_test.go"
+ ],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [
+  "cmd/ailang-worldd/session.go",
+  "cmd/ailang-worldd/service.go",
+  "cmd/ailang-worldd/operator_service.go",
+  "host/approval/operator_signed.go",
+  "host/authority/mint.go",
+  "host/store/credentials.go"
+ ],
+ "not_touched": [
+  ".ail",
+  "daemon routes and serving code",
+  "driver",
+  "go.mod",
+  "preset legacy start",
+  "S3b bank"
+ ],
+ "mutants": {
+  "total": 123,
+  "named_killed": 123,
+  "named_survived": 0,
+  "unmeasured_in_sandbox": 44,
+  "whole_killed": 79,
+  "implementation_only_whole_killed": 2,
+  "implementation_only_whole_survived": 82,
+  "legacy_base_reproduction": [
+   "J-QUICKSTART-b",
+   "J-PRINT-AGENT",
+   "J-DOUBLE-OVERRIDE-APPEND"
+  ],
+  "mutant_report_complete": true
+ },
+ "mutant_ledger": "$HOME/.ailang/state/world-iter432/plan-scratch/mutation-ledger.json",
+ "gates_script": "$HOME/.ailang/state/world-iter432/plan-scratch/gates.sh, embedded in §6",
+ "controller_decisions_requested": [
+  "Run CLI whole-package variants, full Go and Linux race and Darwin observation gates outside the sandbox.",
+  "Keep all Appendix C gates with activation and validate completed S5c size before dispatch."
+ ],
+ "verification": {
+  "base_gates": "§1.1",
+  "final_gates": "§6",
+  "accept": "§3",
+  "roundtrip": "§7",
+  "mutant_replay": "§4"
+ }
+}
