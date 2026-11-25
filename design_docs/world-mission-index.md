@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 436 | 2026-11-25 | row 243 V4 sprint 5e2 LANDED (PR #672, merge `d9c24a3b`): killing tests for the judge-435 reservation-path survivors (owner, empty identity and exa... |
 | 435 | 2026-11-25 | row 243 V4 sprint 5e LANDED (PR #669, merge `2df9dc80`): reservation-path pre-caller pins — killing tests for the judge-434 survivors (store reservati... |
 | 434 | 2026-11-25 | row 243 V4 sprint 5d LANDED (PR #666, merge `bb214516`): the S3b step bank, the start-input forwarding pins, and a signed start's worktree reservat... |
 | 433 | 2026-11-25 | row 243 V4 sprint 5c LANDED (PR #661, merge `3a6e98a7`): killing tests for five of the seven judge-432 survivors and both S5 parity survivors, and ... |
