@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 431 | 2026-11-25 | row 243 V4 sprint 5 LANDED (PR #657, merge `ab520385`): terminal provision exclusion on `session new` and signed `approve`, a shared read-only pres... |
 | 430 | 2026-11-24 | row 243 V4 sprint 4b LANDED (PR #654, merge `fa3ad190`): terminal episode exclusion for start, preset start, resume, launch and the F1 finish; boun... |
 | 429 | 2026-11-24 | row 243 V4 sprint 4 LANDED (PR #651, merge `ee8ef1c0`): the opt-in operator-runner companion (typed `service runner` lifecycle, liveness-only heart... |
 | 428 | 2026-11-24 | row 243 V4 sprint 3 LANDED (PR #643, merge `e83d1717`): credentials schema 10 (`operator_actions`, `operator_runner_state`, `operator_action_steps`... |
