@@ -1,0 +1,172 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s5d",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1, quorum r2 PROCEED 3/3, no absent seats",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s5d-sprint-plan.md",
+ "previous_sprint": "S5c #661, merge 3a6e98a7, judge sonnet PASS 87 and 0 blocking",
+ "base_commit": "68c3673579b53326a2c5d4d7bc62b9d3bb7a1105",
+ "design_measured_at": "68c36735, \u00a71.2 and \u00a71.4",
+ "queue_row": 243,
+ "iteration": 434,
+ "phase": "V4",
+ "sprint_number": "5d",
+ "sprint": "S5d, worktree reservation with attended disposition and reserve/observe bank",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter434-row243-v4s5d",
+ "branch": "sprint/world-iter434-row243-v4s5d",
+ "authority": [
+  "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004",
+  "D-WORLD-109 fixture stores and keys"
+ ],
+ "behaviour": "Reserve after signed reconstruction under the canonical episode lock; prove exact registration/path/common/ref/SHA under lock. An uncertain or interrupted reservation has its attended stop-and-retain command in the same patch. Activation stays closed.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat 68c36735 HEAD -- cmd host docs app",
+  "measured": 1397,
+  "unfiltered_product": 1397,
+  "margin": 3,
+  "moved_out": {
+   "S5e_file_readback_probe": 53,
+   "S5f_process_fd_test_probe": 72,
+   "S5e_S5f_full_size": "UNMEASURED beyond probes",
+   "S6_design_raw": 890,
+   "S8_design_raw": 860,
+   "S12_design_raw": 700
+  }
+ },
+ "planner_decisions": {
+  "cut": "M1 independently green; M2 reservation, Git readback and attended disposition in one patch.",
+  "disposition": "Keep Git evidence as found and explicitly stop by independent current owner/step CAS.",
+  "activation": "No production prep caller. Only the attended reconcile-worktree command can run, for an existing reserved row."
+ },
+ "scope": [
+  "S3b reserve/observe step bank and restart",
+  "S5c seam forwarding and nonzero attempt",
+  "TestOperatorStartCollisions",
+  "TestOperatorWorktreeWindow with exact attended remedy and current CAS",
+  "TestOperatorStartOnce, worktree half"
+ ],
+ "executor_lane": "M1 M2 via patch only",
+ "executor_form": "Appendix P incremental patches, \u00a72 application, \u00a77 snapshots",
+ "estimate_loc": {
+  "compiled_landed": 1397,
+  "parked": {
+   "S5e_file_readback_probe": 53,
+   "S5f_process_fd_test_probe": 72
+  }
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "S3b step bank and pre-caller forwarding",
+   "expected_cumulative_numstat": 280,
+   "added": 274,
+   "deleted": 6,
+   "increment": 280,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang /bin/bash \"$T/accept.sh\" \"$W\" M1 fast",
+   "expected_snapshot": "5/0/5",
+   "unfiltered_product": 280
+  },
+  {
+   "id": "M2",
+   "title": "Signed-start worktree reservation with attended disposition",
+   "expected_cumulative_numstat": 1397,
+   "added": 1384,
+   "deleted": 13,
+   "increment": 1121,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang /bin/bash \"$T/accept.sh\" \"$W\" M2 fast",
+   "expected_snapshot": "14/0/14",
+   "unfiltered_product": 1397
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "5/0/5",
+  "M2": "14/0/14",
+  "format": "STATUS / DELETED / MANIFEST"
+ },
+ "design_premises_found_false": [
+  "\u00a71.4 F1-F7",
+  "row-269 daemon gofmt drift",
+  "hosts layout is consumed only by interactive launch",
+  "verify_go needs Git metadata"
+ ],
+ "existing_tests_edited": [
+  "cmd/ailang-worldd/help_test.go",
+  "cmd/ailang-worldd/operator_start_input_test.go",
+  "host/store/credentials_test.go",
+  "host/store/operator_cas_test.go"
+ ],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [
+  "cmd/ailang-worldd/main.go",
+  "cmd/ailang-worldd/operator_service.go",
+  "cmd/ailang-worldd/operator_start_input.go",
+  "cmd/ailang-worldd/service.go",
+  "docs/QUICKSTART.md"
+ ],
+ "new_files": [
+  "cmd/ailang-worldd/operator_worktree.go",
+  "cmd/ailang-worldd/operator_worktree_reconcile.go",
+  "cmd/ailang-worldd/operator_worktree_test.go",
+  "host/store/operator_steps.go",
+  "host/store/operator_worktree.go"
+ ],
+ "not_touched": [
+  ".ail",
+  "app",
+  "daemon routes and serving code",
+  "driver",
+  "go.mod",
+  "credentials schema",
+  "host/daemon and host/verifygate tests"
+ ],
+ "mutants": {
+  "total_specs": 222,
+  "named_claimed": 220,
+  "named_killed": 220,
+  "named_survived_claimed": 0,
+  "survived_unclaimed": [
+   "N-STORE-RAW-CRED",
+   "N-RES-ABS"
+  ],
+  "whole_killed": 32,
+  "whole_unmeasured_cli": 188,
+  "whole_unmeasured_command": "bash \"$S/whole-mutants.sh\"",
+  "mutant_report_complete": true,
+  "other_unresolved": []
+ },
+ "mutant_ledger": "$HOME/.ailang/state/world-iter434/plan-scratch/mutation-ledger.jsonl",
+ "mutant_specs": "$HOME/.ailang/state/world-iter434/plan-scratch/mutants.json",
+ "gates_script": "$HOME/.ailang/state/world-iter434/plan-scratch/gates.sh, \u00a76",
+ "roundtrip": {
+  "M1": "Full archive diff -r rc=0; cmd/host/docs rc=0; app absent",
+  "M2": "Full archive diff -r rc=0; cmd/host/docs rc=0; app absent",
+  "fenced_scripts_identical": true,
+  "snapshot_rehearsal": {
+   "M1": "5/0/5",
+   "M2": "14/0/14"
+  }
+ },
+ "controller_decisions_requested": [
+  "Run \u00a74.1 whole-mutants.sh outside the sandbox.",
+  "Run \u00a76 on the committed checkout, then Linux CI.",
+  "Carry the Appendix C activation gates."
+ ],
+ "verification": {
+  "base_gates": "\u00a71.1 and \u00a76",
+  "final_gates": "\u00a76; gate-bounded/legs.txt",
+  "accept": "\u00a73 and \u00a77",
+  "roundtrip": "\u00a77",
+  "mutant_replay": "\u00a74",
+  "phase_5_5": "\u00a73.2 and Appendix C"
+ },
+ "unfiltered_branch_with_plan": {
+  "M1": 2903,
+  "M2": 4020
+ }
+}

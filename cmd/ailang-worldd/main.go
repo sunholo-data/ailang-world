@@ -83,7 +83,7 @@ Usage:
   ailang-worldd hosts init [--out-dir <dir>] [--addr <url>] [--replace]
   ailang-worldd version [--json]
   ailang-worldd service install|status|upgrade|stop|start|uninstall [flags; upgrade: --binary FILE --pause]
-  ailang-worldd service runner install|start|stop|status|cancel|uninstall
+  ailang-worldd service runner install|start|stop|status|cancel|reconcile-mint|reconcile-worktree|uninstall
   ailang-worldd serve --db <path> [--credentials-db <path>] [--bind host:port] [--ailang-bin <path>]
                       [--workbench-still]
                       [--workspace-root <dir> --tool-ailang-bin <path>]

@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/daemon"
@@ -30,7 +33,7 @@ const operatorStartTask = "# Fix fixture\nExact signed task bytes.\n"
 func newOperatorStartRig(t *testing.T) operatorStartRig {
 	t.Helper()
 	f := newPresetFixture(t)
-	r := operatorStartRig{f: f, bin: startReadFakeAgent(t, f), hosts: t.TempDir(), at: store.OperatorMintAttempt{Catalogue: 3}}
+	r := operatorStartRig{f: f, bin: startReadFakeAgent(t, f), hosts: t.TempDir(), at: store.OperatorMintAttempt{Catalogue: 3, CAS: store.OperatorCAS{ID: fixtureActionID, Generation: 7}, Runner: store.OperatorOwner{Nonce: "fixture", Generation: 11}, StepVersion: 2}}
 	r.creds = matchingHealth(t, f.r.f, f.r.profiles, f.profile).CredentialsDB
 	canonical, err := store.CanonicalPath(r.creds)
 	if err != nil {
@@ -39,7 +42,7 @@ func newOperatorStartRig(t *testing.T) operatorStartRig {
 	r.action = approval.OperatorAction{Schema: approval.OperatorActionSchema, ID: fixtureActionID, Kind: "start", Episode: "ep",
 		Store: canonical, Options: approval.OperatorOptions{Preset: "p", Headless: true}, Task: operatorStartTask, Review: "fixture"}
 	r.action.Argv = approval.OperatorArgv(r.action.Kind, r.action.Episode, r.action.Options)
-	in, facts, err := operatorStartFacts(presetTestContext(t), r.action, r.at, f.dir, f.r.profiles, f.r.f.ws, r.hosts, presetClock)
+	in, facts, err := operatorStartFacts(presetTestContext(t), r.action, r.at, f.dir, f.r.profiles, f.r.f.ws, r.hosts, presetClock, resolvePresetStart)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +103,7 @@ func TestOperatorStartFacts(t *testing.T) {
 		}
 	}
 	in := r.in
-	if in.Start.Episode != "ep" || in.Start.Base.SHA != f.base || in.Start.Preset.SHA256 != serviceHash(f.data) ||
+	if in.Start.StartedAt != time.Unix(presetClock(), 0).Format(time.RFC3339) || in.Start.Episode != "ep" || in.Start.Base.SHA != f.base || in.Start.Preset.SHA256 != serviceHash(f.data) ||
 		in.Start.Branch != "world/ep" || in.Start.BranchExisted || in.Start.Agent != "codex" || in.Start.TTLS != 43200 ||
 		in.Start.Task == nil || in.Start.Task.Path != filepath.Join(f.r.sessions, "ep.task.md") ||
 		in.Start.Task.SHA256 != serviceHash([]byte(operatorStartTask)) || in.TokenPath != filepath.Join(f.r.sessions, "ep.session") ||
@@ -225,5 +228,31 @@ func TestOperatorStartChanged(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// The preset daemon can configure a workspace distinct from the layout root.
+// Headless starts still forward the hosts directory through the common read seam.
+func TestOperatorStartForwarding(t *testing.T) {
+	r := newOperatorStartRig(t)
+	f := r.f
+	before := observeProvision(t, f.r, r.creds)
+	workspace := t.TempDir()
+	reader := func(ctx context.Context, name, presets, profiles string, in presetStartInput, clock func() int64) (*presetStartRead, error) {
+		if in.hostsDir != r.hosts {
+			t.Errorf("headless start forwarded hosts %q, want %q", in.hostsDir, r.hosts)
+		}
+		return resolvePresetStart(ctx, name, presets, profiles, in, clock)
+	}
+	_, facts, err := operatorStartFacts(presetTestContext(t), r.action, r.at, f.dir, f.r.profiles, workspace, r.hosts, presetClock, reader)
+	if err != nil || !reflect.DeepEqual(facts, r.action.Resolution) {
+		t.Fatalf("different layout root must retain the configured worktree: %v, %v", facts, err)
+	}
+	_, err = reconstructOperatorStart(presetTestContext(t), r.action, r.at, f.dir, f.r.profiles, f.dir, r.hosts, presetClock)
+	if err == nil || !strings.Contains(err.Error(), "inside the workspace") {
+		t.Fatalf("a preset stored inside the supplied workspace must refuse: %v", err)
+	}
+	if !reflect.DeepEqual(before, observeProvision(t, f.r, r.creds)) {
+		t.Fatal("forwarding checks changed durable state")
 	}
 }

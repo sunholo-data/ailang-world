@@ -1,7 +1,10 @@
 package store
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"path/filepath"
 	"sync"
 	"testing"
 )
@@ -119,5 +122,164 @@ func TestOperatorClaimRace(t *testing.T) {
 	operatorExec(t, c, `UPDATE operator_actions SET kind = 'finish', v3_id = 'vr-0000000000000001' WHERE state = 'claimed'`)
 	if _, err := c.db.Exec(`UPDATE operator_actions SET v3_id = 'vr-0000000000000001' WHERE state = 'confirmed'`); err == nil {
 		t.Fatal("the same V3 card was linked to two actions")
+	}
+}
+
+func TestOperatorStepRestart(t *testing.T) {
+	path := filepath.Join(t.TempDir(), CredentialsFileName)
+	open := func() *Credentials {
+		c, err := OpenCredentials(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { c.Close() })
+		return c
+	}
+	c := open()
+	cas, runner := operatorClaimFixture(t, c)
+	ctx := testCtx(t)
+	if err := c.ClaimOperatorAction(ctx, cas, runner, 1599); err != nil {
+		t.Fatal(err)
+	}
+	cas.Generation++
+	key := OperatorStepKey{Action: cas, Owner: runner.Nonce, Kind: "launch", Identity: "run-one", Version: 1}
+	if err := c.ReserveOperatorStep(ctx, key, 1600); !errors.Is(err, ErrOperatorConflict) {
+		t.Fatalf("reserve at expiry: %v", err)
+	}
+	operatorCounts(t, c, 1, 1)
+	if err := c.ReserveOperatorStep(ctx, key, 1599); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Close(); err != nil {
+		t.Fatal(err)
+	}
+	c = open()
+	if err := c.ReserveOperatorStep(ctx, key, 1599); !errors.Is(err, ErrOperatorConflict) {
+		t.Fatalf("reservation replay: %v", err)
+	}
+	reservation, err := c.OperatorStep(ctx, key)
+	if err != nil || reservation.Phase != "reserved" || reservation.Version != 1 || reservation.Owner != runner.Nonce || reservation.Receipt != nil {
+		t.Fatalf("lost reservation on restart: %+v %v", reservation, err)
+	}
+	receipt := []byte("observed-test-launch")
+	wrong := key
+	wrong.Version++
+	if err := c.ObserveOperatorStep(ctx, wrong, receipt); !errors.Is(err, ErrOperatorConflict) {
+		t.Fatalf("wrong step CAS: %v", err)
+	}
+	if got, err := c.OperatorStep(ctx, key); err != nil || got.Phase != "reserved" || got.Receipt != nil {
+		t.Fatal("failed CAS changed reservation")
+	}
+	if err := c.ObserveOperatorStep(ctx, key, receipt); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.ObserveOperatorStep(ctx, key, receipt); !errors.Is(err, ErrOperatorConflict) {
+		t.Fatalf("observation replay: %v", err)
+	}
+	got, err := c.OperatorStep(ctx, key)
+	if err != nil || got.Phase != "observed" || got.Version != 2 || !bytes.Equal(got.Receipt, receipt) {
+		t.Fatalf("observed receipt: %+v %v", got, err)
+	}
+	key.Version++
+	if err := c.ObserveOperatorStep(ctx, key, []byte("second receipt")); !errors.Is(err, ErrOperatorConflict) {
+		t.Fatalf("observed phase accepted at current version: %v", err)
+	}
+	if after, err := c.OperatorStep(ctx, key); err != nil || after.Version != got.Version || !bytes.Equal(after.Receipt, got.Receipt) {
+		t.Fatalf("observed replay changed its receipt: %+v %v", after, err)
+	}
+	operatorCounts(t, c, 1, 2)
+}
+
+func TestOperatorStepGuards(t *testing.T) {
+	c := openTestCredentials(t)
+	ctx := testCtx(t)
+	cas, runner := operatorClaimFixture(t, c)
+	if err := c.ClaimOperatorAction(ctx, cas, runner, 1599); err != nil {
+		t.Fatal(err)
+	}
+	cas.Generation++
+	key := OperatorStepKey{Action: cas, Owner: runner.Nonce, Kind: "checks", Identity: "guard", Version: 1}
+	checks := []struct {
+		name             string
+		edit             func(*OperatorStepKey)
+		reserve, observe error
+	}{
+		{"id", func(k *OperatorStepKey) { k.Action.ID += "-other" }, ErrOperatorConflict, ErrOperatorConflict},
+		{"digest", func(k *OperatorStepKey) { k.Action.Digest[0] ^= 1 }, ErrOperatorConflict, ErrOperatorConflict},
+		{"generation", func(k *OperatorStepKey) { k.Action.Generation++ }, ErrOperatorConflict, ErrOperatorConflict},
+		{"owner", func(k *OperatorStepKey) { k.Owner += "-other" }, ErrOperatorConflict, ErrOperatorConflict},
+		{"empty_owner", func(k *OperatorStepKey) { k.Owner = "" }, ErrOperatorInput, ErrOperatorConflict},
+		{"operation", func(k *OperatorStepKey) { k.Kind = "operation" }, ErrOperatorInput, ErrOperatorConflict},
+		{"empty_identity", func(k *OperatorStepKey) { k.Identity = "" }, ErrOperatorInput, ErrOperatorConflict},
+		{"version", func(k *OperatorStepKey) { k.Version++ }, ErrOperatorInput, ErrOperatorConflict},
+	}
+	for _, tc := range checks {
+		t.Run("reserve_"+tc.name, func(t *testing.T) {
+			bad := key
+			tc.edit(&bad)
+			if err := c.ReserveOperatorStep(ctx, bad, 1599); !errors.Is(err, tc.reserve) {
+				t.Fatalf("reservation class: %v", err)
+			}
+			operatorCounts(t, c, 1, 1)
+		})
+	}
+	if err := c.ReserveOperatorStep(ctx, key, 999); !errors.Is(err, ErrOperatorConflict) {
+		t.Fatalf("clock before creation: %v", err)
+	}
+	operatorExec(t, c, "UPDATE operator_actions SET state='uncertain'")
+	if err := c.ReserveOperatorStep(ctx, key, 1599); !errors.Is(err, ErrOperatorConflict) {
+		t.Fatalf("uncertain action: %v", err)
+	}
+	operatorCounts(t, c, 1, 1)
+	operatorExec(t, c, "UPDATE operator_actions SET state='running'")
+	if err := c.ReserveOperatorStep(ctx, key, 1599); err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range checks {
+		t.Run("observe_"+tc.name, func(t *testing.T) {
+			bad := key
+			tc.edit(&bad)
+			if err := c.ObserveOperatorStep(ctx, bad, []byte("readback")); !errors.Is(err, tc.observe) {
+				t.Fatalf("observation class: %v", err)
+			}
+			assertReservedOperatorStep(t, c, key)
+		})
+	}
+	for _, body := range [][]byte{nil, make([]byte, MaxSurfaceApprovalArtifactBytes+1)} {
+		if err := c.ObserveOperatorStep(ctx, key, body); !errors.Is(err, ErrOperatorInput) {
+			t.Fatalf("receipt size %d: %v", len(body), err)
+		}
+		assertReservedOperatorStep(t, c, key)
+	}
+	operatorExec(t, c, "UPDATE operator_action_steps SET owner='replacement' WHERE kind='checks'")
+	if err := c.ObserveOperatorStep(ctx, key, []byte("readback")); !errors.Is(err, ErrOperatorConflict) {
+		t.Fatalf("stale step owner: %v", err)
+	}
+	replaced := key
+	replaced.Owner = "replacement"
+	assertReservedOperatorStep(t, c, replaced)
+	operatorExec(t, c, "UPDATE operator_action_steps SET owner='runner' WHERE kind='checks'")
+	operatorExec(t, c, "UPDATE operator_actions SET owner='replacement'")
+	if err := c.ObserveOperatorStep(ctx, key, []byte("readback")); !errors.Is(err, ErrOperatorConflict) {
+		t.Fatalf("stale action owner: %v", err)
+	}
+	assertReservedOperatorStep(t, c, key)
+	operatorExec(t, c, "UPDATE operator_actions SET owner='runner'")
+	for i := 1; i <= 32; i++ {
+		next := key
+		next.Identity = fmt.Sprint(i)
+		err := c.ReserveOperatorStep(ctx, next, 1599)
+		if i < 32 && err != nil || i == 32 && !errors.Is(err, ErrOperatorConflict) {
+			t.Fatalf("additional reservation %d: %v", i, err)
+		}
+	}
+	operatorCounts(t, c, 1, 33)
+}
+
+func assertReservedOperatorStep(t *testing.T, c *Credentials, key OperatorStepKey) {
+	t.Helper()
+	got, err := c.OperatorStep(testCtx(t), key)
+	if err != nil || got.Owner != key.Owner || got.Version != key.Version || got.Phase != "reserved" || got.Receipt != nil {
+		t.Fatalf("expected exact reserved step: %+v %v", got, err)
 	}
 }

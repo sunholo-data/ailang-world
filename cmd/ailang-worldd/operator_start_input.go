@@ -8,15 +8,17 @@ import (
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
+type presetStartReader func(context.Context, string, string, string, presetStartInput, func() int64) (*presetStartRead, error)
+
 // operatorStartFacts projects one live read of a headless start into the
 // effective mint input and the complete, name-ordered resolution a reviewed
 // action signs. It derives the task only from the signed task bytes.
 func operatorStartFacts(ctx context.Context, signed approval.OperatorAction, attempt store.OperatorMintAttempt,
-	presets, profiles, workspace, hosts string, clock func() int64) (store.OperatorMintInput, []approval.OperatorResolved, error) {
+	presets, profiles, workspace, hosts string, clock func() int64, readPreset presetStartReader) (store.OperatorMintInput, []approval.OperatorResolved, error) {
 	if signed.Kind != "start" || !signed.Options.Headless {
 		return store.OperatorMintInput{}, nil, store.ErrOperatorConflict
 	}
-	read, err := resolvePresetStart(ctx, signed.Options.Preset, presets, profiles, presetStartInput{
+	read, err := readPreset(ctx, signed.Options.Preset, presets, profiles, presetStartInput{
 		episodes: []string{signed.Episode}, workspaceRoot: workspace, hostsDir: hosts, launching: true, headless: true,
 		readTask: func() (string, []byte, error) { return "inline", []byte(signed.Task), nil },
 	}, clock)
@@ -65,7 +67,7 @@ func operatorStartFacts(ctx context.Context, signed approval.OperatorAction, att
 // production caller until the paired-process consumer lands.
 func reconstructOperatorStart(ctx context.Context, signed approval.OperatorAction, attempt store.OperatorMintAttempt,
 	presets, profiles, workspace, hosts string, clock func() int64) (store.OperatorMintInput, error) {
-	in, facts, err := operatorStartFacts(ctx, signed, attempt, presets, profiles, workspace, hosts, clock)
+	in, facts, err := operatorStartFacts(ctx, signed, attempt, presets, profiles, workspace, hosts, clock, resolvePresetStart)
 	if err != nil {
 		return store.OperatorMintInput{}, err
 	}
