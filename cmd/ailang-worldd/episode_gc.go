@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -68,7 +69,9 @@ func runEpisodeGC(args []string, stdout, stderr io.Writer) int {
 		return exitUsage
 	}
 
-	rep := daemon.RunEpisodeGC(daemon.EpisodeGCOptions{
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	rep := daemon.RunEpisodeGC(ctx, daemon.EpisodeGCOptions{
 		WorkspaceRoot: *wsRoot,
 		ExecCacheDir:  *cacheDir,
 		OlderThan:     *olderThan,

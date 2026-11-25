@@ -50,6 +50,7 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/preset.go|runPreset|Background":                       1, // row 217: read-only preset validation and git inspection (8 s)
 	"cmd/ailang-worldd/episode_preset.go|runPresetEpisodeStart|Background":   1, // row 217: pre-fence validation and git inspection (8 s)
 	"cmd/ailang-worldd/episode_finish.go|runEpisodeFinishWith|Background":    1, // row 218 M1: finish's reads, pinned checks (each capped), commit (2 h)
+	"cmd/ailang-worldd/episode_gc.go|runEpisodeGC|Background":                1, // episode gc's bounded git worktree inspection and removal (2 min); no Store call
 	"cmd/ailang-worldd/session_new.go|runSessionList|Background":             1, // row 138 M5: read-only ListSessions (3 s)
 	"cmd/ailang-worldd/setup.go|runSetup|Background":                         1, // row 138 M3: setup's whole-command budget (12 min); no Store call
 	"cmd/ailang-worldd/profile_init.go|runProfileInit|Background":            1, // row 189 M4: profile init's toolchain probes (75 s); no Store call
@@ -83,6 +84,7 @@ var contextRootPins = map[string]int{
 	"host/broker/exec_tools.go|resolve|WithoutCancel": 1,
 	"host/capsule/capsule.go|Run|Background":          1,
 	"host/daemon/daemon.go|drain|Background":          1,
+	"host/daemon/auto_gc.go|runAutoGCPass|Background": 1, // built-in periodic auto-gc pass bounded by autoGCPassBudget (2 min); Git only, no Store call
 	// Row 134 M4b: an episode's tool handler is built inside the coordinator's
 	// BinderFor, which carries no ctx; its one summary subprocess is bounded
 	// by workspaceHandlerBudget (3 s) fed directly from this root, and it

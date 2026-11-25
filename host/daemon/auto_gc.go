@@ -44,6 +44,7 @@ const (
 	autoGCInitialDelay = 2 * time.Minute
 	autoGCInterval     = 6 * time.Hour
 	autoGCOlderThan    = 72 * time.Hour
+	autoGCPassBudget   = 2 * time.Minute
 )
 
 // startAutoGC runs periodic fail-safe disk claw-back inside the daemon when
@@ -62,21 +63,27 @@ func (d *Daemon) startAutoGC(dbPath string) {
 			case <-d.aguiStop:
 				return
 			case <-timer.C:
-				rep := RunEpisodeGC(EpisodeGCOptions{
-					WorkspaceRoot: wsRoot,
-					ExecCacheDir:  cacheDir,
-					OlderThan:     autoGCOlderThan,
-					Now:           time.Now(),
-					IsActive:      d.isEpisodeActive,
-				})
-				if len(rep.Removed) > 0 && d.errLog != nil {
-					fmt.Fprintf(d.errLog, "ailang-worldd: auto-gc reclaimed %s (%d removed, %d skipped)\n",
-						FormatGCBytes(rep.ReclaimedBytes), len(rep.Removed), len(rep.Skipped))
-				}
+				d.runAutoGCPass(wsRoot, cacheDir)
 				timer.Reset(autoGCInterval)
 			}
 		}
 	}()
+}
+
+func (d *Daemon) runAutoGCPass(wsRoot, cacheDir string) {
+	ctx, cancel := context.WithTimeout(context.Background(), autoGCPassBudget)
+	defer cancel()
+	rep := RunEpisodeGC(ctx, EpisodeGCOptions{
+		WorkspaceRoot: wsRoot,
+		ExecCacheDir:  cacheDir,
+		OlderThan:     autoGCOlderThan,
+		Now:           time.Now(),
+		IsActive:      d.isEpisodeActive,
+	})
+	if len(rep.Removed) > 0 && d.errLog != nil {
+		fmt.Fprintf(d.errLog, "ailang-worldd: auto-gc reclaimed %s (%d removed, %d skipped)\n",
+			FormatGCBytes(rep.ReclaimedBytes), len(rep.Removed), len(rep.Skipped))
+	}
 }
 
 func (d *Daemon) isEpisodeActive(episode string) bool {
@@ -91,7 +98,7 @@ func (d *Daemon) isEpisodeActive(episode string) bool {
 
 // RunEpisodeGC safely reclaims disk space from stale, clean, merged episode
 // worktrees and orphaned startup probe / per-episode exec caches.
-func RunEpisodeGC(opts EpisodeGCOptions) EpisodeGCReport {
+func RunEpisodeGC(ctx context.Context, opts EpisodeGCOptions) EpisodeGCReport {
 	now := opts.Now
 	if now.IsZero() {
 		now = time.Now()
@@ -133,15 +140,15 @@ func RunEpisodeGC(opts EpisodeGCOptions) EpisodeGCReport {
 					})
 					continue
 				}
-				if reason := checkWorktreeUnsafe(wtPath); reason != "" {
+				if reason := checkWorktreeUnsafe(ctx, wtPath); reason != "" {
 					rep.Skipped = append(rep.Skipped, EpisodeGCItem{
 						Kind: "worktree", Name: name, Path: wtPath, Bytes: size, Reason: reason,
 					})
 					continue
 				}
-				commonDir := gitCommonDir(wtPath)
+				commonDir := gitCommonDir(ctx, wtPath)
 				if !opts.DryRun {
-					if err := removeWorktree(wtPath, commonDir); err != nil {
+					if err := removeWorktree(ctx, wtPath, commonDir); err != nil {
 						rep.Skipped = append(rep.Skipped, EpisodeGCItem{
 							Kind: "worktree", Name: name, Path: wtPath, Bytes: size,
 							Reason: "remove failed: " + err.Error(),
@@ -162,7 +169,7 @@ func RunEpisodeGC(opts EpisodeGCOptions) EpisodeGCReport {
 	}
 	if !opts.DryRun {
 		for commonDir := range reposToPrune {
-			_, _ = toolprobe.Output(context.Background(), "git", "", "--git-dir", commonDir, "worktree", "prune")
+			_, _ = toolprobe.Output(ctx, "git", "", "--git-dir", commonDir, "worktree", "prune")
 		}
 	}
 
@@ -234,12 +241,11 @@ func RunEpisodeGC(opts EpisodeGCOptions) EpisodeGCReport {
 	return rep
 }
 
-func checkWorktreeUnsafe(wtPath string) string {
+func checkWorktreeUnsafe(ctx context.Context, wtPath string) string {
 	gitMeta, err := os.Lstat(filepath.Join(wtPath, ".git"))
 	if err != nil || gitMeta.IsDir() {
 		return "not a linked git worktree"
 	}
-	ctx := context.Background()
 	out, err := toolprobe.Output(ctx, "git", wtPath, "status", "--porcelain")
 	if err != nil {
 		return "git status failed"
@@ -255,17 +261,17 @@ func checkWorktreeUnsafe(wtPath string) string {
 	return "unmerged commits on HEAD"
 }
 
-func gitCommonDir(wtPath string) string {
-	out, err := toolprobe.Output(context.Background(), "git", wtPath, "rev-parse", "--path-format=absolute", "--git-common-dir")
+func gitCommonDir(ctx context.Context, wtPath string) string {
+	out, err := toolprobe.Output(ctx, "git", wtPath, "rev-parse", "--path-format=absolute", "--git-common-dir")
 	if err != nil {
 		return ""
 	}
 	return strings.TrimSpace(string(out))
 }
 
-func removeWorktree(wtPath, commonDir string) error {
+func removeWorktree(ctx context.Context, wtPath, commonDir string) error {
 	if commonDir != "" {
-		if _, err := toolprobe.Output(context.Background(), "git", "", "--git-dir", commonDir, "worktree", "remove", wtPath); err == nil {
+		if _, err := toolprobe.Output(ctx, "git", "", "--git-dir", commonDir, "worktree", "remove", wtPath); err == nil {
 			return nil
 		}
 	}
