@@ -67,14 +67,14 @@ func TestOperatorSchema10(t *testing.T) {
 	if _, err := raw.Exec(`DROP INDEX operator_active_episode`); err != nil {
 		t.Fatal(err)
 	}
-	if ok, err := UpgradeCredentials(path); err != nil || !ok || userVersion(t, path) != 10 {
+	if ok, err := UpgradeCredentials(path); err != nil || !ok || userVersion(t, path) != credentialsSchemaVersion {
 		t.Fatalf("v9 upgrade: %v %v", ok, err)
 	}
 	if ok, err := UpgradeCredentials(path); err != nil || ok {
 		t.Fatalf("repeat upgrade: %v %v", ok, err)
 	}
 	fresh := openTestCredentials(t)
-	if fresh.Version() != 10 || !reflect.DeepEqual(operatorSchema(t, raw), operatorSchema(t, fresh.db)) {
+	if fresh.Version() != credentialsSchemaVersion || !reflect.DeepEqual(operatorSchema(t, raw), operatorSchema(t, fresh.db)) {
 		t.Fatal("fresh and upgraded SQLite schema differ")
 	}
 	ro, err := OpenCredentialsReadOnly(path)
@@ -128,8 +128,9 @@ func TestOperatorEpisodeOwnerReadSchema(t *testing.T) {
 	if busyErr != nil || busy != 0 || writeErr == nil {
 		t.Fatalf("deadline or read-only open drift: busy=%d %v write=%v", busy, busyErr, writeErr)
 	}
-	setPositiveFixtureVersion(t, raw, 11)
-	if _, err := ReadOperatorEpisodeOwner(ctx, path, "ep"); err == nil || userVersion(t, path) != 11 {
+	futureVer := credentialsSchemaVersion + 1
+	setPositiveFixtureVersion(t, raw, futureVer)
+	if _, err := ReadOperatorEpisodeOwner(ctx, path, "ep"); err == nil || userVersion(t, path) != futureVer {
 		t.Fatalf("future schema accepted or changed: %v", err)
 	}
 	corrupt := filepath.Join(t.TempDir(), "corrupt.db")

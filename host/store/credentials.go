@@ -38,14 +38,18 @@ var credentialsSchemaSQL string
 //go:embed operator_schema.sql
 var operatorSchemaSQL string
 
+//go:embed allowance_schema.sql
+var allowanceSchemaSQL string
+
 // credentialsSchemaVersion is the credentials store's own user_version,
 // independent of the world store's currentSchemaVersion. Version 2 added
 // profile bindings; version 3 adds immutable attended episode start history;
 // version 4 adds mint requests (row 201); version 5 adds approvers (row 201 A1b); version 6 adds
 // passkeys (row 201 A2); version 7 adds the surface's recorded approvals (row 201 A3); version 8
 // adds the key decisions of Human.Approve requests (row 201 A4); version 9 adds the verb requests a
-// key confirms on the surface (row 243 V3); version 10 adds operator actions.
-const credentialsSchemaVersion = 10
+// key confirms on the surface (row 243 V3); version 10 adds operator actions; version 11 adds
+// standing session allowances and draw ledger (row 224).
+const credentialsSchemaVersion = 11
 
 // CredentialsBindingWriteVersion preserves the existing floor for bound
 // session, start and resume writes on the previous schema.
@@ -80,6 +84,8 @@ const credentialsTable = "session_credentials"
 // credentialsTables is the exact, sorted application table set of a credentials store at version.
 func credentialsTables(version int) []string {
 	switch {
+	case version == 11:
+		return []string{"allowance_draws", approversTable, "episode_starts", keyDecisionsTable, mintRequestsTable, "operator_action_steps", "operator_actions", "operator_runner_state", credentialsTable, "standing_allowances", surfaceApprovalsTable, verbRequestsTable, passkeysTable}
 	case version == 10:
 		return []string{approversTable, "episode_starts", keyDecisionsTable, mintRequestsTable, "operator_action_steps", "operator_actions", "operator_runner_state", credentialsTable, surfaceApprovalsTable, verbRequestsTable, passkeysTable}
 	case version == 9:
@@ -404,6 +410,9 @@ func upgradeCredentials(display string, db *sql.DB, version int) error {
 	if version < 10 {
 		statements = append(statements, operatorSchemaSQL)
 	}
+	if version < 11 {
+		statements = append(statements, allowanceSchemaSQL)
+	}
 	for _, stmt := range statements {
 		if _, err := tx.Exec(stmt); err != nil {
 			return fmt.Errorf("store: upgrade credentials %q: %w", display, err)
@@ -425,7 +434,7 @@ func initCredentialsSchema(display string, db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("store: initialize credentials %q: begin: %w", display, err)
 	}
-	if _, err := tx.Exec(credentialsSchemaSQL + operatorSchemaSQL); err != nil {
+	if _, err := tx.Exec(credentialsSchemaSQL + operatorSchemaSQL + allowanceSchemaSQL); err != nil {
 		_ = tx.Rollback()
 		return fmt.Errorf("store: initialize credentials %q: %w", display, err)
 	}

@@ -65,8 +65,8 @@ func classified(arms []string, sets ...[]string) bool {
 
 func TestVerbTableMatchesTheCLISwitch(t *testing.T) {
 	arms, op, nv, ot := switchArms(t), verbs.OperatorWords, verbs.NeverWords, verbs.OtherWords
-	if len(arms) != 29 || !classified(arms, op, nv, ot) {
-		t.Fatalf("run's switch arms %q (want 29) are not exactly operator ∪ never ∪ other, each once, world excluded", arms)
+	if len(arms) != 30 || !classified(arms, op, nv, ot) {
+		t.Fatalf("run's switch arms %q (want 30) are not exactly operator ∪ never ∪ other, each once, world excluded", arms)
 	}
 	// Controls: an extra arm, a word the table lacks, a word in two sets each fail the check.
 	if classified(append(arms, "nonsuch"), op, nv, ot) || classified(arms, op, nv, ot[1:]) || classified(arms, op, nv, append(ot, "why")) {

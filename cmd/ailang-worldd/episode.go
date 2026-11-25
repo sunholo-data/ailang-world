@@ -217,6 +217,7 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	fs.String("hosts-dir", defaultHostsDir(), "hosts init output directory")
 	launch := fs.Bool("launch", false, "launch after the attended mint")
 	headless := fs.Bool("headless", false, "headless launch; requires --launch")
+	fromAllowance := fs.Bool("from-allowance", false, "draw session from an approved standing allowance (no y/N prompt; requires --preset)")
 	request := fs.Bool("request", false, "store a mint request instead of minting (no terminal; approve it with ailang-worldd approve <id>)")
 	var grantSpecs multiFlag
 	fs.Var(&grantSpecs, "grant", "EFFECT=SCOPE:BUDGET, repeatable")
@@ -271,9 +272,16 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 		return fail("%v", presetRefusal("--launch and --headless require a launch preset", "the launch settings and task must be pinned", "use --preset <name>"))
 	}
 
+	if *fromAllowance && (*preset == "" || *preset == "se-tools") {
+		return fail("%v", presetRefusal("--from-allowance requires a launch preset", "standing allowances are bound per preset (D-WORLD-96)", "use --preset <name>"))
+	}
+	if *fromAllowance && *request {
+		return fail("--from-allowance cannot be combined with --request")
+	}
+
 	// Launch presets validate before daemon contact and share the existing fence.
 	if *preset != "" && *preset != "se-tools" {
-		return runPresetEpisodeStart(fs, positional, *preset, *presetsDir, *profilesDir, *task, grantSpecs, stdout, stderr, env)
+		return runPresetEpisodeStart(fs, positional, *preset, *presetsDir, *profilesDir, *task, grantSpecs, *fromAllowance, stdout, stderr, env)
 	}
 
 	// 1. Validate everything before the daemon check and the fence.

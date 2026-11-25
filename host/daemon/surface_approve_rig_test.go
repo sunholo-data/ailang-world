@@ -172,7 +172,7 @@ func setVersion(t *testing.T, path string, statements ...string) {
 	defer func() { _ = db.Close() }()
 	for _, s := range statements {
 		if strings.HasPrefix(s, "DROP TABLE verb_requests") {
-			s = `DROP TABLE IF EXISTS operator_action_steps; DROP TABLE IF EXISTS operator_actions; DROP TABLE IF EXISTS operator_runner_state; ` + s
+			s = `DROP TABLE IF EXISTS allowance_draws; DROP TABLE IF EXISTS standing_allowances; DROP TABLE IF EXISTS operator_action_steps; DROP TABLE IF EXISTS operator_actions; DROP TABLE IF EXISTS operator_runner_state; ` + s
 		}
 		if _, err := db.Exec(s); err != nil {
 			t.Fatal(err)

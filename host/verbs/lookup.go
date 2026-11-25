@@ -34,18 +34,19 @@ const Binary = "ailang-worldd"
 // The table's word sets. They are exactly the CLI switch's arms but world (VB4 asserts it).
 var (
 	OperatorWords = []string{"why", "episode", "approve"}
-	NeverWords    = []string{"approver", "session", "service", "serve", "setup"}
+	NeverWords    = []string{"allowance", "approver", "session", "service", "serve", "setup"}
 	OtherWords    = []string{"commit", "outcome", "call", "demo", "doctor", "head", "health", "help", "hosts", "log", "mcp-stdio", "object",
 		"preset", "profile", "provenance", "registry", "surface-index", "tools", "version", "whoami"}
 )
 
 // neverWhy is each never verb's reason (D-WORLD-89 R3; host administration stays at a terminal).
 var neverWhy = map[string]string{
-	"approver": "enrolling and revoking an approver key is typed at a terminal",
-	"session":  "minting and revoking a session is typed at a terminal",
-	"service":  "host administration stays at a terminal",
-	"serve":    "host administration stays at a terminal",
-	"setup":    "host administration stays at a terminal",
+	"allowance": "granting and revoking a standing allowance is typed at a terminal",
+	"approver":  "enrolling and revoking an approver key is typed at a terminal",
+	"session":   "minting and revoking a session is typed at a terminal",
+	"service":   "host administration stays at a terminal",
+	"serve":     "host administration stays at a terminal",
+	"setup":     "host administration stays at a terminal",
 }
 
 // EpisodeNeedsSubcommand is step 4b's refusal for a bare or unknown episode form.

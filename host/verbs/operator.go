@@ -30,7 +30,7 @@ var (
 		{"branch", false, false}, {"profile", false, false}, {"exec-profiles-dir", false, false}, {"task", false, false},
 		{"agent", false, false}, {"model", false, false}, {"ttl", false, false}, {"preset", false, true},
 		{"presets-dir", false, false}, {"resume", false, false}, {"hosts-dir", false, false}, {"launch", true, true},
-		{"headless", true, true}, {"request", true, false}, {"grant", false, false}, {"budget", false, false},
+		{"headless", true, true}, {"request", true, false}, {"from-allowance", true, false}, {"grant", false, false}, {"budget", false, false},
 		{"sessions-dir", false, false}, {"addr", false, false},
 	}
 	EpisodeFinishFlags = []OperatorFlag{

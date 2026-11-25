@@ -281,7 +281,7 @@ func TestOperatorServiceStartup(t *testing.T) {
 		t.Fatalf("%d %s", c, s)
 	}
 	f.serving = true
-	credSQL(t, f.config.Credentials, "DROP TABLE operator_action_steps; DROP TABLE operator_actions; DROP TABLE operator_runner_state; PRAGMA user_version=9")
+	credSQL(t, f.config.Credentials, "DROP TABLE IF EXISTS allowance_draws; DROP TABLE IF EXISTS standing_allowances; DROP TABLE operator_action_steps; DROP TABLE operator_actions; DROP TABLE operator_runner_state; PRAGMA user_version=9")
 	if c, msg := f.command("start"); c != 1 || !strings.Contains(msg, "schema mismatch") || f.ctl.boots != 0 {
 		t.Fatalf("schema skew: %d %s", c, msg)
 	}

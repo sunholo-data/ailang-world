@@ -131,7 +131,7 @@ func TestCredentialsUpgradeToV6(t *testing.T) {
 			}
 			db := rawDB(t, path)
 			ddl := tableDDL(t, db)
-			requireExactTableNames(t, "upgraded credentials store", ddl, []string{"approvers", "episode_starts", "key_decisions", "mint_requests", "operator_action_steps", "operator_actions", "operator_runner_state", "session_credentials", "surface_approvals", "verb_requests", "webauthn_credentials"})
+			requireExactTableNames(t, "upgraded credentials store", ddl, credentialsTables(credentialsSchemaVersion))
 			if got, want := normalizeDDL(ddl["approvers"]), normalizeDDL(canonicalApproversDDL); got != want {
 				t.Fatalf("upgraded approvers DDL:\n got: %s\nwant: %s", got, want)
 			}

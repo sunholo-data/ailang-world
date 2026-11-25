@@ -19,6 +19,9 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/mint_request.go|createMintRequest|Background":  1, // row 201 M5: --request's store open and insert (3 s)
 	"cmd/ailang-worldd/approve.go|runApprove|Background":              1, // row 201 M6: approve's read-only request lookup or --list (3 s)
 	"cmd/ailang-worldd/approve_sig.go|signForApproval|Background":     1, // row 201 A1b sprint 4: --sign-with's signer, bounded by the request's remaining lifetime
+	"cmd/ailang-worldd/allowance.go|runAllowanceGrant|Background":     2, // row 224: preset load (10 s) before TTY confirm, then store write (5 s)
+	"cmd/ailang-worldd/allowance.go|runAllowanceList|Background":      1, // row 224: read-only ListAllowances (5 s)
+	"cmd/ailang-worldd/allowance.go|runAllowanceRevoke|Background":    1, // row 224: RevokeAllowance (5 s)
 	"cmd/ailang-worldd/approver.go|runApproverList|Background":        1, // row 201 A1b M3: read-only ListApprovers (3 s)
 	"cmd/ailang-worldd/approver.go|runApproverEnroll|Background":      2, // row 201 A1b M3: the read-only pre-check (3 s), then the write after y (3 s)
 	"cmd/ailang-worldd/approver.go|runApproverRevoke|Background":      3, // row 201 A1b M3: the read-only lookup (3 s), the write after y (3 s); sprint 4 K8: the read-only listing (3 s)

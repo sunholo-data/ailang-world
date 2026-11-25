@@ -160,19 +160,21 @@ func TestCredentialsNewerThanTenIsRefused(t *testing.T) {
 	}
 	_ = c.Close()
 	db := rawDB(t, path)
-	setPositiveFixtureVersion(t, db, 11)
+	futureVer := credentialsSchemaVersion + 1
+	setPositiveFixtureVersion(t, db, futureVer)
 	before, _ := schemaState(t, db)
+	wantMsg := fmt.Sprintf("user_version %d is newer than this binary's %d; use a compatible binary", futureVer, credentialsSchemaVersion)
 	for name, open := range map[string]func(string) (*Credentials, error){"writable": OpenCredentials, "read-only": OpenCredentialsReadOnly, "upgrade": func(p string) (*Credentials, error) { _, err := UpgradeCredentials(p); return nil, err }} {
 		c, err := open(path)
 		if c != nil {
 			_ = c.Close()
 		}
 		var se *CredentialsSchemaError
-		if !errors.As(err, &se) || !strings.Contains(err.Error(), "user_version 11 is newer than this binary's 10; use a compatible binary") {
-			t.Errorf("%s open of a v11 store: %v", name, err)
+		if !errors.As(err, &se) || !strings.Contains(err.Error(), wantMsg) {
+			t.Errorf("%s open of a v%d store: %v", name, futureVer, err)
 		}
 	}
-	if after, v := schemaState(t, db); !reflect.DeepEqual(after, before) || v != 11 {
+	if after, v := schemaState(t, db); !reflect.DeepEqual(after, before) || v != futureVer {
 		t.Fatalf("refused opens changed the store: %v -> %v (version %d)", before, after, v)
 	}
 }
