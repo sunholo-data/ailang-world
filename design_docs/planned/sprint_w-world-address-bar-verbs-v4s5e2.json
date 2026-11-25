@@ -1,0 +1,144 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s5e2",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1, quorum r2 PROCEED 3/3, no absent seats",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s5e2-sprint-plan.md",
+ "previous_sprint": "S5e #669, merge 2df9dc80, judge Sonnet PASS 89 and 0 blocking",
+ "base_commit": "5cac9316b755bf4b5b33263448366ec877926c8b",
+ "design_measured_at": "5cac9316, §1.2 and §1.4",
+ "queue_row": 243,
+ "iteration": 436,
+ "phase": "V4",
+ "sprint_number": "5e2",
+ "sprint": "S5e2 reservation-path survivor tests and measured file publication plus disposition",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter436-row243-v4s5e2",
+ "branch": "sprint/world-iter436-row243-v4s5e2",
+ "authority": [
+  "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004",
+  "D-WORLD-109 fixture stores and keys"
+ ],
+ "behaviour": "Pin existing worktree reservation, independent readback and attended disposition. File publication and reconcile-files stay together in Appendix C.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat 5cac9316 HEAD -- cmd host docs app",
+  "measured": 205,
+  "unfiltered_product": 205,
+  "margin": 1195,
+  "moved_out": {
+   "file_rebase_probe": 967,
+   "file_publication_and_disposition_probe": 1259,
+   "file_probe_cumulative_with_M1": 1464,
+   "S5f_prior_process_probe": 72,
+   "S6_design_raw": 890,
+   "S8_design_raw": 860,
+   "S12_design_raw": 700
+  }
+ },
+ "planner_decisions": {
+  "cut": "M1 only. The hardened file unit plus M1 is 64 changed lines over cap before the remaining mutation matrix.",
+  "disposition": "Carry private task/token/MCP publication, independent readback and attended disposition in one milestone.",
+  "activation": "Existing attended mint/worktree CLI only. Carry #667 GC protection to the first production caller."
+ },
+ "scope": [
+  "Store owner, identity and expiry guards",
+  "Uncertain read, duplicate reservation and disposition CAS",
+  "Successful Git add followed by absent independent readback and exact attended remedy",
+  "Signed kind, absolute Git paths, and locked read-error refusal",
+  "Measured equivalent registration cardinality and signed kind"
+ ],
+ "executor_lane": "codex:gpt-6.2-sol, M1 via patch only",
+ "executor_form": "Appendix P incremental patch, §2 application, §7 snapshot",
+ "estimate_loc": {
+  "compiled_landed": 205,
+  "parked": {
+   "file_publication_and_disposition_probe": 1259,
+   "remaining_mutation_and_native_linux_cost": "UNMEASURED"
+  }
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "Reservation-path pre-caller pins",
+   "expected_cumulative_numstat": 205,
+   "added": 164,
+   "deleted": 41,
+   "increment": 205,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang /bin/bash \"$T/accept.sh\" \"$W\" M1 fast",
+   "expected_snapshot": "3/0/3",
+   "unfiltered_product": 205
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "3/0/3",
+  "format": "STATUS / DELETED / MANIFEST.sha256"
+ },
+ "design_premises_found_false": [
+  "§1.4 F1–F8",
+  "The unmodified file rebase fits but the hardened unit crosses the cap",
+  "The raw absolute-porcelain check is behaviourally distinguishable"
+ ],
+ "existing_tests_edited": [
+  "cmd/ailang-worldd/operator_worktree_guards_test.go",
+  "cmd/ailang-worldd/operator_worktree_test.go",
+  "host/store/operator_worktree_guards_test.go"
+ ],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [],
+ "new_files": [],
+ "not_touched": [
+  ".ail",
+  "app",
+  "daemon routes and serves",
+  "driver",
+  "go.mod",
+  "schema",
+  "host/daemon and host/verifygate tests",
+  "row 271",
+  "episode GC"
+ ],
+ "mutants": {
+  "total_specs": 17,
+  "named_claimed": 11,
+  "named_killed": 11,
+  "named_survived_claimed": 0,
+  "base_judge_survivors_reproduced": 13,
+  "survived_unclaimed": [
+   "Q-R-SIGNEDKIND",
+   "Q-RB-EXACT"
+  ],
+  "whole_killed": 6,
+  "whole_unmeasured_cli": 7,
+  "whole_unmeasured_command": "/bin/bash \"$S/whole-mutants.sh\" \"$W\" \"$S/pkg-cmd-ailang-worldd.base-fails\"",
+  "mutant_report_complete": true,
+  "other_unresolved": []
+ },
+ "mutant_ledger": "$HOME/.ailang/state/world-iter436/plan-scratch/mutation-ledger.jsonl",
+ "mutant_specs": "$HOME/.ailang/state/world-iter436/plan-scratch/mutants.json",
+ "gates_script": "$HOME/.ailang/state/world-iter436/plan-scratch/gates.sh, §6",
+ "roundtrip": {
+  "M1": "M1 round trip in `$S/rt-2` extracted Appendix P with the controller's exact awk and applied it with `/usr/bin/patch -p1 -E` to a fresh export of 5cac9316. Full archive, cmd, host and docs `diff -r` each returned 0. App was absent on both sides. The two inherited .orig fixtures explain the initial all-file backup census. The relative before/after backup list matched with zero new files. The three exact scripts matched their scratch copies and passed `bash -n`. The exact extracted snapshot script read base Git via GIT_DIR and GIT_WORK_TREE, staged no Git changes, and produced 3/0/3 and three verified hashes. `$S/roundtrip.log` and `$S/rt-2/accept.log` record `ACCEPT_OK M1 fast`.",
+  "fenced_scripts_identical": true,
+  "snapshot_rehearsal": {
+   "M1": "3/0/3"
+  }
+ },
+ "controller_decisions_requested": [
+  "Record the same-rig base fail sets in §7.",
+  "Run §4.1, §6 and native Ubuntu CI.",
+  "Carry Appendix C together and require #667 GC protection before activation."
+ ],
+ "verification": {
+  "base_gates": "§1.1 and §6",
+  "final_gates": "The final archive replay ended at `GATES_DONE 230s FAILS: none` in `$S/gate-scratch-final-script`. Same four-family CLI race selector took 16.682 s at base and 20.171 s at M1, a measured +3.489 s package-time difference. Whole CLI race timing remains uninformative under sandbox. Route census was 54 and three surface POSTs at base and M1, with equal served bytes and no production file callers.",
+  "accept": "§3 and §7",
+  "roundtrip": "§7",
+  "mutant_replay": "§4",
+  "phase_5_5": "§3.2 and Appendix C"
+ },
+ "unfiltered_branch_with_plan": {
+  "M1": 1323
+ }
+}
