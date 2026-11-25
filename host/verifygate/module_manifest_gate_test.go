@@ -228,8 +228,8 @@ func pristineControlCovers(root string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("shared pristine control could not run: %v", err)
 	}
-	if files != 26 {
-		return "", "", fmt.Errorf("shared pristine control digested %d files, want 26", files)
+	if files != 28 {
+		return "", "", fmt.Errorf("shared pristine control digested %d files, want 28", files)
 	}
 	mine, mineFiles, err := isolatedTreeDigest(root)
 	if err != nil {
