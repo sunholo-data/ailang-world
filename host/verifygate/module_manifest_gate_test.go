@@ -93,8 +93,8 @@ func buildIsolatedGateRoot(root string) error {
 	if err != nil {
 		return err
 	}
-	if files != 26 || ailFiles != 24 {
-		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 26 / 24", files, ailFiles)
+	if files != 28 || ailFiles != 26 {
+		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 28 / 26", files, ailFiles)
 	}
 	return nil
 }
@@ -218,7 +218,7 @@ func requirePristineControl(t *testing.T, root string) string {
 	return out
 }
 
-const pristineMarker = "✓ 16/16 required world/ identities verified across 24 module(s)"
+const pristineMarker = "✓ 16/16 required world/ identities verified across 26 module(s)"
 
 // pristineControlCovers is requirePristineControl's contract as a predicate: it returns the shared
 // control's output only when that run carries the marker AND root is digest-identical to the root
@@ -228,8 +228,8 @@ func pristineControlCovers(root string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("shared pristine control could not run: %v", err)
 	}
-	if files != 26 {
-		return "", "", fmt.Errorf("shared pristine control digested %d files, want 26", files)
+	if files != 28 {
+		return "", "", fmt.Errorf("shared pristine control digested %d files, want 28", files)
 	}
 	mine, mineFiles, err := isolatedTreeDigest(root)
 	if err != nil {
@@ -332,8 +332,8 @@ func TestModuleManifestRejectsStrayModule(t *testing.T) {
 	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	control := requirePristineControl(t, root)
-	if got := strings.Count(control, "\n   ai-check "); got != 24 {
-		t.Fatalf("pristine control emitted %d ai-check lines, want 24", got)
+	if got := strings.Count(control, "\n   ai-check "); got != 26 {
+		t.Fatalf("pristine control emitted %d ai-check lines, want 26", got)
 	}
 	probe := filepath.Join(root, "world", "_stray_manifest_probe.ail")
 	const source = "module world/_stray_manifest_probe\n\nexport func strayId(x: int) -> int = x\n"
@@ -579,8 +579,10 @@ func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
   packages/se-tools/se_tools/edit.ail
   packages/se-tools/se_tools/examples_search.ail
   packages/se-tools/se_tools/exec.ail
+  packages/se-tools/se_tools/list.ail
   packages/se-tools/se_tools/read.ail
   packages/se-tools/se_tools/run.ail
+  packages/se-tools/se_tools/search.ail
   packages/se-tools/se_tools/write.ail
   world/contracts.ail
   world/logepoch.ail

@@ -188,6 +188,11 @@ var seToolsCases = []seToolsCase{
 	// Row 191a: the 10th, its own Workspace.Delete grant.
 	{"ailang-delete", `{"path":"tmp/helper_test.go"}`, `{"op":"delete","path":"tmp/helper_test.go"}`, false,
 		`{"path":"tmp","recursive":true}`, "recursive"},
+	// Row 228 M2: search and list under Workspace.Read.
+	{"workspace-search", `{"pattern":"func main","path":"host"}`, `{"op":"search","pattern":"func main","path":"host"}`, false,
+		`{"pattern":"func main","exclude":"*.txt"}`, "exclude"},
+	{"workspace-list", `{"path":"host","depth":2}`, `{"op":"list","path":"host","depth":2}`, false,
+		`{"path":"host","recursive":true}`, "recursive"},
 }
 
 // TestSeToolsReadRangePlansAdmittedByPlanLaw is row 190 through the real
@@ -241,8 +246,8 @@ func TestSeToolsReadRangePlansAdmittedByPlanLaw(t *testing.T) {
 // a refusal is a lawful pure plan, L7).
 func TestSeToolsPlansAdmittedByPlanLaw(t *testing.T) {
 	manifest := loadSeToolsManifest(t)
-	if len(manifest) != 10 || len(seToolsCases) != 10 {
-		t.Fatalf("manifest has %d tools, cases %d; the ailang_only lane has 8, plus row 140's workspace-exec and row 191a's ailang-delete",
+	if len(manifest) != 12 || len(seToolsCases) != 12 {
+		t.Fatalf("manifest has %d tools, cases %d; the ailang_only lane has 8, plus row 140's workspace-exec, row 191a's ailang-delete, and row 228's workspace-search/workspace-list",
 			len(manifest), len(seToolsCases))
 	}
 	rig := newSeToolsRig(t)
@@ -315,13 +320,15 @@ func TestSeToolsPathPredicateRefusesBeforeAnyEffect(t *testing.T) {
 	manifest := loadSeToolsManifest(t)
 	rig := newSeToolsRig(t)
 	calls := map[string]string{
-		"ailang-read":   `{"path":%q}`,
-		"ailang-delete": `{"path":%q}`,
-		"ailang-write":  `{"path":%q,"content":"x"}`,
-		"ailang-edit":   `{"path":%q,"old_text":"a","new_text":"b"}`,
-		"ailang-check":  `{"path":%q}`,
-		"ailang-run":    `{"path":%q}`,
-		"ailang-cli":    `{"op":"check","path":%q}`,
+		"ailang-read":      `{"path":%q}`,
+		"ailang-delete":    `{"path":%q}`,
+		"ailang-write":     `{"path":%q,"content":"x"}`,
+		"ailang-edit":      `{"path":%q,"old_text":"a","new_text":"b"}`,
+		"ailang-check":     `{"path":%q}`,
+		"ailang-run":       `{"path":%q}`,
+		"ailang-cli":       `{"op":"check","path":%q}`,
+		"workspace-search": `{"pattern":"x","path":%q}`,
+		"workspace-list":   `{"path":%q}`,
 	}
 	for id, shape := range calls {
 		for _, p := range []string{"-policy.ail", "../ailang/go.mod", "/etc/hosts"} {

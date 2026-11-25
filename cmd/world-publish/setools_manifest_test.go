@@ -62,6 +62,7 @@ func TestSeToolsManifestPublishes(t *testing.T) {
 		"ailang-read": "Workspace.Read", "ailang-write": "Workspace.Write", "ailang-edit": "Workspace.Write", "ailang-delete": "Workspace.Delete",
 		"ailang-check": "Ailang.Check", "ailang-run": "Ailang.Run", "builtins-search": "Ailang.Discover",
 		"examples-search": "Ailang.Discover", "ailang-cli": "Ailang.CLI", "workspace-exec": "Workspace.Exec",
+		"workspace-search": "Workspace.Read", "workspace-list": "Workspace.Read",
 	}
 	if len(rev.Entries) != len(want) {
 		t.Fatalf("published %d descriptors, want %d", len(rev.Entries), len(want))

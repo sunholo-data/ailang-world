@@ -145,6 +145,8 @@ var worldToolEffects = []struct {
 	{"examples-search", []string{broker.EffectAilangDiscover}},
 	{"ailang-cli", []string{broker.EffectAilangCLI}},
 	{"workspace-exec", []string{broker.EffectWorkspaceExec}},
+	{"workspace-search", []string{broker.EffectWorkspaceRead}},
+	{"workspace-list", []string{broker.EffectWorkspaceRead}},
 }
 
 // Test seams: this binary's build identity, and the /v1/health fetch.

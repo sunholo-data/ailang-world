@@ -65,11 +65,15 @@ class WorldArmToolSet(unittest.TestCase):
 
     def test_the_served_tools_left_out_are_workspace_exec_and_delete(self):
         # The floor's World arm is the pre-registered eight; workspace-exec
-        # (row 140) and ailang-delete (row 191a) are served but outside it.
+        # (row 140), ailang-delete (row 191a), and workspace-search/workspace-list
+        # (row 228) are served but outside the frozen floor benchmark arm.
         man = served()
-        self.assertEqual(set(man) - set(EIGHT), {EXEC_TOOL, DELETE_TOOL})  # non-vacuous: both ARE served
+        self.assertEqual(set(man) - set(EIGHT),
+                         {EXEC_TOOL, DELETE_TOOL, 'workspace-search', 'workspace-list'})
         self.assertEqual(man[EXEC_TOOL], (EXEC_EFFECT,))
         self.assertEqual(man[DELETE_TOOL], (DELETE_EFFECT,))
+        self.assertEqual(man['workspace-search'], ('Workspace.Read',))
+        self.assertEqual(man['workspace-list'], ('Workspace.Read',))
 
     def test_world_prompt_never_mentions_exec(self):
         block = prompt.world_tools_block()

@@ -50,7 +50,7 @@ var (
 
 var seToolNames = []string{
 	"ailang-check", "ailang-cli", "ailang-delete", "ailang-edit", "ailang-read", "ailang-run",
-	"ailang-write", "builtins-search", "examples-search", "workspace-exec",
+	"ailang-write", "builtins-search", "examples-search", "workspace-exec", "workspace-list", "workspace-search",
 }
 
 // seToolBins returns the pinned interpreter and the tool binary, or skips

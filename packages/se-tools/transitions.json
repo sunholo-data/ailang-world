@@ -742,5 +742,200 @@
         "cost": 1
       }
     ]
+  },
+  {
+    "id": "workspace-search",
+    "title": "Search worktree (sandboxed)",
+    "description": "Search worktree files for a fixed string or RE2 regex. Relative path only (default `.`); skips `.git`, symlinks and binary files. Unknown keys refuse. Matched lines are cut to a 240-character window and the full result is held under the 40000-character read cap. Costs one Workspace.Read and commits one entry.",
+    "transitionFnFile": "packages/se-tools/se_tools/search.ail",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "pattern": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "description": "Pattern to search for (1 to 512 bytes)"
+        },
+        "regex": {
+          "type": "boolean",
+          "description": "False (default) for fixed string; true for Go RE2 regex"
+        },
+        "ignore_case": {
+          "type": "boolean",
+          "description": "Case-insensitive matching (default false)"
+        },
+        "path": {
+          "type": "string",
+          "description": "File or directory path relative to the worktree root (default \".\")"
+        },
+        "include": {
+          "type": "string",
+          "description": "Basename glob filter, e.g. \"*.go\" or \"*.md*\""
+        },
+        "max_results": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500,
+          "description": "Maximum matches returned (1 to 500, default 100)"
+        }
+      },
+      "required": [
+        "pattern"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "matches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "line": {
+                "type": "integer"
+              },
+              "col": {
+                "type": "integer"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "total_matches": {
+          "type": "integer"
+        },
+        "files_searched": {
+          "type": "integer"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "next": {
+          "type": "string"
+        },
+        "refused": {
+          "type": "string",
+          "description": "Why the call was refused (plan, policy or handler)"
+        },
+        "world": {
+          "type": "object",
+          "description": "World's provenance: the plan ref and the effect record refs"
+        }
+      },
+      "required": [
+        "world"
+      ]
+    },
+    "access": {
+      "effect": "Workspace.Read",
+      "scope": "worktree",
+      "cost": 0
+    },
+    "declaredEffects": [
+      {
+        "effect": "Workspace.Read",
+        "scope": "worktree",
+        "cost": 1
+      }
+    ]
+  },
+  {
+    "id": "workspace-list",
+    "title": "List worktree (sandboxed)",
+    "description": "List files, directories and symlinks in the episode worktree, sorted by path. Relative path only (default `.`); skips `.git` and never follows symlinks. Unknown keys refuse. Bounded by depth (1 to 6, default 2), max_entries (1 to 1000, default 300) and the 40000-character read cap. Costs one Workspace.Read and commits one entry.",
+    "transitionFnFile": "packages/se-tools/se_tools/list.ail",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Directory or file path relative to the worktree root (default \".\")"
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6,
+          "description": "Maximum traversal depth (1 to 6, default 2)"
+        },
+        "max_entries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Maximum entries returned (1 to 1000, default 300)"
+        },
+        "include": {
+          "type": "string",
+          "description": "Basename glob filter, e.g. \"*.go\" or \"*.md\""
+        }
+      },
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "size": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "total": {
+          "type": "integer"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "next": {
+          "type": "string"
+        },
+        "refused": {
+          "type": "string",
+          "description": "Why the call was refused (plan, policy or handler)"
+        },
+        "world": {
+          "type": "object",
+          "description": "World's provenance: the plan ref and the effect record refs"
+        }
+      },
+      "required": [
+        "world"
+      ]
+    },
+    "access": {
+      "effect": "Workspace.Read",
+      "scope": "worktree",
+      "cost": 0
+    },
+    "declaredEffects": [
+      {
+        "effect": "Workspace.Read",
+        "scope": "worktree",
+        "cost": 1
+      }
+    ]
   }
 ]

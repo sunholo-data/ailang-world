@@ -167,7 +167,7 @@ naming the epoch, the release and the store). Its `--candidate` form is headless
   from the repo root.
 - `--ailang-bin`: the `.ail` interpreter pin, `$PIN` (AILANG v0.41.0).
 
-At the prompt, type the line it shows exactly: `publish 10 transitions to /tmp/se-world/world.db`
+At the prompt, type the line it shows exactly: `publish 12 transitions to /tmp/se-world/world.db`
 (the manifest's descriptor count and your `--store`). On success it prints
 `published transition registry revision N (head sha256:…)`. Running it again with nothing
 changed prints `transition registry UNCHANGED at revision N`.
@@ -718,7 +718,7 @@ EOF
 **Publish (attended, TTY fence).** Run this from the **repo root**, because the manifest's
 `transitionFnFile` paths are repo-relative. The daemon must be stopped, since publishing needs
 single-writer authority. `world-publish` refuses without a controlling terminal and asks you, at
-the terminal, to type `publish 10 transitions to /tmp/se-world/world.db` (the manifest's
+the terminal, to type `publish 12 transitions to /tmp/se-world/world.db` (the manifest's
 descriptor count and the store). An agent cannot run this step. It is the first step of
 [§0](#0-attended-steps-the-only-commands-a-person-must-run):
 
