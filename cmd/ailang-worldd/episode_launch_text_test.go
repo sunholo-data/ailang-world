@@ -75,6 +75,20 @@ func TestLaunchArgvFloorGoldens(t *testing.T) {
 	}
 	for _, agent := range []string{"claude", "codex"} {
 		got := launchArgv(agent, "$M", "$P", "<void/ep>", "<private>/<ep>.mcp.json", "127.0.0.1:7644", "", "5.00", floor)
+		// Row 228 adds workspace-search and workspace-list under Workspace.Read;
+		// assert they are emitted for claude, then strip them when comparing
+		// against the frozen row-93 eight-tool floor golden.
+		if agent == "claude" {
+			got = append([]string(nil), got...)
+			for i := 0; i+1 < len(got); i++ {
+				if got[i] == "--allowedTools" {
+					if !strings.Contains(got[i+1], ",mcp__world__workspace-search,mcp__world__workspace-list") {
+						t.Fatalf("claude --allowedTools missing row 228 tools: %s", got[i+1])
+					}
+					got[i+1] = strings.ReplaceAll(got[i+1], ",mcp__world__workspace-search,mcp__world__workspace-list", "")
+				}
+			}
+		}
 		data, err := os.ReadFile(filepath.Join("..", "..", "scripts", "floor", "testdata", "argv_"+agent+"_world.json"))
 		if err != nil {
 			t.Fatal(err)
