@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -77,7 +76,7 @@ func operatorProcessWitness(t *testing.T, mode, path string, files ...*os.File) 
 		cancel()
 		t.Fatal(err)
 	}
-	var stderr bytes.Buffer
+	var stderr syncBuffer
 	cmd.Stderr = &stderr
 	if err := cmd.Start(); err != nil {
 		cancel()
