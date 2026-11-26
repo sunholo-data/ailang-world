@@ -69,7 +69,7 @@ func TestOperatorFlagParity(t *testing.T) {
 		n      int
 		admit  []string
 	}{
-		{"start", verbs.EpisodeStartFlags, 23, []string{"headless", "launch", "preset"}},
+		{"start", verbs.EpisodeStartFlags, 24, []string{"headless", "launch", "preset"}},
 		{"finish", verbs.EpisodeFinishFlags, 9, []string{"confirm-on-surface", "preset", "ready"}},
 	} {
 		cli := flagKinds(cliEpisodeFlagSet(t, c.verb))

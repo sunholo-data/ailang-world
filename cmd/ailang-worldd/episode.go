@@ -217,6 +217,7 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	fs.String("hosts-dir", defaultHostsDir(), "hosts init output directory")
 	launch := fs.Bool("launch", false, "launch after the attended mint")
 	headless := fs.Bool("headless", false, "headless launch; requires --launch")
+	interactive := fs.Bool("interactive", false, "interactive launch (overrides preset mode); requires --launch")
 	fromAllowance := fs.Bool("from-allowance", false, "draw session from an approved standing allowance (no y/N prompt; requires --preset)")
 	request := fs.Bool("request", false, "store a mint request instead of minting (no terminal; approve it with ailang-worldd approve <id>)")
 	var grantSpecs multiFlag
@@ -258,6 +259,8 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 			return fail("--request cannot be combined with --launch: %s; fix: drop --launch, then run the launch line approve prints", why)
 		case *headless:
 			return fail("--request cannot be combined with --headless: %s; fix: drop --headless", why)
+		case *interactive:
+			return fail("--request cannot be combined with --interactive: %s; fix: drop --interactive", why)
 		case *preset != "" && *preset != "se-tools":
 			return fail("--request cannot be combined with a launch preset (--preset %s): %s; fix: use --grant or --preset se-tools", *preset, why)
 		}
@@ -265,11 +268,17 @@ func runEpisodeStart(args []string, stdout, stderr io.Writer, env sessionEnv) in
 	if resumeSet {
 		return runEpisodeResume(fs, positional, *resume, *preset, *presetsDir, *profilesDir, stdout, stderr, env)
 	}
+	if *headless && *interactive {
+		return fail("%v", presetRefusal("--headless and --interactive are mutually exclusive", "choose one launch mode", "drop --headless or --interactive"))
+	}
 	if *headless && !*launch {
 		return fail("%v", presetRefusal("--headless requires --launch on episode start", "headless selects a launch mode", "add --launch with a launch preset"))
 	}
-	if (*launch || *headless) && (*preset == "" || *preset == "se-tools") {
-		return fail("%v", presetRefusal("--launch and --headless require a launch preset", "the launch settings and task must be pinned", "use --preset <name>"))
+	if *interactive && !*launch {
+		return fail("%v", presetRefusal("--interactive requires --launch on episode start", "interactive selects a launch mode", "add --launch with a launch preset"))
+	}
+	if (*launch || *headless || *interactive) && (*preset == "" || *preset == "se-tools") {
+		return fail("%v", presetRefusal("--launch, --headless, and --interactive require a launch preset", "the launch settings and task must be pinned", "use --preset <name>"))
 	}
 
 	if *fromAllowance && (*preset == "" || *preset == "se-tools") {

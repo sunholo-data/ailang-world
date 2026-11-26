@@ -41,7 +41,10 @@ Example: ailang-worldd episode launch my-episode --preset my-repo --headless
 
 var launchClient = newClient
 
-func launchMode(p launchPreset, headless bool) (string, time.Duration, error) {
+func launchMode(p launchPreset, headless, interactive bool) (string, time.Duration, error) {
+	if headless && interactive {
+		return "", 0, errors.New("--headless and --interactive are mutually exclusive")
+	}
 	mode := "interactive"
 	deadline := 3600.0
 	if p.Launch != nil {
@@ -54,6 +57,8 @@ func launchMode(p launchPreset, headless bool) (string, time.Duration, error) {
 	}
 	if headless {
 		mode = "headless"
+	} else if interactive {
+		mode = "interactive"
 	}
 	if mode != "headless" {
 		return mode, 0, nil
@@ -234,6 +239,7 @@ func runEpisodeLaunch(args []string, stdout, stderr io.Writer) int {
 	name := fs.String("preset", "", "required launch preset")
 	dir := fs.String("presets-dir", defaultPresetsDir(), "private presets")
 	headless := fs.Bool("headless", false, "headless launch")
+	interactive := fs.Bool("interactive", false, "interactive launch (overrides preset mode)")
 	hostsDir := fs.String("hosts-dir", defaultHostsDir(), "hosts init output directory")
 	pos, err := verbs.ParseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
@@ -250,12 +256,12 @@ func runEpisodeLaunch(args []string, stdout, stderr io.Writer) int {
 	if len(pos) != 1 || !workspaceEpisodePattern.MatchString(pos[0]) || *name == "" || *name == "se-tools" {
 		return fail(errors.New("episode and --preset <name> are required"))
 	}
-	return launchEpisode(pos[0], *name, *dir, *headless, stdout, stderr, nil, *hostsDir)
+	return launchEpisode(pos[0], *name, *dir, *headless, *interactive, stdout, stderr, nil, *hostsDir)
 }
 
 // launchEpisode is shared by episode launch and the post-mint start path.
 // Its preflight has no writes; only a fully validated launch takes the lock.
-func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io.Writer, held *os.File, hostsDirs ...string) int {
+func launchEpisode(ep, name, presetsDir string, headless, interactive bool, stdout, stderr io.Writer, held *os.File, hostsDirs ...string) int {
 	fail := func(err error) int {
 		msg := err.Error()
 		if !strings.Contains(msg, "\n  why:") {
@@ -313,7 +319,7 @@ func launchEpisode(ep, name, presetsDir string, headless bool, stdout, stderr io
 	if len(hostsDirs) > 0 {
 		hostsDir = hostsDirs[0]
 	}
-	mode, wall, err := launchMode(pinned, headless)
+	mode, wall, err := launchMode(pinned, headless, interactive)
 	if err != nil {
 		return fail(err)
 	}
