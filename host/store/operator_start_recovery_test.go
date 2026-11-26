@@ -84,7 +84,7 @@ func TestOperatorStartRecoveryWindows(t *testing.T) {
 }
 
 func TestOperatorStartRecoveryRejectsContradictoryEvidence(t *testing.T) {
-	for _, kind := range []string{"unexpected", "foreign", "duplicate", "nonempty", "wrong_kind", "version_zero", "unowned", "bad_receipt"} {
+	for _, kind := range []string{"unexpected", "foreign", "duplicate", "nonempty", "wrong_kind", "version_zero", "unowned", "bad_receipt", "wrong_mint_identity"} {
 		t.Run(kind, func(t *testing.T) {
 			f := newOperatorPinFixture(t, false)
 			id := f.in.Attempt.CAS.ID
@@ -98,6 +98,14 @@ func TestOperatorStartRecoveryRejectsContradictoryEvidence(t *testing.T) {
 			} else {
 				key := f.reserveWorktree(t)
 				switch kind {
+				case "wrong_mint_identity":
+					if err := f.c.ObserveOperatorStep(f.ctx, key, []byte("created")); err != nil {
+						t.Fatal(err)
+					}
+					mint := OperatorStepKey{key.Action, key.Owner, "mint", id + "-other", 1}
+					if err := f.c.ReserveOperatorStep(f.ctx, mint, pinNow); err != nil {
+						t.Fatal(err)
+					}
 				case "version_zero":
 					operatorExec(t, f.c, "UPDATE operator_action_steps SET version=0 WHERE kind='worktree'")
 				case "bad_receipt":
@@ -125,8 +133,32 @@ func TestOperatorStartRecoveryRejectsContradictoryEvidence(t *testing.T) {
 				return
 			}
 			if !errors.Is(err, ErrOperatorConflict) || !reflect.DeepEqual(before, f.snapshot(t)) {
-				t.Fatalf("contradictory evidence: %v", err)
+				t.Fatalf("contradictory evidence: window=%q err=%v", current.Window, err)
 			}
 		})
+	}
+}
+
+func TestOperatorStartDispositionRejectsBlobOwner(t *testing.T) {
+	f := newOperatorPinFixture(t, false)
+	id := f.in.Attempt.CAS.ID
+	reviewed, err := f.c.ReadOperatorStartRecovery(f.ctx, id)
+	if err != nil || reviewed.Window != OperatorStartUntouched || reviewed.Owner == "" {
+		t.Fatalf("untouched start: %+v %v", reviewed, err)
+	}
+
+	// The TEXT column accepts a BLOB. Go scans both as the same string, but
+	// SQLite must still match the actual stored owner for disposition.
+	operatorExec(t, f.c, "UPDATE operator_actions SET owner=CAST(owner AS BLOB) WHERE id=?", id)
+	before := f.snapshot(t)
+	current, err := f.c.ReadOperatorStartRecovery(f.ctx, id)
+	if err != nil || current != reviewed {
+		t.Fatalf("BLOB owner changed the reviewed window: %+v %v", current, err)
+	}
+	f.assertRefused(t, before, f.c.DisposeOperatorStartGap(f.ctx, reviewed, nil, pinNow), ErrOperatorConflict)
+
+	operatorExec(t, f.c, "UPDATE operator_actions SET owner=CAST(owner AS TEXT) WHERE id=?", id)
+	if err := f.c.DisposeOperatorStartGap(f.ctx, reviewed, nil, pinNow); err != nil {
+		t.Fatalf("disposition with matching TEXT owner: %v", err)
 	}
 }

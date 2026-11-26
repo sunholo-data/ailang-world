@@ -19,6 +19,8 @@ import (
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
+const wantStoppedRunnerRemedy = "The operator runner companion remains stopped. After resolving this, run ailang-worldd service runner start."
+
 func TestOperatorProcessWitness(t *testing.T) {
 	mode := os.Getenv("WORLD_TEST_OPERATOR_WITNESS")
 	if mode == "" {
@@ -239,18 +241,27 @@ func testOperatorUpgradeActiveChild(t *testing.T) {
 	lock.Close()
 
 	original := f.env.terminal.openTerminal
+	term := &upgradeTerm{r: strings.NewReader("n\n")}
 	f.env.terminal.openTerminal = func() (io.ReadWriteCloser, error) {
-		return &fakeTerm{r: strings.NewReader("n\n")}, nil
+		return term, nil
 	}
 	code, msg := f.run("upgrade", "--binary", candidate)
 	if code != 1 || !strings.Contains(msg, "aborted (not confirmed)") || pairedUpgradeEvidence(f) != old || !s.runnerLoaded {
 		t.Fatalf("upgrade crossed typed refusal: %d %s", code, msg)
+	}
+	for _, line := range []string{"approved companion config: " + old[3], "approved companion plist: " + old[4]} {
+		if !strings.Contains(term.String(), "\n"+line+"\n") {
+			t.Fatalf("typed prompt missing %q: %s", line, term.String())
+		}
 	}
 	f.env.terminal.openTerminal = original
 	code, msg = f.run("upgrade", "--binary", candidate)
 	if code != 1 || !strings.Contains(msg, "retained child still holds the runner lock") || pairedUpgradeEvidence(f) != old ||
 		s.runnerLoaded || serviceFileHash(candidate) == "" || serviceFileHash(f.env.paths.Binary+".prev") != "" {
 		t.Fatalf("upgrade swapped before child exit: %d %s", code, msg)
+	}
+	if !strings.Contains(msg, "companion drain refused") || !strings.Contains(msg, wantStoppedRunnerRemedy+"\n") {
+		t.Fatalf("drain refusal omitted stopped companion remedy: %s", msg)
 	}
 	release()
 
@@ -275,6 +286,9 @@ func TestOperatorPairedUpgradeRefusals(t *testing.T) {
 		if code != 1 || !strings.Contains(msg, want) || pairedUpgradeEvidence(f) != evidence ||
 			!supervisor.runnerLoaded || f.homeJob.kicks != 0 || serviceFileHash(f.env.paths.Binary+".prev") != "" {
 			t.Fatalf("paired refusal %q: %d %s", want, code, msg)
+		}
+		if strings.Contains(msg, wantStoppedRunnerRemedy) {
+			t.Fatalf("loaded companion reported stopped: %s", msg)
 		}
 	}
 	t.Run("schema", func(t *testing.T) {
@@ -339,4 +353,71 @@ func TestOperatorPairedUpgradeRefusals(t *testing.T) {
 			t.Fatalf("changed approved pair: %d %s", code, msg)
 		}
 	})
+	t.Run("post_drain_census", func(t *testing.T) {
+		f, supervisor, candidate := pairedUpgradeFixture(t)
+		before := pairedUpgradeEvidence(f)
+		read := f.env.runnerProcesses
+		pid := os.Getpid() + 1000
+		f.env.runnerProcesses = func() ([]worldProcess, error) {
+			rows, err := read()
+			if !supervisor.runnerLoaded {
+				rows = append(rows, worldProcess{pid, "ailang-worldd.prev"})
+			}
+			return rows, err
+		}
+		code, msg := f.run("upgrade", "--binary", candidate)
+		if code != 1 || !strings.Contains(msg, "terminal drain refused") ||
+			!strings.Contains(msg, fmt.Sprintf("old terminal process retirement not proved (pid %d)", pid)) ||
+			!strings.Contains(msg, wantStoppedRunnerRemedy+"\n") || supervisor.runnerLoaded ||
+			pairedUpgradeEvidence(f) != before || f.homeJob.kicks != 0 ||
+			serviceFileHash(f.env.paths.Binary+".new") != "" || serviceFileHash(f.env.paths.Binary+".prev") != "" {
+			t.Fatalf("post-drain census did not preserve the installed pair: %d %s", code, msg)
+		}
+	})
+}
+
+func testOperatorUpgradeStoppedCompanion(t *testing.T) {
+	f, supervisor, candidate := pairedUpgradeFixture(t)
+	supervisor.runnerLoaded = false
+	before := pairedUpgradeEvidence(f)
+
+	code, msg := f.run("upgrade", "--binary", candidate)
+	after := pairedUpgradeEvidence(f)
+	to := serviceFileHash(candidate)
+	cfg, _, err := f.env.installedRunner()
+	if code != 0 || supervisor.runnerLoaded || f.homeJob.kicks != 1 || err != nil ||
+		after[0] != to || cfg.Executables[f.env.paths.Binary] != to ||
+		after[5] != before[5] || after[6] != before[6] {
+		t.Fatalf("upgrade did not preserve the stopped companion: code=%d loaded=%t config=%v\n%s",
+			code, supervisor.runnerLoaded, err, msg)
+	}
+}
+
+func testOperatorUpgradeRollbackSchema(t *testing.T) {
+	f, supervisor, candidate := pairedUpgradeFixture(t)
+	kick := f.homeJob.onKick
+	var pending [7]string
+	f.homeJob.onKick = func() error {
+		if err := kick(); err != nil {
+			return err
+		}
+		if f.homeJob.kicks != 1 {
+			return nil
+		}
+		// Simulate the candidate committing a newer schema before it fails.
+		credSQL(t, f.config.Credentials, fmt.Sprintf("PRAGMA user_version = %d", store.CredentialsSchemaVersion+1))
+		pending = pairedUpgradeEvidence(f)
+		return errors.New("fixture candidate failed after schema change")
+	}
+	before := pairedUpgradeEvidence(f)
+	code, msg := f.run("upgrade", "--binary", candidate)
+	wantPending := before
+	wantPending[0], wantPending[5] = serviceFileHash(candidate), pending[5]
+	if code != 3 || !strings.Contains(msg, "paired rollback refused") ||
+		!strings.Contains(msg, "is newer than this binary") || !strings.Contains(msg, wantStoppedRunnerRemedy+"\n") ||
+		supervisor.runnerLoaded || f.homeJob.kicks != 1 || pending[5] == before[5] || pending[5] == "" ||
+		pending != wantPending || pairedUpgradeEvidence(f) != pending ||
+		serviceFileHash(f.env.paths.Binary+".prev") != before[0] || serviceFileHash(f.env.paths.Binary+".failed") != "" {
+		t.Fatalf("rollback crossed the changed credentials schema: code=%d kicks=%d\n%s", code, f.homeJob.kicks, msg)
+	}
 }

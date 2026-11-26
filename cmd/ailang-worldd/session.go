@@ -360,9 +360,9 @@ daemon refuses the revoked token from its next request.
 // — MUT-REVOKE-UNKNOWN-OK); a missing --db is refused, never created
 // (MUT-STORE-CREATE); --episode revokes every credential of one episode.
 func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-	return sessionRevokeWithLock(ctx, args, stdout, stderr, terminalEpisodeLock)
+	revokeCtx, cancelRevoke := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancelRevoke()
+	return sessionRevokeWithLock(revokeCtx, args, stdout, stderr, terminalEpisodeLock)
 }
 
 func sessionRevokeWithLock(revokeCtx context.Context, args []string, stdout, stderr io.Writer, acquire func(string, string, *os.File) (*os.File, error)) int {

@@ -220,6 +220,19 @@ func (e serviceEnv) upgrade(candidate string, pause bool, out, errOut io.Writer)
 	return e.swapUpgrade(r, source, candidate, from, to, recordHash, installed, v, pair, out, errOut)
 }
 
+func (e serviceEnv) upgradeFailureNext(pair *runnerUpgradePair, next string, drainConfirmed bool) string {
+	if pair == nil || !pair.loaded {
+		return next
+	}
+	// A failed drain or restart can leave the job in either state.
+	if !drainConfirmed {
+		if _, err := e.controller.Print(e.domain, runnerLabel); !errors.Is(err, errServiceNotLoaded) {
+			return next
+		}
+	}
+	return next + "\n  The operator runner companion remains stopped. After resolving this, run ailang-worldd service runner start."
+}
+
 func (e serviceEnv) swapUpgrade(r serviceRecord, source []byte, candidate, from, to, recordHash string,
 	installed, v serviceVersion, pair *runnerUpgradePair, out, errOut io.Writer) int {
 	lock, err := e.lock()
@@ -236,29 +249,29 @@ func (e serviceEnv) swapUpgrade(r serviceRecord, source []byte, candidate, from,
 	if pair != nil {
 		drained, err = e.drainRunner(pair.config)
 		if err != nil {
-			return serviceMessage(errOut, "companion drain refused", err.Error(), "wait for process exit, then inspect service runner status and retry", 1)
+			return serviceMessage(errOut, "companion drain refused", err.Error(), e.upgradeFailureNext(pair, "wait for process exit, then inspect service runner status and retry", false), 1)
 		}
 		defer drained.Close()
 		if err := e.proveOldTerminalQuiet(); err != nil {
-			return serviceMessage(errOut, "terminal drain refused", err.Error(), "retire old terminal writers and retry", 1)
+			return serviceMessage(errOut, "terminal drain refused", err.Error(), e.upgradeFailureNext(pair, "retire old terminal writers and retry", true), 1)
 		}
 	}
 	fresh, previous := e.paths.Binary+".new", e.paths.Binary+".prev"
 	if err = e.atomic(fresh, source, 0755); err != nil {
-		return serviceMessage(errOut, "cannot stage upgrade", err.Error(), "inspect "+fresh+"; retry upgrade", 2)
+		return serviceMessage(errOut, "cannot stage upgrade", err.Error(), e.upgradeFailureNext(pair, "inspect "+fresh+"; retry upgrade", drained != nil), 2)
 	}
 	e.note(previous)
 	if err = os.Remove(previous); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return serviceMessage(errOut, "cannot remove previous build", err.Error(), "inspect "+previous, 2)
+		return serviceMessage(errOut, "cannot remove previous build", err.Error(), e.upgradeFailureNext(pair, "inspect "+previous, drained != nil), 2)
 	}
 	e.note(previous)
 	if err = os.Link(e.paths.Binary, previous); err != nil {
-		return serviceMessage(errOut, "cannot retain previous build", err.Error(), "inspect "+previous, 2)
+		return serviceMessage(errOut, "cannot retain previous build", err.Error(), e.upgradeFailureNext(pair, "inspect "+previous, drained != nil), 2)
 	}
 	e.note(fresh)
 	e.note(e.paths.Binary)
 	if err = os.Rename(fresh, e.paths.Binary); err != nil {
-		return serviceMessage(errOut, "cannot swap build", err.Error(), "inspect "+fresh, 2)
+		return serviceMessage(errOut, "cannot swap build", err.Error(), e.upgradeFailureNext(pair, "inspect "+fresh, drained != nil), 2)
 	}
 	err = e.rotate()
 	if err == nil {
@@ -289,11 +302,11 @@ func (e serviceEnv) swapUpgrade(r serviceRecord, source []byte, candidate, from,
 		drained.Close()
 		rollbackGuard, err = e.drainRunner(pair.config)
 		if err != nil {
-			return serviceMessage(errOut, "paired rollback refused", err.Error(), "verify the companion and children have exited; retain both builds", 3)
+			return serviceMessage(errOut, "paired rollback refused", err.Error(), e.upgradeFailureNext(pair, "verify the companion and children have exited; retain both builds", false), 3)
 		}
 		defer rollbackGuard.Close()
 		if err := pair.checkSchema(installed.CredentialsSchema); err != nil {
-			return serviceMessage(errOut, "paired rollback refused", err.Error(), "recover the matched pair using a verified schema-compatible build", 3)
+			return serviceMessage(errOut, "paired rollback refused", err.Error(), e.upgradeFailureNext(pair, "recover the matched pair using a verified schema-compatible build", true), 3)
 		}
 	}
 	return e.rollbackUpgrade(r, from, to, candidate, installed.CredentialsSchema, v.CredentialsSchema, pair, rollbackGuard, errOut)
@@ -306,7 +319,7 @@ func (e serviceEnv) rollbackUpgrade(r serviceRecord, from, to, candidate string,
 	if candidateSchema <= 0 || previousSchema < candidateSchema || previousErr != nil ||
 		!previousInfo.Mode().IsRegular() || serviceFileHash(previous) != from {
 		return serviceMessage(w, "automatic rollback refused", "the previous binary cannot be verified compatible with the possibly migrated credentials store; both builds were retained",
-			"inspect service status and recover at the terminal with a verified schema-compatible binary", 3)
+			e.upgradeFailureNext(pair, "inspect service status and recover at the terminal with a verified schema-compatible binary", guard != nil), 3)
 	}
 	restored := false
 	e.note(failed)
@@ -328,15 +341,15 @@ func (e serviceEnv) rollbackUpgrade(r serviceRecord, from, to, candidate string,
 		recordErr := e.saveUpgrade(r, from, to, "rolled back")
 		fmt.Fprintln(w, tail)
 		if recordErr != nil {
-			return serviceMessage(w, "old build is serving but upgrade history could not be saved", recordErr.Error(), "inspect "+e.paths.Record, 3)
+			return serviceMessage(w, "old build is serving but upgrade history could not be saved", recordErr.Error(), e.upgradeFailureNext(pair, "inspect "+e.paths.Record, guard != nil), 3)
 		}
 		if pair != nil {
 			if err := guard.Close(); err != nil {
-				return serviceMessage(w, "old World build restored; companion restart refused", err.Error(), "inspect service runner status", 3)
+				return serviceMessage(w, "old World build restored; companion restart refused", err.Error(), e.upgradeFailureNext(pair, "inspect service runner status", true), 3)
 			}
 			if err := e.writeRunnerPair(pair, true); err != nil {
 				_ = e.controller.Bootout(e.domain, runnerLabel)
-				return serviceMessage(w, "old World build restored; companion restart refused", err.Error(), "inspect the approved runner configuration and service status", 3)
+				return serviceMessage(w, "old World build restored; companion restart refused", err.Error(), e.upgradeFailureNext(pair, "inspect the approved runner configuration and service status", false), 3)
 			}
 			return serviceMessage(w, "paired upgrade rolled back", "the previous World service and companion configuration were restored", "read the service and runner logs; then retry upgrade", 2)
 		}
@@ -363,5 +376,5 @@ func (e serviceEnv) rollbackUpgrade(r serviceRecord, from, to, candidate string,
 	if stopErr != nil {
 		what = "rollback failed too; could not stop the service"
 	}
-	return serviceMessage(w, what, why, next, 3)
+	return serviceMessage(w, what, why, e.upgradeFailureNext(pair, next, guard != nil), 3)
 }
