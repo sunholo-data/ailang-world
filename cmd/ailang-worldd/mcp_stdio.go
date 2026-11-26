@@ -253,7 +253,7 @@ case "$name" in
         ;;
     esac
     ;;
-  mcp_ailang-world_world_*|ailang-world_world_*|mcp_world_*|mcp__world__*|world_*|mcp:world/*|mcp:ailang-world_world/*|ailang-read|ailang-write|ailang-edit|ailang-delete|ailang-check|ailang-run|ailang-cli|workspace-exec|workspace-search|workspace-list|builtins-search|examples-search|update_steps)
+  mcp_ailang-world_world_*|ailang-world_world_*|mcp_world_*|mcp__world__*|world_*|mcp:world/*|mcp:ailang-world_world/*|ailang-read|ailang-write|ailang-edit|ailang-delete|ailang-check|ailang-run|ailang-cli|workspace-exec|workspace-search|workspace-list|builtins-search|examples-search|update_steps|ask_question|AskQuestion)
     printf '{"decision":"allow"}\n'
     exit 0
     ;;
