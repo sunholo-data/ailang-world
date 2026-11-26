@@ -147,7 +147,8 @@ Usage:
                         [--allow-failing CHECK]... [--include-unattributed] [--dry-run]
   ailang-worldd preset list|show|check|init [name] [--presets-dir <dir>]
   ailang-worldd episode launch <episode> --preset <name> [--presets-dir <dir>] [--headless]
-  ailang-worldd episode start [episode] --preset <name> [--presets-dir <dir>] [--task <file>] [--launch] [--headless]
+  ailang-worldd episode start [episode] --preset <name> [--presets-dir <dir>] [--task <file>] [--launch] [--headless] [--from-allowance]
+  ailang-worldd run <preset> [<task-text>...] [--task <file>] [--episode <id>] [--interactive] [--prompt]
   ailang-worldd profile init --repo <dir> --project <name> [--out <file>] [--profiles-dir <dir>]
   ailang-worldd surface-index --repo <dir> --charter <file> --out <file> [--rev dev] [--limit 200]
                     [--rig <dir> --addr <url> [--project ailang-world]]
@@ -511,6 +512,15 @@ func run(args []string, stdout, stderr io.Writer) int {
 		}
 		return runEpisode(*addr, rest[1:], stdout, stderr)
 
+	case "run":
+		// Row 225: one-command preset runner drawing from a standing allowance.
+		if addrGiven {
+			fmt.Fprintln(stderr, "ailang-worldd: the global --addr is not valid for 'run'; "+
+				"the daemon address comes from the preset")
+			return exitUsage
+		}
+		return runWrapper(rest[1:], stdout, stderr, realSessionEnv())
+
 	case "preset":
 		return runPreset(rest[1:], stdout, stderr)
 
@@ -735,7 +745,7 @@ func serveResult(err error, stderr io.Writer) int {
 var ownHelpVerbs = map[string]bool{
 	"version": true, "service": true,
 	"tools": true, "call": true, "why": true, "provenance": true,
-	"setup": true, "doctor": true, "session": true, "approve": true, "approver": true, "allowance": true, "episode": true,
+	"setup": true, "doctor": true, "session": true, "approve": true, "approver": true, "allowance": true, "episode": true, "run": true,
 	"profile": true, "surface-index": true, "hosts": true, "whoami": true,
 }
 

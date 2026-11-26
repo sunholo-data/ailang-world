@@ -42,6 +42,7 @@ var lookupCases = []struct {
 	{"serve", "serve", Never, "host administration", true, []string{}},
 	{"log", "log", Other, "log is a CLI command the app does not run; at a terminal: ailang-worldd log", true, []string{}},
 	{"log tail", "log", Other, "at a terminal: ailang-worldd log tail", true, []string{"tail"}},
+	{"run world-agy fix bug", "run", Other, "run is a CLI command the app does not run; at a terminal: ailang-worldd run world-agy fix bug", true, []string{"world-agy", "fix", "bug"}},
 	{"ailang-worldd world get world-1", "world get", Other, "world get is a CLI command the app does not run; at a terminal: ailang-worldd world get world-1", true, []string{"world-1"}},
 	{"world get a b", "world get", Other, "world get is a CLI command", true, []string{"a", "b"}},
 	{"--addr x episode report w1", "", Refused, "global flags are not accepted", true, nil},
@@ -69,10 +70,10 @@ func TestLookup(t *testing.T) {
 			t.Errorf("Lookup(%q) = %+v, %q", c.line, v, rest)
 		}
 	}
-	// The shadow set: every one of the 29 words is a verb, bare and with an argument; never an address.
+	// The shadow set: every one of the 30 words is a verb, bare and with an argument; never an address.
 	all := append(append(append([]string{}, OperatorWords...), NeverWords...), OtherWords...)
-	if len(all) != 29 {
-		t.Fatalf("shadow set has %d words, want 29", len(all))
+	if len(all) != 30 {
+		t.Fatalf("shadow set has %d words, want 30", len(all))
 	}
 	for _, w := range all {
 		for _, argv := range [][]string{{w}, {w, "zzz"}, {Binary, w, "zzz"}} {
