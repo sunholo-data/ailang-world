@@ -8,8 +8,8 @@ import (
 )
 
 const worldToolMap = `Your only file and shell access is World's MCP tools:
-  read/edit/write files -> ailang-read / ailang-edit / ailang-write / ailang-delete (paths relative to the worktree)
-  run commands         -> workspace-exec, the exec profile's commands only (list them with the tool)
+  read/edit/write files -> ailang-read (keep limit<=120 lines) / ailang-edit / ailang-write / ailang-delete / workspace-list / workspace-search (paths relative to the worktree)
+  run commands         -> workspace-exec, the exec profile's commands only (call with no command to list them; run go-test/go-vet sequentially, not in parallel)
   AILANG               -> ailang-check / ailang-run / ailang-cli; docs -> builtins-search / examples-search
 `
 
@@ -208,14 +208,14 @@ if [ "$inv" = "0" ] || [ "$inv" = "1" ]; then
       i=$((i + 1))
     done
     if [ -f "$WORLD_AGY_MCP_READY" ]; then
-      sleep 0.5
+      sleep 1.2
       : >"${WORLD_AGY_MCP_READY}.waited" 2>/dev/null || :
     fi
   fi
 fi
 printf '{}\n'
 `)
-	files["bin/agy-world-session-start"] = []byte("#!/bin/sh\numask 077\npayload=$(cat)\ncwd=$(printf '%s' \"$payload\" | jq -r '.cwd // \"\"' 2>/dev/null)\ntpath=$(printf '%s' \"$payload\" | jq -r '.transcriptPath // \"\"' 2>/dev/null)\ncid=$(printf '%s' \"$payload\" | jq -r '.conversationId // \"\"' 2>/dev/null)\nif [ -n \"$cwd\" ] && [ -d \"$cwd/.agents\" ] && [ ! -L \"$cwd/.agents\" ] && [ -n \"$tpath\" ] && [ -n \"$cid\" ]; then\n  jq -nc --arg conversationId \"$cid\" --arg transcriptPath \"$tpath\" '{conversationId:$conversationId,transcriptPath:$transcriptPath}' >\"$cwd/.agents/.world-session-meta.json\" 2>/dev/null || :\nfi\nif [ -n \"${WORLD_AGY_MCP_READY:-}\" ] && [ ! -f \"${WORLD_AGY_MCP_READY}.waited\" ]; then\n  i=0\n  while [ \"$i\" -lt 50 ] && [ ! -f \"$WORLD_AGY_MCP_READY\" ]; do\n    sleep 0.1\n    i=$((i + 1))\n  done\n  if [ -f \"$WORLD_AGY_MCP_READY\" ]; then\n    sleep 0.5\n    : >\"${WORLD_AGY_MCP_READY}.waited\" 2>/dev/null || :\n  fi\nfi\ncontext=$(" + shellQuote(context) + ")\njq -nc --arg msg \"$context\" '{injectSteps:[{systemMessage:{systemMessage:$msg}}]}'\n")
+	files["bin/agy-world-session-start"] = []byte("#!/bin/sh\numask 077\npayload=$(cat)\ncwd=$(printf '%s' \"$payload\" | jq -r '.cwd // \"\"' 2>/dev/null)\ntpath=$(printf '%s' \"$payload\" | jq -r '.transcriptPath // \"\"' 2>/dev/null)\ncid=$(printf '%s' \"$payload\" | jq -r '.conversationId // \"\"' 2>/dev/null)\nif [ -n \"$cwd\" ] && [ -d \"$cwd/.agents\" ] && [ ! -L \"$cwd/.agents\" ] && [ -n \"$tpath\" ] && [ -n \"$cid\" ]; then\n  jq -nc --arg conversationId \"$cid\" --arg transcriptPath \"$tpath\" '{conversationId:$conversationId,transcriptPath:$transcriptPath}' >\"$cwd/.agents/.world-session-meta.json\" 2>/dev/null || :\nfi\nif [ -n \"${WORLD_AGY_MCP_READY:-}\" ] && [ ! -f \"${WORLD_AGY_MCP_READY}.waited\" ]; then\n  i=0\n  while [ \"$i\" -lt 50 ] && [ ! -f \"$WORLD_AGY_MCP_READY\" ]; do\n    sleep 0.1\n    i=$((i + 1))\n  done\n  if [ -f \"$WORLD_AGY_MCP_READY\" ]; then\n    sleep 1.2\n    : >\"${WORLD_AGY_MCP_READY}.waited\" 2>/dev/null || :\n  fi\nfi\ncontext=$(" + shellQuote(context) + ")\njq -nc --arg msg \"$context\" '{injectSteps:[{systemMessage:{systemMessage:$msg}}]}'\n")
 	files["bin/agy-world-gate"] = []byte(`#!/bin/sh
 payload=$(cat)
 name=$(printf '%s' "$payload" | jq -r '.toolCall.name // ""' 2>/dev/null)
@@ -224,6 +224,16 @@ case "$name" in
   call_mcp_tool)
     case "$server" in
       ailang-world_world|world)
+        printf '{"decision":"allow"}\n'
+        exit 0
+        ;;
+    esac
+    ;;
+  read_file)
+    path=$(printf '%s' "$payload" | jq -r '.toolCall.args.Path // .toolCall.args.path // ""' 2>/dev/null)
+    case "$path" in
+      *../*|*/../*|*/..) ;;
+      */.gemini/antigravity-cli/brain/*/.system_generated/steps/*/output.txt)
         printf '{"decision":"allow"}\n'
         exit 0
         ;;

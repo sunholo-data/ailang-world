@@ -269,11 +269,14 @@ func (h *ExecHandler) Execute(ctx context.Context, req EffectRequest, payload []
 	// Gate 2 (§4.2): the profile and the grammar, before anything runs.
 	id, args, why := parseExecPayload(payload)
 	if why != "" {
+		if why == "command is required" {
+			return execRefusal(fmt.Sprintf("command is required; profile %q commands: %s", h.profile.Project, strings.Join(sortedKeys(h.profile.Commands), ", ")))
+		}
 		return execRefusal(why)
 	}
 	cmd, ok := h.profile.Commands[id]
 	if !ok {
-		return execRefusal(fmt.Sprintf("command %q is not a command of exec profile %q", id, h.profile.Project))
+		return execRefusal(fmt.Sprintf("command %q is not a command of exec profile %q (available: %s)", id, h.profile.Project, strings.Join(sortedKeys(h.profile.Commands), ", ")))
 	}
 	normalized, err := MatchExecArgs(cmd.ExecCommand, args)
 	if err != nil {
