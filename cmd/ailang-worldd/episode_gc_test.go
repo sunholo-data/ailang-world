@@ -18,7 +18,7 @@ import (
 
 func runGit(t *testing.T, dir string, args ...string) {
 	t.Helper()
-	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
+	cmd := exec.CommandContext(boundedTestContext(t), "git", append([]string{"-C", dir}, args...)...)
 	cmd.Env = append(os.Environ(),
 		"GIT_AUTHOR_NAME=Test", "GIT_AUTHOR_EMAIL=test@example.com",
 		"GIT_COMMITTER_NAME=Test", "GIT_COMMITTER_EMAIL=test@example.com",
@@ -144,7 +144,8 @@ func TestEpisodeGCFailSafeAndReclaims(t *testing.T) {
 		}
 		return got
 	}
-	head, status := gitState("rev-parse", "HEAD"), gitState("status", "--porcelain=v1")
+	head, status := gitState("rev-parse", "HEAD"), gitState("--no-optional-locks", "status", "--porcelain=v1")
+	refs, registration := gitState("show-ref"), gitState("worktree", "list", "--porcelain")
 	physical := func(path string) string {
 		t.Helper()
 		got, err := filepath.EvalSymlinks(path)
@@ -184,7 +185,9 @@ func TestEpisodeGCFailSafeAndReclaims(t *testing.T) {
 			}
 		}
 		if _, err := os.Stat(cleanWT); err != nil || !found || !bytes.Equal(head, gitState("rev-parse", "HEAD")) ||
-			!bytes.Equal(status, gitState("status", "--porcelain=v1")) {
+			!bytes.Equal(status, gitState("--no-optional-locks", "status", "--porcelain=v1")) ||
+			!bytes.Equal(refs, gitState("show-ref")) || !bytes.Equal(registration, gitState("worktree", "list", "--porcelain")) ||
+			string(readStartFixtureFile(t, filepath.Join(cleanWT, "README.md"))) != "hello\n" {
 			t.Fatalf("want unchanged ep-clean and skip %q: %+v, stat %v", reason, rep, err)
 		}
 	}
@@ -193,12 +196,22 @@ func TestEpisodeGCFailSafeAndReclaims(t *testing.T) {
 	if got := episodeGCCredentialsPath(wsRoot, ""); got != "" {
 		t.Fatalf("different configured workspace selected credentials %q", got)
 	}
-	assertSkip("non-terminal operator step", "--credentials-db", creds)
+	assertSkip("operator step lookup unavailable", "--credentials-db", creds)
 	alias := filepath.Join(base, "workspace-alias")
 	if err := os.Symlink(wsRoot, alias); err != nil {
 		t.Fatal(err)
 	}
 	setRecord(wsRoot)
+	assertSkip("operator step lookup unavailable", "--credentials-db", defaultCreds)
+	held, err := store.OpenOperatorEpisodeLock(creds, "ep-clean")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertSkip("operator episode lock unavailable", "--credentials-db", creds)
+	if err := held.Close(); err != nil {
+		t.Fatal(err)
+	}
+	assertSkip("non-terminal operator step", "--credentials-db", creds)
 	if got := episodeGCCredentialsPath(alias, ""); got != creds {
 		t.Fatalf("symlink scan root selected %q, want %q", got, creds)
 	}

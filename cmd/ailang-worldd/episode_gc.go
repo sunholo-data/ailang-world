@@ -26,7 +26,7 @@ ailang-worldd serve (2m after boot, then every 6h).
 
   --workspace-root D   episode worktrees root (default ~/.ailang/world-ws)
   --exec-cache-dir D   per-episode exec caches (default ~/.ailang/world/exec-cache)
-  --credentials-db PATH   credentials for this workspace (matching home service or default workspace inferred)
+  --credentials-db PATH   assert the store paired with this workspace (home service or defaults)
   --older-than DUR     minimum age before a clean merged worktree is removed (default 72h)
   --dry-run            report what would be removed without deleting anything
   --json               emit JSON report
@@ -47,11 +47,8 @@ func defaultExecCacheDir() string {
 }
 
 // episodeGCCredentialsPath uses a store known to belong to the scanned
-// workspace. An explicit path is required for other workspace layouts.
+// workspace. An explicit override must attest to the same physical store.
 func episodeGCCredentialsPath(root, explicit string) string {
-	if explicit != "" {
-		return explicit
-	}
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ""
@@ -70,6 +67,12 @@ func episodeGCCredentialsPath(root, explicit string) string {
 	workspace, workspaceErr := filepath.EvalSymlinks(workspace)
 	if errors.Join(absErr, rootErr, workspaceErr) != nil || root != workspace {
 		return ""
+	}
+	if explicit != "" {
+		match, err := store.SameDatabase(credentials, explicit)
+		if err != nil || !match {
+			return ""
+		}
 	}
 	return credentials
 }
@@ -105,14 +108,12 @@ func runEpisodeGC(args []string, stdout, stderr io.Writer) int {
 	defer cancel()
 	credentials := episodeGCCredentialsPath(*wsRoot, *creds)
 	rep := daemon.RunEpisodeGC(ctx, daemon.EpisodeGCOptions{
-		WorkspaceRoot: *wsRoot,
-		ExecCacheDir:  *cacheDir,
-		OlderThan:     *olderThan,
-		DryRun:        *dryRun,
-		Now:           time.Now(),
-		HasOpenOperatorStep: func(ctx context.Context, episode string) (bool, error) {
-			return store.EpisodeHasUnresolvedOperatorSteps(ctx, credentials, episode)
-		},
+		WorkspaceRoot:   *wsRoot,
+		ExecCacheDir:    *cacheDir,
+		OlderThan:       *olderThan,
+		DryRun:          *dryRun,
+		Now:             time.Now(),
+		CredentialsPath: credentials,
 	})
 	if *asJSON {
 		enc := json.NewEncoder(stdout)

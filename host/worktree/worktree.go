@@ -112,6 +112,12 @@ func Remove(ctx context.Context, git, repo, dir string) error {
 	return runGit(ctx, git, []string{"-C", repo, "worktree", "remove", "--force", dir}, nil)
 }
 
+// RemoveRegistered removes only the named linked worktree, without forcing
+// dirty/locked worktrees or pruning other registrations in the repository.
+func RemoveRegistered(ctx context.Context, git, commonDir, dir string, held *os.File) error {
+	return runGit(ctx, git, []string{"--git-dir", commonDir, "worktree", "remove", dir}, nil, held)
+}
+
 // capped keeps the first max bytes written to it and notes any beyond, which
 // it discards so the child never blocks on a full pipe.
 type capped struct {
