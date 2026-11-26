@@ -1827,3 +1827,55 @@ Keep `cmd/ailang-worldd` race time flat. Row 271 stays small.
 - Rotation not due (#635 opened 2026-11-23T07:34Z; next 2026-11-30 07:00 local). Weekly external-issue sweep not due.
 - Idle fingerprint NOT recorded (this fire picked and landed).
 - Harness share 0/20. The last 3 landings (438, 437, 436) move no clause; no clause is UNMET → no DRIFT line.
+
+## 439 — 2026-11-26 — row 243 V4 sprint 5f LANDED (PR #681, merge `886648ab`): the staged seams and pins the first production caller needs — judge-438's S9/S10 GC kind rows, the attended mint resolver's injected lock (E-RES-EPISODE-CONFLICT and E-RES-REREAD killed), a dormant start selector with a lock-scoped candidate visit, a signed `launch_binary_sha256` start fact, and a heartbeat that no longer advances `catalogue_generation` on an identical payload; the caller moves to S5f2; 578 lines; judge sonnet PASS 86 [PRODUCT]
+
+**Pick:** row 243 V4 sprint 5f, the Next that record 438 named.
+- **Re-measured at pick** (`origin/dev` `9610f5de`): no S5f plan, branch, PR or worktree existed; design r1 reviewed (r2 PROCEED 3/3); ledger 107 rows, 0 OPEN.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Row 243 serves D-WORLD-94 and moves no clause; it is the loop-routable build row.
+- Claim sent to `controlplane` before routing (`inbox_1795679938770_f891b6f0`).
+
+**Gate 0:** stamped first; `gh` = `sunholo-voight-kampff`; billing CLEAN; kill switch absent; 0 allowlisted directives on #635 (18 comments); step 6a: 0 crash, 0 transcript notices (control 107:4); `mission-world` inbox 0 unread.
+
+**Gate 1:** local `dev` = `origin/dev` = `9610f5de`; only untracked files in the main checkout; base `9610f5de…@2026-11-26T07:55:39Z`. Skill drift: resolved symlink and pin copy each byte-identical to ailang `origin/dev` on every file. Dev CI 3/3 green.
+
+**Routing evidence:**
+- Resolver (followed verbatim): planner `recipe codex:gpt-6.2-sol declared:planner-lane-default-pin`, executor `recipe codex:gpt-6.2-sol declared:provider-pin`, evaluator `agent-tool sonnet declared:alias-pin`. Codex probe rc 0 from the sprint worktree. Designer not spawned (reviewed design, no new doc).
+- Controller `claude-opus-5-5` (session; tok: not reported) · planner `codex:gpt-6.2-sol` (382,611 tok; **rc=1**, see below) · executor `codex:gpt-6.2-sol` (65,180 tok) · evaluator Agent `sonnet` (108,428 tok). Planner and executor are cross-provider recipes because the resolver returned `recipe` for both; the evaluator is the Agent tool. judge-independence: cross-vendor. metered=$0.00.
+
+**Directive (controller's):** S5f = the paired-process consumer and drain with the first production caller; M1 S9/S10, M2 E-RES-*, M3 caller + drain + four process pins and the carried J-OWN-UID/Z-*/`session revoke`/GC exclusion, M4 optional; ≤ 1,400 lines with a safe-unit exception to 1,650; "a production caller without its four process pins is not a safe unit"; if it could not fit, a pinned dormant seam with the caller in Appendix C at a MEASURED size; total added `cmd/ailang-worldd` race ≤ 12 s (row 267).
+
+**Planner** (~36 min). **Lane outcome rc=1:** codex printed `WROTE …sprint-plan.md and sprint_….json`, then `ERROR: This content was flagged for possible cybersecurity risk` (twice) and ended with no final message.
+- **Disposition:** a measured partial, not a fallback. The JSON parses, no placeholder text, the planner's own stage checks are rc 0 for all three stages, and the controller round trip reproduces every stage. A kimi fallback would have restarted planning from nothing. Plan + JSON committed `fab82ec3`.
+- Scope: M1 20, M2 98, M3 **578** cumulative (`-- cmd host docs app`). The caller is S5f2 in Appendix C. §1.4 measured three prerequisites absent at HEAD: the upgrade path refuses while a runner is installed and cannot drain a pair; the dormant worktree/files helpers open their own lock descriptor; and every heartbeat advanced `catalogue_generation`, which invalidated a signed mint/worktree CAS on the next tick.
+- Left "pending" in the plan (§1.5 race receipts, §4 mutation table, §6, §7) — measured by the controller and the judge, below. Appendix C names no S5f2 size; the controller measured the prototype `proto-S5f2-current` at **1,082** cumulative lines without the four process pins.
+
+**Controller round trip:** `ctl_roundtrip.sh M1 M2 M3` → `diff -r` rc 0 for M1 and M2; the M3 patch is byte-identical to `st-M3-refined`, not the earlier `st-M3` draft, which the plan's §4.1 still names.
+
+**Executor** (~3 min): three clean patches; `ACCEPT_OK` M1 22/0, M2 46/0, M3 83/0; snapshots 1/0/1, 4/0/4, 17/0/17, all `cmp`-equal to the stages. Controller commits M1 `c5ab7d18`, M2 `cabe66c7`, M3 `0ed2ab53` (NUMSTAT 20 → 98 → 578).
+
+**Controller mutants:** all 45 `mutants.json` specs run outside the sandbox against their named tests → 44 KILLED; D-SELECT-LIMIT (`LIMIT 1` dropped) SURVIVED, pre-declared EQUIVALENT. No whole-package replay.
+
+**Gates** on `0ed2ab53` (no PATH shims, `-timeout 20m`; base fail sets reused from iteration 438's `1b78d779` head, whose code tree equals `9610f5de`): build, vet, Linux vet, test compile, inventories, `verify_ail.sh`, GC probe — rc 0. Caller census = base once the planner script got its missing 4th argument; negative control fires. `host/store` plain/race 0 fails; CLI plain = base 11; daemon race = base minus the load-sensitive `TestSeToolsRunBenchmarkTasksEndToEnd`. `gofmt` flags untouched `host/daemon/daemon.go`, as at base.
+
+**Evaluator** (Agent `sonnet`, foreground, ~39 min, own worktree at `0ed2ab53`, clean at the end): **PASS 86**, 0 blocking (27/26/18/8/7).
+- S9, S10, E-RES-EPISODE-CONFLICT and E-RES-REREAD each killed by a named behavioural test; 11 controller-KILLED ids re-run, all killed.
+- The catalogue CASE terms read the pre-update row; `catalogue_generation` is read by the mint and worktree CAS and `ReadOperatorHeartbeat`, and nothing relied on it advancing every tick.
+- 21 own mutants: J02 must-die killed; J07/J19/J21 equivalents; **J01 (`catalogue IS ?` → `= ?`) survives whole `host/store`**; J05 (drop the visit's `defer db.Close()`) survives the named selectors.
+- Non-blocking: Appendix C has no measured size and the plan still reads "pending"; S5f2 needs a compatibility rule for starts signed before `launch_binary_sha256`; the dormant selector is a justified staged seam.
+- **Controller reproduction of J01:** `catalogue IS ?` → `catalogue = ?` in `host/store/operator_runner.go` → `go test -count=1 ./host/store/` ok 12.439 s. Survives; production SQL is correct; carried to S5f2.
+
+**Gate 3b:** PR #681 attempt 1 RED on `go host build + test` only: `host/broker TestSeedRestartIgnoresASurvivingOldCopy/survivor` ("the old staging dir survived the restart"). It is charter-listed load-sensitive; `host/broker` is untouched by this sprint (`git diff --stat 9610f5de 0ed2ab53 -- host/broker` empty); iteration 437 hit the same test on merge CI. Attempt 2 3/3 (race job: `cmd/ailang-worldd` 269.4 s, `host/daemon` 357.1 s, `host/verifygate` 328.9 s, `host/broker` 275.0 s, `host/store` 63.4 s). `origin/dev` had moved to `419cca9d` (attended #678, #679; no file overlap); `MERGEABLE CLEAN`; merged `--match-head-commit` → `886648ab`. Merge CI on `886648ab` (run 45796678393): attempt 1 RED on the race job only — `panic: test timed out after 8m0s` in `host/daemon` (480.140 s; untouched by this sprint), with `cmd/ailang-worldd` at 464.950 s on that slow runner; attempt 2 **3/3 success** (`cmd/ailang-worldd` 265.2 s, `host/daemon` 355.8 s, `host/verifygate` 324.9 s, `host/broker` 272.2 s). **LANDED.**
+
+**Found:** dev went red mid-iteration on the two attended merges — `6ac6d966` (#678: race `FAIL host/daemon 480.077s`) and `419cca9d` (#679: race `FAIL cmd/ailang-worldd 480.232s`, `host/daemon 480.103s`, `host/verifygate 480.049s`, `panic: test timed out after 8m0s`). `419cca9d`'s race job attempt 2 was green (`6ac6d966` was not re-run), so it is row 267's slow-runner class, not a regression; recorded on row 267. With this merge's attempt 1 it is three consecutive `dev` merges red at attempt 1 on the race bound; filed **D-WORLD-121** (take row 267 before S5f2? A recommended; default B = the attended order).
+
+**Progress:** 1.0: clauses 1–7 MET; goal unmoved. Row 243 V4: S1–S5f landed. Every pin record 438 owed before the caller except the process pins is now killed. The catalogue-generation churn that would have refused every signed mint is fixed. Still dormant: no production caller.
+
+**Ruled out:** falling back to the kimi planner on the codex rc=1 — the plan existed, compiled and round-tripped, so a restart would only have re-bought it on a weaker lane; a third executor round for J01/J05 — the production SQL is correct, the gaps are a test row and a handle close, carried as named S5f2 pins rather than buying a re-judge; re-recording base fail sets — iteration 438's head is code-identical to `9610f5de`.
+
+**Next:** V4 S5f2 — the first production caller with its four process pins, the episode fd borrowed across the worktree/files helpers, the attended paired drain, J01's NULL-catalogue row, J05, a compatibility rule for pre-digest signed starts, J-OWN-UID, terminal `session revoke` exclusion, the activation-vs-GC exclusion and N04/N12/N15. Row 267 goes first only if Mark answers D-WORLD-121 = A; either way S5f2's directive must report its added `cmd/ailang-worldd` race seconds against the 480 s bound.
+
+**Gate 5 bookkeeping:**
+- Rotation not due (#635 opened 2026-11-23T07:34Z; next 2026-11-30 07:00 local). Weekly external-issue sweep not due.
+- Idle fingerprint NOT recorded (this fire picked and landed).
+- Harness share 0/20 (20 rows, 20 tagged). The last 3 landings (439, 438, 437) move no clause; no clause is UNMET → no DRIFT line.
