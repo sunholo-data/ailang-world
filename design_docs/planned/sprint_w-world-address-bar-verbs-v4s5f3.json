@@ -1,0 +1,1173 @@
+{
+  "sprint_id": "w-world-address-bar-verbs-v4s5f3",
+  "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+  "design_revision": "r1, quorum r2 PROCEED 3/3, no absent seats",
+  "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s5f3-sprint-plan.md",
+  "previous_sprint": "S5f2 #685 merge 150d0d96, 1476 product lines, Sonnet r2 PASS 77",
+  "base_commit": "2f573488043565f480574ed42d1dacd514c6aa0b",
+  "design_measured_at": "2f573488043565f480574ed42d1dacd514c6aa0b",
+  "queue_row": 243,
+  "iteration": 441,
+  "phase": "V4",
+  "sprint_number": "5f3",
+  "sprint": "S5f3 activation prerequisites",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter441-row243-v4s5f3",
+  "branch": "sprint/world-iter441-row243-v4s5f3",
+  "authority": [
+    "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004"
+  ],
+  "behaviour": "Exclude terminal session revoke, classify durable start recovery windows, reject old executable bindings, and perform attended paired upgrade and drain. Appendix C measures the final sprint to the first caller.",
+  "cut": {
+    "outcome": "B",
+    "cap_loc": 1400,
+    "safe_unit_cap_loc": 1650,
+    "complete_safe_unit_loc": 2302,
+    "measure": "git diff -M --numstat 2f573488043565f480574ed42d1dacd514c6aa0b HEAD -- cmd host docs app",
+    "measured": 1385,
+    "unfiltered_product": 1385,
+    "margin": 15,
+    "moved_out": {
+      "S5f4": {
+        "stage": "st-M4",
+        "rebased_on": "st-M3",
+        "increment": 917,
+        "cap": 1400,
+        "endpoint": "prepared-awaiting-S6",
+        "compiled_patch": "$S/M4.patch",
+        "named_gate": "$S/accept.sh $S/st-M4 M4 fast",
+        "remaining_scope": "First production caller with first-managed process, current-owner process recovery, and attended gap/orphan remedies."
+      }
+    }
+  },
+  "planner_decisions": [
+    "Product cut uses ordinary 1400-line cap.",
+    "Opaque legacy ids use a disjoint hashed lock key.",
+    "Retain the existing browser refusal set."
+  ],
+  "scope": {
+    "in": [
+      "Terminal revoke exclusion and UID check",
+      "Durable-window dispositions and older signed starts",
+      "Attended paired upgrade and companion drain"
+    ],
+    "out": [
+      "agent spawn (S6)",
+      "browser routes",
+      "AILANG changes",
+      "schema migration",
+      "GC policy changes"
+    ]
+  },
+  "executor_lane": "codex:gpt-6.2-sol",
+  "executor_form": "Apply exact Appendix P fences with /usr/bin/patch -p1 -E. Accept and snapshot; controller commits.",
+  "estimate_loc": 1385,
+  "milestones": [
+    {
+      "increment": 289,
+      "added": 271,
+      "deleted": 18,
+      "expected_cumulative_numstat": 289,
+      "unfiltered_product": 289,
+      "id": "M1",
+      "title": "Terminal revoke exclusion and UID check",
+      "expected_snapshot": {
+        "path": "$STATE/snap/M1",
+        "status": 4,
+        "deleted": 0,
+        "manifest": 4
+      },
+      "accept_parts": [
+        "TestOperatorTerminalRevokeExclusion",
+        "TestOperatorTerminalRevokeLegacy",
+        "TestOperatorRunnerPathUID",
+        "TestOperatorTerminalCreateLockMissingParent",
+        "TestOperatorWaitReadBudget"
+      ],
+      "commit_test": "AILANG_BIN=\"$HOME/.pinned-ailang/ailang\" WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=\"$HOME/.pinned-ailang-tools/v0.54.15/ailang\" /bin/bash \"$S/accept.sh\" \"$W\" M1 fast"
+    },
+    {
+      "increment": 397,
+      "added": 668,
+      "deleted": 18,
+      "expected_cumulative_numstat": 686,
+      "unfiltered_product": 686,
+      "id": "M2",
+      "title": "Durable-window dispositions and older signed starts",
+      "expected_snapshot": {
+        "path": "$STATE/snap/M2",
+        "status": 8,
+        "deleted": 0,
+        "manifest": 8
+      },
+      "accept_parts": [
+        "TestOperatorStartRecoveryWindows",
+        "TestOperatorStartRecoveryRejectsContradictoryEvidence",
+        "TestOperatorPreDigestSignedStart"
+      ],
+      "commit_test": "AILANG_BIN=\"$HOME/.pinned-ailang/ailang\" WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=\"$HOME/.pinned-ailang-tools/v0.54.15/ailang\" /bin/bash \"$S/accept.sh\" \"$W\" M2 fast"
+    },
+    {
+      "increment": 699,
+      "added": 1346,
+      "deleted": 39,
+      "expected_cumulative_numstat": 1385,
+      "unfiltered_product": 1385,
+      "id": "M3",
+      "title": "Attended paired upgrade and companion drain",
+      "expected_snapshot": {
+        "path": "$STATE/snap/M3",
+        "status": 18,
+        "deleted": 0,
+        "manifest": 18
+      },
+      "accept_parts": [
+        "TestOperatorServiceUpgrade/active_child",
+        "TestOperatorOldBuildTerminalDrain",
+        "TestOperatorPairedUpgradeRefusals",
+        "TestOperatorServiceUpgradePairFence",
+        "TestOperatorServiceStartup",
+        "TestOperatorServiceWriteScope"
+      ],
+      "commit_test": "AILANG_BIN=\"$HOME/.pinned-ailang/ailang\" WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=\"$HOME/.pinned-ailang-tools/v0.54.15/ailang\" /bin/bash \"$S/accept.sh\" \"$W\" M3 fast"
+    }
+  ],
+  "expected_snapshots": {
+    "M1": {
+      "path": "$STATE/snap/M1",
+      "status": 4,
+      "deleted": 0,
+      "manifest": 4
+    },
+    "M2": {
+      "path": "$STATE/snap/M2",
+      "status": 8,
+      "deleted": 0,
+      "manifest": 8
+    },
+    "M3": {
+      "path": "$STATE/snap/M3",
+      "status": 18,
+      "deleted": 0,
+      "manifest": 18
+    }
+  },
+  "design_premises_found_false": [
+    "Paired upgrader already exists",
+    "All durable gaps have installed remedies",
+    "Digest implies executability and confinement",
+    "Revoke shares terminal exclusion",
+    "Explicit GC DB path proves workspace binding"
+  ],
+  "existing_tests_edited": [
+    {
+      "path": "cmd/ailang-worldd/operator_upgrade_test.go",
+      "test": "TestOperatorServiceUpgrade",
+      "before": "Six ordinary serviceEnv.upgrade/rollbackUpgrade arms",
+      "after": "Existing arms plus active_child pair drain and rollback",
+      "mutations": [
+        "D-PAIR-EXIT-BOUND",
+        "D-PAIR-ROLLBACK-OLD"
+      ]
+    }
+  ],
+  "existing_tests_deleted": [],
+  "existing_production_edited": [
+    "cmd/ailang-worldd/operator_service.go",
+    "cmd/ailang-worldd/service.go",
+    "cmd/ailang-worldd/service_launchctl.go",
+    "cmd/ailang-worldd/service_upgrade.go",
+    "cmd/ailang-worldd/session.go",
+    "docs/QUICKSTART.md",
+    "host/store/credentials.go",
+    "host/store/credentials_migrate.go"
+  ],
+  "new_files": [
+    "cmd/ailang-worldd/operator_pair_upgrade.go",
+    "cmd/ailang-worldd/operator_pair_upgrade_test.go",
+    "cmd/ailang-worldd/operator_process_darwin.go",
+    "cmd/ailang-worldd/operator_process_other.go",
+    "cmd/ailang-worldd/operator_revoke_test.go",
+    "host/authority/operator_start_digest.go",
+    "host/authority/operator_start_digest_test.go",
+    "host/store/operator_start_recovery.go",
+    "host/store/operator_start_recovery_test.go"
+  ],
+  "not_touched": [
+    "app/",
+    "world/",
+    "tools/launchd/",
+    "host/daemon/",
+    "host/worktree/"
+  ],
+  "mutants": [
+    {
+      "id": "D-RV-RO-FIRST",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 417,
+      "before": "if target == \"\" {",
+      "after": "if target != \"\" {",
+      "killer": "TestOperatorTerminalRevokeLegacy/id",
+      "test": "^TestOperatorTerminalRevokeLegacy$/^id$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-PREVIEW-ID",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 427,
+      "before": "target = reviewed.EpisodeID",
+      "after": "target = reviewed.CredentialID",
+      "killer": "TestOperatorTerminalRevokeExclusion/holder",
+      "test": "^TestOperatorTerminalRevokeExclusion$/^holder$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-OPAQUE",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 429,
+      "before": "if !verbs.EpisodeIDPattern.MatchString(target) {",
+      "after": "if !verbs.EpisodeIDPattern.MatchString(target) && false {",
+      "killer": "TestOperatorTerminalRevokeLegacy/opaque",
+      "test": "^TestOperatorTerminalRevokeLegacy$/^opaque$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-LOCK-KEY",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 434,
+      "before": "lock, err := acquire(credPath, target, nil)",
+      "after": "lock, err := acquire(credPath, \"adjacent\", nil)",
+      "killer": "TestOperatorTerminalRevokeExclusion/holder",
+      "test": "^TestOperatorTerminalRevokeExclusion$/^holder$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-LOCK-REFUSAL",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 434,
+      "before": "lock, err := acquire(credPath, target, nil)\n\tif err != nil {",
+      "after": "lock, err := acquire(credPath, target, nil)\n\tif err != nil && false {",
+      "killer": "TestOperatorTerminalRevokeExclusion/holder",
+      "test": "^TestOperatorTerminalRevokeExclusion$/^holder$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-RELEASE",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 439,
+      "before": "defer lock.Close()\n\tst, err := openCredentialsForSession(revokeCtx",
+      "after": "defer func() { _ = lock }()\n\tst, err := openCredentialsForSession(revokeCtx",
+      "killer": "TestOperatorTerminalRevokeExclusion/stale_lookup",
+      "test": "^TestOperatorTerminalRevokeExclusion$/^stale_lookup$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-WRITER-ORDER",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 434,
+      "before": "\tlock, err := acquire(credPath, target, nil)\n\tif err != nil {\n\t\tfmt.Fprintf(stderr, \"ailang-worldd session revoke: %v\\n\", err)\n\t\treturn exitUsage\n\t}\n\tdefer lock.Close()\n\tst, err := openCredentialsForSession(revokeCtx, *dbPath, credPath)\n\tif err != nil {\n\t\tfmt.Fprintf(stderr, \"ailang-worldd session revoke: cannot open the credentials store %q: %v\\n\", credPath, err)\n\t\treturn exitFatal\n\t}\n\tdefer st.Close()",
+      "after": "\tst, err := openCredentialsForSession(revokeCtx, *dbPath, credPath)\n\tif err != nil {\n\t\tfmt.Fprintf(stderr, \"ailang-worldd session revoke: cannot open the credentials store %q: %v\\n\", credPath, err)\n\t\treturn exitFatal\n\t}\n\tdefer st.Close()\n\tlock, err := acquire(credPath, target, nil)\n\tif err != nil {\n\t\tfmt.Fprintf(stderr, \"ailang-worldd session revoke: %v\\n\", err)\n\t\treturn exitUsage\n\t}\n\tdefer lock.Close()",
+      "killer": "TestOperatorTerminalRevokeLegacy/episode",
+      "test": "^TestOperatorTerminalRevokeLegacy$/^episode$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-ROUTE",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 447,
+      "before": "if *episode != \"\" {\n\t\tif err := revokeEpisodeCredentials",
+      "after": "if *episode != \"\" && false {\n\t\tif err := revokeEpisodeCredentials",
+      "killer": "TestOperatorTerminalRevokeLegacy/episode",
+      "test": "^TestOperatorTerminalRevokeLegacy$/^episode$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-REREAD",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 457,
+      "before": "current, ok, err := st.ResolveSession(revokeCtx, credID)",
+      "after": "current, ok, err := reviewed, true, error(nil)",
+      "killer": "TestOperatorTerminalRevokeExclusion/stale_lookup",
+      "test": "^TestOperatorTerminalRevokeExclusion$/^stale_lookup$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-ROW-IDENTITY",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 465,
+      "before": "if current != reviewed {",
+      "after": "if current != reviewed && false {",
+      "killer": "TestOperatorTerminalRevokeExclusion/stale_lookup",
+      "test": "^TestOperatorTerminalRevokeExclusion$/^stale_lookup$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-LEGACY-RO",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 483,
+      "before": "return store.ResolveLegacySession(ctx, world, id)",
+      "after": "return store.SessionRow{}, false, nil",
+      "killer": "TestOperatorTerminalRevokeLegacy/id",
+      "test": "^TestOperatorTerminalRevokeLegacy$/^id$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-MISSING-STORE",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 485,
+      "before": "if _, err := os.Stat(credentials); errors.Is(err, os.ErrNotExist) {",
+      "after": "if _, err := os.Stat(credentials); errors.Is(err, os.ErrNotExist) && false {",
+      "killer": "TestSessionRevokeAcceptsEitherOrderAndRefusesAnUnknownID",
+      "test": "^TestSessionRevokeAcceptsEitherOrderAndRefusesAnUnknownID$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-RESOLVE-SPLIT",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "host/store/credentials.go",
+      "line": 572,
+      "before": "sessionColumns(version)+` FROM session_credentials WHERE credential_id = ?;`",
+      "after": "sessionColumns(version)+` FROM session_credentials WHERE credential_id <> ?;`",
+      "killer": "TestCredentialsMintAndRevokeBesideALiveWorldWriter",
+      "test": "^TestCredentialsMintAndRevokeBesideALiveWorldWriter$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-RV-LEGACY-SCHEMA",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "host/store/credentials_migrate.go",
+      "line": 140,
+      "before": "if version != preSplitSchemaVersion {\n\t\tdb.Close()",
+      "after": "if version == preSplitSchemaVersion {\n\t\tdb.Close()",
+      "killer": "TestPreSplitStoreOpenModes",
+      "test": "^TestPreSplitStoreOpenModes$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-KIND",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 60,
+      "before": "if row.Kind != \"start\" || row.Owner == \"\" {",
+      "after": "if row.Owner == \"\" {",
+      "killer": "TestOperatorStartRecoveryRejectsContradictoryEvidence/wrong_kind",
+      "test": "^TestOperatorStartRecoveryRejectsContradictoryEvidence$/^wrong_kind$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-OWNER",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 60,
+      "before": "if row.Kind != \"start\" || row.Owner == \"\" {",
+      "after": "if row.Kind != \"start\" {",
+      "killer": "TestOperatorStartRecoveryRejectsContradictoryEvidence/unowned",
+      "test": "^TestOperatorStartRecoveryRejectsContradictoryEvidence$/^unowned$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-LEDGER-FILTER",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 64,
+      "before": "WHERE action_id=? AND kind<>'operation' LIMIT 4",
+      "after": "WHERE action_id=? AND kind='operation' LIMIT 4",
+      "killer": "TestOperatorStartRecoveryWindows/reserved_worktree",
+      "test": "^TestOperatorStartRecoveryWindows$/^reserved_worktree$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-STEP-OWNER",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 87,
+      "before": "if owner != row.Owner || current.steps[i].Identity != \"\" || step.Identity == \"\" || step.Version < 1 {",
+      "after": "if current.steps[i].Identity != \"\" || step.Identity == \"\" || step.Version < 1 {",
+      "killer": "TestOperatorStartRecoveryRejectsContradictoryEvidence/foreign",
+      "test": "^TestOperatorStartRecoveryRejectsContradictoryEvidence$/^foreign$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-STEP-DUPLICATE",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 87,
+      "before": "owner != row.Owner || current.steps[i].Identity != \"\" || step.Identity == \"\"",
+      "after": "owner != row.Owner || step.Identity == \"\"",
+      "killer": "TestOperatorStartRecoveryRejectsContradictoryEvidence/duplicate",
+      "test": "^TestOperatorStartRecoveryRejectsContradictoryEvidence$/^duplicate$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-STEP-VERSION",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 87,
+      "before": "step.Version < 1 {",
+      "after": "step.Version < 0 {",
+      "killer": "TestOperatorStartRecoveryRejectsContradictoryEvidence/version_zero",
+      "test": "^TestOperatorStartRecoveryRejectsContradictoryEvidence$/^version_zero$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-WORKTREE-RECEIPT",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 113,
+      "before": "tree.Phase != \"observed\" || tree.Receipt != \"created\"",
+      "after": "tree.Phase != \"observed\"",
+      "killer": "TestOperatorStartRecoveryRejectsContradictoryEvidence/bad_receipt",
+      "test": "^TestOperatorStartRecoveryRejectsContradictoryEvidence$/^bad_receipt$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-CLAIMED",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 108,
+      "before": "current.Window = OperatorStartUntouched",
+      "after": "current.Window = \"fixture wrong disposition\"",
+      "killer": "TestOperatorStartRecoveryWindows/claimed",
+      "test": "^TestOperatorStartRecoveryWindows$/^claimed$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-RESERVED-WORKTREE",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 112,
+      "before": "current.Window = OperatorStartGitPending",
+      "after": "current.Window = \"fixture wrong disposition\"",
+      "killer": "TestOperatorStartRecoveryWindows/reserved_worktree",
+      "test": "^TestOperatorStartRecoveryWindows$/^reserved_worktree$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-OBSERVED-WORKTREE",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 116,
+      "before": "current.Window = OperatorStartTreeOnly",
+      "after": "current.Window = \"fixture wrong disposition\"",
+      "killer": "TestOperatorStartRecoveryWindows/observed_worktree",
+      "test": "^TestOperatorStartRecoveryWindows$/^observed_worktree$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-RESERVED-MINT",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 123,
+      "before": "current.Window = OperatorStartMintPending",
+      "after": "current.Window = \"fixture wrong disposition\"",
+      "killer": "TestOperatorStartRecoveryWindows/reserved_mint",
+      "test": "^TestOperatorStartRecoveryWindows$/^reserved_mint$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-OBSERVED-MINT",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 131,
+      "before": "current.Window = OperatorStartMintOnly",
+      "after": "current.Window = \"fixture wrong disposition\"",
+      "killer": "TestOperatorStartRecoveryWindows/observed_mint",
+      "test": "^TestOperatorStartRecoveryWindows$/^observed_mint$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-RESERVED-FILES",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 133,
+      "before": "current.Window = OperatorStartFilesPending",
+      "after": "current.Window = \"fixture wrong disposition\"",
+      "killer": "TestOperatorStartRecoveryWindows/reserved_files",
+      "test": "^TestOperatorStartRecoveryWindows$/^reserved_files$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-PREPARED",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 135,
+      "before": "current.Window = OperatorStartPrepared",
+      "after": "current.Window = \"fixture wrong disposition\"",
+      "killer": "TestOperatorStartRecoveryWindows/prepared",
+      "test": "^TestOperatorStartRecoveryWindows$/^prepared$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-MINT-NONEMPTY",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 120,
+      "before": "if start || session {",
+      "after": "if !start && !session {",
+      "killer": "TestOperatorStartRecoveryRejectsContradictoryEvidence/nonempty",
+      "test": "^TestOperatorStartRecoveryRejectsContradictoryEvidence$/^nonempty$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-REVIEW-CAS",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 161,
+      "before": "if current != reviewed {",
+      "after": "if current != reviewed && false {",
+      "killer": "TestOperatorStartRecoveryWindows/observed_worktree",
+      "test": "^TestOperatorStartRecoveryWindows$/^observed_worktree$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-STOP-SCOPE",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 169,
+      "before": "case OperatorStartUntouched, OperatorStartTreeOnly, OperatorStartMintPending:",
+      "after": "case OperatorStartUntouched, OperatorStartTreeOnly, OperatorStartMintPending, OperatorStartPrepared:",
+      "killer": "TestOperatorStartRecoveryWindows/prepared",
+      "test": "^TestOperatorStartRecoveryWindows$/^prepared$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-RELEASE-PROOF",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 174,
+      "before": "if release != nil {",
+      "after": "if release != nil && false {",
+      "killer": "TestOperatorStartRecoveryWindows/claimed",
+      "test": "^TestOperatorStartRecoveryWindows$/^claimed$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-RELEASE-DEADLINE",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 178,
+      "before": "if now >= row.ExpiresAt {",
+      "after": "if now > row.ExpiresAt {",
+      "killer": "TestOperatorStartRecoveryWindows/claimed",
+      "test": "^TestOperatorStartRecoveryWindows$/^claimed$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-RELEASE-OWNER",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 190,
+      "before": "terminal_at=?, owner=NULL, generation=generation+1",
+      "after": "terminal_at=?, owner=NULL, generation=generation-1",
+      "killer": "TestOperatorStartRecoveryWindows/claimed",
+      "test": "^TestOperatorStartRecoveryWindows$/^claimed$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-START-DIGEST-FACT",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/authority/operator_start_digest.go",
+      "line": 12,
+      "before": "if fact.Name == \"launch_binary_sha256\" {",
+      "after": "if fact.Name == \"launch_binary\" {",
+      "killer": "TestOperatorPreDigestSignedStart",
+      "test": "^TestOperatorPreDigestSignedStart$",
+      "pkg": "host/authority"
+    },
+    {
+      "id": "D-START-DIGEST-MISSING",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/authority/operator_start_digest.go",
+      "line": 20,
+      "before": "return \"\", &approval.BindingError{Field: \"launch_binary_sha256\"}",
+      "after": "return \"\", nil",
+      "killer": "TestOperatorPreDigestSignedStart",
+      "test": "^TestOperatorPreDigestSignedStart$",
+      "pkg": "host/authority"
+    },
+    {
+      "id": "D-PAIR-REVIEW",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 28,
+      "before": "if approved != e.runnerUpgradeReview() {",
+      "after": "if approved != e.runnerUpgradeReview() && false {",
+      "killer": "TestOperatorPairedUpgradeRefusals/approved_files_changed",
+      "test": "^TestOperatorPairedUpgradeRefusals$/^approved_files_changed$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-SCHEMA",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 71,
+      "before": "if schema != db.Version() {",
+      "after": "if schema != db.Version() && false {",
+      "killer": "TestOperatorPairedUpgradeRefusals/schema",
+      "test": "^TestOperatorPairedUpgradeRefusals$/^schema$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-SUPERVISOR-STOP",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 113,
+      "before": "if err != nil && !errors.Is(err, errServiceNotLoaded) {\n\t\treturn errors.New(\"could not stop the companion\")",
+      "after": "if err != nil && !errors.Is(err, errServiceNotLoaded) && false {\n\t\treturn errors.New(\"could not stop the companion\")",
+      "killer": "TestOperatorPairedUpgradeRefusals/stop_error",
+      "test": "^TestOperatorPairedUpgradeRefusals$/^stop_error$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-SUPERVISOR-READBACK",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 116,
+      "before": "if _, err := e.controller.Print(e.domain, runnerLabel); !errors.Is(err, errServiceNotLoaded) {",
+      "after": "if _, err := e.controller.Print(e.domain, runnerLabel); !errors.Is(err, errServiceNotLoaded) && false {",
+      "killer": "TestOperatorPairedUpgradeRefusals/stop_reported-only",
+      "test": "^TestOperatorPairedUpgradeRefusals$/^stop_reported-only$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-EXIT-BOUND",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 90,
+      "before": "return nil, errors.New(\"companion or retained child still holds the runner lock\")",
+      "after": "return os.Open(c.Credentials + \".operator-runner.lock\")",
+      "killer": "TestOperatorServiceUpgrade/active_child",
+      "test": "^TestOperatorServiceUpgrade$/^active_child$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-PROOF-UNKNOWN",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 160,
+      "before": "rows, err := read()\n\tif err != nil {",
+      "after": "rows, err := read()\n\tif err != nil && false {",
+      "killer": "TestOperatorPairedUpgradeRefusals/process_inventory",
+      "test": "^TestOperatorPairedUpgradeRefusals$/^process_inventory$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-PROOF-CONTROL",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 171,
+      "before": "if !self {",
+      "after": "if !self && false {",
+      "killer": "TestOperatorPairedUpgradeRefusals/process_inventory",
+      "test": "^TestOperatorPairedUpgradeRefusals$/^process_inventory$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-OLD-TERMINAL",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 167,
+      "before": "if !allowed[process.pid] && strings.HasPrefix(process.name, \"ailang-worldd\") {",
+      "after": "if !allowed[process.pid] && strings.HasPrefix(process.name, \"ailang-worldd\") && false {",
+      "killer": "TestOperatorOldBuildTerminalDrain",
+      "test": "^TestOperatorOldBuildTerminalDrain$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-CONFIG-SWAP",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 198,
+      "before": "if err := e.atomic(p.Record, data, 0600); err != nil {",
+      "after": "if err := e.atomic(p.Record, pair.before, 0600); err != nil {",
+      "killer": "TestOperatorOldBuildTerminalDrain",
+      "test": "^TestOperatorOldBuildTerminalDrain$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-PLIST-SWAP",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 201,
+      "before": "[]byte(runnerPlist(p, c, data))",
+      "after": "[]byte(runnerPlist(p, c, pair.before))",
+      "killer": "TestOperatorOldBuildTerminalDrain",
+      "test": "^TestOperatorOldBuildTerminalDrain$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-RESTART",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 204,
+      "before": "if pair.loaded {",
+      "after": "if pair.loaded && false {",
+      "killer": "TestOperatorOldBuildTerminalDrain",
+      "test": "^TestOperatorOldBuildTerminalDrain$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-TYPED-Y",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/service_upgrade.go",
+      "line": 203,
+      "before": "if !e.confirm(errOut, change) {",
+      "after": "if confirmed := e.confirm(errOut, change); !confirmed && false {",
+      "killer": "TestOperatorServiceUpgrade/active_child",
+      "test": "^TestOperatorServiceUpgrade$/^active_child$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-LIFECYCLE-SCOPE",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/service_upgrade.go",
+      "line": 206,
+      "before": "pairLock, err := runnerLifecycleLock(filepath.Dir(e.paths.Record))",
+      "after": "pairLock, err := os.Open(filepath.Dir(e.paths.Record))",
+      "killer": "TestOperatorServiceUpgradePairFence/locked",
+      "test": "^TestOperatorServiceUpgradePairFence$/^locked$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-ROLLBACK-OLD",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/service_upgrade.go",
+      "line": 337,
+      "before": "if err := e.writeRunnerPair(pair, true); err != nil {",
+      "after": "if err := e.writeRunnerPair(pair, false); err != nil {",
+      "killer": "TestOperatorServiceUpgrade/active_child",
+      "test": "^TestOperatorServiceUpgrade$/^active_child$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "Z-ABSENT-ANY",
+      "kind": "carried",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/operator_episode_lock.go",
+      "line": 42,
+      "before": "absent := flags == 0 && errors.Is(lockErr, os.ErrNotExist)",
+      "after": "absent := errors.Is(lockErr, os.ErrNotExist)",
+      "killer": "TestOperatorTerminalCreateLockMissingParent",
+      "test": "^TestOperatorTerminalCreateLockMissingParent$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "Z-WAIT-READBUDGET",
+      "kind": "carried",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/operator_runner.go",
+      "line": 115,
+      "before": "read(c.Credentials, min(remaining, time.Second))",
+      "after": "read(c.Credentials, time.Second)",
+      "killer": "TestOperatorWaitReadBudget",
+      "test": "^TestOperatorWaitReadBudget$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "J-OWN-UID-reconstruction",
+      "kind": "carried",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/operator_service.go",
+      "line": 71,
+      "before": "if !ok || (int(owner.Uid) != uid && (within(home, p) || p == home || owner.Uid != 0)) {",
+      "after": "if !ok || (int(owner.Uid) != uid && (within(home, p) || p == home || owner.Uid != 0) && false) {",
+      "killer": "TestOperatorRunnerPathUID",
+      "test": "^TestOperatorRunnerPathUID$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-LEGACY-RO-SCHEMA-CUT",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 482,
+      "before": "if version == store.PreSplitSchemaVersion {\n\t\treturn store.ResolveLegacySession",
+      "after": "if version != store.PreSplitSchemaVersion {\n\t\treturn store.ResolveLegacySession",
+      "killer": "TestOperatorTerminalRevokeLegacy/id",
+      "test": "^TestOperatorTerminalRevokeLegacy$/^id$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-RV-WRITER-CLOSE",
+      "kind": "diff",
+      "stage": "M1",
+      "path": "cmd/ailang-worldd/session.go",
+      "line": 445,
+      "before": "defer st.Close()\n\n\tif *episode != \"\" {",
+      "after": "defer func() { _ = st }()\n\n\tif *episode != \"\" {",
+      "killer": "TestOperatorTerminalRevokeExclusion/stale_lookup",
+      "test": "^TestOperatorTerminalRevokeExclusion$/^stale_lookup$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-REC-MINT-OBSERVED-PHASE",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 125,
+      "before": "case mint.Phase == \"observed\" && mint.Identity == id:",
+      "after": "case mint.Phase == \"reserved\" && mint.Identity == id:",
+      "killer": "TestOperatorStartRecoveryWindows/observed_mint",
+      "test": "^TestOperatorStartRecoveryWindows$/^observed_mint$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-MINT-TRANSACTION-READ",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 126,
+      "before": "if _, _, err := readOperatorFiles(ctx, tx, id); err != nil {",
+      "after": "if _, _, err := readOperatorFiles(ctx, tx, id); err == nil {",
+      "killer": "TestOperatorStartRecoveryWindows/observed_mint",
+      "test": "^TestOperatorStartRecoveryWindows$/^observed_mint$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-FILES-OBSERVED-RECEIPT",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 134,
+      "before": "files.Receipt == OperatorFilesPublished",
+      "after": "files.Receipt != OperatorFilesPublished",
+      "killer": "TestOperatorStartRecoveryWindows/prepared",
+      "test": "^TestOperatorStartRecoveryWindows$/^prepared$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-REC-TERMINAL-RESULT",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 173,
+      "before": "state, terminalAt := \"failed\", any(now)",
+      "after": "state, terminalAt := \"cancelled\", any(now)",
+      "killer": "TestOperatorStartRecoveryWindows/reserved_mint",
+      "test": "^TestOperatorStartRecoveryWindows$/^reserved_mint$",
+      "pkg": "host/store"
+    },
+    {
+      "id": "D-START-DIGEST-ALGO",
+      "kind": "diff",
+      "stage": "M2",
+      "path": "host/authority/operator_start_digest.go",
+      "line": 14,
+      "before": "hash.Algo() == \"sha256\"",
+      "after": "hash.Algo() != \"sha256\"",
+      "killer": "TestOperatorPreDigestSignedStart",
+      "test": "^TestOperatorPreDigestSignedStart$",
+      "pkg": "host/authority"
+    },
+    {
+      "id": "D-PAIR-BOTH-PAIR-FILES",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 35,
+      "before": "errors.Is(recordErr, os.ErrNotExist) && errors.Is(plistErr, os.ErrNotExist)",
+      "after": "errors.Is(recordErr, os.ErrNotExist) || errors.Is(plistErr, os.ErrNotExist)",
+      "killer": "TestOperatorServiceUpgradePairFence/installed",
+      "test": "^TestOperatorServiceUpgradePairFence$/^installed$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-UNINSTALLED-SUPERVISOR",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 36,
+      "before": "if !errors.Is(loadedErr, errServiceNotLoaded) {",
+      "after": "if !errors.Is(loadedErr, errServiceNotLoaded) && false {",
+      "killer": "TestOperatorServiceUpgradePairFence/registered",
+      "test": "^TestOperatorServiceUpgradePairFence$/^registered$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-BOOTOUT-ORDER",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 111,
+      "before": "err = e.controller.Bootout(e.domain, runnerLabel)",
+      "after": "err = nil",
+      "killer": "TestOperatorOldBuildTerminalDrain",
+      "test": "^TestOperatorOldBuildTerminalDrain$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-RETAINED-DESCRIPTOR-ERROR",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 85,
+      "before": "if err == nil || !errors.Is(err, syscall.EWOULDBLOCK) {",
+      "after": "if err == nil || errors.Is(err, syscall.EWOULDBLOCK) {",
+      "killer": "TestOperatorServiceUpgrade/active_child",
+      "test": "^TestOperatorServiceUpgrade$/^active_child$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-CANDIDATE-BINDING",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/operator_pair_upgrade.go",
+      "line": 58,
+      "before": "c.Executables[e.paths.Binary] = to",
+      "after": "c.Executables[e.paths.Binary] = from",
+      "killer": "TestOperatorOldBuildTerminalDrain",
+      "test": "^TestOperatorOldBuildTerminalDrain$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-DRAIN-BEFORE-SWAP",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/service_upgrade.go",
+      "line": 237,
+      "before": "drained, err = e.drainRunner(pair.config)",
+      "after": "drained, err = os.Open(pair.config.Credentials + \".operator-runner.lock\")",
+      "killer": "TestOperatorServiceUpgrade/active_child",
+      "test": "^TestOperatorServiceUpgrade$/^active_child$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-ROLLBACK-GUARD",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/service_upgrade.go",
+      "line": 294,
+      "before": "defer rollbackGuard.Close()",
+      "after": "rollbackGuard.Close()",
+      "killer": "TestOperatorServiceUpgrade/active_child",
+      "test": "^TestOperatorServiceUpgrade$/^active_child$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "D-PAIR-RESTART-WITH-GUARD",
+      "kind": "diff",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/service_upgrade.go",
+      "line": 272,
+      "before": "err = drained.Close()",
+      "after": "err = nil",
+      "killer": "TestOperatorOldBuildTerminalDrain",
+      "test": "^TestOperatorOldBuildTerminalDrain$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "P-ROLLBACK-OLDER",
+      "kind": "existing",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/service_upgrade.go",
+      "line": 306,
+      "before": "previousSchema < candidateSchema || previousErr",
+      "after": "(previousSchema < candidateSchema && false) || previousErr",
+      "killer": "TestOperatorServiceUpgrade/old_reader",
+      "test": "^TestOperatorServiceUpgrade$/^old_reader$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "P-ROLLBACK-NO-PREVIOUS-SCHEMA",
+      "kind": "existing",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/service_upgrade.go",
+      "line": 306,
+      "before": "previousSchema < candidateSchema || previousErr",
+      "after": "(previousSchema != 0 && previousSchema < candidateSchema) || previousErr",
+      "killer": "TestOperatorServiceUpgrade/missing_previous_schema",
+      "test": "^TestOperatorServiceUpgrade$/^missing_previous_schema$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "P-ROLLBACK-NO-CANDIDATE-SCHEMA",
+      "kind": "existing",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/service_upgrade.go",
+      "line": 306,
+      "before": "if candidateSchema <= 0 || previousSchema",
+      "after": "if candidateSchema < 0 || previousSchema",
+      "killer": "TestOperatorServiceUpgrade/missing_candidate_schema",
+      "test": "^TestOperatorServiceUpgrade$/^missing_candidate_schema$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "P-ROLLBACK-SUBSTITUTION",
+      "kind": "existing",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/service_upgrade.go",
+      "line": 307,
+      "before": "!previousInfo.Mode().IsRegular() || serviceFileHash(previous) != from",
+      "after": "!previousInfo.Mode().IsRegular() || (serviceFileHash(previous) != from && false)",
+      "killer": "TestOperatorServiceUpgrade/substituted_previous_binary",
+      "test": "^TestOperatorServiceUpgrade$/^substituted_previous_binary$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "P-ROLLBACK-LINK",
+      "kind": "existing",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/service_upgrade.go",
+      "line": 307,
+      "before": "!previousInfo.Mode().IsRegular() || serviceFileHash(previous) != from",
+      "after": "(!previousInfo.Mode().IsRegular() && false) || serviceFileHash(previous) != from",
+      "killer": "TestOperatorServiceUpgrade/linked_previous_binary",
+      "test": "^TestOperatorServiceUpgrade$/^linked_previous_binary$",
+      "pkg": "cmd/ailang-worldd"
+    },
+    {
+      "id": "P-ROLLBACK-PREVIOUS-ABSENT",
+      "kind": "existing",
+      "stage": "M3",
+      "path": "cmd/ailang-worldd/service_upgrade.go",
+      "line": 306,
+      "before": "previousErr != nil ||\n\t\t!previousInfo.Mode().IsRegular() || serviceFileHash(previous) != from",
+      "after": "(previousErr == nil && (!previousInfo.Mode().IsRegular() || serviceFileHash(previous) != from))",
+      "killer": "TestOperatorServiceUpgrade/missing_previous_binary",
+      "test": "^TestOperatorServiceUpgrade$/^missing_previous_binary$",
+      "pkg": "cmd/ailang-worldd"
+    }
+  ],
+  "gates_script": "\u00a76 exact gates.sh fence",
+  "roundtrip": {
+    "summary": "The extracted plan replayed under `$S/rt-*`. Every full archive comparison and snapshot manifest verified. `$S/roundtrip-final.log` contains the transcript. `REPLAY M1 diff -r rc=0; snapshot SHA-256 verified`. `REPLAY M2 diff -r rc=0; snapshot SHA-256 verified`. `REPLAY M3 diff -r rc=0; snapshot SHA-256 verified`. `REPLAY S5f4 prototype incremental diff -r rc=0`.",
+    "format": "plan awk / patch -p1 -E / diff -r / manifest"
+  },
+  "controller_decisions_requested": [
+    "Run the outside package and prioritized mutant commands in \u00a74.1 before accepting the sprint."
+  ],
+  "verification": {
+    "base_and_final": "The controller marker is complete. The raw files and attributable flags are recorded under `$STATE/base/`. See \u00a74.1 for any outside leg whose baseline is absent or truncated. The controller daemon-race raw log includes a time-out, so its partial fail list is truncated and excluded. The untruncated controller cmd-plain baseline has 12 failures. Its recorded set is the row-271 eleven plus TestHostsLaunchersExecHost. Final recorded gate result in `$S/gate-M3/legs.txt`. `GATES_DONE 790s FAILS: compare-race-host-store UNINFORMATIVE: pkg-host-daemon race-host-daemon pkg-cmd-ailang-worldd race-cmd-ailang-worldd`. The outside commands below cover socket-related verification and missing comparison legs. The gate's comparison tags initially named worktree where they should have named authority. The corrected script compares authority. The explicit base/head plain and race fail-set comparison in `$S/authority-failset-replay.txt` found zero additions. An earlier co-load seal run saw the unchanged startup bootstrap and the mint used to set up the old revoke test fail. The startup refusal also reproduced in pristine 2f573488. Both focused tests passed on sealed M3, and M3 and M4 accepted in full after retry. The raw runs are under `$S/acceptance-retry/`. The initial store race added `TestConvertedStoreMethodsM5b/cutoff/AppendOutcome` with a deadline-classification difference. The same named arm passed three times under race at both pristine and M3. An untruncated whole store-race retry at M3 gave no new failures against the controller's empty base set. Raw evidence is under `$S/cutoff-retry/` and `$S/store-race-retry/`. No test or production fix was made for that load-sensitive result.",
+    "race": "The focused receipts use `go test -race -v -count=1` with bounded test contexts. Top-level test bodies are counted once, and the existing upgrade test contributes only the new active-child arm. **S5f3 added CLI test time +3.88 s**, daemon +0.00 s. **S5f4 added CLI test time +10.96 s** against M3, daemon +0.00 s. Read the raw named receipts in `$S/timing-release/`. The older concurrent S5f4 trials measured 13.64 s (`timing-sealed`) and 5.55 s (`timing-final`). Charge only S5f4's new bodies against the activation increment. S5f4 also adds `TestOperatorPartialFilesOrphanRevoke` at 0.36 s in store. Whole host/store base/head package seconds were 151.124/119.183 (-31.941 s). Whole host/authority base/head package seconds were 32.409/71.132 (+38.723 s). Whole CLI and daemon race deltas require the outside comparison in \u00a74.1.",
+    "named_added_race_seconds": {
+      "cmd/ailang-worldd": 3.88,
+      "host/daemon": 0,
+      "host/store": 3.0,
+      "host/authority": 0.94,
+      "s5f4_cmd_increment": 10.96
+    },
+    "whole_race_seconds": {
+      "host-store": [
+        151.124,
+        119.183
+      ],
+      "host-authority": [
+        32.409,
+        71.132
+      ]
+    },
+    "gate_summaries": {
+      "base": "$S/gate-base/legs.txt",
+      "M3": "$S/gate-M3/legs.txt"
+    }
+  },
+  "production_caller_census": {
+    "base": 0,
+    "M1": 0,
+    "M2": 0,
+    "M3": 0,
+    "S5f4": {
+      "internal_entry": 1,
+      "effect_helper_calls": 4,
+      "direct_mint": 1
+    }
+  },
+  "mutants_metrics": {
+    "diff": {
+      "total": 65,
+      "named": {
+        "KILLED": 65
+      },
+      "whole": {
+        "UNMEASURED UNDER SANDBOX": 24,
+        "OUTSIDE QUEUED": 12,
+        "KILLED": 29
+      }
+    },
+    "carried": {
+      "total": 3,
+      "named": {
+        "KILLED": 3
+      },
+      "whole": {
+        "OUTSIDE QUEUED": 3
+      }
+    },
+    "outside_count": 15,
+    "preserved_existing": {
+      "P-ROLLBACK-OLDER": "KILLED",
+      "P-ROLLBACK-NO-PREVIOUS-SCHEMA": "KILLED",
+      "P-ROLLBACK-NO-CANDIDATE-SCHEMA": "KILLED",
+      "P-ROLLBACK-SUBSTITUTION": "KILLED",
+      "P-ROLLBACK-LINK": "KILLED",
+      "P-ROLLBACK-PREVIOUS-ABSENT": "KILLED"
+    }
+  },
+  "unfiltered_branch_with_plan": {
+    "product_lines": 1385,
+    "plan_md_lines": 2252,
+    "sprint_json_lines": 1173,
+    "total": 4810
+  }
+}
