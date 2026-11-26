@@ -9,76 +9,6 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 421 — 2026-11-20 — no pick: rule (d) block report, the twelfth in a row; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); World-episode PR #629 moved the idle snapshot's head, and the fire degraded again, now held by the codex start margin rather than by over-use (row 263, count 9 → 10); dev green at `854747c5` [ADMIN]
-
-**Kind:** no-pick iteration. Nothing is loop-routable without an answer from Mark, so standing rule (d) applies. Since iteration 420's Gate-1 base, 420's two record PRs landed and PR #629, a codex episode run through AILANG World, merged UI code. There is no design, plan, code or product acceptance from the loop. The record is the STATUS stamp (418 moved to the archive), the Current route line, row 263's iteration-421 note, this entry, the regenerated index, the dashboard and `verification/world-iter421/gate1-2-readings.txt`. An independent judge reviews the record before merge.
-
-**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at 2 of 12 sprints. Every remaining V4 sprint waits on D-WORLD-119.
-
-**Pick and why:** none. Clause map at `854747c5`: 1.0 clauses 1–7 MET, so there is no UNMET clause and no critical-path row.
-- **What moved since iteration 420's Gate-1 base (`f25e8558`):** 8 commits. Six are 420's record PRs #627 and #628 (`ba359cd4`, `4c18de6a`, merge `61df2ff9`, `fdd7431f`, `67b0ef20`, merge `9ddb9b44`). Two are PR #629 `world/world-ui-coordinator-1120` (`a51307da`, merge `854747c5`, merged 2026-11-20T19:45:49Z): "Show agent activity and new episodes in Heads and Timeline", authored by codex `gpt-6.2-astra` through World episode `world-ui-coordinator-1120`, 24 paths outside `design_docs/` (host coordinator, daemon, store, surface and surface-page code and tests). No queue row names it (`#629`, `coordinator-1120` and the title each read 0 in the charter and the log; control `#619` reads 4). 0 `| D-WORLD` table rows changed.
-- **Ledger:** `--check` valid (rc 0), 107 rows; `--open` → D-WORLD-119, D-WORLD-120, both unchanged since iteration 406 filed them.
-- **Row 243 (D-WORLD-109 granted scope):** V4 design §8 gates S3–S8 on 119 A/B, S9–S11 also on 120 A/B, and S12 on 119 A. S1, S2 and S2b are landed. The design was not touched in range (0 paths; it names D-WORLD-119 on 4 lines and 120 on 2).
-- **Row 150** waits on the attended A1. Subjects in `f25e8558..854747c5` matching `row ?150|A1|marketing` → **0**; control `record|iteration 420` → **6**.
-- **Row 151** needs row 188's N2d and N4a. Subjects since 2026-10-01 matching `N2d|N4a` → **0**; control `N2c` → **1**. Non-test `.go` files naming `file.json` on `origin/dev`, fixed-string → **0**; control `surface` → **110** (109 at 420; the one new match is `host/daemon/activity.go`, which #629 modified).
-- **Rows 217–219** are on the attended track beside row 188 (D-WORLD-94). **Rows 258, 259, 261, 265** sit under rule (d), below the release rows (D-WORLD-109 (2)). No ledger row changed, so neither placement moved.
-- **External predicates:** no routable row waits on an outside party. Row 263 waits on the fleet; 0 unread on `mission-world`, so no `harness-resolved` reply has arrived.
-
-**Gate 0:**
-- Stamped first. Kill switch armed (`mission-world.disabled` absent). `gh` is `sunholo-voight-kampff`. Billing CLEAN. The env was read by name, then specific non-secret values.
-- Local `dev` and `origin/dev` were level at `854747c5` after a fetch (only untracked files in the tree).
-- Directives: 0 allowlisted on #574 (31 comments, read from the epoch because `mission-574-last-seen` is absent), 0 on issue #1 since its legacy watermark, 0 on #524 since `mission-world-last-seen`. Nothing to `--mark`; no watermark moved.
-- Self-notices (step 6a), prescribed form, exit code captured under `bash`: **rc 1**, the same two #524 notices (crash `2026-11-13T09:48:25Z` rc 1; transcript fire `world-1794807071-53892`, 2 hits), control 107:4 ok. Both credited in entries 393 and 394, so nothing new died. Died-mid-flight traces: the iteration-410 to 420 record worktrees have 0 porcelain lines each; the last three slot verdicts are `COMPLETED rc=0`.
-- **Open PRs from the fleet account:** #615 and #617, both attended UI work, not `mission/` branches; left alone (Gate 2 trace (a)). #629 was a `world/` episode branch and is already merged.
-- **Inbox:** 0 unread on `mission-world`.
-- Skill drift: `SKILL.md` and all 13 `resources/*.md`, at both the resolved symlink target and the driver pin, `cmp` equal to the ailang `origin/dev` `5fd11a779` after a fresh fetch (28 compared, 0 drift). The pin moved from `429eaf806` to `5fd11a779`, and the two commits in that range touch no skill, driver or script path (fleet iteration 129's record and triage iteration 50's record), so the rules are the ones iteration 420 followed.
-- Dev CI at `854747c5`: 3/3 check-runs success.
-
-**Gate 1:** `origin/dev` is `854747c5…`. Gate-1 base `854747c515a4ebab6a0e547f55ebe55a78fbac82@2026-11-20T21:40:03Z` (`mission-base.sh record gate1`). Record written in its own worktree (`mission/world-iter421-record` from `854747c5`, `mission-worktree.sh add` then `wait` → ready).
-
-**Row 263 — head moved, degraded again, and the codex reading changed shape:**
-- `MISSION_ROUTING_NOTE` is set. Driver log 22:38:21 `ration gate: blocked buckets (over ration or unknown quota):codex anthropic`; 22:38:30 `gpt-6.2-sol` unusable (quota-limited); the planner fell back to `opus`, the executor to `claude:claude-haiku-5-5`; 22:39:28 `LANE DEGRADED` (probe rc 75). A no-pick fire spawns neither.
-- The driver's snapshot for this fire is `c3c1a8b1…` (`head=a51307d ledger=107 open=2 directives=0 inbox=0 red=0`). It differs from 420's `dae8092b…` only in the head, which #629's code commit moved. So, as at 419, this fire would have run in full even undegraded. It is still an occurrence of row 263, because the degradation also bars the record that the next identical fire would need.
-- **Codex window this fire: `used=23.0% allowed=24.9%`** (420: `22.0%`/`21.6%`). Use is now **1.9 points under** the allowance. The driver still reads `state=over` because of its start margin: at the pin, `internal/mission/codex_quota.go:172-212` marks a window over when `used > allowed`, and otherwise sets `HeadroomShort` and `state=over` when `allowed − used < StartMargin("codex")` (2.0 points). Iterations 418–420 recorded a used-vs-allowed gap without the margin. Against the admission rule the shortfall went 4.1 (418) → 2.7 (419) → 2.4 (420) → **0.1** (this fire). Use rose 1.0 point in 4 h, the allowance 3.3. This is a reading, not a forecast: the next fire is admitted only if the allowance gains more than 0.1 points on use before it.
-- Gate 5's IDLE RECORD bars `--record` on a degraded fire. Occurrence filed (`inbox_1795210878422_e0f64651`), count 9 → 10 (`slots_lost` 10 in `ticket open --json`).
-- The ration line again names `anthropic` as blocked (its quota UNREADABLE, so the lanes were probed instead). The controller and the Agent-tool judge still ran; recorded as a reading, not acted on.
-
-**Designer / planner / executor:** not spawned. A no-pick iteration has no doc, plan or code, so the routing table sends them nothing. No spawn was attempted, so none failed.
-
-**Independent evaluator (record):** REQUIRED. Agent `sonnet` (`MISSION_EVALUATOR_RESOLVED=sonnet`), fresh foreground read-only context, judging the record commit before merge. Result in the follow-through below.
-
-**Routing evidence:** base=854747c515a4ebab6a0e547f55ebe55a78fbac82@2026-11-20T21:40:03Z (Gate 1).
-- Controller `claude:claude-opus-5-5` (tok: not reported). Designer, planner (`opus`, fallback), executor (`claude:claude-haiku-5-5`, fallback) unused.
-- Evaluator: Agent `sonnet` (tokens in the follow-through). Generator ≠ judge: opus controller, sonnet judge.
-- Quorum: none (no doc). Metered $0.
-
-**Ruled out:**
-- Picking 150, 151, 217–219, 243, 258, 259, 261 or 265: measured reasons above.
-- Treating #629 as loop work or as moving a row: it is a World-episode PR on a `world/` branch, it names no row, and no row names it.
-- Running `idle-fingerprint.sh --record`: the fire is degraded (Gate 5).
-- Treating step 6a's `A FIRE DIED` as a new death: both notices are credited (393, 394), and the traces are clean.
-- Re-asking D-WORLD-119/120 or raising them to `[normal]`: both asks are unchanged since 406, so Gate 5 3d keeps them `[fyi]`.
-- Rotating the log: 32 live entries with this one, below ~40. The index is regenerated with `rotate-log --index-only`.
-
-**Retro:**
-1. One correction to the record's own instrument: 418–420 described the codex block as `used − allowed`, which is the right test only while use is above the allowance. This fire is the first where use is under the allowance and the start margin alone holds codex. The STATUS stamp and row 263's note now state the admission rule from the source, so the next reading is compared against the right threshold. No skill or charter rule changes; this is a reading, recorded once.
-- Harness share (2b): **0/20** over entries 402–421 (20 rows, 20 tagged). Bar-moving landings (2c): no UNMET clause exists, so the drift alarm does not apply.
-- No skill edit.
-
-**Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS; carrying judge-409's `println` fd-capture note and the `format:name` approver persistence). Unanswered, another rule-(d) block report; if codex clears its margin, that fire is undegraded and Gate 5 may record the idle fingerprint. A dev red outranks either way.
-
-**Gate 5 bookkeeping:** rotation not due (#574 opened 2026-11-16; next boundary Monday 2026-11-23 07:00 local). The weekly external-issue sweep ran this week at 393. Idle record: barred (degraded fire).
-
-**Gate 3b (record PR):** the head CI verdict and the merge commit's CI go in the merge commit body and the Gate-5 report, not a further record commit.
-
-**Judge follow-through (iteration 421):** Agent `sonnet`, fresh foreground read-only context, judged record commit `e618090c`. Verdict **PASS 94/100, zero blocking** (correctness 38/40, integrity 24/25, traceability 19/20, completeness 13/15). It used 49,685 subagent tokens, 4 tool uses and 35 s. Generator ≠ judge: opus controller, sonnet judge. The directive gave it the files and ten checks, not the controller's numbers.
-- **What it re-measured:** 3 STATUS stamps (421, 420, 419); 418 gone from the charter and once in the archive, a pure append; charter length unchanged. Range `f25e8558..854747c5`: 8 commits (6 for 420's record, 2 for #629), 24 paths outside `design_docs/`, 0 `| D-WORLD` rows changed; #629's branch, merge time and merge SHA from `gh pr view`; no queue row names #629. `--check` valid at 107 rows, `--open` = 119 and 120. Row 150 0 (control 6); row 151 `N2d|N4a` 0 (control `N2c` 1); `file.json` 0 (control `surface` 110 at `854747c5`, 109 at `f25e8558`). **Degraded fire:** the 22:38–22:39 ration, `unusable`, fallback and `LANE DEGRADED` lines; snapshot `c3c1a8b1…` with head `a51307d`; 420's `dae8092b…` with head `301131e`, other fields equal. **Codex rule:** it read `codex_quota.go` 137–212 and `quota_margin.go` and confirmed the stated admission rule and `StartMargin("codex")` = 2.0; the shortfall series 4.1 → 2.7 → 2.4 → 0.1 and +1.0 / +3.3. Ticket `slots_lost` 10 with the cited id. Dev check-runs 3/3. Log 32 entries; index row 421; dashboard consistent. No address, closing keyword or secret.
-- **Non-blocking notes, checked by the controller:**
-  1. The dashboard's "the next fire may be admitted" is a prediction. It is hedged, and the log states the condition (the allowance must gain more than 0.1 points on use). No change.
-  2. The STATUS stamp is long, like 419's and 420's. Stylistic; no change.
-  3. The earlier "gap" numbers were a different quantity, not wrong. The record says exactly that (418–420 measured used against allowed without the margin). No change.
-- **What it did not check:** the exact 172–212 line span (it read 137–212), row 263's text before the 421 note, the Gate-0 directive, inbox and step-6a readings, the readings file against its commands, and whether each of #629's 24 paths is Heads/Timeline surface code.
-
 ## 422 — 2026-11-21 — no pick: rule (d) block report, the thirteenth in a row; row 243 V4 S3–S12 still wait on D-WORLD-119 (S9–S11 also 120); the first undegraded no-pick fire since row 263 was filed, with an idle snapshot byte-identical to 421's, so Gate 5 records the idle fingerprint (row 263 count stays 10); dev green at `284e1ace` [ADMIN]
 
 **Kind:** no-pick iteration. Nothing is loop-routable without an answer from Mark, so standing rule (d) applies. Since iteration 421's Gate-1 base only 421's record landed. There is no design, plan, code or product acceptance from the loop. The record is the STATUS stamp (419 moved to the archive), the Current route line, row 263's iteration-422 note, this entry, the regenerated index, the dashboard and `verification/world-iter422/gate1-2-readings.txt`. An independent judge reviews the record before merge. After the reports, Gate 5 promotes this fire's idle snapshot.
@@ -1238,3 +1168,94 @@ The judge measured about 584 lines over this head, so it fits one sprint. Its di
 - Rotation not due (#635 opened 2026-11-23; next 2026-11-30 07:00 local). Weekly external-issue sweep not due.
 - Idle fingerprint NOT recorded (this fire picked and landed).
 - The last 3 landings (440, 439, 438) move no clause. No clause is UNMET, so there is no DRIFT line.
+
+## 441 — 2026-11-26 — row 243 V4 sprint 5f3 LANDED (PR #687, merge `a50b0d72`): the last dormant prerequisites for the first production caller — terminal `session revoke` exclusion with J-OWN-UID, the seven durable-window dispositions with pre-digest signed-start compatibility, and the attended paired upgrade/drain/rollback (a live change to `service upgrade`); outcome B ends the deferral chain with a measured schedule: the caller is the single remaining sprint S5f4 (917 lines); 1,527 lines; judge sonnet round 1 FAIL 71, round 2 PASS 83 [PRODUCT]
+
+**Pick:** row 243 V4 sprint 5f3, the Next that record 440 named.
+- **D-WORLD-121** (row 267 first?) is still OPEN. Its default B applied, so the groomed order stood.
+- **Re-measured at pick** (`origin/dev` `2f573488`): no S5f3 plan, branch, PR or worktree existed. Four start-path declarations and zero callers. Zero process-pin test names, with positive control `operator_upgrade_test.go:13`.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Row 243 serves D-WORLD-94.
+
+**Gate 0:** stamped first; `gh` = `sunholo-voight-kampff`; billing CLEAN; kill switch absent; 0 allowlisted directives on #635 (21 comments, LEGACY watermark); step 6a: 0 crash and 0 transcript notices (control 107:4); `mission-world` inbox 0 unread.
+
+**Gate 1:** local `dev` was 9 behind `origin/dev`, so the record was read from origin. Base `2f573488…@2026-11-26T16:26:44Z`. Skill drift: resolved symlink and pin copy byte-identical to ailang `origin/dev` on all 14 files. Dev CI at `2f573488` was in progress at Gate 1; parent `150d0d96` 3/3 green.
+
+**Routing evidence:**
+- Resolver (followed verbatim): planner `recipe codex:gpt-6.2-sol declared:planner-lane-default-pin`, executor `recipe codex:gpt-6.2-sol declared:provider-pin`, evaluator `agent-tool sonnet declared:alias-pin`. Designer not spawned (reviewed design). Codex probe rc 0.
+- The operator's standing request was to spawn every role with the Agent tool "exactly as the routing table specifies". The table returned `recipe` for the planner and executor, which makes the Agent tool not a valid path for them, so they ran as `codex exec` recipes. The REQUIRED judge ran on the Agent tool both rounds, and was resumed by name for a round-3 addendum. No role failed to spawn.
+- Controller `claude-opus-5-5` (session; tok: not reported) · planner `codex:gpt-6.2-sol` (599,391 tok) · executor `codex:gpt-6.2-sol` (run 1 73,830 tok; round 2 157,191 tok; round 3 68,031 tok) · evaluator Agent `sonnet` (r1 149,830 tok; r2 fresh instance 63,389 tok; r3 addendum 66,062 tok). judge-independence: cross-vendor. metered=$0.00.
+
+**Directive (controller's):** S5f3 = activation, but this time the plan had to END the deferral. Either (A) the complete safe unit lands within 1,650, or (B), only if the measured unit exceeds 1,650, the dormant prerequisites land in a fixed priority order with a measured schedule whose last sprint is the caller and fits ≤ 1,400. Priority: (1) terminal revoke exclusion + J-OWN-UID, (2) the durable-window matrix + pre-digest compatibility, (3) the paired drain/upgrade, (4) the caller. It also required a §5 table for every modified existing test (the iteration-440 B1 lesson). Race budget: `cmd/ailang-worldd` ≤ 12 s, `host/daemon` ≤ 5 s.
+
+**Planner** (~78 min, rc 0). Plan + JSON `ce74776b`.
+- **Outcome B.** The compiled activation prototype `st-M4` measured 2,302 cumulative, over 1,650.
+- S5f3 = M1 289, M2 686, M3 1,385 cumulative. Appendix C: S5f4 = the caller, 917 on M3.
+- Race: S5f3 +3.88 s CLI, +0 s daemon. S5f4 +10.96 s CLI.
+- 65/65 diff-anchored and 3/3 carried mutants killed. The only existing test edited was `TestOperatorServiceUpgrade` (one added arm).
+- Controller round trip `diff -r` rc 0 for M1, M2 and M3.
+
+**Executor:**
+- Run 1 applied M1 and M2 with `ACCEPT_OK`, then stopped correctly when M3's in-sandbox acceptance went red on `TestOperatorServiceStartup/gate/*` (`context deadline exceeded`).
+- Outside the sandbox: that test passed `-count=3` at base and at head, and `accept.sh M3 fast` printed `ACCEPT_OK` (60 PASS). So the sandbox invented the red (false-green 3). I took the M3 snapshot with the plan's own `snapshot.sh` (18/18, cmp-equal to the stage).
+- `commit_ms.sh` attempt 1 refused M1 on the existing `TestSessionRevokeByEpisode`: its setup mint hit a deadline at 6.15 s. `-count=5` passed at base (0.10–3.53 s) and at M1, so that was load. The retry committed M1 `7b7acdf6`, M2 `b56285dc` and M3 `211524ae` (NUMSTAT 289 → 686 → 1,385, exactly the plan's).
+
+**Baseline instrument note:** base `daemon-race` timed out at 20 minutes twice (co-loaded with the planner, then alone after it). There was no valid local daemon base, and CI arbitrated it. The sprint has no `host/daemon` diff.
+
+**Gates** on `211524ae` (no PATH shims):
+- Clean legs: build, vet, Linux vet, test compile, five inventories, `verify_ail`, GC probe, caller census (zero non-declaration hits) and `accept.sh M3 race`.
+- `host/store` and `host/authority` plain and race: 0 fails.
+- **`cmd-plain` added `TestSessionRootBudgets`**, plus four git-fixture tests that pass alone (load).
+- `host/verifygate` was not in the sweep.
+
+**Evaluator round 1** (Agent `sonnet`, ~87 min, own worktree): **FAIL 71** (22/15/17/8/9).
+- **B1:** M1 renamed the revoke deadline root, so the existing source guard `TestSessionRootBudgets` went red deterministically. Controller-reproduced: PASS at base, FAIL at head. The plan's §1.2 had claimed the root "stays".
+- Non-blocking:
+  - a refused upgrade left a loaded companion stopped, silently;
+  - `service runner stop|uninstall` refuses without a service record;
+  - the process census matches on name only;
+  - 8 survivors on the live upgrade path and 2 whole-store survivors.
+- 8 of 8 planner kills re-confirmed.
+
+**Round 2** (codex, 169 lines, 37 of them production) → `81789324`.
+- `runSessionRevoke` names its root `revokeCtx` again; the guard is unchanged.
+- `upgradeFailureNext` appends the `service runner start` remedy when a previously loaded companion is left stopped.
+- New tests kill six of the judge's exact edits: J-ROLLBACK-SCHEMA, J-RESTART-LOADED, J-PROMPT-HASHES, J-POST-CENSUS, J-DISPOSE-OWNER and J-RECOVERY-SINGLE-STEP.
+- Controller round-2 gates: every leg green. The `cmd-plain` set equals the base count, and the one swap (`TestOperatorWorktreeWindow`) passes alone at base and head (7.66 / 7.67 s).
+- **Evaluator round 2** (fresh Agent `sonnet`, ~9 min): **PASS 83** (27/25/18/8/5), 0 blocking. B1 and N1 CLOSED: the guard re-detects the round-1 form. All six kills reproduced. Its O-DROP-LOADED survives.
+
+**Round 3** (CI-found):
+- PR #687 CI on `81789324` was red in both Go jobs on one test: `host/verifygate TestSubprocessSinkGate`. M3's `operator_pair_upgrade_test.go:81` used a bare `bytes.Buffer` as a subprocess stderr sink. Locally PASS at base, FAIL at head.
+- Codex fix, test-only, 2 lines (`syncBuffer`) → `ed135376`, 1,527 lines.
+- The round-2 judge, resumed by name, confirmed the diff and the gate. PASS 83 stands.
+
+**Gate 3b:**
+- PR #687 on `ed135376`: attempt 1 red only on the race job's 480 s bound (`host/daemon` 480.134 s, no diff; `cmd/ailang-worldd` 478.231 s). Attempt 2 was 3/3 (275.1 s / 358.2 s).
+- `MERGEABLE CLEAN`; merged `--match-head-commit` → `a50b0d72`.
+- Merge CI attempt 1: red only on the race bound again (`host/daemon` 480.095 s, `panic: test timed out after 8m0s`; `cmd/ailang-worldd` 443.9 s). Attempt 2: **3/3** (`cmd/ailang-worldd` 273.9 s, `host/daemon` 358.8 s). **LANDED.**
+
+**Found:**
+- **Two reds in one sprint came from whole-repo gates my sweep did not run.** One was a whole-package `cmd` guard (B1); the other was a static `host/verifygate` scan over every test file. The planner and executor ran named selectors only, and my gate sweep covered touched packages only. Rule 3g says to derive the CI command list instead of remembering it. Next time, add `host/verifygate` (or the whole CI list) to the controller sweep.
+- The race bound fired on both the PR head and the merge, each time on the untouched `host/daemon`. That makes six instances.
+- Outcome B gave the first measured end to the deferral chain: S5f4 is the caller, at 917 lines.
+
+**Progress:** 1.0: clauses 1–7 MET; goal unmoved. Row 243 V4: S1–S5f3 landed.
+- Every activation prerequisite is now in.
+- The caller is planned and measured as one sprint (S5f4).
+- Still dormant: no production caller.
+
+**Ruled out:**
+- Fixing the four remaining judge survivors (J-FROM-BINARY, J-BUDGET-EXPIRED, J-RUNNER-STOP-CANON, J-REVOKE-MISSINGSTAT) in round 2. They would have kept growing a sprint already over the cap; they are carried to S5f4.
+- Treating `TestOperatorServiceStartup`, `TestSessionRevokeByEpisode`, `TestOperatorWorktreeWindow` or the daemon-race drift as regressions. Each passes alone at base and head, and none has a diff on its path.
+- Editing the `TestSessionRootBudgets` guard to match: the production root was restored instead.
+
+**Next:** V4 **S5f4 — activation, the first production caller**:
+- `runOperatorRunner` takes one confirmed start per tick through `operator_preparation.go`, ending at prepared-awaiting-S6;
+- restart adoption and the attended gap remedies;
+- `TestOperatorFirstManagedEpisodeProcess` and `TestOperatorCurrentOwnerProcessRecovery`.
+
+The planner must re-measure `world-iter441/plan-scratch/M4.patch` on `a50b0d72` first. Its gates must include whole `cmd/ailang-worldd` and `host/verifygate`, and the added CLI race (~11 s) must be reported against the bound. **Row 267 first** if Gate 1 finds `dev` red: under D-WORLD-121's default B, a red tip triggers it.
+
+**Gate 5 bookkeeping:**
+- Rotation not due (#635 opened 2026-11-23; next 2026-11-30 07:00 local). Weekly external-issue sweep not due.
+- Idle fingerprint NOT recorded (this fire picked and landed).
+- The last 3 landings (441, 440, 439) move no clause. No clause is UNMET, so there is no DRIFT line.
