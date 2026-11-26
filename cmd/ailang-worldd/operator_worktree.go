@@ -26,9 +26,8 @@ type operatorStartSource struct {
 	clock                               func() int64
 }
 
-// reserveOperatorStartWorktree is an isolated preparation seam. The
-// paired-process consumer must integrate its held episode fd before dispatch.
-func reserveOperatorStartWorktree(ctx context.Context, credentials string, signed approval.OperatorAction,
+// reserveOperatorStartWorktree borrows the caller-owned episode lock.
+func reserveOperatorStartWorktree(ctx context.Context, credentials string, held *store.OperatorEpisodeLock, signed approval.OperatorAction,
 	attempt store.OperatorMintAttempt, src operatorStartSource, checkpoint func(string) error) error {
 	canonical, err := store.CanonicalPath(credentials)
 	if err != nil {
@@ -37,11 +36,9 @@ func reserveOperatorStartWorktree(ctx context.Context, credentials string, signe
 	if signed.Store != canonical || !verbs.EpisodeIDPattern.MatchString(signed.Episode) {
 		return store.ErrOperatorConflict
 	}
-	lock, err := openRunnerLock(operatorEpisodeLockPath(canonical, signed.Episode), 0)
-	if err != nil {
-		return fmt.Errorf("%w: episode lock unavailable", store.ErrOperatorConflict)
+	if _, err := held.Verify(canonical, signed.Episode); err != nil {
+		return err
 	}
-	defer lock.Close()
 	in, err := reconstructOperatorStart(ctx, signed, attempt, src.presets, src.profiles, src.workspace, src.hosts, src.clock)
 	if err != nil {
 		return err
@@ -87,7 +84,14 @@ func reserveOperatorStartWorktree(ctx context.Context, credentials string, signe
 	if err := checkpoint("before add"); err != nil {
 		return fmt.Errorf("%w; %s", err, reconcileWorktreeCommand(key.Action.ID))
 	}
-	addErr := worktree.Add(ctx, git, target.Repo, target.Path, target.Branch, target.SHA)
+	fd, err := held.Verify(canonical, signed.Episode)
+	if err != nil {
+		return fmt.Errorf("%w; %s", err, reconcileWorktreeCommand(key.Action.ID))
+	}
+	addErr := worktree.Add(ctx, git, target.Repo, target.Path, target.Branch, target.SHA, fd)
+	if _, err := held.Verify(canonical, signed.Episode); err != nil {
+		return fmt.Errorf("%w; %s", err, reconcileWorktreeCommand(key.Action.ID))
+	}
 	if err := checkpoint("before readback"); err != nil {
 		return fmt.Errorf("%w; %s", err, reconcileWorktreeCommand(key.Action.ID))
 	}

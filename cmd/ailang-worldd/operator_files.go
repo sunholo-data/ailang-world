@@ -165,7 +165,12 @@ func readOperatorFileAt(dir *os.File, name, want string, uid uint64, open operat
 }
 
 func readOperatorFileSet(set operatorFileSet, addr string) operatorFilesProof {
-	f, dir := openOperatorFilesDir(set)
+	return readOperatorFileSetWithOpener(set, addr, openOperatorFilesDir)
+}
+
+func readOperatorFileSetWithOpener(set operatorFileSet, addr string,
+	open func(operatorFileSet) (*os.File, operatorFileProof)) operatorFilesProof {
+	f, dir := open(set)
 	p := operatorFilesProof{Dir: dir}
 	if f == nil {
 		return p
@@ -187,7 +192,7 @@ func readOperatorFileSet(set operatorFileSet, addr string) operatorFilesProof {
 			p.Files[2].Status = "unattributed file"
 		}
 	}
-	current, reopened := openOperatorFilesDir(set)
+	current, reopened := open(set)
 	if current != nil {
 		current.Close()
 	}
@@ -259,18 +264,16 @@ func recheckFileApproval(ctx context.Context, credentials string, a approval.Ope
 
 // publishOperatorStartFiles is dormant until the paired-consumer gates open.
 // rawToken is the existing mint output. Neither it nor the MCP bytes enter SQL.
-func publishOperatorStartFiles(ctx context.Context, c runnerConfig, id, rawToken string, clock func() int64, checkpoint func(string) error) error {
+func publishOperatorStartFiles(ctx context.Context, c runnerConfig, held *store.OperatorEpisodeLock, id, rawToken string, clock func() int64, checkpoint func(string) error) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	s, a, err := readRunnerFiles(ctx, c.Credentials, id)
 	if err != nil {
 		return err
 	}
-	lock, err := openRunnerLock(operatorEpisodeLockPath(c.Credentials, a.Episode), 0)
-	if err != nil {
+	if _, err := held.Verify(c.Credentials, a.Episode); err != nil {
 		return err
 	}
-	defer lock.Close()
 	current, a, err := readRunnerFiles(ctx, c.Credentials, id)
 	if err != nil || current != s || s.Phase != "" {
 		return store.ErrOperatorConflict

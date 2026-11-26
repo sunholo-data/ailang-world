@@ -12,7 +12,7 @@ import (
 )
 
 func operatorEpisodeLockPath(canonical, episode string) string {
-	return canonical + ".operator-episode-" + episode + ".lock"
+	return store.OperatorEpisodeLockPath(canonical, episode)
 }
 
 func terminalEpisodeLock(creds, episode string, held *os.File) (*os.File, error) {

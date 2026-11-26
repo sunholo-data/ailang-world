@@ -37,9 +37,7 @@ func claimFixtureEpisodeAction(t *testing.T, creds, episode string, prepare func
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Release a holder if a regression makes the CLI wait on flock.
-	fuse := time.AfterFunc(2*time.Second, func() { held.Close() })
-	t.Cleanup(func() { fuse.Stop(); held.Close() })
+	t.Cleanup(func() { held.Close() })
 	if _, err := store.UpgradeCredentials(creds); err != nil {
 		t.Fatal(err)
 	}
@@ -87,6 +85,9 @@ func claimFixtureEpisodeAction(t *testing.T, creds, episode string, prepare func
 	if err := db.ClaimOperatorAction(ctx, cas, h.Owner, 1011); err != nil {
 		t.Fatal(err)
 	}
+	// Bound the caller's contention test after the fixture is ready.
+	fuse := time.AfterFunc(2*time.Second, func() { held.Close() })
+	t.Cleanup(func() { fuse.Stop() })
 	return held
 }
 

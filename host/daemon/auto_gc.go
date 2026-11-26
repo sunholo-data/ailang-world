@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,7 +11,8 @@ import (
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/store"
-	"github.com/sunholo-data/ailang-world/host/toolprobe"
+	"github.com/sunholo-data/ailang-world/host/verbs"
+	"github.com/sunholo-data/ailang-world/host/worktree"
 )
 
 // EpisodeGCItem describes one worktree or cache directory removed or skipped by RunEpisodeGC.
@@ -39,8 +41,11 @@ type EpisodeGCOptions struct {
 	DryRun        bool
 	Now           time.Time
 	IsActive      func(episode string) bool
-	// A missing lookup, a lookup error, or an unresolved effect bars worktree removal.
-	HasOpenOperatorStep func(ctx context.Context, episode string) (bool, error)
+	// CredentialsPath is the store paired with WorkspaceRoot. An unavailable
+	// lock or ledger bars worktree removal.
+	CredentialsPath    string
+	lookupOperatorStep func(context.Context, string, string) (bool, error)
+	removeRegistered   func(context.Context, string, string, string, *os.File) error
 }
 
 const (
@@ -77,14 +82,12 @@ func (d *Daemon) runAutoGCPass(wsRoot, cacheDir string, now time.Time) EpisodeGC
 	ctx, cancel := context.WithTimeout(context.Background(), autoGCPassBudget)
 	defer cancel()
 	rep := RunEpisodeGC(ctx, EpisodeGCOptions{
-		WorkspaceRoot: wsRoot,
-		ExecCacheDir:  cacheDir,
-		OlderThan:     autoGCOlderThan,
-		Now:           now,
-		IsActive:      d.isEpisodeActive,
-		HasOpenOperatorStep: func(ctx context.Context, episode string) (bool, error) {
-			return store.EpisodeHasUnresolvedOperatorSteps(ctx, d.credentialsPath, episode)
-		},
+		WorkspaceRoot:   wsRoot,
+		ExecCacheDir:    cacheDir,
+		OlderThan:       autoGCOlderThan,
+		Now:             now,
+		IsActive:        func(episode string) bool { return d.isEpisodeActive(episode, now.Unix()) },
+		CredentialsPath: d.credentialsPath,
 	})
 	if len(rep.Removed) > 0 && d.errLog != nil {
 		fmt.Fprintf(d.errLog, "ailang-worldd: auto-gc reclaimed %s (%d removed, %d skipped)\n",
@@ -93,8 +96,8 @@ func (d *Daemon) runAutoGCPass(wsRoot, cacheDir string, now time.Time) EpisodeGC
 	return rep
 }
 
-func (d *Daemon) isEpisodeActive(episode string) bool {
-	snap := d.activity.snapshot(time.Now().Unix())
+func (d *Daemon) isEpisodeActive(episode string, now int64) bool {
+	snap := d.activity.snapshot(now)
 	for _, s := range snap.Sessions {
 		if s.Episode == episode {
 			return true
@@ -117,7 +120,6 @@ func RunEpisodeGC(ctx context.Context, opts EpisodeGCOptions) EpisodeGCReport {
 		Skipped:   []EpisodeGCItem{},
 	}
 	removedWorktrees := map[string]bool{}
-	reposToPrune := map[string]bool{}
 
 	// 1. Scan episode worktrees in WorkspaceRoot.
 	if opts.WorkspaceRoot != "" {
@@ -133,55 +135,11 @@ func RunEpisodeGC(ctx context.Context, opts EpisodeGCOptions) EpisodeGCReport {
 					continue
 				}
 				size := gcDirSizeBytes(wtPath)
-				if opts.IsActive != nil && opts.IsActive(name) {
-					rep.Skipped = append(rep.Skipped, EpisodeGCItem{
-						Kind: "worktree", Name: name, Path: wtPath, Bytes: size, Reason: "active session",
-					})
-					continue
-				}
-				age := now.Sub(info.ModTime())
-				if age < opts.OlderThan {
-					rep.Skipped = append(rep.Skipped, EpisodeGCItem{
-						Kind: "worktree", Name: name, Path: wtPath, Bytes: size,
-						Reason: fmt.Sprintf("too recent (%s < %s)", age.Round(time.Minute), opts.OlderThan),
-					})
-					continue
-				}
-				if reason := checkWorktreeUnsafe(ctx, wtPath); reason != "" {
+				if reason := collectEpisodeWorktree(ctx, opts, now, name, wtPath, info); reason != "" {
 					rep.Skipped = append(rep.Skipped, EpisodeGCItem{
 						Kind: "worktree", Name: name, Path: wtPath, Bytes: size, Reason: reason,
 					})
 					continue
-				}
-				commonDir := gitCommonDir(ctx, wtPath)
-				reason := "operator step lookup unavailable"
-				if opts.HasOpenOperatorStep != nil {
-					unresolved, err := opts.HasOpenOperatorStep(ctx, name)
-					switch {
-					case err != nil || ctx.Err() != nil:
-					case unresolved:
-						reason = "non-terminal operator step"
-					default:
-						reason = ""
-					}
-				}
-				if reason != "" {
-					rep.Skipped = append(rep.Skipped, EpisodeGCItem{
-						Kind: "worktree", Name: name, Path: wtPath, Bytes: size, Reason: reason,
-					})
-					continue
-				}
-				if !opts.DryRun {
-					if err := removeWorktree(ctx, wtPath, commonDir); err != nil {
-						rep.Skipped = append(rep.Skipped, EpisodeGCItem{
-							Kind: "worktree", Name: name, Path: wtPath, Bytes: size,
-							Reason: "remove failed: " + err.Error(),
-						})
-						continue
-					}
-					if commonDir != "" {
-						reposToPrune[commonDir] = true
-					}
 				}
 				removedWorktrees[name] = true
 				rep.ReclaimedBytes += size
@@ -189,11 +147,6 @@ func RunEpisodeGC(ctx context.Context, opts EpisodeGCOptions) EpisodeGCReport {
 					Kind: "worktree", Name: name, Path: wtPath, Bytes: size, Reason: "clean & merged",
 				})
 			}
-		}
-	}
-	if !opts.DryRun {
-		for commonDir := range reposToPrune {
-			_, _ = toolprobe.Output(ctx, "git", "", "--git-dir", commonDir, "worktree", "prune")
 		}
 	}
 
@@ -265,41 +218,137 @@ func RunEpisodeGC(ctx context.Context, opts EpisodeGCOptions) EpisodeGCReport {
 	return rep
 }
 
-func checkWorktreeUnsafe(ctx context.Context, wtPath string) string {
-	gitMeta, err := os.Lstat(filepath.Join(wtPath, ".git"))
-	if err != nil || gitMeta.IsDir() {
-		return "not a linked git worktree"
+func collectEpisodeWorktree(ctx context.Context, opts EpisodeGCOptions, now time.Time, name, path string, scanned os.FileInfo) string {
+	if opts.CredentialsPath == "" {
+		return "operator step lookup unavailable"
 	}
-	out, err := toolprobe.Output(ctx, "git", wtPath, "status", "--porcelain")
+	if !verbs.EpisodeIDPattern.MatchString(name) {
+		return "operator episode lock unavailable"
+	}
+	canonical, err := store.CanonicalPath(opts.CredentialsPath)
+	if err != nil {
+		return "operator episode lock unavailable"
+	}
+	lock, err := store.OpenOperatorEpisodeLock(canonical, name)
+	if err != nil {
+		return "operator episode lock unavailable"
+	}
+	defer lock.Close()
+	lookup := opts.lookupOperatorStep
+	if lookup == nil {
+		lookup = store.EpisodeHasUnresolvedOperatorSteps
+	}
+	unresolved, err := lookup(ctx, canonical, name)
+	if err != nil || ctx.Err() != nil {
+		return "operator step lookup unavailable"
+	}
+	if unresolved {
+		return "non-terminal operator step"
+	}
+
+	info, err := os.Lstat(path)
+	if err != nil || !info.IsDir() || !os.SameFile(info, scanned) {
+		return "worktree changed during scan"
+	}
+	if opts.IsActive != nil && opts.IsActive(name) {
+		return "active session"
+	}
+	if age := now.Sub(info.ModTime()); age < opts.OlderThan {
+		return fmt.Sprintf("too recent (%s < %s)", age.Round(time.Minute), opts.OlderThan)
+	}
+	repo, registered, err := registeredGCWorktree(ctx, path)
+	if err != nil {
+		return err.Error()
+	}
+	if reason := checkWorktreeUnsafe(ctx, registered); reason != "" {
+		return reason
+	}
+	fd, err := lock.Verify(canonical, name)
+	if err != nil {
+		return "operator episode lock unavailable"
+	}
+	if !opts.DryRun {
+		remove := opts.removeRegistered
+		if remove == nil {
+			remove = worktree.RemoveRegistered
+		}
+		if err := remove(ctx, "git", repo, registered, fd); err != nil {
+			return "remove failed: " + err.Error()
+		}
+	}
+	return ""
+}
+
+func registeredGCWorktree(ctx context.Context, path string) (string, string, error) {
+	none := errors.New("worktree registration unavailable or changed")
+	meta := filepath.Join(path, ".git")
+	info, err := os.Lstat(meta)
+	if err != nil || !info.Mode().IsRegular() {
+		return "", "", errors.New("not a linked git worktree")
+	}
+	physical, err := filepath.EvalSymlinks(meta)
+	if err != nil {
+		return "", "", none
+	}
+	gitDir, err := worktree.Output(ctx, "git", []string{"-C", path, "rev-parse", "--absolute-git-dir"})
+	if err != nil {
+		return "", "", none
+	}
+	back, err := os.ReadFile(filepath.Join(strings.TrimSuffix(gitDir, "\n"), "gitdir"))
+	if err != nil {
+		return "", "", none
+	}
+	backPath, err := filepath.EvalSymlinks(strings.TrimSuffix(string(back), "\n"))
+	if err != nil || backPath != physical {
+		return "", "", none
+	}
+	common, err := worktree.Output(ctx, "git", []string{"-C", path, "rev-parse", "--path-format=absolute", "--git-common-dir"})
+	if err != nil {
+		return "", "", none
+	}
+	repo, err := filepath.EvalSymlinks(strings.TrimSuffix(common, "\n"))
+	if err != nil {
+		return "", "", none
+	}
+	list, err := worktree.Output(ctx, "git", []string{"--git-dir", repo, "worktree", "list", "--porcelain", "-z"})
+	if err != nil {
+		return "", "", none
+	}
+	match := ""
+	for _, record := range strings.Split(strings.TrimSuffix(list, "\x00\x00"), "\x00\x00") {
+		first, _, _ := strings.Cut(record, "\x00")
+		dir, ok := strings.CutPrefix(first, "worktree ")
+		if !ok {
+			return "", "", none
+		}
+		candidate, err := filepath.EvalSymlinks(dir)
+		if err == nil && candidate == filepath.Dir(physical) {
+			if match != "" {
+				return "", "", none
+			}
+			match = dir
+		}
+	}
+	if match == "" {
+		return "", "", none
+	}
+	return repo, match, nil
+}
+
+func checkWorktreeUnsafe(ctx context.Context, wtPath string) string {
+	out, err := worktree.Output(ctx, "git", []string{"--no-optional-locks", "-C", wtPath, "status", "--porcelain"})
 	if err != nil {
 		return "git status failed"
 	}
-	if strings.TrimSpace(string(out)) != "" {
+	if strings.TrimSpace(out) != "" {
 		return "dirty worktree (uncommitted or untracked files)"
 	}
 	for _, ref := range []string{"@{u}", "origin/dev", "origin/main", "dev", "main"} {
-		if _, err := toolprobe.Output(ctx, "git", wtPath, "merge-base", "--is-ancestor", "HEAD", ref); err == nil {
+		if _, err := worktree.Output(ctx, "git", []string{"-C", wtPath, "merge-base", "--is-ancestor", "HEAD", ref}); err == nil {
 			return ""
 		}
 	}
 	return "unmerged commits on HEAD"
-}
-
-func gitCommonDir(ctx context.Context, wtPath string) string {
-	out, err := toolprobe.Output(ctx, "git", wtPath, "rev-parse", "--path-format=absolute", "--git-common-dir")
-	if err != nil {
-		return ""
-	}
-	return strings.TrimSpace(string(out))
-}
-
-func removeWorktree(ctx context.Context, wtPath, commonDir string) error {
-	if commonDir != "" {
-		if _, err := toolprobe.Output(ctx, "git", "", "--git-dir", commonDir, "worktree", "remove", wtPath); err == nil {
-			return nil
-		}
-	}
-	return os.RemoveAll(wtPath)
 }
 
 func gcDirSizeBytes(root string) int64 {

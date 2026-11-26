@@ -97,7 +97,18 @@ func (r *worktreeStartRig) start(t *testing.T, step func(string) error) error {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(presetTestContext(t), 5*time.Second)
 	defer cancel()
-	return reserveOperatorStartWorktree(ctx, runnerDB(r.creds), r.action, r.at, r.src, step)
+	held := r.borrow(t)
+	defer held.Close()
+	return reserveOperatorStartWorktree(ctx, runnerDB(r.creds), held, r.action, r.at, r.src, step)
+}
+
+func (r *worktreeStartRig) borrow(t *testing.T) *store.OperatorEpisodeLock {
+	t.Helper()
+	held, err := store.OpenOperatorEpisodeLock(r.creds, r.action.Episode)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return held
 }
 
 func (r *worktreeStartRig) exec(t *testing.T, q string, args ...any) {
@@ -220,12 +231,14 @@ func TestOperatorStartCollisions(t *testing.T) {
 		{"runner", "operator action conflicts"}, {"revoked", "revoked"}, {"expires_at_reservation", "operator action expired"},
 		{"heartbeat_stale", "operator action conflicts"}, {"heartbeat_future", "operator action conflicts"},
 		{"heartbeat_protocol", "operator action conflicts"}, {"heartbeat_readiness", "operator action conflicts"},
-		{"held", "episode lock unavailable"}, {"missing_lock", "episode lock unavailable"},
+		{"held", "episode lock pathname changed"}, {"missing_lock", "episode lock pathname changed"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			r := newWorktreeStartRig(t, tc.name == "mcp")
 			ctx := boundedTestContext(t)
 			lockPath := operatorEpisodeLockPath(r.creds, r.action.Episode)
+			held := r.borrow(t)
+			defer held.Close()
 			switch tc.name {
 			case "branch":
 				presetGit(t, r.f.r.f, "branch", "world/ep", r.f.base)
@@ -304,22 +317,28 @@ func TestOperatorStartCollisions(t *testing.T) {
 				}
 			case "held":
 				r.editPreset(t, func(p *launchPreset) { p.TTLS-- })
-				held, err := openRunnerLock(lockPath, 0)
-				if err != nil {
+				// Keep the original inode linked while a different description holds the canonical lock.
+				if err := os.Rename(lockPath, lockPath+".old"); err != nil {
 					t.Fatal(err)
 				}
-				defer held.Close()
-				defer time.AfterFunc(3*time.Second, func() { held.Close() }).Stop()
+				other := r.borrow(t)
+				defer other.Close()
 			case "missing_lock":
 				if err := os.Remove(lockPath); err != nil {
 					t.Fatal(err)
 				}
 			}
 			before := observeProvision(t, r.f.r, r.creds)
-			err := r.start(t, func(string) error { return nil })
+			err := reserveOperatorStartWorktree(presetTestContext(t), runnerDB(r.creds), held, r.action, r.at, r.src, func(string) error { return nil })
 			if err == nil || !strings.Contains(err.Error(), tc.why) || !reflect.DeepEqual(before, observeProvision(t, r.f.r, r.creds)) ||
 				len(r.writes) != 0 || r.ctl.boots != 0 || r.ctl.stops != 0 {
 				t.Fatalf("collision %s changed state or wrong refusal: %v", tc.name, err)
+			}
+			if tc.name == "held" || tc.name == "missing_lock" {
+				if !errors.Is(err, store.ErrOperatorConflict) {
+					t.Fatalf("expected episode lock conflict: %v", err)
+				}
+				r.rows(t, "claimed", "", "", 0)
 			}
 		})
 	}

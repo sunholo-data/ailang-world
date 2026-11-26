@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
+
 	"testing"
 	"time"
 )
@@ -180,5 +182,97 @@ func TestAddFailureIsReported(t *testing.T) {
 	err := Add(testCtx(t), git, filepath.Join(t.TempDir(), "not-a-repo"), filepath.Join(t.TempDir(), "x"), "", "")
 	if err == nil || !strings.Contains(err.Error(), "worktree add") {
 		t.Fatalf("err = %v, want a reported git failure", err)
+	}
+}
+
+func TestRemoveRegisteredLendsDescriptor(t *testing.T) {
+	const check = "WORLD_TEST_GC_CHILD_LOCK"
+	if path := os.Getenv(check); path != "" {
+		fd := os.NewFile(3, "GC episode lock")
+		if fd == nil {
+			t.Fatal("GC child lacks its inherited descriptor")
+		}
+		defer fd.Close()
+		got, err := fd.Stat()
+		want, statErr := os.Stat(path)
+		if err != nil || statErr != nil || !os.SameFile(got, want) {
+			t.Fatalf("GC child inherited wrong inode: %v %v", err, statErr)
+		}
+		if err := syscall.Flock(3, syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+			t.Fatalf("GC child inherited a different open description: %v", err)
+		}
+		return
+	}
+	git := gitBin(t)
+	repo := newRepo(t, git)
+	path := filepath.Join(t.TempDir(), "ep")
+	if err := Add(testCtx(t), git, repo, path, "world/ep", "HEAD"); err != nil {
+		t.Fatal(err)
+	}
+	f, err := os.Create(filepath.Join(t.TempDir(), "episode.lock"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+		t.Fatal(err)
+	}
+	bin, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv(check, f.Name())
+	t.Setenv("WORLD_TEST_GC_CHILD_EXE", bin)
+	t.Setenv("WORLD_TEST_GC_REAL_GIT", git)
+	t.Setenv("GORACE", strings.TrimSpace(os.Getenv("GORACE")+" atexit_sleep_ms=0"))
+	wrapper := filepath.Join(t.TempDir(), "git-check")
+	body := "#!/bin/sh\n\"$WORLD_TEST_GC_CHILD_EXE\" -test.run '^TestRemoveRegisteredLendsDescriptor$' || exit 1\nexec \"$WORLD_TEST_GC_REAL_GIT\" \"$@\"\n"
+	if err := os.WriteFile(wrapper, []byte(body), 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := RemoveRegistered(testCtx(t), wrapper, filepath.Join(repo, ".git"), path, f); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
+		t.Fatalf("registered worktree still present after real Git remove: %v", err)
+	}
+	if _, err := Output(testCtx(t), git, []string{"-C", repo, "show-ref", "--verify", "refs/heads/world/ep"}); err != nil {
+		t.Fatalf("registered removal changed the branch: %v", err)
+	}
+}
+
+func TestRemoveRegisteredRefusesLockedOrDirty(t *testing.T) {
+	git := gitBin(t)
+	// Git requires two force flags for a locked worktree and one for a dirty worktree.
+	for _, tc := range []struct{ name, why string }{
+		{"locked", "locked working tree"}, {"dirty", "contains modified or untracked files"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := testCtx(t)
+			repo := newRepo(t, git)
+			path := filepath.Join(t.TempDir(), "ep")
+			if err := Add(ctx, git, repo, path, "world/ep", "HEAD"); err != nil {
+				t.Fatal(err)
+			}
+			if tc.name == "locked" {
+				if _, err := Output(ctx, git, []string{"-C", repo, "worktree", "lock", path}); err != nil {
+					t.Fatal(err)
+				}
+			} else if err := os.WriteFile(filepath.Join(path, "untracked"), []byte("keep me"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			list := []string{"-C", repo, "worktree", "list", "--porcelain"}
+			before, err := Output(ctx, git, list)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := RemoveRegistered(ctx, git, filepath.Join(repo, ".git"), path, nil); err == nil || !strings.Contains(err.Error(), tc.why) {
+				t.Fatalf("expected Git to refuse %s worktree removal: %v", tc.name, err)
+			}
+			after, err := Output(ctx, git, list)
+			if err != nil || after != before || !IsLinked(path) {
+				t.Fatalf("refusal changed the worktree or its registration: %v\nbefore:\n%s\nafter:\n%s", err, before, after)
+			}
+		})
 	}
 }
