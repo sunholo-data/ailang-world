@@ -36,10 +36,25 @@ func operatorStartFacts(ctx context.Context, signed approval.OperatorAction, att
 	if served != signed.Store {
 		return store.OperatorMintInput{}, nil, &approval.BindingError{Field: "store"}
 	}
+	tokenPath, err := operatorPhysicalTarget(req.outPath)
+	if err != nil {
+		return store.OperatorMintInput{}, nil, err
+	}
+	taskPath, err := operatorPhysicalTarget(read.taskCopy)
+	if err != nil {
+		return store.OperatorMintInput{}, nil, err
+	}
+	mcp := read.mcp
+	if mcp != "" {
+		mcp, err = operatorPhysicalTarget(mcp)
+		if err != nil {
+			return store.OperatorMintInput{}, nil, err
+		}
+	}
 	start, task := *req.start, *req.start.Task
-	task.Path = read.taskCopy
+	task.Path = taskPath
 	start.Task = &task
-	in := store.OperatorMintInput{Attempt: attempt, Start: start, TokenPath: req.outPath,
+	in := store.OperatorMintInput{Attempt: attempt, Start: start, TokenPath: tokenPath,
 		Profile: approval.ProfileRef{Project: req.profile, Digest: req.prof.Digest}}
 	for _, g := range req.grants {
 		in.Grants = append(in.Grants, approval.Grant{Effect: g.Effect, Scope: g.Scope, Budget: g.Budget})
@@ -53,9 +68,10 @@ func operatorStartFacts(ctx context.Context, signed approval.OperatorAction, att
 		return store.OperatorMintInput{}, nil, err
 	}
 	facts := []approval.OperatorResolved{{Name: "launch_binary", Value: read.launchBinary},
-		{Name: "launch_wall", Value: read.launchWall.String()}, {Name: "mcp_path", Value: read.mcp}}
+		{Name: "launch_wall", Value: read.launchWall.String()}, {Name: "mcp_path", Value: mcp}}
 	facts = append(facts, mint...)
-	facts = append(facts, approval.OperatorResolved{Name: "served_build", Value: string(build)},
+	facts = append(facts, approval.OperatorResolved{Name: "served_address", Value: read.preset.Daemon.Addr},
+		approval.OperatorResolved{Name: "served_build", Value: string(build)},
 		approval.OperatorResolved{Name: "served_interpreter", Value: read.health.ToolRef},
 		approval.OperatorResolved{Name: "worktree_path", Value: req.dir})
 	return in, facts, nil

@@ -13,7 +13,7 @@ var everyVerb = [][]string{
 	{"tools", "list"}, {"call"}, {"why"}, {"provenance"}, {"setup"}, {"doctor"}, {"hosts", "init"},
 	{"session"}, {"session", "new"}, {"session", "list"}, {"session", "revoke"}, {"session", "mint"},
 	{"approve"}, {"service", "runner"}, {"service", "runner", "install"}, {"service", "runner", "start"},
-	{"service", "runner", "stop"}, {"service", "runner", "status"}, {"service", "runner", "cancel"}, {"service", "runner", "reconcile-worktree"}, {"service", "runner", "uninstall"}, {"approver"}, {"approver", "list"}, {"approver", "enroll"}, {"approver", "revoke"},
+	{"service", "runner", "stop"}, {"service", "runner", "status"}, {"service", "runner", "cancel"}, {"service", "runner", "reconcile-worktree"}, {"service", "runner", "reconcile-files"}, {"service", "runner", "uninstall"}, {"approver"}, {"approver", "list"}, {"approver", "enroll"}, {"approver", "revoke"},
 }
 
 // AC5.7: `<verb> --help` and `help <verb>` exit 0 with that verb's help on
@@ -42,7 +42,7 @@ func TestEveryVerbHasHelp(t *testing.T) {
 		"serve --db", "] health", "] head", "world get", "object get", "object find", "log get", "log range",
 		"log tail", "registry get", "commit --file <commit.json> [--session <file|token>]",
 		"tools list", "] call <tool>", "] why ", "provenance", "setup", "doctor",
-		"service runner install|start|stop|status|cancel|reconcile-mint|reconcile-worktree|uninstall", "session new <episode>", "session list", "session revoke", "session mint", "help [<verb>]",
+		"service runner install|start|stop|status|cancel|reconcile-mint|reconcile-worktree|reconcile-files|uninstall", "session new <episode>", "session list", "session revoke", "session mint", "help [<verb>]",
 		"approve <request-id>", "approve <request-id> --signature <file>", "approve <request-id> --sign-with <key>", "approve <request-id> --write-message <file>", "approve <request-id> --webauthn-link", "approve <request-id> --webauthn-assertion <file>", "approve <request-id> --await [--await-for <duration>]", "approve --list [--decided]", "approve <request-ref> [--deny] [--daemon <host:port>]", "approver enroll --name", "approver enroll --name <name> --format webauthn --origin <origin> --registration <file>", "approver list", "approver revoke <name>",
 	} {
 		if !strings.Contains(out.String(), want) {
