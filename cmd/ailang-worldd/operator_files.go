@@ -165,7 +165,12 @@ func readOperatorFileAt(dir *os.File, name, want string, uid uint64, open operat
 }
 
 func readOperatorFileSet(set operatorFileSet, addr string) operatorFilesProof {
-	f, dir := openOperatorFilesDir(set)
+	return readOperatorFileSetWithOpener(set, addr, openOperatorFilesDir)
+}
+
+func readOperatorFileSetWithOpener(set operatorFileSet, addr string,
+	open func(operatorFileSet) (*os.File, operatorFileProof)) operatorFilesProof {
+	f, dir := open(set)
 	p := operatorFilesProof{Dir: dir}
 	if f == nil {
 		return p
@@ -187,7 +192,7 @@ func readOperatorFileSet(set operatorFileSet, addr string) operatorFilesProof {
 			p.Files[2].Status = "unattributed file"
 		}
 	}
-	current, reopened := openOperatorFilesDir(set)
+	current, reopened := open(set)
 	if current != nil {
 		current.Close()
 	}
