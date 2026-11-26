@@ -955,6 +955,7 @@ func newDaemon(ctx, phaseParent context.Context, registryBudget time.Duration, c
 	d.srv = newServer(d.Handler())
 	d.srv.RegisterOnShutdown(func() { d.aguiStopOnce.Do(func() { close(d.aguiStop) }) })
 	d.startAutoGC(cfg.DBPath)
+	d.startOutOfTimeReprobe()
 	return d, nil
 }
 

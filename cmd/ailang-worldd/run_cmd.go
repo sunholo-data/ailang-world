@@ -22,6 +22,7 @@ Flags:
   --episode <id>          explicit episode id (default: auto-derived)
   --interactive           launch interactive mode instead of headless
   --prompt                ask for explicit TTY y/N instead of using a standing allowance
+  --agent <name>          override agent harness (agy|claude|codex)
   --model <name>          override preset model
   --branch <name>         override episode branch
   --ttl <seconds>         override session TTL
@@ -56,6 +57,7 @@ func runWrapper(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	episodeID := fs.String("episode", "", "explicit episode id")
 	interactive := fs.Bool("interactive", false, "launch interactive mode instead of headless")
 	prompt := fs.Bool("prompt", false, "require explicit TTY y/N instead of standing allowance")
+	agent := fs.String("agent", "", "override preset agent harness (agy|claude|codex)")
 	model := fs.String("model", "", "override preset model")
 	branch := fs.String("branch", "", "override episode branch")
 	ttl := fs.String("ttl", "", "override session TTL")
@@ -120,6 +122,9 @@ func runWrapper(args []string, stdout, stderr io.Writer, env sessionEnv) int {
 	}
 	if resolvedTask != "" {
 		startArgs = append(startArgs, "--task", resolvedTask)
+	}
+	if *agent != "" {
+		startArgs = append(startArgs, "--agent", *agent)
 	}
 	if *model != "" {
 		startArgs = append(startArgs, "--model", *model)

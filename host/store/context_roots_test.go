@@ -88,6 +88,8 @@ var contextRootPins = map[string]int{
 	"host/capsule/capsule.go|Run|Background":          1,
 	"host/daemon/daemon.go|drain|Background":          1,
 	"host/daemon/auto_gc.go|runAutoGCPass|Background": 1, // built-in periodic auto-gc pass bounded by autoGCPassBudget (2 min); Git only, no Store call
+	// Background one-shot re-probe for directory exec profiles that ran out of the 9 s startup budget under load; bounded (30 s..3 min), no Store call.
+	"host/daemon/workspace.go|reprobeOutOfTimeProfiles|Background": 1,
 	// Row 134 M4b: an episode's tool handler is built inside the coordinator's
 	// BinderFor, which carries no ctx; its one summary subprocess is bounded
 	// by workspaceHandlerBudget (3 s) fed directly from this root, and it
