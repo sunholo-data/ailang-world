@@ -1,0 +1,178 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s5e3",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1, quorum r2 PROCEED 3/3, no absent seats",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s5e3-sprint-plan.md",
+ "previous_sprint": "S5e2 #672, merge d9c24a3b, judge Sonnet PASS 84 and 0 blocking",
+ "base_commit": "eaa202b1d23f601ce597f063034a061b5bf5dea3",
+ "design_measured_at": "eaa202b1, plan \u00a71.2 and \u00a71.4",
+ "queue_row": 243,
+ "iteration": 437,
+ "phase": "V4",
+ "sprint_number": "5e3",
+ "sprint": "S5e3 signed start publication, independent readback and attended file disposition",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter437-row243-v4s5e3",
+ "branch": "sprint/world-iter437-row243-v4s5e3",
+ "authority": [
+  "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004",
+  "D-WORLD-109 fixture stores and keys"
+ ],
+ "behaviour": "Reserve and publish the exact signed file bundle privately without replacement, prove it by independent readback, and offer attended disposition in the same M1.",
+ "cut": {
+  "cap_loc": 1400,
+  "safe_unit_exception_loc": 1650,
+  "measure": "git diff -M --numstat eaa202b1 HEAD -- cmd host docs app",
+  "measured": 1650,
+  "unfiltered_product": 1650,
+  "margin": -250,
+  "safe_unit_margin": 0,
+  "moved_out": {
+   "optional_M2_pin_capacity": 0,
+   "prior_process_harness": 72,
+   "S6_design_raw": 890,
+   "S8_design_raw": 860,
+   "S12_design_raw": 700
+  }
+ },
+ "planner_decisions": {
+  "cut": "M1 only. Apply the safe-unit exception to preserve publication, readback and disposition together.",
+  "allowance": "Real schema-v11 allowance origin has no matching observed operator mint receipt. Refuse before any write.",
+  "activation": "Dormant effect, attended resolver only. GC guard and paired process required before activation."
+ },
+ "scope": [
+  "Signed start, observed worktree and exact mint binding",
+  "Private no-replacement Codex or Claude file set",
+  "Independent per-output readback and phase interruption tests",
+  "Attended reconcile-files with independent action and step CAS"
+ ],
+ "executor_lane": "codex:gpt-6.2-sol, M1 via patch only",
+ "executor_form": "Appendix P incremental patch, \u00a72 application, \u00a77 cumulative snapshot",
+ "estimate_loc": {
+  "compiled_landed": 1650,
+  "parked": {
+   "optional_store_pin_patch": "UNMEASURED, capacity zero",
+   "GC_skip": "UNMEASURED"
+  }
+ },
+ "milestones": [
+  {
+   "id": "M1",
+   "title": "Signed start files, independent readback and attended disposition",
+   "expected_cumulative_numstat": 1650,
+   "added": 1625,
+   "deleted": 25,
+   "increment": 1650,
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang /bin/bash \"$T/accept.sh\" \"$W\" M1 fast",
+   "expected_snapshot": "16/0/16",
+   "unfiltered_product": 1650
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "16/0/16",
+  "format": "STATUS / DELETED / MANIFEST.sha256"
+ },
+ "design_premises_found_false": [
+  "\u00a71.4 F1\u2013F7",
+  "Inherited MCP hunk applies with an offset and writes a backup",
+  "The inherited resolver shared the I/O budget with human review",
+  "The hardened unit requires the safe-unit size exception"
+ ],
+ "existing_tests_edited": [
+  "cmd/ailang-worldd/help_test.go",
+  "cmd/ailang-worldd/operator_start_input_test.go",
+  "cmd/ailang-worldd/operator_worktree_test.go",
+  "host/store/credentials_test.go"
+ ],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [
+  "cmd/ailang-worldd/episode.go",
+  "cmd/ailang-worldd/main.go",
+  "cmd/ailang-worldd/operator_service.go",
+  "cmd/ailang-worldd/operator_start_input.go",
+  "cmd/ailang-worldd/service.go",
+  "host/store/operator_mint.go"
+ ],
+ "new_files": [
+  "cmd/ailang-worldd/operator_file_syscalls_test.go",
+  "cmd/ailang-worldd/operator_files.go",
+  "cmd/ailang-worldd/operator_files_reconcile.go",
+  "cmd/ailang-worldd/operator_files_test.go",
+  "host/store/operator_files.go"
+ ],
+ "not_touched": [
+  ".ail",
+  "app",
+  "daemon routes or served assets",
+  "driver",
+  "go.mod",
+  "schema",
+  "daemon and verifygate tests",
+  "row 271",
+  "episode GC"
+ ],
+ "mutants": {
+  "total_specs": 98,
+  "named_claimed": 98,
+  "named_killed": 95,
+  "named_survived": 0,
+  "named_survived_claimed": 0,
+  "whole_unmeasured_cli": 98,
+  "named_survived_ids": [],
+  "named_masked": 3,
+  "named_unmeasured": 0,
+  "named_other": {
+   "KILLED": 95,
+   "MASKED": 3
+  },
+  "diff_audit_lines_without_independent_measurement": 122,
+  "observed_survivors": [
+   {
+    "id": "F-CREATE-NOFOLLOW",
+    "mask": "native exclusive-create alias control: O_CREAT|O_EXCL rejects the existing symlink"
+   },
+   {
+    "id": "R-POST-PARENT",
+    "mask": "a changed parent leaves no child proofs, so child comparison independently refuses"
+   },
+   {
+    "id": "S-WORKTREE-PHASE",
+    "mask": "reserved schema forces receipt NULL, which independently refuses"
+   }
+  ],
+  "whole_measured_attempts": 1,
+  "whole_pending": 98,
+  "whole_unmeasured_command": "/bin/bash \"$S/whole-mutants.sh\" \"$W\" \"$S/controller-base/pkg-cmd-ailang-worldd.base-fails\"",
+  "mutant_report_complete": false
+ },
+ "mutant_ledger": "$HOME/.ailang/state/world-iter437/plan-scratch/mutation-ledger.jsonl",
+ "mutant_specs": "$HOME/.ailang/state/world-iter437/plan-scratch/mutants.json",
+ "gates_script": "$HOME/.ailang/state/world-iter437/plan-scratch/gates.sh, \u00a76",
+ "roundtrip": {
+  "M1": "The exact Appendix P round trip in `$S/rt-OzVjqJ` applied the 1,895-line patch to a fresh base archive with `/usr/bin/patch -p1 -E`. Full archive and each of `cmd`, `host` and `docs` returned `diff -r` rc 0. App was absent on both sides. The inherited backup census stayed identical. The exact script fences matched the tested support copies and passed Bash syntax checks. Extracted snapshot script reproduced the tracked status and verified 16 file hashes (16/0/16) through read-only base Git and scratch output. See `$S/roundtrip-final.log`.",
+  "fenced_scripts_identical": true,
+  "snapshot_rehearsal": {
+   "M1": "16/0/16"
+  }
+ },
+ "controller_decisions_requested": [
+  "Record current same-rig base fail sets in \u00a77.",
+  "Run \u00a74.1, \u00a76 and Ubuntu native CI after commit.",
+  "Gate production activation on #667 and the paired process."
+ ],
+ "verification": {
+  "base_gates": "The extended archive run reached `GATES_DONE 727s FAILS: none UNINFORMATIVE: pkg-cmd-ailang-worldd race-cmd-ailang-worldd verify_go`. The plain verifier read 7,387 tracked blobs, reached the evidence manifest and `go test ./... -count=1`, and returned raw rc 1 with actual bind-denial stacks. The fail-set parser printed `FAILSET_CONTROL host/store TestParserPositive`. Its scratch raw failures are uninformative for whole-suite attribution. The CLI and verifier base sets required by \u00a77 must be recorded outside the sandbox.",
+  "final_gates": "`$S/gate-latest/ALL_DONE` recorded `GATES_DONE 269s FAILS: none UNINFORMATIVE: pkg-cmd-ailang-worldd race-cmd-ailang-worldd`. Native build/vet, Linux vet, compile, verify_ail, store plain/race, named inventories, both named acceptance invocations and file race passed. The earlier, combined CLI acceptance run timed out at 120.415 s under load during the S5e2 worktree cases. The final acceptance splits the named publication and regression selectors, each with its original two-minute bound.",
+  "race": "The file-only CLI race selector added 46.692s of package time in the exact latest stage (`$S/gate-latest/files-race.txt`). The same inherited S5e2 selector took 37.113s at the pristine base and 29.080s at M1. The timing varied with load; the file-only selector is the direct added-work measurement. Whole CLI race remains uninformative under the sandbox.",
+  "accept": "\u00a73 and \u00a77",
+  "roundtrip": "\u00a77",
+  "mutant_replay": "\u00a74",
+  "phase_5_5": "\u00a73.2 and Appendix C",
+  "gc": "`/bin/bash \"$S/gc-probe.sh\"` ran the inherited probe against a copy of rebased M1. `$S/probe-M1-GC.log` reports both reserved and fully published worktrees as `clean & merged` dry-run candidates with unchanged evidence at an injected 73 h age. The fixture stubs `IsActive` false, so it establishes candidate eligibility under that precondition. The picture is unchanged."
+ },
+ "unfiltered_branch_with_plan": {
+  "M1": 4308
+ }
+}
