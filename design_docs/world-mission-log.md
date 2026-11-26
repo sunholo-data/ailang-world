@@ -1662,3 +1662,116 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 **Next:** V4 S5e3 planner — **file publication + attended `reconcile-files` as the sprint's whole scope** (start from `~/.ailang/state/world-iter436/plan-scratch/st-M2` and `M2-deferred.patch`, 1,259 incremental on `5cac9316`; re-base onto the current head — attended #671 merged since), closing its Appendix C matrix (flag bits, timing, refusal branches, Linux behaviour). Judge-436's five store survivors and #667's GC skip for non-terminal operator steps stay pre-caller gates before S5f's first production caller. Row 271 stays small and keeps local `verify_go` readable.
 
 **Gate 5 bookkeeping:** rotation not due (#635 opened 2026-11-23T07:34Z; next 2026-11-30 07:00 local). Weekly external-issue sweep not due. Idle fingerprint NOT recorded (this fire picked and landed). Last 3 landings (436, 435, 434) move no clause; no clause is UNMET → no DRIFT line.
+
+## 437 — 2026-11-26 — row 243 V4 sprint 5e3 LANDED (PR #674, merge `22bb7804`): signed start file publication with independent readback and the attended `service runner reconcile-files` as one milestone — the task, in-memory mint token and Claude MCP bundle installed privately with exclusive no-replace under the episode lock after one S3b reservation, read back before the step is observed; #671's allowance origin refused; no production caller; 1,650 lines under the directive's safe-unit exception; judge sonnet PASS 79 [PRODUCT]
+
+**Pick:** row 243 V4 sprint 5e3, the Next that record 436 named.
+- **Re-measured at pick** (`origin/dev` `eaa202b1`):
+  - No S5e3 plan, branch, PR or worktree existed.
+  - Quorum reader rc 0: r2 `…T10-24-51Z` PROCEED, `absent_reviewers` = `[]`. Design unchanged since `8dc91744`.
+  - Ledger 107 rows, 0 OPEN.
+  - Attended #671 (`90e97b1f`) shares 4 files with the deferred publication patch (`comm -12`, positive control firing). The directive told the planner to re-base rather than apply blind, and to decide the allowance credential origin with a test.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Row 243 serves D-WORLD-94 and moves no clause; it is the loop-routable build row.
+- Claim sent to `controlplane` before routing.
+
+**Gate 0:**
+- Stamped first. `gh` = `sunholo-voight-kampff`. Billing CLEAN. Kill switch absent.
+- 0 allowlisted directives on #635 (16 comments).
+- Step 6a rc 0: 0 crash and 0 transcript notices on #635/#574.
+- `mission-world` inbox: 0 unread.
+
+**Gate 1:**
+- Local `dev` was 5 behind (S5e2 plan, M1, #672 merge, record 436 and the #673 merge). Fast-forwarded; `dev` = `origin/dev` = `eaa202b1`. Base `eaa202b1…@2026-11-25T23:18:25Z`.
+- **Skill drift:** the running copy and the pin copy are each identical to `origin/dev` on all 14 files.
+- Dev CI 3/3 green.
+
+**Routing:**
+- Resolver: planner `recipe codex:gpt-6.2-sol declared:planner-lane-default-pin`, executor `recipe codex:gpt-6.2-sol declared:provider-pin`, evaluator `agent-tool sonnet declared:alias-pin`. Followed verbatim.
+- Codex probe: rc 0 from the worktree. A first probe from `/tmp` returned rc 1 on codex's trusted-directory check — the wrong CWD, an instrument error, not a lane failure.
+- Designer not spawned (reviewed design, no new doc).
+
+**Directive (controller's call, stated in it):** publication and its disposition are the WHOLE sprint and may not be deferred a third time — the S5e2 judge wrote "a third deferral should be refused". The minimum safe unit may exceed the 1,400 cap up to 1,650 rather than split publication from `reconcile-files`. Optional store pins go AFTER it, only if they fit.
+
+**Planner** (`codex exec`, sandboxed, ~47 min, **430,131 tok**). Plan `w-world-address-bar-verbs-v4s5e3-sprint-plan.md` + JSON committed `d34c358b`.
+- **M1 alone: 1,650 lines** (1,625+/25−, 16 files).
+  - The pure rebase over #671 reproduced the inherited 1,259; hardening the S5e2 Appendix C gates added 391.
+  - The #671 origin is refused before reservation through the real `GrantAllowance`/`MintFromAllowance` producer (`TestOperatorFileAllowanceOrigin`).
+- Mutants: 95 of 98 named KILLED, 3 MASKED (`F-CREATE-NOFOLLOW`, `R-POST-PARENT`, `S-WORKTREE-PHASE`). The planner's own diff census lists 122 AUDIT lines with no independent mutation measurement.
+- The optional store pins were moved to Appendix C (zero capacity left).
+- **Controller round trip** on a fresh `git archive eaa202b1`: `diff -r` against `st-M1` rc 0 (cmd, host, docs).
+
+**Executor** (`codex exec`, sandboxed, ~2.5 min, 77,895 tok):
+- Patch clean, `ACCEPT_OK` (320 PASS / 0 FAIL). Snapshot 16/0/16, every file byte-equal to the planner's stage.
+- `commit_ms.sh` reran acceptance outside the sandbox and committed `de608652` (1,650).
+
+**Controller baseline** (`baseline-controller.sh`, in a pristine detached base worktree per the iter-295 rule):
+- CLI plain and race fail sets = row 271's 11 exactly.
+- **`verify_go` came back with 60 failures — an INSTRUMENT FAILURE, not a base.** The plan's `gate-bin/git` PATH wrapper ran `exec "$WORLD_GATE_GIT"`, and tests that scrub their child env drop that variable. Every `git` they spawned died `exec: : not found` (43 extra `host/broker` failures; the CLI failures were identical in both runs).
+- Fixed in scratch with a real-git fallback: the original gives rc 127 under `env -i`, the fixed copy rc 0. The contaminated files are kept.
+- Re-recorded the base `verify_go` alone: 18 = row 271's 14 plus four tests on the known load-sensitive list (two of them also charter-listed).
+
+**Gates on `de608652`** (plan `gates.sh`, 1,622 s, fixed wrapper, rig observation on):
+- Every leg rc 0 except `compare-verify_go` (below). CLI plain/race fail sets = base. Linux vet ok. Inventories, callers and file race (48 s) ok. Real-path observation before = after.
+- `compare-verify_go` rc 1 only because head had one FEWER failure (`host/broker TestExecProtectedCheckTimeout` passed). No new failure.
+
+**Evaluator r1** (Agent `sonnet`, background, own worktree, sequenced on `gates-final.rc`, ~119 min, 133,078 tok): **PASS 79**, 0 blocking.
+- Scores: correctness 26/30, tests 20/30, security 18/20, standards 8/10, scope 7/10.
+- What holds:
+  - No write without a reservation, no overwrite or symlink follow, no observe without readback.
+  - The only reachable production path is the attended verb, and its remedy text is executed verbatim.
+  - The allowance refusal uses the real producer.
+  - The 3 masks are genuine on the whole package (fail set = base).
+  - 11 of 11 sampled planner KILLs confirmed. The planner's `S-LATE-APPROVAL` fails `go vet`; a vet-clean variant is killed.
+  - The 1,650 exception was earned.
+- What does not: of 32 valid mutants of its own, 9 were killed and 23 survive their named tests (about two thirds). Non-blocking, ranked:
+  1. The N04/N12 directory-swap windows. Both fail safe to `uncertain`.
+  2. N33/N34 mask each other. No test shows `reconcile-mint` refusing once a files reservation exists.
+  3. The store admission predicates in `host/store/operator_files.go` (N22–N31) have no `host/store` test and survive whole `host/store`.
+  4. N15.
+  5. Whole-package CLI race at 95% of the 480 s bound locally.
+  6. The `gate-bin/git` wrapper should not exist as a gate input.
+- **Controller reproduction** of finding 3 (judge worktree, edit asserted, restored clean): dropping `now >= row.ExpiresAt ||` at `host/store/operator_files.go:191` gives `go test ./host/store/` rc 0 and the CLI file tests rc 0. Inert today (no caller); carried.
+
+**Gate 3b:**
+- PR #674 head `de608652`, run 45731365295. Attempt 1 race red: `FAIL host/daemon 480.093s` (row 267) with `cmd/ailang-worldd` at **477.565 s**. Re-run failed → attempt 2 3/3 (`cmd/ailang-worldd` 262.975 s).
+- `origin/dev` unchanged, `MERGEABLE CLEAN`. Merged `--match-head-commit de608652` → `22bb7804`, tree-identical to the head.
+- Merge run 45743770171, attempt 1, red on two jobs:
+  - `host/broker TestSeedRestartIgnoresASurvivingOldCopy` (charter-listed load-sensitive);
+  - `FAIL host/daemon 480.125s` (row 267), with `cmd/ailang-worldd` at **468.977 s**.
+  - Both packages are byte-identical to the base.
+- Re-run failed → **attempt 2 3/3 success** (`cmd/ailang-worldd` 259.477 s). **LANDED.**
+
+**Routing evidence:** base=eaa202b1d23f601ce597f063034a061b5bf5dea3@2026-11-25T23:18:25Z (Gate 1; sprint worktree from the same SHA). Gate 4 base=22bb78042d52dde832e2a8a2c4f2a652364db702@2026-11-26T03:11:45Z (drift = this merge).
+- Roles and tokens: controller `claude:claude-opus-5-5` (tok: not reported) · designer not spawned (plan-only fire on a reviewed design; rotation pointer unchanged) · planner `codex:gpt-6.2-sol` (430,131 tok) · executor `codex:gpt-6.2-sol` (77,895 tok) · evaluator Agent `sonnet` (133,078 tok) · record judge Agent `sonnet` (102,710 tok; FAIL on imprecisions only — no wrong SHA, run id, token or line count; corrected before commit: the contaminated-set arithmetic, "every leg rc 0", which load-sensitive tests are charter-listed, the judge's survivor count (23 of 32, not ~22), the Gate-1 behind count, a line count and a two-run "typical" range). **Every required role spawned; none failed to spawn.**
+- The run prompt asked for the Agent tool for every role "exactly as the skill's routing table specifies". The resolver named the codex recipe for planner and executor and the Agent tool for the evaluator, so planner and executor ran as `codex exec` and the judge as an Agent sub-agent. No role ran inline.
+- Judge independence: **cross-vendor** (OpenAI planner/executor, Anthropic judge).
+- Metered: **$0.00** (no quorum, no metered lane).
+
+**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4: S1–S5e3 landed.
+- A signed start's files can now be published, read back and, when uncertain, resolved by attended review — all still dormant behind the S5f/S6 and #667 GC gates.
+- Publication, deferred twice, has landed.
+
+**Ruled out:**
+- **Banking the first base `verify_go` set (60).** The 44 `host/broker` `exec: : not found` lines were the gate's own wrapper, not the repo. A comparison against it would have hidden any real `git`-spawning regression at head.
+- **Attributing either CI red to S5e3.** Neither `host/daemon` nor `host/broker` changed. The merge tree equals the green PR head, and both re-runs went 3/3.
+- **Calling `cmd/ailang-worldd`'s 477.6/469.0 s pure noise.** The same head ran 263/259 s on normal runners, so the slow runner explains most of it. But this sprint adds ~51 s locally, and the package is now within 11 s of the bound on a slow runner. Recorded on row 267 as a new package at risk.
+- **A round 2 for judge-437's survivors.** All sit on paths with no production caller, and the S5b→S5e2 precedent takes such pins in the next sprint, before the first caller.
+
+**Retro:**
+- **A gate script that puts a wrapper on `PATH` is an instrument that the code under test can defeat.** Tests that scrub their child env silently dropped the wrapper's variable. The 60-line base set was internally consistent and would have made a head comparison look "equal". It was caught only because 60 against a 16–18 history did not look like a baseline. Next directive: no PATH shims in checkout-mode gates — the archive bridge only where an archive is the input.
+- **The planner's 95/98 overstated the coverage; the judge's own sample came back about 2/3 surviving.** A planner ledger enumerates the mutants it thought of. The 122 AUDIT lines it disclosed were where the judge found the survivors. Next directive: every AUDIT line in a diff census needs a measured disposition or goes in Appendix C as a named pin.
+- **CI race headroom for `cmd/ailang-worldd` is now a constraint on row 243 itself.** New pins go in `host/store`, where the judge also says the store predicates belong.
+
+**Next:** V4 S5e4 planner — pre-caller pins before S5f's first production caller:
+- judge-437's store admission predicates as `host/store` tests (N22–N31; N31 reproduced);
+- the N33/N34 `reconcile-mint`-after-files-reservation refusal;
+- judge-436's five `operator_worktree.go` store survivors;
+- N04/N12/N15 if a seam is cheap;
+- the #667 GC operator-step-aware skip, measured.
+
+Keep `cmd/ailang-worldd` race time flat. Row 271 stays small.
+
+**Gate 5 bookkeeping:**
+- Rotation not due (#635 opened 2026-11-23T07:34Z; next 2026-11-30 07:00 local). Weekly external-issue sweep not due.
+- Idle fingerprint NOT recorded (this fire picked and landed).
+- Harness share 0/20. The last 3 landings (437, 436, 435) move no clause; no clause is UNMET → no DRIFT line.
