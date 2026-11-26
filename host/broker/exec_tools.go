@@ -165,6 +165,54 @@ func NewExecToolState(cfg ExecToolStateConfig) (*ExecToolState, error) {
 	return s, nil
 }
 
+// RegisterProfile adds a directory profile that passed post-startup re-probing
+// so its commands and probe tool are tracked by ExecToolState.
+func (s *ExecToolState) RegisterProfile(p *ExecProfile) error {
+	if s == nil || p == nil {
+		return nil
+	}
+	now := time.Now().UTC().Format(time.RFC3339Nano)
+	entries := make(map[string]execAcceptedTool, len(p.Commands)+1)
+	for name, c := range p.Commands {
+		id, err := toolIdentity(c.Argv0, false)
+		if err != nil {
+			return err
+		}
+		entries[execCommandKey(p.Project, name)] = execAcceptedTool{
+			configured: c.Argv[0], name: c.Argv[0], project: p.Project, command: name,
+			identity: id, sum: c.Argv0SHA256, checked: now,
+		}
+	}
+	if p.Probe.Argv0 != "" {
+		c := p.Probe
+		id, err := toolIdentity(c.Argv0, false)
+		if err != nil {
+			return err
+		}
+		entries[execCommandKey(p.Project, "@probe")] = execAcceptedTool{
+			configured: c.Argv[0], name: c.Argv[0], project: p.Project, command: "@probe",
+			identity: id, sum: c.Argv0SHA256, checked: now,
+		}
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.closed {
+		return errors.New("exec tool state closed")
+	}
+	if s.cfg.Profiles == nil {
+		s.cfg.Profiles = map[string]*ExecProfile{}
+	}
+	s.cfg.Profiles[p.Project] = p
+	for k, v := range entries {
+		s.tools[k] = v
+	}
+	if nodeTool, ok := s.tools["node"]; ok {
+		s.probedNode[p.Project] = nodeTool.identity
+	}
+	s.sandbox, s.profiles = s.snapshots(s.tools)
+	return nil
+}
+
 func (s *ExecToolState) snapshots(tools map[string]execAcceptedTool) (*ExecSandbox, map[string]*ExecProfile) {
 	sb := *s.sandbox
 	sb.Node = tools["node"].identity.path

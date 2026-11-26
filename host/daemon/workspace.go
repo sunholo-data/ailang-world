@@ -158,12 +158,16 @@ type workspaceExec struct {
 	episodeProject map[string]string
 	// sources is each loaded profile's file; excluded the profiles directory's
 	// left-out profiles (row 189 M2), with excludedWhy their reasons by project.
-	sources        map[string]string
-	excluded       []broker.ExecProfileExclusion
-	excludedWhy    map[string]string
-	sandbox        *broker.ExecSandbox
-	maxOutputBytes int64  // 0 = broker.DefaultExecMaxOutputBytes
-	operatorHome   string // "" = os.UserHomeDir, as the probe resolved it
+	mu                sync.RWMutex
+	sources           map[string]string
+	excluded          []broker.ExecProfileExclusion
+	excludedWhy       map[string]string
+	outOfTimeProfiles []*broker.ExecProfile
+	outOfTimeSources  map[string]string
+	probeConfig       broker.ExecProbeConfig
+	sandbox           *broker.ExecSandbox
+	maxOutputBytes    int64  // 0 = broker.DefaultExecMaxOutputBytes
+	operatorHome      string // "" = os.UserHomeDir, as the probe resolved it
 }
 
 // profileFor selects an episode's profile at request time (row 189 M2), in
@@ -177,6 +181,8 @@ type workspaceExec struct {
 //
 // It returns the profile, or nil and the refusal the call answers.
 func (e *workspaceExec) profileFor(episodeID string, b execBinding) (*broker.ExecProfile, string) {
+	e.mu.RLock()
+	defer e.mu.RUnlock()
 	project := ""
 	switch {
 	case b.bound():
@@ -212,6 +218,8 @@ func (w *workspaceTools) healthProfiles() ([]HealthExecProfile, []HealthExecExcl
 	if w == nil || w.exec == nil {
 		return loaded, nil
 	}
+	w.exec.mu.RLock()
+	defer w.exec.mu.RUnlock()
 	for _, project := range sortedProjects(w.exec.byProject) {
 		loaded = append(loaded, HealthExecProfile{Project: project, Digest: w.exec.byProject[project].Digest, File: w.exec.sources[project]})
 	}
@@ -259,6 +267,7 @@ func (w *workspaceTools) configureExec(ctx context.Context, cfg Config) error {
 	}
 	w.exec = &workspaceExec{toolState: st.Tools, profile: st.Only, byProject: st.Profiles, episodeProject: st.EpisodeProjects,
 		sources: st.Sources, excluded: st.Excluded, excludedWhy: map[string]string{},
+		outOfTimeProfiles: st.OutOfTimeProfiles, outOfTimeSources: st.OutOfTimeSources, probeConfig: st.ProbeConfig,
 		sandbox: st.Sandbox, maxOutputBytes: st.MaxOutputBytes, operatorHome: st.OperatorHome}
 	w.exec.tools = captureExecTools(w.exec)
 	// Row 189 M2: a left-out directory profile does not stop the daemon; it
@@ -269,6 +278,112 @@ func (w *workspaceTools) configureExec(ctx context.Context, cfg Config) error {
 		logExecProfileExclusion(w.errLog, x)
 	}
 	return nil
+}
+
+var outOfTimeReprobeDelay = 3 * time.Second
+
+// startOutOfTimeReprobe schedules a one-shot background re-probe for any
+// directory exec profiles that ran out of the 9 s startup budget under load.
+// Profiles that pass all probe arms are promoted live without a restart.
+func (d *Daemon) startOutOfTimeReprobe() {
+	if d.workspace == nil || d.workspace.exec == nil || len(d.workspace.exec.outOfTimeProfiles) == 0 {
+		return
+	}
+	go func() {
+		timer := time.NewTimer(outOfTimeReprobeDelay)
+		defer timer.Stop()
+		select {
+		case <-d.aguiStop:
+			return
+		case <-timer.C:
+			d.reprobeOutOfTimeProfiles()
+		}
+	}()
+}
+
+func (d *Daemon) reprobeOutOfTimeProfiles() {
+	e := d.workspace.exec
+	e.mu.RLock()
+	pending := append([]*broker.ExecProfile(nil), e.outOfTimeProfiles...)
+	sources := map[string]string{}
+	for k, v := range e.outOfTimeSources {
+		sources[k] = v
+	}
+	cfg := e.probeConfig
+	e.mu.RUnlock()
+	if len(pending) == 0 {
+		return
+	}
+	budget := time.Duration(len(pending)) * 20 * time.Second
+	if budget < 30*time.Second {
+		budget = 30 * time.Second
+	}
+	if budget > 3*time.Minute {
+		budget = 3 * time.Minute
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), budget)
+	defer cancel()
+	go func() {
+		select {
+		case <-d.aguiStop:
+			cancel()
+		case <-ctx.Done():
+		}
+	}()
+	errs, err := broker.ProbeExecProfilesEach(ctx, cfg, pending)
+	if err != nil {
+		if d.errLog != nil {
+			fmt.Fprintf(d.errLog, "ailang-worldd: background exec re-probe aborted: %v\n", err)
+		}
+		return
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	promoted := map[string]bool{}
+	updatedReasons := map[string]broker.ExecProfileExclusion{}
+	for i, p := range pending {
+		if errs[i] == nil {
+			if regErr := e.toolState.RegisterProfile(p); regErr != nil {
+				updatedReasons[p.Project] = broker.ExecProfileExclusion{File: sources[p.Project], Project: p.Project, Reason: regErr.Error()}
+				continue
+			}
+			if e.byProject == nil {
+				e.byProject = map[string]*broker.ExecProfile{}
+			}
+			if e.sources == nil {
+				e.sources = map[string]string{}
+			}
+			e.byProject[p.Project] = p
+			e.sources[p.Project] = sources[p.Project]
+			delete(e.excludedWhy, p.Project)
+			promoted[p.Project] = true
+			if d.errLog != nil {
+				fmt.Fprintf(d.errLog, "ailang-worldd: exec profile %q re-probed ok after startup\n", p.Project)
+			}
+		} else {
+			var probeErr *broker.ExecProbeError
+			spent := errors.As(errs[i], &probeErr) && probeErr.OutOfTime()
+			ex := broker.ExecProfileExclusion{File: sources[p.Project], Project: p.Project, Reason: errs[i].Error(), OutOfTime: spent}
+			e.excludedWhy[p.Project] = ex.Reason
+			updatedReasons[p.Project] = ex
+		}
+	}
+	if len(promoted) > 0 || len(updatedReasons) > 0 {
+		kept := make([]broker.ExecProfileExclusion, 0, len(e.excluded))
+		for _, ex := range e.excluded {
+			if promoted[ex.Project] {
+				continue
+			}
+			if upd, ok := updatedReasons[ex.Project]; ok {
+				kept = append(kept, upd)
+			} else {
+				kept = append(kept, ex)
+			}
+		}
+		e.excluded = kept
+		e.outOfTimeProfiles = nil
+		e.outOfTimeSources = nil
+	}
 }
 
 // logExecProfileExclusion keeps late-recording advice observational.

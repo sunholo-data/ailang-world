@@ -45,14 +45,14 @@ func TestRunWrapperBuildsEpisodeStartArgs(t *testing.T) {
 		t.Fatalf("expected temp task file %q to be cleaned up, err=%v", gotArgs[6], err)
 	}
 
-	// 2. Interactive + --prompt + --episode
+	// 2. Interactive + --prompt + --agent + --episode
 	gotArgs = nil
 	out.Reset()
 	errOut.Reset()
-	if rc := runWrapper([]string{"daneel", "--interactive", "--prompt", "--episode", "my-ep"}, &out, &errOut, sessionEnv{}); rc != exitOK {
+	if rc := runWrapper([]string{"daneel", "--interactive", "--prompt", "--agent", "claude", "--episode", "my-ep"}, &out, &errOut, sessionEnv{}); rc != exitOK {
 		t.Fatalf("interactive run failed rc=%d stderr=%s", rc, errOut.String())
 	}
-	wantInteractive := []string{"--preset", "daneel", "--launch", "my-ep"}
+	wantInteractive := []string{"--preset", "daneel", "--launch", "--agent", "claude", "my-ep"}
 	if !reflect.DeepEqual(gotArgs, wantInteractive) {
 		t.Fatalf("interactive args = %q, want %q", gotArgs, wantInteractive)
 	}

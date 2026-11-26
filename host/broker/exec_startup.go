@@ -65,11 +65,14 @@ type ExecStartup struct {
 	// Sources is each loaded profile's file (its realpath), by project.
 	Sources map[string]string
 	// Excluded are the profiles directory's left-out profiles, in file order.
-	Excluded       []ExecProfileExclusion
-	Sandbox        *ExecSandbox
-	Tools          *ExecToolState
-	MaxOutputBytes int64
-	OperatorHome   string
+	Excluded          []ExecProfileExclusion
+	OutOfTimeProfiles []*ExecProfile
+	OutOfTimeSources  map[string]string
+	ProbeConfig       ExecProbeConfig
+	Sandbox           *ExecSandbox
+	Tools             *ExecToolState
+	MaxOutputBytes    int64
+	OperatorHome      string
 }
 
 // ExecProfileExclusion is one profile of --exec-profiles-dir that `serve` left
@@ -236,8 +239,8 @@ func StartExec(ctx context.Context, cfg ExecStartupConfig) (*ExecStartup, error)
 	if err != nil {
 		return nil, &ExecStartupError{Flag: "--exec-sandbox", Value: cfg.SandboxDir, Err: err}
 	}
-	errs, err := ProbeExecProfilesEach(ctx, ExecProbeConfig{Sandbox: st.Sandbox, Paths: paths, MaxOutputBytes: maxOut,
-		Client: cfg.ProbeClient}, order)
+	st.ProbeConfig = ExecProbeConfig{Sandbox: st.Sandbox, Paths: paths, MaxOutputBytes: maxOut, Client: cfg.ProbeClient}
+	errs, err := ProbeExecProfilesEach(ctx, st.ProbeConfig, order)
 	if err != nil {
 		return nil, err
 	}
@@ -267,8 +270,16 @@ func (st *ExecStartup) applyProbe(order []*ExecProfile, flagged int, errs []erro
 		p := order[i]
 		var probeErr *ExecProbeError
 		spent := errors.As(errs[i], &probeErr) && probeErr.OutOfTime()
-		st.Excluded = append(st.Excluded, ExecProfileExclusion{File: st.Sources[p.Project], Project: p.Project, Reason: errs[i].Error(),
+		src := st.Sources[p.Project]
+		st.Excluded = append(st.Excluded, ExecProfileExclusion{File: src, Project: p.Project, Reason: errs[i].Error(),
 			OutOfTime: spent})
+		if spent {
+			if st.OutOfTimeSources == nil {
+				st.OutOfTimeSources = map[string]string{}
+			}
+			st.OutOfTimeProfiles = append(st.OutOfTimeProfiles, p)
+			st.OutOfTimeSources[p.Project] = src
+		}
 		delete(st.Profiles, p.Project)
 		delete(st.Sources, p.Project)
 	}
