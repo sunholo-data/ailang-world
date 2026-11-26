@@ -50,4 +50,5 @@ All times are UTC. The fire started 2026-11-26 07:55 (`MISSION_FIRE_ID` world-17
 - **Merge.** PR `MERGEABLE CLEAN` against `419cca9d`; merged `--match-head-commit 0ed2ab53…` → **`886648ab`** (parents `419cca9d`, `0ed2ab53`).
 - **Merge CI** on `886648ab`, run 45796678393: **attempt 1** race job `FAIL host/daemon 480.140s` (`cmd/ailang-worldd` 464.950 s, `host/broker` 424.308 s, `host/verifygate` 466.402 s, `host/store` 91.748 s — a slow runner); build/test and verify gates green. **Attempt 2: 3/3 success** (`cmd/ailang-worldd` 265.200 s, `host/broker` 272.166 s, `host/daemon` 355.778 s, `host/verifygate` 324.948 s). **LANDED.**
 - **Decision filed:** D-WORLD-121 (row 267 before S5f2?), recommended A, default B.
-- After the merge, attended #680 (`0033ca11`) landed on `dev`; no overlap with the record files.
+- After the merge, attended #680 (`0033ca11`) landed on `dev`; no overlap with the record files. Its race job: `FAIL host/daemon 480.110s` (`host/verifygate` 478.252 s, `cmd/ailang-worldd` 470.880 s; run 45798379293) — the fourth consecutive dev merge red at attempt 1; re-run requested.
+- **Record PR #682** head `83f7203b` (docs only): `go host build + test` red at attempt 1 on `host/broker TestSeedRestartIgnoresASurvivingOldCopy/survivor` again (row 259); amended with this paragraph and re-pushed.

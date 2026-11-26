@@ -8,8 +8,8 @@
 - **Why the caller moved to S5f2:** the planner measured three prerequisites absent at HEAD. The upgrade path cannot drain a paired runner. The worktree and files helpers open their own episode lock rather than borrowing the runner's. And the catalogue churn above. A compiled caller prototype is 1,082 lines before its four process tests.
 - **Routing note:** the codex planner ended rc=1 on an OpenAI "flagged for possible cybersecurity risk" refusal after it had written the whole plan. The controller verified the plan and finished its measurements, so no fallback lane was needed.
 - **Judge's open points (non-blocking):** no test covers a NULL catalogue (`IS` → `=` survives; controller-reproduced); S5f2 needs a rule for starts signed before the digest fact.
-- **Dev CI note:** dev went red on the two attended merges #678/#679 when the race job hit the 8-minute bound on a slow runner (one package on #678, three on #679). A re-run of #679's merge was green (row 267).
-- **DECISIONS FOR MARK:** **D-WORLD-121** — take row 267 (CI race-bound headroom) before S5f2? Recommended **A**; default B (groomed order) if unanswered. The race job hit its 8-minute bound at attempt 1 on three consecutive dev merges today, this sprint's included.
+- **Dev CI note:** the race job hit its 8-minute per-package bound at attempt 1 on four consecutive dev merges today: attended #678, #679 and #680, and this sprint's #681. Each was a slow runner. The re-runs of #679 and #681 were green, and #680's re-run was requested (rows 267, 259).
+- **DECISIONS FOR MARK:** **D-WORLD-121** — take row 267 (CI race-bound headroom) before S5f2? Recommended **A**; default B (groomed order) if unanswered. The race job hit its 8-minute bound at attempt 1 on four consecutive dev merges today, this sprint's included.
 - **Next loop work:** **V4 S5f2**, the first production caller. It carries:
   - the four process pins and the borrowed episode fd
   - the attended paired drain, plus J01, J05 and the digest-compatibility rule
