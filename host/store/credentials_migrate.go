@@ -101,6 +101,25 @@ func WorldSchemaVersion(path string) (int, error) {
 // read-only and lock-free, so `session list` works beside a daemon of an
 // older build that has not moved them yet. It refuses any other version.
 func LegacySessions(ctx context.Context, worldPath, episodeID string, limit int) ([]SessionRow, error) {
+	db, err := openLegacySessionDB(ctx, worldPath)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	return listSessions(ctx, db, credentialsSchemaV1, episodeID, limit)
+}
+
+// ResolveLegacySession performs the same indexed lookup in the pre-split store.
+func ResolveLegacySession(ctx context.Context, worldPath, id string) (SessionRow, bool, error) {
+	db, err := openLegacySessionDB(ctx, worldPath)
+	if err != nil {
+		return SessionRow{}, false, err
+	}
+	defer db.Close()
+	return resolveSession(ctx, db, credentialsSchemaV1, id)
+}
+
+func openLegacySessionDB(ctx context.Context, worldPath string) (*sql.DB, error) {
 	if err := requireDeadline(ctx); err != nil {
 		return nil, err
 	}
@@ -112,16 +131,17 @@ func LegacySessions(ctx context.Context, worldPath, episodeID string, limit int)
 	if err != nil {
 		return nil, fmt.Errorf("store: legacy sessions %q: %w", worldPath, err)
 	}
-	defer func() { _ = db.Close() }()
 	db.SetMaxOpenConns(1)
 	var version int
 	if err := db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil {
+		db.Close()
 		return nil, fmt.Errorf("store: legacy sessions %q: %w", worldPath, err)
 	}
 	if version != preSplitSchemaVersion {
+		db.Close()
 		return nil, fmt.Errorf("store: legacy sessions %q: user_version %d is not the pre-split schema %d", worldPath, version, preSplitSchemaVersion)
 	}
-	return listSessions(ctx, db, credentialsSchemaV1, episodeID, limit)
+	return db, nil
 }
 
 // MigrateCredentials moves every session_credentials row of the schema-4 world
