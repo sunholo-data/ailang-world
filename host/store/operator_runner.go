@@ -59,10 +59,11 @@ func (c *Credentials) PutOperatorHeartbeat(ctx context.Context, h OperatorHeartb
 			h.Owner.Nonce, h.Protocol, h.Build, h.Readiness, h.SeenAt, h.Catalogue).Scan(&generation)
 		return generation, err
 	}
+	// Refresh liveness without superseding a review of the same catalogue.
 	err := c.db.QueryRowContext(ctx, `UPDATE operator_runner_state SET readiness=?, seen_at=?,
-		catalogue_generation=catalogue_generation+1, catalogue=?
-		WHERE singleton=1 AND owner=? AND generation=? AND protocol=? AND build=? AND seen_at<=?
-		RETURNING generation`, h.Readiness, h.SeenAt, h.Catalogue, h.Owner.Nonce,
+		catalogue_generation=catalogue_generation+CASE WHEN readiness IS ? AND catalogue IS ? THEN 0 ELSE 1 END,
+        catalogue=? WHERE singleton=1 AND owner=? AND generation=? AND protocol=? AND build=? AND seen_at<=?
+		RETURNING generation`, h.Readiness, h.SeenAt, h.Readiness, h.Catalogue, h.Catalogue, h.Owner.Nonce,
 		h.Owner.Generation, h.Protocol, h.Build, h.SeenAt).Scan(&generation)
 	if errors.Is(err, sql.ErrNoRows) {
 		err = ErrOperatorRunner

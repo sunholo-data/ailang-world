@@ -24,6 +24,10 @@ func openTerminalEpisodeLock(creds, episode string, held *os.File, flags int) (*
 	if err != nil {
 		return nil, err
 	}
+	return openCanonicalTerminalEpisodeLock(canonical, episode, held, flags)
+}
+
+func openCanonicalTerminalEpisodeLock(canonical, episode string, held *os.File, flags int) (*os.File, error) {
 	path := operatorEpisodeLockPath(canonical, episode)
 	if held != nil {
 		if held.Name() != path {

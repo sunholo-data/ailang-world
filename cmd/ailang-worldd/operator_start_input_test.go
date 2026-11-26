@@ -83,7 +83,7 @@ func TestOperatorStartFacts(t *testing.T) {
 		names = append(names, fact.Name)
 		value[fact.Name] = fact.Value
 	}
-	want := []string{"launch_binary", "launch_wall", "mcp_path", "mint_catalogue", "mint_grants", "mint_profile", "mint_project",
+	want := []string{"launch_binary", "launch_binary_sha256", "launch_wall", "mcp_path", "mint_catalogue", "mint_grants", "mint_profile", "mint_project",
 		"mint_start", "mint_token_path", "served_address", "served_build", "served_interpreter", "worktree_path"}
 	if !reflect.DeepEqual(names, want) {
 		t.Fatalf("reviewed fact names %v, want %v", names, want)
@@ -98,7 +98,7 @@ func TestOperatorStartFacts(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for name, v := range map[string]string{"launch_binary": binary, "launch_wall": "1h0m0s", "mcp_path": "",
+	for name, v := range map[string]string{"launch_binary": binary, "launch_binary_sha256": serviceHash(readStartFixtureFile(t, binary)), "launch_wall": "1h0m0s", "mcp_path": "",
 		"mint_catalogue": "3", "mint_profile": f.profile.Digest, "mint_project": "proj",
 		"mint_token_path": tokenPath, "served_address": defaultEpisodeAddr, "served_build": string(build),
 		"served_interpreter": h.ToolRef, "worktree_path": filepath.Join(f.r.f.ws, "ep")} {
@@ -126,9 +126,27 @@ func TestOperatorStartFacts(t *testing.T) {
 		t.Fatalf("effective grants %+v, want the preset's %+v", in.Grants, grants)
 	}
 	mint, err := in.Resolution()
-	if err != nil || !reflect.DeepEqual(mint, r.action.Resolution[3:9]) {
+	if err != nil || !reflect.DeepEqual(mint, r.action.Resolution[4:10]) {
 		t.Fatalf("mint facts differ from the effective input: %v", err)
 	}
+	t.Run("read_disappeared", func(t *testing.T) {
+		before := observeProvision(t, f.r, r.creds)
+		read := func(ctx context.Context, name, presets, profiles string, in presetStartInput, clock func() int64) (*presetStartRead, error) {
+			live, err := resolvePresetStart(ctx, name, presets, profiles, in, clock)
+			if err == nil {
+				if err := os.Remove(live.launchBinary); err != nil {
+					t.Fatal(err)
+				}
+			}
+			return live, err
+		}
+		_, _, err := operatorStartFacts(presetTestContext(t), r.action, r.at, f.dir, f.r.profiles, f.r.f.ws, r.hosts, presetClock, read)
+		var binding *approval.BindingError
+		if !errors.As(err, &binding) || binding.Field != "launch_binary_sha256" ||
+			!reflect.DeepEqual(observeProvision(t, f.r, r.creds), before) {
+			t.Fatalf("vanished executable changed state or returned wrong class: %v", err)
+		}
+	})
 }
 
 // TestOperatorStartChanged changes one live input after review at a time.
@@ -165,7 +183,7 @@ func TestOperatorStartChanged(t *testing.T) {
 			episodeSelfBuild = func() daemon.BuildIdentity { return other }
 		}},
 		{name: "interpreter", field: "served_interpreter", change: func(t *testing.T, r *operatorStartRig) {
-			r.action.Resolution[11].Value = "sha256:" + serviceHash([]byte("other"))
+			r.action.Resolution[12].Value = "sha256:" + serviceHash([]byte("other"))
 		}},
 		{name: "launch_binary", field: "launch_binary", change: func(t *testing.T, r *operatorStartRig) {
 			other := startReadFakeAgent(t, r.f)
@@ -173,11 +191,16 @@ func TestOperatorStartChanged(t *testing.T) {
 				t.Fatal("fixture reused the agent directory")
 			}
 		}},
+		{name: "launch_binary_bytes", field: "launch_binary_sha256", change: func(t *testing.T, r *operatorStartRig) {
+			if err := os.WriteFile(filepath.Join(r.bin, "codex"), []byte("#!/bin/sh\nexit 71\n"), 0700); err != nil {
+				t.Fatal(err)
+			}
+		}},
 		{name: "mcp_path", field: "mcp_path", change: func(t *testing.T, r *operatorStartRig) {
-			r.action.Resolution[2].Value = filepath.Join(r.f.r.sessions, "ep.mcp.json")
+			r.action.Resolution[3].Value = filepath.Join(r.f.r.sessions, "ep.mcp.json")
 		}},
 		{name: "worktree_path", field: "worktree_path", change: func(t *testing.T, r *operatorStartRig) {
-			r.action.Resolution[12].Value += "-other"
+			r.action.Resolution[13].Value += "-other"
 		}},
 		{name: "extra_fact", field: "resolution", change: func(t *testing.T, r *operatorStartRig) {
 			r.action.Resolution = append(r.action.Resolution, approval.OperatorResolved{Name: "zz_extra", Value: "x"})

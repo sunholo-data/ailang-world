@@ -105,14 +105,14 @@ func runnerHeartbeat(path string, budget time.Duration) (store.OperatorHeartbeat
 	return store.ReadOperatorHeartbeat(ctx, path)
 }
 
-func (e serviceEnv) waitForRunner(c runnerConfig, previous int64) bool {
+func (e serviceEnv) waitForRunner(c runnerConfig, previous int64, read func(string, time.Duration) (store.OperatorHeartbeat, error)) bool {
 	deadline := e.runnerNow().Add(e.wait)
 	for {
 		remaining := deadline.Sub(e.runnerNow())
 		if remaining <= 0 {
 			return false
 		}
-		h, err := runnerHeartbeat(c.Credentials, min(remaining, time.Second))
+		h, err := read(c.Credentials, min(remaining, time.Second))
 		now := e.runnerNow()
 		if !now.Before(deadline) {
 			return false

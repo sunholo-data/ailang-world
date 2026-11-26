@@ -68,6 +68,18 @@ func (c *Credentials) OperatorAction(ctx context.Context, id string, now int64) 
 	return row, err
 }
 
+// NextOperatorStart reads the oldest eligible start without assigning ownership.
+// The caller must take the canonical episode lock and compare the row again
+// before claiming it.
+func (c *Credentials) NextOperatorStart(ctx context.Context, now int64) (OperatorActionRow, error) {
+	if err := c.operatorAccess(ctx); err != nil {
+		return OperatorActionRow{}, err
+	}
+	return scanOperatorAction(c.db.QueryRowContext(ctx, `SELECT `+operatorColumns+` FROM operator_actions
+        WHERE kind = 'start' AND state = 'confirmed' AND created_at <= ? AND expires_at > ?
+        ORDER BY created_at, id LIMIT 1`, now, now))
+}
+
 // RequestOperatorAction records inert work or permanently binds another tap's
 // operation ID to the existing action. The active-episode index arbitrates starts
 // and finishes together.
