@@ -79,11 +79,12 @@ type serviceEnv struct {
 	client              *http.Client
 	portFree            func(string) error
 	// observe records every intended filesystem mutation, including temp paths.
-	observe     func(string)
-	probe       func(string, string) ([]byte, error)
-	runnerLogin func() (int, string, error)
-	runnerNow   func() time.Time
-	runnerSleep func(time.Duration)
+	observe         func(string)
+	probe           func(string, string) ([]byte, error)
+	runnerLogin     func() (int, string, error)
+	runnerNow       func() time.Time
+	runnerSleep     func(time.Duration)
+	runnerProcesses func() ([]worldProcess, error)
 }
 
 func realServiceEnv() serviceEnv {

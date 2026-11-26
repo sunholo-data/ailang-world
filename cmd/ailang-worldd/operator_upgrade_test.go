@@ -11,6 +11,7 @@ import (
 )
 
 func TestOperatorServiceUpgrade(t *testing.T) {
+	t.Run("active_child", testOperatorUpgradeActiveChild)
 	for _, tc := range []struct {
 		name         string
 		before, next int
