@@ -14,12 +14,13 @@ import (
 // visit. The runner may wire a writer here only once the process and recovery
 // gates are met. The visit must use a fresh clock and the locked row for CAS.
 func withOperatorStartCandidate(ctx context.Context, credentials string, now func() int64,
-	acquire func(string) (*os.File, error), visit func(*os.File, store.OperatorActionRow) error) error {
+	open func(string) (*store.Credentials, error), acquire func(string) (*os.File, error),
+	visit func(*os.File, store.OperatorActionRow) error) error {
 	canonical, err := store.CanonicalPath(credentials)
 	if err != nil {
 		return err
 	}
-	db, err := store.OpenCredentialsReadOnly(runnerDB(canonical))
+	db, err := open(runnerDB(canonical))
 	if err != nil {
 		return err
 	}

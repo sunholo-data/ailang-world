@@ -88,6 +88,35 @@ func TestOperatorCatalogueAdmission(t *testing.T) {
 	publish(a, 2, 4)
 }
 
+func TestOperatorCatalogueNullRefresh(t *testing.T) {
+	for _, tt := range []struct {
+		name      string
+		catalogue []byte
+	}{
+		{"null", nil},
+		{"blob", []byte("eligible")},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			c := openTestCredentials(t)
+			ctx := testCtx(t)
+			h := OperatorHeartbeat{Owner: OperatorOwner{Nonce: "fixture"}, Protocol: OperatorRunnerProtocol,
+				Build: "fixture", Readiness: "start", SeenAt: 100, Catalogue: tt.catalogue}
+			gen, err := c.PutOperatorHeartbeat(ctx, h)
+			if err != nil || gen != 1 {
+				t.Fatalf("insert heartbeat: generation %d: %v", gen, err)
+			}
+			h.Owner.Generation, h.SeenAt, h.CatalogueGeneration = gen, 101, 1
+			if gen, err := c.PutOperatorHeartbeat(ctx, h); err != nil || gen != h.Owner.Generation {
+				t.Fatalf("refresh heartbeat: generation %d: %v", gen, err)
+			}
+			got, err := c.OperatorHeartbeat(ctx)
+			if err != nil || !reflect.DeepEqual(got, h) {
+				t.Fatalf("unchanged catalogue must preserve generation across a heartbeat: got %+v, want %+v: %v", got, h, err)
+			}
+		})
+	}
+}
+
 func TestOperatorFinishReadiness(t *testing.T) {
 	c := openTestCredentials(t)
 	cas, runner := operatorClaimFixture(t, c)
