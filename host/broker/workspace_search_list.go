@@ -508,6 +508,8 @@ func (h *AilangToolHandler) executeSearch(ctx context.Context, fields map[string
 	resp["truncated"], _ = json.Marshal(truncated)
 	if truncated {
 		resp["next"], _ = json.Marshal("narrow path or include")
+	} else if totalMatches == 0 && !useRegex && strings.ContainsAny(pattern, "|*?+^$[]()\\") {
+		resp["hint"], _ = json.Marshal("literal search found 0 matches; pass regex: true for Go RE2 regex matching (e.g. a|b)")
 	}
 	return h.stamp(resp)
 }

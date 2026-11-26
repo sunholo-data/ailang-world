@@ -243,7 +243,17 @@ case "$name" in
         ;;
     esac
     ;;
-  mcp_ailang-world_world_*|ailang-world_world_*|mcp_world_*|mcp__world__*|world_*|mcp:world/*|mcp:ailang-world_world/*|ailang-read|ailang-write|ailang-edit|ailang-delete|ailang-check|ailang-run|ailang-cli|workspace-exec|workspace-search|workspace-list|builtins-search|examples-search|update_steps)
+  read_file)
+    path=$(printf '%s' "$payload" | jq -r '.toolCall.args.Path // .toolCall.args.path // ""' 2>/dev/null)
+    case "$path" in
+      *../*|*/../*|*/..) ;;
+      */.gemini/antigravity-cli/brain/*/.system_generated/steps/*/output.txt)
+        printf '{"decision":"allow"}\n'
+        exit 0
+        ;;
+    esac
+    ;;
+  mcp_ailang-world_world_*|ailang-world_world_*|mcp_world_*|mcp__world__*|world_*|mcp:world/*|mcp:ailang-world_world/*|ailang-read|ailang-write|ailang-edit|ailang-delete|ailang-check|ailang-run|ailang-cli|workspace-exec|workspace-search|workspace-list|builtins-search|examples-search|update_steps|ask_question|AskQuestion)
     printf '{"decision":"allow"}\n'
     exit 0
     ;;
@@ -265,7 +275,7 @@ if [ "$inv" = "0" ] || [ "$inv" = "1" ]; then
       i=$((i + 1))
     done
     if [ -f "$WORLD_AGY_MCP_READY" ]; then
-      sleep 0.5
+      sleep 1.2
       : >"${WORLD_AGY_MCP_READY}.waited" 2>/dev/null || :
     fi
   fi

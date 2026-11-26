@@ -13,6 +13,8 @@ const worldToolMap = `Your only file and shell access is World's MCP tools:
   AILANG               -> ailang-check / ailang-run / ailang-cli; docs -> builtins-search / examples-search
 `
 
+const worldUsageTips = "Tips: keep ailang-read limit<=120 lines; use workspace-search (pass regex:true for RE2 patterns) and workspace-list; call workspace-exec with no command to list commands, and run go-test/go-vet sequentially (not in parallel).\n"
+
 const worldBoundary = "Out of budget or need a new grant? Say so; the operator mints it. Don't try to work around World."
 
 // hostsWorlddPath is the ailang-worldd the generated scripts call: the binary
@@ -62,7 +64,7 @@ func addAwarenessFiles(files map[string][]byte, dir, addr string) {
 			map[string]any{"type": "command", "command": shellQuote(context), "timeout": 10},
 		}}},
 	}})
-	files["codex/AGENTS.md"] = []byte("You are working inside AILANG World (confined).\n" + worldToolMap + worldBoundary + "\n")
+	files["codex/AGENTS.md"] = []byte("You are working inside AILANG World (confined).\n" + worldToolMap + worldUsageTips + worldBoundary + "\n")
 	hooks := map[string]any{}
 	codexHook := filepath.Join(home, ".codex", "herdr-agent-state.sh")
 	if info, err := os.Stat(codexHook); err == nil && info.Mode().IsRegular() {
@@ -186,7 +188,7 @@ printf '\n'
 		"command": worldd,
 		"args":    []string{"mcp-stdio", "--addr", addr},
 	}}})
-	files["agy-plugin/rules/AGENTS.md"] = []byte("You are working inside AILANG World (confined).\n" + worldToolMap + "World's MCP tools are served by MCP server `ailang-world_world` (if listed as lazy tools, call them via `call_mcp_tool` with `ServerName: \"ailang-world_world\"`).\n" + worldBoundary + "\n")
+	files["agy-plugin/rules/AGENTS.md"] = []byte("You are working inside AILANG World (confined).\n" + worldToolMap + worldUsageTips + "World's MCP tools are served by MCP server `ailang-world_world` (if listed as lazy tools, call them via `call_mcp_tool` with `ServerName: \"ailang-world_world\"`).\n" + worldBoundary + "\n")
 	agySessionStart := filepath.Join(dir, "bin", "agy-world-session-start")
 	agyReady := filepath.Join(dir, "bin", "agy-world-ready")
 	agyGate := filepath.Join(dir, "bin", "agy-world-gate")
@@ -208,14 +210,14 @@ if [ "$inv" = "0" ] || [ "$inv" = "1" ]; then
       i=$((i + 1))
     done
     if [ -f "$WORLD_AGY_MCP_READY" ]; then
-      sleep 0.5
+      sleep 1.2
       : >"${WORLD_AGY_MCP_READY}.waited" 2>/dev/null || :
     fi
   fi
 fi
 printf '{}\n'
 `)
-	files["bin/agy-world-session-start"] = []byte("#!/bin/sh\numask 077\npayload=$(cat)\ncwd=$(printf '%s' \"$payload\" | jq -r '.cwd // \"\"' 2>/dev/null)\ntpath=$(printf '%s' \"$payload\" | jq -r '.transcriptPath // \"\"' 2>/dev/null)\ncid=$(printf '%s' \"$payload\" | jq -r '.conversationId // \"\"' 2>/dev/null)\nif [ -n \"$cwd\" ] && [ -d \"$cwd/.agents\" ] && [ ! -L \"$cwd/.agents\" ] && [ -n \"$tpath\" ] && [ -n \"$cid\" ]; then\n  jq -nc --arg conversationId \"$cid\" --arg transcriptPath \"$tpath\" '{conversationId:$conversationId,transcriptPath:$transcriptPath}' >\"$cwd/.agents/.world-session-meta.json\" 2>/dev/null || :\nfi\nif [ -n \"${WORLD_AGY_MCP_READY:-}\" ] && [ ! -f \"${WORLD_AGY_MCP_READY}.waited\" ]; then\n  i=0\n  while [ \"$i\" -lt 50 ] && [ ! -f \"$WORLD_AGY_MCP_READY\" ]; do\n    sleep 0.1\n    i=$((i + 1))\n  done\n  if [ -f \"$WORLD_AGY_MCP_READY\" ]; then\n    sleep 0.5\n    : >\"${WORLD_AGY_MCP_READY}.waited\" 2>/dev/null || :\n  fi\nfi\ncontext=$(" + shellQuote(context) + ")\njq -nc --arg msg \"$context\" '{injectSteps:[{systemMessage:{systemMessage:$msg}}]}'\n")
+	files["bin/agy-world-session-start"] = []byte("#!/bin/sh\numask 077\npayload=$(cat)\ncwd=$(printf '%s' \"$payload\" | jq -r '.cwd // \"\"' 2>/dev/null)\ntpath=$(printf '%s' \"$payload\" | jq -r '.transcriptPath // \"\"' 2>/dev/null)\ncid=$(printf '%s' \"$payload\" | jq -r '.conversationId // \"\"' 2>/dev/null)\nif [ -n \"$cwd\" ] && [ -d \"$cwd/.agents\" ] && [ ! -L \"$cwd/.agents\" ] && [ -n \"$tpath\" ] && [ -n \"$cid\" ]; then\n  jq -nc --arg conversationId \"$cid\" --arg transcriptPath \"$tpath\" '{conversationId:$conversationId,transcriptPath:$transcriptPath}' >\"$cwd/.agents/.world-session-meta.json\" 2>/dev/null || :\nfi\nif [ -n \"${WORLD_AGY_MCP_READY:-}\" ] && [ ! -f \"${WORLD_AGY_MCP_READY}.waited\" ]; then\n  i=0\n  while [ \"$i\" -lt 50 ] && [ ! -f \"$WORLD_AGY_MCP_READY\" ]; do\n    sleep 0.1\n    i=$((i + 1))\n  done\n  if [ -f \"$WORLD_AGY_MCP_READY\" ]; then\n    sleep 1.2\n    : >\"${WORLD_AGY_MCP_READY}.waited\" 2>/dev/null || :\n  fi\nfi\ncontext=$(" + shellQuote(context) + ")\njq -nc --arg msg \"$context\" '{injectSteps:[{systemMessage:{systemMessage:$msg}}]}'\n")
 	files["bin/agy-world-gate"] = []byte(`#!/bin/sh
 payload=$(cat)
 name=$(printf '%s' "$payload" | jq -r '.toolCall.name // ""' 2>/dev/null)
@@ -229,7 +231,17 @@ case "$name" in
         ;;
     esac
     ;;
-  mcp_ailang-world_world_*|ailang-world_world_*|mcp_world_*|mcp__world__*|world_*|mcp:world/*|mcp:ailang-world_world/*|ailang-read|ailang-write|ailang-edit|ailang-delete|ailang-check|ailang-run|ailang-cli|workspace-exec|workspace-search|workspace-list|builtins-search|examples-search|update_steps)
+  read_file)
+    path=$(printf '%s' "$payload" | jq -r '.toolCall.args.Path // .toolCall.args.path // ""' 2>/dev/null)
+    case "$path" in
+      *../*|*/../*|*/..) ;;
+      */.gemini/antigravity-cli/brain/*/.system_generated/steps/*/output.txt)
+        printf '{"decision":"allow"}\n'
+        exit 0
+        ;;
+    esac
+    ;;
+  mcp_ailang-world_world_*|ailang-world_world_*|mcp_world_*|mcp__world__*|world_*|mcp:world/*|mcp:ailang-world_world/*|ailang-read|ailang-write|ailang-edit|ailang-delete|ailang-check|ailang-run|ailang-cli|workspace-exec|workspace-search|workspace-list|builtins-search|examples-search|update_steps|ask_question|AskQuestion)
     printf '{"decision":"allow"}\n'
     exit 0
     ;;
