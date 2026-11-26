@@ -443,6 +443,9 @@ func TestOperatorFilePublicationAdmission(t *testing.T) {
 			}
 			r := newWorktreeStartRig(t, true, ttl)
 			token := mintOperatorFileFixture(t, r)
+			held := r.borrow(t)
+			defer held.Close()
+			borrow := held
 			clock := r.src.clock
 			ctx := presetTestContext(t)
 			want := store.ErrOperatorConflict
@@ -471,7 +474,7 @@ func TestOperatorFilePublicationAdmission(t *testing.T) {
 			case "expiry_after_reservation", "credential_expiry_after_reservation":
 				now := int64(1012)
 				clock = func() int64 { return now }
-				err := publishOperatorFilesFixture(t, ctx, r, token, clock, func(point string) error {
+				err := publishOperatorStartFiles(ctx, r.config, borrow, r.action.ID, token, clock, func(point string) error {
 					if point == "before ep.task.md" {
 						now = 1600
 						if name == "credential_expiry_after_reservation" {
@@ -534,15 +537,16 @@ func TestOperatorFilePublicationAdmission(t *testing.T) {
 			case "worktree_moved":
 				presetGit(t, r.f.r.f, "worktree", "move", r.path(), filepath.Join(t.TempDir(), "other"))
 			case "lock_held":
-				lock, err := openRunnerLock(operatorEpisodeLockPath(r.creds, r.action.Episode), 0)
+				// The canonical lock stays held while the caller lends a different episode's lock.
+				var err error
+				borrow, err = store.OpenOperatorEpisodeLock(r.creds, "other")
 				if err != nil {
 					t.Fatal(err)
 				}
-				defer lock.Close()
-				want = nil
+				defer borrow.Close()
 			}
 			before := observeProvision(t, r.f.r, r.creds)
-			err := publishOperatorFilesFixture(t, ctx, r, token, clock, func(point string) error {
+			err := publishOperatorStartFiles(ctx, r.config, borrow, r.action.ID, token, clock, func(point string) error {
 				if point != "before reservation" ||
 					(name != "expired_credential" && name != "expired_action" && name != "wrong_grants" &&
 						name != "wrong_ttl" && name != "revoked_approver" && !strings.HasPrefix(name, "reserve_") && name != "future_mint") {
@@ -552,6 +556,9 @@ func TestOperatorFilePublicationAdmission(t *testing.T) {
 			})
 			if err == nil || want != nil && !errors.Is(err, want) || !reflect.DeepEqual(before, observeProvision(t, r.f.r, r.creds)) {
 				t.Fatalf("expected refusal with unchanged store, files and worktree: %v", err)
+			}
+			if name == "lock_held" && !strings.Contains(err.Error(), "wrong episode lock") {
+				t.Fatalf("expected wrong episode lock refusal: %v", err)
 			}
 			var files int
 			if err := r.db.QueryRow("SELECT count(*) FROM operator_action_steps WHERE kind='files'").Scan(&files); err != nil || files != 0 {

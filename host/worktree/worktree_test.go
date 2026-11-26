@@ -240,3 +240,39 @@ func TestRemoveRegisteredLendsDescriptor(t *testing.T) {
 		t.Fatalf("registered removal changed the branch: %v", err)
 	}
 }
+
+func TestRemoveRegisteredRefusesLockedOrDirty(t *testing.T) {
+	git := gitBin(t)
+	// Git requires two force flags for a locked worktree and one for a dirty worktree.
+	for _, tc := range []struct{ name, why string }{
+		{"locked", "locked working tree"}, {"dirty", "contains modified or untracked files"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := testCtx(t)
+			repo := newRepo(t, git)
+			path := filepath.Join(t.TempDir(), "ep")
+			if err := Add(ctx, git, repo, path, "world/ep", "HEAD"); err != nil {
+				t.Fatal(err)
+			}
+			if tc.name == "locked" {
+				if _, err := Output(ctx, git, []string{"-C", repo, "worktree", "lock", path}); err != nil {
+					t.Fatal(err)
+				}
+			} else if err := os.WriteFile(filepath.Join(path, "untracked"), []byte("keep me"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			list := []string{"-C", repo, "worktree", "list", "--porcelain"}
+			before, err := Output(ctx, git, list)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := RemoveRegistered(ctx, git, filepath.Join(repo, ".git"), path, nil); err == nil || !strings.Contains(err.Error(), tc.why) {
+				t.Fatalf("expected Git to refuse %s worktree removal: %v", tc.name, err)
+			}
+			after, err := Output(ctx, git, list)
+			if err != nil || after != before || !IsLinked(path) {
+				t.Fatalf("refusal changed the worktree or its registration: %v\nbefore:\n%s\nafter:\n%s", err, before, after)
+			}
+		})
+	}
+}
