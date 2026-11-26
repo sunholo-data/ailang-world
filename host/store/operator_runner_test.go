@@ -61,6 +61,8 @@ func TestOperatorCatalogueAdmission(t *testing.T) {
 	a.Owner.Generation, a.SeenAt, a.Catalogue = 1, 11, []byte("two")
 	publish(a, 1, 2) // same-second tick is a valid refresh
 	a.SeenAt++
+	publish(a, 1, 2) // liveness only leaves the approved catalogue current
+	a.Readiness = "none"
 	second := publish(a, 1, 3)
 	if string(first.Catalogue) != "one" {
 		t.Fatal("published generation changed in-place")

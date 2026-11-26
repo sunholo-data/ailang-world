@@ -67,7 +67,12 @@ func operatorStartFacts(ctx context.Context, signed approval.OperatorAction, att
 	if err != nil {
 		return store.OperatorMintInput{}, nil, err
 	}
+	digest := serviceFileHash(read.launchBinary)
+	if digest == "" {
+		return store.OperatorMintInput{}, nil, &approval.BindingError{Field: "launch_binary_sha256"}
+	}
 	facts := []approval.OperatorResolved{{Name: "launch_binary", Value: read.launchBinary},
+		{Name: "launch_binary_sha256", Value: digest},
 		{Name: "launch_wall", Value: read.launchWall.String()}, {Name: "mcp_path", Value: mcp}}
 	facts = append(facts, mint...)
 	facts = append(facts, approval.OperatorResolved{Name: "served_address", Value: read.preset.Daemon.Addr},

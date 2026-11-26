@@ -284,7 +284,7 @@ func runServiceRunner(args []string, out, errOut io.Writer, e serviceEnv) int {
 		return refuse(errors.New("unknown runner operation"))
 	}
 	if verb == "reconcile-mint" {
-		return e.reconcileRunnerMint(args[1], out, errOut)
+		return e.reconcileRunnerMint(args[1], out, errOut, openRunnerLock)
 	}
 	if verb == "reconcile-worktree" {
 		return e.reconcileRunnerWorktree(args[1], out, errOut, readRunnerWorktree)
@@ -450,7 +450,7 @@ func (e serviceEnv) changeRunner(verb string, args []string) error {
 
 			return errors.New("could not bootstrap the companion")
 		}
-		if !e.waitForRunner(c, previous.Owner.Generation) {
+		if !e.waitForRunner(c, previous.Owner.Generation, runnerHeartbeat) {
 			if err := e.controller.Bootout(e.domain, runnerLabel); err != nil && !errors.Is(err, errServiceNotLoaded) {
 				return errors.New("runner readiness timed out and companion could not be stopped")
 			}
@@ -458,7 +458,7 @@ func (e serviceEnv) changeRunner(verb string, args []string) error {
 		}
 	case err != nil:
 		return errors.New("could not inspect the companion")
-	case !e.waitForRunner(c, 0):
+	case !e.waitForRunner(c, 0, runnerHeartbeat):
 		return errors.New("loaded companion heartbeat unavailable")
 	}
 	return nil

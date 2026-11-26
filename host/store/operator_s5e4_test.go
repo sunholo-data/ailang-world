@@ -65,6 +65,11 @@ func newOperatorPinFixture(t *testing.T, allowance bool) operatorPinFixture {
 
 func signOperatorPinAction(t *testing.T, c *Credentials, row OperatorActionRow, a approval.OperatorAction) *approval.OperatorMintProof {
 	t.Helper()
+	return signOperatorPinActionAt(t, c, row, a, pinNow)
+}
+
+func signOperatorPinActionAt(t *testing.T, c *Credentials, row OperatorActionRow, a approval.OperatorAction, now int64) *approval.OperatorMintProof {
+	t.Helper()
 	body, err := approval.CanonicalOperatorAction(a)
 	if err != nil {
 		t.Fatal(err)
@@ -91,11 +96,12 @@ func signOperatorPinAction(t *testing.T, c *Credentials, row OperatorActionRow, 
 	}
 	artifact := signer.Sign(approval.OperatorActionNamespace, message)
 	signed, err := approval.CheckOperatorAction(approval.OperatorCheckInput{Action: a, Challenge: challenge,
-		Expiry: row.ExpiresAt, Now: pinNow, Artifact: artifact, Format: ap.Format, Approver: ap})
+		Expiry: row.ExpiresAt, Now: now, Artifact: artifact, Format: ap.Format, Approver: ap})
 	if err != nil {
 		t.Fatal(err)
 	}
-	operatorExec(t, c, "UPDATE operator_actions SET action=?, digest=?, artifact=?, approved_by=? WHERE id=?",
+	operatorExec(t, c, `UPDATE operator_actions SET action=?, digest=?, artifact=?, approved_by=?,
+        state=CASE WHEN state='requested' THEN 'confirmed' ELSE state END WHERE id=?`,
 		body, digest[:], artifact, signed.ApprovedBy(), row.ID)
 	return signed.MintProof()
 }

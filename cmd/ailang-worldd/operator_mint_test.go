@@ -303,6 +303,77 @@ func TestOperatorMintRecovery(t *testing.T) {
 	}
 }
 
+// Change real ledger evidence between the first read and the real lock.
+func TestOperatorMintRecoveryLockedRead(t *testing.T) {
+	for _, tc := range []struct{ name, want string }{
+		{"different_episode", store.ErrOperatorConflict.Error()},
+		{"expired_on_locked_read", "matching token expired"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := newRecoveryFixture(t)
+			id := r.receipt.CAS.ID
+			token := r.path
+			if tc.name == "different_episode" {
+				token = filepath.Join(filepath.Dir(r.path), "retargeted.session")
+			}
+			if err := writeTokenFile(token, r.token); err != nil {
+				t.Fatal(err)
+			}
+			var out, stderr bytes.Buffer
+			var before string
+			var reviewed store.OperatorMintReceipt
+			files := provisionFiles(t, filepath.Dir(r.path))
+			worktree := provisionFiles(t, r.worktree)
+			acquire := func(path string, flags int) (*os.File, error) {
+				t.Helper()
+				if path != operatorEpisodeLockPath(r.config.Credentials, r.receipt.Episode) || flags != 0 {
+					t.Fatalf("recovery lock = %q flags %d", path, flags)
+				}
+				first, err := readRunnerMint(r.config.Credentials, id)
+				if err != nil || first != r.receipt {
+					t.Fatalf("initial receipt differs: %v", err)
+				}
+				if tc.name == "different_episode" {
+					r.rewriteAction(t, func(a *approval.OperatorAction) {
+						a.Episode = "retargeted"
+						a.Argv = approval.OperatorArgv(a.Kind, a.Episode, a.Options)
+						for i := range a.Resolution {
+							if a.Resolution[i].Name == "mint_token_path" {
+								a.Resolution[i].Value = token
+							}
+						}
+					})
+					r.exec(t, "UPDATE operator_actions SET episode_id='retargeted' WHERE id=?", id)
+					r.exec(t, "UPDATE episode_starts SET episode='retargeted' WHERE episode=?", first.Episode)
+					r.exec(t, "UPDATE session_credentials SET episode_id='retargeted' WHERE credential_id=?", first.CredentialID)
+				} else {
+					r.exec(t, "UPDATE session_credentials SET expires_at=? WHERE credential_id=?", r.env.terminal.now(), first.CredentialID)
+				}
+				before = serviceFileHash(r.config.Credentials)
+				reviewed, err = readRunnerMint(r.config.Credentials, id)
+				if err != nil || reviewed == first {
+					t.Fatalf("interleaving did not leave a fresh readable receipt: %v", err)
+				}
+				if present, err := inspectRunnerMintToken(r.config, reviewed); err != nil || !present {
+					t.Fatalf("interleaved token evidence not reachable: %t %v", present, err)
+				}
+				return openRunnerLock(path, flags)
+			}
+			code := r.env.reconcileRunnerMint(id, &out, &stderr, acquire)
+			if code != exitUsage || !strings.Contains(stderr.String(), "why: "+tc.want+"\n") || out.Len() != 0 {
+				t.Fatalf("locked read %s: %d stdout=%q stderr=%q", tc.name, code, &out, &stderr)
+			}
+			after, err := readRunnerMint(r.config.Credentials, id)
+			if err != nil || after != reviewed || serviceFileHash(r.config.Credentials) != before ||
+				!reflect.DeepEqual(files, provisionFiles(t, filepath.Dir(r.path))) ||
+				!reflect.DeepEqual(worktree, provisionFiles(t, r.worktree)) {
+				t.Fatalf("refusal changed store, worktree or files: %v", err)
+			}
+			requireProvisionLockReleased(t, r.config.Credentials, r.receipt.Episode)
+		})
+	}
+}
+
 func TestOperatorMintTokenReadback(t *testing.T) {
 	for _, name := range []string{"uid", "mode", "link", "symlink", "symlink_valid", "directory", "fifo", "bytes", "length", "short"} {
 		t.Run(name, func(t *testing.T) {
