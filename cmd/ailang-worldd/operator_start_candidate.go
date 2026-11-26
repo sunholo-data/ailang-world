@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 	"reflect"
 
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -14,8 +13,8 @@ import (
 // visit. The runner may wire a writer here only once the process and recovery
 // gates are met. The visit must use a fresh clock and the locked row for CAS.
 func withOperatorStartCandidate(ctx context.Context, credentials string, now func() int64,
-	open func(string) (*store.Credentials, error), acquire func(string) (*os.File, error),
-	visit func(*os.File, store.OperatorActionRow) error) error {
+	open func(string) (*store.Credentials, error), acquire func(string, string) (*store.OperatorEpisodeLock, error),
+	visit func(*store.OperatorEpisodeLock, store.OperatorActionRow) error) error {
 	canonical, err := store.CanonicalPath(credentials)
 	if err != nil {
 		return err
@@ -32,7 +31,7 @@ func withOperatorStartCandidate(ctx context.Context, credentials string, now fun
 	if !verbs.EpisodeIDPattern.MatchString(initial.Episode) {
 		return store.ErrOperatorConflict
 	}
-	lock, err := acquire(operatorEpisodeLockPath(canonical, initial.Episode))
+	lock, err := acquire(canonical, initial.Episode)
 	if err != nil {
 		return fmt.Errorf("%w: episode lock unavailable: %w", store.ErrOperatorConflict, err)
 	}

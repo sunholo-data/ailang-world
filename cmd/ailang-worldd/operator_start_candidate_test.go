@@ -89,7 +89,7 @@ func TestOperatorStartCandidateProcess(t *testing.T) {
 		}
 	}
 	now := func() int64 { return 1012 }
-	err = withOperatorStartCandidate(ctx, aliasPath, now, store.OpenCredentialsReadOnly, runnerKernelLock, func(*os.File, store.OperatorActionRow) error {
+	err = withOperatorStartCandidate(ctx, aliasPath, now, store.OpenCredentialsReadOnly, store.OpenOperatorEpisodeLock, func(*store.OperatorEpisodeLock, store.OperatorActionRow) error {
 		t.Fatal("visit ran while the real terminal process held the lock")
 		return nil
 	})
@@ -107,15 +107,19 @@ func TestOperatorStartCandidateProcess(t *testing.T) {
 		t.Fatalf("terminal release: %v", err)
 	}
 	handled := errors.New("test visit stopped")
-	var acquired *os.File
-	err = withOperatorStartCandidate(ctx, aliasPath, now, store.OpenCredentialsReadOnly, func(path string) (*os.File, error) {
+	var acquired *store.OperatorEpisodeLock
+	err = withOperatorStartCandidate(ctx, aliasPath, now, store.OpenCredentialsReadOnly, func(path, episode string) (*store.OperatorEpisodeLock, error) {
 		var err error
-		acquired, err = runnerKernelLock(path)
+		acquired, err = store.OpenOperatorEpisodeLock(path, episode)
 		return acquired, err
-	}, func(fd *os.File, row store.OperatorActionRow) error {
+	}, func(lock *store.OperatorEpisodeLock, row store.OperatorActionRow) error {
+		fd, err := lock.Verify(canonical, "ep")
+		if err != nil {
+			t.Fatal(err)
+		}
 		physical, err := filepath.EvalSymlinks(fd.Name())
 		want, wantErr := filepath.EvalSymlinks(operatorEpisodeLockPath(canonical, "ep"))
-		if err != nil || wantErr != nil || physical != want || fd != acquired || row.ID != fixtureActionID {
+		if err != nil || wantErr != nil || physical != want || lock != acquired || row.ID != fixtureActionID {
 			t.Fatalf("visit did not receive exact locked candidate: %v %v", err, wantErr)
 		}
 		if err := runnerWrite(canonical, func(*store.Credentials) error { return nil }); err != nil {
@@ -179,7 +183,7 @@ func TestOperatorStartCandidateRefusals(t *testing.T) {
 			now := int64(1012)
 			var acquired bool
 			err = withOperatorStartCandidate(boundedTestContext(t), creds, func() int64 { return now }, store.OpenCredentialsReadOnly,
-				func(path string) (*os.File, error) {
+				func(path, episode string) (*store.OperatorEpisodeLock, error) {
 					acquired = true
 					if tc.advance {
 						now = 1600
@@ -188,8 +192,8 @@ func TestOperatorStartCandidateRefusals(t *testing.T) {
 						credSQL(t, creds, tc.interleave)
 						before, hash = candidateRow(t, creds, 1012), serviceFileHash(creds)
 					}
-					return runnerKernelLock(path)
-				}, func(*os.File, store.OperatorActionRow) error {
+					return store.OpenOperatorEpisodeLock(path, episode)
+				}, func(*store.OperatorEpisodeLock, store.OperatorActionRow) error {
 					t.Fatal("refused candidate reached its visit")
 					return nil
 				})
@@ -206,7 +210,7 @@ func TestOperatorStartCandidateRefusals(t *testing.T) {
 		before := provisionFiles(t, root)
 		missing := filepath.Join(root, "absent", "credentials.db")
 		err := withOperatorStartCandidate(boundedTestContext(t), missing, func() int64 { return 1012 }, store.OpenCredentialsReadOnly,
-			func(string) (*os.File, error) {
+			func(string, string) (*store.OperatorEpisodeLock, error) {
 				t.Fatal("canonical path failure reached the lock")
 				return nil, nil
 			}, nil)
@@ -218,7 +222,7 @@ func TestOperatorStartCandidateRefusals(t *testing.T) {
 		root := t.TempDir()
 		before := provisionFiles(t, root)
 		err := withOperatorStartCandidate(boundedTestContext(t), filepath.Join(root, "credentials.db"), func() int64 { return 1012 }, store.OpenCredentialsReadOnly,
-			func(string) (*os.File, error) {
+			func(string, string) (*store.OperatorEpisodeLock, error) {
 				t.Fatal("missing store reached the lock")
 				return nil, nil
 			}, nil)
@@ -241,8 +245,8 @@ func TestOperatorStartCandidateClosesCredentials(t *testing.T) {
 		return db, err
 	}
 	entered := false
-	err := withOperatorStartCandidate(ctx, creds, func() int64 { return 1012 }, open, runnerKernelLock,
-		func(_ *os.File, row store.OperatorActionRow) error {
+	err := withOperatorStartCandidate(ctx, creds, func() int64 { return 1012 }, open, store.OpenOperatorEpisodeLock,
+		func(_ *store.OperatorEpisodeLock, row store.OperatorActionRow) error {
 			entered = row.ID == fixtureActionID
 			return nil
 		})

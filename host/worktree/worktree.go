@@ -59,8 +59,9 @@ func Env(environ []string) []string {
 }
 
 // Add runs `git -C repo worktree add --detach dir`, or with branch != ""
-// `git -C repo worktree add -b branch dir`.
-func Add(ctx context.Context, git, repo, dir, branch, startPoint string) error {
+// `git -C repo worktree add -b branch dir`. An operator caller lends its
+// held episode descriptor so it also covers Git if the parent is interrupted.
+func Add(ctx context.Context, git, repo, dir, branch, startPoint string, inherited ...*os.File) error {
 	args := []string{"-C", repo, "worktree", "add"}
 	if branch != "" {
 		args = append(args, "-b", branch, dir)
@@ -70,7 +71,7 @@ func Add(ctx context.Context, git, repo, dir, branch, startPoint string) error {
 	if startPoint != "" {
 		args = append(args, startPoint)
 	}
-	return runGit(ctx, git, args, nil)
+	return runGit(ctx, git, args, nil, inherited...)
 }
 
 // AddExisting checks out an existing branch; git refuses a branch held by another worktree.
@@ -132,12 +133,13 @@ func (c *capped) Write(p []byte) (int, error) {
 // runGit is the package's one git launch. With stdout nil, git's stdout and
 // stderr both go to the error message (Add, Remove); otherwise stdout goes to
 // stdout and only stderr to the message (Output).
-func runGit(ctx context.Context, git string, args []string, stdout *capped) error {
+func runGit(ctx context.Context, git string, args []string, stdout *capped, inherited ...*os.File) error {
 	runCtx, cancel := context.WithTimeout(ctx, Timeout)
 	defer cancel()
 	cmd := exec.CommandContext(runCtx, git, args...)
 	cmd.Env = Env(os.Environ())
 	cmd.Stdin = nil
+	cmd.ExtraFiles = inherited
 	cmd.WaitDelay = waitDelay
 	if deadline, ok := runCtx.Deadline(); ok {
 		// Short callers (session metadata) must not spend another two seconds

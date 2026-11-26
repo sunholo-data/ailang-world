@@ -1,6 +1,10 @@
 package main
 
 import (
+	"context"
+	"syscall"
+	"time"
+
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
@@ -32,7 +36,7 @@ func TestOperatorWorktreeSurvivors(t *testing.T) {
 				} else {
 					a.Episode = "BAD!"
 				}
-				if err := reserveOperatorStartWorktree(presetTestContext(t), runnerDB(r.creds), a, r.at, r.src, func(string) error {
+				if err := reserveOperatorStartWorktree(presetTestContext(t), runnerDB(r.creds), nil, a, r.at, r.src, func(string) error {
 					t.Fatal("invalid start crossed a worktree boundary")
 					return nil
 				}); err != store.ErrOperatorConflict {
@@ -364,5 +368,127 @@ func TestOperatorWorktreeLockedReread(t *testing.T) {
 				t.Fatalf("reread did not preserve the replacement row and its evidence: %d %s", code, &stderr)
 			}
 		})
+	}
+}
+
+func TestOperatorBorrowedWorktreeGitProcess(t *testing.T) {
+	const lockEnv = "WORLD_TEST_BORROWED_GIT_LOCK"
+	const swapEnv = "WORLD_TEST_BORROWED_GIT_SWAP"
+	if lockPath := os.Getenv(lockEnv); lockPath != "" {
+		childFD := os.NewFile(3, "inherited episode lock")
+		if childFD == nil {
+			t.Fatal("Git child has no inherited descriptor")
+		}
+		defer childFD.Close()
+		info, err := childFD.Stat()
+		path, pathErr := os.Stat(lockPath)
+		if err != nil || pathErr != nil || !os.SameFile(info, path) {
+			t.Fatalf("Git child inherited a different inode: %v %v", err, pathErr)
+		}
+		// Flock on the already held description succeeds, while an independent
+		// open of the same inode must contend even in the same process.
+		if err := syscall.Flock(3, syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+			t.Fatalf("Git child has a different open file description: %v", err)
+		}
+		if f, err := openRunnerLock(lockPath, 0); !errors.Is(err, syscall.EWOULDBLOCK) {
+			if f != nil {
+				f.Close()
+			}
+			t.Fatalf("Git child can bypass the held lock: %v", err)
+		}
+		if err := os.WriteFile(lockPath+".checked", nil, 0600); err != nil {
+			t.Fatal(err)
+		}
+		if os.Getenv(swapEnv) == "1" {
+			swapFixtureEpisodeLock(t, lockPath)
+		}
+		return
+	}
+	for _, arm := range []string{"kept", "before_git", "during_git"} {
+		t.Run(arm, func(t *testing.T) {
+			testOperatorBorrowedWorktreeGit(t, arm, lockEnv, swapEnv)
+		})
+	}
+}
+
+func swapFixtureEpisodeLock(t *testing.T, path string) {
+	t.Helper()
+	if err := os.Rename(path, path+".old"); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, nil, 0600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func testOperatorBorrowedWorktreeGit(t *testing.T, arm, lockEnv, swapEnv string) {
+	t.Helper()
+	r := newWorktreeStartRig(t, false)
+	held := r.borrow(t)
+	defer held.Close()
+	ctx, cancel := context.WithTimeout(presetTestContext(t), 5*time.Second)
+	defer cancel()
+	before := observeProvision(t, r.f.r, r.creds)
+	checkpoint := func(string) error {
+		t.Fatal("unheld worktree reached an effect boundary")
+		return nil
+	}
+	err := reserveOperatorStartWorktree(ctx, r.creds, nil, r.action, r.at, r.src, checkpoint)
+	if !errors.Is(err, store.ErrOperatorConflict) || !reflect.DeepEqual(before, observeProvision(t, r.f.r, r.creds)) {
+		t.Fatalf("missing borrow changed state or returned wrong class: %v", err)
+	}
+	bin, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	lockPath := operatorEpisodeLockPath(r.creds, r.action.Episode)
+	hook := filepath.Join(r.f.r.f.repo, ".git", "hooks", "post-checkout")
+	t.Setenv(lockEnv, lockPath)
+	if arm == "during_git" {
+		t.Setenv(swapEnv, "1")
+	}
+	t.Setenv("GORACE", strings.TrimSpace(os.Getenv("GORACE")+" atexit_sleep_ms=0"))
+	script := "#!/bin/sh\nexec " + shellQuote(bin) + " -test.run '^TestOperatorBorrowedWorktreeGitProcess$'\n"
+	if err := os.WriteFile(hook, []byte(script), 0700); err != nil {
+		t.Fatal(err)
+	}
+	var reserved provisionSnapshot
+	err = reserveOperatorStartWorktree(ctx, r.creds, held, r.action, r.at, r.src, func(step string) error {
+		if step == "before add" {
+			if arm == "before_git" {
+				swapFixtureEpisodeLock(t, lockPath)
+			}
+			reserved = observeProvision(t, r.f.r, r.creds)
+		}
+		return nil
+	})
+	if arm != "kept" {
+		after := observeProvision(t, r.f.r, r.creds)
+		if !errors.Is(err, store.ErrOperatorConflict) || !strings.Contains(err.Error(), "service runner reconcile-worktree") ||
+			reserved.credentials == "" || reserved.credentials != after.credentials ||
+			!reflect.DeepEqual(reserved.sessions, after.sessions) {
+			t.Fatalf("changed inode advanced a receipt or lacked recovery: %v", err)
+		}
+		if arm == "before_git" && !reflect.DeepEqual(reserved, after) {
+			t.Fatal("replacement before Git changed the branch or worktree")
+		}
+		if arm == "during_git" && (reserved.worktrees == after.worktrees ||
+			presetGit(t, r.f.r.f, "rev-parse", "refs/heads/world/ep") != r.f.base) {
+			t.Fatal("real Git did not complete; reserved worktree evidence required")
+		}
+		return
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(lockPath + ".checked"); err != nil {
+		t.Fatalf("real Git hook did not verify the descriptor: %v", err)
+	}
+	r.state(t, "running", "observed", "created", 2, true)
+	if f, err := openRunnerLock(lockPath, 0); !errors.Is(err, syscall.EWOULDBLOCK) {
+		if f != nil {
+			f.Close()
+		}
+		t.Fatalf("worktree helper released the caller's lock: %v", err)
 	}
 }

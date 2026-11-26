@@ -259,18 +259,16 @@ func recheckFileApproval(ctx context.Context, credentials string, a approval.Ope
 
 // publishOperatorStartFiles is dormant until the paired-consumer gates open.
 // rawToken is the existing mint output. Neither it nor the MCP bytes enter SQL.
-func publishOperatorStartFiles(ctx context.Context, c runnerConfig, id, rawToken string, clock func() int64, checkpoint func(string) error) error {
+func publishOperatorStartFiles(ctx context.Context, c runnerConfig, held *store.OperatorEpisodeLock, id, rawToken string, clock func() int64, checkpoint func(string) error) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	s, a, err := readRunnerFiles(ctx, c.Credentials, id)
 	if err != nil {
 		return err
 	}
-	lock, err := openRunnerLock(operatorEpisodeLockPath(c.Credentials, a.Episode), 0)
-	if err != nil {
+	if _, err := held.Verify(c.Credentials, a.Episode); err != nil {
 		return err
 	}
-	defer lock.Close()
 	current, a, err := readRunnerFiles(ctx, c.Credentials, id)
 	if err != nil || current != s || s.Phase != "" {
 		return store.ErrOperatorConflict

@@ -97,7 +97,18 @@ func (r *worktreeStartRig) start(t *testing.T, step func(string) error) error {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(presetTestContext(t), 5*time.Second)
 	defer cancel()
-	return reserveOperatorStartWorktree(ctx, runnerDB(r.creds), r.action, r.at, r.src, step)
+	held := r.borrow(t)
+	defer held.Close()
+	return reserveOperatorStartWorktree(ctx, runnerDB(r.creds), held, r.action, r.at, r.src, step)
+}
+
+func (r *worktreeStartRig) borrow(t *testing.T) *store.OperatorEpisodeLock {
+	t.Helper()
+	held, err := store.OpenOperatorEpisodeLock(r.creds, r.action.Episode)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return held
 }
 
 func (r *worktreeStartRig) exec(t *testing.T, q string, args ...any) {
