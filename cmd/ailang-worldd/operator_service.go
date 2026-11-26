@@ -284,7 +284,7 @@ func runServiceRunner(args []string, out, errOut io.Writer, e serviceEnv) int {
 		return refuse(errors.New("unknown runner operation"))
 	}
 	if verb == "reconcile-mint" {
-		return e.reconcileRunnerMint(args[1], out, errOut)
+		return e.reconcileRunnerMint(args[1], out, errOut, openRunnerLock)
 	}
 	if verb == "reconcile-worktree" {
 		return e.reconcileRunnerWorktree(args[1], out, errOut, readRunnerWorktree)

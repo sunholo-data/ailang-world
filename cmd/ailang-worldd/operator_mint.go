@@ -14,7 +14,8 @@ import (
 	"github.com/sunholo-data/ailang-world/host/verbs"
 )
 
-func (e serviceEnv) reconcileRunnerMint(id string, out, stderr io.Writer) int {
+func (e serviceEnv) reconcileRunnerMint(id string, out, stderr io.Writer,
+	acquire func(string, int) (*os.File, error)) int {
 	refuse := func(err error) int {
 		return serviceMessage(stderr, "mint recovery refused", err.Error(), "ailang-worldd service runner status", 1)
 	}
@@ -26,7 +27,7 @@ func (e serviceEnv) reconcileRunnerMint(id string, out, stderr io.Writer) int {
 	if err != nil {
 		return refuse(err)
 	}
-	lock, err := openRunnerLock(operatorEpisodeLockPath(c.Credentials, r.Episode), 0)
+	lock, err := acquire(operatorEpisodeLockPath(c.Credentials, r.Episode), 0)
 	if err != nil {
 		return refuse(errors.New("episode recovery lock held or unavailable"))
 	}
