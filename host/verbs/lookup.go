@@ -36,7 +36,7 @@ var (
 	OperatorWords = []string{"why", "episode", "approve"}
 	NeverWords    = []string{"allowance", "approver", "session", "service", "serve", "setup"}
 	OtherWords    = []string{"commit", "outcome", "call", "demo", "doctor", "head", "health", "help", "hosts", "log", "mcp-stdio", "object",
-		"preset", "profile", "provenance", "registry", "surface-index", "tools", "version", "whoami"}
+		"preset", "profile", "provenance", "registry", "run", "surface-index", "tools", "version", "whoami"}
 )
 
 // neverWhy is each never verb's reason (D-WORLD-89 R3; host administration stays at a terminal).
