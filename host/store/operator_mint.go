@@ -243,10 +243,10 @@ func (c *Credentials) ReadOperatorMint(ctx context.Context, id string) (Operator
 	if err := c.operatorAccess(ctx); err != nil {
 		return OperatorMintReceipt{}, err
 	}
-	return readOperatorMint(ctx, c.db, id)
+	return readOperatorMint(ctx, c.db, id, false)
 }
 
-func readOperatorMint(ctx context.Context, db operatorMintReader, id string) (OperatorMintReceipt, error) {
+func readOperatorMint(ctx context.Context, db operatorMintReader, id string, fileStage bool) (OperatorMintReceipt, error) {
 	row, err := scanOperatorAction(db.QueryRowContext(ctx, `SELECT `+operatorColumns+` FROM operator_actions WHERE id = ?`, id))
 	if err != nil {
 		return OperatorMintReceipt{}, err
@@ -263,8 +263,8 @@ func readOperatorMint(ctx context.Context, db operatorMintReader, id string) (Op
 	var receipt []byte
 	err = db.QueryRowContext(ctx, `SELECT version, receipt FROM operator_action_steps WHERE kind = 'mint'
 		AND identity = ? AND action_id = ? AND phase = 'observed' AND owner = ?
-		AND NOT EXISTS (SELECT 1 FROM operator_action_steps WHERE action_id = ? AND kind NOT IN ('operation','worktree','mint'))`,
-		id, id, row.Owner, id).Scan(&r.StepVersion, &receipt)
+		AND NOT EXISTS (SELECT 1 FROM operator_action_steps WHERE action_id = ? AND kind NOT IN ('operation','worktree','mint') AND NOT (? AND kind = 'files'))`,
+		id, id, row.Owner, id, fileStage).Scan(&r.StepVersion, &receipt)
 	if err != nil {
 		return OperatorMintReceipt{}, fmt.Errorf("mint evidence unavailable or later effect reserved: %w", err)
 	}
@@ -299,7 +299,7 @@ func (c *Credentials) AbortOperatorMint(ctx context.Context, reviewed OperatorMi
 		return err
 	}
 	defer tx.Rollback()
-	current, err := readOperatorMint(ctx, tx, reviewed.CAS.ID)
+	current, err := readOperatorMint(ctx, tx, reviewed.CAS.ID, false)
 	if err != nil {
 		return err
 	}

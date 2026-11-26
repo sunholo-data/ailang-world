@@ -34,7 +34,7 @@ const serviceHelp = `usage: ailang-worldd service install|status|upgrade|stop|st
     [--examples-dir DIR] [--surface-index PATH] [--surface-follow PATH]
     [--surface-origin https://<host>.ts.net[:port]]... [--binary PATH] [--replace]
   status [--json] [--verbose]
-  runner install|start|stop|status|cancel|reconcile-mint|reconcile-worktree|uninstall (see service runner --help)
+  runner install|start|stop|status|cancel|reconcile-mint|reconcile-worktree|reconcile-files|uninstall (see service runner --help)
   upgrade [--binary FILE] [--pause]
 Install, stop and uninstall require a typed y at the controlling terminal.
 Start uses the approved plist; edited plists require confirmation.

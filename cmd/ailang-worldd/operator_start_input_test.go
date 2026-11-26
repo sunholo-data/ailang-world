@@ -84,7 +84,7 @@ func TestOperatorStartFacts(t *testing.T) {
 		value[fact.Name] = fact.Value
 	}
 	want := []string{"launch_binary", "launch_wall", "mcp_path", "mint_catalogue", "mint_grants", "mint_profile", "mint_project",
-		"mint_start", "mint_token_path", "served_build", "served_interpreter", "worktree_path"}
+		"mint_start", "mint_token_path", "served_address", "served_build", "served_interpreter", "worktree_path"}
 	if !reflect.DeepEqual(names, want) {
 		t.Fatalf("reviewed fact names %v, want %v", names, want)
 	}
@@ -94,9 +94,13 @@ func TestOperatorStartFacts(t *testing.T) {
 	}
 	build, _ := json.Marshal(testBuild)
 	h := matchingHealth(t, f.r.f, f.r.profiles, f.profile)
+	tokenPath, err := operatorPhysicalTarget(filepath.Join(f.r.sessions, "ep.session"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	for name, v := range map[string]string{"launch_binary": binary, "launch_wall": "1h0m0s", "mcp_path": "",
 		"mint_catalogue": "3", "mint_profile": f.profile.Digest, "mint_project": "proj",
-		"mint_token_path": filepath.Join(f.r.sessions, "ep.session"), "served_build": string(build),
+		"mint_token_path": tokenPath, "served_address": defaultEpisodeAddr, "served_build": string(build),
 		"served_interpreter": h.ToolRef, "worktree_path": filepath.Join(f.r.f.ws, "ep")} {
 		if value[name] != v {
 			t.Fatalf("fact %s = %q, want %q", name, value[name], v)
@@ -105,8 +109,8 @@ func TestOperatorStartFacts(t *testing.T) {
 	in := r.in
 	if in.Start.StartedAt != time.Unix(presetClock(), 0).Format(time.RFC3339) || in.Start.Episode != "ep" || in.Start.Base.SHA != f.base || in.Start.Preset.SHA256 != serviceHash(f.data) ||
 		in.Start.Branch != "world/ep" || in.Start.BranchExisted || in.Start.Agent != "codex" || in.Start.TTLS != 43200 ||
-		in.Start.Task == nil || in.Start.Task.Path != filepath.Join(f.r.sessions, "ep.task.md") ||
-		in.Start.Task.SHA256 != serviceHash([]byte(operatorStartTask)) || in.TokenPath != filepath.Join(f.r.sessions, "ep.session") ||
+		in.Start.Task == nil || in.Start.Task.Path != filepath.Join(filepath.Dir(tokenPath), "ep.task.md") ||
+		in.Start.Task.SHA256 != serviceHash([]byte(operatorStartTask)) || in.TokenPath != tokenPath ||
 		in.Profile != (approval.ProfileRef{Project: "proj", Digest: f.profile.Digest}) || len(in.Grants) == 0 || in.Attempt != r.at {
 		t.Fatalf("effective input differs from the fixture: %+v", in)
 	}
@@ -161,7 +165,7 @@ func TestOperatorStartChanged(t *testing.T) {
 			episodeSelfBuild = func() daemon.BuildIdentity { return other }
 		}},
 		{name: "interpreter", field: "served_interpreter", change: func(t *testing.T, r *operatorStartRig) {
-			r.action.Resolution[10].Value = "sha256:" + serviceHash([]byte("other"))
+			r.action.Resolution[11].Value = "sha256:" + serviceHash([]byte("other"))
 		}},
 		{name: "launch_binary", field: "launch_binary", change: func(t *testing.T, r *operatorStartRig) {
 			other := startReadFakeAgent(t, r.f)
@@ -173,7 +177,7 @@ func TestOperatorStartChanged(t *testing.T) {
 			r.action.Resolution[2].Value = filepath.Join(r.f.r.sessions, "ep.mcp.json")
 		}},
 		{name: "worktree_path", field: "worktree_path", change: func(t *testing.T, r *operatorStartRig) {
-			r.action.Resolution[11].Value += "-other"
+			r.action.Resolution[12].Value += "-other"
 		}},
 		{name: "extra_fact", field: "resolution", change: func(t *testing.T, r *operatorStartRig) {
 			r.action.Resolution = append(r.action.Resolution, approval.OperatorResolved{Name: "zz_extra", Value: "x"})

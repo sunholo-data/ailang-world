@@ -107,6 +107,13 @@ Review whether Git evidence is absent or retained, then type `y` to stop the
 action and release its owner. Any worktree, branch or files stay in place.
 Run the disposable example with `AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./cmd/ailang-worldd -run '^TestOperatorWorktreeWindow$' -count=1 -v`.
 
+For an interrupted file reservation, review the output of this command. Type `y` to stop when the entire signed set is absent or exact. Keep the action reserved when any file remains uncertain. The command preserves the credential, worktree and all files.
+
+```sh
+ailang-worldd service runner reconcile-files oa-0123456789abcdef0123456789abcdef
+```
+
+
 ## Run your agents through World
 
 World launchers now tell Claude Code, Codex and pi their episode, worktree, session

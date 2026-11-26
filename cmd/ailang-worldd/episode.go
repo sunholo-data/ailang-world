@@ -561,10 +561,15 @@ func serveLine(r *mintRequest, addr string) string {
 
 // writeMCPConfig writes the claude MCP config once, mode 0600: arms.py's
 // claude_mcp_config, the one place besides the session file the token lives.
-func writeMCPConfig(path, addr, token string) error {
+func mcpConfigBytes(addr, token string) ([]byte, error) {
 	body, err := json.Marshal(map[string]any{"mcpServers": map[string]any{worldMCPServer: map[string]any{
 		"type": "http", "url": "http://" + addr + "/mcp/",
 		"headers": map[string]string{"Authorization": "Bearer " + token}}}})
+	return append(body, '\n'), err
+}
+
+func writeMCPConfig(path, addr, token string) error {
+	body, err := mcpConfigBytes(addr, token)
 	if err != nil {
 		return err
 	}
@@ -572,7 +577,7 @@ func writeMCPConfig(path, addr, token string) error {
 	if err != nil {
 		return fmt.Errorf("write the MCP config %s: %w", path, errors.Unwrap(err))
 	}
-	if _, err := f.Write(append(body, '\n')); err != nil {
+	if _, err := f.Write(body); err != nil {
 		_ = f.Close()
 		_ = os.Remove(path)
 		return fmt.Errorf("write the MCP config %s: %w", path, err)

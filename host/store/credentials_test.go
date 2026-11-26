@@ -314,6 +314,8 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	_, errs["ReserveOperatorWorktree"] = c.ReserveOperatorWorktree(ctx, OperatorMintAttempt{}, "", nil, func() int64 { return 1000 })
 	_, _, errs["ReadOperatorWorktree"] = c.ReadOperatorWorktree(ctx, "x")
 	errs["DisposeOperatorWorktree"] = c.DisposeOperatorWorktree(ctx, OperatorStepKey{}, OperatorWorktreeAbsent, 1000)
+	errs["ReadOperatorFiles"] = func() error { _, _, err := c.ReadOperatorFiles(ctx, "action"); return err }()
+	errs["RecordOperatorFiles"] = c.RecordOperatorFiles(ctx, OperatorFileState{}, "", nil, nil)
 	errs["CommitOperatorMint"] = c.CommitOperatorMint(ctx, OperatorMintInput{}, nil, nil)
 	_, errs["ReadOperatorMint"] = c.ReadOperatorMint(ctx, "x")
 	errs["AbortOperatorMint"] = c.AbortOperatorMint(ctx, OperatorMintReceipt{}, 1000)

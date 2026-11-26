@@ -28,7 +28,7 @@ type worktreeStartRig struct {
 	src operatorStartSource
 }
 
-func newWorktreeStartRig(t *testing.T, claude bool) *worktreeStartRig {
+func newWorktreeStartRig(t *testing.T, claude bool, ttl ...int64) *worktreeStartRig {
 	t.Helper()
 	s := operatorService(t)
 	s.mustInstall(t)
@@ -50,6 +50,9 @@ func newWorktreeStartRig(t *testing.T, claude bool) *worktreeStartRig {
 			WorkspaceRoot: r.f.r.f.ws, SessionsDir: r.f.r.sessions})
 		if claude {
 			p.Agent = "claude"
+		}
+		if len(ttl) != 0 {
+			p.TTLS = ttl[0]
 		}
 	})
 	h := matchingHealth(t, r.f.r.f, r.f.r.profiles, r.f.profile)
