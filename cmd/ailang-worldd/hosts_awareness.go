@@ -8,10 +8,12 @@ import (
 )
 
 const worldToolMap = `Your only file and shell access is World's MCP tools:
-  read/edit/write files -> ailang-read (keep limit<=120 lines) / ailang-edit / ailang-write / ailang-delete / workspace-list / workspace-search (paths relative to the worktree)
-  run commands         -> workspace-exec, the exec profile's commands only (call with no command to list them; run go-test/go-vet sequentially, not in parallel)
+  read/edit/write files -> ailang-read / ailang-edit / ailang-write / ailang-delete (paths relative to the worktree)
+  run commands         -> workspace-exec, the exec profile's commands only (list them with the tool)
   AILANG               -> ailang-check / ailang-run / ailang-cli; docs -> builtins-search / examples-search
 `
+
+const worldUsageTips = "Tips: keep ailang-read limit<=120 lines; use workspace-search (pass regex:true for RE2 patterns) and workspace-list; call workspace-exec with no command to list commands, and run go-test/go-vet sequentially (not in parallel).\n"
 
 const worldBoundary = "Out of budget or need a new grant? Say so; the operator mints it. Don't try to work around World."
 
@@ -62,7 +64,7 @@ func addAwarenessFiles(files map[string][]byte, dir, addr string) {
 			map[string]any{"type": "command", "command": shellQuote(context), "timeout": 10},
 		}}},
 	}})
-	files["codex/AGENTS.md"] = []byte("You are working inside AILANG World (confined).\n" + worldToolMap + worldBoundary + "\n")
+	files["codex/AGENTS.md"] = []byte("You are working inside AILANG World (confined).\n" + worldToolMap + worldUsageTips + worldBoundary + "\n")
 	hooks := map[string]any{}
 	codexHook := filepath.Join(home, ".codex", "herdr-agent-state.sh")
 	if info, err := os.Stat(codexHook); err == nil && info.Mode().IsRegular() {
@@ -186,7 +188,7 @@ printf '\n'
 		"command": worldd,
 		"args":    []string{"mcp-stdio", "--addr", addr},
 	}}})
-	files["agy-plugin/rules/AGENTS.md"] = []byte("You are working inside AILANG World (confined).\n" + worldToolMap + "World's MCP tools are served by MCP server `ailang-world_world` (if listed as lazy tools, call them via `call_mcp_tool` with `ServerName: \"ailang-world_world\"`).\n" + worldBoundary + "\n")
+	files["agy-plugin/rules/AGENTS.md"] = []byte("You are working inside AILANG World (confined).\n" + worldToolMap + worldUsageTips + "World's MCP tools are served by MCP server `ailang-world_world` (if listed as lazy tools, call them via `call_mcp_tool` with `ServerName: \"ailang-world_world\"`).\n" + worldBoundary + "\n")
 	agySessionStart := filepath.Join(dir, "bin", "agy-world-session-start")
 	agyReady := filepath.Join(dir, "bin", "agy-world-ready")
 	agyGate := filepath.Join(dir, "bin", "agy-world-gate")
