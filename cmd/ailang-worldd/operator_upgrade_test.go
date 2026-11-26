@@ -11,6 +11,9 @@ import (
 )
 
 func TestOperatorServiceUpgrade(t *testing.T) {
+	t.Run("active_child", testOperatorUpgradeActiveChild)
+	t.Run("stopped_companion", testOperatorUpgradeStoppedCompanion)
+	t.Run("rollback_schema_drift", testOperatorUpgradeRollbackSchema)
 	for _, tc := range []struct {
 		name         string
 		before, next int
@@ -77,6 +80,9 @@ func TestOperatorServiceUpgrade(t *testing.T) {
 				serviceFileHash(f.env.paths.Binary+".failed") != "" ||
 				(tc.tamper == "" && serviceFileHash(f.env.paths.Binary+".prev") != original) {
 				t.Fatalf("upgrade %d, kicks %d, stops %d: %s", code, f.ctl.kicks, f.ctl.stops, msg)
+			}
+			if strings.Contains(msg, wantStoppedRunnerRemedy) {
+				t.Fatalf("no-companion install received a companion restart instruction: %s", msg)
 			}
 		})
 	}

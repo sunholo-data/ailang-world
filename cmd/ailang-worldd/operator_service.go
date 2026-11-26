@@ -415,8 +415,21 @@ func (e serviceEnv) changeRunner(verb string, args []string) error {
 				return err
 			}
 		}
-		if err := e.controller.Bootout(e.domain, runnerLabel); err != nil && !errors.Is(err, errServiceNotLoaded) {
-			return errors.New("could not stop the companion")
+		if r, err := readServiceRecord(e.paths); err == nil {
+			creds, err := store.CanonicalPath(r.Credentials)
+			if err != nil || creds != r.Credentials {
+				return errors.New("cannot locate the companion's canonical credentials lock")
+			}
+			guard, err := e.drainRunner(runnerConfig{Credentials: creds})
+			if err != nil {
+				return err
+			}
+			defer guard.Close()
+		} else {
+			if err := e.stopRunnerJob(min(e.wait, serviceExitTimeout)); err != nil {
+				return err
+			}
+			return errors.New("cannot prove exit without the service record")
 		}
 		if verb == "uninstall" {
 			for _, path := range []string{p.Plist, p.Record} {

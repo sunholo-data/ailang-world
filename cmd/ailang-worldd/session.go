@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"errors"
 	"flag"
 	"fmt"
@@ -359,6 +360,12 @@ daemon refuses the revoked token from its next request.
 // — MUT-REVOKE-UNKNOWN-OK); a missing --db is refused, never created
 // (MUT-STORE-CREATE); --episode revokes every credential of one episode.
 func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
+	revokeCtx, cancelRevoke := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancelRevoke()
+	return sessionRevokeWithLock(revokeCtx, args, stdout, stderr, terminalEpisodeLock)
+}
+
+func sessionRevokeWithLock(revokeCtx context.Context, args []string, stdout, stderr io.Writer, acquire func(string, string, *os.File) (*os.File, error)) int {
 	fs := flag.NewFlagSet("ailang-worldd session revoke", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	fs.Usage = func() {}
@@ -400,16 +407,43 @@ func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
 		return exitUsage
 	}
 
-	revokeCtx, cancelRevoke := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancelRevoke()
+	target := *episode
+	var reviewed store.SessionRow
+	missing := func() int {
+		fmt.Fprintf(stderr, "ailang-worldd session revoke: refusing: no session credential %s in %s "+
+			"(already revoked, or minted in another store); nothing was revoked\n", credID, credPath)
+		return exitUsage
+	}
+	if target == "" {
+		var ok bool
+		reviewed, ok, err = readSessionRevokeTarget(revokeCtx, *dbPath, credPath, credID)
+		if err != nil {
+			fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
+			return exitFatal
+		}
+		if !ok {
+			return missing()
+		}
+		target = reviewed.EpisodeID
+	}
+	if !verbs.EpisodeIDPattern.MatchString(target) {
+		// Unmanaged legacy IDs may include path separators. Encode the exact
+		// value in a disjoint lock namespace without changing the lookup ID.
+		target = fmt.Sprintf("-%x", sha256.Sum256([]byte(target)))
+	}
+	lock, err := acquire(credPath, target, nil)
+	if err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
+		return exitUsage
+	}
+	defer lock.Close()
 	st, err := openCredentialsForSession(revokeCtx, *dbPath, credPath)
 	if err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd session revoke: cannot open the credentials store %q: %v\n", credPath, err)
 		return exitFatal
 	}
-	defer func() { _ = st.Close() }()
+	defer st.Close()
 
-	ids := []string{credID}
 	if *episode != "" {
 		if err := revokeEpisodeCredentials(revokeCtx, st, *episode, stdout); err != nil {
 			fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
@@ -419,22 +453,44 @@ func runSessionRevoke(args []string, stdout, stderr io.Writer) int {
 			return exitFatal
 		}
 		return exitOK
-	} else if _, ok, err := st.ResolveSession(revokeCtx, credID); err != nil {
+	}
+	current, ok, err := st.ResolveSession(revokeCtx, credID)
+	if err != nil {
 		fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
 		return exitFatal
-	} else if !ok {
-		fmt.Fprintf(stderr, "ailang-worldd session revoke: refusing: no session credential %s in %s "+
-			"(already revoked, or minted in another store); nothing was revoked\n", credID, credPath)
+	}
+	if !ok {
+		return missing()
+	}
+	if current != reviewed {
+		fmt.Fprintf(stderr, "ailang-worldd session revoke: %v: session changed during revoke\n", store.ErrOperatorConflict)
 		return exitUsage
 	}
-	for _, id := range ids {
-		if err := authority.Revoke(revokeCtx, st, id); err != nil {
-			fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
-			return exitFatal
-		}
-		fmt.Fprintf(stdout, "revoked session credential %s\n", id)
+	if err := authority.Revoke(revokeCtx, st, credID); err != nil {
+		fmt.Fprintf(stderr, "ailang-worldd session revoke: %v\n", err)
+		return exitFatal
 	}
+	fmt.Fprintf(stdout, "revoked session credential %s\n", credID)
 	return exitOK
+}
+
+func readSessionRevokeTarget(ctx context.Context, world, credentials, id string) (store.SessionRow, bool, error) {
+	version, err := store.WorldSchemaVersion(world)
+	if err != nil {
+		return store.SessionRow{}, false, err
+	}
+	if version == store.PreSplitSchemaVersion {
+		return store.ResolveLegacySession(ctx, world, id)
+	}
+	if _, err := os.Stat(credentials); errors.Is(err, os.ErrNotExist) {
+		return store.SessionRow{}, false, nil
+	}
+	db, err := store.OpenCredentialsReadOnly(runnerDB(credentials))
+	if err != nil {
+		return store.SessionRow{}, false, err
+	}
+	defer db.Close()
+	return db.ResolveSession(ctx, id)
 }
 
 // parseGrants converts the repeatable --grant EFFECT=SCOPE:BUDGET specs into

@@ -562,10 +562,14 @@ func (c *Credentials) ResolveSession(ctx context.Context, credentialID string) (
 	if err := requireDeadline(ctx); err != nil {
 		return SessionRow{}, false, err
 	}
+	return resolveSession(ctx, c.db, c.version, credentialID)
+}
+
+func resolveSession(ctx context.Context, db *sql.DB, version int, credentialID string) (SessionRow, bool, error) {
 	var row SessionRow
 	var project, digest sql.NullString
-	err := c.db.QueryRowContext(ctx,
-		sessionColumns(c.version)+` FROM session_credentials WHERE credential_id = ?;`,
+	err := db.QueryRowContext(ctx,
+		sessionColumns(version)+` FROM session_credentials WHERE credential_id = ?;`,
 		credentialID,
 	).Scan(&row.CredentialID, &row.EpisodeID, &row.GrantsJSON, &row.ExpiresAt, &row.CreatedAt, &project, &digest)
 	switch {

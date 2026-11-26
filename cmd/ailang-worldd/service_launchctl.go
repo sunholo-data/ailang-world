@@ -46,8 +46,12 @@ func launchctlBudget(verb string) time.Duration {
 // scrubs the registry credential (a direct exec here failed the AC10 census).
 // launchctl reports "Could not find service" on stderr, which a non-zero exit
 // carries in its *exec.ExitError; it is joined to stdout as CombinedOutput did.
-func (systemServiceController) command(args ...string) (string, error) {
-	ctx, cancel := budgetContext(launchctlBudget(args[0]))
+func (c systemServiceController) command(args ...string) (string, error) {
+	return c.commandWithin(launchctlBudget(args[0]), args...)
+}
+
+func (systemServiceController) commandWithin(budget time.Duration, args ...string) (string, error) {
+	ctx, cancel := budgetContext(budget)
 	defer cancel()
 	out, err := toolprobe.OutputEnv(ctx, "/bin/launchctl", "", []string{"PATH=/usr/bin:/bin:/usr/sbin:/sbin"}, args...)
 	var exit *exec.ExitError

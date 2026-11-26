@@ -73,14 +73,21 @@ ailang-worldd service runner status
 ailang-worldd service runner stop
 ailang-worldd service runner uninstall
 ```
-Review and type `y` for install, stop and uninstall. Uninstall before upgrading or replacing the config. Spool and action records are retained.
+Review and type `y` for install, stop and uninstall. Uninstall before replacing the config. The
+companion can stay installed during an attended `ailang-worldd service upgrade --binary <file>`.
+Retire older terminal World commands before typing `y`. The upgrade verifies the installed pair
+and both builds' support for the current credentials schema. It unloads the companion and waits for
+its process lock, including any retained children, before swapping the binary. An installed but
+stopped companion stays stopped. If a restart fails, rollback requires a verified compatible pair.
+A drain refusal retains the builds and evidence. After the processes retire, inspect
+`ailang-worldd service runner status` and retry the upgrade. Spool and action records are retained.
 Terminal episode operations use private mode-0600 sidecars named
 `<creds>.operator-episode-<ep>.lock` beside the canonical credentials database.
 Keep these sidecars in place across stop and uninstall. Independent opens need
 the same file to coordinate access to the episode.
 Run the checked example with a fake supervisor and disposable stores:
 ```sh
-AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./cmd/ailang-worldd -run '^TestOperatorServiceWriteScope$' -count=1 -v
+AILANG_BIN=$HOME/.pinned-ailang/ailang go test ./cmd/ailang-worldd -run '^(TestOperatorServiceWriteScope|TestOperatorServiceUpgrade|TestOperatorOldBuildTerminalDrain)$' -count=1 -v
 ```
 
 For an owned start with a committed mint and a missing token, use the
