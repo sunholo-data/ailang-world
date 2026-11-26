@@ -1775,3 +1775,55 @@ Keep `cmd/ailang-worldd` race time flat. Row 271 stays small.
 - Rotation not due (#635 opened 2026-11-23T07:34Z; next 2026-11-30 07:00 local). Weekly external-issue sweep not due.
 - Idle fingerprint NOT recorded (this fire picked and landed).
 - Harness share 0/20. The last 3 landings (437, 436, 435) move no clause; no clause is UNMET → no DRIFT line.
+
+## 438 — 2026-11-26 — row 243 V4 sprint 5e4 LANDED (PR #676, merge `e554db6b`): the pre-caller pins — `host/store` behavioural tests kill all sixteen judge-437/436 store survivor edits (eight file-admission predicates N22–N31, N33/N34 — each now with a sole killer — and judge-436's six worktree-store edits), and #667's episode GC skips any worktree whose episode has an unresolved operator step on the daemon pass and the `episode gc` CLI, failing safe; no production caller; 929 lines; judge sonnet PASS 88 [PRODUCT]
+
+**Pick:** row 243 V4 sprint 5e4, the Next that record 437 named.
+- **Re-measured at pick** (`origin/dev` `684069f2`): no S5e4 plan, branch, PR or worktree existed; design r1 reviewed (r2 PROCEED 3/3); ledger 107 rows, 0 OPEN.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Row 243 serves D-WORLD-94 and moves no clause; it is the loop-routable build row.
+- Claim sent to `controlplane` before routing (`inbox_1795665451823_88ce66ef`).
+
+**Gate 0:** stamped first; `gh` = `sunholo-voight-kampff`; billing CLEAN; kill switch absent; 0 allowlisted directives on #635 (17 comments); step 6a rc 0 (0 crash, 0 transcript notices; control 107:4).
+- **Inbox:** two fleet `harness-resolved` replies. Row 268 (`skill:mission-base-relative-path-records-driver-repo`, fleet #2466 `fcc3d3481`) and row 270 (`skill:rotate-log-index-only-targets-registry-workdir`, fleet #2471 `92bc214ba`) are marked RESOLVED upstream. Row 270's flag is not yet reachable: the rig's `ailang` v0.62.0-dirty still rejects `--workdir`, so this record used the scratch-registry recipe again.
+
+**Gate 1:** local `dev` 5 behind (record #675), only untracked files in the main checkout, fast-forwarded; base `684069f2…@2026-11-26T03:55:33Z`. Skill drift: resolved symlink and pin copy each byte-identical to `origin/dev` on all 14 files. Dev CI 3/3 green.
+
+**Routing:**
+- Resolver (followed verbatim): planner `recipe codex:gpt-6.2-sol declared:planner-lane-default-pin`, executor `recipe codex:gpt-6.2-sol declared:provider-pin`, evaluator `agent-tool sonnet declared:alias-pin`. Codex probe rc 0 from the sprint worktree. Designer not spawned (reviewed design, no new doc).
+- Controller `claude-opus-5-5` (session) · planner `codex:gpt-6.2-sol` (465,015 tok) · executor `codex:gpt-6.2-sol` (59,934 tok) · evaluator Agent `sonnet` (112,169 tok). Planner and executor are cross-provider recipes, not Agent-tool spawns, because the resolver returned `recipe` for both; the evaluator is the Agent tool. judge-independence: cross-vendor.
+
+**Directive (controller's):** M1 store pins, M2 the files fence, M3 the GC skip, M4 optional; ≤ 1,400 lines; pins in `host/store` because CI race for `cmd/ailang-worldd` (477.6 s on a slow runner) and `host/daemon` (480.0x s) sit at the 480 s bound (figures carried from row 267 and record 437, not measured this fire); at most one pure in-process GC test in `host/daemon`; no PATH shims (iteration 437's `gate-bin/git` lesson); mutation counts on both the diff-anchored set and every named judge survivor.
+
+**Planner** (~68 min). Plan + JSON `7f7ff262`.
+- M1 320 (`host/store/operator_s5e4_test.go`), M2 52 (`operator_mint_s5e4_test.go`), M3 557 (new `host/store/operator_episode_gc.go` + test, `host/daemon/auto_gc.go` + `auto_gc_s5e4_test.go`, `cmd/ailang-worldd/episode_gc.go` + test). **929** changed lines (`-- cmd host docs app`).
+- M4 (N04/N12/N15) prototyped and killed in scratch, 82 lines and +4.4 s focused CLI race: parked in Appendix C.
+- Ledgers: 37 diff-anchored mutants killed in named tests; all 15 required judge edits killed in named tests and whole `host/store`. Survivors: N01 (mask — no observed mint receipt) and the parked M4 ids.
+- Premise corrected: N33/N34 pass `fileStage=false` at base; each mutant flips its own call to `true`.
+
+**Controller round trip:** `ctl_roundtrip.sh M1 M2 M3` → `diff -r` rc 0 for cmd, host and docs at every milestone.
+
+**Executor** (~5 min): three clean patches; `ACCEPT_OK` M1 20/0, M2 24/0, M3 55/0; snapshots 1/0/1, 2/0/2, 9/0/9, all `cmp`-equal to the stages. Controller commits M1 `4f8ff2be`, M2 `54cb1b96`, M3 `1b78d779` (NUMSTAT 320 → 372 → 929).
+
+**Controller baseline** (pristine `684069f2` worktree with the planner running; load 4–6, spiking to 17 during the CLI race leg and 9 during `verify_go`): `host/store` race 0 fails; `host/daemon` race the 3 row-271 tests; `cmd/ailang-worldd` plain the 11 row-271 tests. **Instrument failure, discarded:** base `cmd/ailang-worldd` race and plain `verify_go.sh` hit `panic: test timed out after 10m0s` (verify_go in three packages), so those fail sets were truncated. CI arbitrated whole-package race and `verify_go`.
+
+**Gates** on `1b78d779` (no PATH shims, `-timeout 20m`): build, vet, Linux vet, test compile, nine inventories, `verify_ail.sh`, GC probe (reserved and published worktrees now skipped as `non-terminal operator step`), caller census = base — all rc 0. `host/store` plain/race 0 fails; CLI plain fail set = base; daemon race = base + `TestSeToolsRunBenchmarkTasksEndToEnd` (charter-listed load-sensitive; passes alone at head, 8.3 s). `gofmt` flags `host/daemon/daemon.go`, untouched and flagged at base too. Whole-package mutant replay (28 ids) not run: every id has a named killer, the survivors are N01 and the parked M4 ids, and the replay would take about four hours (UNMEASURED).
+
+**Evaluator** (Agent `sonnet`, foreground, ~34 min, own worktree at `1b78d779`, clean at the end): **PASS 88**, 0 blocking (28/25/19/9/7).
+- All 16 judge-437/436 survivor edits (N22–N25, N27–N29, N31, N33, N34, and judge-436's six) killed by named `host/store` tests and whole `host/store`. N01 confirmed as a mask.
+- GC policy judged correct: a reserved step, or any non-`operation` step under an action with no `terminal_at`, protects; `operation` rows are alias identity rows (schema CHECK: observed, no owner, no receipt). The CLI cannot be steered to an unrelated store; the daemon uses `d.credentialsPath`; no new context root.
+- 31 own M3 mutants: all daemon and CLI arms killed; store S6 a must-live equivalent; **S9 (drop `files`) and S10 (drop `mint`) survive whole `host/store`** — the lookup's test table holds only `worktree`-kind rows.
+- Finding 2: an absent, pre-v10, locked or unresolvable credentials store makes GC skip every worktree (fail-safe, reason reported) — a doc line would help.
+- **Controller reproduction of S9:** `s.kind NOT IN ('operation','files')` at `host/store/operator_episode_gc.go:23` → `go test -count=1 ./host/store/` ok 12.171 s. Survives; carried to S5f.
+
+**Gate 3b:** PR #676 CI 3/3 on attempt 1 (race job: `cmd/ailang-worldd` 262.9 s, `host/daemon` 355.8 s, `host/broker` 280.8 s, `host/store` 62.8 s). `origin/dev` unchanged; `MERGEABLE CLEAN`; merged `--match-head-commit` → `e554db6b` (tree-identical). Merge CI on `e554db6b` (run 45765797616): 3/3 success on attempt 1. **LANDED.**
+
+**Progress:** 1.0: clauses 1–7 MET; goal unmoved. Row 243 V4: S1–S5e4 landed; every pre-caller store survivor edit the S5e2/S5e3 judges carried (16) is now killed, and GC no longer removes a worktree an unresolved operator effect needs. Still dormant: no production caller.
+
+**Ruled out:** a third executor round to add the S9/S10 lookup rows before landing — the production SQL is correct today, the gap is a test-table one, and it is carried as a named pin before S5f's first caller rather than buying a re-judge; running the 28-id whole-package replay (about four hours, every id already has a named killer).
+
+**Next:** V4 S5f — the paired-process consumer and drain with the first production caller, carrying the S9/S10 lookup-table pins, N04/N12/N15, `E-RES-EPISODE-CONFLICT`, `E-RES-REREAD`, J-OWN-UID, Z-ABSENT-ANY, Z-WAIT-READBUDGET and the four process pins.
+
+**Gate 5 bookkeeping:**
+- Rotation not due (#635 opened 2026-11-23T07:34Z; next 2026-11-30 07:00 local). Weekly external-issue sweep not due.
+- Idle fingerprint NOT recorded (this fire picked and landed).
+- Harness share 0/20. The last 3 landings (438, 437, 436) move no clause; no clause is UNMET → no DRIFT line.
