@@ -1,0 +1,301 @@
+{
+ "sprint_id": "w-world-address-bar-verbs-v4s5e4",
+ "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+ "design_revision": "r1, quorum r2 PROCEED 3/3, no absent seats",
+ "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s5e4-sprint-plan.md",
+ "previous_sprint": "S5e3 #674, merge 22bb7804, judge Sonnet PASS 79 and 0 blocking",
+ "base_commit": "684069f2118264d0797a0f7575b3c4d837c7fef3",
+ "design_measured_at": "684069f2, plan \u00a71.2 and \u00a71.4",
+ "queue_row": 243,
+ "iteration": 438,
+ "phase": "V4",
+ "sprint_number": "5e4",
+ "sprint": "S5e4 pre-caller pins and #667 operator-step-aware episode GC",
+ "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter438-row243-v4s5e4",
+ "branch": "sprint/world-iter438-row243-v4s5e4",
+ "authority": [
+  "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004",
+  "D-WORLD-109 fixture stores and keys"
+ ],
+ "behaviour": "Preserve clean merged worktrees with unresolved operator effect steps or unavailable lookup evidence, through both daemon and CLI.",
+ "cut": {
+  "cap_loc": 1400,
+  "measure": "git diff -M --numstat 684069f2 HEAD -- cmd host docs app",
+  "measured": 929,
+  "unfiltered_product": 929,
+  "margin": 471,
+  "moved_out": {
+   "M4_prototype_loc": 82,
+   "paired_process_prior_fd_harness": 72
+  }
+ },
+ "planner_decisions": {
+  "cut": "M1\u2013M3 only",
+  "terminal": "Reserved effects or observations without action disposal protect the worktree. Operation aliases are not effects.",
+  "activation": "S5f only",
+  "cli": "Explicit credentials path, matching recorded home service, or matching default workspace."
+ },
+ "scope": [
+  "Real-store file and worktree admission pins",
+  "Independent store mint read and abort fences",
+  "Operator-step-aware episode GC"
+ ],
+ "executor_lane": "codex:gpt-6.2-sol, patch only",
+ "executor_form": "Appendix P incremental patches, \u00a72 application, \u00a77 cumulative snapshots",
+ "estimate_loc": {
+  "compiled_landed": 929,
+  "parked": {
+   "M4_prototype": 82,
+   "S5f_full": "UNMEASURED"
+  }
+ },
+ "milestones": [
+  {
+   "increment": 320,
+   "added": 320,
+   "deleted": 0,
+   "expected_cumulative_numstat": 320,
+   "unfiltered_product": 320,
+   "expected_snapshot": "1/0/1",
+   "id": "M1",
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang /bin/bash \"$T/accept.sh\" \"$W\" M1 fast",
+   "title": "Real-store file and worktree admission pins"
+  },
+  {
+   "increment": 52,
+   "added": 372,
+   "deleted": 0,
+   "expected_cumulative_numstat": 372,
+   "unfiltered_product": 372,
+   "expected_snapshot": "2/0/2",
+   "id": "M2",
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang /bin/bash \"$T/accept.sh\" \"$W\" M2 fast",
+   "title": "Independent store mint read and abort fences"
+  },
+  {
+   "increment": 557,
+   "added": 917,
+   "deleted": 12,
+   "expected_cumulative_numstat": 929,
+   "unfiltered_product": 929,
+   "expected_snapshot": "9/0/9",
+   "id": "M3",
+   "accept_parts": [
+    "fast"
+   ],
+   "commit_test": "AILANG_BIN=$HOME/.pinned-ailang/ailang WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=$HOME/.pinned-ailang-tools/v0.54.15/ailang /bin/bash \"$T/accept.sh\" \"$W\" M3 fast",
+   "title": "Operator-step-aware episode GC"
+  }
+ ],
+ "expected_snapshots": {
+  "M1": "1/0/1",
+  "M2": "2/0/2",
+  "M3": "9/0/9",
+  "format": "STATUS / DELETED / MANIFEST.sha256"
+ },
+ "design_premises_found_false": [
+  "\u00a71.4",
+  "ReadOperatorMint and AbortOperatorMint pass false; mutant flips true"
+ ],
+ "existing_tests_edited": [
+  "host/store/credentials_test.go",
+  "cmd/ailang-worldd/episode_gc_test.go"
+ ],
+ "existing_tests_deleted": [],
+ "existing_production_edited": [
+  "host/daemon/auto_gc.go",
+  "cmd/ailang-worldd/episode_gc.go"
+ ],
+ "new_files": [
+  "host/daemon/auto_gc_s5e4_test.go",
+  "host/store/operator_episode_gc.go",
+  "host/store/operator_episode_gc_test.go",
+  "host/store/operator_mint_s5e4_test.go",
+  "host/store/operator_s5e4_test.go"
+ ],
+ "not_touched": [
+  "schema",
+  ".ail",
+  "routes",
+  "app",
+  "driver",
+  "row 271",
+  "start/reservation/mint/publication callers"
+ ],
+ "mutants": {
+  "specs": "/Users/voightkampff/.ailang/state/world-iter438/plan-scratch/mutants.json",
+  "named_ledger": "/Users/voightkampff/.ailang/state/world-iter438/plan-scratch/ledger-named.jsonl",
+  "whole_ledger": "/Users/voightkampff/.ailang/state/world-iter438/plan-scratch/ledger-whole.jsonl",
+  "controller_whole_ids": "/Users/voightkampff/.ailang/state/world-iter438/plan-scratch/whole-mutant-ids.txt",
+  "controller_whole_command": "/bin/bash \"$S/whole-mutants.sh\" \"$S/st-M3\" \"$S/controller-base\"",
+  "groups": {
+   "diff": {
+    "total": 37,
+    "named": {
+     "KILLED": 37
+    },
+    "whole": {
+     "KILLED": 13,
+     "UNINFORMATIVE UNDER SANDBOX": 24
+    }
+   },
+   "judge": {
+    "total": 19,
+    "named": {
+     "SURVIVED": 4,
+     "KILLED": 15
+    },
+    "whole": {
+     "UNINFORMATIVE UNDER SANDBOX": 4,
+     "KILLED": 15
+    }
+   },
+   "controls": {
+    "total": 4,
+    "named": {
+     "KILLED": 3,
+     "SURVIVED": 1
+    },
+    "whole": {
+     "KILLED": 3,
+     "SURVIVED": 1
+    }
+   }
+  },
+  "total_specs": 60,
+  "named_killed": 55,
+  "whole_killed": 31,
+  "named_survived_ids": [
+   "N01-ALLOWANCE-PATHS",
+   "N04-REOPEN-CMP",
+   "N12-FRESH-DIR",
+   "N15-POST-TREE",
+   "LIVE-POSITIVE"
+  ],
+  "whole_uninformative_ids": [
+   "N01-ALLOWANCE-PATHS",
+   "N04-REOPEN-CMP",
+   "N12-FRESH-DIR",
+   "N15-POST-TREE",
+   "GC-D-WIRING",
+   "GC-D-WIRING-BOOL",
+   "GC-D-CLOCK",
+   "GC-D-NIL",
+   "GC-D-ERR",
+   "GC-D-CANCELED",
+   "GC-D-ERR-OR",
+   "GC-D-TRUE",
+   "GC-D-FALSE",
+   "GC-D-SKIP",
+   "GC-D-CONTINUE",
+   "GC-D-EPISODE",
+   "GC-C-EXPLICIT",
+   "GC-C-HOME",
+   "GC-C-SERVICE",
+   "GC-C-MALFORMED",
+   "GC-C-ABS-INPUT",
+   "GC-C-PATH-ERRORS",
+   "GC-C-SAME-ROOT",
+   "GC-C-PHYSICAL-SCAN",
+   "GC-C-PHYSICAL-RECORDED",
+   "GC-C-WIRING",
+   "GC-C-WIRING-BOOL",
+   "GC-C-FLAG"
+  ],
+  "diff_mutant_ledger": "/Users/voightkampff/.ailang/state/world-iter438/plan-scratch/mutants-diff.tsv",
+  "judge_mutant_ledger": "/Users/voightkampff/.ailang/state/world-iter438/plan-scratch/mutants-judge.tsv",
+  "diff_audit": "/Users/voightkampff/.ailang/state/world-iter438/plan-scratch/diff-audit.tsv",
+  "mutant_report_complete_in_sandbox": true,
+  "whole_pending_controller": 28
+ },
+ "mutant_ledger": "/Users/voightkampff/.ailang/state/world-iter438/plan-scratch/ledger-named.jsonl",
+ "mutant_specs": "/Users/voightkampff/.ailang/state/world-iter438/plan-scratch/mutants.json",
+ "gates_script": "/Users/voightkampff/.ailang/state/world-iter438/plan-scratch/gates.sh",
+ "roundtrip": {
+  "summary": "The exact Appendix P fences were extracted from this plan and replayed under `$S/rt-0zhgJj`. M1, M2 and M3 returned `diff -r` rc 0 for the full trees and each of `cmd`, `host` and `docs`. `app` was absent in both trees. The rehearsed snapshot used the main executor path with the sprint worktree's Git metadata read-only and the replay tree as `GIT_WORK_TREE`. Cumulative STATUS/deletion/hash counts were `1/0/1`, `2/0/2` and `9/0/9`. No new patch reject or backup files appeared. Extracted shell fences matched the tested copies and passed Bash syntax checks. Receipt `$S/roundtrip-refined.log`.",
+  "format": "plan awk / patch / diff-r / manifest",
+  "M1": {
+   "diff_r_full_tree_rc": 0,
+   "snapshot": "1/0/1"
+  },
+  "M2": {
+   "diff_r_full_tree_rc": 0,
+   "snapshot": "2/0/2"
+  },
+  "M3": {
+   "diff_r_full_tree_rc": 0,
+   "snapshot": "9/0/9"
+  }
+ },
+ "controller_decisions_requested": [
+  "Record same-rig outside-sandbox base fail sets",
+  "Run \u00a74.1, \u00a76 and Linux CI"
+ ],
+ "verification": {
+  "base_and_final": "| Run | Receipt |\n|---|---|\n| base first | `GATES_DONE 152s FAILS: none UNINFORMATIVE: pkg-host-daemon race-host-daemon pkg-cmd-ailang-worldd race-cmd-ailang-worldd` |\n| base complete verifier | `GATES_DONE 675s FAILS: none UNINFORMATIVE: verify_go pkg-host-daemon race-host-daemon pkg-cmd-ailang-worldd race-cmd-ailang-worldd` |\n| M1 | `GATES_DONE 100s FAILS: none UNINFORMATIVE: none` |\n| M2 | `GATES_DONE 64s FAILS: none UNINFORMATIVE: none` |\n| M3 initial | `GATES_DONE 928s FAILS: none UNINFORMATIVE: verify_go pkg-host-daemon race-host-daemon pkg-cmd-ailang-worldd race-cmd-ailang-worldd` |\n| M3 final | `GATES_DONE 172s FAILS: none UNINFORMATIVE: pkg-host-daemon race-host-daemon pkg-cmd-ailang-worldd race-cmd-ailang-worldd` |\n\nThe Go toolchain was go1.26.6 darwin/arm64. The real Git executable was `/opt/homebrew/bin/git`. Native build/vet, Linux vet, the requested inventories and named acceptance all returned rc 0 for the compiled stages. The AILANG v0.41.0 gate on base and M3 verified 16 required identities, 40 named tests, 594 se-tools tests, and the 9/9 world-package checks. Those runs used the scratch-temp relocation described in \u00a76.\n\nThe plain Go verifier saw its race control fire and ran `go test ./... -count=1`. The base and the initial M3 archive reported actual `bind: operation not permitted` output. The final M3 path-error simplification was replayed through the other gate legs. The broad verifier on the exact final archive remains for the controller. Whole daemon and CLI plain/race are **UNINFORMATIVE UNDER SANDBOX**. The recorded local store fail sets are empty. Unrelated load-sensitive rows are compared on the controller's same-head base in \u00a77. `uptime` was recorded in each log, and the sandbox denied the process-list command. Base receipts stay in `$S/gate-base` and `$S/gate-base-final-script`. M2's first gate process was invalidated by updating the gate script while Bash was reading it. The frozen-script M2 replay is recorded independently in `$S/gate-M2-final`.\n\nThe historical 11-test CLI process baseline is `$HOME/.ailang/state/world-iter437/plan-scratch/controller-base/pkg-cmd-ailang-worldd.base-fails`. See \u00a78 for its names. The controller compares with fresh `684069f2` captures in `$S/controller-base`.",
+  "race": "Go package seconds, with the same command on each archive. Whole runs use `go test -count=1 -race -timeout 8m ./<pkg>` and the base archive's last run with the matching leg. Focused runs use `go test -race -v -count=1 -timeout 2m ./<pkg> -run <selector>`. Receipts are `$S/gate-base-final-script`, `$S/gate-M3-final` and `$S/race-focused-final.log`.\n\n| Package | Whole base \u2192 M3 (delta) | Focused base \u2192 M3 (delta) |\n|---|---|---|\n| `host/store` | 44.317 \u2192 41.085 s (-3.232 s) | 1.507 \u2192 3.812 s (+2.305 s) |\n| `host/daemon` | UNINFORMATIVE UNDER SANDBOX | 1.592 \u2192 2.001 s (+0.409 s) |\n| `cmd/ailang-worldd` | UNINFORMATIVE UNDER SANDBOX | 2.345 \u2192 2.357 s (+0.012 s) |\n\nThe focused daemon selector is `^TestEpisodeGCOperatorSteps$` and the CLI selector is `^TestEpisodeGCFailSafeAndReclaims$`. The daemon selector discovers zero tests at base, so its package-time delta is the measured cost of the new test. The CLI filters the same existing test at both trees. The store selector and every exact invocation are in `$S/measure-race.sh`.",
+  "accept": "\u00a73 and \u00a77",
+  "roundtrip": "\u00a77",
+  "gc": "| Fixture arm | Pristine 684069f2 | Compiled M3 |\n|---|---|---|\n| Real reserved before first publication | Injected 73 h, dry-run candidate `clean & merged` | At 73 h, live core skips as `non-terminal operator step`. Real CLI also skips. |\n| Real published, action left running | Injected 73 h, dry-run candidate `clean & merged` | At 73 h, live core skips as `non-terminal operator step`. Real CLI also skips. |\n| Same published evidence after terminal disposition | Not part of the unchanged base probe | Injected 73 h, dry-run candidate `clean & merged`. |\n\nBoth sides verify a clean Git status and preserved evidence. `$S/gate-base-final-script/gc-probe.txt` and `$S/gate-M3-final/gc-probe.txt` contain the exact isolated before/after. The CLI arm supplies an explicit fixture credential path and a zero age threshold to isolate store wiring from its wall clock. The core arms use the same 72-hour cutoff on both trees.",
+  "mutants": "\u00a74",
+  "phase_5_5": "\u00a73.2 and Appendix C",
+  "gate_summaries": {
+   "base first": "GATES_DONE 152s FAILS: none UNINFORMATIVE: pkg-host-daemon race-host-daemon pkg-cmd-ailang-worldd race-cmd-ailang-worldd",
+   "base complete verifier": "GATES_DONE 675s FAILS: none UNINFORMATIVE: verify_go pkg-host-daemon race-host-daemon pkg-cmd-ailang-worldd race-cmd-ailang-worldd",
+   "M1": "GATES_DONE 100s FAILS: none UNINFORMATIVE: none",
+   "M2": "GATES_DONE 64s FAILS: none UNINFORMATIVE: none",
+   "M3 initial": "GATES_DONE 928s FAILS: none UNINFORMATIVE: verify_go pkg-host-daemon race-host-daemon pkg-cmd-ailang-worldd race-cmd-ailang-worldd",
+   "M3 final": "GATES_DONE 172s FAILS: none UNINFORMATIVE: pkg-host-daemon race-host-daemon pkg-cmd-ailang-worldd race-cmd-ailang-worldd"
+  },
+  "race_seconds": {
+   "host/store": {
+    "whole_base_seconds": 44.317,
+    "whole_stage_seconds": 41.085,
+    "whole_delta": -3.2319999999999993,
+    "focused_base_seconds": 1.507,
+    "focused_stage_seconds": 3.812,
+    "focused_delta": 2.3049999999999997
+   },
+   "host/daemon": {
+    "whole_base_seconds": null,
+    "whole_stage_seconds": null,
+    "whole_delta": null,
+    "focused_base_seconds": 1.592,
+    "focused_stage_seconds": 2.001,
+    "focused_delta": 0.4089999999999998
+   },
+   "cmd/ailang-worldd": {
+    "whole_base_seconds": null,
+    "whole_stage_seconds": null,
+    "whole_delta": null,
+    "focused_base_seconds": 2.345,
+    "focused_stage_seconds": 2.357,
+    "focused_delta": 0.01200000000000001
+   }
+  },
+  "stage_anchors": "/Users/voightkampff/.ailang/state/world-iter438/plan-scratch/stage-anchors.txt",
+  "m4_prototype": {
+   "production_changed_lines": 9,
+   "test_lines": 73,
+   "prototype_named_killed": [
+    "N04",
+    "N12",
+    "N15"
+   ],
+   "race_base_seconds": 1.632,
+   "race_prototype_seconds": 6.031,
+   "race_delta": 4.399
+  }
+ },
+ "unfiltered_branch_with_plan": {
+  "M1": 2345,
+  "M2": 2397,
+  "M3": 2954
+ }
+}
