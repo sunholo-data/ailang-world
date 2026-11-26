@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 440 | 2026-11-26 | row 243 V4 sprint 5f2 LANDED (PR #685, merge `150d0d96`): the activation prerequisites — judge-439 J01/J05 pins, the runner's borrowed per-episode ... |
 | 439 | 2026-11-26 | row 243 V4 sprint 5f LANDED (PR #681, merge `886648ab`): the staged seams and pins the first production caller needs — judge-438's S9/S10 GC kind r... |
 | 438 | 2026-11-26 | row 243 V4 sprint 5e4 LANDED (PR #676, merge `e554db6b`): the pre-caller pins — `host/store` behavioural tests kill all sixteen judge-437/436 store... |
 | 437 | 2026-11-26 | row 243 V4 sprint 5e3 LANDED (PR #674, merge `22bb7804`): signed start file publication with independent readback and the attended `service runner ... |
