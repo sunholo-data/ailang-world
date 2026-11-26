@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/toolprobe"
 )
 
@@ -38,6 +39,8 @@ type EpisodeGCOptions struct {
 	DryRun        bool
 	Now           time.Time
 	IsActive      func(episode string) bool
+	// A missing lookup, a lookup error, or an unresolved effect bars worktree removal.
+	HasOpenOperatorStep func(ctx context.Context, episode string) (bool, error)
 }
 
 const (
@@ -63,27 +66,31 @@ func (d *Daemon) startAutoGC(dbPath string) {
 			case <-d.aguiStop:
 				return
 			case <-timer.C:
-				d.runAutoGCPass(wsRoot, cacheDir)
+				d.runAutoGCPass(wsRoot, cacheDir, time.Now())
 				timer.Reset(autoGCInterval)
 			}
 		}
 	}()
 }
 
-func (d *Daemon) runAutoGCPass(wsRoot, cacheDir string) {
+func (d *Daemon) runAutoGCPass(wsRoot, cacheDir string, now time.Time) EpisodeGCReport {
 	ctx, cancel := context.WithTimeout(context.Background(), autoGCPassBudget)
 	defer cancel()
 	rep := RunEpisodeGC(ctx, EpisodeGCOptions{
 		WorkspaceRoot: wsRoot,
 		ExecCacheDir:  cacheDir,
 		OlderThan:     autoGCOlderThan,
-		Now:           time.Now(),
+		Now:           now,
 		IsActive:      d.isEpisodeActive,
+		HasOpenOperatorStep: func(ctx context.Context, episode string) (bool, error) {
+			return store.EpisodeHasUnresolvedOperatorSteps(ctx, d.credentialsPath, episode)
+		},
 	})
 	if len(rep.Removed) > 0 && d.errLog != nil {
 		fmt.Fprintf(d.errLog, "ailang-worldd: auto-gc reclaimed %s (%d removed, %d skipped)\n",
 			FormatGCBytes(rep.ReclaimedBytes), len(rep.Removed), len(rep.Skipped))
 	}
+	return rep
 }
 
 func (d *Daemon) isEpisodeActive(episode string) bool {
@@ -147,6 +154,23 @@ func RunEpisodeGC(ctx context.Context, opts EpisodeGCOptions) EpisodeGCReport {
 					continue
 				}
 				commonDir := gitCommonDir(ctx, wtPath)
+				reason := "operator step lookup unavailable"
+				if opts.HasOpenOperatorStep != nil {
+					unresolved, err := opts.HasOpenOperatorStep(ctx, name)
+					switch {
+					case err != nil || ctx.Err() != nil:
+					case unresolved:
+						reason = "non-terminal operator step"
+					default:
+						reason = ""
+					}
+				}
+				if reason != "" {
+					rep.Skipped = append(rep.Skipped, EpisodeGCItem{
+						Kind: "worktree", Name: name, Path: wtPath, Bytes: size, Reason: reason,
+					})
+					continue
+				}
 				if !opts.DryRun {
 					if err := removeWorktree(ctx, wtPath, commonDir); err != nil {
 						rep.Skipped = append(rep.Skipped, EpisodeGCItem{

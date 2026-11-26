@@ -322,6 +322,7 @@ func TestCredentialsMethodsRequireADeadline(t *testing.T) {
 	_, errs["OperatorHeartbeat"] = c.OperatorHeartbeat(ctx)
 	_, errs["ReadOperatorHeartbeat"] = ReadOperatorHeartbeat(ctx, "")
 	_, errs["ReadOperatorEpisodeOwner"] = ReadOperatorEpisodeOwner(ctx, c.display, "ep")
+	_, errs["EpisodeHasUnresolvedOperatorSteps"] = EpisodeHasUnresolvedOperatorSteps(ctx, c.display, "ep")
 	for name, err := range errs {
 		if !errors.Is(err, ErrNoDeadline) {
 			t.Errorf("%s(Background) = %v, want ErrNoDeadline", name, err)
