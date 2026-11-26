@@ -56,11 +56,11 @@ type presetStartOverride struct {
 }
 
 type presetStartInput struct {
-	episodes                []string
-	workspaceRoot, hostsDir string
-	launching, headless     bool
-	overrides               []presetStartOverride
-	readTask                func() (source string, data []byte, err error)
+	episodes                         []string
+	workspaceRoot, hostsDir          string
+	launching, headless, interactive bool
+	overrides                        []presetStartOverride
+	readTask                         func() (source string, data []byte, err error)
 }
 
 type presetStartRead struct {
@@ -85,7 +85,7 @@ func resolvePresetStart(ctx context.Context, name, dir, profilesDir string, inpu
 	var mode string
 	var wall time.Duration
 	if input.launching {
-		mode, wall, err = launchMode(p.Preset, input.headless)
+		mode, wall, err = launchMode(p.Preset, input.headless, input.interactive)
 		if err != nil {
 			return nil, err
 		}
@@ -316,6 +316,7 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 	input := presetStartInput{
 		episodes: pos, workspaceRoot: defaultWorldPaths().workspaceRoot, hostsDir: fs.Lookup("hosts-dir").Value.String(),
 		launching: fs.Lookup("launch").Value.String() == "true", headless: fs.Lookup("headless").Value.String() == "true",
+		interactive: fs.Lookup("interactive").Value.String() == "true",
 	}
 	fs.Visit(func(f *flag.Flag) {
 		switch f.Name {
@@ -375,7 +376,7 @@ func runPresetEpisodeStart(fs *flag.FlagSet, pos []string, name, dir, profilesDi
 		return code
 	}
 	if input.launching {
-		return launchEpisode(ep, name, dir, input.headless, out, errOut, effectLock, input.hostsDir)
+		return launchEpisode(ep, name, dir, input.headless, input.interactive, out, errOut, effectLock, input.hostsDir)
 	}
 	taskPath := ""
 	if taskRecord != nil {
