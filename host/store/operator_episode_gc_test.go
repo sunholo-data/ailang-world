@@ -13,8 +13,8 @@ import (
 
 func TestEpisodeHasUnresolvedOperatorSteps(t *testing.T) {
 	for _, tc := range []struct {
-		name, phase, state string
-		want               bool
+		name, kind, phase, state string
+		want                     bool
 	}{
 		{name: "none"},
 		{name: "operation_only", state: "running"},
@@ -27,11 +27,25 @@ func TestEpisodeHasUnresolvedOperatorSteps(t *testing.T) {
 		{name: "observed_expired", phase: "observed", state: "expired"},
 		{name: "observed_cancelled", phase: "observed", state: "cancelled"},
 		{name: "terminal_with_reservation", phase: "reserved", state: "failed", want: true},
+		{name: "files_reserved", kind: "files", phase: "reserved", state: "failed", want: true},
+		{name: "files_observed_running", kind: "files", phase: "observed", state: "running", want: true},
+		{name: "mint_reserved", kind: "mint", phase: "reserved", state: "failed", want: true},
+		{name: "mint_observed_uncertain", kind: "mint", phase: "observed", state: "uncertain", want: true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			f := newOperatorPinFixture(t, false)
 			if tc.phase != "" {
-				key := f.reserveWorktree(t)
+				var key OperatorStepKey
+				if tc.kind == "" {
+					key = f.reserveWorktree(t)
+				} else {
+					// Isolate the lookup by giving this episode exactly one effect kind.
+					attempt := f.in.Attempt
+					key = OperatorStepKey{attempt.CAS, attempt.Runner.Nonce, tc.kind, attempt.CAS.ID, 1}
+					if err := f.c.ReserveOperatorStep(f.ctx, key, pinNow); err != nil {
+						t.Fatal(err)
+					}
+				}
 				if tc.phase == "observed" {
 					if err := f.c.ObserveOperatorStep(f.ctx, key, []byte("created")); err != nil {
 						t.Fatal(err)
