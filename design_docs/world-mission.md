@@ -71,6 +71,15 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   `go test -count=1 -run '^TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential$' ./host/broker/` (~25 s). A diff that adds
   or moves any `exec.Command`/`exec.CommandContext` also runs whole `host/broker`. New subprocess sites belong in a `host/` package,
   with a driver in that guard's map.
+- **EVERY SWEEP RUNS THE WHOLE TOUCHED TEST FILE FAMILY AND ISOLATES AILANG STATE** (process fix, iter-445; rule 3g at its fourth
+  consecutive instance, the first caught in-sweep). S7's M2 changed `host/daemon/surface_verb.go` and the plan's §5 modified-tests table
+  named `TestSurfaceVerbIsReadOnly` but missed its sibling `TestSurfaceVerbOutcomes` (+ `verb-route.golden.json`), which went red
+  (judge-445 B1). The controller sweep caught it only because its selector was `TestSurfaceVerb.*`. Separately, the planner-authored
+  `commit-guards.sh` ran whole `host/verifygate` without `AILANG_STATE_DIR`/`AILANG_CACHE_DIR`, and two verifygate tests went red at
+  head AND base for that reason alone. Rule: (a) for every touched production file `<stem>.go`, the sweep runs `-run` over every
+  test whose name contains the CamelCase stem (e.g. `SurfaceVerb`) plus every `*_test.go` and golden that references the touched
+  file's exported names; (b) every leg that runs `ailang`-backed tests (verifygate, broker) exports a fresh `AILANG_STATE_DIR` and
+  `AILANG_CACHE_DIR`, exactly as the baseline does, so head and base differ only by the diff.
 - **EVERY ROLE DIRECTIVE THAT RUNS PROCESSES MUST SAY: KILL ONLY THE PIDS YOU STARTED — NEVER `pkill`, `killall` OR A PATTERN KILL;
   REPORT A SUSPECTED LEAK, DO NOT KILL IT** (process fix, iter-443; instance 1). This rig is shared with long GPU jobs. The round-1 judge
   ran contention loops (`yes` spinners, `sleep 300` probes) and at its end SIGKILLed PIDs 96794/96825, which it took for its own leaked
