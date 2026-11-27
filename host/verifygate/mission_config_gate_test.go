@@ -476,11 +476,30 @@ func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bo
 			`bash scripts/tracked_binary_gate.sh --allow-png 'website/static/img/v1/' \`,
 		}
 	}
+	const raceArmsCall = `bash scripts/test_race_leg_bounds.sh`
+	raceAnchors := []string{`echo "── go test ./... -count=1 -race -timeout 8m (leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s)"`, `cmd = ["go", "test", "./...", "-count=1", "-race", "-timeout", "8m"]`, `    print(f"verify_go.sh: FATAL: -race leg timed out after {bound}s", file=sys.stderr)`, `    sys.exit(124)`}
+	if repaired {
+		raceAnchors = []string{
+			raceArmsCall,
+			`echo "── go test ./... -count=1 -race -timeout ${VERIFY_GO_RACE_PKG_TIMEOUT_S}s (leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s)"`,
+			raceLegCall,
+		}
+		for _, needle := range []string{`    print(f"verify_go.sh: FATAL: -race leg timed out after {bound}s", file=sys.stderr)`, `    sys.exit(124)`} {
+			if n := strings.Count(src, needle); n != 1 {
+				t.Errorf("%s: race wrapper anchor %q has count %d, want 1", label, needle, n)
+			}
+		}
+	}
 	passedAnchor := `echo "✓ go gate PASSED ($VERIFY_GO_LEGS): build clean; legs run pass with pinned AILANG_BIN ($ver)"`
 	needles := []string{
 		`if [ -z "${AILANG_BIN:-}" ]; then`,
 		verTokAnchor,
 		`echo "── AILANG_BIN=$AILANG_BIN ($ver)"`,
+	}
+	if repaired {
+		needles = append(needles, `check_race_bounds || exit $?`)
+	}
+	needles = append(needles,
 		`echo "── tracked-binary hygiene gate"`,
 		binaryAnchors[0],
 		binaryAnchors[1],
@@ -497,15 +516,13 @@ func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bo
 		evidenceCall,
 		`echo "── go test ./... -count=1"`,
 		`go test ./... -count=1`,
-		`echo "── go test ./... -count=1 -race -timeout 8m (leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s)"`,
-		`cmd = ["go", "test", "./...", "-count=1", "-race", "-timeout", "8m"]`,
-		`    print(f"verify_go.sh: FATAL: -race leg timed out after {bound}s", file=sys.stderr)`,
-		`    sys.exit(124)`,
-		passedAnchor,
-	}
+	)
+	needles = append(needles, raceAnchors...)
+	needles = append(needles, passedAnchor)
 	position := -1
 	for _, needle := range needles {
-		exactLine := needle == `go build ./...` || needle == `go test ./... -count=1` || (repaired && needle == `check_mission_config`)
+		exactLine := needle == `go build ./...` || needle == `go test ./... -count=1` ||
+			(repaired && (needle == `check_mission_config` || needle == `check_race_bounds || exit $?` || needle == raceArmsCall))
 		count := strings.Count(src, needle)
 		next := strings.Index(src, needle)
 		if exactLine {

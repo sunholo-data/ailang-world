@@ -518,9 +518,10 @@ jobs:
 
 
       - name: go -race gate (replay tests run against pinned AILANG_BIN)
-        # The leg bound (VERIFY_GO_RACE_TIMEOUT_S) is loud on overrun; this ceiling sits above it.
-        timeout-minutes: 35
+        # Package (900s) < leg (2000s) < step (40m). See row 267 in
+        # design_docs/planned/w-daemon-race-package-timeout-headroom.md §0.
+        timeout-minutes: 40
         env:
           VERIFY_GO_LEGS: race
-          VERIFY_GO_RACE_TIMEOUT_S: "1500"
+          VERIFY_GO_RACE_TIMEOUT_S: "2000"
         run: ./scripts/verify_go.sh

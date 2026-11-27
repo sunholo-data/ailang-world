@@ -1,0 +1,971 @@
+{
+  "sprint_id": "w-daemon-race-package-timeout-headroom",
+  "design_doc": "design_docs/planned/w-daemon-race-package-timeout-headroom.md",
+  "design_revision": "r2",
+  "sprint_plan": "design_docs/planned/w-daemon-race-package-timeout-headroom-sprint-plan.md",
+  "previous_sprint": "w-world-address-bar-verbs-v4s5f4",
+  "base_commit": "6420426efcd0304c88adf347cf7af0f158d96863",
+  "design_measured_at": "c50264d6fe6d1a23184a4289ec214d023528c909",
+  "queue_row": 267,
+  "iteration": 443,
+  "phase": "planner",
+  "sprint_number": 1,
+  "sprint": "race package timeout headroom",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter443-row267",
+  "branch": "sprint/world-iter443-row267-race-headroom",
+  "authority": "Reviewed design §0 r2 supersedes conflicts in §1–§3.",
+  "behaviour": {
+    "package_seconds": 900,
+    "backup_kill_seconds": 60,
+    "start_allowance_seconds": 995,
+    "minimum_leg_seconds": 1955,
+    "leg_seconds": 2000,
+    "step_minutes": 40,
+    "listing_grace_seconds": 2,
+    "leg_timeout_rc": 124
+  },
+  "cut": "One milestone. Apply the compiled Appendix P fence.",
+  "planner_decisions": [
+    "Pin the evidence subcommand's exact success output so M19 observes extra top-level output.",
+    "Bound the R6 watcher and require the full R7 arm to finish below 10 seconds."
+  ],
+  "scope": {
+    "in": [
+      "scripts/verify_go.sh",
+      "scripts/test_race_leg_bounds.sh",
+      "host/verifygate/race_job_gate_test.go",
+      "host/verifygate/mission_config_gate_test.go",
+      "host/verifygate/evidence_manifest_gate_test.go",
+      ".github/workflows/ci.yml"
+    ],
+    "out": [
+      ".ail",
+      "production Go",
+      "tools/launchd"
+    ]
+  },
+  "executor_lane": "codex:gpt-6.2-sol",
+  "executor_form": "Apply with /usr/bin/patch -p1 -E. Run accept.sh on the current tree and snapshot.sh M1.",
+  "estimate_loc": {
+    "design": 262,
+    "cap": 400,
+    "measured": 351
+  },
+  "milestones": [
+    {
+      "increment": 351,
+      "added": 294,
+      "deleted": 57,
+      "expected_cumulative_numstat": 351,
+      "unfiltered_product": 351,
+      "id": "M1",
+      "title": "Derive and enforce the three race bounds",
+      "patch_fence": "diff M1",
+      "expected_snapshot": {
+        "path": "$STATE/snap/M1",
+        "status": 6,
+        "deleted": 0,
+        "manifest": 8
+      },
+      "accept_parts": [
+        "TestRaceBoundsAreOrdered",
+        "TestRaceLegRunsInItsOwnJob",
+        "TestVerifyGoProductCheckSequence",
+        "TestVerifyGoRefusesUnknownLegs",
+        "TestEvidenceNamedManifestRejectsUnpinnedTest",
+        "TestZ3PinDeclaredOnceAndInstalledInBothJobs",
+        "scripts/test_race_leg_bounds.sh",
+        "AC5 mutation replay"
+      ],
+      "commit_test": "export AILANG_BIN=\"$HOME/.pinned-ailang/ailang\" GOTOOLCHAIN=go1.26.6\nexport WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node\nexport WORLD_TOOL_AILANG_BIN=\"$HOME/.pinned-ailang-tools/v0.54.15/ailang\"\nd=$(mktemp -d \"${TMPDIR:-/tmp}/r267-commit.XXXXXX\") || exit 2\ntrap 'rm -rf \"$d\"' EXIT\nexport AILANG_STATE_DIR=\"$d/state\" AILANG_CACHE_DIR=\"$d/cache\"\nmkdir \"$AILANG_STATE_DIR\" \"$AILANG_CACHE_DIR\" || exit 2\ngo test -count=1 -v -run '^(TestRaceBoundsAreOrdered|TestRaceLegRunsInItsOwnJob|TestVerifyGoProductCheckSequence|TestVerifyGoRefusesUnknownLegs|TestEvidenceNamedManifestRejectsUnpinnedTest|TestZ3PinDeclaredOnceAndInstalledInBothJobs)$' ./host/verifygate/ &&\n  bash scripts/test_race_leg_bounds.sh &&\n  go test -count=1 ./host/verifygate/\n"
+    }
+  ],
+  "expected_snapshots": [
+    "$STATE/snap/M1"
+  ],
+  "design_premises_found_false": [
+    "Python imports scripts/floor/canary.py. Its verify_go.sh docstring makes no text assertion.",
+    "The charter wording at line 6372 is attributed to S5f2, so it does not verify the design's S6 attribution.",
+    "The original evidence success assertion could not see a leading echo; M19 needs exact success output.",
+    "AC3 has seven ok lines. The design's older AC5 row count is superseded by r2 M20/M21."
+  ],
+  "existing_tests_edited": [
+    "host/verifygate/race_job_gate_test.go",
+    "host/verifygate/mission_config_gate_test.go",
+    "host/verifygate/evidence_manifest_gate_test.go"
+  ],
+  "existing_tests_deleted": [],
+  "existing_production_edited": [
+    "scripts/verify_go.sh",
+    ".github/workflows/ci.yml"
+  ],
+  "new_files": [
+    "scripts/test_race_leg_bounds.sh"
+  ],
+  "not_touched": [
+    ".ail",
+    "production Go",
+    "tools/launchd"
+  ],
+  "mutants": [
+    {
+      "id": "M1",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "P=480",
+      "path": "scripts/verify_go.sh",
+      "line": 161,
+      "before": "PKG_TIMEOUT_S=900",
+      "after": "PKG_TIMEOUT_S=480",
+      "killer": "TestRaceBoundsAreOrdered",
+      "test": "^TestRaceBoundsAreOrdered$",
+      "pkg": "host/verifygate",
+      "evidence": [
+        {
+          "killer": "TestRaceBoundsAreOrdered",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole rc 1 KILLED (intended failure reached; package timed out afterward)"
+        },
+        {
+          "killer": "R1",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "KILLED (named arm restored; later R6 denied)",
+          "whole": "whole KILLED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M2",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "hardcode 8m in race call",
+      "path": "scripts/verify_go.sh",
+      "line": 405,
+      "before": "run_race_leg \"$VERIFY_GO_RACE_TIMEOUT_S\" go test ./... -count=1 -race -timeout \"${VERIFY_GO_RACE_PKG_TIMEOUT_S}s\"",
+      "after": "run_race_leg \"$VERIFY_GO_RACE_TIMEOUT_S\" go test ./... -count=1 -race -timeout 8m",
+      "killer": "TestRaceBoundsAreOrdered",
+      "test": "^TestRaceBoundsAreOrdered$",
+      "pkg": "host/verifygate",
+      "evidence": [
+        {
+          "killer": "TestRaceBoundsAreOrdered",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole rc 1 KILLED (intended failure reached; package timed out afterward)"
+        },
+        {
+          "killer": "TestVerifyGoProductCheckSequence",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole rc 1 KILLED (intended failure reached; package timed out afterward)"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M3",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "CI L=1500",
+      "path": ".github/workflows/ci.yml",
+      "line": 526,
+      "before": "VERIFY_GO_RACE_TIMEOUT_S: \"2000\"",
+      "after": "VERIFY_GO_RACE_TIMEOUT_S: \"1500\"",
+      "killer": "TestRaceBoundsAreOrdered",
+      "test": "^TestRaceBoundsAreOrdered$",
+      "pkg": "host/verifygate",
+      "evidence": [
+        {
+          "killer": "TestRaceBoundsAreOrdered",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole rc 1 KILLED (intended failure reached; package timed out afterward)"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M4",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "default L=1900",
+      "path": "scripts/verify_go.sh",
+      "line": 163,
+      "before": ":-2000}",
+      "after": ":-1900}",
+      "killer": "TestRaceBoundsAreOrdered",
+      "test": "^TestRaceBoundsAreOrdered$",
+      "pkg": "host/verifygate",
+      "evidence": [
+        {
+          "killer": "TestRaceBoundsAreOrdered",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole rc 1 KILLED (intended failure reached; package timed out afterward)"
+        },
+        {
+          "killer": "R1",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "KILLED (named arm restored; later R6 denied)",
+          "whole": "whole KILLED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M5",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "CI step=36",
+      "path": ".github/workflows/ci.yml",
+      "line": 523,
+      "before": "timeout-minutes: 40",
+      "after": "timeout-minutes: 36",
+      "killer": "TestRaceBoundsAreOrdered",
+      "test": "^TestRaceBoundsAreOrdered$",
+      "pkg": "host/verifygate",
+      "evidence": [
+        {
+          "killer": "TestRaceBoundsAreOrdered",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole rc 1 KILLED (intended failure reached; package timed out afterward)"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M6",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "short-circuit guard",
+      "path": "scripts/verify_go.sh",
+      "line": 165,
+      "before": "check_race_bounds() {\n",
+      "after": "check_race_bounds() {\n  return 0\n",
+      "killer": "R3",
+      "test": "R3",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R3",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "KILLED (named arm restored; later R6 denied)",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M7",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "comparison -le",
+      "path": "scripts/verify_go.sh",
+      "line": 171,
+      "before": " -lt \"$min\" ",
+      "after": " -le \"$min\" ",
+      "killer": "R2",
+      "test": "R2",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R2",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "KILLED (named arm restored; later R6 denied)",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M8",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "A=813",
+      "path": "scripts/verify_go.sh",
+      "line": 162,
+      "before": "START_ALLOWANCE_S=995",
+      "after": "START_ALLOWANCE_S=813",
+      "killer": "TestRaceBoundsAreOrdered",
+      "test": "^TestRaceBoundsAreOrdered$",
+      "pkg": "host/verifygate",
+      "evidence": [
+        {
+          "killer": "TestRaceBoundsAreOrdered",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole intended failure observed; terminal receipt PENDING; timeout panic in raw log"
+        },
+        {
+          "killer": "R1",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "KILLED (named arm restored; later R6 denied)",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M9",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "delete ps listing",
+      "path": "scripts/verify_go.sh",
+      "line": 190,
+      "before": "            listing = subprocess.run(\n                [\"ps\", \"-ww\", \"-eo\", \"pgid=,etime=,args=\"],\n                capture_output=True, text=True, errors=\"replace\", check=True, timeout=2,\n            )\n",
+      "after": "            listing = subprocess.CompletedProcess([], 0, stdout='')\n",
+      "killer": "R6",
+      "test": "R6",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R6",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "UNINFORMATIVE UNDER SANDBOX",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M10",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "kill child only",
+      "path": "scripts/verify_go.sh",
+      "line": 200,
+      "before": "os.killpg(p.pid, signal.SIGKILL)",
+      "after": "p.kill()",
+      "killer": "R6",
+      "test": "R6",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R6",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "UNINFORMATIVE UNDER SANDBOX",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M11",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "swallow child rc",
+      "path": "scripts/verify_go.sh",
+      "line": 185,
+      "before": "    sys.exit(p.wait(timeout=bound))",
+      "after": "    p.wait(timeout=bound)\n    sys.exit(0)",
+      "killer": "R5",
+      "test": "R5",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R5",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "KILLED (named arm restored; later R6 denied)",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M12",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "timeout rc 0",
+      "path": "scripts/verify_go.sh",
+      "line": 204,
+      "before": "    sys.exit(124)",
+      "after": "    sys.exit(0)",
+      "killer": "R6",
+      "test": "R6",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R6",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "UNINFORMATIVE UNDER SANDBOX",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M13",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "append -short",
+      "path": "scripts/verify_go.sh",
+      "line": 405,
+      "before": "run_race_leg \"$VERIFY_GO_RACE_TIMEOUT_S\" go test ./... -count=1 -race -timeout \"${VERIFY_GO_RACE_PKG_TIMEOUT_S}s\"",
+      "after": "run_race_leg \"$VERIFY_GO_RACE_TIMEOUT_S\" go test ./... -count=1 -race -timeout \"${VERIFY_GO_RACE_PKG_TIMEOUT_S}s\" -short",
+      "killer": "TestRaceBoundsAreOrdered",
+      "test": "^TestRaceBoundsAreOrdered$",
+      "pkg": "host/verifygate",
+      "evidence": [
+        {
+          "killer": "TestRaceBoundsAreOrdered",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole intended failure observed; terminal receipt PENDING; timeout panic in raw log"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M14",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "drop -race",
+      "path": "scripts/verify_go.sh",
+      "line": 405,
+      "before": "run_race_leg \"$VERIFY_GO_RACE_TIMEOUT_S\" go test ./... -count=1 -race -timeout \"${VERIFY_GO_RACE_PKG_TIMEOUT_S}s\"",
+      "after": "run_race_leg \"$VERIFY_GO_RACE_TIMEOUT_S\" go test ./... -count=1 -timeout \"${VERIFY_GO_RACE_PKG_TIMEOUT_S}s\"",
+      "killer": "TestRaceBoundsAreOrdered",
+      "test": "^TestRaceBoundsAreOrdered$",
+      "pkg": "host/verifygate",
+      "evidence": [
+        {
+          "killer": "TestRaceBoundsAreOrdered",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole intended failure observed; terminal receipt PENDING; timeout panic in raw log"
+        },
+        {
+          "killer": "TestRaceLegRunsInItsOwnJob",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole intended failure observed; terminal receipt PENDING; timeout panic in raw log"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M15",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "continue-on-error true",
+      "path": ".github/workflows/ci.yml",
+      "line": 523,
+      "before": "        timeout-minutes: 40",
+      "after": "        continue-on-error: true\n        timeout-minutes: 40",
+      "killer": "TestRaceBoundsAreOrdered",
+      "test": "^TestRaceBoundsAreOrdered$",
+      "pkg": "host/verifygate",
+      "evidence": [
+        {
+          "killer": "TestRaceBoundsAreOrdered",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole intended failure observed; terminal receipt PENDING; timeout panic in raw log"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M16",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "drop fixture call",
+      "path": "scripts/verify_go.sh",
+      "line": 402,
+      "before": "\nbash scripts/test_race_leg_bounds.sh\n",
+      "after": "\n",
+      "killer": "TestVerifyGoProductCheckSequence",
+      "test": "^TestVerifyGoProductCheckSequence$",
+      "pkg": "host/verifygate",
+      "evidence": [
+        {
+          "killer": "TestVerifyGoProductCheckSequence",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole intended failure observed; terminal receipt PENDING; timeout panic in raw log"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M17",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "drop main-flow guard",
+      "path": "scripts/verify_go.sh",
+      "line": 282,
+      "before": "\ncheck_race_bounds || exit $?\n",
+      "after": "\n",
+      "killer": "TestVerifyGoProductCheckSequence",
+      "test": "^TestVerifyGoProductCheckSequence$",
+      "pkg": "host/verifygate",
+      "evidence": [
+        {
+          "killer": "TestVerifyGoProductCheckSequence",
+          "kind": "static text",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole intended failure observed; terminal receipt PENDING; timeout panic in raw log"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M18",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "omit backup minute",
+      "path": "scripts/verify_go.sh",
+      "line": 170,
+      "before": " + 60 + VERIFY_GO_RACE_START_ALLOWANCE_S",
+      "after": " + VERIFY_GO_RACE_START_ALLOWANCE_S",
+      "killer": "R3",
+      "test": "R3",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R3",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "KILLED (named arm restored; later R6 denied)",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M19",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "top-level guard and echo",
+      "path": "scripts/verify_go.sh",
+      "line": 208,
+      "before": "if [ \"${1:-}\" = \"--evidence-manifest-check\" ]; then",
+      "after": "check_race_bounds\necho row267-before-dispatch\nif [ \"${1:-}\" = \"--evidence-manifest-check\" ]; then",
+      "killer": "TestEvidenceNamedManifestRejectsUnpinnedTest",
+      "test": "^TestEvidenceNamedManifestRejectsUnpinnedTest$",
+      "pkg": "host/verifygate",
+      "evidence": [
+        {
+          "killer": "TestEvidenceNamedManifestRejectsUnpinnedTest",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole intended failure observed; terminal receipt PENDING; timeout panic in raw log"
+        },
+        {
+          "killer": "R1",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "KILLED (named arm restored; later R6 denied)",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M20",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "remove ps timeout",
+      "path": "scripts/verify_go.sh",
+      "line": 192,
+      "before": "check=True, timeout=2,",
+      "after": "check=True,",
+      "killer": "R7",
+      "test": "R7",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R7",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "M21",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "design §5",
+      "mutation": "move SIGKILL after listing outside finally",
+      "path": "scripts/verify_go.sh",
+      "line": 188,
+      "before": "        try:\n            # Diagnostics have at most two seconds of grace before SIGKILL.\n            listing = subprocess.run(\n                [\"ps\", \"-ww\", \"-eo\", \"pgid=,etime=,args=\"],\n                capture_output=True, text=True, errors=\"replace\", check=True, timeout=2,\n            )\n            for line in listing.stdout.splitlines():\n                fields = line.split(None, 2)\n                if len(fields) == 3 and fields[0] == str(p.pid):\n                    print(f\"verify_go.sh: still running at the leg bound (elapsed {fields[1]}): {fields[2]}\", file=sys.stderr)\n        finally:\n            with suppress(ProcessLookupError):\n                os.killpg(p.pid, signal.SIGKILL)\n",
+      "after": "        # Diagnostics have at most two seconds of grace before SIGKILL.\n        listing = subprocess.run(\n            [\"ps\", \"-ww\", \"-eo\", \"pgid=,etime=,args=\"],\n            capture_output=True, text=True, errors=\"replace\", check=True, timeout=2,\n        )\n        for line in listing.stdout.splitlines():\n            fields = line.split(None, 2)\n            if len(fields) == 3 and fields[0] == str(p.pid):\n                print(f\"verify_go.sh: still running at the leg bound (elapsed {fields[1]}): {fields[2]}\", file=sys.stderr)\n        with suppress(ProcessLookupError):\n            os.killpg(p.pid, signal.SIGKILL)\n",
+      "killer": "R7",
+      "test": "R7",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R7",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "X01",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "additional branch in M1 diff",
+      "mutation": "feed constant into guard case",
+      "path": "scripts/verify_go.sh",
+      "line": 167,
+      "before": "  case \"$VERIFY_GO_RACE_TIMEOUT_S\" in",
+      "after": "  case 2000 in",
+      "killer": "R4",
+      "test": "R4",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R4",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "KILLED (named arm restored; later R6 denied)",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "X02",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "additional branch in M1 diff",
+      "mutation": "disable bounds dispatch",
+      "path": "scripts/verify_go.sh",
+      "line": 226,
+      "before": " = \"--race-bounds-check\" ]; then",
+      "after": " = \"--mutated-race-bounds-check\" ]; then",
+      "killer": "R1",
+      "test": "R1",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R1",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "KILLED (named arm restored; later R6 denied)",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "X03",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "additional branch in M1 diff",
+      "mutation": "disable wrapper dispatch",
+      "path": "scripts/verify_go.sh",
+      "line": 232,
+      "before": " = \"--race-leg-wrapper-check\" ]; then",
+      "after": " = \"--mutated-race-leg-wrapper-check\" ]; then",
+      "killer": "R5",
+      "test": "R5",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R5",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "KILLED (named arm restored; later R6 denied)",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "X04",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "additional branch in M1 diff",
+      "mutation": "remove process-group filter",
+      "path": "scripts/verify_go.sh",
+      "line": 196,
+      "before": " and fields[0] == str(p.pid)",
+      "after": "",
+      "killer": "R6",
+      "test": "R6",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R6",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "UNINFORMATIVE UNDER SANDBOX",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "X05",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "additional branch in M1 diff",
+      "mutation": "do not catch subprocess listing errors",
+      "path": "scripts/verify_go.sh",
+      "line": 201,
+      "before": "except (OSError, subprocess.SubprocessError) as exc:",
+      "after": "except OSError as exc:",
+      "killer": "R7",
+      "test": "R7",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R7",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "X06",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "additional branch in M1 diff",
+      "mutation": "remove child wait timeout",
+      "path": "scripts/verify_go.sh",
+      "line": 185,
+      "before": "    sys.exit(p.wait(timeout=bound))",
+      "after": "    sys.exit(p.wait())",
+      "killer": "R6",
+      "test": "R6",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "R6",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 1,
+          "named": "UNINFORMATIVE UNDER SANDBOX",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "X07",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "additional branch in M1 diff",
+      "mutation": "remove partial ps-row guard",
+      "path": "scripts/verify_go.sh",
+      "line": 196,
+      "before": "len(fields) == 3 and ",
+      "after": "",
+      "killer": "malformed",
+      "test": "malformed",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "malformed",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "X08",
+      "kind": "diff",
+      "stage": "M1",
+      "source": "additional branch in M1 diff",
+      "mutation": "allow a missing group to add a spurious listing diagnostic",
+      "path": "scripts/verify_go.sh",
+      "line": 199,
+      "before": "            with suppress(ProcessLookupError):\n                os.killpg",
+      "after": "            os.killpg",
+      "killer": "missing",
+      "test": "missing",
+      "pkg": "scripts",
+      "evidence": [
+        {
+          "killer": "missing",
+          "kind": "behavior",
+          "mutated_rc": 1,
+          "restored_rc": 0,
+          "named": "KILLED",
+          "whole": "whole SKIPPED"
+        }
+      ],
+      "status": "measured"
+    },
+    {
+      "id": "drop-ww",
+      "stage": "M1",
+      "kind": "declared",
+      "status": "UNOBSERVED"
+    }
+  ],
+  "gates_script": "§7 exact gates.sh fence",
+  "roundtrip": {
+    "summary": "Extracted the Appendix P fence from this plan with the controller's awk expression. `/usr/bin/patch -p1 -E` applied cleanly to the fresh archive at `$S/rt-1`. `diff -r` returned rc 0 for `scripts`, `host` and `.github` with no output. See `$S/roundtrip.raw`.",
+    "format": "plan awk / patch -p1 -E / diff -r / manifest"
+  },
+  "controller_decisions_requested": [
+    "Run outside-sandbox AC3 and the deferred R6 mutation replays from §6.",
+    "Run comparable gates and record PR CI and first ten post-merge race attempts."
+  ],
+  "verification": {
+    "base_and_final": "Before the M1 test runs, `git archive 6420426e | tar -x -C \"$S/pristine\"` created the pristine source export. The same archive seeded `$S/st-M1`. Local base AC1–AC3 reported ac1 rc=2, ac2-refuse rc=2, ac2-accept rc=2, ac3 rc=127, ac3-contended rc=127. The old script refused the new switches as unrecognized, and the new fixture did not exist. AC4 native vet rc 0, tests rc 0 (five existing names). Base build rc 0 and `verify_ail.sh` rc 0. AC5 is SKIPPED at base because its anchors are added by M1. AC7/AC8 require PR or merge artifacts.\n\nPristine AC6 used `go test ./... -count=1 -timeout 45m` from the completed archive. rc 1. **UNINFORMATIVE UNDER SANDBOX**. It hit the socket-bind denial above. The source export has no Git index, which also affects tracked-file and history readers. The controller's actual checkout baselines below are the acceptance comparator. The parser control is `FAILSET_CONTROL host/store TestParserPositive`. The raw logs are checked for `panic: test timed out`. The pristine all-package parser control fired; its text fail set is in `$S/base-archive-all-plain.fails`.\n\n| Controller base leg | Result |\n|---|---|\n| `verifygate-plain` | rc 1, host/verifygate TestMissionConfigDefaultFlowIntegration, FAILSET_CONTROL fired, timeout panic absent. |\n| `pins-plain` | rc 0, empty fail set, FAILSET_CONTROL fired, timeout panic absent. |\n| `all-plain` | rc 1, 49 failing tests (`cmd/ailang-worldd` 20, `cmd/world-publish` 1, `host/broker` 7, `host/coordinator` 1, `host/daemon` 19, `host/verifygate` 1). Full fail set at `$STATE/base/all-plain.fails`, FAILSET_CONTROL fired, timeout panic absent. |\n\nBaseline marker `ALL_DONE for 6420426efcd0304c88adf347cf7af0f158d96863`. The controller script uses `go test -count=1 -timeout 30m ./host/verifygate/`, `go test -count=1 -timeout 10m ./host/pins/`, and `go test -count=1 -timeout 45m ./...`.\n\nThe first aggregate gates rehearsal stopped after verifygate when its script was edited in flight. The final extracted script passes `bash -n`. Pins, direct all-package and both AC3 environments have separate raw receipts.\n\nStage AC1/AC2 logged the three expected values and exit codes in `$S/st-ac1-ac2.raw`. Strict AC4 named rc 0. Native and Linux-targeted vet rc 0 and 0. Build rc 0. AIL gate rc 0. Shell syntax and gofmt are in `$S/st-gates-progress.raw`. The exact `gofmt -l host/verifygate/` also printed no files.\n\n| Stage gate | Result |\n|---|---|\n| `verifygate-plain` | rc 1, **INSTRUMENT FAILURE** (30-minute timeout panic). The attributable fail set was host/verifygate TestMissionConfigDefaultFlowIntegration, the same as controller base. Repeat the package outside under the §7 gate. |\n| `pins-plain` | rc 0 with read-only index; empty fail set matches controller base. |\n| `all-plain` | rc 1, **UNINFORMATIVE UNDER SANDBOX** (socket bind in `$S/st-archive-all-plain.raw`). Parser control fired, 37 attributable names, timeout panic absent. Repeat against the controller base outside. |\n\n`$S/pins-stage-whole-git.raw` also records the entire `host/pins` package with the read-only index, rc 0 and an empty fail set. Its fail set matched `$STATE/base/pins-plain.fails` byte for byte.\n\nA non-zero test exit with an empty parse is an instrument failure, even when in a leg with a separate sandbox limitation. Compare only attributable package/test names and inspect timeout lines separately.",
+    "reader_receipt": "$S/st-readers.raw and $S/readers-stage-git.raw",
+    "daemon_mid": {
+      "n": 9,
+      "pearson_r": -0.583,
+      "slope_seconds_per_k": -137.1,
+      "receipt": "$S/daemon-trend.raw"
+    },
+    "ac3": "Both complete fixture runs returned **UNINFORMATIVE UNDER SANDBOX** for R6 with raw rc 1. R1–R5 passed and the wrapper returned 124 with the 2 s FATAL, but launching real `ps` returned `[Errno 1] Operation not permitted`. The contention run recorded `drwxrwxrwt 777 /private/tmp` and eight spinners. R7 executed independently with the same fixture body and passed in both settings (wrapper 4s, arm 4s plain and wrapper 4s, arm 4s contended). R6 wall/diagnostic acceptance remains pending outside. The receipts are `$S/ac3-final/legs.txt` and `$S/ac3-r7-final/legs.txt`.",
+    "snapshot": "`SNAPSHOT_ROOT=\"$S/snap-rehearsal\" SNAPSHOT_BASE_REPO=\"$W\" bash \"$S/snapshot.sh\" M1` created six STATUS entries, an empty DELETED and eight checked SHA-256 entries including the two bookkeeping files. The controller's active snapshot path is untouched."
+  },
+  "production_caller_census": {
+    "race_leg_calls": 1,
+    "verify_go_workflow_invocations": 2
+  },
+  "mutants_metrics": {
+    "design_total": 21,
+    "extra_total": 8,
+    "unobserved": [
+      "drop-ww"
+    ],
+    "named_receipts": 35,
+    "whole_receipts": 5,
+    "whole_named_seen": [
+      "M1",
+      "M13",
+      "M14",
+      "M15",
+      "M16",
+      "M17",
+      "M19",
+      "M2",
+      "M3",
+      "M4",
+      "M5",
+      "M8"
+    ],
+    "survivors": [],
+    "sandbox_uninformative": [
+      [
+        "M9",
+        "R6"
+      ],
+      [
+        "M12",
+        "R6"
+      ],
+      [
+        "M10",
+        "R6"
+      ],
+      [
+        "X04",
+        "R6"
+      ],
+      [
+        "X06",
+        "R6"
+      ]
+    ]
+  },
+  "unfiltered_branch_with_plan": {
+    "design_commits": 535,
+    "product_lines": 351,
+    "committed_total": 886,
+    "scope": "The plan and JSON are untracked planner deliverables.",
+    "plan_md_lines": 1026,
+    "sprint_json_lines": 971,
+    "if_both_planner_files_committed": 2883
+  }
+}
