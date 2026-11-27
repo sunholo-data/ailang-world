@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
+	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/worktree"
 )
@@ -35,6 +36,11 @@ func newWorktreeStartRig(t *testing.T, claude bool, ttl ...int64) *worktreeStart
 
 func newWorktreeStartRigWithContext(t *testing.T, claude bool, ctx context.Context, ttl ...int64) *worktreeStartRig {
 	t.Helper()
+	return newWorktreeStartRigWithAgent(t, claude, ctx, "", ttl...)
+}
+
+func newWorktreeStartRigWithAgent(t *testing.T, claude bool, ctx context.Context, body string, ttl ...int64) *worktreeStartRig {
+	t.Helper()
 	s := operatorService(t)
 	s.mustInstall(t)
 	s.writes = nil
@@ -46,6 +52,11 @@ func newWorktreeStartRigWithContext(t *testing.T, claude bool, ctx context.Conte
 		t.Fatal(err)
 	}
 	startReadFakeAgentIn(t, f, bin)
+	if body != "" {
+		if err := os.WriteFile(filepath.Join(bin, "codex"), []byte(body), 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
 	f.r.sessions = filepath.Join(s.config.Home, "sessions")
 	r := operatorStartRig{f: f, bin: bin, creds: s.config.Credentials, hosts: t.TempDir()}
 	r.f.r.f.db = s.config.World
@@ -69,7 +80,14 @@ func newWorktreeStartRigWithContext(t *testing.T, claude bool, ctx context.Conte
 	})
 	h := matchingHealth(t, r.f.r.f, r.f.r.profiles, r.f.profile)
 	h.DBPath = s.config.World
+	if body != "" {
+		h.Build.ExecutableSHA256 = s.config.Executables[s.env.paths.Binary]
+		s.health = h
+	}
 	stubDaemon(t, h, nil)
+	if body != "" {
+		episodeSelfBuild = func() daemon.BuildIdentity { return h.Build }
+	}
 	r.at = store.OperatorMintAttempt{Catalogue: 1}
 	src := operatorStartSource{r.f.dir, r.f.r.profiles, r.f.r.f.ws, r.hosts, s.env.terminal.now}
 	if ctx == nil {
@@ -213,6 +231,11 @@ func (r *worktreeStartRig) run(t *testing.T, cmd string) (int, string) {
 }
 
 func TestOperatorStartOnce(t *testing.T) {
+	t.Run("worktree", testOperatorStartOnceWorktree)
+	t.Run("launch", testOperatorStartOnceLaunch)
+}
+
+func testOperatorStartOnceWorktree(t *testing.T) {
 	r := newWorktreeStartRig(t, false)
 	if err := r.start(t, func(step string) error {
 		if step == "before add" {

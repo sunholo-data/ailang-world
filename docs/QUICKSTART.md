@@ -2083,3 +2083,17 @@ python3 scripts/surface/import_github_checks.py --repo "$PWD" --repo-id world \
 
 The card shows when the checks were captured and links to GitHub. Rerun the
 import to refresh a pending result. Receipts attach to the exact PR head.
+
+### Managed headless start launch
+
+The installed operator runner starts one confined Codex child after an approved
+start reaches its prepared checkpoint. It rechecks the session, key and signed
+executable before taking the durable run reservation. The worker holds the
+runner and episode locks. An admitted child can finish through a daemon restart.
+
+Run `ailang-worldd service runner launch-status <action-id>`. The log and status
+use the action ID and report `launched`, `stopped`, `failed`, `capped` or
+`spawn-refused`. `uncertain` preserves the effect fence for attended review of
+the process and receipts. `ailang-worldd episode report <episode>` shows the exit
+and transcript after completion. Saved streams scrub session credentials. Use the attended
+runner stop or paired upgrade to drain a live launch.

@@ -33,7 +33,12 @@ func activationTestContext(t *testing.T) context.Context {
 
 func operatorActivationFixture(t *testing.T) (*worktreeStartRig, runnerConfig, store.OperatorHeartbeat, *os.File) {
 	t.Helper()
-	r := newWorktreeStartRigWithContext(t, false, activationTestContext(t))
+	return operatorActivationFixtureWithAgent(t, "")
+}
+
+func operatorActivationFixtureWithAgent(t *testing.T, script string) (*worktreeStartRig, runnerConfig, store.OperatorHeartbeat, *os.File) {
+	t.Helper()
+	r := newWorktreeStartRigWithAgent(t, false, activationTestContext(t), script)
 	r.env.operatorBudget = activationTestBudget
 	c := r.config
 	agent := operatorFileFact(r.action, "launch_binary")
@@ -320,7 +325,10 @@ func TestOperatorFirstManagedEpisodeProcess(t *testing.T) {
 		t.Fatalf("next tick prepared the same row twice: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join(r.bin, "ran")); !errors.Is(err, os.ErrNotExist) {
-		t.Fatalf("spawn crossed the S6 boundary: %v", err)
+		t.Fatalf("preparation or readback spawned before a durable S6 reservation: %v", err)
+	}
+	if _, err := ro.ReadOperatorLaunch(ctx, row.ID); !errors.Is(err, store.ErrOperatorMissing) {
+		t.Fatalf("preparation or readback changed the launch ledger: %v", err)
 	}
 }
 

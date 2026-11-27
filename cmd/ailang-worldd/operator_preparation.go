@@ -20,13 +20,13 @@ var errOperatorDraining = errors.New("operator runner draining")
 
 func (e serviceEnv) consumeOperatorPreparation(ctx context.Context, c runnerConfig, heartbeat store.OperatorHeartbeat,
 	src operatorStartSource, stops <-chan os.Signal, process *os.File, recoveryCursor *string,
-	acquire func(string, string) (*store.OperatorEpisodeLock, error)) error {
+	acquire func(string, string) (*store.OperatorEpisodeLock, error), launch ...operatorPreparedLaunch) error {
 	select {
 	case <-stops:
 		return errOperatorDraining
 	default:
 	}
-	if err := e.recoverOperatorStart(ctx, c, heartbeat, src, recoveryCursor, stops); err != nil {
+	if err := e.recoverOperatorStart(ctx, c, heartbeat, src, recoveryCursor, stops, launch...); err != nil {
 		return err
 	}
 	return e.prepareOperatorStart(ctx, c, heartbeat.Owner, heartbeat.Build, src, stops, process, acquire)

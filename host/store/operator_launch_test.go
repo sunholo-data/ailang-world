@@ -1,6 +1,7 @@
 package store
 
 import (
+	"encoding/json"
 	"errors"
 	"reflect"
 	"testing"
@@ -8,9 +9,29 @@ import (
 	"github.com/sunholo-data/ailang-world/host/approval"
 )
 
-func TestOperatorLaunchReceiptLaw(t *testing.T) {
+func preparedOperatorLaunchFixture(t *testing.T, ttl int64) (operatorPinFixture, string, OperatorStartRecovery) {
+	t.Helper()
 	digest := "sha256:" + hex64("fixture executable")
-	f := newOperatorPinFixtureWithFacts(t, false, []approval.OperatorResolved{{Name: "launch_binary_sha256", Value: digest}}, startRecoveryTestContext(t))
+	prefix := []approval.OperatorResolved{{Name: "launch_binary_sha256", Value: digest}}
+	f := newOperatorPinFixtureWithFacts(t, false, prefix, startRecoveryTestContext(t))
+	if ttl > 0 {
+		row := getOperator(t, f.c, f.in.Attempt.CAS.ID, pinNow)
+		a, err := approval.DecodeOperatorAction(row.Action)
+		if err != nil {
+			t.Fatal(err)
+		}
+		f.in.Start.TTLS = ttl
+		facts, err := f.in.Resolution()
+		if err != nil {
+			t.Fatal(err)
+		}
+		a.Resolution = append(prefix, facts...)
+		f.proof = signOperatorPinAction(t, f.c, row, a)
+		f.in.Attempt.CAS.Digest, err = approval.OperatorSignatureDigest(a)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
 	f.mint(t)
 	id := f.in.Attempt.CAS.ID
 	for _, value := range []string{"files-identity", OperatorFilesPublished} {
@@ -22,11 +43,16 @@ func TestOperatorLaunchReceiptLaw(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	before := f.snapshot(t)
 	prepared, err := f.c.ReadOperatorStartRecovery(f.ctx, id)
 	if err != nil || prepared.Window != OperatorStartPrepared {
 		t.Fatalf("prepared: %+v %v", prepared, err)
 	}
+	return f, digest, prepared
+}
+
+func TestOperatorLaunchReceiptLaw(t *testing.T) {
+	f, digest, prepared := preparedOperatorLaunchFixture(t, 0)
+	id, before := prepared.CAS.ID, f.snapshot(t)
 	handoff := [32]byte{1}
 	now := func() int64 { return pinNow }
 	f.assertRefused(t, before, f.c.ReserveOperatorStep(f.ctx, operatorLaunchKey(prepared, handoff), pinNow), ErrOperatorInput)
@@ -72,6 +98,27 @@ func TestOperatorLaunchReceiptLaw(t *testing.T) {
 		t.Fatalf("observed: %+v %v", live, err)
 	}
 	f.assertRefused(t, before, f.c.RecordOperatorLaunch(f.ctx, reserved, r, nil, pinNow), ErrOperatorConflict)
+	bad := r
+	bad.Executable = "sha256:" + hex64("wrong observed executable")
+	raw, err := json.Marshal(bad)
+	if err != nil {
+		t.Fatal(err)
+	}
+	operatorExec(t, f.c, "UPDATE operator_action_steps SET receipt=? WHERE kind='launch'", raw)
+	corrupt := f.snapshot(t)
+	_, err = f.c.ReadOperatorLaunch(f.ctx, id)
+	f.assertRefused(t, corrupt, err, ErrOperatorConflict)
+	raw, _ = json.Marshal(r)
+	operatorExec(t, f.c, "UPDATE operator_action_steps SET receipt=? WHERE kind='launch'", raw)
+	if owner, err := ReadOperatorEpisodeOwner(f.ctx, f.c.lock.dbPath, prepared.Episode); err != nil || owner != id {
+		t.Fatalf("observed child lost terminal effect exclusion: %q %v", owner, err)
+	}
+	if pending, err := EpisodeHasUnresolvedOperatorSteps(f.ctx, f.c.lock.dbPath, prepared.Episode); err != nil || !pending {
+		t.Fatalf("observed child lost GC effect exclusion: %t %v", pending, err)
+	}
+	if err := f.c.PruneOperatorActions(f.ctx, pinNow+31*86400); err != nil || !reflect.DeepEqual(before, f.snapshot(t)) {
+		t.Fatalf("pruner changed an unresolved receipt: %v", err)
+	}
 	r.Status = "capped"
 	r.Exit = -1
 	history := EpisodeLaunch{Mode: "headless", Exit: r.Exit}
@@ -89,4 +136,38 @@ func TestOperatorLaunchReceiptLaw(t *testing.T) {
 	if err := f.c.RecordOperatorLaunch(f.ctx, live, r, &history, pinNow); !errors.Is(err, ErrOperatorConflict) {
 		t.Fatalf("completion replay: %v", err)
 	}
+}
+
+func TestOperatorLaunchSession(t *testing.T) {
+	f, _, ready := preparedOperatorLaunchFixture(t, 5)
+	id, secret := ready.CAS.ID, [32]byte{1}
+	now := func() int64 { return pinNow }
+
+	before := f.snapshot(t)
+	f.assertRefused(t, before, f.c.ReserveOperatorLaunch(f.ctx, ready, secret, f.proof, func() int64 { return pinNow + 5 }), ErrOperatorExpired)
+	if err := f.c.ReserveOperatorLaunch(f.ctx, ready, secret, f.proof, now); err != nil {
+		t.Fatal(err)
+	}
+	reserved, err := f.c.ReadOperatorLaunch(f.ctx, id)
+	if err != nil || reserved.Receipt != (OperatorLaunchReceipt{}) {
+		t.Fatalf("reserved: %+v %v", reserved, err)
+	}
+	before = f.snapshot(t)
+	f.assertRefused(t, before, f.c.AuthorizeOperatorSpawn(f.ctx, id, secret, f.proof, func() int64 { return pinNow + 5 }), ErrOperatorExpired)
+	operatorExec(t, f.c, "UPDATE session_credentials SET project='changed'")
+	f.assertRefused(t, f.snapshot(t), f.c.AuthorizeOperatorSpawn(f.ctx, id, secret, f.proof, now), ErrOperatorConflict)
+	operatorExec(t, f.c, "UPDATE session_credentials SET project=?", f.in.Profile.Project)
+	operatorExec(t, f.c, `INSERT INTO session_credentials
+		(credential_id,episode_id,grants_json,expires_at,created_at,project,profile_digest)
+		SELECT ?,episode_id,grants_json,expires_at,created_at,project,profile_digest FROM session_credentials`, hex64("other credential"))
+	f.assertRefused(t, f.snapshot(t), f.c.AuthorizeOperatorSpawn(f.ctx, id, secret, f.proof, now), ErrOperatorConflict)
+	operatorExec(t, f.c, "DELETE FROM session_credentials WHERE credential_id=?", hex64("other credential"))
+	operatorExec(t, f.c, "UPDATE approvers SET revoked_at=?", pinNow)
+	before = f.snapshot(t)
+	if err := f.c.AuthorizeOperatorSpawn(f.ctx, id, secret, f.proof, now); err == nil || !reflect.DeepEqual(before, f.snapshot(t)) {
+		t.Fatalf("revoked approver changed a reservation: %v", err)
+	}
+	operatorExec(t, f.c, "UPDATE approvers SET revoked_at=NULL")
+	operatorExec(t, f.c, "DELETE FROM session_credentials")
+	f.assertRefused(t, f.snapshot(t), f.c.AuthorizeOperatorSpawn(f.ctx, id, secret, f.proof, now), ErrOperatorConflict)
 }

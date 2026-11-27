@@ -34,6 +34,7 @@ type OperatorLaunchSnapshot struct {
 	Key     OperatorStepKey
 	Phase   string
 	Receipt OperatorLaunchReceipt
+	NoSpawn bool
 }
 
 func operatorLaunchKey(s OperatorStartRecovery, handoff [32]byte) OperatorStepKey {
@@ -183,6 +184,12 @@ func readOperatorLaunch(ctx context.Context, tx *sql.Tx, id string) (OperatorLau
 		!operatorLaunchDigest(s.Receipt.Executable) {
 		return s, row, ErrOperatorConflict
 	}
+	if len(row.Action) != 0 {
+		a, err := decodeOperatorMintAction(row)
+		if err != nil || s.Receipt.Executable != mintFact(a, "launch_binary_sha256") {
+			return s, row, ErrOperatorConflict
+		}
+	}
 	switch s.Receipt.Status {
 	case "launched":
 		if s.Key.Version == 3 && row.State == "succeeded" && s.Receipt.PID > 0 && s.Receipt.Birth != "" {
@@ -190,6 +197,7 @@ func readOperatorLaunch(ctx context.Context, tx *sql.Tx, id string) (OperatorLau
 		}
 	case "spawn-refused":
 		if (s.Key.Version == 2 || s.Key.Version == 3) && row.State == "failed" && s.Receipt.PID == 0 && s.Receipt.Birth == "" {
+			s.Receipt, s.NoSpawn = OperatorLaunchReceipt{}, true
 			return s, row, nil
 		}
 	case "stopped", "failed", "capped":
