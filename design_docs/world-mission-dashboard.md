@@ -1,22 +1,25 @@
-# World mission dashboard — iteration 442 (2026-11-27)
+# World mission dashboard — iteration 443 (2026-11-27)
 
-- **Done this fire:** row 243 **V4 sprint 5f4 LANDED** (PR #689, merge `c3504c56`). The judge gave **FAIL 68** in round 1 and **PASS 85** in round 2, with 0 blocking findings.
-  - **Activation is in. The installed operator runner now prepares an approved start on its own.**
-    - Each bounded tick takes at most one confirmed start: it takes the runner and episode locks, re-reads the candidate, claims it under lifecycle exclusion, creates and reads back the worktree, mints the session credential atomically and publishes the private files.
-    - It stops at **prepared-awaiting-S6**. Nothing launches an agent yet.
-    - After a restart, the runner adopts each of the seven durable windows read-only and never repeats an effect.
-    - New attended remedy: `ailang-worldd service runner reconcile-start ACTION-ID` (typed `y`), plus a partial-files orphan revoke.
-  - 1,617 lines (cap 1,400; under the 1,650 safe-unit ceiling).
-- **The deferral chain is closed.** S5f, S5f2 and S5f3 each moved the caller on; this sprint landed it as one milestone.
-- **Why round 1 failed:** the first activation test ran the real loop under a real 22-second tick budget, so a loaded machine turned it red. I hit that on my first commit attempt and the judge reproduced it under CPU contention. Round 2 made the budget a named constant with a test-only override; production is unchanged.
-- **CI found a Linux-only red** (round 3): the test fixture put the session directory outside the runner home, so the production permission walk reached `/tmp`. It is now fixed in the fixture, 16 test lines. A `TMPDIR` under `/private/tmp` reproduces it on macOS.
-- **CI race bound (row 267):** it did not fire this landing. PR and merge were both 3/3 at attempt 1. The merge ran on a slower runner: `cmd/ailang-worldd` 374.8 s, `host/daemon` 421.7 s, against the 480 s bound.
-- **DECISIONS FOR MARK:** **D-WORLD-121**: take row 267 (race-bound headroom) before the next row-243 sprint? Recommended **A**; the default is B, which applied this fire.
-- **Next loop work:** **V4 S6, launch**: the spawn reservation, launch receipt and launch recovery from prepared-awaiting-S6. Also carry the judge's notes: behavioural pins for the production budgets, and clamp `worktree.WithCommandTimeout`.
-- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Goal unmoved; row 243 serves D-WORLD-94.
+- **Done this fire:** **row 267 LANDED** (PR #691, merge `6447e776`): the CI race job's timeout headroom. The judge gave **FAIL 74**, then **FAIL 77**, then **PASS 79**, with 0 blocking findings at the end.
+  - **Why it was picked:** dev's tip `6420426e` went red at attempt 1 on the race job's 480 s per-package bound. It was a docs-only merge, so the code had no defect. D-WORLD-121's default B makes row 267 the pick whenever dev's tip is red.
+  - **What changed:**
+    - Bounds: per-package 900 s (was 8 min), leg 2000 s (was 1500 s), CI step 40 min (was 35).
+    - A guard refuses any leg bound below per-package + 60 s (Go's backup kill) + the 995 s start allowance.
+    - On a leg timeout, the wrapper now lists what is still running, then kills the whole process group.
+    - New tests: shell arms R1–R7 run first in the race leg, plus `TestRaceBoundsAreOrdered`.
+  - **Derivation:** the bounds come from 51 race-job attempts across 40 CI runs. 18 hit the cap, all on slow runners.
+  - 379 lines. No package left `-race`, and nothing retries the gate.
+- **Why two rounds failed:** the new hang-arm test was itself load-sensitive (2–4% failures under CPU contention). Two mechanisms were involved: a fixed 2 s bound, and a probe written as a fresh file, which macOS execs slowly under load.
+  - The fix retries an arm only when its probe never became ready. Every real assertion still fails at once.
+  - Result: 0/40 failures under contention.
+- **⚠ Side effect, repaired:** the round-1 judge SIGKILLed two helper loops of an unrelated GPU finetune run (`ailang/tools/finetune/pilot5_run.sh`: its loss-divergence watchdog and its rig-lock heartbeat). Training kept running, and I restored both loops verbatim. Whoever owns that run should check it. A new charter rule says roles kill only PIDs they started.
+- **DECISIONS FOR MARK:** **D-WORLD-121** is now moot, because row 267 has landed. Nothing else is asked.
+- **Next loop work:** row 243 **V4 S6, launch** (spawn reservation, launch receipt and launch recovery), carrying judge-442's budget-pin notes.
+- **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Goal unmoved.
 - **Routing this fire:**
-  - Planner and executor ran `codex:gpt-6.2-sol`: the planner used 610k tokens, the executor 70k + 232k + (round 3 not captured).
-  - The judge was Agent `sonnet`, a different vendor: 92k tokens in round 1, then 74k for the fresh round-2 instance and 83k cumulative after its round-3 addendum.
-  - Metered spend: $0.
+  - Designer `claude:claude-opus-5-5`.
+  - Planner and executor `codex:gpt-6.2-sol`: 398k tokens for the planner; 56k + 86k + 77k + 80k for the executor.
+  - Judge: Agent `sonnet`, a different vendor, at 96k / 58k / 74k tokens.
+  - Metered: $0.74 (two quorum rounds).
 - **Open PRs:** #617 is attended UI work that the loop does not touch.
 - **Bookkeeping thread:** #635 (next rotation Monday 2026-11-30 07:00 local).
