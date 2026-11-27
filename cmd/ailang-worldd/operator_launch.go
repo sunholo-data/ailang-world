@@ -223,8 +223,15 @@ func (e serviceEnv) superviseOperatorLaunch(job operatorLaunchJob, stops <-chan 
 	go func() { done <- cmd.Wait() }()
 	ticker := time.NewTicker(runnerPoll)
 	defer ticker.Stop()
-	cap := time.NewTimer(job.wall + time.Minute)
-	defer cap.Stop()
+	timer := e.operatorSupervisorCap
+	if timer == nil {
+		timer = func(d time.Duration) (<-chan time.Time, func()) {
+			t := time.NewTimer(d)
+			return t.C, func() { t.Stop() }
+		}
+	}
+	cap, stopCap := timer(job.wall + time.Minute)
+	defer stopCap()
 	for {
 		select {
 		case err := <-done:
@@ -234,7 +241,7 @@ func (e serviceEnv) superviseOperatorLaunch(job operatorLaunchJob, stops <-chan 
 		case <-stops:
 			_ = cmd.Process.Signal(syscall.SIGTERM)
 			stops = nil
-		case <-cap.C:
+		case <-cap:
 			_ = cmd.Process.Signal(syscall.SIGTERM)
 			return errors.New("launch supervisor did not report completion")
 		}
@@ -262,7 +269,13 @@ func (e serviceEnv) writeOperatorLaunch(c runnerConfig, r store.OperatorLaunchRe
 	})
 }
 
-func (e serviceEnv) runOperatorLaunchWorker(args []string, out io.Writer) int {
+type operatorWorkerInput struct {
+	build   string
+	handoff io.Reader
+	file    func(uintptr, string) *os.File
+}
+
+func (e serviceEnv) runOperatorLaunchWorker(args []string, out io.Writer, input operatorWorkerInput) int {
 	proc, stop := serveSignalContext()
 	defer stop()
 	if len(args) != 1 || !verbs.ValidOperatorActionID(args[0]) {
@@ -270,7 +283,7 @@ func (e serviceEnv) runOperatorLaunchWorker(args []string, out io.Writer) int {
 	}
 	c, b, err := e.installedRunner()
 	if err != nil || os.Getenv("WORLD_OPERATOR_CONFIG_SHA256") != serviceHash(b) ||
-		daemon.CurrentBuild().ExecutableSHA256 != c.Executables[e.paths.Binary] {
+		input.build != c.Executables[e.paths.Binary] {
 		return exitUsage
 	}
 	ctx, cancel := e.operatorContext(operatorLaunchBudget)
@@ -288,7 +301,7 @@ func (e serviceEnv) runOperatorLaunchWorker(args []string, out io.Writer) int {
 	names := [3]string{c.Credentials + ".operator-runner.lock",
 		store.OperatorEpisodeLockPath(c.Credentials, row.Episode), filepath.Dir(e.paths.Record)}
 	for i, name := range names {
-		fd := os.NewFile(uintptr(3+i), name)
+		fd := input.file(uintptr(3+i), name)
 		defer fd.Close()
 		st, err := fd.Stat()
 		path, pathErr := os.Lstat(name)
@@ -298,7 +311,7 @@ func (e serviceEnv) runOperatorLaunchWorker(args []string, out io.Writer) int {
 		syscall.CloseOnExec(int(fd.Fd()))
 		job.locks[i] = fd
 	}
-	if _, err := io.ReadFull(os.Stdin, job.secret[:]); err != nil {
+	if _, err := io.ReadFull(input.handoff, job.secret[:]); err != nil {
 		return exitUsage
 	}
 	if err := e.executeOperatorLaunch(proc, job, out); err != nil {
@@ -453,10 +466,8 @@ func (e serviceEnv) executeOperatorLaunch(proc context.Context, job operatorLaun
 		},
 		Started: func(pid int) error {
 			defer func() { writer.Close(); writer = nil; job.locks[2].Close() }()
-			r.PID = pid
-			r.Birth, _ = operatorProcessIdentity(pid)
-			if r.Birth == "" {
-				return errors.New("process birth unavailable")
+			if err := requireOperatorProcessBirth(&r, pid, operatorProcessIdentity); err != nil {
+				return err
 			}
 			s, err := writer.ReadOperatorLaunch(ctx, row.ID)
 			if err != nil {
@@ -497,6 +508,17 @@ func (e serviceEnv) executeOperatorLaunch(proc context.Context, job operatorLaun
 		return err
 	}
 	fmt.Fprintf(log, "operator launch %s: %s\n", row.ID, r.Status)
+	return nil
+}
+
+// requireOperatorProcessBirth stops the Started hook before receipt readback
+// when the kernel cannot identify the child it just started.
+func requireOperatorProcessBirth(r *store.OperatorLaunchReceipt, pid int, birth func(int) (string, bool)) error {
+	r.PID = pid
+	r.Birth, _ = birth(pid)
+	if r.Birth == "" {
+		return errors.New("process birth unavailable")
+	}
 	return nil
 }
 

@@ -86,6 +86,9 @@ func TestOperatorLaunchReceiptLaw(t *testing.T) {
 	}
 
 	r := OperatorLaunchReceipt{Run: id, Executable: digest, PID: 42, Birth: "kernel-start", Status: "launched"}
+	wrongBirthAtStart := r
+	wrongBirthAtStart.Birth = ""
+	f.assertRefused(t, before, f.c.RecordOperatorLaunch(f.ctx, reserved, wrongBirthAtStart, nil, pinNow), ErrOperatorInput)
 	wrongRun := r
 	wrongRun.Run += "x"
 	f.assertRefused(t, before, f.c.RecordOperatorLaunch(f.ctx, reserved, wrongRun, nil, pinNow), ErrOperatorConflict)
