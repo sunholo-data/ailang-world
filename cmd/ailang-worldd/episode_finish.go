@@ -98,14 +98,23 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	if *onSurface && *dry { // row 243 V3 §2.7 step 1
 		return fail("--confirm-on-surface cannot be combined with --dry-run", "a dry run opens no pull request", "drop one of them")
 	}
-	if len(pos) != 1 || !workspaceEpisodePattern.MatchString(pos[0]) || *preset == "" {
-		return fail("episode and --preset <name> are required", "finish needs a pinned start record", "ailang-worldd episode finish --help")
+	if len(pos) != 1 || !workspaceEpisodePattern.MatchString(pos[0]) {
+		return fail("episode is required", "finish needs an episode id", "ailang-worldd episode finish --help")
 	}
 	ep := pos[0]
 	// One bound for the whole command: each check also has its own cap, and the
 	// prompt waits on a person, so this is generous rather than tight.
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Hour)
 	defer cancel()
+	if *preset == "" {
+		inferred, inferErr := inferFinishPreset(ctx, ep, *dir)
+		if inferErr != nil {
+			return fail("could not infer --preset for episode "+ep+": "+inferErr.Error(),
+				"finish needs the launch preset pinned at start",
+				"pass --preset <name> (see ailang-worldd preset list)")
+		}
+		*preset = inferred
+	}
 	p, err := finishPreset(*preset, *dir)
 	if err != nil {
 		return fail(err.Error(), "finish needs the preset's daemon and paths", "ailang-worldd preset check "+*preset)
@@ -501,6 +510,35 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	}
 	fmt.Fprintln(stdout, pr.URL)
 	return exitOK
+}
+
+// inferFinishPreset resolves the launch preset name from the episode's pinned
+// start record when --preset is omitted on the command line (e.g. when copied
+// from the Surface UI or invoked from the Herdr panel).
+func inferFinishPreset(ctx context.Context, ep, presetsDir string) (string, error) {
+	addr := defaultEpisodeAddr
+	if d, err := resolvePresetDaemon(nil); err == nil && d.Addr != "" {
+		addr = d.Addr
+	} else if entries, err := os.ReadDir(presetsDir); err == nil {
+		for _, ent := range entries {
+			if ent.IsDir() || !strings.HasSuffix(ent.Name(), ".json") {
+				continue
+			}
+			name := strings.TrimSuffix(ent.Name(), ".json")
+			if pd, err := finishPreset(name, presetsDir); err == nil && pd.Addr != "" {
+				addr = pd.Addr
+				break
+			}
+		}
+	}
+	_, rep, err := fetchReport(ctx, finishClient(addr), ep)
+	if err != nil && !errors.Is(err, errNoCalls) {
+		return "", err
+	}
+	if rep.Start == nil || rep.Start.Preset.Name == "" {
+		return "", fmt.Errorf("episode %s has no start preset record", ep)
+	}
+	return rep.Start.Preset.Name, nil
 }
 
 // finishPreset intentionally does not re-pin or validate mutable checks.

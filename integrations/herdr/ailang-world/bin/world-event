@@ -30,5 +30,5 @@ world_mark_ended "$panes" "$pane"
 world_mark_ended "$HERDR_PLUGIN_STATE_DIR/arms.jsonl" "$pane"
 rm -f "$HERDR_PLUGIN_STATE_DIR/watch/$(world_safe "$pane")"
 if [ -n "$ep" ]; then
-  world_notify "ailang-world" "Episode $ep's pane closed. Its worktree and session remain; finish it from the CLI (row 218 will make this one step)"
+  world_notify "ailang-world" "Episode $ep's pane closed. Open World panel (prefix+shift+o) and press f, or run: ailang-worldd episode finish $ep"
 fi

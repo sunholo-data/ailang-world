@@ -153,9 +153,10 @@ func (f *Follower) Run(ctx context.Context) error {
 		}()
 	}
 	reconciling, reconcileAgain := false, false
-	// endObserved is touched only by the single reconcile goroutine; the
-	// events channel orders successive reconciles.
+	// endObserved and baseAncestors are touched only by the single reconcile
+	// goroutine; the events channel orders successive reconciles.
 	endObserved := map[string]time.Time{}
+	baseAncestors := map[string][]string{}
 	startReconcile := func() {
 		if f.Episodes == nil {
 			return
@@ -173,6 +174,9 @@ func (f *Follower) Run(ctx context.Context) error {
 			facts, err := f.Episodes.ReadEpisodes(ctx, now, f.Config.Repos)
 			if err == nil && ctx.Err() != nil {
 				err = context.DeadlineExceeded
+			}
+			if err == nil {
+				facts.BaseAncestors = resolveBaseAncestors(ctx, c.Git, f.Config.Repos, baseAncestors, facts.Starts)
 			}
 			closeScope()
 			if runCtx.Err() != nil {
@@ -370,6 +374,58 @@ func observeEnds(seen map[string]time.Time, facts EpisodeFacts, now time.Time) m
 			continue
 		}
 		out[ep] = t
+	}
+	return out
+}
+
+// resolveBaseAncestors walks up to 64 first-parent ancestors for each episode's
+// recorded base commit so BuildOverlay can anchor episodes based on an unindexed
+// single-parent commit (such as a squash merge on dev) to the nearest indexed
+// commit in the repo's window. Results are cached per (repo, baseSHA).
+func resolveBaseAncestors(ctx context.Context, git Git, repos []Repo, cache map[string][]string, starts []StartFact) map[string][]string {
+	if git == nil || len(starts) == 0 {
+		return nil
+	}
+	repoPath := make(map[string]string, len(repos))
+	for _, r := range repos {
+		repoPath[r.ID] = r.Repo
+	}
+	var out map[string][]string
+	for _, st := range starts {
+		if st.RepoID == "" || st.BaseSHA == "" {
+			continue
+		}
+		if _, err := surface.QualifyID(st.RepoID, "commit", st.BaseSHA); err != nil {
+			continue
+		}
+		key := st.RepoID + ":" + st.BaseSHA
+		anc, ok := cache[key]
+		if !ok {
+			path := repoPath[st.RepoID]
+			if path == "" {
+				continue
+			}
+			if len(cache) >= 4096 {
+				clear(cache)
+			}
+			raw, err := git.Git(ctx, []string{"-C", path, "-c", "core.fsmonitor=false", "rev-list", "--first-parent", "--max-count=64", st.BaseSHA})
+			if err == nil {
+				for _, line := range strings.Split(strings.TrimSpace(raw), "\n") {
+					h := strings.TrimSpace(line)
+					if h == "" || h == st.BaseSHA {
+						continue
+					}
+					anc = append(anc, h)
+				}
+			}
+			cache[key] = anc
+		}
+		if len(anc) > 0 {
+			if out == nil {
+				out = make(map[string][]string)
+			}
+			out[key] = anc
+		}
 	}
 	return out
 }
