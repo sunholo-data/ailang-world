@@ -179,7 +179,7 @@ func (s *ExecToolState) RegisterProfile(p *ExecProfile) error {
 			return err
 		}
 		entries[execCommandKey(p.Project, name)] = execAcceptedTool{
-			configured: c.Argv[0], name: c.Argv[0], project: p.Project, command: name,
+			configured: c.Argv0, name: c.Argv[0], project: p.Project, command: name,
 			identity: id, sum: c.Argv0SHA256, checked: now,
 		}
 	}
@@ -190,7 +190,7 @@ func (s *ExecToolState) RegisterProfile(p *ExecProfile) error {
 			return err
 		}
 		entries[execCommandKey(p.Project, "@probe")] = execAcceptedTool{
-			configured: c.Argv[0], name: c.Argv[0], project: p.Project, command: "@probe",
+			configured: c.Argv0, name: c.Argv[0], project: p.Project, command: "@probe",
 			identity: id, sum: c.Argv0SHA256, checked: now,
 		}
 	}
@@ -203,6 +203,10 @@ func (s *ExecToolState) RegisterProfile(p *ExecProfile) error {
 		s.cfg.Profiles = map[string]*ExecProfile{}
 	}
 	s.cfg.Profiles[p.Project] = p
+	if s.profiles == nil {
+		s.profiles = map[string]*ExecProfile{}
+	}
+	s.profiles[p.Project] = p
 	for k, v := range entries {
 		s.tools[k] = v
 	}
