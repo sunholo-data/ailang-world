@@ -234,6 +234,30 @@ func DecodeOperatorAction(b []byte) (OperatorAction, error) {
 	return a, nil
 }
 
+// DecodeOperatorObject reads a closed, single JSON object without duplicate
+// keys or case-folded aliases. The caller supplies its body and field bounds.
+func DecodeOperatorObject(b []byte, dst any, keys ...string) error {
+	if !utf8.Valid(b) {
+		return ErrOperatorUTF8
+	}
+	if bytes.IndexByte(b, 0) >= 0 {
+		return ErrOperatorNUL
+	}
+	if err := strictObject(b); err != nil {
+		return err
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(b, &fields); err != nil {
+		return err
+	}
+	for name := range fields {
+		if !slices.Contains(keys, name) {
+			return ErrOperatorUnknownKey
+		}
+	}
+	return json.Unmarshal(b, dst)
+}
+
 // strictObject walks b's tokens (host/daemon strictRosterJSON's form): one JSON object (D4), no key
 // twice in any object (D5) and nothing after it (D6). encoding/json alone keeps the last of a repeated
 // key and stops reading after the first value.

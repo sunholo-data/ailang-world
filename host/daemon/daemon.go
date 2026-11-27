@@ -287,7 +287,7 @@ type Config struct {
 	// probe is left out — named on the error log and in /v1/health — while
 	// every other profile serves; the --exec-profile flags keep their
 	// all-or-nothing rule.
-	ExecProfilesDir     string
+	ExecProfilesDir string
 	// PresetsDir (row 269) is a read-only directory of <name>.json launch
 	// presets surfaced on GET /surface/presets.json; World never writes here.
 	PresetsDir          string
@@ -1172,7 +1172,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("POST /surface/confirm/{id}", d.approvalRoute(d.handleSurfaceConfirm))
 	mux.HandleFunc("GET /surface/confirm.js", d.approvalRoute(d.handleSurfaceConfirmScript))
 	mux.HandleFunc("GET /surface/confirmations/{id}", d.approvalRoute(d.handleSurfaceConfirmation))
-	mux.HandleFunc("GET /surface/verb.json", d.approvalRoute(d.handleSurfaceVerb)) // row 243 V1: the bar's verbs, read-only
+	mux.HandleFunc("GET /surface/verb.json", d.approvalRoute(d.handleSurfaceVerb))         // row 243 V1: the bar's verbs, read-only
 	mux.HandleFunc("GET /surface/profiles.json", d.approvalRoute(d.handleSurfaceProfiles)) // row 269 Phase 1: read-only exec profiles
 	mux.HandleFunc("GET /surface/presets.json", d.approvalRoute(d.handleSurfacePresets))   // row 269 Phase 1: read-only launch presets
 	mux.HandleFunc("GET /surface/repos", d.approvalRoute(d.handleSurfaceReposPage))        // row 269 Phase 1: Repos & Presets UI
@@ -1185,7 +1185,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("POST /a2a/", d.projection.A2A)
 	mux.HandleFunc("POST /mcp/", d.projection.MCP)
 	mux.HandleFunc("POST /agui/", d.handleAGUI)
-	return trackActivityRequests(NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, d.surfaceFontPaths(mux)))
+	return trackActivityRequests(NewSessionMiddleware(d.resolver, d.credentialBudget, d.writeInternalError).Wrap(d.isProtected, d.surfaceFontPaths(d.operatorRoutes(mux))))
 }
 
 // isProtected reports whether a request must carry a valid session credential

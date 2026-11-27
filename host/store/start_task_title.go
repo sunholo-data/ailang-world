@@ -1,9 +1,9 @@
-package main
+package store
 
 import "strings"
 
-// taskTitle derives a short title for new starts; stored titles stay unchanged.
-func taskTitle(data []byte) string {
+// StartTaskTitle derives a short title for new starts; stored titles stay unchanged.
+func StartTaskTitle(data []byte) string {
 	title := ""
 	for _, line := range strings.Split(string(data), "\n") {
 		title = strings.TrimSpace(line)

@@ -147,6 +147,16 @@ func (d *Daemon) readRequests(ctx context.Context, now int64, out *surfacepage.R
 	for _, row := range decided {
 		out.Decided = append(out.Decided, surfacepage.Decided(storedRequest(row)))
 	}
+	actions, err := ro.PendingOperatorActions(ctx, now)
+	if err != nil && !isOlderStore(err) {
+		out.OperatorActionsUnavailable = "the operator actions could not be read"
+	}
+	for _, row := range actions {
+		p := operatorStatusFor(row, now)
+		out.OperatorActions = append(out.OperatorActions, surfacepage.PendingOperatorAction{
+			ID: p.ID, Episode: p.Episode, Kind: p.Kind, ExpiresAt: p.ExpiresAt, Href: p.Href,
+		})
+	}
 	return nil
 }
 

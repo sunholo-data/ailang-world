@@ -37,6 +37,9 @@ type OperatorRequest struct {
 
 var operatorOperationID = regexp.MustCompile(`^[0-9a-f]{32}$`)
 
+// ValidOperatorOperationID is the exact browser retry key grammar.
+func ValidOperatorOperationID(id string) bool { return operatorOperationID.MatchString(id) }
+
 func (c *Credentials) operatorAccess(ctx context.Context) error {
 	if err := requireDeadline(ctx); err != nil {
 		return err
@@ -68,6 +71,44 @@ func (c *Credentials) OperatorAction(ctx context.Context, id string, now int64) 
 	return row, err
 }
 
+// OperatorActionForOperation recovers an inert request after a lost response.
+func (c *Credentials) OperatorActionForOperation(ctx context.Context, id string, now int64) (OperatorActionRow, error) {
+	if err := c.operatorAccess(ctx); err != nil {
+		return OperatorActionRow{}, err
+	}
+	var action string
+	err := c.db.QueryRowContext(ctx, `SELECT action_id FROM operator_action_steps WHERE kind='operation' AND identity=?`, id).Scan(&action)
+	if errors.Is(err, sql.ErrNoRows) {
+		return OperatorActionRow{}, ErrOperatorMissing
+	}
+	if err != nil {
+		return OperatorActionRow{}, err
+	}
+	return c.OperatorAction(ctx, action, now)
+}
+
+// PendingOperatorActions supplies the redacted Needs-you projection.
+func (c *Credentials) PendingOperatorActions(ctx context.Context, now int64) ([]OperatorActionRow, error) {
+	if err := c.operatorAccess(ctx); err != nil {
+		return nil, err
+	}
+	rows, err := c.db.QueryContext(ctx, `SELECT id, episode_id, kind, created_at, expires_at FROM operator_actions
+		WHERE state = 'requested' AND created_at <= ? AND expires_at > ? ORDER BY created_at, id LIMIT 16`, now, now)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []OperatorActionRow
+	for rows.Next() {
+		r := OperatorActionRow{State: "requested"}
+		if err := rows.Scan(&r.ID, &r.Episode, &r.Kind, &r.CreatedAt, &r.ExpiresAt); err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
 // NextOperatorStart reads the oldest eligible start without assigning ownership.
 // The caller must take the canonical episode lock and compare the row again
 // before claiming it.
@@ -88,7 +129,7 @@ func (c *Credentials) RequestOperatorAction(ctx context.Context, request Operato
 		return OperatorActionRow{}, err
 	}
 	a := request.Action
-	if !operatorOperationID.MatchString(request.OperationID) ||
+	if !ValidOperatorOperationID(request.OperationID) ||
 		request.CreatedAt <= 0 || now < request.CreatedAt ||
 		request.ExpiresAt-request.CreatedAt > int64(approval.OperatorActionLifetime/time.Second) ||
 		c.lock == nil || a.Store != c.lock.dbPath {

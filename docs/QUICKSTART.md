@@ -2097,3 +2097,27 @@ use the action ID and report `launched`, `stopped`, `failed`, `capped` or
 the process and receipts. `ailang-worldd episode report <episode>` shows the exit
 and transcript after completion. Saved streams scrub session credentials. Use the attended
 runner stop or paired upgrade to drain a live launch.
+
+### Review one headless start on the local surface
+
+Check the paired headless runner with `ailang-worldd service runner status`.
+1. URL-encode `episode start demo --preset sol --launch --headless` as `q`
+   in `GET /surface/verb.json`. The read-only `review` returns `argv`, preview
+   `text` and `catalogueGeneration`. An unavailable runner gives terminal guidance.
+2. Same-origin `POST /surface/operator-actions` with `Content-Type: application/json`.
+   Send that `argv` and `catalogueGeneration`, `task` (1–8192 bytes of literal UTF-8)
+   and `operationId` (`openssl rand -hex 16`). Keep the operation id for retry.
+3. Open the response's `href` at `GET /surface/operator-actions/{id}`. Poll its
+   `statusHref` at `GET /surface/operator-actions/{id}/status.json` for the durable
+   state. `GET /surface/requests.json` lists live requests in `operatorActions`.
+   The home summary counts them from that read. Run this fake example with loopback:
+
+```sh
+AILANG_BIN="$HOME/.pinned-ailang/ailang" go test -count=1 ./host/daemon/ -run '^TestOperatorAdmissionHTTP$'
+```
+
+For a missing definitive launch receipt, run `ailang-worldd service runner
+launch-status ACTION-ID`. There is no unlock command for `uncertain`. Preserve
+the action id, runner log, launch receipt, worktree and session records for
+attended reconciliation. Check the episode report for existing work. Only
+positive evidence can settle the reservation. Refresh and retry preserve it.

@@ -70,6 +70,7 @@ func TestOperatorLaunchWorker(t *testing.T) {
 	if err != nil || string(marker) != "x" || s.Receipt.Status != "stopped" || s.Receipt.Birth == "" {
 		t.Fatalf("worker child or fds 3/4: marker=%q receipt=%+v err=%v", marker, s.Receipt, err)
 	}
+	t.Run("catalogue", func(t *testing.T) { testOperatorCataloguePublication(t, f) })
 }
 
 func TestOperatorStartedRequiresBirth(t *testing.T) {

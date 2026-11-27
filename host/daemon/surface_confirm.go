@@ -77,6 +77,12 @@ func (d *Daemon) confirmStoreError(w http.ResponseWriter, r *http.Request, err e
 	}
 }
 
+// openConfirmationWriter is the daemon's shared non-waiting writer seam
+// for key confirmation and inert operator-action admission.
+func (d *Daemon) openConfirmationWriter() (*store.Credentials, error) {
+	return store.OpenCredentials(d.credentialsPath)
+}
+
 // consumeRefusal is C15's answer: the row raced (409), the approver or the counter changed since
 // C11 (422), else confirmStoreError.
 func (d *Daemon) consumeRefusal(w http.ResponseWriter, r *http.Request, row store.VerbRequestRow, err error) {
@@ -189,7 +195,7 @@ func (d *Daemon) handleSurfaceConfirm(w http.ResponseWriter, r *http.Request, o 
 		writeApprovalRefusal(w, http.StatusUnprocessableEntity, "NotApproved", "the "+what+" does not confirm request "+id+": "+err.Error())
 		return
 	}
-	wr, err := store.OpenCredentials(d.credentialsPath) // C13: non-waiting, before any write
+	wr, err := d.openConfirmationWriter() // C13: non-waiting, before any write
 	if err != nil {
 		d.confirmStoreError(w, r, err)
 		return

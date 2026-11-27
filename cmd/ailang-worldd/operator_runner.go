@@ -92,6 +92,7 @@ func runOperatorRunner(args []string, errOut io.Writer, e serviceEnv) int {
 	ticker := time.NewTicker(runnerPoll)
 	defer ticker.Stop()
 	source := operatorStartSource{defaultPresetsDir(), defaultExecProfilesDir(), "", defaultHostsDir(), e.terminal.now}
+	e.operatorCatalogue = func(c runnerConfig) []byte { return e.readOperatorCatalogue(c, source) }
 	return e.runOperatorPreparationLoop(errOut, c, h, source, stops, ticker.C, lock)
 }
 
@@ -159,10 +160,13 @@ func (e serviceEnv) runnerTick(c runnerConfig, h *store.OperatorHeartbeat) error
 	if err := e.checkRunnerPair(c); err != nil {
 		return err
 	}
-	h.SeenAt = e.terminal.now()
 	h.Readiness = "start"
-	// Publish the admitted installed preset names before the start consumer.
-	h.Catalogue, _ = json.Marshal(c.PresetNames)
+	if e.operatorCatalogue != nil {
+		h.Catalogue = e.operatorCatalogue(c)
+	} else {
+		h.Catalogue, _ = json.Marshal(c.PresetNames)
+	}
+	h.SeenAt = e.terminal.now()
 	return runnerWrite(c.Credentials, func(db *store.Credentials) error {
 		ctx, cancel := e.operatorContext(time.Second)
 		defer cancel()

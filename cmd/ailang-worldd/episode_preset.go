@@ -219,7 +219,7 @@ func resolvePresetStart(ctx context.Context, name, dir, profilesDir string, inpu
 		if err != nil {
 			return nil, err
 		}
-		taskRecord = &store.StartTask{Path: path, SHA256: serviceHash(taskData), Title: taskTitle(taskData)}
+		taskRecord = &store.StartTask{Path: path, SHA256: serviceHash(taskData), Title: store.StartTaskTitle(taskData)}
 	}
 	req, err := prepareMint(mintOptions{verb: "episode start", episode: ep, db: p.Daemon.DB, credsDB: p.Daemon.CredentialsDB,
 		wsRoot: p.Daemon.WorkspaceRoot, repo: p.Preset.Repo, branch: branch, grants: p.Grants, ttl: ttl,
@@ -246,10 +246,8 @@ func resolvePresetStart(ctx context.Context, name, dir, profilesDir string, inpu
 		}
 	}
 	req.startPoint, req.existingBranch = p.BaseSHA, existing
-	req.start = &store.EpisodeStart{Schema: "world/episode-start/v1", Episode: ep, StartedAt: time.Unix(now(), 0).Format(time.RFC3339),
-		Preset: store.StartPreset{Name: name, Path: p.Path, SHA256: p.SHA256, Bytes: p.File}, Repo: p.Preset.Repo,
-		Remote: store.StartRemote{Name: p.Preset.Remote, URL: p.RemoteURL}, Base: store.StartBase{Branch: p.Preset.Base, SHA: p.BaseSHA},
-		Branch: branch, BranchExisted: existing, Agent: agent, Model: model, Overrides: overrides, Task: taskRecord, Checks: p.Checks, TTLS: ttl}
+	req.start = p.startRecord(ep, branch, agent, model, ttl, existing, overrides, taskRecord)
+	req.start.StartedAt = time.Unix(now(), 0).Format(time.RFC3339)
 	var prompt strings.Builder
 	fmt.Fprintf(&prompt, "episode %s from preset %s (%s, %s)\n  repo      %s, remote %s = %s\n  base      %s @ %s (%s)\n",
 		ep, name, p.SHA256, p.Path, p.Preset.Repo, p.Preset.Remote, p.RemoteURL, p.Preset.Base, p.BaseSHA, p.Lag)
@@ -284,6 +282,14 @@ func resolvePresetStart(ctx context.Context, name, dir, profilesDir string, inpu
 	}
 	return &presetStartRead{mint: req, preset: p, health: h, taskCopy: taskCopy, mcp: mcp,
 		task: taskData, launchMode: mode, launchWall: wall, launchBinary: binary}, nil
+}
+
+// startRecord is the exact mint input shared by the live read and the runner catalogue.
+func (p *resolvedPreset) startRecord(ep, branch, agent, model string, ttl int64, existing bool, overrides []string, task *store.StartTask) *store.EpisodeStart {
+	return &store.EpisodeStart{Schema: "world/episode-start/v1", Episode: ep,
+		Preset: store.StartPreset{Name: p.Name, Path: p.Path, SHA256: p.SHA256, Bytes: p.File}, Repo: p.Preset.Repo,
+		Remote: store.StartRemote{Name: p.Preset.Remote, URL: p.RemoteURL}, Base: store.StartBase{Branch: p.Preset.Base, SHA: p.BaseSHA},
+		Branch: branch, BranchExisted: existing, Agent: agent, Model: model, Overrides: overrides, Task: task, Checks: p.Checks, TTLS: ttl}
 }
 
 func readPresetStartTask(task string) (string, []byte, error) {

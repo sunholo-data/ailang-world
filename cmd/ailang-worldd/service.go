@@ -92,6 +92,7 @@ type serviceEnv struct {
 	operatorSupervisor    func(operatorLaunchJob, io.Writer) error
 	operatorAgentRun      operatorAgentRunner
 	operatorSupervisorCap func(time.Duration) (<-chan time.Time, func())
+	operatorCatalogue     func(runnerConfig) []byte
 }
 
 func realServiceEnv() serviceEnv {
