@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/sunholo-data/ailang-world/host/agentrun"
+	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -137,6 +138,71 @@ func TestOperatorSpawnRefused(t *testing.T) {
 	start, err := f.db.EpisodeStart(f.ctx, f.action.Episode)
 	if err != nil || len(start.Launches) != 0 {
 		t.Fatalf("exec refusal created launch history: %v %v", start, err)
+	}
+}
+
+func TestOperatorLaunchDispatchRechecks(t *testing.T) {
+	for _, tc := range []struct {
+		name, want string
+		drift      func(binary, dir string) error
+	}{
+		{
+			name: "binary_digest",
+			want: (&approval.BindingError{Field: "launch_binary_sha256"}).Error(),
+			drift: func(binary, _ string) error {
+				return os.WriteFile(binary, []byte(fakeLaunchMarker+"# changed after preflight\n"), 0700)
+			},
+		},
+		{
+			name: "nonempty_directory",
+			want: "is not empty (F8)",
+			drift: func(_, dir string) error {
+				return os.WriteFile(filepath.Join(dir, "unexpected"), []byte("drift"), 0600)
+			},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newOperatorLaunchRig(t, fakeLaunchMarker)
+			f.assertUnspawned(t)
+			beforeAction, err := f.db.OperatorAction(f.ctx, f.action.ID, f.now)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var reserved store.OperatorLaunchSnapshot
+			var dispatchErr error
+			supervise := f.env.operatorSupervisor
+			f.env.operatorSupervisor = func(job operatorLaunchJob, log io.Writer) error {
+				reserved = f.receipt(t)
+				dispatchErr = supervise(job, log)
+				return dispatchErr
+			}
+			f.env.operatorAgentRun = func(ctx context.Context, argv []string, dir string, env []string,
+				out, stderr *os.File, wall time.Duration, hooks agentrun.LaunchHooks) (agentrun.Result, error) {
+				// Reservation and worker preflight have passed. Drift here exercises Before.
+				if err := tc.drift(argv[0], dir); err != nil {
+					t.Fatal(err)
+				}
+				return agentrun.RunObserved(ctx, argv, dir, env, out, stderr, wall, hooks)
+			}
+			out := f.tick(t)
+			if dispatchErr == nil || !strings.Contains(dispatchErr.Error(), tc.want) || !strings.Contains(out, "blocked or uncertain") {
+				t.Errorf("dispatch refusal = %v, output = %q, want %q", dispatchErr, out, tc.want)
+			}
+			if _, err := os.Stat(filepath.Join(f.bin, "ran")); !errors.Is(err, os.ErrNotExist) {
+				t.Errorf("fake child ran: %v", err)
+			}
+			if after := f.receipt(t); reserved.Key.Version != 1 || after != reserved || after.Receipt != (store.OperatorLaunchReceipt{}) {
+				t.Errorf("dispatch changed reservation or recorded a receipt: before %+v, after %+v", reserved, after)
+			}
+			afterAction, err := f.db.OperatorAction(f.ctx, f.action.ID, f.now)
+			if err != nil || !reflect.DeepEqual(beforeAction, afterAction) {
+				t.Errorf("dispatch changed action state: %s -> %s (%v)", beforeAction.State, afterAction.State, err)
+			}
+			start, err := f.db.EpisodeStart(f.ctx, f.action.Episode)
+			if err != nil || start == nil || len(start.Launches) != 0 {
+				t.Errorf("dispatch refusal created launch history: %v (%v)", start, err)
+			}
+		})
 	}
 }
 

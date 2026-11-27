@@ -1223,7 +1223,7 @@ func TestEverySubprocessSiteIsDrivenAndScrubsTheRegistryCredential(t *testing.T)
 		// (go env, uv python find) through host/toolprobe's one exec site.
 		"host/toolprobe/toolprobe.go": {driveToolprobeOutput},
 		"host/checkrun/checkrun.go":   {driveCheckrun},
-		"host/agentrun/agentrun.go":   {driveAgentrun},
+		"host/agentrun/agentrun.go":   {driveAgentrun, driveAgentrunWorker},
 		// Row 201 A1b sprint 4: `approve --sign-with` runs ssh-keygen -Y sign through
 		// host/sshsign's one site.
 		"host/sshsign/sshsign.go": {driveSSHSign},
@@ -2716,6 +2716,25 @@ func driveAgentrun(t *testing.T, probe string) {
 	defer errout.Close()
 	if r, err := agentrun.Run(boundedTestContext(t), []string{probe}, dir, childenv.Scrubbed(os.Environ()), out, errout, probeRunCap); err != nil || r.ExitCode != 0 {
 		t.Fatalf("agentrun.Run via the probe: %+v, %v", r, err)
+	}
+}
+
+func driveAgentrunWorker(t *testing.T, probe string) {
+	t.Helper()
+	cmd, err := agentrun.StartWorker(probe, nil, nil, io.Discard, nil)
+	if err != nil {
+		t.Fatalf("agentrun.StartWorker via the probe: %v", err)
+	}
+	done := make(chan error, 1)
+	go func() { done <- cmd.Wait() }()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("worker probe: %v", err)
+		}
+	case <-time.After(probeRunCap):
+		_ = cmd.Process.Kill()
+		t.Fatal("worker probe timed out")
 	}
 }
 

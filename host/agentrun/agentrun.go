@@ -1,4 +1,4 @@
-// Package agentrun owns the bounded agent subprocess site.
+// Package agentrun starts agent subprocesses and their supervising workers.
 // Output goes to private staging files or the caller\'s controlling terminal.
 package agentrun
 
@@ -6,14 +6,30 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/childenv"
 	"github.com/sunholo-data/ailang-world/host/procbound"
 )
+
+// StartWorker starts a worker in its own process group with a scrubbed environment.
+// The caller owns supervision and must call Wait on the returned command.
+func StartWorker(path string, args []string, stdin io.Reader, stderr io.Writer, files []*os.File) (*exec.Cmd, error) {
+	cmd := exec.Command(path, args...)
+	cmd.Env = childenv.Scrubbed(os.Environ())
+	cmd.Stdin, cmd.Stderr = stdin, stderr
+	cmd.ExtraFiles = files
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+	return cmd, nil
+}
 
 type Result struct {
 	ExitCode int

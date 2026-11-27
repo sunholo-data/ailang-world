@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"slices"
 	"strconv"
@@ -214,11 +213,9 @@ func (e serviceEnv) launchPreparedOperatorStart(outer context.Context, c runnerC
 
 func (e serviceEnv) superviseOperatorLaunch(job operatorLaunchJob, stops <-chan os.Signal, log io.Writer,
 	h store.OperatorHeartbeat, digest string) error {
-	cmd := exec.Command(e.paths.Binary, "operator-launch-worker", job.row.ID)
-	cmd.Stdin, cmd.Stderr = bytes.NewReader(job.secret[:]), log
-	cmd.ExtraFiles = job.locks[:]
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	if err := cmd.Start(); err != nil {
+	cmd, err := agentrun.StartWorker(e.paths.Binary, []string{"operator-launch-worker", job.row.ID},
+		bytes.NewReader(job.secret[:]), log, job.locks[:])
+	if err != nil {
 		return e.operatorSpawnRefusal(job.config, job.row.ID, digest, log)
 	}
 	job.locks[2].Close() // Worker holds the same description through agent Start.
