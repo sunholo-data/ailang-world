@@ -2,6 +2,9 @@ package agentrun
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,6 +14,139 @@ import (
 
 	"github.com/sunholo-data/ailang-world/host/childenv"
 )
+
+func TestStartWorkerEnvironmentAndFiles(t *testing.T) {
+	const probe = "WORLD_AGENTRUN_WORKER_PROBE"
+	const binding = "WORLD_OPERATOR_CONFIG_SHA256"
+	const digest = "test-config-digest"
+	messages := []string{"fd 3", "fd 4"}
+	if os.Getenv(probe) == "1" {
+		for _, name := range childenv.RegistryVariables {
+			if _, ok := os.LookupEnv(name); ok {
+				fmt.Fprintln(os.Stderr, "worker inherited", name)
+				t.Fail()
+			}
+		}
+		if os.Getenv(binding) != digest || syscall.Getpgrp() != os.Getpid() {
+			fmt.Fprintln(os.Stderr, "worker lost config binding or did not lead its process group")
+			t.Fail()
+		}
+		for i, message := range messages {
+			f := os.NewFile(uintptr(3+i), message)
+			if _, err := f.WriteString(message); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				t.Fail()
+			}
+			f.Close()
+		}
+		if _, err := io.Copy(os.Stderr, os.Stdin); err != nil {
+			t.Error(err)
+		}
+		return
+	}
+	for _, name := range childenv.RegistryVariables {
+		t.Setenv(name, "registry-canary")
+	}
+	t.Setenv(probe, "1")
+	t.Setenv(binding, digest)
+	dir := t.TempDir()
+	files := []*os.File{testOutputFile(t, dir), testOutputFile(t, dir)}
+	stderr := testOutputFile(t, dir)
+	bin, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cmd, err := StartWorker(bin, []string{"-test.run=^TestStartWorkerEnvironmentAndFiles$"}, strings.NewReader("handoff"), stderr, files)
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() { done <- cmd.Wait() }()
+	select {
+	case err := <-done:
+		body, readErr := os.ReadFile(stderr.Name())
+		if err != nil || readErr != nil || string(body) != "handoff" {
+			t.Fatalf("worker exit = %v, stderr = %q (%v)", err, body, readErr)
+		}
+	case <-time.After(time.Minute):
+		_ = cmd.Process.Kill()
+		t.Fatal("worker did not exit")
+	}
+	for i, f := range files {
+		if body, err := os.ReadFile(f.Name()); err != nil || string(body) != messages[i] {
+			t.Errorf("worker fd %d wrote %q (%v)", 3+i, body, err)
+		}
+	}
+}
+
+func TestRunObservedBeforeRefusalPreventsStart(t *testing.T) {
+	dir := t.TempDir()
+	marker := filepath.Join(dir, "ran")
+	stream := testOutputFile(t, dir)
+	refused := errors.New("dispatch refused")
+	started := false
+	hooks := LaunchHooks{
+		Before:  func() error { return refused },
+		Started: func(int) error { started = true; return nil },
+	}
+	argv := []string{"/bin/sh", "-c", `printf ran > "$1"`, "worker", marker}
+	_, err := RunObserved(t.Context(), argv, dir, []string{}, stream, stream, time.Minute, hooks)
+	if !errors.Is(err, refused) || started {
+		t.Errorf("RunObserved error = %v, Started called = %v", err, started)
+	}
+	if _, err := os.Stat(marker); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("refused child wrote a marker: %v", err)
+	}
+}
+
+func TestRunObservedStartedRefusalKillsGroup(t *testing.T) {
+	dir := t.TempDir()
+	marker := filepath.Join(dir, "ran")
+	stream := testOutputFile(t, dir)
+	ready, write, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ready.Close()
+	defer write.Close()
+	if err := ready.SetReadDeadline(time.Now().Add(time.Minute)); err != nil {
+		t.Fatal(err)
+	}
+	refused := errors.New("process receipt refused")
+	var signal [1]byte
+	hooks := LaunchHooks{Files: []*os.File{write}, Started: func(int) error {
+		defer write.Close()
+		if _, err := io.ReadFull(ready, signal[:]); err != nil {
+			return err
+		}
+		return refused
+	}}
+	// The descendant signals readiness and keeps fd 3 open until it exits.
+	argv := []string{"/bin/sh", "-c", `(printf x >&3; /bin/sleep 30 && printf ran > "$1") & wait`, "worker", marker}
+	result, err := RunObserved(t.Context(), argv, dir, []string{}, stream, stream, 2*time.Minute, hooks)
+	if !errors.Is(err, refused) {
+		t.Fatalf("RunObserved did not return the Started error: %v", err)
+	}
+	if result.Reason != "signal" || result.ExitCode != -1 {
+		t.Errorf("process was not killed: %+v", result)
+	}
+	if _, err := ready.Read(signal[:]); !errors.Is(err, io.EOF) {
+		t.Errorf("group still holds the readiness pipe: %v", err)
+	}
+	if _, err := os.Stat(marker); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("descendant wrote a marker after refusal: %v", err)
+	}
+}
+
+func testOutputFile(t *testing.T, dir string) *os.File {
+	t.Helper()
+	f, err := os.CreateTemp(dir, "stream")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { f.Close() })
+	return f
+}
 
 func TestAgentrunWallCapKillsDescendants(t *testing.T) {
 	dir := t.TempDir()

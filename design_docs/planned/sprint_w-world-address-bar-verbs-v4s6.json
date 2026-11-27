@@ -1,0 +1,1652 @@
+{
+  "sprint_id": "w-world-address-bar-verbs-v4s6",
+  "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+  "design_revision": "r1, quorum r2 PROCEED 3/3, no absent seats",
+  "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s6-sprint-plan.md",
+  "previous_sprint": "S5f4 #689 merge c3504c56. #691 adjusts CI race bounds. #692 records the change.",
+  "base_commit": "b2b0ebab7bffbcf5f3105aa17e3ced452e480e35",
+  "design_measured_at": "b2b0ebab7bffbcf5f3105aa17e3ced452e480e35",
+  "queue_row": 243,
+  "iteration": 444,
+  "phase": "V4",
+  "sprint_number": "6",
+  "sprint": "S6 LAUNCH",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter444-row243-v4s6",
+  "branch": "sprint/world-iter444-row243-v4s6",
+  "authority": [
+    "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004"
+  ],
+  "behaviour": "Installed operator runner resumes one approved prepared start into a reserved, confined headless Codex child and process receipt.",
+  "cut": {
+    "outcome": "A",
+    "cap_loc": 1400,
+    "safe_unit_cap_loc": 1650,
+    "complete_safe_unit_loc": 1650,
+    "measure": "git diff -M --numstat b2b0ebab7bffbcf5f3105aa17e3ced452e480e35 HEAD -- cmd host docs app",
+    "unfiltered_product": 1650,
+    "raw_loc": 890,
+    "calibrated_loc": 1202
+  },
+  "planner_decisions": [
+    "Use schema 10's existing launch step",
+    "Consume a private one-use handoff before agent exec",
+    "Retain locks through the worker's bounded wait",
+    "Reuse V3 confinement and scrub logic"
+  ],
+  "scope": {
+    "in": [
+      "Prepared recovery",
+      "Reservation and dispatch",
+      "Signed executable and confined child",
+      "Process receipt, expiry, restart, stop, cap and scrub",
+      "Operator status"
+    ],
+    "out": [
+      "S7 browser",
+      "F1 and finish",
+      "Herdr hand-off",
+      "AILANG changes"
+    ]
+  },
+  "executor_lane": "codex:gpt-6.2-sol",
+  "executor_form": "Extract Appendix P and apply with /usr/bin/patch -p1 -E. Accept and snapshot. Controller commits.",
+  "estimate_loc": 1650,
+  "milestones": [
+    {
+      "added": 489,
+      "deleted": 23,
+      "expected_cumulative_numstat": 512,
+      "unfiltered_product": 512,
+      "id": "M1",
+      "increment": 512,
+      "title": "Durable launch law and deadline pins",
+      "expected_snapshot": {
+        "path": "$STATE/snap/M1",
+        "status": 20,
+        "deleted": 0,
+        "manifest": 20
+      },
+      "accept_parts": [
+        "TestOperatorFirstManagedEpisodeProcess",
+        "TestOperatorCurrentOwnerProcessRecovery",
+        "TestOperatorAttendedStartDisposition",
+        "TestOperatorProductionDeadlines",
+        "TestOperatorStepRestart",
+        "TestOperatorLaunchReceiptLaw",
+        "TestWithCommandTimeoutClampsGitCap"
+      ],
+      "commit_test": "export AILANG_BIN=\"$HOME/.pinned-ailang/ailang\" WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=\"$HOME/.pinned-ailang-tools/v0.54.15/ailang\"; /bin/bash \"$S/accept.sh\" \"$W\" M1 fast"
+    },
+    {
+      "added": 1604,
+      "deleted": 46,
+      "expected_cumulative_numstat": 1650,
+      "unfiltered_product": 1650,
+      "id": "M2",
+      "increment": 1138,
+      "title": "Installed launch caller and process verification",
+      "expected_snapshot": {
+        "path": "$STATE/snap/M2",
+        "status": 34,
+        "deleted": 0,
+        "manifest": 34
+      },
+      "accept_parts": [
+        "TestOperatorFirstManagedEpisodeProcess",
+        "TestOperatorCurrentOwnerProcessRecovery",
+        "TestOperatorAttendedStartDisposition",
+        "TestOperatorProductionDeadlines",
+        "TestOperatorStepRestart",
+        "TestOperatorLaunchReceiptLaw",
+        "TestWithCommandTimeoutClampsGitCap",
+        "TestOperatorStartOnce/launch",
+        "TestOperatorLaunchSession",
+        "TestOperatorSpawnRefused",
+        "TestOperatorLaunchCrashWindow",
+        "TestOperatorLaunchExit",
+        "TestOperatorStartBrowser",
+        "TestOperatorNeverDispatch"
+      ],
+      "commit_test": "export AILANG_BIN=\"$HOME/.pinned-ailang/ailang\" WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=\"$HOME/.pinned-ailang-tools/v0.54.15/ailang\"; /bin/bash \"$S/accept.sh\" \"$W\" M2 fast && /bin/bash \"$S/go-leg.sh\" \"$W\" \"$S/commit-M2-verifygate.raw\" 930 go test -count=1 ./host/verifygate/ -timeout 900s"
+    }
+  ],
+  "expected_snapshots": {
+    "M1": {
+      "path": "$STATE/snap/M1",
+      "status": 20,
+      "deleted": 0,
+      "manifest": 20
+    },
+    "M2": {
+      "path": "$STATE/snap/M2",
+      "status": 34,
+      "deleted": 0,
+      "manifest": 34
+    }
+  },
+  "design_premises_found_false": [
+    "The supplied iteration-429 state directory is absent on this machine. Checked-in E3 controller reading is present.",
+    "Controller baseline script writes ALL_DONE for the full base hash.",
+    "Whole packages that bind loopback cannot be evaluated under this sandbox."
+  ],
+  "existing_tests_edited": [
+    {
+      "path": "cmd/ailang-worldd/operator_activation_test.go",
+      "test": "TestOperatorFirstManagedEpisodeProcess",
+      "before": "Installed preparation loop and readback, expected no fake marker at the old boundary",
+      "after": "Same prep entry and no marker, plus no launch reservation/receipt. New `TestOperatorStartOnce/launch` alone allows one child after write-ahead.",
+      "mutations": [
+        "P-S5-PREP-CALLER",
+        "D-NORMAL-CALLER",
+        "D-RESERVE-ORDER"
+      ]
+    },
+    {
+      "path": "cmd/ailang-worldd/operator_activation_test.go",
+      "test": "TestOperatorAttendedStartDisposition",
+      "before": "`service runner reconcile-start` for held, rejected, drifted and successfully stopped work",
+      "after": "Same lifecycle and change checks, plus two observed 5 s contexts",
+      "mutations": [
+        "J22"
+      ]
+    },
+    {
+      "path": "cmd/ailang-worldd/operator_activation_test.go",
+      "test": "operatorActivationFixture",
+      "before": "`newWorktreeStartRigWithContext` prepares the managed fake",
+      "after": "Same default and new opt-in fake launch script under the temp runner home",
+      "mutations": [
+        "P-S5-PREP-CALLER",
+        "D-RESERVE-ORDER"
+      ]
+    },
+    {
+      "path": "cmd/ailang-worldd/operator_worktree_test.go",
+      "test": "newWorktreeStartRigWithContext",
+      "before": "Temp Git and signed worktree fixture",
+      "after": "Same default via `newWorktreeStartRigWithAgent`, opt-in fake agrees with paired installed build",
+      "mutations": [
+        "P-DERIVED-BRANCH-REPLAY",
+        "P-WORKTREE-REPLAY"
+      ]
+    },
+    {
+      "path": "cmd/ailang-worldd/operator_worktree_test.go",
+      "test": "TestOperatorStartOnce",
+      "before": "Worktree effect run and replay refusal via `r.start`",
+      "after": "Original worktree replay body in /worktree plus installed-loop /launch",
+      "mutations": [
+        "P-DERIVED-BRANCH-REPLAY",
+        "D-NORMAL-CALLER",
+        "D-RESERVE-ORDER",
+        "D-ARGV-CONFINEMENT"
+      ]
+    },
+    {
+      "path": "cmd/ailang-worldd/cli_credential_writers_test.go",
+      "test": "TestCLICredentialWriterSites",
+      "before": "AST census of credentials writers",
+      "after": "Adds one bounded `executeOperatorLaunch` writer site",
+      "mutations": []
+    },
+    {
+      "path": "host/store/operator_cas_test.go",
+      "test": "TestOperatorStepRestart",
+      "before": "Generic step reserve, observe and replay through a fixture launch-kind row",
+      "after": "Same generic behavior with `checks`. The launch-specific reservation and observation move under typed law and are pinned by `TestOperatorLaunchReceiptLaw`.",
+      "mutations": [
+        "P-RESTART-GENERIC",
+        "D-BYPASS-GENERIC-RESERVE"
+      ]
+    },
+    {
+      "path": "host/store/credentials_test.go",
+      "test": "TestCredentialsMethodsRequireADeadline",
+      "before": "Existing credentials methods",
+      "after": "Same plus five typed launch CRUD calls",
+      "mutations": [
+        "P-LAUNCH-DEADLINE-REFUSAL"
+      ]
+    },
+    {
+      "path": "host/store/operator_s5e4_test.go",
+      "test": "newOperatorPinFixture",
+      "before": "Real migration, start signer and default facts",
+      "after": "Default wrapper plus new fixture prefix for the real signed binary digest",
+      "mutations": [
+        "D-RESERVE-CAS",
+        "D-RECHECK-EXPIRY"
+      ]
+    },
+    {
+      "path": "host/verbs/operator_policy_test.go",
+      "test": "TestOperatorNeverDispatch",
+      "before": "`AdmitOperator` service and unknown-family refusals",
+      "after": "Also covers launch-status and the private worker",
+      "mutations": [
+        "P-NEVER-DISPATCH"
+      ]
+    }
+  ],
+  "existing_tests_deleted": [],
+  "existing_production_edited": [
+    "cmd/ailang-worldd/main.go",
+    "cmd/ailang-worldd/operator_preparation.go",
+    "cmd/ailang-worldd/operator_process_darwin.go",
+    "cmd/ailang-worldd/operator_process_other.go",
+    "cmd/ailang-worldd/operator_runner.go",
+    "cmd/ailang-worldd/operator_service.go",
+    "cmd/ailang-worldd/operator_start_recovery.go",
+    "cmd/ailang-worldd/service.go",
+    "docs/QUICKSTART.md",
+    "host/agentrun/agentrun.go",
+    "host/store/episode_starts.go",
+    "host/store/operator_actions.go",
+    "host/store/operator_cas.go",
+    "host/store/operator_episode_gc.go",
+    "host/store/operator_files.go",
+    "host/store/operator_mint.go",
+    "host/store/operator_runner.go",
+    "host/store/operator_start_recovery.go",
+    "host/store/operator_steps.go",
+    "host/worktree/worktree.go"
+  ],
+  "new_files": [
+    "cmd/ailang-worldd/operator_deadline_test.go",
+    "cmd/ailang-worldd/operator_launch.go",
+    "cmd/ailang-worldd/operator_launch_test.go",
+    "cmd/ailang-worldd/operator_process_linux.go",
+    "host/store/operator_launch.go",
+    "host/store/operator_launch_test.go",
+    "host/worktree/command_timeout_test.go"
+  ],
+  "not_touched": [
+    "app/",
+    "world/",
+    "tools/launchd/",
+    "host/daemon/",
+    "host/authority/"
+  ],
+  "mutants": [
+    {
+      "id": "J21",
+      "path": "cmd/ailang-worldd/operator_runner.go",
+      "line": 115,
+      "before": "ctx, cancel := e.operatorContext(operatorPreparationBudget)",
+      "after": "ctx, cancel := e.operatorContext(time.Second)",
+      "killer": "TestOperatorProductionDeadlines",
+      "test": "^TestOperatorProductionDeadlines$",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "carried"
+    },
+    {
+      "id": "J22",
+      "path": "cmd/ailang-worldd/operator_runner.go",
+      "line": 41,
+      "before": "return budgetContext(budget)",
+      "after": "return budgetContext(budget+time.Hour)",
+      "killer": "TestOperatorProductionDeadlines",
+      "test": "^TestOperatorProductionDeadlines$",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "carried"
+    },
+    {
+      "id": "J22-heartbeat",
+      "path": "cmd/ailang-worldd/operator_runner.go",
+      "line": 157,
+      "before": "ctx, cancel := e.operatorContext(time.Second)",
+      "after": "ctx, cancel := e.operatorContext(2*time.Second)",
+      "killer": "TestOperatorProductionDeadlines",
+      "test": "^TestOperatorProductionDeadlines$",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "carried"
+    },
+    {
+      "id": "J22-reconcile",
+      "path": "cmd/ailang-worldd/operator_start_recovery.go",
+      "line": 275,
+      "before": "ctx, done := e.operatorContext(5 * time.Second)",
+      "after": "ctx, done := e.operatorContext(time.Second)",
+      "killer": "TestOperatorAttendedStartDisposition",
+      "test": "^TestOperatorAttendedStartDisposition$",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "carried"
+    },
+    {
+      "id": "J-git-cap",
+      "path": "host/worktree/worktree.go",
+      "line": 51,
+      "before": "min(timeout, Timeout)",
+      "after": "timeout",
+      "killer": "TestWithCommandTimeoutClampsGitCap",
+      "test": "^TestWithCommandTimeoutClampsGitCap$",
+      "stage": "M1",
+      "pkg": "host/worktree",
+      "kind": "carried"
+    },
+    {
+      "id": "J-shared-override",
+      "path": "cmd/ailang-worldd/operator_runner.go",
+      "line": 43,
+      "before": "ctx, cancel := budgetContext(e.operatorBudget)",
+      "after": "ctx, cancel := budgetContext(budget)",
+      "killer": "TestOperatorProductionDeadlines",
+      "test": "^TestOperatorProductionDeadlines$",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "carried"
+    },
+    {
+      "id": "J-stuck-cursor",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 206,
+      "before": "AND id>? ORDER BY id LIMIT 1",
+      "after": "AND id>=? ORDER BY id LIMIT 1",
+      "killer": "TestNextOwnedOperatorStart",
+      "test": "^TestNextOwnedOperatorStart$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "carried"
+    },
+    {
+      "id": "J-launch-budget",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 29,
+      "before": "const operatorLaunchBudget = 5 * time.Second",
+      "after": "const operatorLaunchBudget = 7 * time.Second",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "carried"
+    },
+    {
+      "id": "D-NORMAL-CALLER",
+      "path": "cmd/ailang-worldd/operator_runner.go",
+      "line": 118,
+      "before": "err := e.launchPreparedOperatorStart(ctx, c, h, src, stops, lock, errOut, ro, row, current, episode)",
+      "after": "var err error\n\t\t\tif false { err = e.launchPreparedOperatorStart(ctx, c, h, src, stops, lock, errOut, ro, row, current, episode) }",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-RESERVE-ORDER",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 202,
+      "before": "return db.ReserveOperatorLaunch(ctx, current, job.secret, in.proof, src.clock)",
+      "after": "if false { return db.ReserveOperatorLaunch(ctx, current, job.secret, in.proof, src.clock) }; return nil",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-BYPASS-GENERIC-RESERVE",
+      "path": "host/store/operator_steps.go",
+      "line": 21,
+      "before": "(key.Kind == \"operation\" || key.Kind == \"launch\")",
+      "after": "(key.Kind == \"operation\")",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-BYPASS-GENERIC-RECEIPT",
+      "path": "host/store/operator_steps.go",
+      "line": 49,
+      "before": "key.Kind == \"launch\" || len(receipt)",
+      "after": "len(receipt)",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-READ-PROCESS-DIGEST",
+      "path": "host/store/operator_launch.go",
+      "line": 189,
+      "before": "if err != nil || s.Receipt.Executable != mintFact(a, \"launch_binary_sha256\")",
+      "after": "if err != nil || false && s.Receipt.Executable != mintFact(a, \"launch_binary_sha256\")",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-RESERVE-CAS",
+      "path": "host/store/operator_launch.go",
+      "line": 64,
+      "before": "current != reviewed || current.Window",
+      "after": "false && current != reviewed || current.Window",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-SPAWN-HANDOFF",
+      "path": "host/store/operator_launch.go",
+      "line": 109,
+      "before": "s.Key != operatorLaunchKey(OperatorStartRecovery{CAS: s.Key.Action, Owner: row.Owner}, handoff)",
+      "after": "false && s.Key != operatorLaunchKey(OperatorStartRecovery{CAS: s.Key.Action, Owner: row.Owner}, handoff)",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-SPAWN-COMMIT",
+      "path": "host/store/operator_launch.go",
+      "line": 118,
+      "before": "if err := operatorChangedOne(res, err); err != nil {\n\t\treturn err\n\t}\n\treturn tx.Commit()\n}",
+      "after": "if err := operatorChangedOne(res, err); err != nil {\n\t\treturn err\n\t}\n\treturn nil\n}",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-RECHECK-EXPIRY",
+      "path": "host/store/operator_files.go",
+      "line": 203,
+      "before": "now >= row.ExpiresAt || now >= current.Session.ExpiresAt",
+      "after": "now >= row.ExpiresAt",
+      "killer": "TestOperatorLaunchSession",
+      "test": "^TestOperatorLaunchSession$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-RECHECK-SESSION",
+      "path": "host/store/operator_files.go",
+      "line": 222,
+      "before": "return ValidateOperatorStartSession(current, action)",
+      "after": "return nil",
+      "killer": "TestOperatorLaunchSession",
+      "test": "^TestOperatorLaunchSession$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-RECHECK-KEY",
+      "path": "host/store/operator_files.go",
+      "line": 219,
+      "before": "if err := operatorMintApprover(ctx, tx, proof, b, now); err != nil {",
+      "after": "if err := operatorMintApprover(ctx, tx, proof, b, now); false && err != nil {",
+      "killer": "TestOperatorLaunchSession",
+      "test": "^TestOperatorLaunchSession$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-PUBLISH-START-LOG",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 469,
+      "before": "if err := writer.RecordOperatorLaunch(ctx, s, r, nil, e.terminal.now()); err != nil {",
+      "after": "if err := writer.RecordOperatorLaunch(ctx, s, r, nil, e.terminal.now()); err == nil {",
+      "killer": "TestOperatorStartBrowser",
+      "test": "^TestOperatorStartBrowser$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-PUBLISH-START-AT-EXIT",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 469,
+      "before": "if err := writer.RecordOperatorLaunch(ctx, s, r, nil, e.terminal.now()); err != nil {",
+      "after": "if false { if err := writer.RecordOperatorLaunch(ctx, s, r, nil, e.terminal.now()); err != nil { return err } }; if err != nil {",
+      "killer": "TestOperatorStartBrowser",
+      "test": "^TestOperatorStartBrowser$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-READ-BIRTH",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 330,
+      "before": "!live || birth != s.Receipt.Birth",
+      "after": "!live || false && birth != s.Receipt.Birth",
+      "killer": "TestOperatorLaunchCrashWindow",
+      "test": "^TestOperatorLaunchCrashWindow$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-PROCESS-REPLAY",
+      "path": "cmd/ailang-worldd/operator_start_recovery.go",
+      "line": 49,
+      "before": "if _, err := ro.ReadOperatorLaunch(ctx, row.ID); !errors.Is(err, store.ErrOperatorMissing) {",
+      "after": "if _, err := ro.ReadOperatorLaunch(ctx, row.ID); false && !errors.Is(err, store.ErrOperatorMissing) {",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-ARGV-CONFINEMENT",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 139,
+      "before": "in.argv = launchArgv(start.Agent, start.Model, in.prompt, in.dir, \"\", c.Address, contextText, \"\", nil)",
+      "after": "in.argv = launchArgv(start.Agent, start.Model, in.prompt, in.dir, \"\", c.Address, contextText, \"\", nil)\n\tfor i,arg := range in.argv { if arg == \"read-only\" { in.argv[i] = \"unconfined\" } }",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-HOLD-EPISODE",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 437,
+      "before": "Files: job.locks[:2]",
+      "after": "Files: job.locks[:1]",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-CAP-BINDING",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 480,
+      "before": "stderr, in.wall, hooks)",
+      "after": "stderr, in.wall+time.Hour, hooks)",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-EMIT-REFUSAL",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 248,
+      "before": "Executable: digest, Status: \"spawn-refused\"",
+      "after": "Executable: digest, Status: \"launched\"",
+      "killer": "TestOperatorSpawnRefused",
+      "test": "^TestOperatorSpawnRefused$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-CAP-STATUS",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 523,
+      "before": "return \"capped\"",
+      "after": "return \"stopped\"",
+      "killer": "TestOperatorLaunchExit/capped_and_scrubbed",
+      "test": "^TestOperatorLaunchExit$/^capped_and_scrubbed$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-NONZERO-STATUS",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 526,
+      "before": "return \"failed\"",
+      "after": "return \"stopped\"",
+      "killer": "TestOperatorLaunchExit/failed",
+      "test": "^TestOperatorLaunchExit$/^failed$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-SCRUB-STDOUT",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 509,
+      "before": "keepLaunchStream(stdout, transcript, in.token, 1)",
+      "after": "keepLaunchStream(stdout, transcript, \"other-canary\", 1)",
+      "killer": "TestOperatorLaunchExit/capped_and_scrubbed",
+      "test": "^TestOperatorLaunchExit$/^capped_and_scrubbed$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-SCRUB-STDERR",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 510,
+      "before": "keepLaunchStream(stderr, errPath, in.token, 1)",
+      "after": "keepLaunchStream(stderr, errPath, \"other-canary\", 1)",
+      "killer": "TestOperatorLaunchExit/capped_and_scrubbed",
+      "test": "^TestOperatorLaunchExit$/^capped_and_scrubbed$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-EXIT-BIRTH-CAS",
+      "path": "host/store/operator_launch.go",
+      "line": 242,
+      "before": "r.Birth != s.Receipt.Birth",
+      "after": "false && r.Birth != s.Receipt.Birth",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-EXIT-HISTORY-ATOMIC",
+      "path": "host/store/operator_launch.go",
+      "line": 271,
+      "before": "if err := appendEpisodeLaunch(ctx, tx, row.Episode, *history); err != nil {",
+      "after": "if err := appendEpisodeLaunch(ctx, tx, row.Episode, *history); err == nil {",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-UNRESOLVED-OWNER",
+      "path": "host/store/operator_runner.go",
+      "line": 105,
+      "before": "(owner IS NOT NULL OR (`+operatorLaunchUnsettled+`)) LIMIT 1",
+      "after": "(owner IS NOT NULL OR (0 AND `+operatorLaunchUnsettled+`)) LIMIT 1",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-UNRESOLVED-GC",
+      "path": "host/store/operator_episode_gc.go",
+      "line": 24,
+      "before": "OR (`+operatorLaunchUnsettled+`)))",
+      "after": "OR (0 AND (`+operatorLaunchUnsettled+`))))",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-UNRESOLVED-PRUNE",
+      "path": "host/store/operator_actions.go",
+      "line": 189,
+      "before": "AND NOT (`+operatorLaunchUnsettled+`)",
+      "after": "AND (1 OR (`+operatorLaunchUnsettled+`))",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-WRITEBACK-EXPIRY",
+      "path": "host/store/operator_launch.go",
+      "line": 225,
+      "before": "s, row, err := readOperatorLaunch(ctx, tx, reviewed.Key.Action.ID)",
+      "after": "s, row, err := readOperatorLaunch(ctx, tx, reviewed.Key.Action.ID)\n\tif now >= row.ExpiresAt { return ErrOperatorExpired }",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "P-RESTART-GENERIC",
+      "path": "host/store/operator_steps.go",
+      "line": 36,
+      "before": "AND expires_at > ? AND created_at <= ?",
+      "after": "AND expires_at >= ? AND created_at <= ?",
+      "killer": "TestOperatorStepRestart",
+      "test": "^TestOperatorStepRestart$",
+      "stage": "M1",
+      "pkg": "host/store",
+      "kind": "preserved"
+    },
+    {
+      "id": "P-NEVER-DISPATCH",
+      "path": "host/verbs/operator.go",
+      "line": 143,
+      "before": "if v.Class == Never {",
+      "after": "if v.Class == Never && v.Words != \"service\" {",
+      "killer": "TestOperatorNeverDispatch",
+      "test": "^TestOperatorNeverDispatch$",
+      "stage": "M2",
+      "pkg": "host/verbs",
+      "kind": "preserved"
+    },
+    {
+      "id": "D-STORE-RESERVE-COMMIT",
+      "path": "host/store/operator_launch.go",
+      "line": 70,
+      "before": "if err := reserveOperatorStep(ctx, tx, operatorLaunchKey(current, handoff), now); err != nil {",
+      "after": "if err := reserveOperatorStep(ctx, tx, operatorLaunchKey(current, handoff), now); err == nil {",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-HANDOFF-NONCE-COMMITMENT",
+      "path": "host/store/operator_launch.go",
+      "line": 41,
+      "before": "Identity: fmt.Sprintf(\"%s:%x\", s.CAS.ID, sha256.Sum256(handoff[:]))",
+      "after": "Identity: fmt.Sprintf(\"%s:%x\", s.CAS.ID, sha256.Sum256(handoff[:0]))",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-STATE-SUCCESS-ON-START",
+      "path": "host/store/operator_launch.go",
+      "line": 235,
+      "before": "terminal = \"succeeded\"",
+      "after": "terminal = \"failed\"",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-PROCESS-READ-OWNER",
+      "path": "host/store/operator_launch.go",
+      "line": 179,
+      "before": "s.Key.Owner == row.Owner &&\n\t\t(row.State",
+      "after": "s.Key.Owner != row.Owner &&\n\t\t(row.State",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-RUN-ID-BINDING",
+      "path": "host/store/operator_launch.go",
+      "line": 227,
+      "before": "r.Run != row.ID || r.Executable",
+      "after": "false && r.Run != row.ID || r.Executable",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-REMINT-ON-RESUME",
+      "path": "host/store/operator_start_recovery.go",
+      "line": 206,
+      "before": "AND id>? ORDER BY id LIMIT 1",
+      "after": "AND id>? AND a.state='claimed' ORDER BY id LIMIT 1",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-AFTER-EXEC-NO-PROCESS",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 484,
+      "before": "if r.PID == 0 {",
+      "after": "if r.PID != 0 {",
+      "killer": "TestOperatorSpawnRefused",
+      "test": "^TestOperatorSpawnRefused$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-PRIVATE-CWD-REFUSAL",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 420,
+      "before": "if err := runnerPath(c.Home, in.dir, c.UID, true, 0700); err != nil {",
+      "after": "if err := runnerPath(c.Home, in.dir, c.UID, true, 0700); err == nil {",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-EXEC-DIGEST-COMPARE",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 447,
+      "before": "if serviceFileHash(in.binary) != in.digest {",
+      "after": "if serviceFileHash(in.binary) == in.digest {",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-SERVICE-PAIR-COMPARE",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 65,
+      "before": "if err := e.checkStartPair(c, root); err != nil {",
+      "after": "if err := e.checkStartPair(c, root); err == nil {",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-EXACT-DEADLINE-PROOF",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 62,
+      "before": "if now >= row.ExpiresAt || now >= files.Session.ExpiresAt {",
+      "after": "if now < row.ExpiresAt || now >= files.Session.ExpiresAt {",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-EXEC-ADMISSION-CALL",
+      "path": "host/agentrun/agentrun.go",
+      "line": 81,
+      "before": "if hooks.Before != nil {",
+      "after": "if false && hooks.Before != nil {",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-EXEC-OBSERVATION-CALL",
+      "path": "host/agentrun/agentrun.go",
+      "line": 92,
+      "before": "if hooks.Started != nil {",
+      "after": "if false && hooks.Started != nil {",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-CLOSE-PROC-IDENTITY-CAS",
+      "path": "host/store/operator_launch.go",
+      "line": 242,
+      "before": "r.PID != s.Receipt.PID || r.Birth",
+      "after": "r.PID == s.Receipt.PID || r.Birth",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "D-KNOWN-REFUSAL-NO-PROCESS",
+      "path": "host/store/operator_launch.go",
+      "line": 200,
+      "before": "s.Receipt, s.NoSpawn = OperatorLaunchReceipt{}, true",
+      "after": "s.NoSpawn = true",
+      "killer": "TestOperatorSpawnRefused",
+      "test": "^TestOperatorSpawnRefused$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-LIFECYCLE-LOCK",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 182,
+      "before": "lifecycle, err := runnerLifecycleLock(filepath.Dir(e.paths.Record))",
+      "after": "lifecycle, err := runnerLifecycleLock(filepath.Dir(e.paths.Record) + \"/missing-fixture\")",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-EPISODE-LOCK-VERIFIED",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 178,
+      "before": "episode.Verify(c.Credentials, row.Episode)",
+      "after": "episode.Verify(c.Credentials, row.Episode+\"-wrong\")",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-RAW-STREAM-PATH",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 367,
+      "before": "if err := os.Remove(f.Name()); err != nil {",
+      "after": "if false { var err error",
+      "killer": "TestOperatorLaunchExit/capped_and_scrubbed",
+      "test": "^TestOperatorLaunchExit$/^capped_and_scrubbed$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-OUTPUT-FAILURE-STATUS",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 512,
+      "before": "if outErr != nil || errErr != nil {",
+      "after": "if false && (outErr != nil || errErr != nil) {",
+      "killer": "TestOperatorLaunchExit/failed",
+      "test": "^TestOperatorLaunchExit$/^failed$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-OTHER-CREDENTIAL",
+      "path": "host/store/operator_launch.go",
+      "line": 138,
+      "before": "if other || !operatorLaunchDigest(mintFact(a, \"launch_binary_sha256\")) {",
+      "after": "if false && other || !operatorLaunchDigest(mintFact(a, \"launch_binary_sha256\")) {",
+      "killer": "TestOperatorLaunchSession",
+      "test": "^TestOperatorLaunchSession$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "P-S5-PREP-CALLER",
+      "path": "cmd/ailang-worldd/operator_preparation.go",
+      "line": 32,
+      "before": "return e.prepareOperatorStart(ctx, c, heartbeat.Owner, heartbeat.Build, src, stops, process, acquire)",
+      "after": "if false { return e.prepareOperatorStart(ctx, c, heartbeat.Owner, heartbeat.Build, src, stops, process, acquire) }; return store.ErrOperatorMissing",
+      "killer": "TestOperatorFirstManagedEpisodeProcess",
+      "test": "^TestOperatorFirstManagedEpisodeProcess$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "preserved"
+    },
+    {
+      "id": "P-WORKTREE-REPLAY",
+      "path": "cmd/ailang-worldd/operator_worktree.go",
+      "line": 58,
+      "before": "if initial.state != treeAbsent {",
+      "after": "if false && initial.state != treeAbsent {",
+      "killer": "TestOperatorStartCollisions/registration",
+      "test": "^TestOperatorStartCollisions$/^registration$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "preserved"
+    },
+    {
+      "id": "P-LAUNCH-DEADLINE-REFUSAL",
+      "path": "host/store/operator_launch.go",
+      "line": 47,
+      "before": "func (c *Credentials) ReserveOperatorLaunch(ctx context.Context, reviewed OperatorStartRecovery, handoff [32]byte, proof *approval.OperatorMintProof, clock func() int64) error {\n\tif err := c.operatorAccess(ctx); err != nil {",
+      "after": "func (c *Credentials) ReserveOperatorLaunch(ctx context.Context, reviewed OperatorStartRecovery, handoff [32]byte, proof *approval.OperatorMintProof, clock func() int64) error {\n\tif err := c.operatorAccess(ctx); false && err != nil {",
+      "killer": "TestCredentialsMethodsRequireADeadline",
+      "test": "^TestCredentialsMethodsRequireADeadline$",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "preserved"
+    },
+    {
+      "id": "I-EXTRA-CLI-WRITER",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 337,
+      "before": "func (e serviceEnv) operatorLaunchStatus(id string, out io.Writer) error {\n\tc, _, err := e.installedRunner()\n\tif err != nil {\n\t\treturn err\n\t}\n\tdb, err := store.OpenCredentialsReadOnly(c.Credentials)",
+      "after": "func (e serviceEnv) operatorLaunchStatus(id string, out io.Writer) error {\n\tc, _, err := e.installedRunner()\n\tif err != nil {\n\t\treturn err\n\t}\n\tdb, err := store.OpenCredentials(c.Credentials)",
+      "killer": "TestCLICredentialWriterSites",
+      "test": "^TestCLICredentialWriterSites$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "inventory"
+    },
+    {
+      "id": "P-DERIVED-BRANCH-REPLAY",
+      "path": "cmd/ailang-worldd/episode_preset.go",
+      "line": 183,
+      "before": "if existing && !branchOverridden {",
+      "after": "if false && existing && !branchOverridden {",
+      "killer": "TestOperatorStartOnce/worktree",
+      "test": "^TestOperatorStartOnce$/^worktree$",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "preserved"
+    },
+    {
+      "id": "Q-host-store-operator_launch-48",
+      "path": "host/store/operator_launch.go",
+      "before": "\nfunc (c *Credentials) ReserveOperatorLaunch(ctx context.Context, reviewed OperatorStartRecovery, handoff [32]byte, proof *approval.OperatorMintProof, clock func() int64) error {\n\tif err := c.operatorAccess(ctx); err != nil {\n\t\treturn err",
+      "after": "\nfunc (c *Credentials) ReserveOperatorLaunch(ctx context.Context, reviewed OperatorStartRecovery, handoff [32]byte, proof *approval.OperatorMintProof, clock func() int64) error {\n\tif err := c.operatorAccess(ctx); !(err != nil) {\n\t\treturn err",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 46
+    },
+    {
+      "id": "Q-host-store-operator_launch-51",
+      "path": "host/store/operator_launch.go",
+      "before": "\nfunc (c *Credentials) ReserveOperatorLaunch(ctx context.Context, reviewed OperatorStartRecovery, handoff [32]byte, proof *approval.OperatorMintProof, clock func() int64) error {\n\tif err := c.operatorAccess(ctx); err != nil {\n\t\treturn err\n\t}\n\tif clock == nil || c.lock == nil || handoff == ([32]byte{}) {\n\t\treturn ErrOperatorInput\n\t}\n\ttx, err := c.db.BeginTx(ctx, nil)\n\tif err != nil {",
+      "after": "\nfunc (c *Credentials) ReserveOperatorLaunch(ctx context.Context, reviewed OperatorStartRecovery, handoff [32]byte, proof *approval.OperatorMintProof, clock func() int64) error {\n\tif err := c.operatorAccess(ctx); err != nil {\n\t\treturn err\n\t}\n\tif !(clock == nil || c.lock == nil || handoff == ([32]byte{})) {\n\t\treturn ErrOperatorInput\n\t}\n\ttx, err := c.db.BeginTx(ctx, nil)\n\tif err != nil {",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 46
+    },
+    {
+      "id": "Q-host-store-operator_launch-55",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\tif clock == nil || c.lock == nil || handoff == ([32]byte{}) {\n\t\treturn ErrOperatorInput\n\t}\n\ttx, err := c.db.BeginTx(ctx, nil)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer tx.Rollback()\n\tcurrent, row, err := readOperatorStartRecovery(ctx, tx, reviewed.CAS.ID)",
+      "after": "\n\tif clock == nil || c.lock == nil || handoff == ([32]byte{}) {\n\t\treturn ErrOperatorInput\n\t}\n\ttx, err := c.db.BeginTx(ctx, nil)\n\tif !(err != nil) {\n\t\treturn err\n\t}\n\tdefer tx.Rollback()\n\tcurrent, row, err := readOperatorStartRecovery(ctx, tx, reviewed.CAS.ID)",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 50
+    },
+    {
+      "id": "Q-host-store-operator_launch-61",
+      "path": "host/store/operator_launch.go",
+      "before": "err == nil && now >= row.ExpiresAt",
+      "after": "!(err == nil && now >= row.ExpiresAt)",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 61
+    },
+    {
+      "id": "Q-host-store-operator_launch-67",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\tif _, _, err := operatorSpawnInput(ctx, tx, row, proof, now, false); err != nil {",
+      "after": "\n\tif _, _, err := operatorSpawnInput(ctx, tx, row, proof, now, false); !(err != nil) {",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 66
+    },
+    {
+      "id": "Q-host-store-operator_launch-79",
+      "path": "host/store/operator_launch.go",
+      "before": "\nfunc (c *Credentials) ReadOperatorSpawnInput(ctx context.Context, id string) (OperatorFileState, approval.OperatorAction, error) {\n\tif err := c.operatorAccess(ctx); err != nil {\n\t\treturn OperatorFileState{}, approval.OperatorAction{}, err",
+      "after": "\nfunc (c *Credentials) ReadOperatorSpawnInput(ctx context.Context, id string) (OperatorFileState, approval.OperatorAction, error) {\n\tif err := c.operatorAccess(ctx); !(err != nil) {\n\t\treturn OperatorFileState{}, approval.OperatorAction{}, err",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 77
+    },
+    {
+      "id": "Q-host-store-operator_launch-83",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\ttx, err := c.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})\n\tif err != nil {\n\t\treturn OperatorFileState{}, approval.OperatorAction{}, err",
+      "after": "\n\ttx, err := c.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})\n\tif !(err != nil) {\n\t\treturn OperatorFileState{}, approval.OperatorAction{}, err",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 81
+    },
+    {
+      "id": "Q-host-store-operator_launch-88",
+      "path": "host/store/operator_launch.go",
+      "before": "err != nil || s.Phase != \"reserved\" || s.Key.Version != 1",
+      "after": "!(err != nil || s.Phase != \"reserved\" || s.Key.Version != 1)",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 88
+    },
+    {
+      "id": "Q-host-store-operator_launch-97",
+      "path": "host/store/operator_launch.go",
+      "before": "\nfunc (c *Credentials) AuthorizeOperatorSpawn(ctx context.Context, id string, handoff [32]byte, proof *approval.OperatorMintProof, clock func() int64) error {\n\tif err := c.operatorAccess(ctx); err != nil {\n\t\treturn err",
+      "after": "\nfunc (c *Credentials) AuthorizeOperatorSpawn(ctx context.Context, id string, handoff [32]byte, proof *approval.OperatorMintProof, clock func() int64) error {\n\tif err := c.operatorAccess(ctx); !(err != nil) {\n\t\treturn err",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 95
+    },
+    {
+      "id": "Q-host-store-operator_launch-100",
+      "path": "host/store/operator_launch.go",
+      "before": "\nfunc (c *Credentials) AuthorizeOperatorSpawn(ctx context.Context, id string, handoff [32]byte, proof *approval.OperatorMintProof, clock func() int64) error {\n\tif err := c.operatorAccess(ctx); err != nil {\n\t\treturn err\n\t}\n\tif clock == nil || c.lock == nil || handoff == ([32]byte{}) {\n\t\treturn ErrOperatorInput\n\t}\n\ttx, err := c.db.BeginTx(ctx, nil)\n\tif err != nil {",
+      "after": "\nfunc (c *Credentials) AuthorizeOperatorSpawn(ctx context.Context, id string, handoff [32]byte, proof *approval.OperatorMintProof, clock func() int64) error {\n\tif err := c.operatorAccess(ctx); err != nil {\n\t\treturn err\n\t}\n\tif !(clock == nil || c.lock == nil || handoff == ([32]byte{})) {\n\t\treturn ErrOperatorInput\n\t}\n\ttx, err := c.db.BeginTx(ctx, nil)\n\tif err != nil {",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 95
+    },
+    {
+      "id": "Q-host-store-operator_launch-104",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\tif clock == nil || c.lock == nil || handoff == ([32]byte{}) {\n\t\treturn ErrOperatorInput\n\t}\n\ttx, err := c.db.BeginTx(ctx, nil)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer tx.Rollback()\n\ts, row, err := readOperatorLaunch(ctx, tx, id)",
+      "after": "\n\tif clock == nil || c.lock == nil || handoff == ([32]byte{}) {\n\t\treturn ErrOperatorInput\n\t}\n\ttx, err := c.db.BeginTx(ctx, nil)\n\tif !(err != nil) {\n\t\treturn err\n\t}\n\tdefer tx.Rollback()\n\ts, row, err := readOperatorLaunch(ctx, tx, id)",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 99
+    },
+    {
+      "id": "Q-host-store-operator_launch-112",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\tif _, _, err := operatorSpawnInput(ctx, tx, row, proof, clock(), true); err != nil {",
+      "after": "\n\tif _, _, err := operatorSpawnInput(ctx, tx, row, proof, clock(), true); !(err != nil) {",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 111
+    },
+    {
+      "id": "Q-host-store-operator_launch-126",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\tfiles, a, err := readOperatorFilesAt(ctx, tx, row.ID, reserved)\n\tif err != nil {\n\t\treturn files, a, ErrOperatorConflict",
+      "after": "\n\tfiles, a, err := readOperatorFilesAt(ctx, tx, row.ID, reserved)\n\tif !(err != nil) {\n\t\treturn files, a, ErrOperatorConflict",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 124
+    },
+    {
+      "id": "Q-host-store-operator_launch-129",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\tif err := admitOperatorFiles(ctx, tx, row, files, a, proof, now); err != nil {",
+      "after": "\n\tif err := admitOperatorFiles(ctx, tx, row, files, a, proof, now); !(err != nil) {",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 128
+    },
+    {
+      "id": "Q-host-store-operator_launch-133",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\t\trow.Episode, files.Session.CredentialID).Scan(&other); err != nil {",
+      "after": "\n\t\trow.Episode, files.Session.CredentialID).Scan(&other); !(err != nil) {",
+      "killer": "TestOperatorLaunchSession",
+      "test": "^TestOperatorLaunchSession$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 134
+    },
+    {
+      "id": "Q-host-store-operator_launch-138",
+      "path": "host/store/operator_launch.go",
+      "before": "other || !operatorLaunchDigest(mintFact(a, \"launch_binary_sha256\"))",
+      "after": "!(other || !operatorLaunchDigest(mintFact(a, \"launch_binary_sha256\")))",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 138
+    },
+    {
+      "id": "Q-host-store-operator_launch-147",
+      "path": "host/store/operator_launch.go",
+      "before": "\nfunc (c *Credentials) ReadOperatorLaunch(ctx context.Context, id string) (OperatorLaunchSnapshot, error) {\n\tif err := c.operatorAccess(ctx); err != nil {\n\t\treturn OperatorLaunchSnapshot{}, err",
+      "after": "\nfunc (c *Credentials) ReadOperatorLaunch(ctx context.Context, id string) (OperatorLaunchSnapshot, error) {\n\tif err := c.operatorAccess(ctx); !(err != nil) {\n\t\treturn OperatorLaunchSnapshot{}, err",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 145
+    },
+    {
+      "id": "Q-host-store-operator_launch-151",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\ttx, err := c.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})\n\tif err != nil {\n\t\treturn OperatorLaunchSnapshot{}, err",
+      "after": "\n\ttx, err := c.db.BeginTx(ctx, &sql.TxOptions{ReadOnly: true})\n\tif !(err != nil) {\n\t\treturn OperatorLaunchSnapshot{}, err",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 149
+    },
+    {
+      "id": "Q-host-store-operator_launch-162",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\trow, err := scanOperatorAction(tx.QueryRowContext(ctx, \"SELECT \"+operatorColumns+\" FROM operator_actions WHERE id=?\", id))\n\tif err != nil {\n\t\treturn s, row, err",
+      "after": "\n\trow, err := scanOperatorAction(tx.QueryRowContext(ctx, \"SELECT \"+operatorColumns+\" FROM operator_actions WHERE id=?\", id))\n\tif !(err != nil) {\n\t\treturn s, row, err",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 160
+    },
+    {
+      "id": "Q-host-store-operator_launch-173",
+      "path": "host/store/operator_launch.go",
+      "before": "errors.Is(err, sql.ErrNoRows) && row.Kind == \"start\"",
+      "after": "!(errors.Is(err, sql.ErrNoRows) && row.Kind == \"start\")",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 172
+    },
+    {
+      "id": "Q-host-store-operator_launch-177",
+      "path": "host/store/operator_launch.go",
+      "before": "err != nil || n != 1 || row.Kind != \"start\" || s.Key.Owner == \"\" || !prefixed || !operatorDigestString(identity)",
+      "after": "!(err != nil || n != 1 || row.Kind != \"start\" || s.Key.Owner == \"\" || !prefixed || !operatorDigestString(identity))",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 176
+    },
+    {
+      "id": "Q-host-store-operator_launch-184",
+      "path": "host/store/operator_launch.go",
+      "before": "s.Phase != \"observed\" || json.Unmarshal(raw, &s.Receipt) != nil || s.Receipt.Run != id ||\n\t\t!operatorLaunchDigest(s.Receipt.Executable)",
+      "after": "!(s.Phase != \"observed\" || json.Unmarshal(raw, &s.Receipt) != nil || s.Receipt.Run != id ||\n\t\t!operatorLaunchDigest(s.Receipt.Executable))",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 183
+    },
+    {
+      "id": "Q-host-store-operator_launch-188",
+      "path": "host/store/operator_launch.go",
+      "before": "len(row.Action) != 0",
+      "after": "!(len(row.Action) != 0)",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 187
+    },
+    {
+      "id": "Q-host-store-operator_launch-196",
+      "path": "host/store/operator_launch.go",
+      "before": "s.Key.Version == 3 && row.State == \"succeeded\" && s.Receipt.PID > 0 && s.Receipt.Birth != \"\"",
+      "after": "!(s.Key.Version == 3 && row.State == \"succeeded\" && s.Receipt.PID > 0 && s.Receipt.Birth != \"\")",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 195
+    },
+    {
+      "id": "Q-host-store-operator_launch-205",
+      "path": "host/store/operator_launch.go",
+      "before": "s.Key.Version == 4 && row.State == \"succeeded\" && s.Receipt.PID > 0 && s.Receipt.Birth != \"\"",
+      "after": "!(s.Key.Version == 4 && row.State == \"succeeded\" && s.Receipt.PID > 0 && s.Receipt.Birth != \"\")",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 204
+    },
+    {
+      "id": "Q-host-store-operator_launch-215",
+      "path": "host/store/operator_launch.go",
+      "before": "\nfunc (c *Credentials) RecordOperatorLaunch(ctx context.Context, reviewed OperatorLaunchSnapshot, r OperatorLaunchReceipt, history *EpisodeLaunch, now int64) error {\n\tif err := c.operatorAccess(ctx); err != nil {\n\t\treturn err",
+      "after": "\nfunc (c *Credentials) RecordOperatorLaunch(ctx context.Context, reviewed OperatorLaunchSnapshot, r OperatorLaunchReceipt, history *EpisodeLaunch, now int64) error {\n\tif err := c.operatorAccess(ctx); !(err != nil) {\n\t\treturn err",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 212
+    },
+    {
+      "id": "Q-host-store-operator_launch-218",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\tif c.lock == nil {",
+      "after": "\n\tif !(c.lock == nil) {",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 216
+    },
+    {
+      "id": "Q-host-store-operator_launch-222",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\tif c.lock == nil {\n\t\treturn ErrOperatorInput\n\t}\n\ttx, err := c.db.BeginTx(ctx, nil)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer tx.Rollback()\n\ts, row, err := readOperatorLaunch(ctx, tx, reviewed.Key.Action.ID)",
+      "after": "\n\tif c.lock == nil {\n\t\treturn ErrOperatorInput\n\t}\n\ttx, err := c.db.BeginTx(ctx, nil)\n\tif !(err != nil) {\n\t\treturn err\n\t}\n\tdefer tx.Rollback()\n\ts, row, err := readOperatorLaunch(ctx, tx, reviewed.Key.Action.ID)",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 216
+    },
+    {
+      "id": "Q-host-store-operator_launch-254",
+      "path": "host/store/operator_launch.go",
+      "before": "err != nil || len(raw) > 2048",
+      "after": "!(err != nil || len(raw) > 2048)",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 253
+    },
+    {
+      "id": "Q-host-store-operator_launch-260",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\tif err := operatorChangedOne(change, err); err != nil {",
+      "after": "\n\tif err := operatorChangedOne(change, err); !(err != nil) {",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 258
+    },
+    {
+      "id": "Q-host-store-operator_launch-263",
+      "path": "host/store/operator_launch.go",
+      "before": "terminal != \"\"",
+      "after": "!(terminal != \"\")",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 262
+    },
+    {
+      "id": "Q-host-store-operator_launch-267",
+      "path": "host/store/operator_launch.go",
+      "before": "\n\t\tif err := operatorChangedOne(change, err); err != nil {",
+      "after": "\n\t\tif err := operatorChangedOne(change, err); !(err != nil) {",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 265
+    },
+    {
+      "id": "Q-host-store-operator_launch-271",
+      "path": "host/store/operator_launch.go",
+      "before": "history != nil",
+      "after": "!(history != nil)",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "^TestOperatorLaunchReceiptLaw$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "host/store",
+      "line": 270
+    },
+    {
+      "id": "Q-cmd-ailang-worldd-operator_launch-56",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "before": "!a.Options.Headless || a.Store != c.Credentials || c.Backend != \"headless\" ||\n\t\tfilepath.Base(in.binary) != \"codex\" || c.Executables[in.binary] != in.digest ||\n\t\t!slices.Contains(c.PresetNames, a.Options.Preset) || operatorFileFact(a, \"served_address\") != c.Address",
+      "after": "!(!a.Options.Headless || a.Store != c.Credentials || c.Backend != \"headless\" ||\n\t\tfilepath.Base(in.binary) != \"codex\" || c.Executables[in.binary] != in.digest ||\n\t\t!slices.Contains(c.PresetNames, a.Options.Preset) || operatorFileFact(a, \"served_address\") != c.Address)",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "line": 56
+    },
+    {
+      "id": "Q-cmd-ailang-worldd-operator_launch-70",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "before": "err != nil || string(build) != operatorFileFact(a, \"served_build\") || h.ToolRef != operatorFileFact(a, \"served_interpreter\")",
+      "after": "!(err != nil || string(build) != operatorFileFact(a, \"served_build\") || h.ToolRef != operatorFileFact(a, \"served_interpreter\"))",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "line": 70
+    },
+    {
+      "id": "Q-cmd-ailang-worldd-operator_launch-74",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "before": "!slices.ContainsFunc(h.ExecProfiles, func(p daemon.HealthExecProfile) bool {\n\t\treturn p.Project == project && p.Digest == operatorFileFact(a, \"mint_profile\")\n\t})",
+      "after": "!(!slices.ContainsFunc(h.ExecProfiles, func(p daemon.HealthExecProfile) bool {\n\t\treturn p.Project == project && p.Digest == operatorFileFact(a, \"mint_profile\")\n\t}))",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "line": 74
+    },
+    {
+      "id": "Q-cmd-ailang-worldd-operator_launch-88",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "before": "err != nil || proofErr != nil || start.Agent != \"codex\" || proofs.Files[0].Status != \"exact\" || proofs.Files[1].Status != \"exact\"",
+      "after": "!(err != nil || proofErr != nil || start.Agent != \"codex\" || proofs.Files[0].Status != \"exact\" || proofs.Files[1].Status != \"exact\")",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "line": 88
+    },
+    {
+      "id": "Q-cmd-ailang-worldd-operator_launch-98",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "before": "tokenProof.Status != \"exact\"",
+      "after": "!(tokenProof.Status != \"exact\")",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "line": 98
+    },
+    {
+      "id": "Q-cmd-ailang-worldd-operator_launch-126",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "before": "err != nil || res.StatusCode != http.StatusOK || json.Unmarshal(body, &self) != nil ||\n\t\tself.SecondsLeft <= 0 || self.ExpiresAt != files.Session.ExpiresAt || self.Episode != row.Episode",
+      "after": "!(err != nil || res.StatusCode != http.StatusOK || json.Unmarshal(body, &self) != nil ||\n\t\tself.SecondsLeft <= 0 || self.ExpiresAt != files.Session.ExpiresAt || self.Episode != row.Episode)",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "line": 126
+    },
+    {
+      "id": "Q-cmd-ailang-worldd-operator_launch-131",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "before": "gotErr != nil || peerErr != nil || got != peer",
+      "after": "!(gotErr != nil || peerErr != nil || got != peer)",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "line": 131
+    },
+    {
+      "id": "Q-cmd-ailang-worldd-operator_launch-340",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "before": "\n\tc, _, err := e.installedRunner()\n\tif err != nil {\n\t\treturn err",
+      "after": "\n\tc, _, err := e.installedRunner()\n\tif !(err != nil) {\n\t\treturn err",
+      "killer": "TestOperatorStartBrowser",
+      "test": "^TestOperatorStartBrowser$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "line": 337
+    },
+    {
+      "id": "Q-cmd-ailang-worldd-operator_launch-462",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "before": "r.Birth == \"\"",
+      "after": "!(r.Birth == \"\")",
+      "killer": "TestOperatorStartOnce/launch",
+      "test": "^TestOperatorStartOnce$/^launch$",
+      "kind": "generated-condition",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "line": 461
+    }
+  ],
+  "gates_script": "§6 exact gates.sh fence",
+  "roundtrip": {
+    "summary": "The final Appendix P was extracted by the controller's awk rule and applied with `patch -p1 -E`.\n\n```text\nREHEARSAL /Users/voightkampff/.ailang/state/world-iter444/plan-scratch/rt-c8qPyP\nM1 diff -r cmd rc=0\nM1 diff -r host rc=0\nM1 diff -r docs rc=0\nM1 diff -r app SKIPPED (absent)\nM1 diff -r full archive rc=0\nM1 SHA manifest and byte compare OK (20 paths, 0 deleted)\nM2 diff -r cmd rc=0\nM2 diff -r host rc=0\nM2 diff -r docs rc=0\nM2 diff -r app SKIPPED (absent)\nM2 diff -r full archive rc=0\nM2 SHA manifest and byte compare OK (34 paths, 0 deleted)\nROUNDTRIP_OK\n```",
+    "format": "plan awk / patch -p1 -E / diff -r / manifest"
+  },
+  "controller_decisions_requested": [
+    "Incomplete or denied gates in §4.1",
+    "Prioritized whole mutation replay and pending anchors"
+  ],
+  "verification": {
+    "named_added_race_seconds": {
+      "cmd/ailang-worldd": {
+        "TestOperatorLaunchCrashWindow": 0.0,
+        "TestOperatorLaunchExit": 0.37,
+        "TestOperatorProductionDeadlines": 0.36,
+        "TestOperatorSpawnRefused": 2.48,
+        "TestOperatorStartBrowser": 1.89,
+        "TestOperatorStartOnce/launch": 1.9
+      },
+      "host/daemon": 0
+    },
+    "named_added_cli_total_seconds": 7.0,
+    "whole_race_seconds": {
+      "host/store": [
+        119.751,
+        93.467,
+        -26.284
+      ],
+      "host/agentrun": [
+        17.713,
+        17.823,
+        0.11
+      ],
+      "host/worktree": [
+        4.526,
+        60.558,
+        56.032
+      ],
+      "host/verbs": [
+        1.582,
+        1.473,
+        -0.109
+      ],
+      "cmd/ailang-worldd": "UNINFORMATIVE UNDER SANDBOX",
+      "host/daemon": "UNINFORMATIVE UNDER SANDBOX"
+    },
+    "gates": {
+      "base": "LEG gofmt OK 0s\nLEG build OK 25s\nLEG vet OK 23s\nLEG linux-vet OK 77s\nLEG inv-store OK 22s\nLEG inv-boundary OK 15s\nLEG inv-cli OK 12s\nLEG inv-verbs OK 2s\nLEG inv-daemon OK 8s\nLEG inv-verifygate OK 81s\nLEG accept SKIPPED (S6 tests absent)\nLEG t1777 SKIPPED (S6 tests absent)\nLEG verify_ail OK 287s\nLEG callers OK 1s\nLEG store-plain recorded rc=0 26s\nLEG store-race recorded rc=1 117s\nLEG authority-plain recorded rc=0 47s\nLEG authority-race recorded rc=0 37s\nLEG worktree-plain recorded rc=0 8s\nLEG worktree-race recorded rc=0 6s\nLEG agentrun-plain recorded rc=0 19s\nLEG agentrun-race recorded rc=0 22s\nLEG verifygate-plain recorded rc=1 414s\nLEG cmd-plain UNINFORMATIVE UNDER SANDBOX rc=1\nLEG cmd-race UNINFORMATIVE UNDER SANDBOX rc=1\nLEG daemon-race UNINFORMATIVE UNDER SANDBOX rc=1\nLEG compare-store-plain SKIPPED (pristine record)\nLEG compare-store-race SKIPPED (pristine record)\nLEG compare-authority-plain SKIPPED (pristine record)\nLEG compare-authority-race SKIPPED (pristine record)\nLEG compare-worktree-plain SKIPPED (pristine record)\nLEG compare-worktree-race SKIPPED (pristine record)\nLEG compare-agentrun-plain SKIPPED (pristine record)\nLEG compare-agentrun-race SKIPPED (pristine record)\nLEG compare-verifygate-plain SKIPPED (pristine record)\nLEG compare-cmd-plain SKIPPED (pristine record)\nLEG compare-cmd-race SKIPPED (pristine record)\nLEG compare-daemon-race SKIPPED (pristine record)\nGATES_DONE issue=0 uninformative=1\n",
+      "M1-seal": "LEG gofmt OK 1s\nLEG build OK 49s\nLEG vet OK 5s\nLEG linux-vet OK 3s\nLEG context-roots OK 10s\nLEG inv-store OK 3s\nLEG inv-boundary OK 10s\nLEG inv-cli OK 27s\nLEG inv-verbs OK 2s\nLEG inv-daemon OK 5s\nLEG inv-verifygate INSTRUMENT FAILURE (truncated) rc=1\nLEG accept OK 58s\nLEG t1777 OK 24s\nLEG verify_ail OK 183s\nLEG callers OK 1s\nLEG store-plain recorded rc=0 67s\nLEG store-race recorded rc=0 160s\nLEG authority-plain recorded rc=0 61s\nLEG authority-race recorded rc=0 113s\nLEG worktree-plain recorded rc=0 13s\nLEG worktree-race recorded rc=0 36s\nLEG agentrun-plain recorded rc=0 28s\nLEG agentrun-race recorded rc=0 29s\nLEG verifygate-plain recorded rc=1 661s\nLEG cmd-plain UNINFORMATIVE UNDER SANDBOX rc=1\nLEG cmd-race UNINFORMATIVE UNDER SANDBOX rc=1\nLEG daemon-race UNINFORMATIVE UNDER SANDBOX rc=1\nLEG verbs-plain recorded rc=0 1s\nLEG verbs-race recorded rc=0 5s\nLEG compare-store-plain OK\nLEG compare-store-race OK\nLEG compare-authority-plain OK\nLEG compare-authority-race OK\nLEG compare-worktree-plain OK\nLEG compare-worktree-race OK\nLEG compare-agentrun-plain OK\nLEG compare-agentrun-race OK\nLEG compare-verifygate-plain OK\nLEG compare-cmd-plain SKIPPED (head record unavailable)\nLEG compare-cmd-race SKIPPED (head record unavailable)\nLEG compare-daemon-race SKIPPED (head record unavailable)\nLEG compare-verbs-plain OK\nLEG compare-verbs-race OK\nGATES_DONE issue=1 uninformative=1\n",
+      "M2-seal": "LEG gofmt OK 1s\nLEG build OK 43s\nLEG vet OK 11s\nLEG linux-vet OK 2s\nLEG context-roots OK 7s\nLEG inv-store OK 3s\nLEG inv-boundary OK 11s\nLEG inv-cli OK 28s\nLEG inv-verbs OK 1s\nLEG inv-daemon OK 14s\nLEG inv-verifygate INSTRUMENT FAILURE (truncated) rc=1\nLEG accept OK 67s\nLEG t1777 OK 39s\nLEG verify_ail OK 151s\nLEG callers OK 3s\nLEG store-plain recorded rc=0 68s\nLEG store-race recorded rc=0 152s\nLEG authority-plain recorded rc=0 70s\nLEG authority-race recorded rc=0 122s\nLEG worktree-plain recorded rc=0 56s\nLEG worktree-race recorded rc=0 69s\nLEG agentrun-plain recorded rc=0 16s\nLEG agentrun-race recorded rc=0 19s\nLEG verifygate-plain recorded rc=1 569s\nLEG cmd-plain UNINFORMATIVE UNDER SANDBOX rc=1\nLEG cmd-race UNINFORMATIVE UNDER SANDBOX rc=1\nLEG daemon-race UNINFORMATIVE UNDER SANDBOX rc=1\nLEG verbs-plain recorded rc=0 0s\nLEG verbs-race recorded rc=0 4s\nLEG compare-store-plain OK\nLEG compare-store-race OK\nLEG compare-authority-plain OK\nLEG compare-authority-race OK\nLEG compare-worktree-plain OK\nLEG compare-worktree-race OK\nLEG compare-agentrun-plain OK\nLEG compare-agentrun-race OK\nLEG compare-verifygate-plain OK\nLEG compare-cmd-plain SKIPPED (head record unavailable)\nLEG compare-cmd-race SKIPPED (head record unavailable)\nLEG compare-daemon-race SKIPPED (head record unavailable)\nLEG compare-verbs-plain OK\nLEG compare-verbs-race OK\nGATES_DONE issue=1 uninformative=1\n"
+    }
+  },
+  "production_caller_census": {
+    "base": 0,
+    "M1": 0,
+    "M2": 1
+  },
+  "mutants_metrics": {
+    "carried": {
+      "named": {
+        "KILLED": 8
+      },
+      "whole": {
+        "PENDING": 7,
+        "KILLED": 1
+      }
+    },
+    "diff": {
+      "named": {
+        "KILLED": 49
+      },
+      "whole": {
+        "PENDING": 47,
+        "KILLED": 2
+      }
+    },
+    "preserved": {
+      "named": {
+        "KILLED": 6
+      },
+      "whole": {
+        "KILLED": 2,
+        "PENDING": 4
+      }
+    },
+    "inventory": {
+      "named": {
+        "KILLED": 1
+      },
+      "whole": {
+        "PENDING": 1
+      }
+    },
+    "generated-condition": {
+      "named": {
+        "KILLED": 42
+      },
+      "whole": {
+        "PENDING": 42
+      }
+    }
+  },
+  "unfiltered_branch_with_plan": {
+    "product_lines": 1650,
+    "plan_md_lines": 3064,
+    "sprint_json_lines": 1652,
+    "total": 6366
+  }
+}

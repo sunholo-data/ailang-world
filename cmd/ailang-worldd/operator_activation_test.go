@@ -33,7 +33,12 @@ func activationTestContext(t *testing.T) context.Context {
 
 func operatorActivationFixture(t *testing.T) (*worktreeStartRig, runnerConfig, store.OperatorHeartbeat, *os.File) {
 	t.Helper()
-	r := newWorktreeStartRigWithContext(t, false, activationTestContext(t))
+	return operatorActivationFixtureWithAgent(t, "")
+}
+
+func operatorActivationFixtureWithAgent(t *testing.T, script string) (*worktreeStartRig, runnerConfig, store.OperatorHeartbeat, *os.File) {
+	t.Helper()
+	r := newWorktreeStartRigWithAgent(t, false, activationTestContext(t), script)
 	r.env.operatorBudget = activationTestBudget
 	c := r.config
 	agent := operatorFileFact(r.action, "launch_binary")
@@ -96,9 +101,6 @@ func activationEvidence(t *testing.T, r *worktreeStartRig) [5]any {
 }
 
 func TestOperatorFirstManagedEpisodeProcess(t *testing.T) {
-	if operatorPreparationBudget != 22*time.Second {
-		t.Fatalf("production preparation budget = %v, want 22s", operatorPreparationBudget)
-	}
 	r, c, h, runner := operatorActivationFixture(t)
 	ctx := activationTestContext(t)
 	prepare := func(acquire func(string, string) (*store.OperatorEpisodeLock, error), stops <-chan os.Signal) error {
@@ -323,7 +325,10 @@ func TestOperatorFirstManagedEpisodeProcess(t *testing.T) {
 		t.Fatalf("next tick prepared the same row twice: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join(r.bin, "ran")); !errors.Is(err, os.ErrNotExist) {
-		t.Fatalf("spawn crossed the S6 boundary: %v", err)
+		t.Fatalf("preparation or readback spawned before a durable S6 reservation: %v", err)
+	}
+	if _, err := ro.ReadOperatorLaunch(ctx, row.ID); !errors.Is(err, store.ErrOperatorMissing) {
+		t.Fatalf("preparation or readback changed the launch ledger: %v", err)
 	}
 }
 
@@ -558,6 +563,9 @@ func TestOperatorAttendedStartDisposition(t *testing.T) {
 	}
 	before = drifted
 	r.env.terminal.openTerminal = terminal
+	var budgets []time.Duration
+	r.env.operatorDeadline = func(budget time.Duration, _ context.Context) { budgets = append(budgets, budget) }
+
 	code, output = r.command("reconcile-start", id)
 	after := activationEvidence(t, r)
 	if code != exitOK || !strings.Contains(output, "existing evidence retained") {
@@ -566,6 +574,9 @@ func TestOperatorAttendedStartDisposition(t *testing.T) {
 	before[0] = after[0]
 	if !reflect.DeepEqual(before, after) {
 		t.Fatal("disposition modified the retained worktree, branch or private files")
+	}
+	if !reflect.DeepEqual(budgets, []time.Duration{5 * time.Second, 5 * time.Second}) {
+		t.Fatalf("reconcile preflight and writeback deadlines: %v", budgets)
 	}
 	stopped, err := ro.OperatorAction(ctx, id, 0)
 	if err != nil || stopped.State != "failed" || stopped.Owner != "" {

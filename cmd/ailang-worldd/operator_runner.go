@@ -33,7 +33,10 @@ func operatorChildBudget(ctx context.Context, budget time.Duration) (context.Con
 	return context.WithTimeout(ctx, budget)
 }
 
-func (e serviceEnv) operatorContext(budget time.Duration) (context.Context, context.CancelFunc) {
+func (e serviceEnv) operatorContext(budget time.Duration) (result context.Context, done context.CancelFunc) {
+	if e.operatorDeadline != nil {
+		defer func() { e.operatorDeadline(budget, result) }()
+	}
 	if e.operatorBudget == 0 {
 		return budgetContext(budget)
 	}
@@ -111,12 +114,22 @@ func (e serviceEnv) runOperatorPreparationLoop(errOut io.Writer, c runnerConfig,
 		}
 		ctx, cancel := e.operatorContext(operatorPreparationBudget)
 		src.workspace = record.Workspace
-		err = e.consumeOperatorPreparation(ctx, c, h, src, stops, lock, &recoveryCursor, store.OpenOperatorEpisodeLock)
+		launch := func(ro *store.Credentials, row store.OperatorActionRow, current store.OperatorStartRecovery, episode *store.OperatorEpisodeLock) error {
+			err := e.launchPreparedOperatorStart(ctx, c, h, src, stops, lock, errOut, ro, row, current, episode)
+			if errors.Is(err, errOperatorDraining) {
+				return err
+			}
+			if err != nil {
+				fmt.Fprintf(errOut, "operator launch %s: %s\n", row.ID, operatorLaunchFailure(err))
+			}
+			return errOperatorLaunchHandled
+		}
+		err = e.consumeOperatorPreparation(ctx, c, h, src, stops, lock, &recoveryCursor, store.OpenOperatorEpisodeLock, launch)
 		cancel()
 		switch {
 		case errors.Is(err, errOperatorDraining):
 			return 0
-		case err != nil && !errors.Is(err, store.ErrOperatorMissing):
+		case err != nil && !errors.Is(err, store.ErrOperatorMissing) && !errors.Is(err, errOperatorLaunchHandled):
 			var stale *approval.BindingError
 			var remedy operatorRecoveryNeeded
 			switch {

@@ -21,9 +21,13 @@ type OperatorFileState struct {
 }
 
 func readOperatorFiles(ctx context.Context, tx *sql.Tx, id string) (OperatorFileState, approval.OperatorAction, error) {
+	return readOperatorFilesAt(ctx, tx, id, false)
+}
+
+func readOperatorFilesAt(ctx context.Context, tx *sql.Tx, id string, launch bool) (OperatorFileState, approval.OperatorAction, error) {
 	var state OperatorFileState
 	var action approval.OperatorAction
-	mint, err := readOperatorMint(ctx, tx, id, true)
+	mint, err := readOperatorMint(ctx, tx, id, true, launch)
 	if err != nil {
 		return state, action, err
 	}

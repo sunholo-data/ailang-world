@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -86,6 +87,10 @@ type serviceEnv struct {
 	runnerNow       func() time.Time
 	runnerSleep     func(time.Duration)
 	runnerProcesses func() ([]worldProcess, error)
+
+	operatorDeadline   func(time.Duration, context.Context)
+	operatorSupervisor func(operatorLaunchJob, io.Writer) error
+	operatorAgentRun   operatorAgentRunner
 }
 
 func realServiceEnv() serviceEnv {

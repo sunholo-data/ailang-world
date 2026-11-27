@@ -203,7 +203,7 @@ func (c *Credentials) NextOwnedOperatorStart(ctx context.Context, after string) 
 		return OperatorActionRow{}, err
 	}
 	return scanOperatorAction(c.db.QueryRowContext(ctx, `SELECT `+operatorColumns+
-		` FROM operator_actions WHERE kind='start' AND owner IS NOT NULL AND id>? ORDER BY id LIMIT 1`, after))
+		` FROM operator_actions a WHERE kind='start' AND (owner IS NOT NULL OR (`+operatorLaunchUnsettled+`)) AND id>? ORDER BY id LIMIT 1`, after))
 }
 
 // MarkOperatorMintUncertain preserves every receipt and the old owner while

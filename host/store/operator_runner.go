@@ -102,7 +102,7 @@ func ReadOperatorEpisodeOwner(ctx context.Context, path, episode string) (string
 		return "", nil
 	}
 	var id string
-	err = db.QueryRowContext(ctx, `SELECT id FROM operator_actions WHERE episode_id=? AND owner IS NOT NULL`, episode).Scan(&id)
+	err = db.QueryRowContext(ctx, `SELECT id FROM operator_actions a WHERE episode_id=? AND (owner IS NOT NULL OR (`+operatorLaunchUnsettled+`)) LIMIT 1`, episode).Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", nil
 	}

@@ -21,7 +21,9 @@ type operatorRecoveryNeeded struct{ command string }
 
 func (r operatorRecoveryNeeded) Error() string { return r.command }
 
-func (e serviceEnv) recoverOperatorStart(ctx context.Context, c runnerConfig, h store.OperatorHeartbeat, src operatorStartSource, cursor *string, stops <-chan os.Signal) error {
+type operatorPreparedLaunch func(*store.Credentials, store.OperatorActionRow, store.OperatorStartRecovery, *store.OperatorEpisodeLock) error
+
+func (e serviceEnv) recoverOperatorStart(ctx context.Context, c runnerConfig, h store.OperatorHeartbeat, src operatorStartSource, cursor *string, stops <-chan os.Signal, launch ...operatorPreparedLaunch) error {
 	ro, err := store.OpenCredentialsReadOnly(runnerDB(c.Credentials))
 	if err != nil {
 		return err
@@ -36,13 +38,19 @@ func (e serviceEnv) recoverOperatorStart(ctx context.Context, c runnerConfig, h 
 		return err
 	}
 	*cursor = row.ID
-	return e.recoverOwnedStart(ctx, ro, c, h, src, row, stops)
+	return e.recoverOwnedStart(ctx, ro, c, h, src, row, stops, launch)
 }
 
 func (e serviceEnv) recoverOwnedStart(ctx context.Context, ro *store.Credentials, c runnerConfig, h store.OperatorHeartbeat,
-	src operatorStartSource, row store.OperatorActionRow, stops <-chan os.Signal) error {
+	src operatorStartSource, row store.OperatorActionRow, stops <-chan os.Signal, launch []operatorPreparedLaunch) error {
 	if !verbs.EpisodeIDPattern.MatchString(row.Episode) {
 		return store.ErrOperatorConflict
+	}
+	if _, err := ro.ReadOperatorLaunch(ctx, row.ID); !errors.Is(err, store.ErrOperatorMissing) {
+		if err != nil {
+			return err
+		}
+		return operatorRecoveryNeeded{"ailang-worldd service runner launch-status " + row.ID}
 	}
 	lock, err := store.OpenOperatorEpisodeLock(c.Credentials, row.Episode)
 	if err != nil {
@@ -69,6 +77,9 @@ func (e serviceEnv) recoverOwnedStart(ctx context.Context, ro *store.Credentials
 	case store.OperatorStartTreeOnly, store.OperatorStartMintPending, store.OperatorStartMintUncertain:
 		return operatorRecoveryNeeded{reconcileStartCommand(row.ID)}
 	case store.OperatorStartPrepared:
+		if len(launch) != 0 {
+			return launch[0](ro, row, current, lock)
+		}
 		return verifyPreparedStart(ctx, c, current, ro, a, src.clock())
 	case store.OperatorStartUntouched:
 		if err := e.proveOldTerminalQuiet(); err != nil {

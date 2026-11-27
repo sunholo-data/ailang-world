@@ -146,7 +146,9 @@ func (c *Credentials) ClaimOperatorAction(ctx context.Context, cas OperatorCAS, 
 	}
 	res, err := tx.ExecContext(ctx, `UPDATE operator_actions AS a SET state = 'claimed', owner = ?, generation = generation + 1
 		WHERE id = ? AND digest = ? AND generation = ? AND state = 'confirmed' AND expires_at > ? AND owner IS NULL
-		AND NOT EXISTS (SELECT 1 FROM operator_actions b WHERE b.episode_id = a.episode_id AND b.id <> a.id AND b.owner IS NOT NULL)`,
+		AND NOT EXISTS (SELECT 1 FROM operator_actions b WHERE b.episode_id = a.episode_id AND b.id <> a.id AND b.owner IS NOT NULL)
+		AND NOT EXISTS (SELECT 1 FROM operator_action_steps ls JOIN operator_actions b ON b.id=ls.action_id
+			WHERE b.episode_id=a.episode_id AND b.state='succeeded' AND ls.kind='launch' AND ls.phase='observed' AND ls.version=3)`,
 		runner.Nonce, cas.ID, cas.Digest[:], cas.Generation, now)
 	if err := operatorChangedOne(res, err); err != nil {
 		return err

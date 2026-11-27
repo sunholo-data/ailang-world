@@ -48,7 +48,7 @@ type commandTimeoutKey struct{}
 // WithCommandTimeout overrides the per-invocation cap. The parent deadline
 // still bounds the complete operation.
 func WithCommandTimeout(ctx context.Context, timeout time.Duration) context.Context {
-	return context.WithValue(ctx, commandTimeoutKey{}, timeout)
+	return context.WithValue(ctx, commandTimeoutKey{}, min(timeout, Timeout))
 }
 
 // Env is the child environment: environ without registry, GIT_* or WORLD_SESSION variables.

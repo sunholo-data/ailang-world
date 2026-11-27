@@ -70,6 +70,7 @@ func TestOperatorNeverDispatch(t *testing.T) {
 	for _, line := range []string{"approver enroll --name mark-key", "approver revoke mark-key", "session mint w1", "session revoke w1",
 		"service install", "service", "serve", "setup", "ailang-worldd approver enroll", "ailang-worldd service uninstall",
 		"service runner reconcile-start oa-0123456789abcdef0123456789abcdef",
+		"service runner launch-status oa-0123456789abcdef0123456789abcdef",
 		"world-publish approve sha256:x", "world-publish"} {
 		a := admitLine(t, line, allYes)
 		refused(t, a, line, OperatorNever, "-", "is never run from the app")
@@ -78,7 +79,7 @@ func TestOperatorNeverDispatch(t *testing.T) {
 		}
 	}
 	for _, line := range []string{"sh -c ls", "bash", "episode launch w1 --preset p --headless", "episode report w1", "call x", "log", "why head",
-		"approve mr-0123456789abcdef", "world-publishx", "commit"} {
+		"approve mr-0123456789abcdef", "world-publishx", "commit", "operator-launch-worker oa-0123456789abcdef0123456789abcdef"} {
 		argv, _ := Split(line)
 		v, _ := Lookup(argv)
 		refused(t, admitLine(t, line, allYes), line, OperatorOther, "", v.Reason)

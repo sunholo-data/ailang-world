@@ -389,6 +389,12 @@ func run(args []string, stdout, stderr io.Writer) int {
 		}
 		return runOperatorRunner(rest[1:], stderr, realServiceEnv())
 	}
+	if rest[0] == "operator-launch-worker" {
+		if addrGiven {
+			return exitUsage
+		}
+		return realServiceEnv().runOperatorLaunchWorker(rest[1:], stderr)
+	}
 	switch verb := rest[0]; verb {
 	case "version":
 		return runVersion(rest[1:], stdout, stderr)
