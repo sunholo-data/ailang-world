@@ -249,3 +249,145 @@
 @media (max-width: 600px) {
   .hc-time-axis { width: 48px; }
 }
+
+/* ---------- Pass 2: Precision Flight-Deck World Episode cards vs recessed GitHub Merge baselines ---------- */
+.hc-space :is(.hc-face, .hc-rear:not(.hc-mini)) {
+  border-radius: 7px;
+}
+.hc-face .hc-front-content {
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 160ms, border-color 160ms;
+}
+.hc-face[data-record-kind="episode"] .hc-front-content {
+  background: var(--card);
+  border-width: 1.5px;
+  border-color: color-mix(in srgb, var(--hc-lane) 78%, var(--cardEdge));
+  box-shadow: var(--shadow-md);
+}
+.hc-face.is-open-episode .hc-front-content {
+  border-inline-start: 4px solid var(--hc-lane);
+}
+/* Non-compact live header bar: crisp deep teal with luminous contrast */
+.hc-face.is-live:not(.is-compact) .hc-front-content {
+  box-shadow: 0 8px 24px -4px rgba(13, 148, 136, 0.22), var(--shadow-sm);
+}
+.hc-face.is-live:not(.is-compact) .hc-face-bar {
+  background: linear-gradient(90deg, #0f766e, #115e59);
+  color: #ffffff;
+  border-bottom-color: rgba(255, 255, 255, 0.14);
+}
+.hc-face.is-live:not(.is-compact) .hc-age {
+  color: rgba(240, 253, 250, 0.88);
+}
+/* Compact live / open cards: crisp bright card surface, never a dark unreadable slab */
+.hc-face.is-compact:is(.is-live, .is-open-episode, .needs-human) .hc-front-content,
+.hc-face.is-compact:is(.is-live, .is-open-episode, .needs-human) .hc-face-bar {
+  background: var(--card);
+  color: var(--ink);
+}
+.hc-face.is-compact.is-live .hc-front-content {
+  border: 2px solid #0d9488;
+  border-inline-start-width: 5px;
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.22);
+}
+.hc-face.needs-human .hc-front-content {
+  border-inline-start: 4px solid var(--you);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--you) 24%, transparent);
+}
+.hc-face:is(.is-live, .is-open-episode) .hc-front-content > strong {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.hc-face:not(.is-baseline) .hc-identity {
+  color: var(--sealConfinedFg);
+  font-weight: 500;
+}
+
+/* Soften distant rear history bricks so foreground heads stand out clearly */
+.hc-rear:not(.hc-mini, :hover, :focus-visible, .is-selected, .is-inspected, .is-related) .hc-front-content {
+  opacity: 0.52;
+}
+.hc-mini:not(:hover, :focus-visible, .is-inspected, .is-related) {
+  opacity: 0.45;
+}
+
+/* Demote GitHub merges & shared commits into quiet ground/baseline markers */
+.hc-face.is-baseline .hc-front-content {
+  background: color-mix(in srgb, var(--panel) 88%, var(--stageBg));
+  border: 1px dashed color-mix(in srgb, var(--edge) 72%, transparent);
+  box-shadow: none;
+}
+.hc-face.is-baseline .hc-face-bar {
+  background: color-mix(in srgb, var(--panel) 94%, var(--cardHead));
+  color: var(--inkSub);
+  border-bottom: 1px dashed var(--line);
+  font-weight: 600;
+}
+.hc-face.is-baseline .hc-age { color: var(--inkSub); }
+.hc-face.is-baseline .hc-front-content > strong {
+  font-weight: 560;
+  color: var(--inkSub);
+  -webkit-line-clamp: 3;
+}
+.hc-face.is-baseline:is(:hover, :focus-visible, .is-selected) .hc-front-content > strong {
+  color: var(--ink);
+}
+.hc-face.is-baseline .hc-plane { opacity: 0.35; }
+
+/* Card header status & provenance badges */
+.hc-pill {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font: 700 9.5px/1.2 var(--font);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.hc-pill.is-live { background: rgba(255, 255, 255, 0.18); border: 1px solid rgba(134, 239, 172, 0.75); color: #ffffff; }
+.hc-pill.is-live::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #4ade80; }
+.hc-pill.is-you { background: var(--you); color: var(--onYou); }
+.hc-pill.is-pr { background: rgba(255, 255, 255, 0.16); color: var(--cardBarText); }
+.hc-world-seal {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  background: rgba(231, 60, 23, 0.24);
+  border: 1px solid rgba(249, 166, 151, 0.55);
+  color: #ffd7ce;
+  font: 700 10px/1 Georgia, serif;
+}
+.hc-merge-seal {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--chip);
+  border: 1px solid var(--colLine);
+  color: var(--inkSub);
+  font: 600 9px/1.15 var(--mono);
+}
+
+/* Toolbar Focus Filters: spotlight World episodes or Live sessions */
+#head-space[data-head-filter="episodes"] :is(.hc-face, .hc-rear):is([data-record-kind="github-merge"], [data-record-kind="shared-commit"], [data-record-kind="step"]):not(:hover, :focus-visible, .is-inspected) {
+  opacity: 0.22;
+  filter: saturate(0.25);
+  transition: opacity 160ms, filter 160ms;
+}
+#head-space[data-head-filter="live"] :is(.hc-face, .hc-rear):not(.is-live, .is-open-episode, .needs-human, :hover, :focus-visible, .is-inspected) {
+  opacity: 0.14;
+  filter: saturate(0.15);
+  transition: opacity 160ms, filter 160ms;
+}
+#head-space[data-head-filter="live"] .hc-mini:not(:hover, :focus-visible, .is-inspected) {
+  opacity: 0.15;
+}
+

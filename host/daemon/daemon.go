@@ -1156,6 +1156,8 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/file.json", d.handleSurfaceFile)
 	mux.HandleFunc("GET /surface/trajectory.json", d.handleSurfaceTrajectory)
 	mux.HandleFunc("GET /surface/episode-files.json", d.handleSurfaceEpisodeFiles)
+	mux.HandleFunc("GET /surface/conversation.json", d.approvalRoute(d.handleSurfaceConversation))
+	mux.HandleFunc("GET /surface/conversation-media", d.approvalRoute(d.handleSurfaceConversationMedia))
 	// The approval routes (row 201 A3): Host-checked against the surface origin set; none under /v1.
 	mux.HandleFunc("GET /surface/requests.json", d.approvalRoute(d.handleSurfaceRequests))
 	mux.HandleFunc("GET /surface/requests/{id}", d.approvalRoute(d.handleSurfaceRequestCard))

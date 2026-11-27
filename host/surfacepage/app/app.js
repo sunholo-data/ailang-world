@@ -102,7 +102,134 @@
   let PL = 262, PR = 1262, PW = PR - PL;
   const TICK_T = 768, MINI_T = 818, MINI_H = 36, LEGEND_T = 892;
 
-  // ---------- Model: world/surface-model/v1 adapted to the timeline's lookups ----------
+  // projectHeadsModel filters and projects a v2 follow model for #heads so the street
+  // defaults to genuinely active work + repo baselines instead of merged row-N history
+  // and piles of expired open-episode bricks, while pinning live sessions to Now (Z=1).
+  function projectHeadsModel(D, mode = 'current', { keepID = '', pendingEpisodes = new Set() } = {}) {
+    if (!D || !Array.isArray(D.lanes) || D.schema !== 'world/surface-model/v2') {
+      return { model: D, counts: countHeadCategories(D, pendingEpisodes) };
+    }
+    const counts = countHeadCategories(D, pendingEpisodes);
+    const includeEnded = mode === 'ended' || mode === 'all';
+    const includeMerged = mode === 'all';
+    const isActiveOpen = s => Boolean(
+      s.open?.sessionLive || s.sessionLive ||
+      s.open?.state === 'pr-open' || s.open?.state === 'push-failed' ||
+      s.open?.state === 'pr-failed' || s.open?.state === 'ambiguous' ||
+      (s.episode && pendingEpisodes.has(s.episode))
+    );
+    const pinLiveState = (s, canonicalLane) => {
+      const pinnedLive = Boolean(s.open?.sessionLive || s.sessionLive);
+      return pinnedLive && D.now
+        ? { ...s, startedAt: s.at, at: D.now, rel: s.rel ? 'started ' + s.rel : s.rel, canonicalLane }
+        : { ...s, canonicalLane };
+    };
+    const keepIds = new Set();
+    const laneRewrites = new Map();
+    const lanes = [];
+    for (const lane of D.lanes) {
+      if (lane.draft) {
+        lanes.push(lane);
+        for (const s of lane.states || []) keepIds.add(s.id);
+        continue;
+      }
+      if (isSharedKey(lane.key)) {
+        const sharedStates = (lane.states || []).filter(s => includeMerged || s.kind === 'shared' || s.id === keepID);
+        if (sharedStates.length) {
+          lanes.push({ ...lane, states: sharedStates });
+          for (const s of sharedStates) keepIds.add(s.id);
+        }
+        continue;
+      }
+      const laneHasKeep = Boolean(keepID && (lane.states || []).some(s => s.id === keepID));
+      const openStates = (lane.states || []).filter(s => s.kind === 'open');
+      const keptOpen = openStates.filter(s => isActiveOpen(s) || (includeEnded && s.open?.state === 'ended') || s.id === keepID);
+      // Give each live/active open episode on the shared "open" lane its own stable track across all filter modes.
+      if (keptOpen.length > 0 && /:brane:open$/.test(lane.key)) {
+        const liveOrActive = keptOpen.filter(s => isActiveOpen(s) || s.id === keepID);
+        const endedRest = keptOpen.filter(s => !liveOrActive.includes(s));
+        liveOrActive.forEach((s, idx) => {
+          const pinnedLive = Boolean(s.open?.sessionLive || s.sessionLive);
+          const projected = pinLiveState(s, lane.key);
+          const key = idx === 0 ? lane.key : `${lane.key}~${s.episode || idx}`;
+          if (key !== lane.key) laneRewrites.set(s.id, key);
+          lanes.push({
+            ...lane,
+            key,
+            name: pinnedLive ? 'Live episode' : (s.open?.state === 'pr-open' ? 'Open PR' : lane.name),
+            colour: pinnedLive ? '#2c7a7b' : lane.colour,
+            states: [projected],
+          });
+          keepIds.add(s.id);
+        });
+        if (endedRest.length) {
+          const key = liveOrActive.length ? `${lane.key}~ended` : lane.key;
+          lanes.push({
+            ...lane,
+            key,
+            name: 'Ended episodes',
+            states: endedRest.map(s => ({ ...s, canonicalLane: lane.key })),
+          });
+          for (const s of endedRest) keepIds.add(s.id);
+        }
+        continue;
+      }
+      if (includeMerged) {
+        const allStates = (lane.states || []).map(s => s.kind === 'open' ? pinLiveState(s, lane.key) : s);
+        if (allStates.length) {
+          lanes.push({ ...lane, states: allStates });
+          for (const s of allStates) keepIds.add(s.id);
+        }
+        continue;
+      }
+      if (keptOpen.length > 0) {
+        const projectedStates = keptOpen.map(s => pinLiveState(s, lane.key));
+        lanes.push({ ...lane, states: projectedStates });
+        for (const s of projectedStates) keepIds.add(s.id);
+        continue;
+      }
+      if (laneHasKeep) {
+        lanes.push(lane);
+        for (const s of lane.states || []) keepIds.add(s.id);
+      }
+    }
+    const links = (D.links || []).filter(k => keepIds.has(k.from) && keepIds.has(k.to));
+    let nowEdge = D.nowEdge;
+    if (laneRewrites.size > 0 && D.nowEdge?.open?.live) {
+      nowEdge = {
+        ...D.nowEdge,
+        open: {
+          ...D.nowEdge.open,
+          live: D.nowEdge.open.live.map(sess => laneRewrites.has(sess.id) ? { ...sess, lane: laneRewrites.get(sess.id) } : sess),
+        },
+      };
+    }
+    return { model: { ...D, lanes, links, nowEdge }, counts };
+  }
+
+  function countHeadCategories(D, pendingEpisodes = new Set()) {
+    let active = 0, ended = 0, mergedTracks = 0, baselines = 0;
+    for (const lane of D?.lanes || []) {
+      if (lane.draft) continue;
+      if (isSharedKey(lane.key)) { baselines++; continue; }
+      const states = lane.states || [];
+      let laneHasOpen = false;
+      for (const s of states) {
+        if (s.kind === 'open') {
+          laneHasOpen = true;
+          if (s.open?.sessionLive || s.sessionLive || s.open?.state === 'pr-open' ||
+              s.open?.state === 'push-failed' || s.open?.state === 'pr-failed' ||
+              s.open?.state === 'ambiguous' || (s.episode && pendingEpisodes.has(s.episode))) {
+            active++;
+          } else {
+            ended++;
+          }
+        }
+      }
+      if (!laneHasOpen && states.length) mergedTracks++;
+    }
+    return { active, ended, mergedTracks, baselines };
+  }
   function adaptModel(D) {
     const LANES = {}, N = {};
     (D.lanes || []).forEach(l => { LANES[l.key] = l; (l.states || []).forEach(s => { N[s.id] = Object.assign({}, s, { lane: l.key }); }); });
@@ -129,7 +256,12 @@
       if (n.draft) return 'draft';
       return n.kind === 'open' || n.episode ? 'episode' : 'step';
     };
-    const recordLabel = n => RECORD_LABEL[recordKind(n)];
+    const isWorldMerge = n => Boolean(n && n.kind === 'shared' && parents[n.id]?.some(id => N[id]?.episode));
+    const recordLabel = n => {
+      const kind = recordKind(n);
+      if (kind === 'github-merge' && isWorldMerge(n)) return 'GitHub merge (via World)';
+      return RECORD_LABEL[kind];
+    };
     const activityLabel = n => D.nowEdge?.activityUntil?.[n.id] ? 'Tool activity observed at ' + hm(D.now) + ' UTC' : '';
     const glyphOfNode = (n, size) => {
       if (n.kind === 'shared') return recordKind(n) === 'github-merge' ? mergeGlyph(size) : gl('circle', SHARED_INK, size);
@@ -179,7 +311,7 @@
     const aliasOf = {}; (D.aliases || []).forEach(a => { if (N[a.target]) aliasOf[a.id] = a.target; });
     return { D, LANES, N, parents, kids, SH, ...axis, MAXU: axis.LX.length - 1, STEPS, OPEN, above, below, quiet, LY, ROWS,
       GROUPS, multi, GAP, QUIET, groupOf, isDip, isOther, homeRow, aliasOf,
-      nameOf, laneTitle, glyphOf, glyphOfNode, recordKind, recordLabel, activityLabel, mergeOf, rowOf, rowY, lastStep, lastState };
+      nameOf, laneTitle, glyphOf, glyphOfNode, recordKind, recordLabel, isWorldMerge, activityLabel, mergeOf, rowOf, rowY, lastStep, lastState };
   }
 
   // ---------- Layout of the visible graph at one zoom (XS) ----------
@@ -279,18 +411,42 @@
     return `<button type="button" class="file-path" data-file-path="${pathAttribute(path)}" data-file-source="${source}"${origin ? ` data-file-origin="${esc(origin)}"` : ''}${version ? ` aria-label="Preview ${version} of ${pathAttribute(path)}"` : ''}>${name}</button>`;
   }
 
+  function dirOfPath(path) {
+    const clean = String(path || '');
+    const slash = clean.lastIndexOf('/');
+    return slash > 0 ? clean.slice(0, slash) : '(worktree root)';
+  }
+
   function filesTabHTML(F, activity) {
     const groups = [], options = [];
     const episode = F.trajectoryEpisode || F.run?.episode;
-    const addGroup = (kind, title, rows, describe, source = '') => {
+    const addGroup = (kind, title, rows, describe, source = '', groupByDir = false) => {
       if (!rows.length) return;
-      const list = rows.map((row, index) => {
+      const renderRow = (row, index) => {
         const metadata = describe(row);
         return `<li class="file-change file-activity-row" data-file-row="${pathAttribute(row.path)}">
           <span class="file-activity-meta">${esc(metadata)}</span>${filePathHTML(row.path, source, kind + ':' + index)}</li>`;
-      }).join('');
+      };
+      let body = '';
+      if (groupByDir && rows.length > 8) {
+        const byDir = new Map();
+        rows.forEach((row, index) => {
+          const dir = dirOfPath(row.path);
+          if (!byDir.has(dir)) byDir.set(dir, { rows: [], totalCount: 0 });
+          const bucket = byDir.get(dir);
+          bucket.rows.push(renderRow(row, index));
+          bucket.totalCount += Number.isSafeInteger(row.count) && row.count > 0 ? row.count : 1;
+        });
+        const dirs = [...byDir.entries()].sort((a, b) => b[1].totalCount - a[1].totalCount || a[0].localeCompare(b[0]));
+        body = dirs.map(([dir, bucket], dirIdx) => {
+          const countNote = `${bucket.rows.length} file${bucket.rows.length === 1 ? '' : 's'}${bucket.totalCount > bucket.rows.length ? ' · ' + bucket.totalCount + ' reads' : ''}`;
+          return `<details class="file-dir-group" data-file-dir${dirIdx < 2 ? ' open' : ''}><summary><span>${esc(dir)}</span><small>${esc(countNote)}</small></summary><ul class="file-list">${bucket.rows.join('')}</ul></details>`;
+        }).join('');
+      } else {
+        body = `<ul class="file-list">${rows.map(renderRow).join('')}</ul>`;
+      }
       options.push(`<option value="${kind}">${title}</option>`);
-      groups.push(`<section class="file-activity-group" data-file-group="${kind}"><h3>${title} <span>${rows.length}</span></h3><ul class="file-list">${list}</ul></section>`);
+      groups.push(`<section class="file-activity-group" data-file-group="${kind}"><h3>${title} <span>${rows.length}</span></h3>${body}</section>`);
     };
     const mentions = (row, word) => Number.isSafeInteger(row.count) && row.count > 0 ? `${row.count} ${word}${row.count === 1 ? '' : 's'}` : '';
     const writeActions = new Map([['workspace-write', 'write'], ['workspace-edit', 'edit'], ['write', 'write'], ['edit', 'edit'], ['patch', 'patch']]);
@@ -304,9 +460,9 @@
         message = '<p class="muted" role="status">Loading episode file activity…</p>';
       } else if (activity.status === 'complete' || activity.status === 'partial') {
         const reads = activity.reads || [], writes = activity.writes || [], produced = activity.produced || [];
-        addGroup('reads', 'Read', reads, row => mentions(row, 'read'), 'episode-read');
         addGroup('writes', 'Written', writes, writeDescription, 'episode-write');
         addGroup('produced', 'Changes observed after commands', produced, row => mentions(row, 'observation'));
+        addGroup('reads', 'Read', reads, row => mentions(row, 'read'), 'episode-read', true);
         if (activity.status === 'partial') {
           const omitted = Object.values(activity.omitted || {}).reduce((a,n) => a + (Number(n) || 0), 0);
           message = `<p class="muted">Episode file activity is partial.${omitted ? ' Some path records were omitted.' : ''}${activity.deltaGaps ? ' Some command changes could not be enumerated.' : ''}</p>`;
@@ -404,7 +560,7 @@
   }
 
   function commitHTML(F) {
-    if (!F.commits?.length) return F.kind === 'open' && !F.pr ? '<div class="muted">No finish commit recorded for this episode.</div>' : '';
+    if (!F.commits?.length) return '';
     return F.commits.map(c => {
       const kind = c.kinds.includes('episode-finish') ? 'Episode finish commit' : c.kinds.includes('branch-tip') ? 'Branch tip commit' : 'Merge commit';
       return `<section class="commit-message"><h3>${kind} <code>${esc(c.id.split(':').pop().slice(0, 8))}</code></h3>
@@ -431,14 +587,19 @@
     return h ? h + ' h ' + m + ' min' : m + ' min ' + (seconds % 60) + ' s';
   }
 
-  function permissionsHTML(permissions) {
-    if (!permissions) return '';
-    const sessions = permissions.sessions || [];
+  const EFFECT_LABELS = {
+    'Workspace.Read': 'Read files', 'Workspace.Write': 'Write files',
+    'Workspace.Delete': 'Delete files', 'Workspace.Exec': 'Run commands',
+    'Ailang.Check': 'Check AILANG', 'Ailang.Run': 'Run AILANG',
+    'Ailang.RunEnv': 'Run AILANG (env)', 'Ailang.RunNet': 'Run AILANG (net)',
+    'Ailang.CLI': 'AILANG CLI', 'Ailang.Discover': 'Search AILANG docs',
+  };
+  const effectLabel = effect => Object.hasOwn(EFFECT_LABELS, effect) ? EFFECT_LABELS[effect] : effect;
+
+  function collectPermissions(permissions) {
+    const sessions = permissions?.sessions || [];
     const byScope = new Map();
     let overlapping = false;
-    const names = { 'Workspace.Read': 'Read files', 'Workspace.Write': 'Write files', 'Workspace.Exec': 'Run commands' };
-    const label = effect => Object.hasOwn(names, effect) ? names[effect] : effect;
-    const number = n => n.toLocaleString('en-US');
     const key = g => JSON.stringify([g.effect, g.scopeKey ?? g.scope]);
     // One episode spends against a shared counter for each permission and scope.
     // Simultaneous credentials offer alternative ceilings, never additive credit.
@@ -452,14 +613,36 @@
         }
       }
     }
-    for (const grant of permissions.observed || []) {
+    for (const grant of permissions?.observed || []) {
       if (!byScope.has(key(grant))) byScope.set(key(grant), {grant, session: {}, active:false});
     }
     const list = [...byScope.values()].sort((a,b) => a.grant.effect.localeCompare(b.grant.effect) || a.grant.scope.localeCompare(b.grant.scope));
+    return { sessions, list, overlapping };
+  }
+
+  function overviewPermissionsHTML(permissions) {
+    if (!permissions) return '';
+    const { list } = collectPermissions(permissions);
+    if (!list.length) return '';
+    const number = n => n.toLocaleString('en-US');
+    const used = list.filter(({grant:g}) => (g.used || 0) > 0 || Boolean(g.reserved))
+      .sort((a,b) => (b.grant.used || 0) - (a.grant.used || 0));
+    if (!used.length) return '';
+    const chips = used.map(({grant:g}) =>
+      `<span class="budget-chip"><b>${esc(effectLabel(g.effect))}</b> <code>${esc(number(g.used || 0))}${g.budget != null ? ' / ' + esc(number(g.budget)) : ''}</code></span>`
+    );
+    return `<div class="sect overview-budgets"><div class="overview-budgets-head"><span class="l">Active budgets</span><button type="button" class="link-btn" data-jump-tab="audit">Audit →</button></div>
+      <div class="budget-chips">${chips.join('')}</div></div>`;
+  }
+
+  function permissionsHTML(permissions) {
+    if (!permissions) return '';
+    const { sessions, list, overlapping } = collectPermissions(permissions);
+    const number = n => n.toLocaleString('en-US');
     const stateLabel = state => ({active:'Active',expired:'Expired',revoked:'Revoked',unavailable:'Grant details unavailable',observed:'Historical use','revoked-or-unavailable':'Credential unavailable'})[state] || 'Recorded';
-    const grantRows = list.map(({grant:g,session,active}) => {
+    const renderRow = ({grant:g, session, active}) => {
       const metrics = [];
-      metrics.push(g.used != null ? number(g.used) + ' used' : 'Usage unavailable');
+      metrics.push(g.used != null ? number(g.used) + ' used' : 'Limit only');
       if (g.budget != null) metrics.push('limit ' + number(g.budget));
       if (g.reserved) metrics.push(number(g.reserved) + ' reserved');
       if (active && g.remaining != null) metrics.push(number(g.remaining) + ' left');
@@ -467,22 +650,45 @@
         if (g.ledgerRemaining != null) metrics.push(number(g.ledgerRemaining) + ' unused');
         metrics.push(stateLabel(g.state || session.state));
       }
-      return `<li><span><b>${esc(label(g.effect))}</b> <small class="muted">${esc(g.scope)}</small></span><span>${esc(metrics.join(' · '))}</span></li>`;
-    }).join('');
+      const isUsed = (g.used || 0) > 0 || Boolean(g.reserved);
+      const hasMeter = active && isUsed && Number.isFinite(g.used) && Number.isFinite(g.budget) && g.budget > 0;
+      const pct = hasMeter ? Math.min(100, Math.max(1, Math.round((g.used / g.budget) * 1000) / 10)) : 0;
+      const warn = hasMeter && g.remaining != null && g.remaining <= g.budget * 0.15;
+      const meter = hasMeter ? `<span class="perm-meter${warn ? ' is-warn' : ''}" aria-hidden="true"><i style="width:${pct}%"></i></span>` : '';
+      return `<li class="perm-row${isUsed ? ' is-used' : ''}"><span class="perm-name"><b>${esc(effectLabel(g.effect))}</b> <small class="perm-scope muted">${esc(g.scope)}</small></span> <span class="perm-metrics">${esc(metrics.join(' · '))}</span>${meter}</li>`;
+    };
+    const isQuietActive = ({grant:g, active}) => active && !g.reserved && (g.used === 0 || g.used == null);
+    const primary = list.filter(item => !isQuietActive(item))
+      .sort((a, b) => (b.grant.used || 0) - (a.grant.used || 0) || a.grant.effect.localeCompare(b.grant.effect) || a.grant.scope.localeCompare(b.grant.scope));
+    const quiet = list.filter(isQuietActive);
+    const allUnmeasured = quiet.length > 0 && quiet.every(({grant:g}) => g.used == null);
+    const collapseQuiet = quiet.length > 0 && (primary.length > 0 || quiet.length >= 3);
+    let bodyHTML = '';
+    if (!list.length) {
+      bodyHTML = '<p class="muted">Grant details unavailable.</p>';
+    } else if (collapseQuiet) {
+      const summaryLabel = allUnmeasured ? `Capability limits · ${quiet.length}` : `Unused capabilities · ${quiet.length}`;
+      const calmNote = primary.length ? '' : (allUnmeasured
+        ? `<p class="perm-calm muted">${quiet.length} active capability grants enforced (live usage counters require daemon upgrade).</p>`
+        : `<p class="perm-calm">No budget spent yet across ${quiet.length} active grants.</p>`);
+      bodyHTML = (primary.length ? `<ol class="permission-totals">${primary.map(renderRow).join('')}</ol>` : calmNote) +
+        `<details class="stack-disclosure perm-unused" data-detail="unused-grants"><summary>${summaryLabel}</summary><ol class="permission-totals">${quiet.map(renderRow).join('')}</ol></details>`;
+    } else {
+      bodyHTML = `<ol class="permission-totals">${list.map(renderRow).join('')}</ol>`;
+    }
     const history = sessions.map(session => {
       const when = [];
       if (session.createdAt) when.push('Issued ' + exactOf(session.createdAt));
       if (session.expiresAt) when.push((session.state === 'expired' ? 'expired ' : 'expires ') + exactOf(session.expiresAt));
       const grants = (session.grants || []).map(g => {
         const expires = g.expiresAt && g.expiresAt !== session.expiresAt ? ' · expires ' + exactOf(g.expiresAt) : '';
-        return `<li><span>${esc(g.effect)} · ${esc(g.scope)}</span><span>${g.budget != null ? 'Limit ' + esc(number(g.budget)) : 'Limit unavailable'}${esc(expires)}</span></li>`;
+        return `<li><span>${esc(g.effect)} · ${esc(g.scope)}</span> <span>${g.budget != null ? 'Limit ' + esc(number(g.budget)) : 'Limit unavailable'}${esc(expires)}</span></li>`;
       }).join('');
       return `<section class="sect"><b>${esc(stateLabel(session.state))}</b>${when.length ? `<span class="muted">${esc(when.join(' · '))}</span>` : ''}${grants ? `<ol>${grants}</ol>` : ''}</section>`;
     }).join('');
     return `<div class="node-decisions node-permissions">
-      ${grantRows ? `<ol class="permission-totals">${grantRows}</ol>` : '<p class="muted">Grant details unavailable.</p>'}
-      ${history ? `<details class="stack-disclosure" data-detail="grant-history"><summary>Grant history · ${sessions.length}</summary>${overlapping ? '<p class="muted">Active grants for the same permission and scope share one usage counter. The summary shows the highest active limit. Each credential enforces its own limit.</p>' : ''}${history}</details>` : ''}
-      ${permissions.truncated ? '<p class="muted">Only part of the grant history is available.</p>' : ''}</div>`;
+      ${bodyHTML}
+      ${history ? `<details class="stack-disclosure" data-detail="grant-history"><summary>Grant history · ${sessions.length}</summary>${overlapping ? '<p class="muted">Active grants for the same permission and scope share one usage counter. The summary shows the highest active limit. Each credential enforces its own limit.</p>' : ''}${history}</details>` : ''}</div>`;
   }
 
   function inspectionHTML(F) {
@@ -492,8 +698,9 @@
     let html = '';
     if (run) {
       const harness = [prettyModel(run.harness), prettyModel(run.model)].filter(Boolean).join(' · ');
-      const metrics = [['Harness', harness || 'Unrecorded'], ['Recorded launches', run.launches]];
+      const metrics = [['Harness', harness || 'Unrecorded']];
       if (run.launches) {
+        metrics.push(['Completed launches', run.launches]);
         metrics.push(['Completed turns', run.turns ?? 'Unreported']);
         if (run.tokens) {
           const tokens = run.tokens, count = n => n.toLocaleString('en-US');
@@ -505,15 +712,17 @@
           if (tokens.output != null) metrics.push(['Output tokens', count(tokens.output), tokens.reasoning != null ? count(tokens.reasoning) + ' reasoning' : '']);
           else if (tokens.reasoning != null) metrics.push(['Reasoning tokens', count(tokens.reasoning)]);
         }
-        metrics.push(['Provider cost', run.costUsd == null ? 'Unreported' : new Intl.NumberFormat('en-US', {style:'currency',currency:'USD',maximumFractionDigits:6}).format(run.costUsd)]);
+        if (run.costUsd != null) {
+          metrics.push(['Provider cost', new Intl.NumberFormat('en-US', {style:'currency',currency:'USD',maximumFractionDigits:6}).format(run.costUsd)]);
+        } else {
+          metrics.push(['Provider cost', 'Unreported']);
+        }
+      } else if (F.open?.sessionLive || F.sessionLive) {
+        metrics.push(['Session state', 'Active interactive session (seals on finish)']);
       }
       if (run.runtime != null) metrics.push(['Harness runtime',runTime(run.runtime)]);
       if (run.elapsed != null) metrics.push(['Start to finish',runTime(run.elapsed)]);
-      let usageNote = '';
-      if (!run.launches) usageNote = 'World has no recorded harness launch for this episode.';
-      else if (run.turns == null && run.costUsd == null && !run.tokens) usageNote = 'World has no verified usage totals for this run.';
-      else if (run.costUsd == null) usageNote = 'The retained run record supplies no USD amount.';
-      html += section('Run details', rows(metrics) + (usageNote ? `<p class="muted">${usageNote}</p>` : ''));
+      html += section('Session & harness', rows(metrics));
       if (run.permissions) html += section('Permissions & budgets', permissionsHTML(run.permissions));
       if (run.checks?.length) {
         html += section('World finish checks · ' + run.checks.length, rows(run.checks.map(c => [c.name, c.result === 'PASS' ? 'Passed' : 'Failed'])));
@@ -554,35 +763,284 @@
     return finishEpisode(F) ? '<section class="node-decisions" data-node-confirmations hidden><h3>Awaiting approval</h3><div data-finish-links></div></section>' : '';
   }
 
-  function nodeLayout(F, bar, head, overview, tab, activity) {
+  function trustStripHTML(F, T) {
+    const pills = [];
+    const isOpen = F.kind === 'open';
+    const isEp = Boolean(isOpen || F.episode || F.run);
+    if (isEp) {
+      const confined = Boolean(F.run || isOpen);
+      pills.push(confined
+        ? '<span class="trust-seal is-confined" title="Tools and commands execute inside an AILANG World confined worktree"><i>λ</i>World Confined</span>'
+        : '<span class="trust-seal is-episode"><i>λ</i>World Episode</span>');
+      const humanCount = F.run?.decisions?.length || 0;
+      if (humanCount > 0) {
+        pills.push(`<span class="trust-seal is-signed" title="Authorized by cryptographic human decision">✓ Human Signed · ${humanCount}</span>`);
+      }
+      if (F.run?.permissions) {
+        const { list } = collectPermissions(F.run.permissions);
+        const effects = new Set(list.map(x => x.grant.effect));
+        const canWrite = effects.has('Workspace.Write') || effects.has('Workspace.Delete');
+        const canRead = effects.has('Workspace.Read');
+        const hasExec = effects.has('Workspace.Exec');
+        const hasNet = effects.has('Ailang.RunNet');
+        pills.push(`<span class="blast-pill ${canWrite ? 'is-neutral' : 'is-safe'}">FS: ${canWrite ? 'worktree R/W' : canRead ? 'read-only' : 'isolated'}</span>`);
+        pills.push(`<span class="blast-pill ${hasExec ? 'is-neutral' : 'is-safe'}">Exec: ${hasExec ? 'sandboxed profile' : 'off'}</span>`);
+        pills.push(`<span class="blast-pill ${hasNet ? 'is-warn' : 'is-safe'}">${hasNet ? '⚠ Net: allowed' : 'Net: blocked'}</span>`);
+        let used = 0, budget = 0;
+        for (const { grant } of list) {
+          used += Number(grant.used || 0);
+          if (Number.isFinite(grant.budget) && grant.budget > 0) budget += grant.budget;
+        }
+        if (budget > 0) {
+          const warn = used / budget >= 0.85;
+          pills.push(`<span class="blast-pill is-mono${warn ? ' is-warn' : ''}">Budget: ${used}/${budget} calls</span>`);
+        }
+      }
+      if (F.checks?.graders) {
+        const pass = Boolean(F.checks.firstRoundPass);
+        pills.push(`<span class="blast-pill ${pass ? 'is-safe' : 'is-neutral'}">✓ ${esc(F.checks.graders)} graders${pass ? ' · 1st pass' : ''}</span>`);
+      } else if (isOpen && !F.pr) {
+        pills.push('<span class="blast-pill is-gate">Merge gate: Passkey required</span>');
+      }
+    } else if (F.kind === 'shared') {
+      const worldAttested = Boolean(T?.isWorldMerge?.(F));
+      if (worldAttested) {
+        pills.push('<span class="trust-seal is-signed">✓ World-Attested Merge</span>');
+        if (F.pr) pills.push(`<span class="blast-pill is-safe">PR #${esc(F.pr)} · Landed from confined episode</span>`);
+      } else {
+        pills.push('<span class="trust-seal is-external">○ External Git Commit</span>');
+        pills.push('<span class="blast-pill is-muted">No World confinement receipt attached</span>');
+      }
+    } else {
+      pills.push('<span class="trust-seal is-external">○ Unattested Work Step</span>');
+    }
+    return `<div class="trust-strip" data-trust-strip aria-label="Trust and confinement boundary">${pills.join('')}</div>`;
+  }
+
+  function summarizeConvTools(tools) {
+    if (!Array.isArray(tools) || !tools.length) return '';
+    const groups = new Map();
+    for (const raw of tools) {
+      let item = typeof raw === 'string' ? { name: raw } : (raw || {});
+      if (typeof raw === 'string' && raw.includes(' ')) {
+        const sp = raw.indexOf(' '), n = raw.slice(0, sp), rest = raw.slice(sp + 1).trim();
+        const isFile = rest && !rest.startsWith('"') && !rest.startsWith('-') && (rest.includes('/') || /\.[a-z0-9]{1,8}$/i.test(rest));
+        const parts = rest.split('/').filter(Boolean);
+        item = { name: n, target: isFile && parts.length > 2 ? parts.slice(-2).join('/') : rest, file: isFile ? rest : '' };
+      }
+      const name = String(item.name || '').trim();
+      if (!name) continue;
+      const target = String(item.target || '').trim();
+      const file = String(item.file || '').trim();
+      const key = `${name}\0${target}\0${file}`;
+      const prev = groups.get(key);
+      if (prev) prev.count++;
+      else groups.set(key, { name, target, file, count: 1 });
+    }
+    if (!groups.size) return '';
+    const all = [...groups.values()];
+    const pills = all.slice(0, 10).map(({ name, target, file, count }) => {
+      const isWrite = /write|edit|delete/i.test(name);
+      const cls = 'conv-tool-pill' + (isWrite ? ' is-write' : '') + (file ? ' is-clickable' : '');
+      const inner = `<b>${esc(name)}</b>${target ? ` <span>${esc(target)}</span>` : ''}${count > 1 ? ` <i>×${count}</i>` : ''}`;
+      if (file) {
+        return `<button type="button" class="${cls}" data-file-path="${esc(file)}" data-file-source="${isWrite ? 'episode-write' : 'episode-read'}">${inner}</button>`;
+      }
+      return `<span class="${cls}">${inner}</span>`;
+    }).join('');
+    const rest = all.length > 10 ? `<span class="conv-tool-pill is-muted">+${all.length - 10} more</span>` : '';
+    return `<div class="conv-tools" aria-label="Tools invoked in turn">${pills}${rest}</div>`;
+  }
+
+  function convMediaHTML(media, compact = false) {
+    if (!Array.isArray(media) || !media.length) return '';
+    const imgs = media.filter(x => x && typeof x.url === 'string' && x.url.startsWith('/surface/conversation-media?')).map(x =>
+      `<a class="conv-media-link" href="${esc(x.url)}" target="_blank" rel="noopener noreferrer" title="${esc(x.name || 'Attachment')}"><img class="conv-media-img${compact ? ' is-compact' : ''}" src="${esc(x.url)}" loading="lazy" alt="${esc(x.name || 'Uploaded image')}"></a>`
+    ).join('');
+    return imgs ? `<div class="conv-media">${imgs}</div>` : '';
+  }
+
+  function convTimeOf(at) {
+    if (!at) return '';
+    const ms = Date.parse(at);
+    if (!Number.isFinite(ms)) return '';
+    const d = new Date(ms);
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
+  }
+
+  function cleanConvLinks(text) {
+    return String(text || '').replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g, (_, label) => label);
+  }
+
+  function conversationTabHTML(F, conv, newestFirst = true) {
+    const ep = F.trajectoryEpisode || F.run?.episode || F.episode || '';
+    if (!conv) {
+      return `<div class="conv-tab" data-conv-root><div class="muted">Loading conversation${ep ? ` for ${esc(ep)}` : ''}…</div></div>`;
+    }
+    const msgs = Array.isArray(conv.messages) ? conv.messages : [];
+    const live = conv.status === 'live' || Boolean(F.open?.sessionLive || F.sessionLive);
+    const statusBadge = conv.status === 'verified'
+      ? '<span class="conv-status is-verified" title="Sealed and SHA-256 verified episode transcript">✓ Verified transcript</span>'
+      : conv.status === 'live'
+      ? '<span class="conv-status is-live" title="Streaming live from active host session">● Live stream</span>'
+      : '<span class="conv-status is-muted">Transcript unavailable</span>';
+    const agentBadge = conv.agent ? `<span class="conv-meta">${esc(prettyModel(conv.agent))}</span>` : '';
+    const totalCount = Number(conv.total || msgs.length || 0);
+    const countBadge = msgs.length ? `<span class="conv-meta" data-conv-count>${totalCount} turn${totalCount === 1 ? '' : 's'}${conv.truncated ? ` (showing latest ${msgs.length})` : ''}</span>` : '';
+    const searchRow = msgs.length > 2 ? `<div class="conv-filter-row">
+      <input type="search" class="conv-search" data-conv-search placeholder="Search conversation or tools…" aria-label="Search conversation" spellcheck="false" autocomplete="off">
+      <div class="conv-order" role="group" aria-label="Speaker filter">
+        <button type="button" class="conv-order-btn" data-conv-role="" aria-pressed="true">All</button>
+        <button type="button" class="conv-order-btn" data-conv-role="user" aria-pressed="false">You</button>
+        <button type="button" class="conv-order-btn" data-conv-role="assistant" aria-pressed="false">Agent</button>
+      </div>
+    </div>` : '';
+    const controls = `<div class="conv-controls">
+      ${msgs.length > 1 ? `<div class="conv-order" role="group" aria-label="Turn order">
+        <button type="button" class="conv-order-btn" data-conv-order="newest" aria-pressed="${newestFirst}">Newest first</button>
+        <button type="button" class="conv-order-btn" data-conv-order="oldest" aria-pressed="${!newestFirst}">Chronological</button>
+      </div>
+      <button type="button" class="conv-refresh-btn" data-conv-scroll="end" title="Jump to bottom / top">↕ Jump</button>` : ''}
+      <button type="button" class="conv-refresh-btn" data-conv-refresh>${live ? 'Refresh' : 'Reload'}</button>
+    </div>`;
+    const bar = `<div class="conv-bar"><div class="conv-bar-top"><div class="conv-bar-left">${statusBadge}${agentBadge}${countBadge}</div>${controls}</div>${searchRow}</div>`;
+    if (!msgs.length) {
+      const reason = conv.reason || 'No conversation messages recorded for this episode yet.';
+      return `<div class="conv-tab" data-conv-root>${bar}<div class="conv-empty muted">${esc(reason)}</div></div>`;
+    }
+    const startTurn = Math.max(1, totalCount - msgs.length + 1);
+    const indexed = msgs.map((m, idx) => ({ m, turnNo: startTurn + idx }));
+    const ordered = newestFirst ? [...indexed].reverse() : indexed;
+    const rows = ordered.map(({ m, turnNo }) => {
+      const isUser = m.role === 'user';
+      const who = isUser ? 'You' : (conv.agent ? prettyModel(conv.agent) : 'Agent');
+      const tm = convTimeOf(m.at);
+      const toolSearch = (m.tools || []).map(t => typeof t === 'string' ? t : [t?.name, t?.target, t?.file].filter(Boolean).join(' '));
+      const hay = [m.text || '', ...toolSearch, '#' + turnNo].join(' ').toLowerCase();
+      const body = m.text ? `<div class="task-document conv-body">${taskDocument(cleanConvLinks(m.text))}</div>` : '<div class="muted conv-tool-only">Tool execution step</div>';
+      return `<article class="conv-turn ${isUser ? 'is-user' : 'is-assistant'}" data-turn="${turnNo}" data-role="${isUser ? 'user' : 'assistant'}" data-conv-hay="${esc(hay)}">
+        <header class="conv-turn-head">
+          <span class="conv-role ${isUser ? 'is-user' : 'is-assistant'}">${esc(who)}</span>
+          <span class="conv-turn-num">#${turnNo}</span>
+          ${tm ? `<span class="conv-time">${esc(tm)}</span>` : ''}
+        </header>
+        ${body}
+        ${convMediaHTML(m.media, false)}
+        ${summarizeConvTools(m.tools)}
+      </article>`;
+    }).join('');
+    return `<div class="conv-tab" data-conv-root>${bar}<p class="muted" data-conv-empty hidden>No turns match your filter.</p><div class="conv-list">${rows}</div></div>`;
+  }
+
+  function overviewConversationHTML(F, conv) {
+    if (!conv) {
+      return '<div class="overview-conv-box is-empty"><span class="muted">Loading conversation…</span></div>';
+    }
+    const msgs = Array.isArray(conv.messages) ? conv.messages : [];
+    if (!msgs.length) {
+      const note = conv.reason || 'No conversation transcript recorded for this episode.';
+      return `<div class="overview-conv-box is-empty"><span class="muted">${esc(note)}</span><button type="button" class="link-btn" data-jump-tab="audit">Inspect Audit →</button></div>`;
+    }
+    const total = Number(conv.total || msgs.length);
+    const recent = msgs.slice(-5);
+    const isLive = conv.status === 'live';
+    const items = recent.map(m => {
+      const isUser = m.role === 'user';
+      const who = isUser ? 'You' : (conv.agent ? prettyModel(conv.agent) : 'Agent');
+      const cleaned = cleanConvLinks(m.text || '').trim();
+      const clipped = cleaned.length > 420 ? cleaned.slice(0, 419).replace(/\s+\S*$/, '') + '…' : cleaned;
+      const rendered = clipped
+        ? `<div class="task-document overview-conv-md">${taskDocument(clipped)}</div>`
+        : '';
+      const media = convMediaHTML(m.media, true);
+      const tools = !isUser ? summarizeConvTools(m.tools) : '';
+      return `<div class="overview-conv-item ${isUser ? 'is-user' : 'is-assistant'}"><span class="conv-role ${isUser ? 'is-user' : 'is-assistant'}">${esc(who)}</span><div class="overview-conv-body">${rendered}${media}${tools}</div></div>`;
+    }).join('');
+    return `<div class="overview-conv-box">
+      <div class="overview-conv-head"><span class="l">${isLive ? '● Live conversation' : '✓ Conversation'} · ${total} turn${total === 1 ? '' : 's'}</span><button type="button" class="link-btn" data-jump-tab="conversation">Open full thread →</button></div>
+      <div class="overview-conv-list">${items}</div>
+    </div>`;
+  }
+
+  function nodeLayout(F, bar, head, overview, tab, activity, trust = '', conv = null, convNewest = true) {
+    if (tab === 'run' || tab === 'trajectory') tab = F.run || F.trajectoryEpisode ? 'audit' : 'checks';
     const run = inspectionHTML(F);
+    const hasTraj = Boolean(F.trajectoryEpisode || F.run?.episode);
+    const hasConv = F.kind === 'open' || Boolean(hasTraj || F.episode);
+    const fileCount = (activity?.writes?.length || 0) || (F.landedFileCount || F.landedFiles?.length || 0);
+    const filesLabel = fileCount > 0 ? `Files · ${fileCount}` : 'Files';
     const sections = [
       ['overview', 'Overview', overview],
-      ['files', 'Files', filesTabHTML(F, activity)],
     ];
-    if (run) sections.push(['run', F.run ? 'Run' : 'Checks', `<div class="node-run-grid">${run}</div>`]);
-    if (F.trajectoryEpisode || F.run?.episode) {
-      const label = F.kind === 'shared' ? 'Linked episode trajectory' : 'Agent trajectory';
-      sections.push(['trajectory', 'Trajectory', `<h2 class="node-panel-title">${label}</h2><div data-trajectory-body></div>`]);
+    if (hasConv) {
+      const count = conv?.total || conv?.messages?.length || 0;
+      const convLabel = count > 0 ? `Conversation · ${count}` : 'Conversation';
+      sections.push(['conversation', convLabel, conversationTabHTML(F, conv, convNewest)]);
+    }
+    sections.push(['files', filesLabel, filesTabHTML(F, activity)]);
+    if (run || hasTraj) {
+      const pureChecks = Boolean(run && !F.run && !hasTraj);
+      const tabId = pureChecks ? 'checks' : 'audit';
+      const tabLabel = pureChecks ? 'Checks' : 'Audit';
+      const trajLabel = F.kind === 'shared' ? 'Linked episode tool log' : 'World tool log';
+      const trajBlock = hasTraj ? `<section class="audit-trajectory"><h2 class="node-panel-title">${trajLabel}</h2><div data-trajectory-body></div></section>` : '';
+      const runBlock = run ? `<div class="node-run-grid">${run}</div>` : '';
+      sections.push([tabId, tabLabel, `<div class="node-audit-stack">${runBlock}${trajBlock}</div>`]);
     }
     if (!sections.some(([id]) => id === tab)) tab = 'overview';
     const buttons = sections.map(([id,label]) =>
       `<button type="button" role="tab" data-node-tab="${id}" id="node-tab-${id}" aria-controls="node-panel-${id}" aria-selected="${tab === id}" tabindex="${tab === id ? 0 : -1}">${label}</button>`).join('');
     const panels = sections.map(([id,,content]) =>
       `<section role="tabpanel" tabindex="0" data-node-panel="${id}" id="node-panel-${id}" aria-labelledby="node-tab-${id}"${tab === id ? '' : ' hidden'}>${content}</section>`).join('');
-    return bar + `<nav class="node-tabs" role="tablist" aria-label="Node sections">${buttons}</nav><div class="fbody stack-body" tabindex="0" role="region" aria-label="Node summary">${head}${panels}</div>`;
+    return bar + trust + `<nav class="node-tabs" role="tablist" aria-label="Node sections">${buttons}</nav><div class="fbody stack-body" tabindex="0" role="region" aria-label="Node summary"><div class="stack-inner">${head}${panels}</div></div>`;
   }
 
-  function overviewHTML(inputs, history, outputs) {
+  function overviewHTML(inputs, history, outputs, openThreeCol = false) {
+    if (openThreeCol && history && outputs) {
+      return `<div class="node-overview node-open-overview">${inputs}${history}${outputs}</div>`;
+    }
     return `<div class="node-overview">${inputs}${history || outputs ? `<div class="node-outcome">${history}${outputs}</div>` : ''}</div>`;
+  }
+
+  function openOutputsSummaryHTML(F, activity) {
+    if (!activity || (activity.status !== 'complete' && activity.status !== 'partial')) return '';
+    const writes = activity.writes || [], produced = activity.produced || [], reads = activity.reads || [];
+    if (writes.length || produced.length) {
+      const shown = writes.slice(0, 6).map((row, idx) =>
+        `<li class="file-change file-activity-row"><span class="file-activity-meta">${row.count > 1 ? row.count + ' writes' : 'Modified'}</span>${filePathHTML(row.path, 'episode-write', 'overview-write:' + idx)}</li>`
+      ).join('');
+      const extra = writes.length > 6 ? `<div class="muted">+${writes.length - 6} more modified in worktree</div>` : '';
+      const prodNote = produced.length ? `<div class="muted">${produced.length} file${produced.length === 1 ? '' : 's'} changed after commands</div>` : '';
+      return `<div class="overview-files-summary">
+        <div class="l">Modified in worktree · ${writes.length}</div>
+        ${shown ? `<ul class="file-list">${shown}</ul>` : ''}${extra}${prodNote}
+        <button type="button" class="link-btn" data-jump-tab="files">Inspect all files (${writes.length + reads.length}) →</button>
+      </div>`;
+    }
+    if (reads.length) {
+      const dirs = new Map();
+      for (const r of reads) {
+        const d = dirOfPath(r.path);
+        dirs.set(d, (dirs.get(d) || 0) + 1);
+      }
+      const topDirs = [...dirs.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4)
+        .map(([d, n]) => `<span class="dir-chip">${esc(d)} · ${n}</span>`).join('');
+      return `<div class="overview-files-summary">
+        <div class="l">Read-only so far · ${reads.length} file${reads.length === 1 ? '' : 's'} inspected</div>
+        <div class="dir-chips">${topDirs}</div>
+        <button type="button" class="link-btn" data-jump-tab="files">Browse inspected files →</button>
+      </div>`;
+    }
+    return '';
   }
 
   // frontHTML is the front card for the stack's front state. T (the adapted model) only names
   // and glyphs other states; every value on the card is the stack's own, or an honest gap.
-  function frontHTML(S, T, tab = 'overview', activity = null) {
+  function frontHTML(S, T, tab = 'overview', activity = null, conv = null, convNewest = true) {
     const F = S.front, step = F.kind === 'step';
     const none = t => `<div class="muted">${esc(t)}</div>`;
-    if (F.kind === 'open') return openFrontHTML(S, T, none, tab, activity);
+    if (F.kind === 'open') return openFrontHTML(S, T, none, tab, activity, conv, convNewest);
     const tag = F.episode ? F.episode + (F.model ? ' · ' + prettyModel(F.model) : '') : F.label;
     const bar = `<div class="fbar"><span id="cb-tag" style="font-weight:700">${esc(tag)}</span><span class="sub" id="cb-when">${esc(`${F.rel} · ${F.exact}`)}</span><span style="flex:1"></span><span class="sub" style="display:inline-flex;align-items:center;gap:7px">${gl(F.glyph, F.glyph === 'circle' ? SHARED_INK : F.colour, 11)}${esc(rowLabel(F.name, F.row))}</span><span class="sub" id="cb-pos">${esc(F.position)}</span></div>`;
     const summ = summaryOf(F);
@@ -623,27 +1081,60 @@
       ? `<section class="col" aria-labelledby="front-history"${hasHistory ? '' : ' data-finish-history-only hidden'}><h2 class="colh" id="front-history">What happened</h2>${finish}${acts ? `<ol class="front-history">${acts}</ol>` : ''}${totals ? `<div class="check-totals">${totals}</div>` : ''}${decisions}</section>`
       : '';
 
-    return nodeLayout(F, bar, head, overviewHTML(inputs, happened, outputs), tab, activity);
+    return nodeLayout(F, bar, head, overviewHTML(inputs, happened, outputs), tab, activity, trustStripHTML(F, T), conv, convNewest);
   }
 
-  // openFrontHTML is an open episode's minimal card (row 220 M4): what it is, what it was built on,
-  // its lifecycle label. Nothing has landed, so outputs and checks are honest gaps; N2d owns the richer card.
-  function openFrontHTML(S, T, none, tab, activity) {
+  // openFrontHTML is an open episode's live mission card: human dialogue + task intent on the left,
+  // and concrete worktree impact + compact session context on the right.
+  function openFrontHTML(S, T, none, tab, activity, conv = null, convNewest = true) {
     const F = S.front, o = F.open || {};
-    const bar = `<div class="fbar"><span id="cb-tag" style="font-weight:700">${esc(F.episode + (F.model ? ' · ' + prettyModel(F.model) : ''))}</span><span class="sub" id="cb-when">${esc(`started ${F.rel} · ${F.exact}`)}</span><span style="flex:1"></span><span class="sub" style="display:inline-flex;align-items:center;gap:7px">${gl(F.glyph, F.colour, 11)}${esc(rowLabel(F.name, F.row))}</span><span class="sub" id="cb-pos" data-open-state="${esc(o.state)}">${esc(o.label)}</span></div>`;
-    const head = `<div class="head"><div class="h">${esc(F.title || F.episode)}</div><div class="outcome">${esc(o.label + (o.ended ? ' · ended ' + o.ended : ''))}</div></div>`;
-    let grid = '';
-    if (o.lastRun) grid += `<span class="k">Agent run</span><div>${esc(lastRunDetail(o.lastRun))}</div>`;
-    if (F.model) grid += `<span class="k">Agent</span><div>${esc(agentLine(F))}</div>`;
-    if (o.branch) grid += `<span class="k">Branch</span><div>${esc(o.branch)}</div>`;
-    const came = F.builtOn ? `<div class="sect"><div class="l">↑ Came from</div><div class="chips">${stateChip(T, F.builtOn, 'built on')}</div></div>`
-      : none(o.baseOutsideWindow ? `Built on ${o.base || 'an unrecorded base'}, outside the retained window.` : 'Base not recorded.');
-    const inputs = `<div class="col"><div class="colh">Inputs</div>${taskHTML(F)}${grid ? `<div class="ingrid">${grid}</div>` : ''}${came}</div>`;
-    const outputs = `<div class="col g6"><div class="colh">Outputs</div>${commitHTML(F)}${F.pr ? `<div class="prpill">#${F.pr} · waiting for merge</div>` : (F.commits?.length ? none('Nothing has landed yet.') : '')}</div>`;
-    const decisions = humanDecisionsHTML(F.run);
+    const runHarness = F.run?.harness ? [prettyModel(F.run.harness), F.run.model ? prettyModel(F.run.model) : ''].filter(Boolean).join(' · ') : '';
+    const shownAgent = agentLine(F) || runHarness || cap(F.agent || '');
+    const liveBadge = o.sessionLive ? '<span class="live-pill">Live</span>' : '';
+    const posHidden = o.sessionLive ? ' hidden' : '';
+    const bar = `<div class="fbar">${liveBadge}<span id="cb-tag" style="font-weight:700">${esc(F.episode || F.label)}</span><span class="sub" id="cb-when">${esc(`started ${F.rel} · ${F.exact}`)}</span><span style="flex:1"></span><span class="sub" style="display:inline-flex;align-items:center;gap:7px">${gl(F.glyph, F.colour, 11)}${esc(rowLabel(F.name, F.row))}</span><span class="sub" id="cb-pos" data-open-state="${esc(o.state)}"${posHidden}>${esc(o.label)}</span></div>`;
+    const headTitle = F.title || (o.sessionLive ? (shownAgent ? `Interactive session · ${shownAgent}` : 'Interactive session') : F.episode);
+    const epActions = F.episode ? `<div class="ep-actions" data-episode-actions>
+      ${!F.pr ? `<button type="button" class="ep-act-btn is-primary" data-verb="episode finish ${esc(F.episode)}">Finish &amp; review PR…</button>` : ''}
+      <details class="ep-more" data-detail="ep-more">
+        <summary class="ep-act-btn">More</summary>
+        <div class="ep-more-menu">
+          <button type="button" class="ep-more-item" data-verb="episode report ${esc(F.episode)}">Episode report</button>
+          ${o.sessionLive ? '<button type="button" class="ep-more-item" data-verb="why head">Why latest call</button>' : ''}
+          <button type="button" class="ep-more-item" data-copy-cli="ailang-worldd episode report ${esc(F.episode)}">Copy CLI command</button>
+        </div>
+      </details>
+    </div>` : '';
+    const endedSub = o.ended ? `Ended ${o.ended}` : (!o.sessionLive && o.label ? o.label : '');
+    const head = `<div class="head"><div class="head-row"><div class="h">${esc(headTitle)}</div>${epActions}</div>${endedSub ? `<div class="outcome">${esc(endedSub)}</div>` : ''}</div>`;
+
     const finish = finishPlaceholder(F);
-    const history = decisions || finish ? `<section class="col"${decisions ? '' : ' data-finish-history-only hidden'}><h2 class="colh">What happened</h2>${finish}${decisions}</section>` : '';
-    return nodeLayout(F, bar, head, overviewHTML(inputs, history, outputs), tab, activity);
+    const task = taskHTML(F);
+    const hasConv = Boolean(F.episode || F.trajectoryEpisode || F.run?.episode);
+    const convFeed = hasConv ? `<div class="overview-conv" data-overview-conversation>${overviewConversationHTML(F, conv)}</div>` : '';
+    const mainCol = `<section class="col open-main-col"><h2 class="colh">${task ? 'Task &amp; conversation' : 'Conversation'}${o.sessionLive ? '<span class="n">Live</span>' : ''}</h2>${finish}${task}${convFeed}</section>`;
+
+    const filesSummary = openOutputsSummaryHTML(F, activity);
+    const commits = commitHTML(F);
+    const prBadge = F.pr ? `<div class="prpill">PR #${F.pr} · waiting for merge</div>` : '';
+    const decisions = humanDecisionsHTML(F.run);
+    const budgets = overviewPermissionsHTML(F.run?.permissions);
+
+    const sessions = F.run?.permissions?.sessions || [];
+    const activeSess = sessions.find(s => s.current && s.state === 'active') || sessions.find(s => s.state === 'active');
+    let metaGrid = '';
+    if (shownAgent && !headTitle.includes(shownAgent)) metaGrid += `<span class="k">Agent</span><div>${esc(shownAgent)}</div>`;
+    if (o.lastRun) metaGrid += `<span class="k">Last run</span><div>${esc(lastRunDetail(o.lastRun))}</div>`;
+    if (o.branch) metaGrid += `<span class="k">Branch</span><div><code>${esc(o.branch)}</code></div>`;
+    if (F.builtOn) metaGrid += `<span class="k">Base</span><div>${stateChip(T, F.builtOn, 'built on')}</div>`;
+    else if (o.base) metaGrid += `<span class="k">Base</span><div><code>${esc(o.base)}</code></div>`;
+    if (activeSess?.expiresAt) metaGrid += `<span class="k">Expires</span><div>${esc(exactOf(activeSess.expiresAt))}</div>`;
+    const contextSect = metaGrid ? `<div class="sect"><div class="l">Session context</div><div class="ingrid is-compact">${metaGrid}</div></div>` : '';
+
+    const impactEmpty = !filesSummary && !commits && !prBadge ? '<div class="muted">No worktree changes recorded yet.</div>' : '';
+    const sideCol = `<section class="col g6 open-side-col"><h2 class="colh">Impact &amp; context</h2><div data-overview-files>${filesSummary || impactEmpty}</div>${commits}${prBadge}${decisions}${budgets}${contextSect}</section>`;
+
+    return nodeLayout(F, bar, head, `<div class="node-overview node-open-clean">${mainCol}${sideCol}</div>`, tab, activity, trustStripHTML(F, T), conv, convNewest);
   }
 
   // railHTML is the whole brane, newest at the top; a long lane shows a window around the front.
@@ -776,7 +1267,7 @@
   // lookOf is v3's two choices from M4a's stored look: Paper or Slate, full or reduced motion.
   function lookOf(look, prefersDark, prefersReduced) {
     const l = look && typeof look === 'object' ? look : {};
-    const theme = l.theme === 'system' ? (prefersDark ? 'slate' : 'paper') : l.theme === 'slate' || l.theme === 'night' ? 'slate' : 'paper';
+    const theme = l.theme === 'night' || l.theme === 'slate' || (l.theme === 'system' && prefersDark) ? 'night' : 'paper';
     const motion = l.motion === 'reduced' || (l.motion === 'system' && prefersReduced) ? 'reduced' : 'full';
     return { theme, motion };
   }
@@ -1012,16 +1503,16 @@
   // verbPanel builds the panel's nodes with textContent only: a report or a reason is never markup.
   function verbPanel(doc, p) {
     const el = doc.createElement('div'), head = doc.createElement('div'), body = doc.createElement('pre');
-    el.id = 'verb'; el.className = 'pop'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Verb');
-    head.className = 'mono'; head.textContent = p.head;
-    body.style.cssText = 'margin:10px 0 0;white-space:pre-wrap;max-height:60vh;overflow:auto;font-size:12px'; body.textContent = p.body;
+    el.id = 'verb'; el.className = 'pop verb-sheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Verb');
+    head.className = 'mono verb-head'; head.textContent = p.head;
+    body.className = 'verb-body'; body.textContent = p.body;
     el.append(head, body);
-    if (p.copy) { const b = doc.createElement('button'); b.type = 'button'; b.className = 'hbtn'; b.textContent = 'Copy the line'; b.dataset.copy = p.copy; el.append(b); }
+    if (p.copy) { const b = doc.createElement('button'); b.type = 'button'; b.className = 'verb-copy-btn'; b.textContent = 'Copy the line'; b.dataset.copy = p.copy; el.append(b); }
     return el;
   }
 
   if (typeof module !== 'undefined') module.exports = { needsYouHTML, decidedHTML, notifications, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, finishMatchesNode, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
-    adaptModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, filePath, fileEvidenceHTML, filesTabHTML, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW },
+    adaptModel, projectHeadsModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, filePath, fileEvidenceHTML, filesTabHTML, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW },
     VERB_ROUTE_BUDGET_MS, verbOutcome, askVerb, verbAct, verbPanel, goWith, addressGo };
   if (typeof document === 'undefined') return;
 
@@ -1161,11 +1652,10 @@
       }
     }
     scale = narrow.matches ? 1 : Math.min(w / 1600, h / 936, 1.25);
-    const bx = Math.max(0, (w - 1600 * scale) / 2);
     $('tl').style.transform = `scale(${scale})`;
-    $('br').style.transform = `translate(${bx}px, 0) scale(${scale})`;
-    const edge = bx + 1290 * scale;
-    $('L1').style.background = `linear-gradient(90deg, var(--stageBg) ${edge}px, var(--line) ${edge}px, var(--line) ${edge + 1}px, var(--bg) ${edge + 1}px)`;
+    $('br').style.transform = '';
+    $('L1').style.background = '';
+    if (st.d === 1 && S) placeBars(false);
   }
 
   // ---------- State ----------
@@ -1196,12 +1686,16 @@
     return points;
   }
 
+  function pendingEpisodeSet() {
+    const requests = [...(REQS?.pending || []), ...(REQS?.decisions || []), ...(REQS?.confirmations || [])];
+    return new Set(requests.filter(r => !r.refused && !r.recorded && (!r.expires || r.expires > REQS.now)).map(r => r.episode).filter(Boolean));
+  }
   // Only attribute a pending request to a lane when its episode has one owner.
   function attentionLanes() {
-    const requests = [...(REQS?.pending || []), ...(REQS?.decisions || []), ...(REQS?.confirmations || [])];
-    const pending = new Set(requests.filter(r => !r.refused && !r.recorded && (!r.expires || r.expires > REQS.now)).map(r => r.episode).filter(Boolean));
+    const pending = pendingEpisodeSet();
+    const activeGraph = headModelCache?.graph || T;
     const episodes = new Map(), lanes = new Set();
-    for (const node of Object.values(N)) {
+    for (const node of Object.values(activeGraph?.N || N)) {
       if (!pending.has(node.episode)) continue;
       if (!episodes.has(node.episode)) episodes.set(node.episode, new Set());
       episodes.get(node.episode).add(node.lane);
@@ -1209,10 +1703,35 @@
     for (const owners of episodes.values()) if (owners.size === 1) owners.forEach(lane => lanes.add(lane));
     return lanes;
   }
+  let headFilter = 'current', headExplicitKeep = '';
+  let headModelCache = null;
+  function currentHeadGraph() {
+    if (!T || !D) return T;
+    if (!followMode) return T;
+    const mode = headFilter || 'current';
+    const pending = pendingEpisodeSet();
+    const key = JSON.stringify([D.generation || '', D.now || '', mode, headExplicitKeep, [...pending].sort(), D.lanes?.length || 0]);
+    if (headModelCache?.key === key) return headModelCache.graph;
+    const projected = projectHeadsModel(D, mode, { keepID: headExplicitKeep, pendingEpisodes: pending });
+    const graph = adaptModel(projected.model);
+    if (mode !== 'current' && typeof WorldHeadCamera !== 'undefined') {
+      const baseProjected = projectHeadsModel(D, 'current', { keepID: headExplicitKeep, pendingEpisodes: pending });
+      const baseGraph = adaptModel(baseProjected.model);
+      const baseScene = WorldHeadCamera.layout(baseGraph, { width: 1280, height: 720, attention: attentionLanes() });
+      const preferredSides = new Map();
+      for (const [lane, info] of baseScene.plan?.lanes || []) {
+        preferredSides.set(lane, Math.sign(info.origin));
+      }
+      graph.preferredSides = preferredSides;
+    }
+    headModelCache = { key, graph, counts: projected.counts };
+    return graph;
+  }
+  const headAgent = n => agentLine(n) || cap(n?.agent || '');
   const camera = WorldCameraController.create($('stage'), $('head-space'), {
-    model:() => T, timeXs:() => XS, sidePoints, attention:attentionLanes, reduced,
+    model:() => currentHeadGraph(), timeXs:() => (currentHeadGraph() || T)?.LX?.[1] || XS, sidePoints, attention:attentionLanes, reduced,
     glyph:(n, size) => glyphOfNode(n, size), title:n => cleanTitle(n.title) || n.episode || n.label || n.id,
-    summary:summaryOf, agent:agentLine, tag:tagOf, lastRunLabel, lastRunDetail, mergeFileSummary, stops:() => miniStops,
+    summary:summaryOf, agent:agentLine, headAgent, tag:tagOf, lastRunLabel, lastRunDetail, mergeFileSummary, stops:() => miniStops,
     open:id => open(id),
     select:id => { if (N[id]) { st.focus = id; camera.select(id); } },
     placeStatus:placeNow,
@@ -1273,6 +1792,8 @@
     const chosen = anchor || timelineAnchor;
     const node = N[chosen] || N[T.aliasOf[chosen]];
     if (node) st.focus = node.id;
+    headExplicitKeep = heads && node ? node.id : '';
+    headModelCache = null;
     if (wasStack && fromHeads && !heads && !camera.active) camera.turn(true, st.focus, {instant:true});
     if (!heads && st.focus && REP[st.focus]) {
       pinnedTimelineState = st.focus;
@@ -1366,7 +1887,7 @@
     h += `<div class="pedge" style="left:${PL - 1}px;top:96px;height:${TICK_T + 36 - 96}px"></div><div class="pedge" style="left:${PR}px;top:96px;height:${TICK_T + 36 - 96}px"></div>`;
     h += `<div class="plot" id="plot" style="left:${PL}px;top:0;width:${PW}px;height:${TICK_T + 40}px"><div class="world" id="world"></div></div>`;
     h += `<div class="tlbar" style="left:${PL}px;top:62px;width:${PW}px">
-      <button type="button" class="phone-view" id="phone-activity">Activity</button><span class="range" id="range"></span><span style="flex:1"></span>
+      <button type="button" class="phone-view" id="phone-activity">Activity</button><span class="range" id="range"></span><span id="tl-live-triage" class="tl-live-triage"></span><span style="flex:1"></span>
       <span class="ctl">
         <button type="button" class="cb" id="pg-back" aria-label="Back in time" data-tip="k:← back a page · drag or scroll to pan">‹</button>
         <button type="button" class="cb" id="pg-fwd" aria-label="Forward in time" data-tip="k:→ forward a page">›</button>
@@ -1383,8 +1904,9 @@
       }).join('')}</div>`;
     });
     h += `<div class="legend" aria-label="Legend" style="top:${LEGEND_T}px">
+      <span><span class="tl-legend-live"></span>Live World episode</span>
+      <span>${gl('square', 'var(--sub)', 10)}World episode / step</span>
       <span>${mergeGlyph(11, true)}GitHub merge</span>
-      <span>${gl('square', 'var(--sub)', 10)}World episode or work step</span>
       <span><span class="nb inl">1</span>your decisions</span>
       <span><span style="width:14px;height:14px;border-radius:7px;box-shadow:0 0 0 4px var(--halo)"></span>connected to the step you point at</span>
       <span><span style="width:18px;border-top:2px dotted var(--read)"></span>read</span>
@@ -1477,7 +1999,9 @@
       const title = cleanTitle(n.title) || n.episode || n.label;
       const pr = n.pr && title !== '#' + n.pr && 'PR #' + n.pr;
       const what = [T.recordLabel(n), T.activityLabel(n), opened && n.open?.label, lastRunDetail(n.open?.lastRun), title, pr].filter(Boolean).join(', ');
-      h += `<button type="button" class="node${shared ? ' sh' : ''}" data-id="${id}" data-state="${esc(id)}" data-record-kind="${record}"${opened ? ` data-open="${esc(n.open?.state || '')}"` : ''} data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${esc(nameOf(n.lane) + ', ' + what + (n.rel ? ', ' + n.rel : '') + (n.badge ? ', ' + n.badge + ' of your decisions' : ''))}"><span class="halo">${inner}</span></button>`;
+      const isLiveNode = Boolean(opened && (n.open?.sessionLive || n.sessionLive));
+      const worldMerge = Boolean(shared && T.isWorldMerge(n));
+      h += `<button type="button" class="node${shared ? ' sh' : ''}${isLiveNode ? ' is-live-ep' : ''}" data-id="${id}" data-state="${esc(id)}" data-record-kind="${record}"${opened ? ` data-open="${esc(n.open?.state || '')}"` : ''}${isLiveNode ? ' data-session-live="1"' : ''}${worldMerge ? ' data-world-merge="1"' : ''} data-tip="node:${id}" style="left:${x}px;top:${y}px" aria-label="${esc(nameOf(n.lane) + ', ' + what + (n.rel ? ', ' + n.rel : '') + (n.badge ? ', ' + n.badge + ' of your decisions' : ''))}"><span class="halo">${inner}</span></button>`;
       if (n.badge > 0) h += `<div class="nb" style="left:${x + 6}px;top:${y - 19}px">${n.badge}</div>`;
       if (LABELED.has(id)) h += `<div class="nlab" data-l="${id}" style="left:${x - 56}px;bottom:${936 - (y - 18)}px"><span class="tx">${esc(opened ? n.episode + ' · ' + (lastRunLabel(n.open.lastRun) || n.open.label) : shortTitle(n.title || '') || n.episode || n.label)}</span></div>`;
       h += `<div class="nlab" data-r="${id}" style="left:${x - 56}px;top:${y + (shared ? 9 : 14)}px"><div class="rel"></div></div>`;
@@ -1791,26 +2315,64 @@
 
   // ---------- Brane view ----------
   function placeBars(animate) {
+    const host = $('bstage'), front = $('front');
+    if (!host || !front || !S) return;
     const bars = stackBars(S.earlier, -1).concat(stackBars(S.later, 1));
-    const host = $('bstage'), have = new Map([...host.querySelectorAll('.strip')].map(el => [el.dataset.key, el]));
+    const maxEarlier = bars.reduce((m, b) => b.dir < 0 ? Math.max(m, b.dd) : m, 0);
+    const maxLater = bars.reduce((m, b) => b.dir > 0 ? Math.max(m, b.dd) : m, 0);
+    const step = 36;
+    const topPad = narrow.matches ? 0 : (maxEarlier ? 14 + maxEarlier * step : 18);
+    const botPad = narrow.matches ? 0 : (maxLater ? 14 + maxLater * step : 18);
+    if (!narrow.matches) {
+      front.style.top = topPad + 'px';
+      front.style.bottom = botPad + 'px';
+    } else {
+      front.style.top = '';
+      front.style.bottom = '';
+    }
+    const hostW = Math.max(320, Math.min(1440, (host.clientWidth || 1080) - 40));
+    const have = new Map([...host.querySelectorAll('.strip')].map(el => [el.dataset.key, el]));
     const keep = new Set();
     bars.forEach(b => {
       keep.add(b.key);
+      const group = ((b.dir < 0 ? S.earlier : S.later) || []).slice(0, 3);
+      const nc = Math.max(1, group.length);
+      const colIdx = Math.max(0, group.indexOf(b.col));
+      const cw = (hostW - (nc - 1) * 10) / nc;
+      const shrink = (b.dd - 1) * 22;
+      const width = Math.max(150, cw - shrink);
+      const ml = -hostW / 2 + colIdx * (cw + 10) + shrink / 2;
+      const targetTop = b.dir < 0
+        ? (topPad - b.dd * step + 2) + 'px'
+        : `calc(100% - ${botPad - (b.dd - 1) * step - 4}px)`;
+      const startTop = b.dir < 0
+        ? (topPad - b.dd * step - 26) + 'px'
+        : `calc(100% - ${botPad - (b.dd - 1) * step - 32}px)`;
       let el = have.get(b.key);
       const fresh = !el;
       if (fresh) {
-        el = document.createElement('button'); el.type = 'button'; el.className = 'strip'; el.dataset.key = b.key; el.dataset.id = b.card.id; el.dataset.lane = b.col.brane;
-        el.style.top = (b.top + (b.dir < 0 ? -46 : 46)) + 'px'; el.style.opacity = '0'; el.style.width = b.width + 'px'; el.style.marginLeft = b.ml + 'px';
+        el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'strip ' + (b.dir < 0 ? 'is-past' : 'is-future');
+        el.dataset.key = b.key;
+        el.dataset.id = b.card.id;
+        el.dataset.lane = b.col.brane;
+        el.style.top = startTop;
+        el.style.opacity = '0';
+        el.style.width = width + 'px';
+        el.style.marginLeft = ml + 'px';
         host.appendChild(el);
+      } else {
+        el.className = 'strip ' + (b.dir < 0 ? 'is-past' : 'is-future');
       }
       el.innerHTML = barHTML(b);
       el.setAttribute('aria-label', (b.dir < 0 ? 'Back to ' : 'Ahead to ') + tagOf(b.card) + (b.card.title ? ': ' + cleanTitle(b.card.title) : ''));
       el.dataset.tip = N[b.card.id] ? 'node:' + b.card.id : '';
       el.style.zIndex = b.z;
-      const apply = () => { el.style.top = b.top + 'px'; el.style.width = b.width + 'px'; el.style.marginLeft = b.ml + 'px'; el.style.opacity = b.op; };
+      const apply = () => { el.style.top = targetTop; el.style.width = width + 'px'; el.style.marginLeft = ml + 'px'; el.style.opacity = b.op; };
       if (fresh && animate) requestAnimationFrame(() => requestAnimationFrame(apply)); else apply();
     });
-    have.forEach((el, k) => { if (!keep.has(k)) { if (animate) { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); } else el.remove(); } });
+    have.forEach((el, k) => { if (!keep.has(k)) { if (animate) { el.style.opacity = '0'; setTimeout(() => el.remove(), 260); } else el.remove(); } });
   }
 
   let selectedFile = null, filePreview = null, restoringFileFocus = false;
@@ -1856,7 +2418,7 @@
     const { filePath: path, fileSource: source = 'committed', fileOrigin: origin = '' } = button.dataset;
     const tab = button.closest('[data-node-panel]')?.dataset.nodePanel || '';
     if (source === 'committed' && F.landedFiles?.some(file => file.path === path)) return {path, source, tab, origin};
-    if (tab === 'files' && (source === 'episode-read' || source === 'episode-write')) return {path, source, tab, origin};
+    if ((tab === 'files' || tab === 'overview' || tab === 'audit' || tab === 'conversation') && (source === 'episode-read' || source === 'episode-write')) return {path, source, tab, origin};
     return null;
   }
 
@@ -1869,6 +2431,11 @@
       for (const row of group.querySelectorAll('[data-file-row]')) {
         row.hidden = (kind && kind !== group.dataset.fileGroup) || !row.dataset.fileRow.toLowerCase().includes(query);
         if (!row.hidden) matches++;
+      }
+      for (const dir of group.querySelectorAll('[data-file-dir]')) {
+        const dirMatches = Array.from(dir.querySelectorAll('[data-file-row]')).some(row => !row.hidden);
+        dir.hidden = !dirMatches;
+        if (query && dirMatches) dir.open = true;
       }
       group.hidden = !matches;
       visible += matches;
@@ -2080,6 +2647,102 @@
     paintFinishLinks(check.rows);
   }
 
+  let episodeConv = null, convNewestFirst = true, convLiveTimer = null;
+
+  function resetEpisodeConversation() {
+    episodeConv?.request?.abort();
+    episodeConv = null;
+    if (convLiveTimer) { clearInterval(convLiveTimer); convLiveTimer = null; }
+  }
+
+  function syncConvLiveTimer() {
+    const wantsLive = Boolean(st.d === 1 && F && (F.kind === 'open' || F.open?.sessionLive || F.sessionLive) &&
+      (selectedNodeTab === 'conversation' || selectedNodeTab === 'overview'));
+    if (!wantsLive) {
+      if (convLiveTimer) { clearInterval(convLiveTimer); convLiveTimer = null; }
+      return;
+    }
+    if (!convLiveTimer) {
+      convLiveTimer = setInterval(() => {
+        if (!liveVisible() || st.d !== 1 || !F || !$('front')) return;
+        loadEpisodeConversation($('front'), true);
+      }, 4500);
+    }
+  }
+
+  function applyConvFilters(root) {
+    if (!root) return;
+    const query = (root.querySelector('[data-conv-search]')?.value || '').trim().toLowerCase();
+    const roleBtn = root.querySelector('[data-conv-role][aria-pressed="true"]');
+    const role = roleBtn ? roleBtn.dataset.convRole : '';
+    let visible = 0;
+    for (const row of root.querySelectorAll('.conv-turn')) {
+      const roleMatch = !role || row.dataset.role === role;
+      const textMatch = !query || (row.dataset.convHay || '').includes(query);
+      row.hidden = !(roleMatch && textMatch);
+      if (!row.hidden) visible++;
+    }
+    const empty = root.querySelector('[data-conv-empty]');
+    if (empty) empty.hidden = visible !== 0;
+  }
+
+  function repaintConversationDOM(front) {
+    if (!front || !episodeConv?.data) return;
+    const data = episodeConv.data;
+    const tabBtn = front.querySelector('[data-node-tab="conversation"]');
+    if (tabBtn) {
+      const count = data.total || data.messages?.length || 0;
+      tabBtn.textContent = count > 0 ? `Conversation · ${count}` : 'Conversation';
+    }
+    const ov = front.querySelector('[data-overview-conversation]');
+    if (ov) ov.innerHTML = overviewConversationHTML(F, data);
+    const panel = front.querySelector('[data-node-panel="conversation"]');
+    if (panel) {
+      const summary = front.querySelector('.stack-body');
+      const prevTop = summary ? summary.scrollTop : 0;
+      const prevSearch = panel.querySelector('[data-conv-search]')?.value || '';
+      const prevRole = panel.querySelector('[data-conv-role][aria-pressed="true"]')?.dataset.convRole || '';
+      const hadSearchFocus = document.activeElement?.matches?.('[data-conv-search]');
+      panel.innerHTML = conversationTabHTML(F, data, convNewestFirst);
+      const searchEl = panel.querySelector('[data-conv-search]');
+      if (searchEl && prevSearch) searchEl.value = prevSearch;
+      if (prevRole) {
+        for (const b of panel.querySelectorAll('[data-conv-role]')) {
+          b.setAttribute('aria-pressed', String(b.dataset.convRole === prevRole));
+        }
+      }
+      applyConvFilters(panel);
+      if (hadSearchFocus) panel.querySelector('[data-conv-search]')?.focus({preventScroll:true});
+      if (summary) summary.scrollTop = prevTop;
+    }
+  }
+
+  async function loadEpisodeConversation(front, force = false) {
+    const episode = F?.trajectoryEpisode || F?.run?.episode || F?.episode;
+    const wantsOverview = selectedNodeTab === 'overview' && F?.kind === 'open';
+    if (!episode || (selectedNodeTab !== 'conversation' && !wantsOverview)) return;
+    if (!episodeConv) episodeConv = {id:F.id, brane:F.brane, episode, checked:0};
+    const state = episodeConv;
+    const cooldown = force ? 900 : 3500;
+    if (state.request || Date.now() - state.checked < cooldown) return;
+    const request = new AbortController();
+    state.request = request;
+    let data;
+    try {
+      const query = new URLSearchParams({brane: state.brane, at: state.id});
+      const response = await getJSON('/surface/conversation.json?' + query, request.signal);
+      if (response.ok && response.body?.schema === 'world/surface-conversation/v1') data = response.body;
+    } catch (_) { /* Conversation stays optional on static or offline hosts. */ }
+    if (episodeConv !== state || request.signal.aborted) return;
+    state.request = null;
+    state.checked = Date.now();
+    data ||= {status:'unavailable', reason:'Conversation stream unavailable.'};
+    if (JSON.stringify(state.data) === JSON.stringify(data)) return;
+    state.data = data;
+    if (!F || F.id !== state.id || F.brane !== state.brane) return;
+    repaintConversationDOM(front);
+  }
+
   function resetEpisodeFiles() {
     episodeFiles?.request?.abort();
     episodeFiles = null;
@@ -2098,12 +2761,14 @@
     applyFileFilters(root);
   }
 
-  async function loadEpisodeFiles(front) {
+  async function loadEpisodeFiles(front, force = false) {
     const episode = F.trajectoryEpisode || F.run?.episode;
-    if (!episode || selectedNodeTab !== 'files') return;
+    const wantsOverview = selectedNodeTab === 'overview' && F.kind === 'open';
+    if (!episode || (selectedNodeTab !== 'files' && !wantsOverview)) return;
     if (!episodeFiles) episodeFiles = {id:F.id, brane:F.brane, episode, checked:0};
     const state = episodeFiles;
-    if (state.request || Date.now() - state.checked < 10000) return;
+    const cooldown = force ? 1200 : 10000;
+    if (state.request || Date.now() - state.checked < cooldown) return;
     const request = new AbortController();
     state.request = request;
     let data;
@@ -2118,8 +2783,19 @@
     data ||= {status:'unavailable'};
     if (JSON.stringify(state.data) === JSON.stringify(data)) return;
     state.data = data;
+    if (F.id !== state.id || F.brane !== state.brane) return;
+    const overviewFiles = front.querySelector('[data-overview-files]');
+    if (overviewFiles) {
+      const summaryHTML = openOutputsSummaryHTML(F, data);
+      overviewFiles.innerHTML = summaryHTML || (!F.commits?.length && !F.pr ? '<div class="muted">No worktree changes recorded yet.</div>' : '');
+    }
+    const filesBtn = front.querySelector('[data-node-tab="files"]');
+    if (filesBtn) {
+      const writeCount = (data.writes?.length || 0) || (F.landedFileCount || F.landedFiles?.length || 0);
+      filesBtn.textContent = writeCount > 0 ? `Files · ${writeCount}` : 'Files';
+    }
     const panel = front.querySelector('[data-node-panel=files]');
-    if (!panel || F.id !== state.id || F.brane !== state.brane) return;
+    if (!panel) return;
     const focused = document.activeElement;
     const pathControl = focused.matches?.('[data-file-filter]'), kindControl = focused.matches?.('[data-file-kind]');
     const focusedFile = panel.contains(focused) && focused.matches?.('[data-file-path]') ? fileSelection(focused) : null;
@@ -2131,7 +2807,10 @@
     else if (pathControl || kindControl) panel.querySelector(pathControl ? '[data-file-filter]' : '[data-file-kind]')?.focus({preventScroll:true});
   }
 
+  const trajectoryVisible = tab => tab === 'audit';
+
   function selectNodeTab(tab) {
+    if (tab === 'run' || tab === 'trajectory') tab = $('front')?.querySelector('[data-node-tab="audit"]') ? 'audit' : 'checks';
     const front = $('front'), chosen = front?.querySelector(`[data-node-tab="${tab}"]`);
     if (!chosen || st.d !== 1) return;
     const wasFile = Boolean(selectedFile);
@@ -2150,8 +2829,10 @@
     if (narrow.matches) $('L1').scrollTop = 0;
     if (wasFile && narrow.matches) $('phone-back').textContent = fromHeads ? '← Heads' : '← Timeline';
     cameraURL(nodeURL(), false);
-    globalThis.WorldNodeTrajectory?.mount(front, F, getJSON, tab === 'trajectory');
+    globalThis.WorldNodeTrajectory?.mount(front, F, getJSON, trajectoryVisible(tab));
     loadEpisodeFiles(front);
+    loadEpisodeConversation(front);
+    syncConvLiveTimer();
   }
 
   function renderBrane(animate) {
@@ -2170,10 +2851,11 @@
     const focusedFile = activeFileButton ? fileSelection(activeFileButton) : null;
     const readingPosition = sameNode ? front.querySelector('.stack-body')?.scrollTop : 0;
     if (episodeFiles && (episodeFiles.id !== F.id || episodeFiles.brane !== F.brane)) resetEpisodeFiles();
+    if (episodeConv && (episodeConv.id !== F.id || episodeConv.brane !== F.brane)) resetEpisodeConversation();
     const savedFilters = fileFilters(sameNode && front.querySelector('[data-node-panel=files]') || null);
     const focusedTab = sameNode && document.activeElement?.dataset.nodeTab;
     const oldFilter = sameNode && document.activeElement?.matches?.('[data-file-filter], [data-file-kind]') ? document.activeElement : null;
-    front.innerHTML = frontHTML(S, T, selectedNodeTab, episodeFiles?.data);
+    front.innerHTML = frontHTML(S, T, selectedNodeTab, episodeFiles?.data, episodeConv?.data, convNewestFirst);
     selectedNodeTab = front.querySelector('[data-node-tab][aria-selected=true]').dataset.nodeTab;
     restoreFilters(front.querySelector('[data-node-panel=files]'), savedFilters);
     if (focusedTab) front.querySelector(`[data-node-tab="${focusedTab}"]`)?.focus({preventScroll:true});
@@ -2183,8 +2865,10 @@
       if (openDetails.has(key)) detail.open = true;
       if (key === focusedDetail) detail.querySelector('summary')?.focus({preventScroll:true});
     }
-    globalThis.WorldNodeTrajectory?.mount(front, F, getJSON, selectedNodeTab === 'trajectory');
+    globalThis.WorldNodeTrajectory?.mount(front, F, getJSON, trajectoryVisible(selectedNodeTab));
     loadEpisodeFiles(front);
+    loadEpisodeConversation(front);
+    syncConvLiveTimer();
     if (readingPosition) front.querySelector('.stack-body').scrollTop = readingPosition;
     if (focusedFile && !selectedFile) focusFileSource(fileButton(front, focusedFile) || front.querySelector('.stack-body'));
     if (selectedFile) {
@@ -2245,7 +2929,7 @@
   // askNotify asks this browser for notifications, only from the "Notify me" click (a user gesture).
   function askNotify() { Promise.resolve(Notification.requestPermission()).then(repaintNow, repaintNow); }
   const FOLLOW_MODEL = 'world/surface-model/v2', POLL_MS = 15000;
-  let followMode = false, shownGen = null, shownAt = '', pollTimer = null, liveStarted = false;
+  let followMode = false, shownGen = null, shownLiveIndex = null, shownAt = '', pollTimer = null, liveStarted = false;
   const poll = { note: '' };
   async function loadModel() {
     let res;
@@ -2257,7 +2941,9 @@
     if (b.empty) return renderVoid('empty', b.reason || 'the surface index is empty');
     if (!Array.isArray(b.lanes) || !b.lanes.some(l => l.states && l.states.length)) return renderVoid('empty', 'The surface index holds no states yet.', b.repos);
     setModel(b);
-    shownGen = b.generation == null ? null : b.generation; shownAt = hm(new Date());
+    shownGen = b.generation == null ? null : b.generation;
+    shownLiveIndex = b.nowEdge?.live?.lastIndex ?? null;
+    shownAt = hm(new Date());
     st.focus = defaultFocus();
     renderTimeline(); renderCrumbs();
     setView('timeline');
@@ -2332,6 +3018,97 @@
     }
     applyStatusSize();
   }
+  function renderHeadFilterButtons() {
+    const filters = $('head-filter-bar');
+    if (!filters) return;
+    if (!followMode || !D) {
+      filters.hidden = true;
+      return;
+    }
+    filters.hidden = false;
+    const counts = countHeadCategories(D, pendingEpisodeSet());
+    const options = [
+      ['current', `Current · ${counts.active + counts.baselines}`],
+      ...(counts.ended > 0 ? [['ended', `+ Ended (${counts.ended})`]] : []),
+      ['all', `All history${counts.mergedTracks ? ' (+' + counts.mergedTracks + ' merged)' : ''}`],
+    ];
+    if (!options.some(([val]) => val === headFilter)) headFilter = 'current';
+    filters.innerHTML = options.map(([val, label]) =>
+      `<button type="button" data-head-filter-btn="${val}" aria-pressed="${headFilter === val}">${esc(label)}</button>`
+    ).join('');
+  }
+
+  function ensureHeadControls() {
+    if (!toolbar || $('head-quick-triage')) return;
+    const triage = document.createElement('div');
+    triage.id = 'head-quick-triage';
+    triage.className = 'head-quick-triage';
+    triage.setAttribute('aria-label', 'Active work');
+    triage.addEventListener('click', event => {
+      const epBtn = event.target.closest('[data-triage-go]');
+      if (epBtn) {
+        event.stopPropagation();
+        const id = epBtn.dataset.triageGo;
+        if (N[id]) open(id);
+        return;
+      }
+      const needsBtn = event.target.closest('[data-triage-needs]');
+      if (needsBtn) {
+        event.stopPropagation();
+        focusActivity();
+      }
+    });
+    const filters = document.createElement('div');
+    filters.id = 'head-filter-bar';
+    filters.className = 'head-filter-bar';
+    filters.setAttribute('role', 'group');
+    filters.setAttribute('aria-label', 'Heads scope');
+    filters.addEventListener('click', event => {
+      const btn = event.target.closest('[data-head-filter-btn]');
+      if (!btn) return;
+      event.stopPropagation();
+      headFilter = btn.dataset.headFilterBtn;
+      headExplicitKeep = '';
+      headModelCache = null;
+      renderHeadFilterButtons();
+      if (camera.active) camera.update();
+    });
+    toolbar.insertBefore(triage, statusDetail);
+    toolbar.insertBefore(filters, statusDetail);
+    renderHeadFilterButtons();
+  }
+
+  function repaintHeadTriage() {
+    ensureHeadControls();
+    renderHeadFilterButtons();
+    const triage = $('head-quick-triage');
+    if (!triage || !T) return;
+    const ne = D.nowEdge || {};
+    const pendingCount = (REQS?.pending?.length || 0) + (REQS?.decisions?.length || 0) + (REQS?.confirmations?.length || 0);
+    const liveItems = ne.open?.live || [];
+    const chips = [];
+    if (pendingCount > 0) {
+      chips.push(`<button type="button" class="triage-pill is-needs" data-triage-needs="1">Needs you · ${pendingCount}</button>`);
+    }
+    for (const item of liveItems.slice(0, 4)) {
+      const target = item.id && N[item.id] ? item.id : '';
+      const node = target ? N[target] : null;
+      const agent = node ? headAgent(node) : '';
+      const shortEp = String(item.episode || '').length > 26 ? String(item.episode).slice(0, 24) + '…' : String(item.episode || '');
+      const text = `${shortEp}${agent ? ' · ' + agent : ''}`;
+      if (target) {
+        chips.push(`<button type="button" class="triage-pill is-live" data-triage-go="${esc(target)}" title="Open ${esc(item.episode)}">${esc(text)}</button>`);
+      } else {
+        chips.push(`<span class="triage-pill is-live">${esc(text)}</span>`);
+      }
+    }
+    if (liveItems.length > 4) {
+      chips.push(`<span class="triage-more">+${liveItems.length - 4} live</span>`);
+    }
+    triage.innerHTML = chips.join('');
+    triage.hidden = chips.length === 0;
+  }
+
   function repaintNow() {
     if (!T) return;
     const slot = toolbar.hidden ? $('timeline-now') : statusDetail;
@@ -2349,6 +3126,18 @@
     const running = card.querySelector('[data-running] .nh')?.textContent;
     const active = [needs, lastRunLabel(D.nowEdge?.open?.lastRun), running].filter(label => label && !/ · 0$/.test(label));
     $('head-status-activity').textContent = active.join(' · ');
+    repaintHeadTriage();
+    const tlTriage = $('tl-live-triage');
+    if (tlTriage) {
+      const liveItems = D.nowEdge?.open?.live || [];
+      tlTriage.innerHTML = liveItems.slice(0, 3).map(item => {
+        const target = item.id && N[item.id] ? item.id : '';
+        const shortEp = String(item.episode || '').length > 24 ? String(item.episode).slice(0, 22) + '…' : String(item.episode || '');
+        return target
+          ? `<button type="button" class="tl-live-pill" data-go="${esc(target)}" title="Open live episode ${esc(item.episode)}">${esc(shortEp)}</button>`
+          : `<span class="tl-live-pill">${esc(shortEp)}</span>`;
+      }).join('');
+    }
     applyStatusSize();
   }
   // schedulePoll: follow mode polls the model every 15 s while the page is visible, independently of AG-UI.
@@ -2407,8 +3196,14 @@
     const count = live.count;
     try {
       const selection = T && st.d === 1 && F ? {brane: F.brane, at: F.id, seq: openSeq} : null;
+      const liveEpisodeOpen = Boolean(selection && F && (F.kind === 'open' || F.sessionLive || F.open?.sessionLive || T?.D?.nowEdge?.activityUntil?.[F.id]));
       await loadRequests();
-      const r = await fetchCoherent(getJSON, selection, T ? shownGen : null);
+      let r = await fetchCoherent(getJSON, selection, (T && !(liveEpisodeOpen && trigger === 'live')) ? shownGen : null);
+      const nextLiveIndex = r.model?.nowEdge?.live?.lastIndex ?? null;
+      if (r.kind === 'same' && liveEpisodeOpen && nextLiveIndex != null && nextLiveIndex !== shownLiveIndex) {
+        r = await fetchCoherent(getJSON, selection, null);
+      }
+      const liveMoved = trigger === 'live' || (nextLiveIndex != null && nextLiveIndex !== shownLiveIndex);
       if (r.kind === 'fail') {
         if (!followMode) throw new Error('refresh failed (HTTP ' + r.status + ')');
         const reason = (r.body && r.body.reason) || 'HTTP ' + r.status;
@@ -2419,7 +3214,16 @@
       } else {
         if (r.kind === 'same') applyModel(r, null);
         else { applyModel(r, selection); indexP = null; }
-        if (r.model) { shownGen = r.model.generation == null ? null : r.model.generation; shownAt = hm(new Date()); }
+        if (r.model) {
+          shownGen = r.model.generation == null ? null : r.model.generation;
+          if (nextLiveIndex != null) shownLiveIndex = nextLiveIndex;
+          shownAt = hm(new Date());
+        }
+        if (liveEpisodeOpen && liveMoved && st.d === 1 && $('front')) {
+          if (trajectoryVisible(selectedNodeTab)) globalThis.WorldNodeTrajectory?.refresh?.();
+          loadEpisodeFiles($('front'), true);
+          loadEpisodeConversation($('front'), true);
+        }
         poll.note = '';
         const cursor = r.model && r.model.nowEdge && r.model.nowEdge.live;
         if (cursor && live.cursor != null) live.cursor = Math.max(live.cursor, cursor.lastIndex);
@@ -2593,6 +3397,7 @@
   function out(focusId) {
     resetFinishLinks();
     resetEpisodeFiles();
+    resetEpisodeConversation();
     selectedNodeTab = 'overview';
     globalThis.WorldNodeTrajectory?.clear();
     if (st.d === 0) {
@@ -2633,9 +3438,16 @@
   }
   function showVerbPanel(p) {
     const old = $('verb'), el = verbPanel(document, p);
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'verb-close';
+    closeBtn.textContent = 'Close';
+    closeBtn.setAttribute('aria-label', 'Close command output');
+    closeBtn.addEventListener('click', () => el.remove());
+    el.append(closeBtn);
     if (old) old.replaceWith(el); else $('stage').appendChild(el);
-    const b = el.querySelector('button');
-    if (b) b.addEventListener('click', () => { try { navigator.clipboard.writeText(b.dataset.copy).then(() => say('copied'), () => say('copy it from the panel')); } catch (_) { say('copy it from the panel'); } });
+    const b = el.querySelector('button[data-copy]');
+    if (b) b.addEventListener('click', () => { try { navigator.clipboard.writeText(b.dataset.copy).then(() => say('Copied command'), () => say('Copy it from the panel')); } catch (_) { say('Copy it from the panel'); } });
   }
   function goAddress(raw, current) { return addressGo(raw, current, { parse: SEAMS.parseAddress, loadIndex, out, openState, say }); }
 
@@ -2679,9 +3491,9 @@
   function renderLook() {
     const opt = (key, v, label) => { const on = look[key] === v; return `<button type="button" data-look="${key}:${v}" aria-pressed="${on}" style="font:inherit;flex:1;min-height:44px;border-radius:var(--r);cursor:pointer;border:1px solid ${on ? 'var(--you)' : 'var(--ctl)'};background:${on ? 'var(--you)' : 'var(--btn)'};color:${on ? 'var(--onYou)' : 'var(--text)'};font-weight:${on ? 700 : 500};font-size:13px">${label}</button>`; };
     $('look').innerHTML = `<div style="font-size:15px;font-weight:700">Appearance</div>
-      <div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:12.5px;color:var(--sub)">Theme</div><div style="display:flex;gap:6px">${opt('theme', 'paper', 'Paper')}${opt('theme', 'slate', 'Slate')}</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:12.5px;color:var(--sub)">Theme</div><div style="display:flex;gap:6px">${opt('theme', 'paper', 'Light (Paper)')}${opt('theme', 'night', 'Night')}</div></div>
       <div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:12.5px;color:var(--sub)">Motion</div><div style="display:flex;gap:6px">${opt('motion', 'full', 'Full')}${opt('motion', 'reduced', 'Reduced')}</div></div>
-      <div style="display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:var(--sub)">Paper and Slate follow the Sunholo brand guide. Your choices stay on this device.</div>`;
+      <div style="display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:12px;font-size:12px;color:var(--sub)">Warm Daylight (Paper) and Night palettes. Your choices stay on this device.</div>`;
   }
   function toggle(which) {
     const other = which === 'keys' ? 'look' : 'keys';
@@ -2765,11 +3577,11 @@
     tip.innerHTML = html; tip.hidden = false;
     tip.classList.toggle('wide', /^(node|goal|ms):/.test(t.dataset.tip));
     const sr = $('stage').getBoundingClientRect(), r = t.getBoundingClientRect();
-    const isNode = t.classList.contains('node');
-    let x = isNode ? r.right - sr.left + 8 : r.left - sr.left, y = isNode ? r.top - sr.top - 6 : r.bottom - sr.top + 6;
+    const toRight = t.classList.contains('node') || t.classList.contains('rrow');
+    let x = toRight ? r.right - sr.left + 10 : r.left - sr.left, y = toRight ? r.top - sr.top - 4 : r.bottom - sr.top + 6;
     const tw = tip.offsetWidth, th = tip.offsetHeight;
-    if (x + tw > sr.width - 8) x = isNode ? r.left - sr.left - tw - 8 : sr.width - 8 - tw;
-    if (y + th > sr.height - 8) y = isNode ? sr.height - 8 - th : r.top - sr.top - th - 6;
+    if (x + tw > sr.width - 8) x = toRight ? r.left - sr.left - tw - 8 : sr.width - 8 - tw;
+    if (y + th > sr.height - 8) y = toRight ? sr.height - 8 - th : r.top - sr.top - th - 6;
     tip.style.left = Math.max(8, x) + 'px'; tip.style.top = Math.max(8, y) + 'px';
   });
 
@@ -2790,6 +3602,8 @@
   function filterNodeFiles(event) {
     const filter = event.target.closest('[data-file-filter], [data-file-kind]');
     if (filter) applyFileFilters(filter.closest('.node-files-tab'));
+    const convSearch = event.target.closest('[data-conv-search]');
+    if (convSearch) applyConvFilters(convSearch.closest('[data-node-panel="conversation"]'));
   }
   $('stage').addEventListener('input', filterNodeFiles);
   $('stage').addEventListener('change', filterNodeFiles);
@@ -2913,7 +3727,50 @@
   }
   $('br').addEventListener('click', event => {
     const tab = event.target.closest('[data-node-tab]');
-    if (tab) selectNodeTab(tab.dataset.nodeTab);
+    if (tab) return selectNodeTab(tab.dataset.nodeTab);
+    const jump = event.target.closest('[data-jump-tab]');
+    if (jump) return selectNodeTab(jump.dataset.jumpTab);
+    const convOrd = event.target.closest('[data-conv-order]');
+    if (convOrd) {
+      event.stopPropagation();
+      convNewestFirst = convOrd.dataset.convOrder !== 'oldest';
+      repaintConversationDOM($('front'));
+      return;
+    }
+    const convRole = event.target.closest('[data-conv-role]');
+    if (convRole) {
+      event.stopPropagation();
+      const panel = convRole.closest('[data-node-panel="conversation"]');
+      if (panel) {
+        for (const b of panel.querySelectorAll('[data-conv-role]')) b.setAttribute('aria-pressed', String(b === convRole));
+        applyConvFilters(panel);
+      }
+      return;
+    }
+    const convScroll = event.target.closest('[data-conv-scroll]');
+    if (convScroll) {
+      event.stopPropagation();
+      const scroller = $('front')?.querySelector('.stack-body');
+      if (scroller) scroller.scrollTo({ top: scroller.scrollTop > 120 ? 0 : scroller.scrollHeight, behavior: 'smooth' });
+      return;
+    }
+    const convRef = event.target.closest('[data-conv-refresh]');
+    if (convRef) {
+      event.stopPropagation();
+      if (episodeConv) episodeConv.checked = 0;
+      loadEpisodeConversation($('front'), true);
+      return;
+    }
+    const verbBtn = event.target.closest('[data-verb]');
+    if (verbBtn) {
+      event.stopPropagation();
+      return go(verbBtn.dataset.verb);
+    }
+    const copyBtn = event.target.closest('[data-copy-cli]');
+    if (copyBtn) {
+      event.stopPropagation();
+      navigator.clipboard?.writeText?.(copyBtn.dataset.copyCli)?.then(() => say('Copied CLI command'));
+    }
   });
   $('br').addEventListener('keydown', event => {
     const tab = event.target.closest('[data-node-tab]');
@@ -2996,6 +3853,17 @@
   });
   window.addEventListener('resize', () => { fit(); camera.update(); });
 
+  window.__worldPinDraft = (commitPrefix, rawTitle) => {
+    if (!T) return false;
+    const prefix = String(commitPrefix || '').trim();
+    let parentID = '';
+    if (prefix) {
+      const match = Object.keys(N).find(id => id === prefix || id.endsWith(':' + prefix) || id.split(':').pop().startsWith(prefix));
+      if (match) parentID = match;
+    }
+    if (!parentID) parentID = SH.at(-1) || Object.keys(N).find(id => !N[id].draft) || '';
+    return parentID ? Boolean(drafts.createDraft(parentID, rawTitle)) : false;
+  };
   // Exposed for the screenshot driver.
   window.World = { open: label => { const n = Object.values(N).find(x => x.id === label || x.episode === label || x.label === label) || (T && N[T.aliasOf[label]]); if (n) open(n.id); return !!n; }, out: () => out(), rail: k => openRail(k),
     poll: () => refresh('poll'), generation: () => shownGen,

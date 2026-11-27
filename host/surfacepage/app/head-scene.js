@@ -5,7 +5,7 @@
 
   const escape = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[ch]));
   const clamp = (value, lo, hi) => Math.max(lo, Math.min(hi, value));
-  const statePath = node => node.draft ? '/surface#' + new URLSearchParams({draft:node.id}) : '/surface?' + new URLSearchParams({brane: node.lane, at: node.id}) + '#heads';
+  const statePath = node => node.draft ? '/surface#' + new URLSearchParams({draft:node.id}) : '/surface?' + new URLSearchParams({brane: node.canonicalLane || node.lane, at: node.id}) + '#heads';
   const accent = lane => /^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(lane?.colour) ? lane.colour : '#657b91';
   const shortAge = value => String(value ?? '').replace(/\b(minutes?|mins?)\b/i, 'm')
     .replace(/\b(hours?|hrs?)\b/i, 'h').replace(/\bdays?\b/i, 'd')
@@ -221,22 +221,53 @@
         const node = model.N[head.id];
         if (!node) return;
         const lane = model.LANES[head.lane];
-        const label = model.laneTitle?.(head.lane) || lane?.name || head.lane;
-        const title = options.title(node) || node.title || node.label || node.id;
+        const rawLaneLabel = model.laneTitle?.(head.lane) || lane?.name || head.lane;
         const record = model.recordKind(node);
+        const isMerge = record === 'github-merge' || record === 'shared-commit';
+        const isEpisode = record === 'episode' || record === 'draft';
+        const worldMerge = isMerge && Boolean(model.isWorldMerge?.(node));
+        const agentName = options.headAgent?.(node) || options.agent?.(node) || '';
+        const cleanedTitle = options.title(node) || node.title || node.label || node.id;
+        const title = node.kind === 'open' && !node.title
+          ? (agentName ? `${agentName} · ${node.episode}` : node.episode)
+          : cleanedTitle;
+        const label = node.kind === 'open' && rawLaneLabel === 'Open episodes'
+          ? (head.live ? 'Live episode' : 'Past episode')
+          : rawLaneLabel;
         const stamp = Date.parse(node.at);
-        const compact = head.height <= 48;
+        const important = Boolean(head.live || head.attention || node.kind === 'open');
+        const compact = head.height <= (important ? 34 : 46);
         const rel = node.rel || (Number.isFinite(stamp) ? exactTime.format(stamp) : '');
-        const shownTime = compact ? shortAge(rel) : rel;
-        const status = head.attention ? 'Needs you' : head.live ? 'Session live' : '';
+        const shownTime = head.height <= 56 ? shortAge(rel) : rel;
+        const status = head.attention ? 'Needs you' : head.live ? 'Live' : '';
+        const badge = head.attention ? '<span class="hc-pill is-you">Needs you</span>'
+          : head.live ? '<span class="hc-pill is-live">Live</span>'
+          : node.kind === 'open' && node.pr ? `<span class="hc-pill is-pr">PR #${escape(node.pr)}</span>`
+          : isEpisode && !node.draft ? '<span class="hc-world-seal" title="AILANG World episode">λ</span>'
+          : worldMerge ? `<span class="hc-merge-seal" title="Merged from World episode">λ #${escape(node.pr)}</span>`
+          : record === 'github-merge' && node.pr ? `<span class="hc-merge-seal">#${escape(node.pr)}</span>`
+          : '';
         const run = options.lastRunLabel?.(node.open?.lastRun);
-        const identity = (head.attention && status) || run || status || node.open?.label || node.episode ||
-          (record === 'github-merge' ? 'GitHub merge · #' + node.pr : node.pr ? 'PR #' + node.pr : '');
-        const timing = Number.isFinite(stamp)
-          ? `<time datetime="${escape(node.at)}" title="${escape(exactTime.format(stamp) + ' UTC')}">${escape(shownTime)}</time>`
+        const epIdentity = [
+          isEpisode && !node.draft ? 'λ Confined' : '',
+          node.title ? node.episode : '',
+          node.title ? agentName : (head.live && agentName ? agentName : ''),
+          run || (!head.live && node.open?.label),
+          node.pr && node.kind !== 'open' && 'PR #' + node.pr
+        ].filter(Boolean).join(' · ');
+        const mergeIdentity = record === 'github-merge'
+          ? (worldMerge ? `Merged via World` : `GitHub merge`)
+          : 'Shared commit';
+        const identity = isMerge ? mergeIdentity : (epIdentity || (node.pr ? 'PR #' + node.pr : ''));
+        const timingStamp = Date.parse(node.startedAt || node.at);
+        const timing = Number.isFinite(timingStamp)
+          ? `<time datetime="${escape(node.startedAt || node.at)}" title="${escape(exactTime.format(timingStamp) + ' UTC')}">${escape(shownTime)}</time>`
           : `<span>${escape(shownTime)}</span>`;
-        const bar = `<span class="hc-face-bar">${options.glyph(node, compact ? 10 : 12)}<span class="hc-lane-name">${escape(label)}</span><span class="hc-age">${compact && status ? escape(status) : timing}</span></span>`;
-        const markup = compact ? bar : `${bar}<strong>${escape(title)}</strong>${head.height > 76 && identity ? `<span class="hc-identity">${escape(identity)}</span>` : ''}`;
+        const compactTitle = important ? `${status ? status + ' · ' : ''}${title}` : label;
+        const bar = compact
+          ? `<span class="hc-face-bar">${options.glyph(node, 10)}<span class="hc-lane-name">${escape(compactTitle)}</span><span class="hc-age">${timing}</span></span>`
+          : `<span class="hc-face-bar">${options.glyph(node, 12)}<span class="hc-lane-name">${escape(label)}</span>${badge}<span class="hc-age">${timing}</span></span>`;
+        const markup = compact ? bar : `${bar}<strong>${escape(title)}</strong>${head.height > 60 && identity ? `<span class="hc-identity">${escape(identity)}</span>` : ''}`;
         let entry = cards.get(head.id);
         if (!entry) {
           const el = document.createElement('a');
@@ -252,6 +283,10 @@
           entry.markup = markup;
         }
         el.classList.toggle('needs-human', Boolean(head.attention));
+        el.classList.toggle('is-live', Boolean(head.live));
+        el.classList.toggle('is-open-episode', node.kind === 'open');
+        el.classList.toggle('is-baseline', isMerge);
+        el.classList.toggle('is-world-attested', worldMerge || (isEpisode && !node.draft));
         el.classList.toggle('is-draft', Boolean(node.draft));
         el.classList.toggle('is-compact', compact);
         el.classList.toggle('is-distant', compact && head.height < 35);
@@ -259,9 +294,13 @@
         el.classList.toggle('is-short', !compact && head.height < 58);
         el.href = statePath(node);
         el.dataset.recordKind = record;
-        el.setAttribute('aria-label', [...new Set([label, model.recordLabel(node), title,
-          status, model.activityLabel?.(node), node.open?.label, options.lastRunDetail?.(node.open?.lastRun), node.episode, node.pr && 'PR #' + node.pr, rel].filter(Boolean))].join(' · '));
-        el.style.setProperty('--hc-lane', accent(lane));
+        const rawAccent = accent(lane);
+        const cardAccent = head.attention ? '#e73c17'
+          : (node.kind === 'open' && (rawAccent === '#526677' || rawAccent === '#657b91')) ? '#2c7a7b'
+          : rawAccent;
+        el.setAttribute('aria-label', [...new Set([rawLaneLabel, model.recordLabel(node), cleanedTitle,
+          status && (head.live ? 'Session live' : status), model.activityLabel?.(node), node.open?.label, options.lastRunDetail?.(node.open?.lastRun), node.episode, node.pr && 'PR #' + node.pr, rel].filter(Boolean))].join(' · '));
+        el.style.setProperty('--hc-lane', cardAccent);
         if (space.children[index] !== el) {
           const focused = document.activeElement === el;
           space.insertBefore(el, space.children[index] || null);

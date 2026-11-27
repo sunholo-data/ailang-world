@@ -134,7 +134,8 @@
         pos++;
       }
       const repo = T.groupOf?.(member.lane)?.shared;
-      const side = groupSide.get(repo) || (right <= -left ? 1 : -1);
+      const preferred = T.preferredSides?.get(member.lane);
+      const side = (preferred === 1 || preferred === -1) ? preferred : (groupSide.get(repo) || (right <= -left ? 1 : -1));
       const origin = member === center ? 0 : side > 0 ? right + 1 - lo : left - 1 - hi;
       left = Math.min(left, origin + lo);
       right = Math.max(right, origin + hi);
