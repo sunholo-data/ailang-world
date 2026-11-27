@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
@@ -65,12 +66,51 @@ func runOperatorRunner(args []string, errOut io.Writer, e serviceEnv) int {
 	defer signal.Stop(stops)
 	ticker := time.NewTicker(runnerPoll)
 	defer ticker.Stop()
+	source := operatorStartSource{defaultPresetsDir(), defaultExecProfilesDir(), "", defaultHostsDir(), e.terminal.now}
+	return e.runOperatorPreparationLoop(errOut, c, h, source, stops, ticker.C, lock)
+}
+
+func (e serviceEnv) runOperatorPreparationLoop(errOut io.Writer, c runnerConfig, h store.OperatorHeartbeat,
+	src operatorStartSource, stops <-chan os.Signal, ticks <-chan time.Time, lock *os.File) int {
+	var recoveryCursor string
 	for {
+		select {
+		case <-stops:
+			return 0
+		default:
+		}
+
 		if err := e.runnerTick(c, &h); err != nil {
 			return serviceMessage(errOut, "runner halted", "pair or heartbeat unavailable", "ailang-worldd service runner status", 2)
 		}
+		record, err := readServiceRecord(e.paths)
+		if err != nil {
+			return serviceMessage(errOut, "runner halted", "service record unavailable", "ailang-worldd service runner status", 2)
+		}
+		ctx, cancel := budgetContext(22 * time.Second)
+		src.workspace = record.Workspace
+		err = e.consumeOperatorPreparation(ctx, c, h, src, stops, lock, &recoveryCursor, store.OpenOperatorEpisodeLock)
+		cancel()
+		switch {
+		case errors.Is(err, errOperatorDraining):
+			return 0
+		case err != nil && !errors.Is(err, store.ErrOperatorMissing):
+			var stale *approval.BindingError
+			var remedy operatorRecoveryNeeded
+			switch {
+			case errors.As(err, &stale):
+				fmt.Fprintf(errOut, "operator start binding stale (%s); request fresh review\n", stale.Field)
+			case errors.As(err, &remedy):
+				fmt.Fprintf(errOut, "operator start blocked; attended recovery: %s\n", remedy.command)
+			default:
+				fmt.Fprintln(errOut, "operator start blocked; inspect service runner status and reconcile durable evidence")
+			}
+		}
 		select {
-		case <-ticker.C:
+		case _, open := <-ticks:
+			if !open {
+				return 0
+			}
 		case <-stops:
 			return 0
 		}
@@ -86,7 +126,7 @@ func (e serviceEnv) runnerTick(c runnerConfig, h *store.OperatorHeartbeat) error
 	}
 	h.SeenAt = e.terminal.now()
 	h.Readiness = "start"
-	// S4 projects the configured names. No effect dispatch or GitHub probe.
+	// Publish the admitted installed preset names before the start consumer.
 	h.Catalogue, _ = json.Marshal(c.PresetNames)
 	return runnerWrite(c.Credentials, func(db *store.Credentials) error {
 		ctx, cancel := budgetContext(time.Second)

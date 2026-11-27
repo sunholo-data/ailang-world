@@ -121,6 +121,28 @@ ailang-worldd service runner reconcile-files oa-0123456789abcdef0123456789abcdef
 ```
 
 
+Create the approved preset’s session directory with mode 0700 before admitting a start.
+The companion prepares one confirmed headless start per tick. A prepared start retains its
+worktree, credential and private files while awaiting the launch transition. For a claimed start
+with a worktree-only or incomplete mint checkpoint, stop the companion and use the signed
+action's ID at the terminal. Review the proposed disposition and type `y`.
+
+```sh
+ailang-worldd service runner stop
+ailang-worldd service runner reconcile-start oa-0123456789abcdef0123456789abcdef
+```
+
+The runner log names the applicable attended command for a retained reservation. Successful
+preparation is durable as `prepared-awaiting-S6` and leaves the status readiness fields intact.
+An ambiguous mint retains the owner and every receipt. A file reservation with a verified missing
+token may be stopped by revoking its exact orphan credential. A changed binary or an older review
+without its digest requires a fresh attended review. Try the command with a fake supervisor and
+a disposable workspace using the following test.
+
+```sh
+AILANG_BIN="$HOME/.pinned-ailang/ailang" WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN="$HOME/.pinned-ailang-tools/v0.54.15/ailang" go test ./cmd/ailang-worldd -run '^TestOperatorAttendedStartDisposition$' -count=1 -v
+```
+
 ## Run your agents through World
 
 World launchers now tell Claude Code, Codex and pi their episode, worktree, session
