@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 444 | 2026-11-27 | row 243 V4 sprint 6 LANDED (PR #695, merge `00b4ec55`): LAUNCH — the installed operator runner resumes a durable prepared-awaiting-S6 start under t... |
 | 443 | 2026-11-27 | row 267 LANDED (PR #691, merge `6447e776`): the CI race leg's bounds are derived from the measured slow runners — per-package 900 s (was 8m), start... |
 | 442 | 2026-11-27 | row 243 V4 sprint 5f4 LANDED (PR #689, merge `c3504c56`): ACTIVATION — the first production caller of the operator start path: the installed `opera... |
 | 441 | 2026-11-26 | row 243 V4 sprint 5f3 LANDED (PR #687, merge `a50b0d72`): the last dormant prerequisites for the first production caller — terminal `session revoke... |
