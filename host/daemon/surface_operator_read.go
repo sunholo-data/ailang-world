@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/sunholo-data/ailang-world/host/agentrun"
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/verbs"
@@ -57,6 +58,9 @@ var operatorCard = template.Must(template.New("operator action").Parse(`<!doctyp
 <html lang="en"><meta charset="utf-8"><title>Operator action</title>
 <body><h1>{{.Status.ID}}</h1><p>{{.Status.State}}</p>{{if .Status.Reason}}<p>{{.Status.Reason}}</p>{{end}}
 {{if .Review}}<h2>Review</h2><pre>{{.Review}}</pre><h2>Task</h2><pre>{{.Task}}</pre>{{end}}
+{{if .Ceremony}}<h2>Confirm this action</h2>
+<p>Verify the exact review and task. Submit a passkey assertion or SSH signature over this action using the ceremony below.</p>
+<pre id="operator-ceremony">{{.Ceremony}}</pre>{{end}}
 {{if .Status.StatusHref}}<p><a href="{{.Status.StatusHref}}">Action status (JSON)</a></p>{{end}}
 {{if .Status.ReportHref}}<p><a href="{{.Status.ReportHref}}">Episode report</a></p>{{end}}
 </body></html>`))
@@ -85,13 +89,10 @@ func (d *Daemon) handleOperatorRead(w http.ResponseWriter, r *http.Request, id s
 	if status.Href != "" && row.Kind == "start" && (row.State == "running" || row.State == "succeeded" || row.State == "uncertain" || row.State == "failed") {
 		launch, err := ro.ReadOperatorLaunch(ctx, id)
 		if err == nil {
-			switch {
-			case launch.NoSpawn:
+			if launch.NoSpawn {
 				status.State = "spawn-refused"
-			case launch.Phase == "reserved" || launch.Receipt.Status == "launched":
-				status.State = "uncertain"
-			default:
-				status.State = launch.Receipt.Status
+			} else {
+				status.State = launch.ProcessStatus(agentrun.ProcessIdentity)
 			}
 			if status.ReportHref == "" {
 				status.ReportHref = "/v1/episodes/" + row.Episode + "/report"
@@ -109,8 +110,8 @@ func (d *Daemon) handleOperatorRead(w http.ResponseWriter, r *http.Request, id s
 		return
 	}
 	card := struct {
-		Status       operatorStatus
-		Review, Task string
+		Status                 operatorStatus
+		Review, Task, Ceremony string
 	}{Status: status}
 	if len(row.Action) != 0 && status.Href != "" {
 		a, err := approval.DecodeOperatorAction(row.Action)
@@ -120,6 +121,13 @@ func (d *Daemon) handleOperatorRead(w http.ResponseWriter, r *http.Request, id s
 			return
 		}
 		card.Review, card.Task = a.Review, a.Task
+		if row.State == "requested" && len(row.Challenge) == 32 && row.CreatedAt <= now {
+			card.Ceremony, err = operatorCeremony(ctx, ro, row, status.Href+"/confirm")
+			if err != nil {
+				d.operatorError(w, err)
+				return
+			}
+		}
 	}
 	setSurfaceHeaders(w)
 	_ = operatorCard.Execute(w, card)

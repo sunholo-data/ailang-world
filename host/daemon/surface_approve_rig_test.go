@@ -31,8 +31,9 @@ import (
 const apT0, apLoopback = int64(1800000000), "127.0.0.1:7644"
 
 type approvalRig struct {
-	t *testing.T
-	d *Daemon
+	t           *testing.T
+	d           *Daemon
+	writeBudget time.Duration
 }
 
 func newApprovalRig(t *testing.T) approvalRig {
@@ -54,7 +55,11 @@ func (a approvalRig) write(f func(ctx context.Context, c *store.Credentials) err
 		a.t.Fatal(err)
 	}
 	defer func() { _ = c.Close() }()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	budget := a.writeBudget
+	if budget == 0 {
+		budget = 5 * time.Second
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), budget)
 	defer cancel()
 	if err := f(ctx, c); err != nil {
 		a.t.Fatal(err)

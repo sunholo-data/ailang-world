@@ -38,7 +38,12 @@ func operatorActivationFixture(t *testing.T) (*worktreeStartRig, runnerConfig, s
 
 func operatorActivationFixtureWithAgent(t *testing.T, script string) (*worktreeStartRig, runnerConfig, store.OperatorHeartbeat, *os.File) {
 	t.Helper()
-	r := newWorktreeStartRigWithAgent(t, false, activationTestContext(t), script)
+	return operatorActivationFixtureWithTask(t, script, operatorStartTask)
+}
+
+func operatorActivationFixtureWithTask(t *testing.T, script, task string) (*worktreeStartRig, runnerConfig, store.OperatorHeartbeat, *os.File) {
+	t.Helper()
+	r := newWorktreeStartRigWithTask(t, false, activationTestContext(t), script, task)
 	r.env.operatorBudget = activationTestBudget
 	c := r.config
 	agent := operatorFileFact(r.action, "launch_binary")

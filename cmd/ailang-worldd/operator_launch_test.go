@@ -38,7 +38,12 @@ type operatorLaunchRig struct {
 
 func newOperatorLaunchRig(t *testing.T, script string) *operatorLaunchRig {
 	t.Helper()
-	r, c, h, runner := operatorActivationFixtureWithAgent(t, script)
+	return newOperatorLaunchRigWithTask(t, script, operatorStartTask)
+}
+
+func newOperatorLaunchRigWithTask(t *testing.T, script, task string) *operatorLaunchRig {
+	t.Helper()
+	r, c, h, runner := operatorActivationFixtureWithTask(t, script, task)
 	f := &operatorLaunchRig{worktreeStartRig: r, c: c, h: h, runner: runner, ctx: activationTestContext(t), now: r.src.clock()}
 	r.src.clock = func() int64 { return f.now }
 	r.env.terminal.now = r.src.clock
@@ -357,8 +362,20 @@ func testOperatorStartOnceLaunch(t *testing.T) {
 }
 
 func TestOperatorStartBrowser(t *testing.T) {
-	f := newOperatorLaunchRig(t, fakeLaunchMarker+"while [ ! -e release ]; do :; done\nexit 0\n")
+	// Same browser-supplied task as TestOperatorConfirmHTTP. The launch rig
+	// signs and freezes it before preparation reads the durable row.
+	task := "# Task\n<script>alert(1)</script> ; $(literal) &"
+	f := newOperatorLaunchRigWithTask(t, fakeLaunchMarker+"while [ ! -e release ]; do :; done\nexit 0\n", task)
 	f.env.operatorAgentRun = func(ctx context.Context, argv []string, dir string, env []string, out, stderr *os.File, wall time.Duration, hooks agentrun.LaunchHooks) (agentrun.Result, error) {
+		promptArgs := 0
+		for _, arg := range argv {
+			if strings.Contains(arg, task) {
+				promptArgs++
+			}
+		}
+		if promptArgs != 1 || !strings.HasPrefix(argv[len(argv)-1], task) {
+			t.Errorf("browser task did not survive launch as one literal prompt argument: %q", argv)
+		}
 		start := hooks.Started
 		hooks.Started = func(pid int) error {
 			defer func() { _ = os.WriteFile(filepath.Join(dir, "release"), nil, 0600) }()

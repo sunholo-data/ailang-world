@@ -41,6 +41,11 @@ func newWorktreeStartRigWithContext(t *testing.T, claude bool, ctx context.Conte
 
 func newWorktreeStartRigWithAgent(t *testing.T, claude bool, ctx context.Context, body string, ttl ...int64) *worktreeStartRig {
 	t.Helper()
+	return newWorktreeStartRigWithTask(t, claude, ctx, body, operatorStartTask, ttl...)
+}
+
+func newWorktreeStartRigWithTask(t *testing.T, claude bool, ctx context.Context, body, task string, ttl ...int64) *worktreeStartRig {
+	t.Helper()
 	s := operatorService(t)
 	s.mustInstall(t)
 	s.writes = nil
@@ -61,7 +66,7 @@ func newWorktreeStartRigWithAgent(t *testing.T, claude bool, ctx context.Context
 	r := operatorStartRig{f: f, bin: bin, creds: s.config.Credentials, hosts: t.TempDir()}
 	r.f.r.f.db = s.config.World
 	r.action = approval.OperatorAction{Schema: approval.OperatorActionSchema, ID: fixtureActionID, Kind: "start", Episode: "ep",
-		Store: r.creds, Options: approval.OperatorOptions{Preset: "p", Headless: true}, Task: operatorStartTask, Review: "fixture"}
+		Store: r.creds, Options: approval.OperatorOptions{Preset: "p", Headless: true}, Task: task, Review: "fixture"}
 	r.action.Argv = approval.OperatorArgv(r.action.Kind, r.action.Episode, r.action.Options)
 	if claude {
 		if err := os.Rename(filepath.Join(r.bin, "codex"), filepath.Join(r.bin, "claude")); err != nil {

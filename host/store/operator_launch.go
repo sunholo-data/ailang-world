@@ -208,6 +208,22 @@ func readOperatorLaunch(ctx context.Context, tx *sql.Tx, id string) (OperatorLau
 	return s, row, ErrOperatorConflict
 }
 
+// ProcessStatus classifies the persisted receipt with a current identity read.
+func (s OperatorLaunchSnapshot) ProcessStatus(read func(int) (string, bool)) string {
+	if s.NoSpawn {
+		return "spawn-refused"
+	}
+	if s.Phase == "reserved" {
+		return "uncertain"
+	}
+	if s.Receipt.Status == "launched" {
+		if birth, live := read(s.Receipt.PID); !live || birth != s.Receipt.Birth {
+			return "uncertain"
+		}
+	}
+	return s.Receipt.Status
+}
+
 // RecordOperatorLaunch compares the exact read-back and never replaces a
 // process identity. Recording an admitted child's outcome ignores expiry.
 func (c *Credentials) RecordOperatorLaunch(ctx context.Context, reviewed OperatorLaunchSnapshot, r OperatorLaunchReceipt, history *EpisodeLaunch, now int64) error {
