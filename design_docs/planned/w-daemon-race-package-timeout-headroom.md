@@ -19,6 +19,34 @@
 Quantities carry their instrument. `VERIFIED BY CONTROLLER` marks inherited controller facts; `D<n>` marks this
 session's re-derivations, each with its command and output in §10.
 
+
+## 0. r2 amendments (quorum round 2, applied by the controller under the narrow-refinement carve-out) — these SUPERSEDE every conflicting value in §1–§3
+
+Round 2 (seats oc-glm-5-3 PASS, oc-kimi-k3 REJECT, codex:gpt-6.2-astra REJECT; no absent seat) left two blocking objections,
+each with a concrete reviewer-authored `proposed_fix` and neither disputing the direction (option A, P = 900 s, strict layer
+ordering). The controller applied those fixes verbatim (iteration 443, Gate 2 narrow-refinement carve-out); §11 logs them.
+
+- **kimi (censored daemon slow tail).** `host/daemon` is capped in every slow-tail attempt, so its slow-tail per-`k` time is
+  unmeasured. Two models: (i) class-invariant per-`k` → need 645.4 s (§3, r1); (ii) `cmd/ailang-worldd`'s measured inflation on the
+  slow tail (+28%, 266 → 341 s per unit `k`) applied to daemon → need 407.2 × 1.28 × 1.585 ≈ **827.4 s**, uncapped extension
+  827.4 − 480.1 ≈ **347 s**. The conservative stack is therefore A = 554 + 92.9 + 347 ≈ 993.9 → **A = 995 s**; the guard is
+  L ≥ P + 60 + A = 900 + 60 + 995 = **1955 s**; **L = 2000 s** (default and CI); J = 40 still holds (2400 ≥ 2000 + 300 = 2300).
+  P = 900 s is kept: it clears model (i) by 254.6 s (`k` ≤ 2.21) and model (ii) by ~73 s (`k` tolerance ≈ 1.73). The r1 margin
+  claims in §3 ("254.6 s (1.39×)", "`k` ≤ 2.21") hold under model (i) only; under model (ii) they are ~73 s and ≈ 1.73.
+  Ordering: 900 < 960 < 1955 ≤ 2000 < 2300 ≤ 2400. §4–§6 carry the r2 values (R1 text, R2 1955 accept, R3 1954 refuse,
+  AC1/AC2, M4 `:-1900`, M8 = 813, the test's `daemonExtensionInflatedS = 347` and `P > daemonInflatedNeedS`).
+  PENDING — planner to measure: daemon per-`k` versus `k` across the uncapped mid-class attempts (`k` 1.057–1.321) with
+  `~/.ailang/state/world-iter443/design-scratch/classes.py`; if it is flat or falling, say so — the r2 values stand either way
+  (they are the conservative reading).
+- **astra (unbounded diagnostics on the timeout path).** `ps` gets a 2-second timeout and the process-group kill sits in a
+  `finally`, so the listing can delay the SIGKILL by at most 2 s and never prevent it; new arm R7 (sleeping `ps` shim, 10 s
+  watchdog) and mutations M20/M21 (§4, §5).
+- **kimi catches.** AC6 gains an explicit `-timeout 45m` with a same-session base comparison; the drop-`-ww` mutant is declared
+  unobserved everywhere rather than "observed under AC7".
+- **glm (PASS) notes, applied.** AC8 classifies failure causes (§6, glm's text). §7's quoted row-243 clause is unverified
+  in this doc's log — treat it as a paraphrase (PENDING — planner: `grep -n 'keep the package' design_docs/world-mission.md`).
+  The `03:47:56.9` job-start timestamp in §3 C is unlogged and non-load-bearing (option C is deferred); disregard it.
+
 ## 1. Problem as measured (and where row 267 is wrong or stale)
 
 The race job runs `go test ./... -count=1 -race -timeout 8m` (`scripts/verify_go.sh:355`) inside a Python
@@ -214,8 +242,8 @@ the serial upper bound). Today the same attempt fails at ~18 min and then pays a
    # latest measured heavy-package start (554 s) + cmd's (93 s) + daemon's (166 s) uncapped extensions, stacked.
    # The guard adds cmd/go's backup kill (testKillTimeout = -timeout + 1m) so both fire before the leg SIGKILL.
    VERIFY_GO_RACE_PKG_TIMEOUT_S=900
-   VERIFY_GO_RACE_START_ALLOWANCE_S=813
-   VERIFY_GO_RACE_TIMEOUT_S="${VERIFY_GO_RACE_TIMEOUT_S:-1900}"
+   VERIFY_GO_RACE_START_ALLOWANCE_S=995
+   VERIFY_GO_RACE_TIMEOUT_S="${VERIFY_GO_RACE_TIMEOUT_S:-2000}"
    check_race_bounds() {
      case "$VERIFY_GO_RACE_TIMEOUT_S" in
        ''|*[!0-9]*) echo "verify_go.sh: FATAL: VERIFY_GO_RACE_TIMEOUT_S must be a positive integer" >&2; return 2 ;;
@@ -238,8 +266,10 @@ the serial upper bound). Today the same attempt fails at ~18 min and then pays a
    `print(f"verify_go.sh: FATAL: -race leg timed out after {bound}s", file=sys.stderr)` and `sys.exit(124)`. NEW,
    before the kill: list every process whose pgid is the leg's, each as
    `verify_go.sh: still running at the leg bound (elapsed <etime>): <args>`, read from
-   `ps -ww -eo pgid=,etime=,args=` and split with `line.split(None, 2)` (procps left-pads `pgid`; `split()` absorbs it). If `ps` itself fails, print one
-   `could not list` line and still kill and exit 124 (diagnostics never gate the refusal).
+   `ps -ww -eo pgid=,etime=,args=` and split with `line.split(None, 2)` (procps left-pads `pgid`; `split()` absorbs it). **r2 (astra, verbatim fix):** give `ps` an explicit two-second timeout (`subprocess.run(..., timeout=2)`) and put the
+   process-group kill in a `finally` block, so a stalled, missing or failing `ps` can delay the SIGKILL by at most 2 s and can
+   never prevent it or the `exit 124`; document that maximum two-second diagnostic grace beside the bound. If `ps` fails or
+   times out, print one `could not list` line and still kill and exit 124 (diagnostics never gate the refusal).
 3. Two subcommands beside `--evidence-manifest-check` and `--mission-config-check`, both exiting before the
    `AILANG_BIN` check:
    - `--race-bounds-check` (no arguments): runs `check_race_bounds`; on success prints exactly
@@ -259,13 +289,13 @@ the serial upper bound). Today the same attempt fails at ~18 min and then pays a
    must not touch the P1/P2 toolchain lines read by `toolchain_pin_gate_test.go` [D8].
 
 **`scripts/test_race_leg_bounds.sh`** (new, ~75; `set -euo pipefail`, scratch under `mktemp -d "${TMPDIR:-/tmp}/…"`
-with an EXIT trap; prints `ok <arm>` per arm and `PASS 6/6 arms`; any failure prints the arm and its captured
+with an EXIT trap; prints `ok <arm>` per arm and `PASS 7/7 arms`; any failure prints the arm and its captured
 output and exits 1):
 - **R1 default**: `env -u VERIFY_GO_RACE_TIMEOUT_S bash scripts/verify_go.sh --race-bounds-check` → rc 0, stdout
-  exactly `race bounds: per-package 900s, start allowance 813s, leg 1900s`.
-- **R2 boundary accept**: `VERIFY_GO_RACE_TIMEOUT_S=1773 … --race-bounds-check` → rc 0.
-- **R3 boundary refuse**: `VERIFY_GO_RACE_TIMEOUT_S=1772` → rc 2, stderr contains
-  `must be at least per-package 900s + 60s backup kill + start allowance 813s (1773s)`.
+  exactly `race bounds: per-package 900s, start allowance 995s, leg 2000s`.
+- **R2 boundary accept**: `VERIFY_GO_RACE_TIMEOUT_S=1955 … --race-bounds-check` → rc 0.
+- **R3 boundary refuse**: `VERIFY_GO_RACE_TIMEOUT_S=1954` → rc 2, stderr contains
+  `must be at least per-package 900s + 60s backup kill + start allowance 995s (1955s)`.
 - **R4 malformed**: `VERIFY_GO_RACE_TIMEOUT_S=15m` → rc 2, `must be a positive integer`.
 - **R5 passthrough**: `--race-leg-wrapper-check 30 sh -c 'exit 3'` → rc 3, and stderr has no `FATAL`.
 - **R6 hang**: a fake executable `$tmp/hang_probe.test` (`#!/bin/sh`: `sleep 300 & echo $! >"$tmp/gc.pid"; sleep 300`)
@@ -276,6 +306,11 @@ output and exits 1):
   reparenting and reaping the orphan cannot redden it. Under M10 the grandchild sleeps 300 s, well past the poll.
   Wall ~2–3 s, ≤ 7 s worst case. `$tmp` sits under `$TMPDIR`; on darwin that is a long `/var/folders/…` path, which
   is the truncation case [C3].
+- **R7 stalled `ps` (r2, astra, verbatim fix)**: an R6 variant with a sleeping `ps` shim first on `PATH` (`#!/bin/sh`:
+  `sleep 300`) and an independent ten-second watchdog around the wrapper call. Require the wrapper to return 124 and
+  terminate the probe group (bounded `kill -0` poll as in R6) before the watchdog fires; stderr contains
+  `could not list` and `FATAL: -race leg timed out after 2s`. Kills M20 (`ps` timeout removed) and M21 (kill moved
+  out of `finally` after the listing).
 
 **`host/verifygate/race_job_gate_test.go`** (~+95/−1):
 - Existing `TestRaceLegRunsInItsOwnJob`: replace the needle `"go", "test", "./...", "-count=1", "-race"` with
@@ -289,10 +324,10 @@ output and exits 1):
     `run: ./scripts/verify_go.sh` → `timeout-minutes: (\d+)` → J and `VERIFY_GO_RACE_TIMEOUT_S: "(\d+)"` →
     L_ci. Control: the job contains `runs-on: ubuntu-24.04`, and has zero `continue-on-error`.
   - Measured constants, named with their sources (this doc §2/§3): `slowNeedS = 646`, `latestHeavyStartS = 554`,
-    `worlddExtensionS = 93`, `daemonExtensionS = 166`, `backupKillS = 60` (Go's `testKillTimeout`, [D9]),
+    `worlddExtensionS = 93`, `daemonExtensionS = 166`, `daemonExtensionInflatedS = 347` (r2, §0 kimi model ii), `daemonInflatedNeedS = 828`, `backupKillS = 60` (Go's `testKillTimeout`, [D9]),
     `preLegMaxS = 55`.
-  - Asserts: `P*4 >= slowNeedS*5` (P ≥ 1.25 × need); `A >= latestHeavyStartS + worlddExtensionS + daemonExtensionS`
-    (≥ 813); `L_ci == L_default`; `L_default >= P + backupKillS + A`; `J*60 >= L_ci + 300` and `300 >= 5*preLegMaxS`; the call line
+  - Asserts: `P*4 >= slowNeedS*5` (P ≥ 1.25 × need); `A >= latestHeavyStartS + worlddExtensionS + daemonExtensionInflatedS` (r2) and `P > daemonInflatedNeedS` (r2)
+    (≥ 995); `L_ci == L_default`; `L_default >= P + backupKillS + A`; `J*60 >= L_ci + 300` and `300 >= 5*preLegMaxS`; the call line
     contains `-race` and contains none of `-short`, `-run`, `-skip`, `-failfast=false`. Each failure message names
     the layer and the inequality.
 
@@ -304,7 +339,7 @@ output and exits 1):
 (`:415-442`) is history and stays byte-identical.
 
 **`.github/workflows/ci.yml`** (~+5/−3): step "go -race gate": `timeout-minutes: 40`,
-`VERIFY_GO_RACE_TIMEOUT_S: "1900"`. The comment names the three layers and points at this doc. No new job, no new
+`VERIFY_GO_RACE_TIMEOUT_S: "2000"`. The comment names the three layers and points at this doc. No new job, no new
 step (the wrapper test runs inside `verify_go.sh`). The edit keeps the controls `ailang-verify:`, `go-verify:` and
 `./scripts/verify_go.sh`, and adds no `Z3_VER`/`Z3_SHA` token, both of which `TestZ3PinDeclaredOnceAndInstalledInBothJobs`
 counts [C1].
@@ -318,11 +353,11 @@ Each mutation is a single edit to the M1 tree. "Kills" names the test and the as
 | M1 | revert P: `VERIFY_GO_RACE_PKG_TIMEOUT_S=480` | `TestRaceBoundsAreOrdered` (P ≥ 1.25 × 646); `test_race_leg_bounds.sh` R1 (stdout text) |
 | M2 | call line hardcodes `-timeout 8m` (P defined but unused) | `TestRaceBoundsAreOrdered` (exact call line); `TestVerifyGoProductCheckSequence` repaired arm (call-line needle count 0) |
 | M3 | CI keeps `VERIFY_GO_RACE_TIMEOUT_S: "1500"` | `TestRaceBoundsAreOrdered` (`L_ci == L_default`, and `L ≥ P + 60 + A`) |
-| M4 | script default lowered to `:-1700` (< 1773; r0's 1800 would still pass the guard, so the mutant is 1700) | `TestRaceBoundsAreOrdered` (`L_default ≥ P + 60 + A`); R1 (rc 2, not 0) |
-| M5 | `timeout-minutes: 36` (J×60 = 2160 < L + 300 = 2200) | `TestRaceBoundsAreOrdered` (`J*60 ≥ L + 300`) |
+| M4 | script default lowered to `:-1900` (< 1955; r1's 1900 now fails the guard, so it is the mutant) | `TestRaceBoundsAreOrdered` (`L_default ≥ P + 60 + A`); R1 (rc 2, not 0) |
+| M5 | `timeout-minutes: 36` (J×60 = 2160 < L + 300 = 2300) | `TestRaceBoundsAreOrdered` (`J*60 ≥ L + 300`) |
 | M6 | `check_race_bounds` ordering branch deleted (or `return 0` first) | R3 (rc 0, want 2) |
-| M7 | ordering comparison `-lt` → `-le` (off by one) | R2 (rc 2 at 1773, want 0) |
-| M8 | `VERIFY_GO_RACE_START_ALLOWANCE_S=720` (r0's daemon-only undercut) | `TestRaceBoundsAreOrdered` (A ≥ 813); R1 text |
+| M7 | ordering comparison `-lt` → `-le` (off by one) | R2 (rc 2 at 1955, want 0) |
+| M8 | `VERIFY_GO_RACE_START_ALLOWANCE_S=813` (r1's value, without the censored-daemon inflation) | `TestRaceBoundsAreOrdered` (A ≥ 995); R1 text |
 | M9 | wrapper's process listing deleted | R6 (`still running at the leg bound` / `hang_probe.test` absent) |
 | M10 | `os.killpg(...)` → `p.kill()` (child only) | R6 (grandchild `kill -0` succeeds) |
 | M11 | `sys.exit(p.wait(...))` → `p.wait(...); sys.exit(0)` | R5 (rc 0, want 3) |
@@ -332,13 +367,14 @@ Each mutation is a single edit to the M1 tree. "Kills" names the test and the as
 | M15 | `continue-on-error: true` on the race job/step | `TestRaceBoundsAreOrdered` (zero `continue-on-error`) |
 | M16 | `bash scripts/test_race_leg_bounds.sh` line dropped from the race block | `TestVerifyGoProductCheckSequence` repaired arm, *only if* the implementer adds it as a needle; **required**: add it |
 | M17 | `check_race_bounds || exit $?` dropped from the main flow | **required new needle** in the repaired sequence, the same as M16 |
-| M18 | the `+ 60` backup-kill term dropped from `min` | R3 (rc 0 at 1772, want 2) |
+| M18 | the `+ 60` backup-kill term dropped from `min` | R3 (rc 0 at 1954, want 2) |
 | M19 | a top-level `check_race_bounds` call (or any echo) inserted above the subcommand dispatch | `TestEvidenceNamedManifestRejectsUnpinnedTest` if it changes `--evidence-manifest-check` output; R1 if it prints twice |
+| M20 | the `timeout=2` on the `ps` call removed (r2) | R7 (watchdog fires before rc 124) |
+| M21 | the process-group kill moved after the listing, outside `finally` (r2) | R7 (watchdog fires; probe group alive) |
 
 M16/M17 are listed so the implementer adds the two needles; without them those edits would survive. There are no
 declared equivalents. One edit is **not killable locally**, and is declared: dropping `-ww` from the `ps` call. On
-darwin the output is identical either way [C3], so R6 stays green. On Linux, R6 in the CI race job (AC7) is the
-observation that decides whether it matters.
+darwin the output is identical either way [C3], so R6 stays green. **r2 (kimi):** AC7 runs R6 as written (with `-ww`) and never replays the mutation, so the drop-`-ww` mutant is declared UNOBSERVED everywhere (locally and in CI), not killed.
 
 ## 6. Acceptance criteria
 
@@ -346,14 +382,14 @@ All commands run from the worktree root on the rig with `AILANG_BIN=$HOME/.pinne
 released), `GOTOOLCHAIN=go1.26.6`.
 
 - **AC1** `bash scripts/verify_go.sh --race-bounds-check; echo rc=$?` →
-  `race bounds: per-package 900s, start allowance 813s, leg 1900s` / `rc=0`.
-- **AC2** `VERIFY_GO_RACE_TIMEOUT_S=1772 bash scripts/verify_go.sh --race-bounds-check; echo rc=$?` → stderr
-  `… leg bound 1772s must be at least per-package 900s + 60s backup kill + start allowance 813s (1773s)` / `rc=2`;
-  and with `=1773` → `rc=0`.
-- **AC3** `bash scripts/test_race_leg_bounds.sh; echo rc=$?` → six `ok R<n> …` lines, `PASS 6/6 arms`, `rc=0`.
+  `race bounds: per-package 900s, start allowance 995s, leg 2000s` / `rc=0`.
+- **AC2** `VERIFY_GO_RACE_TIMEOUT_S=1954 bash scripts/verify_go.sh --race-bounds-check; echo rc=$?` → stderr
+  `… leg bound 1954s must be at least per-package 900s + 60s backup kill + start allowance 995s (1955s)` / `rc=2`;
+  and with `=1955` → `rc=0`.
+- **AC3** `bash scripts/test_race_leg_bounds.sh; echo rc=$?` → six `ok R<n> …` lines, `PASS 7/7 arms`, `rc=0`.
   It also passes with `TMPDIR` under a 1777 parent and under CPU contention, per the iteration-442 Gate 5 process
   rule: `TMPDIR=$(mktemp -d /private/tmp/r267.XXXX) bash scripts/test_race_leg_bounds.sh` with 8 `yes >/dev/null`
-  spinners running → `PASS 6/6 arms`.
+  spinners running → `PASS 7/7 arms`.
 - **AC4** `go vet ./host/verifygate/ && go test ./host/verifygate/ -count=1 -v -run 'TestRaceBoundsAreOrdered|TestRaceLegRunsInItsOwnJob|TestVerifyGoProductCheckSequence|TestVerifyGoRefusesUnknownLegs|TestEvidenceNamedManifestRejectsUnpinnedTest|TestZ3PinDeclaredOnceAndInstalledInBothJobs' 2>&1 | grep -E '^(--- |ok|FAIL)'`
   → six `--- PASS` lines and `ok`. (The last two are the C1 readers that copy-and-execute `verify_go.sh` and count
   `ci.yml` tokens. AC6's whole `go test ./...` runs them again.) (`go vet` is the compile fence for `_test.go`; `go build` is not.)
@@ -362,17 +398,19 @@ released), `GOTOOLCHAIN=go1.26.6`.
   rc restored`. Expected: 19/19 killed, 0 survivors (M19 as the specific insertion the replay applies:
   `check_race_bounds` called above the dispatch with an echo). The declared `-ww` case is excluded locally and
   observed under AC7.
-- **AC6** Whole gates on the M1 tree: `./scripts/verify_ail.sh` rc 0; `go build ./... && go test ./... -count=1`
+- **AC6** Whole gates on the M1 tree: `./scripts/verify_ail.sh` rc 0; `go build ./... && go test ./... -count=1 -timeout 45m` (r2, kimi: explicit `-timeout`, because the rig's plain `cmd/ailang-worldd` reads ~696 s against Go's 600 s default; compared against a same-session base run on `6420426e`)
   with the fail set compared to base `6420426e`, so no new failure; `gofmt -l host/verifygate/` empty;
   `bash -n scripts/verify_go.sh scripts/test_race_leg_bounds.sh` rc 0.
-- **AC7** CI on the PR: the race job's log contains `── legs: race (race bounds: per-package 900s, leg 1900s)`,
-  the shell test's `PASS 6/6 arms`, and
-  `── go test ./... -count=1 -race -timeout 900s (leg bound 1900s)`, and all three jobs are green. R6's `ok` line in
+- **AC7** CI on the PR: the race job's log contains `── legs: race (race bounds: per-package 900s, leg 2000s)`,
+  the shell test's `PASS 7/7 arms`, and
+  `── go test ./... -count=1 -race -timeout 900s (leg bound 2000s)`, and all three jobs are green. R6's `ok` line in
   that log is the Linux procps observation for `ps -ww … args=` [C3].
-- **AC8 (observational; recorded, never claimed if unobserved)**: over the first 10 race-job attempts after merge,
-  any attempt in which a heavy package reads > 480 s is green for that package, and no
-  `panic: test timed out after 15m0s` appears. If none of the 10 draws a non-normal runner (`host/store` ≤ 67.5 s
-  in all), AC8 is recorded as **unobserved**, not passed.
+- **AC8 (observational; recorded, never claimed if unobserved; r2 text is glm's verbatim fix)**: over the first 10 race-job
+  attempts after merge, (i) no `panic: test timed out after 15m0s` appears in any attempt, and (ii) every heavy-package
+  instance reading > 480 s is classified as green or legitimately-red — red only with a non-timeout failure cause that
+  reproduces on the same commit (e.g., in the plain leg or at base `6420426e`); record a per-attempt classification table
+  (attempt | heavy>480s | result | cause class). If no attempt draws a non-normal runner (`host/store` ≤ 67.5 s in all 10),
+  record AC8 as unobserved, not passed.
 
 ## 7. Conflict surface (who else reads these bounds or these lines)
 
@@ -482,3 +520,16 @@ ordering line; §4 step 1 constants, comment, guard, FATAL text and the C1 const
 R1/R2/R3/R6; test constants and asserts; ci.yml value 1900 and the C1 controls note; §5 M3/M4/M5/M7/M8, plus
 M18/M19 and the declared `-ww` case; §6 AC1/AC2/AC4/AC5/AC7; §7 three-reader bullet; §8 sizing; §9 A note;
 §10 D11–D13, C1–C4; §11.
+
+### Round 2 (r1 `4c76f7c0`) — BLOCKED 2/3; resolved by the controller's bounded r2 under the narrow-refinement carve-out
+
+Seats: oc-glm-5-3, oc-kimi-k3, codex:gpt-6.2-astra (reserve gemini-4-carbon). FLAG: gemini-4-carbon (round-1 seat) was not
+re-seated — the controller passed a four-model `--reviewers` pool and the tool seated astra; the rule is the same three seats
+every round. Artifact `w-daemon-race-package-timeout-headroom-2026-11-27T04-32-02Z.json`.
+
+| seat | verdict | objection (one line) | r2 change |
+|---|---|---|---|
+| oc-glm-5-3 | PASS | AC8 mixes timeout-class and real-failure reds; §7's row-243 quote unlogged; one unlogged timestamp | AC8 replaced by glm's text; quote and timestamp marked in §0 |
+| oc-kimi-k3 | REJECT | daemon slow-tail per-`k` is censored; under `cmd`'s measured inflation A ≈ 994, guard ≥ 1955, L = 1900 breaks | A 995, guard 1955, L 2000, test constants, M4/M8, R1–R3, AC1/AC2 (kimi's fix); AC6 `-timeout`; `-ww` mutant unobserved |
+| codex:gpt-6.2-astra | REJECT | unbounded `ps` before `os.killpg` on the timeout path | `ps` timeout 2 s, kill in `finally`, R7 + M20/M21 (astra's fix) |
+
