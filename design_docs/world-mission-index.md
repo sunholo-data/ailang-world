@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 442 | 2026-11-27 | row 243 V4 sprint 5f4 LANDED (PR #689, merge `c3504c56`): ACTIVATION — the first production caller of the operator start path: the installed `opera... |
 | 441 | 2026-11-26 | row 243 V4 sprint 5f3 LANDED (PR #687, merge `a50b0d72`): the last dormant prerequisites for the first production caller — terminal `session revoke... |
 | 440 | 2026-11-26 | row 243 V4 sprint 5f2 LANDED (PR #685, merge `150d0d96`): the activation prerequisites — judge-439 J01/J05 pins, the runner's borrowed per-episode ... |
 | 439 | 2026-11-26 | row 243 V4 sprint 5f LANDED (PR #681, merge `886648ab`): the staged seams and pins the first production caller needs — judge-438's S9/S10 GC kind r... |
