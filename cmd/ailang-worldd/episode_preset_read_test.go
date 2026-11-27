@@ -312,6 +312,12 @@ func TestPresetStartReadRefusals(t *testing.T) {
 func startReadFakeAgent(t *testing.T, f presetFixture) string {
 	t.Helper()
 	bin := t.TempDir()
+	startReadFakeAgentIn(t, f, bin)
+	return bin
+}
+
+func startReadFakeAgentIn(t *testing.T, f presetFixture, bin string) {
+	t.Helper()
 	gitLink := filepath.Join(bin, "git")
 	if err := os.Symlink(f.r.f.git, gitLink); err != nil {
 		t.Fatal(err)
@@ -322,7 +328,6 @@ func startReadFakeAgent(t *testing.T, f presetFixture) string {
 	}
 	t.Setenv("PATH", bin)
 	t.Setenv("WORLD_FIXTURE_AGENT_RAN", filepath.Join(bin, "ran"))
-	return bin
 }
 
 func seedStartFixtureFile(t *testing.T, path string, data []byte) {

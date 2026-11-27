@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -32,6 +33,21 @@ func TestOperatorProcessWitness(t *testing.T) {
 	}
 	path := os.Getenv("WORLD_TEST_OPERATOR_WITNESS_PATH")
 	switch mode {
+	case "git-inherited":
+		lock := os.NewFile(4, "Git inherited runner lock")
+		defer lock.Close()
+		if got, err := lock.Stat(); err != nil {
+			t.Fatal(err)
+		} else if want, err := os.Stat(path); err != nil || !os.SameFile(got, want) {
+			t.Fatalf("Git received a different runner lock: %v", err)
+		}
+		if err := syscall.Flock(4, syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path+".git-observed", nil, 0600); err != nil {
+			t.Fatal(err)
+		}
+		return
 	case "inherited":
 		lock := os.NewFile(3, "inherited runner lock")
 		defer lock.Close()
@@ -45,6 +61,18 @@ func TestOperatorProcessWitness(t *testing.T) {
 			t.Fatal(err)
 		}
 		return
+	case "episode":
+		lock, err := openTerminalEpisodeLock(path, "ep", nil, os.O_CREATE, activationTestBudget)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer lock.Close()
+	case "owner":
+		lock, err := store.OpenOperatorEpisodeLock(path, "ep")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer lock.Close()
 	default:
 		t.Fatalf("bad witness mode %q", mode)
 	}
@@ -55,7 +83,12 @@ func TestOperatorProcessWitness(t *testing.T) {
 
 func operatorProcessWitness(t *testing.T, mode, path string, files ...*os.File) (int, func()) {
 	t.Helper()
-	ctx, cancel := budgetContext(8 * time.Second)
+	return operatorProcessWitnessWithin(t, 8*time.Second, mode, path, files...)
+}
+
+func operatorProcessWitnessWithin(t *testing.T, budget time.Duration, mode, path string, files ...*os.File) (int, func()) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), budget)
 	bin, err := os.Executable()
 	if err != nil {
 		cancel()

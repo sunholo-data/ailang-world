@@ -22,9 +22,12 @@ type operatorPinFixture struct {
 	proof *approval.OperatorMintProof
 }
 
-func newOperatorPinFixture(t *testing.T, allowance bool) operatorPinFixture {
+func newOperatorPinFixture(t *testing.T, allowance bool, contexts ...context.Context) operatorPinFixture {
 	t.Helper()
 	c, ctx := openTestCredentials(t), testCtx(t)
+	if len(contexts) > 0 {
+		ctx = contexts[0]
+	}
 	cas, runner := operatorClaimFixture(t, c)
 	row := getOperator(t, c, cas.ID, pinNow)
 	a, err := approval.DecodeOperatorAction(row.Action)

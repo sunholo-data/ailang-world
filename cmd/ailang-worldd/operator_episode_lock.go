@@ -19,15 +19,15 @@ func terminalEpisodeLock(creds, episode string, held *os.File) (*os.File, error)
 	return openTerminalEpisodeLock(creds, episode, held, os.O_CREATE)
 }
 
-func openTerminalEpisodeLock(creds, episode string, held *os.File, flags int) (*os.File, error) {
+func openTerminalEpisodeLock(creds, episode string, held *os.File, flags int, budget ...time.Duration) (*os.File, error) {
 	canonical, err := store.CanonicalPath(creds)
 	if err != nil {
 		return nil, err
 	}
-	return openCanonicalTerminalEpisodeLock(canonical, episode, held, flags)
+	return openCanonicalTerminalEpisodeLock(canonical, episode, held, flags, budget...)
 }
 
-func openCanonicalTerminalEpisodeLock(canonical, episode string, held *os.File, flags int) (*os.File, error) {
+func openCanonicalTerminalEpisodeLock(canonical, episode string, held *os.File, flags int, budget ...time.Duration) (*os.File, error) {
 	path := operatorEpisodeLockPath(canonical, episode)
 	if held != nil {
 		if held.Name() != path {
@@ -43,7 +43,11 @@ func openCanonicalTerminalEpisodeLock(canonical, episode string, held *os.File, 
 	if lockErr != nil && !absent && !errors.Is(lockErr, syscall.EWOULDBLOCK) {
 		return nil, lockErr
 	}
-	ctx, cancel := budgetContext(4 * time.Second)
+	timeout := 4 * time.Second
+	if len(budget) != 0 {
+		timeout = budget[0]
+	}
+	ctx, cancel := budgetContext(timeout)
 	defer cancel()
 	id, readErr := store.ReadOperatorEpisodeOwner(ctx, canonical, episode)
 	if (lockErr == nil || absent) && readErr == nil && id == "" {

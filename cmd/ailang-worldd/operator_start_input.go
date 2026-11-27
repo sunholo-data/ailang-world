@@ -84,8 +84,8 @@ func operatorStartFacts(ctx context.Context, signed approval.OperatorAction, att
 
 // reconstructOperatorStart requires every signed resolution fact to equal its
 // live value before any effect. A change, even one lowering authority, needs a
-// fresh review. It locks, writes, mints and launches nothing, and it has no
-// production caller until the paired-process consumer lands.
+// fresh review. It is read-only and runs inside the preparation consumer's
+// process and episode exclusion.
 func reconstructOperatorStart(ctx context.Context, signed approval.OperatorAction, attempt store.OperatorMintAttempt,
 	presets, profiles, workspace, hosts string, clock func() int64) (store.OperatorMintInput, error) {
 	in, facts, err := operatorStartFacts(ctx, signed, attempt, presets, profiles, workspace, hosts, clock, resolvePresetStart)

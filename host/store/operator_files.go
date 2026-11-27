@@ -81,6 +81,7 @@ const (
 	OperatorFilesPublished       = "published"
 	OperatorFilesStoppedAbsent   = "stopped: absent"
 	OperatorFilesStoppedRetained = "stopped: retained"
+	OperatorFilesStoppedOrphan   = "stopped: orphan revoked"
 )
 
 // RecordOperatorFiles reserves an empty phase, or observes or disposes the exact reservation.
@@ -122,7 +123,7 @@ func (c *Credentials) RecordOperatorFiles(ctx context.Context, reviewed Operator
 		}
 	case "reserved":
 		switch value {
-		case OperatorFilesPublished, OperatorFilesStoppedAbsent, OperatorFilesStoppedRetained:
+		case OperatorFilesPublished, OperatorFilesStoppedAbsent, OperatorFilesStoppedRetained, OperatorFilesStoppedOrphan:
 			if err := observeOperatorStep(ctx, tx, key, []byte(value)); err != nil {
 				return err
 			}
@@ -164,7 +165,7 @@ func (c *Credentials) RecordOperatorFiles(ctx context.Context, reviewed Operator
 			return err
 		}
 	}
-	stopped := current.Phase == "reserved" && (value == OperatorFilesStoppedAbsent || value == OperatorFilesStoppedRetained)
+	stopped := current.Phase == "reserved" && (value == OperatorFilesStoppedAbsent || value == OperatorFilesStoppedRetained || value == OperatorFilesStoppedOrphan)
 	uncertain := current.Phase == "reserved" && value == OperatorFilesUncertain
 	res, err := tx.ExecContext(ctx, `UPDATE operator_actions
 		SET state=CASE WHEN ? THEN 'failed' WHEN ? THEN 'uncertain' ELSE state END,
@@ -180,6 +181,13 @@ func (c *Credentials) RecordOperatorFiles(ctx context.Context, reviewed Operator
 		key.Action.ID, key.Identity, key.Owner, phase, version, receipt, key.Action.ID)
 	if err := operatorChangedOne(res, err); err != nil {
 		return err
+	}
+	if stopped && value == OperatorFilesStoppedOrphan {
+		res, err := tx.ExecContext(ctx, `DELETE FROM session_credentials WHERE credential_id=? AND episode_id=?`,
+			current.Session.CredentialID, current.Session.EpisodeID)
+		if err := operatorChangedOne(res, err); err != nil {
+			return err
+		}
 	}
 	return tx.Commit()
 }
@@ -207,6 +215,12 @@ func admitOperatorFiles(ctx context.Context, tx *sql.Tx, row OperatorActionRow, 
 	if err := operatorMintApprover(ctx, tx, proof, b, now); err != nil {
 		return err
 	}
+	return ValidateOperatorStartSession(current, action)
+}
+
+// ValidateOperatorStartSession compares the current persisted session with
+// the session implied by the frozen signed start and its exact mint time.
+func ValidateOperatorStartSession(current OperatorFileState, action approval.OperatorAction) error {
 	catalogue, err := strconv.ParseInt(mintFact(action, "mint_catalogue"), 10, 64)
 	if err != nil {
 		return ErrOperatorConflict

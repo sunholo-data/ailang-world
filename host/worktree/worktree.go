@@ -43,6 +43,14 @@ const (
 	MaxStdout = 8 << 20
 )
 
+type commandTimeoutKey struct{}
+
+// WithCommandTimeout overrides the per-invocation cap. The parent deadline
+// still bounds the complete operation.
+func WithCommandTimeout(ctx context.Context, timeout time.Duration) context.Context {
+	return context.WithValue(ctx, commandTimeoutKey{}, timeout)
+}
+
 // Env is the child environment: environ without registry, GIT_* or WORLD_SESSION variables.
 // Like childenv.Scrubbed it is never nil, so exec never falls back to
 // inheriting the process environment.
@@ -140,7 +148,11 @@ func (c *capped) Write(p []byte) (int, error) {
 // stderr both go to the error message (Add, Remove); otherwise stdout goes to
 // stdout and only stderr to the message (Output).
 func runGit(ctx context.Context, git string, args []string, stdout *capped, inherited ...*os.File) error {
-	runCtx, cancel := context.WithTimeout(ctx, Timeout)
+	timeout, _ := ctx.Value(commandTimeoutKey{}).(time.Duration)
+	if timeout == 0 {
+		timeout = Timeout
+	}
+	runCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	cmd := exec.CommandContext(runCtx, git, args...)
 	cmd.Env = Env(os.Environ())
@@ -163,7 +175,7 @@ func runGit(ctx context.Context, git string, args []string, stdout *capped, inhe
 			text = text[:maxOutput] + "…"
 		}
 		if runCtx.Err() != nil {
-			return fmt.Errorf("worktree: git %s: timed out after %v: %w (%s)", strings.Join(args, " "), Timeout, runCtx.Err(), text)
+			return fmt.Errorf("worktree: git %s: timed out after %v: %w (%s)", strings.Join(args, " "), timeout, runCtx.Err(), text)
 		}
 		return fmt.Errorf("worktree: git %s: %w: %s", strings.Join(args, " "), err, text)
 	}

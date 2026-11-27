@@ -24,6 +24,7 @@ import (
 // git repo to add worktrees from.
 type episodeFixture struct {
 	db, ws, repo, git string
+	gitContext        context.Context
 }
 
 func newEpisodeFixture(t *testing.T) episodeFixture {

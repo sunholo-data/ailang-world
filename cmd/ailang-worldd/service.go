@@ -82,6 +82,7 @@ type serviceEnv struct {
 	observe         func(string)
 	probe           func(string, string) ([]byte, error)
 	runnerLogin     func() (int, string, error)
+	operatorBudget  time.Duration
 	runnerNow       func() time.Time
 	runnerSleep     func(time.Duration)
 	runnerProcesses func() ([]worldProcess, error)

@@ -30,12 +30,24 @@ type worktreeStartRig struct {
 
 func newWorktreeStartRig(t *testing.T, claude bool, ttl ...int64) *worktreeStartRig {
 	t.Helper()
+	return newWorktreeStartRigWithContext(t, claude, nil, ttl...)
+}
+
+func newWorktreeStartRigWithContext(t *testing.T, claude bool, ctx context.Context, ttl ...int64) *worktreeStartRig {
+	t.Helper()
 	s := operatorService(t)
 	s.mustInstall(t)
 	s.writes = nil
 	s.env.terminal.now = func() int64 { return 1012 }
-	f := newPresetFixture(t)
-	r := operatorStartRig{f: f, bin: startReadFakeAgent(t, f), creds: s.config.Credentials, hosts: t.TempDir()}
+	f := newPresetFixture(t, ctx)
+	// The runner checks the agent and session directory up to its login home.
+	bin, err := os.MkdirTemp(s.config.Home, "agent-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	startReadFakeAgentIn(t, f, bin)
+	f.r.sessions = filepath.Join(s.config.Home, "sessions")
+	r := operatorStartRig{f: f, bin: bin, creds: s.config.Credentials, hosts: t.TempDir()}
 	r.f.r.f.db = s.config.World
 	r.action = approval.OperatorAction{Schema: approval.OperatorActionSchema, ID: fixtureActionID, Kind: "start", Episode: "ep",
 		Store: r.creds, Options: approval.OperatorOptions{Preset: "p", Headless: true}, Task: operatorStartTask, Review: "fixture"}
@@ -60,7 +72,10 @@ func newWorktreeStartRig(t *testing.T, claude bool, ttl ...int64) *worktreeStart
 	stubDaemon(t, h, nil)
 	r.at = store.OperatorMintAttempt{Catalogue: 1}
 	src := operatorStartSource{r.f.dir, r.f.r.profiles, r.f.r.f.ws, r.hosts, s.env.terminal.now}
-	in, facts, err := operatorStartFacts(presetTestContext(t), r.action, r.at, src.presets, src.profiles, src.workspace, src.hosts, src.clock, resolvePresetStart)
+	if ctx == nil {
+		ctx = presetTestContext(t)
+	}
+	in, facts, err := operatorStartFacts(ctx, r.action, r.at, src.presets, src.profiles, src.workspace, src.hosts, src.clock, resolvePresetStart)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,7 +128,11 @@ func (r *worktreeStartRig) borrow(t *testing.T) *store.OperatorEpisodeLock {
 
 func (r *worktreeStartRig) exec(t *testing.T, q string, args ...any) {
 	t.Helper()
-	if _, err := r.db.ExecContext(boundedTestContext(t), q, args...); err != nil {
+	ctx := r.f.r.f.gitContext
+	if ctx == nil {
+		ctx = boundedTestContext(t)
+	}
+	if _, err := r.db.ExecContext(ctx, q, args...); err != nil {
 		t.Fatal(err)
 	}
 }

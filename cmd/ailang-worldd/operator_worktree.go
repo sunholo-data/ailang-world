@@ -28,7 +28,7 @@ type operatorStartSource struct {
 
 // reserveOperatorStartWorktree borrows the caller-owned episode lock.
 func reserveOperatorStartWorktree(ctx context.Context, credentials string, held *store.OperatorEpisodeLock, signed approval.OperatorAction,
-	attempt store.OperatorMintAttempt, src operatorStartSource, checkpoint func(string) error) error {
+	attempt store.OperatorMintAttempt, src operatorStartSource, checkpoint func(string) error, process ...*os.File) error {
 	canonical, err := store.CanonicalPath(credentials)
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func reserveOperatorStartWorktree(ctx context.Context, credentials string, held 
 	if err != nil {
 		return fmt.Errorf("%w; %s", err, reconcileWorktreeCommand(key.Action.ID))
 	}
-	addErr := worktree.Add(ctx, git, target.Repo, target.Path, target.Branch, target.SHA, fd)
+	addErr := worktree.Add(ctx, git, target.Repo, target.Path, target.Branch, target.SHA, append([]*os.File{fd}, process...)...)
 	if _, err := held.Verify(canonical, signed.Episode); err != nil {
 		return fmt.Errorf("%w; %s", err, reconcileWorktreeCommand(key.Action.ID))
 	}

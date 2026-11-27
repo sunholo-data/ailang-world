@@ -195,3 +195,40 @@ func (c *Credentials) DisposeOperatorStartGap(ctx context.Context, reviewed Oper
 	}
 	return tx.Commit()
 }
+
+// NextOwnedOperatorStart scans only owned starts. A cursor lets the runner
+// inspect one action per tick without starving behind a prepared checkpoint.
+func (c *Credentials) NextOwnedOperatorStart(ctx context.Context, after string) (OperatorActionRow, error) {
+	if err := c.operatorAccess(ctx); err != nil {
+		return OperatorActionRow{}, err
+	}
+	return scanOperatorAction(c.db.QueryRowContext(ctx, `SELECT `+operatorColumns+
+		` FROM operator_actions WHERE kind='start' AND owner IS NOT NULL AND id>? ORDER BY id LIMIT 1`, after))
+}
+
+// MarkOperatorMintUncertain preserves every receipt and the old owner while
+// recording the ambiguity found after an interrupted mint.
+func (c *Credentials) MarkOperatorMintUncertain(ctx context.Context, reviewed OperatorStartRecovery) error {
+	if err := c.operatorAccess(ctx); err != nil {
+		return err
+	}
+	tx, err := c.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	current, row, err := readOperatorStartRecovery(ctx, tx, reviewed.CAS.ID)
+	if err != nil || current != reviewed || current.Window != OperatorStartMintUncertain {
+		return ErrOperatorConflict
+	}
+	if row.State == "uncertain" {
+		return nil
+	}
+	res, err := tx.ExecContext(ctx, `UPDATE operator_actions SET state='uncertain', generation=generation+1
+		WHERE id=? AND digest=? AND generation=? AND owner=? AND state='running'`,
+		current.CAS.ID, current.CAS.Digest[:], current.CAS.Generation, current.Owner)
+	if err := operatorChangedOne(res, err); err != nil {
+		return err
+	}
+	return tx.Commit()
+}

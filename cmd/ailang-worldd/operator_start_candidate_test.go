@@ -142,12 +142,17 @@ func TestOperatorStartCandidateProcess(t *testing.T) {
 
 func candidateRow(t *testing.T, path string, now int64) store.OperatorActionRow {
 	t.Helper()
+	return candidateRowWithContext(t, boundedTestContext(t), path, now)
+}
+
+func candidateRowWithContext(t *testing.T, ctx context.Context, path string, now int64) store.OperatorActionRow {
+	t.Helper()
 	db, err := store.OpenCredentialsReadOnly(runnerDB(path))
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer db.Close()
-	row, err := db.OperatorAction(boundedTestContext(t), fixtureActionID, now)
+	row, err := db.OperatorAction(ctx, fixtureActionID, now)
 	if err != nil {
 		t.Fatal(err)
 	}
