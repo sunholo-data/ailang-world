@@ -1,25 +1,22 @@
-# World mission dashboard — iteration 441 (2026-11-26)
+# World mission dashboard — iteration 442 (2026-11-27)
 
-- **Done this fire:** row 243 **V4 sprint 5f3 LANDED** (PR #687, merge `a50b0d72`). The judge gave **FAIL 71** in round 1 and **PASS 83** in round 2, with 0 blocking findings.
-  - **All the activation prerequisites are now in.**
-    - Terminal `session revoke` takes the episode lock, both by ID and by episode, and J-OWN-UID is pinned.
-    - The seven crash-recovery windows are classified in one read-only store snapshot.
-    - Starts signed before the binary digest existed get a stale-binding refusal and need a fresh review.
-  - **Live change (attended):** `ailang-worldd service upgrade --binary` no longer refuses when an operator-runner companion is installed.
-    - It shows the companion's hashes in the typed prompt.
-    - It drains the companion under a real lock and checks for old terminal writers.
-    - It then restarts the matched pair, and rolls back only to a schema-compatible pair.
-    - Installs with no companion are unchanged. If an upgrade refuses after the drain, the message says the companion is stopped and gives `service runner start`.
-  - 1,527 lines (cap 1,400; the excess is the round-2 and round-3 repairs). Nothing dispatches yet: there is still no production caller.
-- **The deferral chain has a measured end.** The planner compiled the whole activation unit (2,302 lines, over the 1,650 ceiling) and scheduled exactly one more sprint. **S5f4 is the caller, measured at 917 lines.**
-- **Why round 1 failed:** M1 renamed the revoke deadline variable, which turned the existing source guard `TestSessionRootBudgets` red. Separately, PR CI then found `TestSubprocessSinkGate` red: an M3 test used an unsynchronised stderr buffer. Both are whole-repo gates my touched-package sweep did not run. Both are fixed: round 2 was 169 lines and round 3 was 2 test lines.
-- **CI race bound (row 267):** `host/daemon` hit the 480 s bound at attempt 1 on BOTH the PR head (480.134 s) and the merge (480.095 s), with no daemon diff. Both re-runs were green at about 358 s. That is six instances now, and `cmd/ailang-worldd` read 478 s once.
-- **DECISIONS FOR MARK:** **D-WORLD-121**: take row 267 (race-bound headroom) before S5f4? Recommended **A**. The default is B (groomed order), which applied this fire. S5f4 adds about 11 s of CLI race tests.
-- **Next loop work:** **V4 S5f4, the first production caller**: one confirmed start per runner tick, ending at prepared-awaiting-S6, with the four process pins. The planner must re-measure the prototype on `a50b0d72`, and its gates must include whole `cmd/ailang-worldd` and `host/verifygate`.
+- **Done this fire:** row 243 **V4 sprint 5f4 LANDED** (PR #689, merge `c3504c56`). The judge gave **FAIL 68** in round 1 and **PASS 85** in round 2, with 0 blocking findings.
+  - **Activation is in. The installed operator runner now prepares an approved start on its own.**
+    - Each bounded tick takes at most one confirmed start: it takes the runner and episode locks, re-reads the candidate, claims it under lifecycle exclusion, creates and reads back the worktree, mints the session credential atomically and publishes the private files.
+    - It stops at **prepared-awaiting-S6**. Nothing launches an agent yet.
+    - After a restart, the runner adopts each of the seven durable windows read-only and never repeats an effect.
+    - New attended remedy: `ailang-worldd service runner reconcile-start ACTION-ID` (typed `y`), plus a partial-files orphan revoke.
+  - 1,617 lines (cap 1,400; under the 1,650 safe-unit ceiling).
+- **The deferral chain is closed.** S5f, S5f2 and S5f3 each moved the caller on; this sprint landed it as one milestone.
+- **Why round 1 failed:** the first activation test ran the real loop under a real 22-second tick budget, so a loaded machine turned it red. I hit that on my first commit attempt and the judge reproduced it under CPU contention. Round 2 made the budget a named constant with a test-only override; production is unchanged.
+- **CI found a Linux-only red** (round 3): the test fixture put the session directory outside the runner home, so the production permission walk reached `/tmp`. It is now fixed in the fixture, 16 test lines. A `TMPDIR` under `/private/tmp` reproduces it on macOS.
+- **CI race bound (row 267):** it did not fire this landing. PR and merge were both 3/3 at attempt 1. The merge ran on a slower runner: `cmd/ailang-worldd` 374.8 s, `host/daemon` 421.7 s, against the 480 s bound.
+- **DECISIONS FOR MARK:** **D-WORLD-121**: take row 267 (race-bound headroom) before the next row-243 sprint? Recommended **A**; the default is B, which applied this fire.
+- **Next loop work:** **V4 S6, launch**: the spawn reservation, launch receipt and launch recovery from prepared-awaiting-S6. Also carry the judge's notes: behavioural pins for the production budgets, and clamp `worktree.WithCommandTimeout`.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Goal unmoved; row 243 serves D-WORLD-94.
 - **Routing this fire:**
-  - Planner and executor ran `codex:gpt-6.2-sol`: the planner used 599k tokens, the executor 74k + 157k + 68k.
-  - The judge was Agent `sonnet`, a different vendor: 150k tokens in round 1, then 63k + 66k for the fresh round-2 instance.
+  - Planner and executor ran `codex:gpt-6.2-sol`: the planner used 610k tokens, the executor 70k + 232k + (round 3 not captured).
+  - The judge was Agent `sonnet`, a different vendor: 92k tokens in round 1, then 74k for the fresh round-2 instance and 83k cumulative after its round-3 addendum.
   - Metered spend: $0.
 - **Open PRs:** #617 is attended UI work that the loop does not touch.
 - **Bookkeeping thread:** #635 (next rotation Monday 2026-11-30 07:00 local).
