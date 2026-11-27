@@ -62,6 +62,15 @@ staggered vs the V1 loop (shared rig quota). Billing guard: subscription-or-noth
   gate). Repo-wide sweep: `./scripts/verify_ail.sh` (what CI runs; fails loudly on zero modules).
   Go host code (daemon/store, from M1 onward) adds `go build ./... && go test ./...` to the gate
   when it first lands — extend the CI workflow in the same PR that introduces Go code.
+- **A NEW TEST MUST NOT INHERIT A PRODUCTION WALL-CLOCK BUDGET OR THE RIG'S TEMP-ROOT PERMISSIONS — RUN EVERY NEW TEST
+  UNDER CPU CONTENTION AND WITH `TMPDIR` UNDER A 1777 PARENT BEFORE THE JUDGE** (process fix, iter-442; two instances in one
+  sprint). (1) `TestOperatorFirstManagedEpisodeProcess` drove the real preparation loop under its real 22 s tick budget, so a
+  loaded rig turned it red (controller commit attempt 1 at 24.99 s; judge `GOMAXPROCS=1 -race` + 32 busy loops at 43.70 s);
+  fixed by a named production constant plus a test-only override. (2) The activation fixture put its sessions directory
+  outside the runner home, so `runnerPath`'s ancestor walk reached Linux's `/tmp` (1777) and CI went red on five new tests
+  that were green on macOS's private temp root. Both reproduce locally in seconds: `GOMAXPROCS=1 go test -race -count=3`
+  with busy loops, and `TMPDIR=/private/tmp/<private-dir> go test …`. Name both runs in the directive's gate list for any
+  new test that drives a production loop or a path-permission check.
 - **A TEST ROW THAT DRIVES A FAKE TOOL MUST HAVE A SIBLING ROW FED THE REAL TOOL'S CAPTURED RESPONSE** (process fix,
   iter-299; instance: M5b's TESTED rule required `exit_code == 0` because its fake `ailang` always sent it, while the pinned
   v0.54.15 policy-tool omits `exit_code` on success, so no real TESTED row could resolve until M5c's real seed ran). Check in
