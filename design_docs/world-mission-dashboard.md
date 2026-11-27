@@ -1,27 +1,18 @@
-# World mission dashboard — iteration 444 (2026-11-27)
+# World mission dashboard — iteration 445 (2026-11-27)
 
-- **Done this fire:** **row 243 V4 S6 (launch) LANDED** (PR #695, merge `00b4ec55`). The judge gave **PASS 73**, then **PASS 80**, with 0 blocking findings. PR and merge CI were both 3/3 at attempt 1 on the final head.
-  - **What changed:** the installed operator runner now takes a prepared start all the way to a running agent.
-    - Under the episode lock, it reserves the launch while holding lifecycle exclusion.
-    - At dispatch it rechecks the session, the approver, the signed binary and the launch directory.
-    - It then runs **one** supervised, confined headless agent. The agent gets a process receipt with birth identity, a bounded cap and scrubbed output in the episode history.
-    - New command: `service runner launch-status ACTION-ID`.
-  - **Round 2:** PR CI went red on the repo's subprocess guard. The new worker re-exec was an undriven `exec.Command` in `cmd/` that inherited the runner's full environment. It moved to `host/agentrun.StartWorker` with a scrubbed env, and tests were added for the four pre-exec checks the judge found unpinned.
-  - **Size:** 1,888 lines, past the 1,650 safe-unit exception because of round 2 (FLAGGED).
-- **Not live yet:** nothing in production creates a confirmed start (`ConfirmOperatorAction` has no non-test caller). Launch therefore stays dormant until S7 adds the confirmation routes.
-- **Carried into S7 (judge-444):**
-  - The real worker entry `runOperatorLaunchWorker` and the supervisor cap are not yet executed by any test.
-  - A stuck launch row has no attended settle command.
-  - The agent child inherits the runner's lock fds 3/4.
-  - J06.
-- **Process fix:** controller sweeps now always run whole `host/verifygate` plus the `host/broker` subprocess guard. This is the third landing in a row that was caught by a guard outside the touched packages.
-- **DECISIONS FOR MARK:** none new. D-WORLD-121 is moot because row 267 has landed.
-- **Next loop work:** row 243 **V4 S7**: inert request and guarded confirmation routes, plus the status projection.
+- **Done this fire:** **row 243 V4 S7 (inert operator requests) LANDED** (PR #700, merge `6836c9a9`). The judge gave **FAIL 68**, then **PASS 85**, with 0 blocking findings in round 2. PR CI was 3/3 at attempt 1; merge CI 3/3 at attempt 1.
+  - **Outcome B:** the whole S7, compiled and measured, came to 1,892 lines (> 1,650). This sprint landed the inert part; the key confirmation is **S7b**, whose 517-line patch is already compiled in the plan.
+  - **What changed:** the address bar's `review` outcome for a supported headless start; `POST /surface/operator-actions` creates one inert pending action behind every approval-route guard; an escaped action card and `status.json`; Needs you counts pending actions. Launch-worker pins J06/J17/J18 landed first.
+  - **Round 2:** round 1 had changed the bar's answers for plain `episode start`/`episode finish` and broken the existing `TestSurfaceVerbOutcomes` + golden (BLOCKING). Fixed, with pins for the catalogue guards, cap SIGTERM, replay conflicts and the pending projection.
+  - **Size:** 1,559 lines, over the 1,400 cap and under the 1,650 exception (FLAGGED).
+- **Not live yet:** the confirm URL is 404 and nothing in production calls `ConfirmOperatorAction`, so the S6 launch is still dormant.
+- **DECISIONS FOR MARK:** none. The ledger has 0 OPEN rows (your groom #697 closed D-WORLD-121).
+- **Next loop work:** row 243 **V4 S7b**: register confirmation with its key-ceremony, replay and counter pins. That makes the start → launch path reachable from the browser.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Goal unmoved.
 - **Routing this fire:**
-  - Planner: `codex:gpt-6.2-sol`, 657k tokens.
-  - Executor: `codex:gpt-6.2-sol`, 77k + 156k tokens.
-  - Judge: Agent `sonnet` (a different vendor), 161k → 179k tokens.
+  - Planner: `codex:gpt-6.2-sol`, 996k tokens.
+  - Executor: `codex:gpt-6.2-sol`, 74k + 177k tokens.
+  - Judge: Agent `sonnet` (a different vendor), 150k → 173k tokens.
   - No designer. Metered spend: $0.00.
 - **Open PRs:** #617 is attended UI work that the loop does not touch.
 - **Bookkeeping thread:** #635 (next rotation Monday 2026-11-30 07:00 local).
