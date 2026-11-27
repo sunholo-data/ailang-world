@@ -116,6 +116,22 @@ func TestOperatorAdmissionBoundaries(t *testing.T) {
 		t.Fatalf("17th pending: %v", err)
 	}
 	operatorCounts(t, c, 16, 16)
+	t.Run("PendingProjection", func(t *testing.T) {
+		pending, err := c.PendingOperatorActions(testCtx(t), 1599)
+		if err != nil || len(pending) != 16 {
+			t.Fatalf("pending at capacity: %d, want 16 (err %v)", len(pending), err)
+		}
+		operatorExec(t, c, `UPDATE operator_actions SET state = 'confirmed', approved_by = 'ssh:fixture', artifact = action WHERE id = ?`, accepted.ID)
+		pending, err = c.PendingOperatorActions(testCtx(t), 1599)
+		if err != nil || len(pending) != 15 {
+			t.Fatalf("pending after confirmation: %d, want 15 (err %v)", len(pending), err)
+		}
+		for _, row := range pending {
+			if row.ID == accepted.ID {
+				t.Fatalf("confirmed action still pending: %s", row.ID)
+			}
+		}
+	})
 	finish.CreatedAt, finish.ExpiresAt = 1600, 2200
 	finish.Action.ID, finish.OperationID = "oa-00000000000000000000000000000011", "00000000000000000000000000000011"
 	if got := putOperator(t, c, finish, 1600); got.Kind != "finish" || got.State != "requested" {

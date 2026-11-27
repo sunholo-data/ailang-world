@@ -55,6 +55,9 @@ func (d *Daemon) handleSurfaceVerb(w http.ResponseWriter, r *http.Request, _ []s
 		return
 	}
 	switch {
+	case len(argv) > 0 && argv[0] == "world-publish":
+		admission := verbs.AdmitOperator(argv, operatorPolicy)
+		a.Outcome, a.Reason, a.CLI = "refused", admission.Reason, admission.CLI
 	case v.Class == verbs.Address:
 		a.Outcome = "address"
 	case v.Words == "episode report":

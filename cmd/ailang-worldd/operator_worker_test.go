@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"io"
@@ -90,29 +91,56 @@ func TestOperatorStartedRequiresBirth(t *testing.T) {
 
 func TestOperatorSupervisorCap(t *testing.T) {
 	dir := t.TempDir()
-	f, err := os.CreateTemp(dir, "lock")
+	hold, release, err := os.Pipe()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
+	defer hold.Close()
+	defer release.Close()
+	events, report, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer events.Close()
+	defer report.Close()
+	if err := events.SetReadDeadline(time.Now().Add(activationTestBudget)); err != nil {
+		t.Fatal(err)
+	}
 	path := filepath.Join(dir, "worker")
-	if err := os.WriteFile(path, []byte("#!/bin/sh\nwhile :; do :; done\n"), 0700); err != nil {
+	script := `#!/bin/sh
+trap 'printf "TERM\n" >&4; exit' TERM
+printf 'ready\n' >&4
+read -r unused <&3
+printf 'released\n' >&4
+`
+	if err := os.WriteFile(path, []byte(script), 0700); err != nil {
 		t.Fatal(err)
 	}
 	e := serviceEnv{}
 	e.paths.Binary = path
 	fired, stopped := make(chan time.Time, 1), false
-	fired <- time.Time{}
+	event := bufio.NewReader(events)
 	wall := 2 * time.Minute
 	e.operatorSupervisorCap = func(got time.Duration) (<-chan time.Time, func()) {
 		if got != wall+time.Minute {
 			t.Errorf("supervisor cap duration %s", got)
 		}
+		if line, err := event.ReadString('\n'); err != nil || line != "ready\n" {
+			t.Fatalf("worker did not install its signal trap: %q (%v)", line, err)
+		}
+		fired <- time.Time{}
 		return fired, func() { stopped = true }
 	}
-	job := operatorLaunchJob{wall: wall, locks: [3]*os.File{f, f, f}}
+	job := operatorLaunchJob{wall: wall, locks: [3]*os.File{hold, report, report}}
 	err = e.superviseOperatorLaunch(job, nil, io.Discard, store.OperatorHeartbeat{}, "")
 	if err == nil || !strings.Contains(err.Error(), "did not report completion") || !stopped || errors.Is(err, os.ErrClosed) {
 		t.Fatalf("supervisor did not honor its injected cap: %v", err)
+	}
+	// Unblock the worker even if the cap failed to signal it.
+	if err := release.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if line, err := event.ReadString('\n'); err != nil || line != "TERM\n" {
+		t.Fatalf("worker did not record SIGTERM: %q (%v)", line, err)
 	}
 }

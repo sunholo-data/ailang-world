@@ -57,6 +57,14 @@ type operatorHTTP struct {
 
 func newOperatorHTTP(t *testing.T) *operatorHTTP {
 	t.Helper()
+	f := newOperatorSurface(t, nil)
+	f.server = httptest.NewServer(f.handler)
+	t.Cleanup(f.server.Close)
+	return f
+}
+
+func newOperatorSurface(t *testing.T, edit func(*store.OperatorStartReview)) *operatorHTTP {
+	t.Helper()
 	f := &operatorHTTP{approvalRig: newApprovalRig(t)}
 	f.now.Store(apT0)
 	f.d.approveNow = f.now.Load
@@ -75,12 +83,13 @@ func newOperatorHTTP(t *testing.T) *operatorHTTP {
 	entry := store.OperatorStartReview{Store: physical, Workspace: root, Sessions: root, Binary: filepath.Join(root, "fake-codex"), Wall: "1m",
 		Start: store.EpisodeStart{Schema: "world/episode-start/v1", Agent: "codex", Model: "fixture", TTLS: 60,
 			Preset: store.StartPreset{Name: "sol", SHA256: "sha256:fixture"}, Overrides: []string{}}}
+	if edit != nil {
+		edit(&entry)
+	}
 	f.h = store.OperatorHeartbeat{Owner: store.OperatorOwner{Nonce: "fixture"}, Protocol: store.OperatorRunnerProtocol, Build: build,
 		Readiness: "start", SeenAt: apT0, Catalogue: opJSON(map[string]store.OperatorStartReview{"sol": entry})}
 	f.publish()
 	f.handler = f.d.Handler()
-	f.server = httptest.NewServer(f.handler)
-	t.Cleanup(f.server.Close)
 	return f
 }
 
@@ -184,6 +193,59 @@ func (f *operatorHTTP) refuse(before opEvidence, r *httptest.ResponseRecorder, s
 	requireRefusal(f.t, class, r, status, class)
 	if r.Header().Get("Location") != "" || before != f.evidence() {
 		f.t.Fatal("refusal changed durable evidence or built a redirect")
+	}
+}
+
+func (f *operatorHTTP) postOperator(body operatorRequestBody) *httptest.ResponseRecorder {
+	return f.serve("POST", operatorPath, apLoopback, opJSON(body),
+		"Origin", opOrigin, "Content-Type", "application/json", "Sec-Fetch-Site", "same-origin")
+}
+
+func TestOperatorReviewRefusesForgedCatalogue(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		edit func(*store.OperatorStartReview)
+	}{
+		{"Store", func(r *store.OperatorStartReview) { r.Store += ".foreign" }},
+		{"Agent", func(r *store.OperatorStartReview) { r.Start.Agent = "claude" }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newOperatorSurface(t, tc.edit)
+			before := f.evidence()
+			line := "episode start ep-1 --preset sol --launch --headless"
+			bar := f.serve("GET", "/surface/verb.json?q="+url.QueryEscape(line), apLoopback, nil)
+			post := f.postOperator(opRequest(1))
+			var a verbAnswer
+			if err := json.Unmarshal(bar.Body.Bytes(), &a); bar.Code != 200 || err != nil ||
+				a.Outcome != "terminal" || a.Reason != operatorUnavailable || a.Text != "" || a.CatalogueGeneration != 0 {
+				t.Errorf("forged catalogue reached review: %d %s (%v)", bar.Code, bar.Body, err)
+			}
+			f.refuse(before, post, 503, "RunnerUnavailable")
+		})
+	}
+}
+
+func TestOperatorReplayConflicts(t *testing.T) {
+	f := newOperatorSurface(t, nil)
+	if r := f.postOperator(opRequest(1)); r.Code != 200 {
+		t.Fatalf("initial request: %d %s", r.Code, r.Body)
+	}
+	before := f.evidence()
+	if before.actions != 1 || before.operations != 1 {
+		t.Fatalf("initial request evidence: %+v", before)
+	}
+	for _, tc := range []struct {
+		name string
+		edit func(*operatorRequestBody)
+	}{
+		{"Argv", func(b *operatorRequestBody) { b.Argv = opRequest(2).Argv }},
+		{"Generation", func(b *operatorRequestBody) { b.CatalogueGeneration++ }},
+	} {
+		f.sub(tc.name, func(t *testing.T) {
+			b := opRequest(1)
+			tc.edit(&b)
+			f.refuse(before, f.postOperator(b), 409, "Conflict")
+		})
 	}
 }
 
@@ -329,26 +391,23 @@ func TestOperatorAdmissionHTTP(t *testing.T) {
 		t.Fatal("lost request response did not survive catalogue expiry")
 	}
 	f.now.Store(apT0)
-	f.write(func(ctx context.Context, db *store.Credentials) error {
-		entry, err := f.h.StartReview("sol")
+	entry, err := f.h.StartReview("sol")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 2; i <= 16; i++ {
+		b := opRequest(i)
+		a, err := entry.Action(fmt.Sprintf("ep-%d", i), b.Task, 1)
 		if err != nil {
-			return err
+			t.Fatal(err)
 		}
-		for i := 2; i <= 16; i++ {
-			b := opRequest(i)
-			a, err := entry.Action(fmt.Sprintf("ep-%d", i), b.Task, 1)
-			if err != nil {
-				return err
-			}
-			a.ID = "oa-" + b.OperationID
-			_, err = db.RequestOperatorAction(ctx, store.OperatorRequest{Action: a, OperationID: b.OperationID,
+		a.ID = "oa-" + b.OperationID
+		f.write(func(ctx context.Context, db *store.Credentials) error {
+			_, err := db.RequestOperatorAction(ctx, store.OperatorRequest{Action: a, OperationID: b.OperationID,
 				Challenge: sha256.Sum256([]byte(a.ID)), CreatedAt: apT0, ExpiresAt: apT0 + 600}, apT0)
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
+			return err
+		})
+	}
 	before = f.evidence()
 	if before.actions != 16 {
 		t.Fatalf("pending cap positive control: %d", before.actions)

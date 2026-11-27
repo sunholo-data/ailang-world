@@ -26,14 +26,11 @@ var operatorPolicy = verbs.OperatorPolicy{Start: "A", Finish: "A"} // Headless s
 func (d *Daemon) operatorVerb(r *http.Request, argv []string, out *verbAnswer) bool {
 	a := verbs.AdmitOperator(argv, operatorPolicy)
 	switch a.Class {
-	case verbs.OperatorOther:
-		return false
-	case verbs.OperatorNever, verbs.OperatorUsage:
-		out.Outcome, out.Reason, out.CLI = "refused", a.Reason, a.CLI
+	case verbs.OperatorNever:
+		return out.Class == string(verbs.Never) // Lookup already supplied the refusal.
 	case verbs.OperatorReview:
-		out.Outcome, out.Reason, out.CLI = "terminal", "finish preparation requires an attended terminal", a.CLI
 		if a.Intent.Kind == "start" && a.Intent.Headless {
-			out.Reason = operatorUnavailable
+			out.Outcome, out.Reason, out.CLI = "terminal", operatorUnavailable, a.CLI
 			ctx, cancel := d.readCtx(r)
 			defer cancel()
 			ro, err := store.OpenCredentialsReadOnly(d.credentialsPath)
@@ -48,11 +45,10 @@ func (d *Daemon) operatorVerb(r *http.Request, argv []string, out *verbAnswer) b
 					out.CatalogueGeneration = h.CatalogueGeneration
 				}
 			}
+			return true
 		}
-	default:
-		out.Outcome, out.Reason, out.CLI = "terminal", a.Reason, a.CLI
 	}
-	return true
+	return false
 }
 
 func (d *Daemon) operatorReview(ctx context.Context, db *store.Credentials, preset string, now int64) (store.OperatorHeartbeat, store.OperatorStartReview, error) {
