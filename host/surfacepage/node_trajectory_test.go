@@ -28,8 +28,8 @@ func TestNodeTrajectoryLoadsLazilyAndVerifiesLocalTranscript(t *testing.T) {
 const nodeTrajectoryHarness = `
 const assert = require('node:assert/strict');
 const {webcrypto, createHash} = require('node:crypto');
-const {trajectoryPath, rawReceipt, verifyTranscript, transcriptPages} = require(process.argv[1]);
-const {mount, clear} = globalThis.WorldNodeTrajectory;
+const {trajectoryPath, rawReceipt, verifyTranscript, transcriptPages, collapseCalls} = require(process.argv[1]);
+const {mount, clear, refresh: refreshTrajectory} = globalThis.WorldNodeTrajectory;
 const transcript = '{"kind":"<private>"}\r\n' + 'x'.repeat(11975) + '💡'.repeat(200) + '\n';
 const bytes = new TextEncoder().encode(transcript);
 const receipt = {filename:'verified.transcript.jsonl', sha256:createHash('sha256').update(bytes).digest('hex')};
@@ -115,12 +115,36 @@ function disclosure() {
   assert(localRefresh.body.find('details').open, 'raw disclosure survives same-node refresh');
   assert.equal(localRefresh.body.find('pre').textContent, pages[0]);
 
+  // Consecutive ranged reads of the same file collapse into one burst row.
+  const collapsed = collapseCalls([
+    {tool:'ailang-read', surface:'mcp', target:'host/app.css:1-100', status:'ok', entry:10, at:'2026-11-26T10:15:00Z'},
+    {tool:'ailang-read', surface:'mcp', target:'host/app.css:101-200', status:'ok', entry:11, at:'2026-11-26T10:15:01Z'},
+    {tool:'ailang-edit', surface:'mcp', target:'host/app.css', status:'refused', entry:12, at:'2026-11-26T10:15:02Z'},
+  ]);
+  assert.equal(collapsed.length, 2);
+  assert.equal(collapsed[0].count, 2);
+  assert.equal(collapsed[0].target, 'host/app.css');
+  assert.equal(collapsed[1].status, 'refused');
+
+  // Live refresh re-fetches after cooldown without clearing existing evidence.
+  await new Promise(r => setTimeout(r, 820));
+  refreshTrajectory();
+  assert.equal(requests.length, 2, 'live refresh triggers background reload');
+  requests[1].resolve({ok:true, body:{schema:'world/surface-trajectory/v1', episode:'verified',
+    world:{available:true, total:2, calls:[
+      {tool:'read_checkpoint', surface:'mcp', target:'docs/a.md', entry:7},
+      {tool:'ailang-edit', surface:'mcp', target:'docs/a.md', status:'ok', entry:8}
+    ]},
+    harness:{available:true, events:[{launch:1, kind:'turn-completed'}]}, rawTranscript:receipt}});
+  await new Promise(setImmediate);
+  assert.match(localRefresh.body.text(), /ailang-edit.*docs\/a\.md.*entry 8/);
+
   const second = disclosure();
   mount(second.front, {...config, id:'world:episode:next', run:{episode:'next'}}, getJSON, true);
-  assert.equal(requests.length, 2);
+  assert.equal(requests.length, 3);
   clear();
-  assert(requests[1].signal.aborted, 'leaving a selection should cancel its request');
-  requests[1].resolve(result);
+  assert(requests[2].signal.aborted, 'leaving a selection should cancel its request');
+  requests[2].resolve(result);
   await new Promise(setImmediate);
   assert(!second.body.text().includes('read_checkpoint'), 'stale evidence must not render');
 })().catch(error => { console.error(error); process.exitCode = 1; });

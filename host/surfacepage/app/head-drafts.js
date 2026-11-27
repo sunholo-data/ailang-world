@@ -159,6 +159,15 @@
         editor(parent, draft);
         return true;
       },
+      createDraft(parentID, rawTitle) {
+        const value = taskTitle(rawTitle).slice(0, titleLimit);
+        const parent = parents.get(parentID)?.state;
+        if (!parent || !value) return null;
+        const draft = {id: nextID(), parent: parent.id, title: value, at: new Date().toISOString()};
+        drafts.set(draft.id, draft);
+        changed(draft, false);
+        return draft.id;
+      },
       has(id) { return drafts.has(id); }
     };
   }

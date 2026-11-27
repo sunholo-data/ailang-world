@@ -19,9 +19,9 @@ import (
 
 const (
 	episodeFilesSchema          = "world/surface-episode-files/v1"
-	surfaceEpisodeFileIntents   = 128 // per invocation namespace
-	surfaceEpisodeFileLookups   = 1024
-	surfaceEpisodeFilePaths     = 128 // per activity class
+	surfaceEpisodeFileIntents   = 999 // per invocation namespace
+	surfaceEpisodeFileLookups   = 4096
+	surfaceEpisodeFilePaths     = 256 // per activity class
 	surfaceEpisodeFilePathBytes = 512
 )
 

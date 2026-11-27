@@ -14,6 +14,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/coordinator"
 	"github.com/sunholo-data/ailang-world/host/hashref"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -22,8 +23,10 @@ import (
 )
 
 const (
-	trajectorySchema    = "world/surface-trajectory/v1"
-	maxTrajectoryEvents = 120
+	trajectorySchema     = "world/surface-trajectory/v1"
+	maxTrajectoryEvents  = 120
+	maxTrajectoryScan    = 999
+	maxTrajectoryLookups = 512
 )
 
 type surfaceTrajectory struct {
@@ -54,6 +57,7 @@ type trajectoryEvent struct {
 
 type trajectoryWorld struct {
 	Available bool             `json:"available"`
+	Total     int              `json:"total,omitempty"`
 	Calls     []trajectoryCall `json:"calls"`
 	Truncated bool             `json:"truncated,omitempty"`
 }
@@ -63,6 +67,8 @@ type trajectoryCall struct {
 	At      string `json:"at"`
 	Tool    string `json:"tool"`
 	Surface string `json:"surface"`
+	Target  string `json:"target,omitempty"`
+	Status  string `json:"status,omitempty"`
 }
 
 func (d *Daemon) handleSurfaceTrajectory(w http.ResponseWriter, r *http.Request) {
@@ -291,23 +297,110 @@ func harnessTrajectoryEvent(line []byte) trajectoryEvent {
 	return event
 }
 
-var trajectoryToolName = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$`)
+var (
+	trajectoryToolName    = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$`)
+	trajectoryExecCommand = regexp.MustCompile(`^[a-z][a-z0-9-]{0,31}$`)
+)
 
-// The report's journal ranges provide committed invocation receipts. Read at
-// most one capped page per namespace, verify exact episode and commit world,
-// and project only the tool identifier and its committed entry.
+func trajectoryCallMeta(ctx context.Context, reads objectWorldReader, lookups *int, tool, inputRef string, effects []string) (target, status string) {
+	if inHash, err := hashref.Parse(inputRef); err == nil && *lookups > 0 {
+		*lookups--
+		if inObj, ok, err := reads.GetObject(ctx, inHash); err == nil && ok && len(inObj.Payload) <= 64<<10 {
+			var args struct {
+				Path    string `json:"path"`
+				Command string `json:"command"`
+				Offset  int    `json:"offset"`
+				Limit   int    `json:"limit"`
+			}
+			if json.Unmarshal(inObj.Payload, &args) == nil {
+				switch {
+				case args.Path != "":
+					if (tool == "workspace-list" || tool == "workspace-search") && args.Path == "." {
+						target = "."
+					} else if safeEpisodeFilePath(args.Path) {
+						if tool == "ailang-read" && args.Offset > 0 && args.Limit > 0 {
+							target = fmt.Sprintf("%s:%d-%d", args.Path, args.Offset, args.Offset+args.Limit-1)
+						} else {
+							target = args.Path
+						}
+					}
+				case tool == "workspace-list":
+					target = "."
+				case tool == "workspace-exec" && trajectoryExecCommand.MatchString(args.Command):
+					target = args.Command
+				}
+			}
+		}
+	}
+	if len(effects) == 0 {
+		return target, "refused"
+	}
+	resolved := false
+	for _, effText := range effects {
+		if *lookups <= 0 {
+			break
+		}
+		effHash, err := hashref.Parse(effText)
+		if err != nil {
+			continue
+		}
+		*lookups--
+		effObj, ok, err := reads.GetObject(ctx, effHash)
+		if err != nil || !ok || effObj.SemanticID != broker.EffectRecordV1 {
+			continue
+		}
+		rec, err := broker.DecodeRecord(effObj.Payload)
+		if err != nil {
+			continue
+		}
+		resolved = true
+		if !rec.Allowed {
+			return target, "denied"
+		}
+		if rec.Failed {
+			return target, "failed"
+		}
+		if rec.ResultRef != (hashref.HashRef{}) && *lookups > 0 {
+			*lookups--
+			if resObj, ok, err := reads.GetObject(ctx, rec.ResultRef); err == nil && ok && len(resObj.Payload) <= 64<<10 {
+				var out struct {
+					OK *bool `json:"ok"`
+				}
+				if json.Unmarshal(resObj.Payload, &out) == nil && out.OK != nil && !*out.OK {
+					return target, "refused"
+				}
+			}
+		}
+	}
+	if resolved {
+		return target, "ok"
+	}
+	return target, ""
+}
+
+// The report's journal ranges provide committed invocation receipts. Scan up to
+// maxTrajectoryScan per namespace, verify exact episode and commit world, and
+// project the tool identifier, committed entry, and sanitized target/status.
 func readTrajectoryWorld(ctx context.Context, intents intentReader, reads objectWorldReader, episode string, through time.Time) trajectoryWorld {
 	out := trajectoryWorld{Calls: []trajectoryCall{}}
 	if intents == nil || reads == nil || !surface.EpisodeGrammar.MatchString(episode) {
 		return out
 	}
+	lookups := maxTrajectoryLookups
+	type pendingCall struct {
+		call    trajectoryCall
+		v2      bool
+		input   string
+		effects []string
+	}
+	var pending []pendingCall
 	for _, via := range reportSurfaces {
-		page, err := intents.InvocationIntents(ctx, string(via)+":"+episode+":", 0, maxTrajectoryEvents+1)
+		page, err := intents.InvocationIntents(ctx, string(via)+":"+episode+":", 0, maxTrajectoryScan+1)
 		if err != nil {
 			return trajectoryWorld{Calls: []trajectoryCall{}}
 		}
-		if len(page) > maxTrajectoryEvents {
-			page = page[:maxTrajectoryEvents]
+		if len(page) > maxTrajectoryScan {
+			page = page[:maxTrajectoryScan]
 			out.Truncated = true
 		}
 		for _, it := range page {
@@ -320,9 +413,11 @@ func readTrajectoryWorld(ctx context.Context, intents intentReader, reads object
 				return trajectoryWorld{Calls: []trajectoryCall{}}
 			}
 			var rec struct {
-				Episode    string `json:"episodeId"`
-				Invocation string `json:"invocationId"`
-				Tool       string `json:"skillId"`
+				Episode    string   `json:"episodeId"`
+				Invocation string   `json:"invocationId"`
+				Tool       string   `json:"skillId"`
+				Input      string   `json:"input"`
+				Effects    []string `json:"effects"`
 			}
 			if !ok || (obj.SemanticID != coordinator.RecordV1 && obj.SemanticID != coordinator.RecordV2) ||
 				json.Unmarshal(obj.Payload, &rec) != nil || rec.Episode != episode || rec.Invocation != it.Intent.InvocationID {
@@ -339,13 +434,28 @@ func readTrajectoryWorld(ctx context.Context, intents intentReader, reads object
 			if !trajectoryToolName.MatchString(tool) || surface.SanitizeOpenText(tool, 96) != tool {
 				tool = "Recorded tool"
 			}
-			out.Calls = append(out.Calls, trajectoryCall{Entry: world.Revision, At: at.Format(time.RFC3339), Tool: tool, Surface: string(via)})
+			pending = append(pending, pendingCall{
+				call: trajectoryCall{
+					Entry: world.Revision, At: at.Format(time.RFC3339),
+					Tool: tool, Surface: string(via),
+				},
+				v2:      obj.SemanticID == coordinator.RecordV2,
+				input:   rec.Input,
+				effects: rec.Effects,
+			})
 		}
 	}
-	sort.SliceStable(out.Calls, func(i, j int) bool { return out.Calls[i].Entry < out.Calls[j].Entry })
-	if len(out.Calls) > maxTrajectoryEvents {
-		out.Calls = out.Calls[:maxTrajectoryEvents]
+	sort.SliceStable(pending, func(i, j int) bool { return pending[i].call.Entry < pending[j].call.Entry })
+	out.Total = len(pending)
+	if len(pending) > maxTrajectoryEvents {
+		pending = pending[len(pending)-maxTrajectoryEvents:]
 		out.Truncated = true
+	}
+	for _, p := range pending {
+		if p.v2 {
+			p.call.Target, p.call.Status = trajectoryCallMeta(ctx, reads, &lookups, p.call.Tool, p.input, p.effects)
+		}
+		out.Calls = append(out.Calls, p.call)
 	}
 	out.Available = true
 	return out

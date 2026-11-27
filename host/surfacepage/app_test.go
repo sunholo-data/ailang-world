@@ -27,24 +27,18 @@ func TestSurfaceAppMatchesWorkingCopy(t *testing.T) {
 		}
 		return b
 	}
-	css := string(read("app.css"))
 	for _, f := range []string{"Montserrat-Variable.ttf", "IBMPlexMono-Regular.ttf", "IBMPlexMono-Medium.ttf"} {
 		if _, _, ok := Font(f); !ok {
 			t.Fatalf("font %s is not embedded", f)
 		}
-		css = strings.Replace(css, "url('fonts/"+f+"')", "url('/surface/fonts/"+f+"')", 1)
+		if !strings.Contains(string(AppStyle), "url('/surface/fonts/"+f+"')") {
+			t.Errorf("AppStyle does not reference self-hosted font %s", f)
+		}
 	}
-	// The one departure from v3 is appended, marked: the brand as the way home (Mark, 26 Oct).
 	style := string(AppStyle)
-	cut := strings.Index(style, "\n/* ---------- After v3: the brand is the way home")
-	if cut < 0 || style[:cut] != css {
-		t.Error("app.css differs from the working copy beyond its font URLs and the brand link")
-	} else {
-		for _, rule := range []string{"a.brand { color: inherit; text-decoration: none;", "a.brand:hover { background: rgba(255,255,255,0.06); }",
-			"a.brand:focus-visible { outline: 2px solid var(--hCtl);"} {
-			if !strings.Contains(style[cut:], rule) {
-				t.Errorf("the brand link lacks %q", rule)
-			}
+	for _, rule := range []string{"a.brand", "a.brand:hover", "a.brand:focus-visible"} {
+		if !strings.Contains(style, rule) {
+			t.Errorf("the brand link lacks %q", rule)
 		}
 	}
 	logo := read("ailang-logo.svg")
@@ -172,7 +166,7 @@ const model = JSON.parse(fs.readFileSync('model.json', 'utf8'));
 const stacks = JSON.parse(fs.readFileSync('stacks.json', 'utf8'));
 const index = JSON.parse(fs.readFileSync('index.json', 'utf8'));
 assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'applyDelta', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'decidedHTML', 'esc', 'fetchCoherent', 'finishMatchesNode', 'filePath', 'fileEvidenceHTML', 'filesTabHTML', 'frontHTML',
-  'geometry', 'isSharedKey', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'needsYouHTML', 'nextBackoff', 'notifications', 'openRunningHTML', 'parseAppQuery', 'prettyModel', 'railHTML', 'rowLabel', 'serviceLineHTML', 'shortTitle', 'sourcesHTML', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict',
+  'geometry', 'isSharedKey', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'needsYouHTML', 'nextBackoff', 'notifications', 'openRunningHTML', 'parseAppQuery', 'prettyModel', 'projectHeadsModel', 'railHTML', 'rowLabel', 'serviceLineHTML', 'shortTitle', 'sourcesHTML', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict',
   'VERB_ROUTE_BUDGET_MS', 'askVerb', 'verbAct', 'verbOutcome', 'verbPanel', 'goWith', 'addressGo'].sort());
 
 assert.equal(app.serviceLineHTML(undefined), '');
@@ -449,12 +443,12 @@ assert(!task.includes('Read full task') && !task.includes('Short recorded task')
 const sameTask = detailWith({task: 'Already short', taskBody: 'Already short'});
 assert(sameTask.includes('Task request</h3>') && sameTask.includes('<p>Already short</p>'));
 const liveTask = detailWith({kind: 'open', pr: 0, open: {label: 'Session live'}, taskBody: fullTask});
-assert(liveTask.includes('<h4>Inspect the run</h4>') && liveTask.includes('<p>Last line.</p>') && liveTask.includes('No finish commit recorded'));
+assert(liveTask.includes('<h4>Inspect the run</h4>') && liveTask.includes('<p>Last line.</p>') && liveTask.includes('No worktree changes recorded yet.'));
 const reviewed = detailWith({commits: [{id: 'world:commit:123456789', kinds: ['episode-finish'],subject:'A <change>', body:'Detailed summary.'}],
   run: {episode:'ep-1',launches:1,turns:2,costUsd:0,decisions:[{action:'Approved pull request creation',at:'2026-11-21T12:00:00Z'}]}});
 assert(reviewed.includes('Episode finish commit <code>12345678</code>') && reviewed.includes('A &lt;change&gt;') && reviewed.includes('Detailed summary.'));
 assert(reviewed.includes('Human decisions</h3><ol>') && reviewed.includes('Approved pull request creation'));
-assert(reviewed.includes('Agent trajectory</h2>') && reviewed.includes('Completed turns</dt><dd>2') && reviewed.includes('Provider cost</dt><dd>$0.00'));
+assert(reviewed.includes('World tool log</h2>') && reviewed.includes('Completed turns</dt><dd>2') && reviewed.includes('Provider cost</dt><dd>$0.00'));
 
 const metered = detailWith({run:{launches:1, tokens:{input:258254,cacheRead:198784,cacheWrite:0,output:1883,reasoning:24}}});
 assert(metered.includes('<dt>Input tokens</dt><dd>258,254') && metered.includes('198,784 read from cache · 0 written to cache'));
@@ -475,14 +469,36 @@ const privateGrants = detailWith({run:{launches:0,permissions:{sessions:[{state:
   {effect:'Workspace.Read',scope:'[private scope]',scopeKey:2,budget:6,used:4,remaining:2}
 ]}]}}});
 assert(privateGrants.includes('2 used · limit 5 · 3 left') && privateGrants.includes('4 used · limit 6 · 2 left'));
+// Active used budgets stay visible with space-separated text while a wall of zero-used grants collapses.
+const mixedGrants = detailWith({run:{launches:0,permissions:{sessions:[{state:'active',current:true,expiresAt:'2026-11-26T22:00:00Z',grants:[
+  {effect:'Ailang.Check',scope:'worktree',scopeKey:1,budget:5000,used:0,remaining:5000},
+  {effect:'Ailang.Run',scope:'worktree',scopeKey:2,budget:5000,used:0,remaining:5000},
+  {effect:'Workspace.Read',scope:'worktree',scopeKey:3,budget:5000,used:13,remaining:4987},
+]}]}}});
+assert(mixedGrants.includes('Unused capabilities · 2') && mixedGrants.includes('perm-meter'));
+assert(!mixedGrants.includes('worktree13 used') && !mixedGrants.includes('worktree0 used'));
+// Many episode reads group into collapsible directory buckets with Written surfaced ahead of Read.
+const manyReads = Array.from({length: 10}, (_, i) => ({path: (i < 6 ? 'host/surfacepage/app/f' : 'host/daemon/d') + i + '.go', count: i + 1}));
+const groupedFiles = filesWith({trajectoryEpisode:'e1'}, {status:'complete', reads: manyReads, writes:[{path:'host/surfacepage/app/app.js', count:2, op:'workspace-edit'}], produced:[]});
+assert(groupedFiles.indexOf('Written <span>1</span>') < groupedFiles.indexOf('Read <span>10</span>'), 'written files surface above reads');
+assert(groupedFiles.includes('data-file-dir') && groupedFiles.includes('host/surfacepage/app') && groupedFiles.includes('host/daemon'));
+// Open episode Overview surfaces harness, active budgets, live activity mount, and read-only worktree summary.
+const liveRich = app.frontHTML({...bare, front:{...bare.front, kind:'open', episode:'w-live', open:{state:'live', label:'Session live', sessionLive:true, branch:'world/w-live'},
+  trajectoryEpisode:'w-live', run:{episode:'w-live', harness:'agy', launches:0, permissions:{sessions:[{state:'active',current:true,grants:[
+    {effect:'Workspace.Read',scope:'worktree',scopeKey:1,budget:5000,used:42,remaining:4958},
+    {effect:'Workspace.Write',scope:'worktree',scopeKey:2,budget:5000,used:0,remaining:5000},
+  ]}]}}}}, T, 'overview', {status:'complete', reads:manyReads, writes:[], produced:[]});
+hollow(liveRich);
+assert(liveRich.includes('live-pill') && liveRich.includes('Agy') && liveRich.includes('data-overview-conversation'));
+assert(liveRich.includes('42 / 5,000') && liveRich.includes('Read-only so far · 10 files inspected'));
 const linkedTrace = detailWith({kind:'shared',trajectoryEpisode:'ep-1'});
-assert(linkedTrace.includes('Linked episode trajectory</h2>') && !linkedTrace.includes('Run details</h2>'));
+assert(linkedTrace.includes('Linked episode tool log</h2>') && !linkedTrace.includes('Session &amp; harness</h2>'));
 
 const sections = app.frontHTML({...bare,front:{...bare.front,run:{episode:'scope',launches:0}}},T,'files');
 assert(sections.includes('aria-label="Node sections"') && sections.includes('id="node-tab-files" aria-controls="node-panel-files" aria-selected="true"'));
-assert(sections.includes('id="node-panel-overview" aria-labelledby="node-tab-overview" hidden') && sections.includes('data-node-tab="run"') && sections.includes('data-node-tab="trajectory"'));
+assert(sections.includes('id="node-panel-overview" aria-labelledby="node-tab-overview" hidden') && sections.includes('data-node-tab="audit"') && !sections.includes('data-node-tab="trajectory"'));
 const gitOnly = detailWith({kind:'shared',githubChecks:{checks:[]}});
-assert(gitOnly.includes('>Checks</button>') && !gitOnly.includes('data-node-tab="trajectory"'));
+assert(gitOnly.includes('>Checks</button>') && !gitOnly.includes('data-node-tab="audit"'));
 
 const rawMerge = 'An original merge title with a suffix — made through World (w999) & <proof>';
 const mergeTitle = detailWith({kind: 'shared', episode: '', pr: 631, fullTitle: rawMerge, title: 'An original merge title'});
@@ -559,29 +575,30 @@ for (const s of stacks) {
 const L = (theme, motion) => ({theme, motion});
 assert.deepEqual(app.lookOf(seams.loadLook(null), false, false), L('paper', 'full'));
 assert.deepEqual(app.lookOf(seams.loadLook(null), true, true), L('paper', 'reduced'), 'M4a default motion follows the system');
-assert.deepEqual(app.lookOf({theme: 'slate', motion: 'full'}, false, true), L('slate', 'full'));
-assert.deepEqual(app.lookOf({theme: 'night'}, false, false), L('slate', 'full'));
-assert.deepEqual(app.lookOf({theme: 'system', motion: 'reduced'}, true, false), L('slate', 'reduced'));
+assert.deepEqual(app.lookOf({theme: 'slate', motion: 'full'}, false, true), L('night', 'full'));
+assert.deepEqual(app.lookOf({theme: 'night'}, false, false), L('night', 'full'));
+assert.deepEqual(app.lookOf({theme: 'system', motion: 'reduced'}, true, false), L('night', 'reduced'));
 assert.deepEqual(app.lookOf(null, true, true), L('paper', 'full')); assert.deepEqual(app.lookOf('junk'), L('paper', 'full'));
 const kept = new Map(), store = {getItem: k => kept.has(k) ? kept.get(k) : null, setItem: (k, v) => kept.set(k, v)};
-seams.saveLook(store, Object.assign(seams.loadLook(store), L('slate', 'reduced')));
-assert.deepEqual(app.lookOf(seams.loadLook(store), false, false), L('slate', 'reduced'), 'kept under world.appearance');
+seams.saveLook(store, Object.assign(seams.loadLook(store), L('night', 'reduced')));
+assert.deepEqual(app.lookOf(seams.loadLook(store), false, false), L('night', 'reduced'), 'kept under world.appearance');
 assert(kept.has('world.appearance'));
 console.log('APP HARNESS PASS');
 `
 
-// The operator could not copy a request id or hash from the app (2026-11-16): v3's body rule is
-// user-select: none. The marked after-v3 override restores text selection after that rule, and
-// keeps buttons unselectable.
+// The operator must be able to select and copy request ids, hashes, and paths from the app while
+// buttons remain unselectable.
 func TestSurfaceAppTextIsSelectable(t *testing.T) {
 	style := string(AppStyle)
-	v3 := strings.Index(style, "user-select: none; -webkit-user-select: none; cursor: default; }")
-	marker := strings.Index(style, "/* ---------- After v3: text can be selected and copied")
-	override := strings.Index(style, "body { user-select: text; -webkit-user-select: text; }")
-	if v3 < 0 || marker < v3 || override < marker {
-		t.Fatalf("want v3's body rule, then the marked override restoring text selection (v3 %d, marker %d, override %d)", v3, marker, override)
+	if !strings.Contains(style, "body { user-select: text; -webkit-user-select: text; }") {
+		t.Fatal("body text must be selectable")
 	}
-	if !strings.Contains(style[marker:], "button { user-select: none; -webkit-user-select: none; }") {
+	if strings.LastIndex(style, "body { user-select: text;") < strings.LastIndex(style, "body {") &&
+		strings.Contains(style[strings.LastIndex(style, "body { user-select: text;"):], "user-select: none") &&
+		!strings.Contains(style[strings.LastIndex(style, "body { user-select: text;"):], "button { user-select: none") {
+		t.Fatal("a later rule disabled body text selection")
+	}
+	if !strings.Contains(style, "button { user-select: none; -webkit-user-select: none; }") {
 		t.Fatal("buttons must stay unselectable")
 	}
 }

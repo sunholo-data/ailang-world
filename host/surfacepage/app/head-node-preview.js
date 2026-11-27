@@ -40,8 +40,17 @@
       const laneColour = model.LANES[node.lane]?.colour;
       if (/^#[0-9a-f]{3}([0-9a-f]{3})?$/i.test(laneColour)) tip.style.setProperty('--hc-lane', laneColour);
       else tip.style.removeProperty('--hc-lane');
+      const record = model.recordKind(node);
+      const live = Boolean(node.sessionLive || node.open?.sessionLive);
+      const kindBadge = document.createElement('div');
+      kindBadge.className = 'hc-preview-kind ' + (live ? 'is-live' : record === 'episode' || record === 'draft' ? 'is-episode' : 'is-baseline');
+      kindBadge.textContent = live ? '● Live World episode'
+        : record === 'episode' ? 'λ World episode'
+        : record === 'draft' ? 'Draft episode'
+        : model.isWorldMerge?.(node) ? 'GitHub merge · λ World attested'
+        : model.recordLabel(node);
       const status = node.open?.label || (node.sessionLive ? 'Session live' : node.status);
-      const context = [...new Set([model.recordLabel(node), lane, status, options.lastRunDetail?.(node.open?.lastRun)].filter(Boolean))].join(' · ');
+      const context = [...new Set([lane, status, options.lastRunDetail?.(node.open?.lastRun)].filter(Boolean))].join(' · ');
       const meta = text('div', 'hc-preview-meta', context);
       const stamp = Date.parse(node.at);
       if (Number.isFinite(stamp)) {
@@ -51,9 +60,9 @@
         meta.append(time);
       }
       const heading = title(node);
-      tip.replaceChildren(text('strong', 'hc-preview-title', heading), meta);
+      tip.replaceChildren(kindBadge, text('strong', 'hc-preview-title', heading), meta);
       const episode = node.episode && !heading.toLowerCase().includes(node.episode.toLowerCase()) ? node.episode : '';
-      const agent = options.agent?.(node) || node.agent;
+      const agent = options.headAgent?.(node) || options.agent?.(node) || node.agent;
       const identity = [episode, node.pr && 'PR #' + node.pr, agent, options.mergeFileSummary?.(node)].filter(Boolean).join(' · ');
       if (identity) tip.append(text('div', 'hc-preview-meta', identity));
       const summary = options.summary?.(node) ?? (node.summary || '').trim();

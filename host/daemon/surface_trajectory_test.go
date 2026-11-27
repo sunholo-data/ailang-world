@@ -222,3 +222,36 @@ func TestSurfaceTrajectoryAgyTranscriptProjectsWithoutPrivateContent(t *testing.
 		}
 	}
 }
+
+func TestSurfaceTrajectoryCallMetaSanitizesTargetsAndStatus(t *testing.T) {
+	cfg, _ := followFixture(t, 1)
+	d := newFollowDaemon(t, cfg)
+	ctx := boundedTestContext(t)
+	putJSON := func(semanticID string, v any) string {
+		t.Helper()
+		obj := reportObject(semanticID, mustMarshal(t, v))
+		if err := d.store.PutObject(ctx, obj); err != nil {
+			t.Fatal(err)
+		}
+		return obj.Hash.String()
+	}
+
+	lookups := 64
+	safeIn := putJSON("world/input/v1", map[string]any{"path": "host/surfacepage/app/app.css", "offset": 1, "limit": 100, "pattern": "top-secret-token"})
+	target, status := trajectoryCallMeta(ctx, d.reads, &lookups, "ailang-read", safeIn, nil)
+	if target != "host/surfacepage/app/app.css:1-100" || status != "refused" {
+		t.Fatalf("ranged read meta = (%q, %q)", target, status)
+	}
+
+	unsafeIn := putJSON("world/input/v1", map[string]any{"path": "../outside/secret.txt", "pattern": "top-secret-token"})
+	target, status = trajectoryCallMeta(ctx, d.reads, &lookups, "workspace-search", unsafeIn, nil)
+	if target != "" || strings.Contains(target, "secret") {
+		t.Fatalf("unsafe path leaked into target: %q (status %q)", target, status)
+	}
+
+	execIn := putJSON("world/input/v1", map[string]any{"command": "go-test", "args": []string{"./host/surfacepage/"}})
+	target, _ = trajectoryCallMeta(ctx, d.reads, &lookups, "workspace-exec", execIn, nil)
+	if target != "go-test" {
+		t.Fatalf("exec command target = %q, want go-test", target)
+	}
+}

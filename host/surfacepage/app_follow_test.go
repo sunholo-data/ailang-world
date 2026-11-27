@@ -98,6 +98,46 @@ assert.doesNotMatch(T.glyphOfNode(work, 12), /merge-glyph/);
 const episode = recorded.find(n => n.episode && n.kind !== 'shared');
 assert(episode, 'fixture needs a recorded World episode');
 assert.equal(T.recordLabel(episode), 'World episode');
+assert.equal(typeof T.isWorldMerge(merge), 'boolean');
+if (work.episode) assert.equal(T.isWorldMerge(merge), true, 'merge of a World episode is World-attested');
+// projectHeadsModel defaults #heads in v2 follow mode to active episodes + repo baselines, pinning live sessions to Now.
+const currentHeads = app.projectHeadsModel(model, 'current');
+const currentGraph = app.adaptModel(currentHeads.model);
+assert(currentGraph.N['world:episode:w189z'], 'live episode stays in Current heads');
+assert.equal(currentGraph.N['world:episode:w189z'].at, model.now, 'live episode pins to Now plane on Heads');
+assert(currentGraph.N['world:episode:w190q'], 'PR-open episode stays in Current heads');
+assert(!Object.keys(currentGraph.LANES).some(k => k === 'tools:brane:row-189'), 'merged row-N lanes Without open work hide from Current heads');
+const allHeads = app.projectHeadsModel(model, 'all');
+const allGraph = app.adaptModel(allHeads.model);
+assert(Object.keys(allGraph.LANES).includes('tools:brane:row-189'), 'All history restores merged row-N lanes');
+assert.equal(allGraph.N['world:episode:w189z'].at, model.now, 'live episode stays pinned to Now in All history too');
+assert.equal(allGraph.N['world:episode:w189z'].lane, currentGraph.N['world:episode:w189z'].lane, 'live episode keeps the same lane key across filters');
+// Verify open-lane splitting keeps identical lane keys and sides across current, ended, and all modes.
+{
+  const withOpen = {
+    ...model,
+    lanes: [
+      ...model.lanes,
+      {
+        key: 'world:brane:open',
+        repo: 'world',
+        name: 'Open episodes',
+        states: [
+          { id: 'world:episode:live1', kind: 'open', episode: 'live1', at: '2026-10-21T05:00:00Z', rel: '4h ago', sessionLive: true, open: { state: 'live', sessionLive: true } },
+          { id: 'world:episode:end1', kind: 'open', episode: 'end1', at: '2026-10-20T05:00:00Z', rel: '1d ago', open: { state: 'ended', sessionLive: false } },
+        ],
+      },
+    ],
+  };
+  const cG = app.adaptModel(app.projectHeadsModel(withOpen, 'current').model);
+  const eG = app.adaptModel(app.projectHeadsModel(withOpen, 'ended').model);
+  const aG = app.adaptModel(app.projectHeadsModel(withOpen, 'all').model);
+  assert.equal(cG.N['world:episode:live1'].lane, 'world:brane:open');
+  assert.equal(eG.N['world:episode:live1'].lane, 'world:brane:open');
+  assert.equal(aG.N['world:episode:live1'].lane, 'world:brane:open');
+  assert.equal(eG.N['world:episode:end1'].lane, 'world:brane:open~ended');
+  assert.equal(aG.N['world:episode:end1'].lane, 'world:brane:open~ended');
+}
 const direct = {...merge, id:'world:commit:direct'};
 assert.equal(T.recordLabel(direct), 'Shared commit', 'a shared lane and PR number do not prove a merge');
 assert.doesNotMatch(T.glyphOfNode(direct, 12), /merge-glyph/);
@@ -141,7 +181,7 @@ assert(!T1.multi); assert.equal(T1.LY['world:brane:shared'], 320); assert(T1.ROW
 // ---- The open card and the landed alias (minimal; N2d owns the richer card).
 const oh = app.frontHTML(open, T);
 hollow(oh);
-for (const want of ['w189z', 'session live', 'Last run finished · 21 Oct 08:55 UTC', 'Polish the plugin docs', 'No finish commit recorded for this episode.', 'via">built on<', 'trial/row189-m7']) assert(oh.includes(want), want);
+for (const want of ['w189z', 'session live', 'Last run finished · 21 Oct 08:55 UTC', 'Polish the plugin docs', 'No worktree changes recorded yet.', 'via">built on<', 'trial/row189-m7']) assert(oh.includes(want), want);
 assert(!oh.includes('A merge has no checks'), 'an open episode is not a merge');
 const ch = app.frontHTML(commit, T);
 hollow(ch); assert(ch.includes('data-go="tools:commit:'), 'commit stack chips stay in their repo');

@@ -110,9 +110,9 @@ func (d *Daemon) surfaceRun(ctx context.Context, start *store.EpisodeStart) (*su
 }
 
 const (
-	nodePermissionSessionLimit = 32
-	nodePermissionGrantLimit   = 128
-	nodePermissionReceiptLimit = 512
+	nodePermissionSessionLimit = 64
+	nodePermissionGrantLimit   = 256
+	nodePermissionReceiptLimit = 999
 )
 
 type surfacePermissionUsage struct {
@@ -125,8 +125,19 @@ func (d *Daemon) surfacePermissionUsage(ctx context.Context, episode string) (ma
 		return nil, false
 	}
 	receipts, err := d.store.EpisodeEffectReceipts(ctx, episode, nodePermissionReceiptLimit+1)
-	if err != nil || len(receipts) > nodePermissionReceiptLimit {
+	if err != nil {
 		return nil, false
+	}
+	if len(receipts) > nodePermissionReceiptLimit {
+		spend, err := d.store.EffectSpend(ctx, episode)
+		if err != nil {
+			return nil, false
+		}
+		totals := make(map[store.EffectKey]surfacePermissionUsage, len(spend))
+		for key, cost := range spend {
+			totals[key] = surfacePermissionUsage{debited: cost, used: cost}
+		}
+		return totals, true
 	}
 	type observedReceipt struct {
 		intent  *store.EffectIntent
