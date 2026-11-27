@@ -155,6 +155,56 @@ check_mission_config() {
   echo "   World decision-ledger validated; centralized runtime currency is NOT certified here."
 }
 
+# Row 267: design_docs/planned/w-daemon-race-package-timeout-headroom.md §0.
+# P covers the 828s inflated daemon estimate. A stacks the 554s latest heavy
+# start and 93s + 347s uncapped extensions. Allow Go's 60s backup kill before L.
+VERIFY_GO_RACE_PKG_TIMEOUT_S=900
+VERIFY_GO_RACE_START_ALLOWANCE_S=995
+VERIFY_GO_RACE_TIMEOUT_S="${VERIFY_GO_RACE_TIMEOUT_S:-2000}"
+
+check_race_bounds() {
+  local min
+  case "$VERIFY_GO_RACE_TIMEOUT_S" in
+    ''|*[!0-9]*) echo "verify_go.sh: FATAL: VERIFY_GO_RACE_TIMEOUT_S must be a positive integer" >&2; return 2 ;;
+  esac
+  min=$((VERIFY_GO_RACE_PKG_TIMEOUT_S + 60 + VERIFY_GO_RACE_START_ALLOWANCE_S))
+  if [ "$VERIFY_GO_RACE_TIMEOUT_S" -lt "$min" ]; then
+    echo "verify_go.sh: FATAL: leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s must be at least per-package ${VERIFY_GO_RACE_PKG_TIMEOUT_S}s + 60s backup kill + start allowance ${VERIFY_GO_RACE_START_ALLOWANCE_S}s (${min}s)" >&2
+    return 2
+  fi
+}
+
+run_race_leg() {
+  python3 - "$@" <<'PYTHON'
+import os, signal, subprocess, sys
+from contextlib import suppress
+
+bound = int(sys.argv[1])
+p = subprocess.Popen(sys.argv[2:], start_new_session=True)
+try:
+    sys.exit(p.wait(timeout=bound))
+except subprocess.TimeoutExpired:
+    try:
+        try:
+            # Diagnostics have at most two seconds of grace before SIGKILL.
+            listing = subprocess.run(
+                ["ps", "-ww", "-eo", "pgid=,etime=,args="],
+                capture_output=True, text=True, errors="replace", check=True, timeout=2,
+            )
+            for line in listing.stdout.splitlines():
+                fields = line.split(None, 2)
+                if len(fields) == 3 and fields[0] == str(p.pid):
+                    print(f"verify_go.sh: still running at the leg bound (elapsed {fields[1]}): {fields[2]}", file=sys.stderr)
+        finally:
+            with suppress(ProcessLookupError):
+                os.killpg(p.pid, signal.SIGKILL)
+    except (OSError, subprocess.SubprocessError) as exc:
+        print(f"verify_go.sh: could not list race leg processes: {exc}", file=sys.stderr)
+    print(f"verify_go.sh: FATAL: -race leg timed out after {bound}s", file=sys.stderr)
+    sys.exit(124)
+PYTHON
+}
+
 if [ "${1:-}" = "--evidence-manifest-check" ]; then
   if [ "$#" -ne 3 ]; then
     echo "usage: $0 --evidence-manifest-check JSON EXACT" >&2
@@ -170,6 +220,18 @@ if [ "${1:-}" = "--mission-config-check" ]; then
     exit 2
   fi
   check_mission_config
+  exit $?
+fi
+
+if [ "${1:-}" = "--race-bounds-check" ]; then
+  check_race_bounds || exit $?
+  echo "race bounds: per-package ${VERIFY_GO_RACE_PKG_TIMEOUT_S}s, start allowance ${VERIFY_GO_RACE_START_ALLOWANCE_S}s, leg ${VERIFY_GO_RACE_TIMEOUT_S}s"
+  exit 0
+fi
+
+if [ "${1:-}" = "--race-leg-wrapper-check" ]; then
+  shift
+  run_race_leg "$@"
   exit $?
 fi
 
@@ -209,9 +271,7 @@ if [ "$ver_tok" != 'v0.41.0' ]; then
 fi
 echo "── AILANG_BIN=$AILANG_BIN ($ver)"
 
-# Row 181 (attended 2026-10-16, Mark: "split race into its own CI job"): the -race leg needs ~1,000 s
-# wall on the 2-core runner (measured run 38884339127: broker 343 s, verifygate 308 s, daemon 307 s
-# under -race, ~2,050 s of package time at -p 2), so CI runs it as its own parallel job.
+# Row 181 (attended 2026-10-16): CI runs -race as its own parallel job.
 # VERIFY_GO_LEGS: all (default, local) | plain (everything except the -race leg) | race (the
 # shared preconditions, the race-detector control and the -race leg only).
 VERIFY_GO_LEGS="${VERIFY_GO_LEGS:-all}"
@@ -219,11 +279,8 @@ case "$VERIFY_GO_LEGS" in
   all|plain|race) ;;
   *) echo "verify_go.sh: FATAL: VERIFY_GO_LEGS must be all, plain or race (got: $VERIFY_GO_LEGS)" >&2; exit 2 ;;
 esac
-VERIFY_GO_RACE_TIMEOUT_S="${VERIFY_GO_RACE_TIMEOUT_S:-1500}"
-case "$VERIFY_GO_RACE_TIMEOUT_S" in
-  ''|*[!0-9]*) echo "verify_go.sh: FATAL: VERIFY_GO_RACE_TIMEOUT_S must be a positive integer" >&2; exit 2 ;;
-esac
-echo "── legs: $VERIFY_GO_LEGS (race bound ${VERIFY_GO_RACE_TIMEOUT_S}s)"
+check_race_bounds || exit $?
+echo "── legs: $VERIFY_GO_LEGS (race bounds: per-package ${VERIFY_GO_RACE_PKG_TIMEOUT_S}s, leg ${VERIFY_GO_RACE_TIMEOUT_S}s)"
 
 echo "── tracked-binary hygiene gate"
 # SM.A once committed a 15.7 MB Mach-O that every reviewer and both CI jobs passed, because
@@ -339,28 +396,13 @@ go version
 go test ./... -count=1
 fi
 
-# Measured at 78 s wall on darwin/arm64 at 7550ee9 under load ~4.5;
-# host/broker was the 76.9 s critical path. The doc's ~179 s was not reproduced.
-# 2026-10-03 (row 135 revert 78db602): on the 2-core runner this leg overran 600 s; with -p 2
-# packages run two at a time and host/verifygate (alphabetically last, 412 s race pre-#190) is
-# the tail. Fixed by removing redundant gate reruns inside verifygate (one shared, digest-checked
-# pristine control; one shared run per shim version line), not by raising this budget or
-# dropping the package from -race. Local GOMAXPROCS=2 race leg: 465 s before, 312 s after.
+# Row 267: 51 complete race attempts set the three bounds in
+# design_docs/planned/w-daemon-race-package-timeout-headroom.md §0.
 if [ "$VERIFY_GO_LEGS" != plain ]; then
-echo "── go test ./... -count=1 -race -timeout 8m (leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s)"
+bash scripts/test_race_leg_bounds.sh
+echo "── go test ./... -count=1 -race -timeout ${VERIFY_GO_RACE_PKG_TIMEOUT_S}s (leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s)"
 go version
-VERIFY_GO_RACE_TIMEOUT_S="$VERIFY_GO_RACE_TIMEOUT_S" python3 - <<'PY'
-import os, signal, subprocess, sys
-bound = int(os.environ["VERIFY_GO_RACE_TIMEOUT_S"])
-cmd = ["go", "test", "./...", "-count=1", "-race", "-timeout", "8m"]
-p = subprocess.Popen(cmd, start_new_session=True)
-try:
-    sys.exit(p.wait(timeout=bound))
-except subprocess.TimeoutExpired:
-    os.killpg(os.getpgid(p.pid), signal.SIGKILL)
-    print(f"verify_go.sh: FATAL: -race leg timed out after {bound}s", file=sys.stderr)
-    sys.exit(124)
-PY
+run_race_leg "$VERIFY_GO_RACE_TIMEOUT_S" go test ./... -count=1 -race -timeout "${VERIFY_GO_RACE_PKG_TIMEOUT_S}s"
 fi
 
 echo "✓ go gate PASSED ($VERIFY_GO_LEGS): build clean; legs run pass with pinned AILANG_BIN ($ver)"
