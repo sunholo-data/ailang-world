@@ -1,17 +1,18 @@
 # w-daemon-race-package-timeout-headroom — the 8-minute cap encodes the fast runner; one in three race attempts draws a slower one
 
-- **Status**: Planned (r0, iteration 443, unattended designer `claude:claude-opus-5-5`)
+- **Status**: Planned (r1, iteration 443, unattended designer `claude:claude-opus-5-5`; r0 committed as `8256a83e`,
+  quorum round 1 BLOCKED 3/3 on completeness/derivation, §11)
 - **Item**: charter queue row 267, `w-daemon-race-package-timeout-headroom`, clause-2 hygiene. Picked under the
   standing red-dev rule (D-WORLD-121 OPEN, default B: Gate 1 found `dev`'s tip `6420426e` red at attempt 1)
-- **Estimated**: one milestone, ~0.5 day, ~250 changed lines (§8)
+- **Estimated**: one milestone, ~0.5 day, ~262 changed lines (§8)
 - **Measurement base**: `6420426e` (dev tip, clean worktree `sprint/world-iter443-row267-race-headroom`), 2026-11-27
 - **Instruments**: CI job logs of the `go-race-verify` job (ubuntu-24.04, Azure eastus2 hosted runners) for the
   last 40 workflow runs, 53 attempt files under `~/.ailang/state/world-iter443/racelogs/` (fetched by the
   controller); the controller's `race_table.py`/`race_table.txt`; this session's re-derivation scripts
-  `~/.ailang/state/world-iter443/design-scratch/{legs,classes,atcap}.py` (run with `python3 -I`; outputs
-  `classes.out`, `atcap.out`); local `go1.26.6 darwin/arm64` source of `cmd/go` for the `go test` kill path.
+  `~/.ailang/state/world-iter443/design-scratch/{legs,classes,atcap,slots}.py` (run with `python3 -I`; outputs
+  `classes.out`, `atcap.out`, `slots.out`); controller measurements C1–C4 (iteration 443, at `8256a83e`); local `go1.26.6 darwin/arm64` source of `cmd/go` for the `go test` kill path.
   No `.ail` is touched, so the pinned `ailang` matters only to the gate runs (§6).
-- **Files touched**: `scripts/verify_go.sh` (~+45/−14), `scripts/test_race_leg_bounds.sh` (new, ~75),
+- **Files touched**: `scripts/verify_go.sh` (~+47/−14), `scripts/test_race_leg_bounds.sh` (new, ~80),
   `host/verifygate/race_job_gate_test.go` (~+95/−1), `host/verifygate/mission_config_gate_test.go` (~+12/−4),
   `.github/workflows/ci.yml` (~+5/−3). No Go production code, no `.ail`, nothing under `tools/launchd/`.
 
@@ -66,7 +67,8 @@ the three heavy packages read `host/daemon` 353.7–360.3 s (median 356.8), `cmd
    at 0 s elapsed [D5]. The package's total is what overruns, not one test.
 6. *"Iteration 442 measured a full local `cmd/ailang-worldd` plain run at ~696 s under load, so local plain runs
    already pass their own `-timeout`"* (brief) is **false as stated**. The 696 s reading was taken with an explicit
-   `-timeout 45m` (`world-iter442/readings.md:17`). `verify_go.sh`'s plain leg passes no `-timeout`, so it runs under
+   `-timeout 45m` (`world-iter442/readings.md:17`). `verify_go.sh`'s plain leg passes no `-timeout`: the script has exactly two
+   `-timeout` lines, both in the race leg (`:350` banner, `:355` command) [C2, D12]. So the plain leg runs under
    Go's default 10 m = 600 s, which a 696 s package would exceed [D9]. This item does not change the plain leg (§9).
    I record the plain leg's 600 s exposure under rig load as an open observation, not a fix.
 7. The brief counts 52 attempts. The table has 53 rows: 51 complete distinct attempts, the in-progress
@@ -103,8 +105,13 @@ Every heavy package's need on the slow tail exceeds 480 s; the largest (645.4 s)
 
 **The leg's schedule** [D4]: `cmd/ailang-worldd` starts 43–73 s into the leg, `host/daemon` 105–166 s, and
 `host/verifygate` (alphabetically late) 322–554 s, once an earlier package frees a slot. The slow-class leg ends at
-930–1034 s *with* the three heavy packages cut off at 480 s. Uncapped, the leg grows by at most the sum of their
-extensions, which is a serial worst case:
+930–1034 s *with* the three heavy packages cut off at 480 s. **Which slot does `host/verifygate` take?** [D11]: in all 51 attempts it started *before* `host/daemon`
+ended (by 91.4–172.7 s in the 15 attempts where both `cmd/ailang-worldd` and `host/daemon` read ≥ 440 s). In
+those 15 it started 83.0 s before to 1.3 s after `cmd/ailang-worldd` ended. So on the measured schedules it takes
+`cmd/ailang-worldd`'s slot, or another early package's, and never waits on `host/daemon`'s. r0's "delayed by
+daemon's extension" premise is refuted by the data; the slot it does track is cmd's. Uncapping changes the schedule,
+though, and the data cannot rule out a cascade, so the start allowance takes the stacked worst case (§3).
+Uncapped, the leg grows by at most the sum of the extensions, which is a serial worst case:
 1034 + (645.4 − 480.1) + (573.1 − 480.2) + (534.9 − 480.0) = **1347.1 s**.
 
 ## 3. Options considered
@@ -159,14 +166,21 @@ tests would also change package boundaries in production-test files for no measu
 
 **Why A needs two small additions to stay honest (constraint 1):**
 
-1. **A runtime ordering guard.** A hung package's own panic (which names it) must fire before the leg wrapper's
-   SIGKILL. The latest heavy start is 554 s (`host/verifygate`, run 45787704457 a1) [D4]. Uncapping `host/daemon`
-   can delay that slot by at most its 165.3 s extension, giving a start allowance A = 554 + 166 = **720 s**. So
-   L ≥ P + A = 1620 s is required. `verify_go.sh` refuses (rc 2, before any leg runs) when that does not hold, so
+1. **A runtime ordering guard.** A hung package's own panic (which names it), and `cmd/go`'s backup kill 60 s
+   after it [D9], must both fire before the leg wrapper's SIGKILL. The latest heavy start is 554 s
+   (`host/verifygate`, run 45787704457 a1) [D4]. Under the serial worst-case model already used for the leg (§2),
+   that start can be delayed by every extension ahead of its slot: `cmd/ailang-worldd`'s 92.9 s plus
+   `host/daemon`'s 165.3 s = 258.2 s. That gives a start allowance A = 554 + 258.2 = 812.2 → **813 s**. The
+   measured schedules support only the cmd term (§2, [D11]: 554 + 93 = 647). The stacked value is kept because it
+   costs 100 s of leg bound and nothing on a passing run. So L ≥ P + 60 + A = 900 + 60 + 813 = **1773 s** is
+   required. `verify_go.sh` refuses (rc 2, before any leg runs) when that does not hold, so
    an override cannot silently invert the layers.
-2. **The leg wrapper names what it kills.** A package that starts after L − P (> 900 s into the leg; only light
+2. **The leg wrapper names what it kills.** A package that starts after L − P − 60 (> 940 s into the leg; only light
    packages, on a slow runner) and then hangs is still caught by L first. Today the wrapper prints only "leg timed
-   out". The new wrapper lists the leg's process group (`ps -eo pgid=,etime=,args=`) before the SIGKILL. A test
+   out". The new wrapper lists the leg's process group (`ps -ww -eo pgid=,etime=,args=`) before the SIGKILL. `-ww` (unlimited width)
+   is accepted by both BSD `ps` and procps. On darwin under a pipe, the output is identical with and without it: no
+   truncation of a 146-character path [C3]. On Linux procps under a pipe it is unmeasured locally, so R6 running in
+   the ubuntu-24.04 race job (AC7) is the Linux observation. A test
    binary's argv is `…/b<N>/<pkg>.test`, so the package is named. This also covers hangs outside a test binary
    (a stuck link step, a stuck `go` command).
 
@@ -176,11 +190,11 @@ tests would also change package boundaries in production-test files for no measu
 |---|---|---|---|---|
 | per-package `go test -timeout` (P) | **900** (15 m) | ≥ 1.25 × slow-tail need 645.4 = 806.8; rounded up to 15 m | 254.6 s over need (1.39×); daemon tolerates `k` ≤ 2.21 | a test that hangs or runs away inside a test binary: `panic: test timed out after 15m0s` + test name + goroutines + `FAIL <pkg>` |
 | `cmd/go` backup kill | P + 60 = 960 | Go's own (`test.go:840-841`) [D9] | — | a test binary whose alarm does not fire: `*** Test killed: ran too long (16m0s)` + `FAIL <pkg>` |
-| start allowance (A) | **720** | latest heavy start 554 + daemon's max uncapped extension 165.3 → 720 | — | (ordering input only) |
-| leg bound (L) | **1800** (30 m) | ≥ P + A = 1620 (ordering); ≥ slow-leg serial worst case 1347.1 | 180 s over P + A; 452.9 s over 1347.1 (1.34×) | anything still running at 30 m: a package started after 900 s that hangs, a stuck build/link or `go` process; names the running processes, SIGKILLs the group, rc 124 |
-| step `timeout-minutes` (J) | **40** (2400 s) | ≥ L + 300; 300 ≥ 5 × the 55 s max pre-leg time | 600 s over L (545 s after the measured 55 s pre-leg) | a hang before or around the leg (race-detector control, `go build ./...`, the wrapper itself); Actions fails the step |
+| start allowance (A) | **813** | latest heavy start 554 + cmd's 92.9 + daemon's 165.3 uncapped extensions (stacked) = 812.2 → 813 | 166 s over the measured-schedule value 647 [D11] | (ordering input only) |
+| leg bound (L) | **1900** (31 m 40 s) | ≥ P + 60 + A = 1773 (ordering, incl. Go's backup kill); ≥ slow-leg serial worst case 1347.1 | 127 s over 1773; 552.9 s over 1347.1 (1.41×) | anything still running at 1900 s: a package started after 900 s that hangs, a stuck build/link or `go` process; names the running processes, SIGKILLs the group, rc 124 |
+| step `timeout-minutes` (J) | **40** (2400 s) | J × 60 ≥ L + 300 = 2200 → J ≥ 36.7 → 40; 300 ≥ 5 × the 55 s max pre-leg time | 200 s over L + 300; 500 s over L (445 s after the measured 55 s pre-leg) | a hang before or around the leg (race-detector control, `go build ./...`, the wrapper itself); Actions fails the step |
 
-Ordering: 900 < 960 < 1620 ≤ 1800 < 2100 ≤ 2400. Each inequality is asserted by a test (§5).
+Ordering: 900 < 960 < 1773 ≤ 1900 < 2200 ≤ 2400. Each inequality is asserted by a test (§5).
 
 Expected effect, from the table: all 18 attempts that panicked at 480 s fall below 900 s on the extrapolation (max
 need 645.4 s), so none would have needed a re-run for this class. The 5 attempts with real test failures at 0
@@ -197,28 +211,34 @@ the serial upper bound). Today the same attempt fails at ~18 min and then pays a
    ```bash
    # Row 267 (design_docs/planned/w-daemon-race-package-timeout-headroom.md §3): per-package -race bound P,
    # derived from the measured slow-runner need (645 s at k=1.585) with 1.39x margin; start allowance A =
-   # latest measured heavy-package start (554 s) + the daemon's uncapped extension (166 s).
+   # latest measured heavy-package start (554 s) + cmd's (93 s) + daemon's (166 s) uncapped extensions, stacked.
+   # The guard adds cmd/go's backup kill (testKillTimeout = -timeout + 1m) so both fire before the leg SIGKILL.
    VERIFY_GO_RACE_PKG_TIMEOUT_S=900
-   VERIFY_GO_RACE_START_ALLOWANCE_S=720
-   VERIFY_GO_RACE_TIMEOUT_S="${VERIFY_GO_RACE_TIMEOUT_S:-1800}"
+   VERIFY_GO_RACE_START_ALLOWANCE_S=813
+   VERIFY_GO_RACE_TIMEOUT_S="${VERIFY_GO_RACE_TIMEOUT_S:-1900}"
    check_race_bounds() {
      case "$VERIFY_GO_RACE_TIMEOUT_S" in
        ''|*[!0-9]*) echo "verify_go.sh: FATAL: VERIFY_GO_RACE_TIMEOUT_S must be a positive integer" >&2; return 2 ;;
      esac
-     min=$((VERIFY_GO_RACE_PKG_TIMEOUT_S + VERIFY_GO_RACE_START_ALLOWANCE_S))
+     min=$((VERIFY_GO_RACE_PKG_TIMEOUT_S + 60 + VERIFY_GO_RACE_START_ALLOWANCE_S))
      if [ "$VERIFY_GO_RACE_TIMEOUT_S" -lt "$min" ]; then
-       echo "verify_go.sh: FATAL: leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s must be at least per-package ${VERIFY_GO_RACE_PKG_TIMEOUT_S}s + start allowance ${VERIFY_GO_RACE_START_ALLOWANCE_S}s (${min}s)" >&2
+       echo "verify_go.sh: FATAL: leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s must be at least per-package ${VERIFY_GO_RACE_PKG_TIMEOUT_S}s + 60s backup kill + start allowance ${VERIFY_GO_RACE_START_ALLOWANCE_S}s (${min}s)" >&2
        return 2
      fi
    }
    ```
    (`min` must not shadow anything; the implementer checks with `grep -n '\bmin=' scripts/verify_go.sh`.)
+   Everything this step adds above the subcommand dispatch is assignments and function definitions only: nothing
+   runs, prints or exits there. That keeps `--evidence-manifest-check` byte-identical in behaviour and output for
+   `TestEvidenceNamedManifestRejectsUnpinnedTest`, which copies and executes this file [C1]. The new heredoc must
+   not contain the text `REQUIRED_EVIDENCE_TESTS = {`, which that test uses as a mutation anchor via `strings.Index`.
 2. `run_race_leg BOUND CMD...`, a shell function wrapping the existing heredoc. Python reads the bound from
    `argv[1]` and the command from `argv[2:]`, via `python3 - "$@" <<'PY'`. It keeps
    `start_new_session=True`, `p.wait(timeout=bound)` with the exit code passed through, `os.killpg(…, SIGKILL)`,
    `print(f"verify_go.sh: FATAL: -race leg timed out after {bound}s", file=sys.stderr)` and `sys.exit(124)`. NEW,
    before the kill: list every process whose pgid is the leg's, each as
-   `verify_go.sh: still running at the leg bound (elapsed <etime>): <args>`. If `ps` itself fails, print one
+   `verify_go.sh: still running at the leg bound (elapsed <etime>): <args>`, read from
+   `ps -ww -eo pgid=,etime=,args=` and split with `line.split(None, 2)` (procps left-pads `pgid`; `split()` absorbs it). If `ps` itself fails, print one
    `could not list` line and still kill and exit 124 (diagnostics never gate the refusal).
 3. Two subcommands beside `--evidence-manifest-check` and `--mission-config-check`, both exiting before the
    `AILANG_BIN` check:
@@ -242,16 +262,20 @@ the serial upper bound). Today the same attempt fails at ~18 min and then pays a
 with an EXIT trap; prints `ok <arm>` per arm and `PASS 6/6 arms`; any failure prints the arm and its captured
 output and exits 1):
 - **R1 default**: `env -u VERIFY_GO_RACE_TIMEOUT_S bash scripts/verify_go.sh --race-bounds-check` → rc 0, stdout
-  exactly `race bounds: per-package 900s, start allowance 720s, leg 1800s`.
-- **R2 boundary accept**: `VERIFY_GO_RACE_TIMEOUT_S=1620 … --race-bounds-check` → rc 0.
-- **R3 boundary refuse**: `VERIFY_GO_RACE_TIMEOUT_S=1619` → rc 2, stderr contains `must be at least per-package 900s`.
+  exactly `race bounds: per-package 900s, start allowance 813s, leg 1900s`.
+- **R2 boundary accept**: `VERIFY_GO_RACE_TIMEOUT_S=1773 … --race-bounds-check` → rc 0.
+- **R3 boundary refuse**: `VERIFY_GO_RACE_TIMEOUT_S=1772` → rc 2, stderr contains
+  `must be at least per-package 900s + 60s backup kill + start allowance 813s (1773s)`.
 - **R4 malformed**: `VERIFY_GO_RACE_TIMEOUT_S=15m` → rc 2, `must be a positive integer`.
 - **R5 passthrough**: `--race-leg-wrapper-check 30 sh -c 'exit 3'` → rc 3, and stderr has no `FATAL`.
 - **R6 hang**: a fake executable `$tmp/hang_probe.test` (`#!/bin/sh`: `sleep 300 & echo $! >"$tmp/gc.pid"; sleep 300`)
   run as `--race-leg-wrapper-check 2 "$tmp/hang_probe.test"` → rc 124. Stderr contains `still running at the
   leg bound`, `hang_probe.test`, and `FATAL: -race leg timed out after 2s`. Elapsed ≥ 2 s and < 30 s. Known-positive
-  control: `gc.pid` is non-empty. After return, `kill -0 "$(cat gc.pid)"` fails (the grandchild died with the
-  group). Wall ~2–3 s.
+  control: `gc.pid` is non-empty. After return, a **bounded poll** (up to 5 s in 0.1 s steps) waits for
+  `kill -0 "$(cat gc.pid)"` to fail. The arm fails only if the grandchild is still alive at 5 s, so the latency of
+  reparenting and reaping the orphan cannot redden it. Under M10 the grandchild sleeps 300 s, well past the poll.
+  Wall ~2–3 s, ≤ 7 s worst case. `$tmp` sits under `$TMPDIR`; on darwin that is a long `/var/folders/…` path, which
+  is the truncation case [C3].
 
 **`host/verifygate/race_job_gate_test.go`** (~+95/−1):
 - Existing `TestRaceLegRunsInItsOwnJob`: replace the needle `"go", "test", "./...", "-count=1", "-race"` with
@@ -265,9 +289,10 @@ output and exits 1):
     `run: ./scripts/verify_go.sh` → `timeout-minutes: (\d+)` → J and `VERIFY_GO_RACE_TIMEOUT_S: "(\d+)"` →
     L_ci. Control: the job contains `runs-on: ubuntu-24.04`, and has zero `continue-on-error`.
   - Measured constants, named with their sources (this doc §2/§3): `slowNeedS = 646`, `latestHeavyStartS = 554`,
-    `daemonExtensionS = 166`, `preLegMaxS = 55`.
-  - Asserts: `P*4 >= slowNeedS*5` (P ≥ 1.25 × need); `A >= latestHeavyStartS + daemonExtensionS`;
-    `L_ci == L_default`; `L_default >= P + A`; `J*60 >= L_ci + 300` and `300 >= 5*preLegMaxS`; the call line
+    `worlddExtensionS = 93`, `daemonExtensionS = 166`, `backupKillS = 60` (Go's `testKillTimeout`, [D9]),
+    `preLegMaxS = 55`.
+  - Asserts: `P*4 >= slowNeedS*5` (P ≥ 1.25 × need); `A >= latestHeavyStartS + worlddExtensionS + daemonExtensionS`
+    (≥ 813); `L_ci == L_default`; `L_default >= P + backupKillS + A`; `J*60 >= L_ci + 300` and `300 >= 5*preLegMaxS`; the call line
     contains `-race` and contains none of `-short`, `-run`, `-skip`, `-failfast=false`. Each failure message names
     the layer and the inequality.
 
@@ -279,8 +304,10 @@ output and exits 1):
 (`:415-442`) is history and stays byte-identical.
 
 **`.github/workflows/ci.yml`** (~+5/−3): step "go -race gate": `timeout-minutes: 40`,
-`VERIFY_GO_RACE_TIMEOUT_S: "1800"`. The comment names the three layers and points at this doc. No new job, no new
-step (the wrapper test runs inside `verify_go.sh`).
+`VERIFY_GO_RACE_TIMEOUT_S: "1900"`. The comment names the three layers and points at this doc. No new job, no new
+step (the wrapper test runs inside `verify_go.sh`). The edit keeps the controls `ailang-verify:`, `go-verify:` and
+`./scripts/verify_go.sh`, and adds no `Z3_VER`/`Z3_SHA` token, both of which `TestZ3PinDeclaredOnceAndInstalledInBothJobs`
+counts [C1].
 
 ## 5. Mutation table
 
@@ -290,12 +317,12 @@ Each mutation is a single edit to the M1 tree. "Kills" names the test and the as
 |---|---|---|
 | M1 | revert P: `VERIFY_GO_RACE_PKG_TIMEOUT_S=480` | `TestRaceBoundsAreOrdered` (P ≥ 1.25 × 646); `test_race_leg_bounds.sh` R1 (stdout text) |
 | M2 | call line hardcodes `-timeout 8m` (P defined but unused) | `TestRaceBoundsAreOrdered` (exact call line); `TestVerifyGoProductCheckSequence` repaired arm (call-line needle count 0) |
-| M3 | CI keeps `VERIFY_GO_RACE_TIMEOUT_S: "1500"` | `TestRaceBoundsAreOrdered` (`L_ci == L_default`, and `L ≥ P + A`) |
-| M4 | script default back to `:-1500` | `TestRaceBoundsAreOrdered` (`L_default ≥ P + A`); R1 (rc 2, not 0) |
-| M5 | `timeout-minutes: 30` (J×60 = 1800 ≤ L) | `TestRaceBoundsAreOrdered` (`J*60 ≥ L + 300`) |
+| M3 | CI keeps `VERIFY_GO_RACE_TIMEOUT_S: "1500"` | `TestRaceBoundsAreOrdered` (`L_ci == L_default`, and `L ≥ P + 60 + A`) |
+| M4 | script default lowered to `:-1700` (< 1773; r0's 1800 would still pass the guard, so the mutant is 1700) | `TestRaceBoundsAreOrdered` (`L_default ≥ P + 60 + A`); R1 (rc 2, not 0) |
+| M5 | `timeout-minutes: 36` (J×60 = 2160 < L + 300 = 2200) | `TestRaceBoundsAreOrdered` (`J*60 ≥ L + 300`) |
 | M6 | `check_race_bounds` ordering branch deleted (or `return 0` first) | R3 (rc 0, want 2) |
-| M7 | ordering comparison `-lt` → `-le` (off by one) | R2 (rc 2 at 1620, want 0) |
-| M8 | `VERIFY_GO_RACE_START_ALLOWANCE_S=0` | `TestRaceBoundsAreOrdered` (A ≥ 720); R1 text |
+| M7 | ordering comparison `-lt` → `-le` (off by one) | R2 (rc 2 at 1773, want 0) |
+| M8 | `VERIFY_GO_RACE_START_ALLOWANCE_S=720` (r0's daemon-only undercut) | `TestRaceBoundsAreOrdered` (A ≥ 813); R1 text |
 | M9 | wrapper's process listing deleted | R6 (`still running at the leg bound` / `hang_probe.test` absent) |
 | M10 | `os.killpg(...)` → `p.kill()` (child only) | R6 (grandchild `kill -0` succeeds) |
 | M11 | `sys.exit(p.wait(...))` → `p.wait(...); sys.exit(0)` | R5 (rc 0, want 3) |
@@ -305,9 +332,13 @@ Each mutation is a single edit to the M1 tree. "Kills" names the test and the as
 | M15 | `continue-on-error: true` on the race job/step | `TestRaceBoundsAreOrdered` (zero `continue-on-error`) |
 | M16 | `bash scripts/test_race_leg_bounds.sh` line dropped from the race block | `TestVerifyGoProductCheckSequence` repaired arm, *only if* the implementer adds it as a needle; **required**: add it |
 | M17 | `check_race_bounds || exit $?` dropped from the main flow | **required new needle** in the repaired sequence, the same as M16 |
+| M18 | the `+ 60` backup-kill term dropped from `min` | R3 (rc 0 at 1772, want 2) |
+| M19 | a top-level `check_race_bounds` call (or any echo) inserted above the subcommand dispatch | `TestEvidenceNamedManifestRejectsUnpinnedTest` if it changes `--evidence-manifest-check` output; R1 if it prints twice |
 
 M16/M17 are listed so the implementer adds the two needles; without them those edits would survive. There are no
-declared equivalents.
+declared equivalents. One edit is **not killable locally**, and is declared: dropping `-ww` from the `ps` call. On
+darwin the output is identical either way [C3], so R6 stays green. On Linux, R6 in the CI race job (AC7) is the
+observation that decides whether it matters.
 
 ## 6. Acceptance criteria
 
@@ -315,24 +346,29 @@ All commands run from the worktree root on the rig with `AILANG_BIN=$HOME/.pinne
 released), `GOTOOLCHAIN=go1.26.6`.
 
 - **AC1** `bash scripts/verify_go.sh --race-bounds-check; echo rc=$?` →
-  `race bounds: per-package 900s, start allowance 720s, leg 1800s` / `rc=0`.
-- **AC2** `VERIFY_GO_RACE_TIMEOUT_S=1619 bash scripts/verify_go.sh --race-bounds-check; echo rc=$?` → stderr
-  `… leg bound 1619s must be at least per-package 900s + start allowance 720s (1620s)` / `rc=2`.
+  `race bounds: per-package 900s, start allowance 813s, leg 1900s` / `rc=0`.
+- **AC2** `VERIFY_GO_RACE_TIMEOUT_S=1772 bash scripts/verify_go.sh --race-bounds-check; echo rc=$?` → stderr
+  `… leg bound 1772s must be at least per-package 900s + 60s backup kill + start allowance 813s (1773s)` / `rc=2`;
+  and with `=1773` → `rc=0`.
 - **AC3** `bash scripts/test_race_leg_bounds.sh; echo rc=$?` → six `ok R<n> …` lines, `PASS 6/6 arms`, `rc=0`.
   It also passes with `TMPDIR` under a 1777 parent and under CPU contention, per the iteration-442 Gate 5 process
   rule: `TMPDIR=$(mktemp -d /private/tmp/r267.XXXX) bash scripts/test_race_leg_bounds.sh` with 8 `yes >/dev/null`
   spinners running → `PASS 6/6 arms`.
-- **AC4** `go vet ./host/verifygate/ && go test ./host/verifygate/ -count=1 -v -run 'TestRaceBoundsAreOrdered|TestRaceLegRunsInItsOwnJob|TestVerifyGoProductCheckSequence|TestVerifyGoRefusesUnknownLegs' 2>&1 | grep -E '^(--- |ok|FAIL)'`
-  → four `--- PASS` lines and `ok`. (`go vet` is the compile fence for `_test.go`; `go build` is not.)
-- **AC5** Mutation replay: for each of M1–M17, apply the single edit, run the killing test(s) named in §5, and
+- **AC4** `go vet ./host/verifygate/ && go test ./host/verifygate/ -count=1 -v -run 'TestRaceBoundsAreOrdered|TestRaceLegRunsInItsOwnJob|TestVerifyGoProductCheckSequence|TestVerifyGoRefusesUnknownLegs|TestEvidenceNamedManifestRejectsUnpinnedTest|TestZ3PinDeclaredOnceAndInstalledInBothJobs' 2>&1 | grep -E '^(--- |ok|FAIL)'`
+  → six `--- PASS` lines and `ok`. (The last two are the C1 readers that copy-and-execute `verify_go.sh` and count
+  `ci.yml` tokens. AC6's whole `go test ./...` runs them again.) (`go vet` is the compile fence for `_test.go`; `go build` is not.)
+- **AC5** Mutation replay: for each of M1–M19, apply the single edit, run the killing test(s) named in §5, and
   observe red with the named assertion; restore and observe green. Record a table `id | killing test | rc mutated |
-  rc restored`. Expected: 17/17 killed, 0 survivors.
+  rc restored`. Expected: 19/19 killed, 0 survivors (M19 as the specific insertion the replay applies:
+  `check_race_bounds` called above the dispatch with an echo). The declared `-ww` case is excluded locally and
+  observed under AC7.
 - **AC6** Whole gates on the M1 tree: `./scripts/verify_ail.sh` rc 0; `go build ./... && go test ./... -count=1`
   with the fail set compared to base `6420426e`, so no new failure; `gofmt -l host/verifygate/` empty;
   `bash -n scripts/verify_go.sh scripts/test_race_leg_bounds.sh` rc 0.
-- **AC7** CI on the PR: the race job's log contains `── legs: race (race bounds: per-package 900s, leg 1800s)`,
+- **AC7** CI on the PR: the race job's log contains `── legs: race (race bounds: per-package 900s, leg 1900s)`,
   the shell test's `PASS 6/6 arms`, and
-  `── go test ./... -count=1 -race -timeout 900s (leg bound 1800s)`, and all three jobs are green.
+  `── go test ./... -count=1 -race -timeout 900s (leg bound 1900s)`, and all three jobs are green. R6's `ok` line in
+  that log is the Linux procps observation for `ps -ww … args=` [C3].
 - **AC8 (observational; recorded, never claimed if unobserved)**: over the first 10 race-job attempts after merge,
   any attempt in which a heavy package reads > 480 s is green for that package, and no
   `panic: test timed out after 15m0s` appears. If none of the 10 draws a non-normal runner (`host/store` ≤ 67.5 s
@@ -347,6 +383,18 @@ Greps in [D8]:
   parameterised (§4). **Must change in M1 or that test goes red.**
 - `host/verifygate/race_job_gate_test.go:37, 55-57`: `VERIFY_GO_RACE_TIMEOUT_S:` presence and the Python `cmd`
   substring. The latter must change (§4).
+- **The three D10 readers r0 left unclassified** [C1]:
+  - `scripts/floor/canary.py:95`: a docstring only ("verify_go.sh's tracked-binary gate refuses .gz"). It pins
+    no text, and nothing executes `canary.py` from CI or a script (grep: no match, with a positive control on
+    `ci.yml`; [C1, D13]). Not affected; no AC needed.
+  - `host/verifygate/evidence_manifest_gate_test.go` (`TestEvidenceNamedManifestRejectsUnpinnedTest`; helpers at
+    `:98,106,169,187,212`): **copies and executes** `verify_go.sh --evidence-manifest-check`, and rewrites the text
+    between `REQUIRED_EVIDENCE_TESTS = {` and `}\nEXACT_EVIDENCE_TESTS = int(sys.argv[2])`. Affected only if M1 adds
+    executing top-level code before the dispatch, or reuses those anchors. §4 step 1 forbids both. Exercised by AC4
+    (named) and AC6 (whole suite); M19 is its mutation.
+  - `host/verifygate/ail_binary_gate_test.go:708` (`TestZ3PinDeclaredOnceAndInstalledInBothJobs`): requires the
+    `ci.yml` controls `ailang-verify:`, `go-verify:` and `./scripts/verify_go.sh`, and counts `Z3_VER:`/`Z3_SHA:`.
+    M1's `ci.yml` edit (two values and a comment in one step) touches none of them. Exercised by AC4 and AC6.
 - `host/pins/scan_test.go:158`: counts `v0.41.0` tokens in `verify_go.sh` (n = 4). M1 adds none.
 - `host/verifygate/toolchain_pin_gate_test.go:123, 159-160, 1189-1340`: reads `verify_go.sh`'s P1/P2 toolchain
   bindings and pins the exact CI job set. M1 touches neither, and is a reason option C would need more edits.
@@ -362,7 +410,7 @@ Greps in [D8]:
 
 ## 8. Sizing
 
-One milestone. ~+232/−22 ≈ 254 changed lines: `verify_go.sh` ~59, `test_race_leg_bounds.sh` ~75,
+One milestone. ~+240/−22 ≈ 262 changed lines: `verify_go.sh` ~61, `test_race_leg_bounds.sh` ~80,
 `race_job_gate_test.go` ~96, `mission_config_gate_test.go` ~16, `ci.yml` ~8. Within the < 300 brief. Shell and
 Go test only, no `.ail`, no production Go. CI cost: +~3 s for the shell arms in each race-leg run, and +ms for the
 static test in both Go jobs. `host/verifygate`'s race time (a heavy package) grows by the static test only, which
@@ -381,6 +429,7 @@ is file reads.
 - Not claiming the runner's vCPU count: `nproc` is not in the logs. The existing "2-core runner" comment is
   unverified, and M1's comment says so. `PENDING — controller to measure: add `nproc; go env GOMAXPROCS` to the race
   job's "go version" step on any PR and read it.`
+- Not shrinking A to the measured-schedule value 647 s [D11]. The stacked 813 s costs nothing on a passing run.
 - Residual exposure, stated: a runner slower than `k` ≈ 2.2 (39 % beyond the worst observed) would reach 900 s in
   `host/daemon`. It fails loudly and named, the same as today's failure, at a 1.39× higher bar.
 
@@ -399,15 +448,37 @@ Scripts: `~/.ailang/state/world-iter443/design-scratch/`. Logs: `~/.ailang/state
 | D7 | repo visibility (minute cost of C) | `gh repo view sunholo-data/ailang-world --json visibility -q .visibility` | `PUBLIC` |
 | D8 | readers of these lines/bounds | `grep -rn 'VERIFY_GO_RACE_TIMEOUT_S' --include='*.go' --include='*.sh' --include='*.yml' --include='*.py' . \| grep -v '^./design_docs/'`; `grep -rln 'timeout-minutes' --include='*.go' --include='*.sh' --include='*.py' . \| grep -v design_docs` with control `grep -rln 'ci.yml' --include='*_test.go' host`; `grep -rn 'verify_go\|go-race-verify' tools/launchd` with control `ls tools/launchd \| wc -l`; `grep -n 'verify_go' host/pins/scan_test.go`; `grep -rln VERIFY_GO_RACE_TIMEOUT_S design_docs/verification` with control `grep -rln VERIFY_GO_LEGS design_docs/verification` | `race_job_gate_test.go:37`, `mission_config_gate_test.go:436,500`, `verify_go.sh:222-226,350-354`, `ci.yml:521,525`; **timeout-minutes readers: none**, with control listing 9 `_test.go` files that read `ci.yml`; **tools/launchd: no match**, with control `5` files present; `scan_test.go:158 "scripts/verify_go.sh": {… n: 4 …}`; verification hits only historical CI copies (`world-iter386/ci_merge_race_attempt1.log`, `world-iter329/plan-M*-ci.yml.txt`), with control `world-iter397/gates.sh` matching `VERIFY_GO_LEGS` |
 | D9 | Go's timeout semantics; the brief's 696 s premise | `go help testflag \| grep -A3 -- '-timeout d'`; `grep -n 'testKillTimeout\|WaitDelay' $(go env GOROOT)/src/cmd/go/internal/test/test.go`; `grep -n 696 design_docs/verification/world-iter442/readings.md` | `The default is 10 minutes (10m).`; `840: if testWaitDelay < 1*time.Minute {` / `841: testKillTimeout = testTimeout + 1*time.Minute`; `1740: "*** Test killed with %v: ran too long (%v).\n"`; readings `17: base2/cmd-plain (-timeout 45m): complete, 696 s …` |
+| D11 | slot cascade (C4, kimi's check): which slot `host/verifygate` takes | `python3 -I design-scratch/slots.py` (output `slots.out`; start = print offset − duration, as D4) | `both cmd&daemon >=440s: 15 \| vg_start - cmd_end range -83.0..+1.3 \| vg_start - daemon_end range -172.7..-91.4`; `all: 51 \| vg_start - cmd_end range -83.0..+16.7 \| vg_start before daemon_end in 51 of 51`; e.g. `45936239736_a1 cmd_end 534 dmn_end 620 \| vg_start 451` |
+| D12 | the plain leg passes no `-timeout` (correction 6) | `grep -n -- '-timeout' scripts/verify_go.sh` (positive control: it matches the two race lines) | `350:echo "── go test ./... -count=1 -race -timeout 8m …"`, `355:cmd = [… "-timeout", "8m"]`; no other line; = C2 |
+| D13 | C1 readers and their test names | `grep -n '^func Test' host/verifygate/evidence_manifest_gate_test.go`; `awk 'NR<=708 && /^func Test/{l=NR": "$0} END{print l}' host/verifygate/ail_binary_gate_test.go`; `grep -n verify_go scripts/floor/canary.py`; `grep -rn canary.py --include='*.sh' --include='*.yml' --include='*.go' --include=Makefile . \| grep -v ^./design_docs` with control `grep -rln verify_go.sh --include='*.yml' . \| grep -v design_docs` | `229:func TestEvidenceNamedManifestRejectsUnpinnedTest` (the file's only `Test`); `699: func TestZ3PinDeclaredOnceAndInstalledInBothJobs`; `95:` a docstring, `Evidence transcripts stay plain .jsonl: verify_go.sh's tracked-binary gate refuses .gz.`; **canary.py executors: none**, with control `.github/workflows/ci.yml` |
+| C1 | readers (VERIFIED BY CONTROLLER) | as in the r1 brief: `grep -n 'verify_go' scripts/floor/canary.py host/verifygate/evidence_manifest_gate_test.go host/verifygate/ail_binary_gate_test.go` | canary docstring `:95`; evidence test copies+executes at `:98,106,169,187,212`; ail_binary controls `:708`; control `grep -c verify_go host/verifygate/mission_config_gate_test.go` → `25` |
+| C2 | plain leg `-timeout` (VERIFIED BY CONTROLLER) | `grep -n -- '-timeout' scripts/verify_go.sh` | exactly `350` and `355` |
+| C3 | `ps` truncation (VERIFIED BY CONTROLLER, darwin/arm64 only) | 146-char executable, `start_new_session=True`, listed from Python with `stdout=PIPE`, with and without `-ww` | full path present, longest line 3,282 chars, identical output; Linux procps unmeasured |
+| C4 | start-allowance check | not measured by the controller; done here as D11 | — |
 | D10 | existing pins of `verify_go.sh` text | `grep -rln 'verify_go' --include='*.go' --include='*.sh' --include='*.yml' --include='*.py' . \| grep -v '^./design_docs'` | `host/verifygate/{mission_config_gate,evidence_manifest_gate,ail_binary_gate,toolchain_pin_gate,race_job_gate}_test.go`, `host/pins/scan_test.go`, `host/{broker,transitionreg,runbook,replay}` (prose/comments), `scripts/{verify_go,tracked_binary_gate,test_tracked_binary_gate}.sh`, `scripts/floor/canary.py`, `.github/workflows/ci.yml` |
 
 Inherited, VERIFIED BY CONTROLLER (iteration 443): `race_table.txt` and `racelogs/` (53 attempt logs, run ids,
 shas, events, conclusions); the latest instance of §1. Each number used above was re-derived from the raw logs
 (D2–D6), not from the table's text.
 
-Not measured (each marked PENDING in the body): the runner vCPU count; per-shard `-race` times (option C); a full
+Not measured (each marked PENDING in the body): Linux procps `ps -ww` under a pipe (observed by AC7); the runner vCPU count; per-shard `-race` times (option C); a full
 local `VERIFY_GO_LEGS=all` run on the M1 tree (AC6 covers it at implementation).
 
 ## 11. Quorum verification log
 
-Pending.
+**Round 1** (on r0 `8256a83e`; author `claude:claude-opus-5-5` benched; seats gemini-4-carbon, oc-glm-5-3,
+oc-kimi-k3, no absent seat): **BLOCKED 3/3**. No seat disputed the direction (option A, fixed per-package bound,
+strict layer ordering).
+
+| seat | objection (one line) | r1 change |
+|---|---|---|
+| gemini-4-carbon | `ps -eo … args=` may truncate argv (BSD without `-ww`, non-tty) and was asserted without a log row; A = 720 omits `cmd/ailang-worldd`'s 92.9 s extension | `ps -ww` adopted as a belt (§3, §4), with C3: darwin under a pipe does **not** truncate (premise refuted there), and Linux is observed by R6 in CI (AC7). The `-ww` drop is a declared locally-unkillable edit (§5). A recomputed with both extensions stacked: 813 (gemini proposed 820 with L ≥ P + A; r1 also adds the 60 s backup kill, per kimi) |
+| oc-glm-5-3 | §7 omits three D10 readers (`canary.py`, `evidence_manifest_gate_test.go`, `ail_binary_gate_test.go`); correction 6's "plain leg passes no `-timeout`" was unverified | §7 classifies all three [C1, D13]: canary is a docstring with no executor; the evidence test copies and executes the script (§4 step 1 constraint, M19); the Z3 test counts ci.yml controls. AC4 names both Go tests and AC6 runs them. Correction 6 now cites C2/D12 |
+| oc-kimi-k3 | A = 720 is under-derived against the doc's own stacked model; the guard omits Go's 60 s backup kill; R6's single `kill -0` can race the reaping | Slot cascade measured (D11): verifygate never waits on daemon's slot (51/51), so it tracks cmd's. The stacked A = 813 is kept anyway as the conservative reading. Guard is now L ≥ P + 60 + A = 1773, and L is raised to **1900** (127 s margin). J = 40 re-derived (2400 ≥ 2200). R1–R3, AC1/AC2, the test constants (`worlddExtensionS`, `backupKillS`), M7/M8 updated, M18 added. R6 is now a bounded 5 s poll |
+
+r0 → r1 diff (derived from `diff design-scratch/r0.md` against this file): header/instruments; correction 6 citation;
+§2 slot-cascade paragraph; §3 item 1 (A, guard formula) and item 2 (`ps -ww`, C3); bounds table rows A/L/J and the
+ordering line; §4 step 1 constants, comment, guard, FATAL text and the C1 constraint; step 2 `ps -ww` and parsing;
+R1/R2/R3/R6; test constants and asserts; ci.yml value 1900 and the C1 controls note; §5 M3/M4/M5/M7/M8, plus
+M18/M19 and the declared `-ww` case; §6 AC1/AC2/AC4/AC5/AC7; §7 three-reader bullet; §8 sizing; §9 A note;
+§10 D11–D13, C1–C4; §11.
