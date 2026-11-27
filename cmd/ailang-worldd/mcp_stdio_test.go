@@ -92,6 +92,104 @@ func TestMCPStdioBridgeSSEJSONSessionAndRedaction(t *testing.T) {
 	}
 }
 
+func TestMCPStdioBridgeConcurrentToolCallsAndCancel(t *testing.T) {
+	const token = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	slowStarted := make(chan struct{})
+	slowRelease := make(chan struct{})
+	cancelStarted := make(chan struct{})
+	cancelObserved := make(chan struct{})
+
+	client := &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		body, _ := io.ReadAll(r.Body)
+		var env struct {
+			ID     int    `json:"id"`
+			Method string `json:"method"`
+		}
+		_ = json.Unmarshal(body, &env)
+		switch env.ID {
+		case 1:
+			h := http.Header{"Mcp-Session-Id": {"sid-conc"}, "Content-Type": {"application/json"}}
+			return &http.Response{StatusCode: http.StatusOK, Header: h, Body: io.NopCloser(strings.NewReader(`{"jsonrpc":"2.0","id":1,"result":{"ok":true}}`))}, nil
+		case 10:
+			// Slow tools/call: blocks until fast call (id=11) completes.
+			close(slowStarted)
+			<-slowRelease
+			h := http.Header{"Content-Type": {"application/json"}}
+			return &http.Response{StatusCode: http.StatusOK, Header: h, Body: io.NopCloser(strings.NewReader(`{"jsonrpc":"2.0","id":10,"result":{"which":"slow"}}`))}, nil
+		case 11:
+			// Fast tools/call: arrives while id=10 is still blocked; proves no head-of-line blocking.
+			<-slowStarted
+			close(slowRelease)
+			h := http.Header{"Content-Type": {"application/json"}}
+			return &http.Response{StatusCode: http.StatusOK, Header: h, Body: io.NopCloser(strings.NewReader(`{"jsonrpc":"2.0","id":11,"result":{"which":"fast"}}`))}, nil
+		case 12:
+			// Cancelled tools/call: blocks until notifications/cancelled cancels its context.
+			close(cancelStarted)
+			<-r.Context().Done()
+			close(cancelObserved)
+			return nil, r.Context().Err()
+		default:
+			return &http.Response{StatusCode: http.StatusAccepted, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(""))}, nil
+		}
+	})}
+
+	pr, pw := io.Pipe()
+	var stdout bytes.Buffer
+	done := make(chan error, 1)
+	go func() {
+		done <- bridgeMCPStdio(pr, &stdout, client, "http://127.0.0.1:7644/mcp/", token)
+	}()
+
+	writeLine := func(s string) {
+		if _, err := io.WriteString(pw, s+"\n"); err != nil {
+			t.Fatalf("write stdin: %v", err)
+		}
+	}
+	writeLine(`{"jsonrpc":"2.0","id":1,"method":"initialize"}`)
+	writeLine(`{"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"workspace-search"}}`)
+	writeLine(`{"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"ailang-read"}}`)
+	writeLine(`{"jsonrpc":"2.0","id":12,"method":"tools/call","params":{"name":"workspace-exec"}}`)
+	select {
+	case <-cancelStarted:
+	case <-time.After(5 * time.Second):
+		t.Fatal("cancelled call never started")
+	}
+	writeLine(`{"jsonrpc":"2.0","method":"notifications/cancelled","params":{"requestId":12}}`)
+	select {
+	case <-cancelObserved:
+	case <-time.After(5 * time.Second):
+		t.Fatal("notifications/cancelled did not cancel in-flight request")
+	}
+	_ = pw.Close()
+
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatalf("bridgeMCPStdio: %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("bridgeMCPStdio did not exit after stdin EOF")
+	}
+
+	lines := strings.Split(strings.TrimSpace(stdout.String()), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("got %d responses, want 3 (init + id 10 + id 11; cancelled id 12 omitted): %q", len(lines), stdout.String())
+	}
+	seenIDs := map[int]bool{}
+	for _, line := range lines {
+		var resp struct {
+			ID int `json:"id"`
+		}
+		if err := json.Unmarshal([]byte(line), &resp); err != nil {
+			t.Fatalf("invalid JSON response %q: %v", line, err)
+		}
+		seenIDs[resp.ID] = true
+	}
+	if !seenIDs[1] || !seenIDs[10] || !seenIDs[11] || seenIDs[12] {
+		t.Fatalf("unexpected response IDs: %+v (%s)", seenIDs, stdout.String())
+	}
+}
+
 func TestAgyHostInitLauncherGateAndStage(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	root := t.TempDir()
