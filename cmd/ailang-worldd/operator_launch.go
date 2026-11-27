@@ -330,18 +330,7 @@ func operatorLaunchFailure(err error) string {
 }
 
 func operatorLaunchProcessStatus(s store.OperatorLaunchSnapshot, read func(int) (string, bool)) string {
-	if s.NoSpawn {
-		return "spawn-refused"
-	}
-	if s.Phase == "reserved" {
-		return "uncertain"
-	}
-	if s.Receipt.Status == "launched" {
-		if birth, live := read(s.Receipt.PID); !live || birth != s.Receipt.Birth {
-			return "uncertain"
-		}
-	}
-	return s.Receipt.Status
+	return s.ProcessStatus(read)
 }
 
 func (e serviceEnv) operatorLaunchStatus(id string, out io.Writer) error {
@@ -546,3 +535,5 @@ func operatorLaunchExitStatus(proc context.Context, result agentrun.Result) stri
 	}
 	return "stopped"
 }
+
+func operatorProcessIdentity(pid int) (string, bool) { return agentrun.ProcessIdentity(pid) }

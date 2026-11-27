@@ -2121,3 +2121,41 @@ launch-status ACTION-ID`. There is no unlock command for `uncertain`. Preserve
 the action id, runner log, launch receipt, worktree and session records for
 attended reconciliation. Check the episode report for existing work. Only
 positive evidence can settle the reservation. Refresh and retry preserve it.
+
+#### Confirm with an enrolled key
+
+Review the exact action and task. The pending card's `operator-ceremony` JSON
+gives the same-origin `post` URL, `digest`, `messageHex`, SSHSIG `namespace`
+and passkey `origin`, `rp` and `allow` credential IDs. For SSHSIG, save that
+JSON in a private directory as `ceremony.json`, then use your enrolled key.
+
+```sh
+jq -r .messageHex ceremony.json | xxd -r -p > action.message
+ssh-keygen -Y sign -n world-operator-action@sunholo -f "$ENROLLED_KEY" action.message
+jq -n --arg digest "$(jq -r .digest ceremony.json)" --rawfile signature action.message.sig \
+  '{v: 1, digest: $digest, sshsig: $signature}' > confirmation.json
+```
+
+POST that JSON with `Content-Type: application/json` from the card's exact
+origin to its `post` URL. A passkey uses SHA-256 of the message bytes as the
+challenge, the card's RP and allow-list for that origin, and
+`userVerification: "required"`. Send the serialized assertion as `webauthn`
+in place of `sshsig`. The POST returns `result`, `approvedBy` and the action
+links. The same artifact can be retried after a lost response and returns
+`already-confirmed`.
+
+A ready runner claims the action after confirmation. Poll `statusHref`.
+`launched` means the live PID and its birth identity match the receipt.
+`spawn-refused` means the runner recorded no spawn. A missing or mismatched
+identity reports `uncertain` and retains the fence described above.
+
+Run a fake confirmation with both key types, real same-origin transport,
+temporary stores and the runner absent. The fixture constructs both payloads
+for the exact bytes shown on the card and verifies one counter advance on replay.
+
+```sh
+AILANG_BIN="$HOME/.pinned-ailang/ailang" WORLD_REQUIRE_SSH_KEYGEN=1 \
+WORLD_EXEC_NODE=/opt/homebrew/bin/node \
+WORLD_TOOL_AILANG_BIN="$HOME/.pinned-ailang-tools/v0.54.15/ailang" \
+go test -count=1 ./host/daemon/ -run '^TestOperatorConfirmHTTP$'
+```

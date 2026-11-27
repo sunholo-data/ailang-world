@@ -104,6 +104,11 @@ func (d *Daemon) handleOperatorRoutes(w http.ResponseWriter, r *http.Request, or
 				d.handleOperatorRead(w, r, id, hasSuffix)
 				return
 			}
+		case suffix == "confirm":
+			if r.Method == http.MethodPost {
+				d.handleOperatorConfirm(w, r, id, origins)
+				return
+			}
 		default:
 			writeApprovalRefusal(w, http.StatusNotFound, "NotFound", "no operator action route")
 			return

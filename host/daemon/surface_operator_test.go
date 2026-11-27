@@ -19,6 +19,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/store"
@@ -55,17 +56,21 @@ type operatorHTTP struct {
 	log     operatorLog
 }
 
-func newOperatorHTTP(t *testing.T) *operatorHTTP {
+func newOperatorHTTP(t *testing.T, budget ...time.Duration) *operatorHTTP {
 	t.Helper()
-	f := newOperatorSurface(t, nil)
+	f := newOperatorSurface(t, nil, budget...)
 	f.server = httptest.NewServer(f.handler)
 	t.Cleanup(f.server.Close)
 	return f
 }
 
-func newOperatorSurface(t *testing.T, edit func(*store.OperatorStartReview)) *operatorHTTP {
+func newOperatorSurface(t *testing.T, edit func(*store.OperatorStartReview), budget ...time.Duration) *operatorHTTP {
 	t.Helper()
 	f := &operatorHTTP{approvalRig: newApprovalRig(t)}
+	if len(budget) != 0 {
+		f.approvalRig.writeBudget = budget[0]
+		f.d.commitBudget, f.d.readDeadline = budget[0], budget[0]
+	}
 	f.now.Store(apT0)
 	f.d.approveNow = f.now.Load
 	f.d.errLog = &f.log
@@ -320,7 +325,7 @@ func TestOperatorAdmissionHTTP(t *testing.T) {
 			refuse(path, "GET", nil, 400, "BadRequest", nil)
 		}
 		refuse(operatorPath+id+"/status.json/x", "GET", nil, 404, "NotFound", nil)
-		refuse(operatorPath+id+"/confirm", "POST", valid, 404, "NotFound", nil)
+		refuse(operatorPath+id+"/confirm/x", "POST", valid, 404, "NotFound", nil)
 	})
 	f.sub("StrictJSONAndLimits", func(t *testing.T) {
 		invalid := [][]byte{nil, []byte("[]"), []byte(`{"argv":"start"}`), []byte(`{"argv":[42]}`), append(bytes.Clone(valid), []byte(" {}")...),
