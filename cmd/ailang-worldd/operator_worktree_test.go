@@ -40,7 +40,14 @@ func newWorktreeStartRigWithContext(t *testing.T, claude bool, ctx context.Conte
 	s.writes = nil
 	s.env.terminal.now = func() int64 { return 1012 }
 	f := newPresetFixture(t, ctx)
-	r := operatorStartRig{f: f, bin: startReadFakeAgent(t, f), creds: s.config.Credentials, hosts: t.TempDir()}
+	// The runner checks the agent and session directory up to its login home.
+	bin, err := os.MkdirTemp(s.config.Home, "agent-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	startReadFakeAgentIn(t, f, bin)
+	f.r.sessions = filepath.Join(s.config.Home, "sessions")
+	r := operatorStartRig{f: f, bin: bin, creds: s.config.Credentials, hosts: t.TempDir()}
 	r.f.r.f.db = s.config.World
 	r.action = approval.OperatorAction{Schema: approval.OperatorActionSchema, ID: fixtureActionID, Kind: "start", Episode: "ep",
 		Store: r.creds, Options: approval.OperatorOptions{Preset: "p", Headless: true}, Task: operatorStartTask, Review: "fixture"}
