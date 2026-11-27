@@ -476,10 +476,11 @@ func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bo
 			`bash scripts/tracked_binary_gate.sh --allow-png 'website/static/img/v1/' \`,
 		}
 	}
+	const raceArmsCall = `bash scripts/test_race_leg_bounds.sh`
 	raceAnchors := []string{`echo "── go test ./... -count=1 -race -timeout 8m (leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s)"`, `cmd = ["go", "test", "./...", "-count=1", "-race", "-timeout", "8m"]`, `    print(f"verify_go.sh: FATAL: -race leg timed out after {bound}s", file=sys.stderr)`, `    sys.exit(124)`}
 	if repaired {
 		raceAnchors = []string{
-			`bash scripts/test_race_leg_bounds.sh`,
+			raceArmsCall,
 			`echo "── go test ./... -count=1 -race -timeout ${VERIFY_GO_RACE_PKG_TIMEOUT_S}s (leg bound ${VERIFY_GO_RACE_TIMEOUT_S}s)"`,
 			raceLegCall,
 		}
@@ -520,7 +521,8 @@ func requireVerifyGoProductSequence(t *testing.T, label, src string, repaired bo
 	needles = append(needles, passedAnchor)
 	position := -1
 	for _, needle := range needles {
-		exactLine := needle == `go build ./...` || needle == `go test ./... -count=1` || (repaired && (needle == `check_mission_config` || needle == `check_race_bounds || exit $?`))
+		exactLine := needle == `go build ./...` || needle == `go test ./... -count=1` ||
+			(repaired && (needle == `check_mission_config` || needle == `check_race_bounds || exit $?` || needle == raceArmsCall))
 		count := strings.Count(src, needle)
 		next := strings.Index(src, needle)
 		if exactLine {
