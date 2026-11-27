@@ -184,9 +184,9 @@ func (c *Credentials) PruneOperatorActions(ctx context.Context, now int64) error
 	if err := expireOperatorActions(ctx, tx, now); err != nil {
 		return err
 	}
-	if _, err := tx.ExecContext(ctx, `UPDATE operator_actions SET action = NULL, challenge = NULL, artifact = NULL, approved_by = NULL
+	if _, err := tx.ExecContext(ctx, `UPDATE operator_actions AS a SET action = NULL, challenge = NULL, artifact = NULL, approved_by = NULL
 		WHERE terminal_at < ? AND NOT EXISTS
-			(SELECT 1 FROM operator_action_steps WHERE action_id = operator_actions.id AND phase = 'reserved')`, now-30*86400); err != nil {
+			(SELECT 1 FROM operator_action_steps WHERE action_id = a.id AND phase = 'reserved') AND NOT (`+operatorLaunchUnsettled+`)`, now-30*86400); err != nil {
 		return err
 	}
 	return tx.Commit()

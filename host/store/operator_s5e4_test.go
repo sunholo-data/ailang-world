@@ -24,6 +24,11 @@ type operatorPinFixture struct {
 
 func newOperatorPinFixture(t *testing.T, allowance bool, contexts ...context.Context) operatorPinFixture {
 	t.Helper()
+	return newOperatorPinFixtureWithFacts(t, allowance, nil, contexts...)
+}
+
+func newOperatorPinFixtureWithFacts(t *testing.T, allowance bool, prefix []approval.OperatorResolved, contexts ...context.Context) operatorPinFixture {
+	t.Helper()
 	c, ctx := openTestCredentials(t), testCtx(t)
 	if len(contexts) > 0 {
 		ctx = contexts[0]
@@ -54,6 +59,7 @@ func newOperatorPinFixture(t *testing.T, allowance bool, contexts ...context.Con
 	if err != nil {
 		t.Fatal(err)
 	}
+	a.Resolution = append(prefix, a.Resolution...)
 	proof := signOperatorPinAction(t, c, row, a)
 	in.Attempt.CAS.Digest, err = approval.OperatorSignatureDigest(a)
 	if err != nil {

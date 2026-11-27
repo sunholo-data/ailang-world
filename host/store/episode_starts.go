@@ -131,7 +131,14 @@ func (c *Credentials) AppendEpisodeLaunch(ctx context.Context, episode string, l
 	if err != nil {
 		return err
 	}
-	defer func() { _ = tx.Rollback() }()
+	defer tx.Rollback()
+	if err := appendEpisodeLaunch(ctx, tx, episode, launch); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func appendEpisodeLaunch(ctx context.Context, tx *sql.Tx, episode string, launch EpisodeLaunch) error {
 	var data string
 	if err := tx.QueryRowContext(ctx, "SELECT start_json FROM episode_starts WHERE episode = ?", episode).Scan(&data); err != nil {
 		return err
@@ -162,7 +169,7 @@ func (c *Credentials) AppendEpisodeLaunch(ctx context.Context, episode string, l
 	if _, err := tx.ExecContext(ctx, "UPDATE episode_starts SET start_json = ? WHERE episode = ?", string(encoded), episode); err != nil {
 		return err
 	}
-	return tx.Commit()
+	return nil
 }
 
 type EpisodeResume struct {

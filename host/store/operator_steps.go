@@ -18,7 +18,7 @@ func (c *Credentials) ReserveOperatorStep(ctx context.Context, key OperatorStepK
 	if err := c.operatorAccess(ctx); err != nil {
 		return err
 	}
-	if key.Kind == "operation" || key.Identity == "" || key.Owner == "" || key.Version != 1 {
+	if (key.Kind == "operation" || key.Kind == "launch") || key.Identity == "" || key.Owner == "" || key.Version != 1 {
 		return ErrOperatorInput
 	}
 	return reserveOperatorStep(ctx, c.db, key, now)
@@ -46,7 +46,7 @@ func (c *Credentials) ObserveOperatorStep(ctx context.Context, key OperatorStepK
 	if err := c.operatorAccess(ctx); err != nil {
 		return err
 	}
-	if len(receipt) == 0 || len(receipt) > MaxSurfaceApprovalArtifactBytes {
+	if key.Kind == "launch" || len(receipt) == 0 || len(receipt) > MaxSurfaceApprovalArtifactBytes {
 		return ErrOperatorInput
 	}
 	return observeOperatorStep(ctx, c.db, key, receipt)

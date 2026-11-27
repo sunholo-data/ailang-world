@@ -33,7 +33,10 @@ func operatorChildBudget(ctx context.Context, budget time.Duration) (context.Con
 	return context.WithTimeout(ctx, budget)
 }
 
-func (e serviceEnv) operatorContext(budget time.Duration) (context.Context, context.CancelFunc) {
+func (e serviceEnv) operatorContext(budget time.Duration) (result context.Context, done context.CancelFunc) {
+	if e.operatorDeadline != nil {
+		defer func() { e.operatorDeadline(budget, result) }()
+	}
 	if e.operatorBudget == 0 {
 		return budgetContext(budget)
 	}

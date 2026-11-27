@@ -96,9 +96,6 @@ func activationEvidence(t *testing.T, r *worktreeStartRig) [5]any {
 }
 
 func TestOperatorFirstManagedEpisodeProcess(t *testing.T) {
-	if operatorPreparationBudget != 22*time.Second {
-		t.Fatalf("production preparation budget = %v, want 22s", operatorPreparationBudget)
-	}
 	r, c, h, runner := operatorActivationFixture(t)
 	ctx := activationTestContext(t)
 	prepare := func(acquire func(string, string) (*store.OperatorEpisodeLock, error), stops <-chan os.Signal) error {
@@ -558,6 +555,9 @@ func TestOperatorAttendedStartDisposition(t *testing.T) {
 	}
 	before = drifted
 	r.env.terminal.openTerminal = terminal
+	var budgets []time.Duration
+	r.env.operatorDeadline = func(budget time.Duration, _ context.Context) { budgets = append(budgets, budget) }
+
 	code, output = r.command("reconcile-start", id)
 	after := activationEvidence(t, r)
 	if code != exitOK || !strings.Contains(output, "existing evidence retained") {
@@ -566,6 +566,9 @@ func TestOperatorAttendedStartDisposition(t *testing.T) {
 	before[0] = after[0]
 	if !reflect.DeepEqual(before, after) {
 		t.Fatal("disposition modified the retained worktree, branch or private files")
+	}
+	if !reflect.DeepEqual(budgets, []time.Duration{5 * time.Second, 5 * time.Second}) {
+		t.Fatalf("reconcile preflight and writeback deadlines: %v", budgets)
 	}
 	stopped, err := ro.OperatorAction(ctx, id, 0)
 	if err != nil || stopped.State != "failed" || stopped.Owner != "" {

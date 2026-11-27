@@ -21,6 +21,6 @@ func EpisodeHasUnresolvedOperatorSteps(ctx context.Context, path, episode string
 	err = db.QueryRowContext(ctx, `SELECT EXISTS (
 		SELECT 1 FROM operator_actions a JOIN operator_action_steps s ON s.action_id = a.id
 		WHERE a.episode_id = ? AND s.kind <> 'operation'
-		AND (s.phase = 'reserved' OR a.terminal_at IS NULL))`, episode).Scan(&unresolved)
+		AND (s.phase = 'reserved' OR a.terminal_at IS NULL OR (`+operatorLaunchUnsettled+`)))`, episode).Scan(&unresolved)
 	return unresolved, err
 }

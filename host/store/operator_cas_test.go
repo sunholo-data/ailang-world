@@ -142,7 +142,7 @@ func TestOperatorStepRestart(t *testing.T) {
 		t.Fatal(err)
 	}
 	cas.Generation++
-	key := OperatorStepKey{Action: cas, Owner: runner.Nonce, Kind: "launch", Identity: "run-one", Version: 1}
+	key := OperatorStepKey{Action: cas, Owner: runner.Nonce, Kind: "checks", Identity: "run-one", Version: 1}
 	if err := c.ReserveOperatorStep(ctx, key, 1600); !errors.Is(err, ErrOperatorConflict) {
 		t.Fatalf("reserve at expiry: %v", err)
 	}
@@ -161,7 +161,7 @@ func TestOperatorStepRestart(t *testing.T) {
 	if err != nil || reservation.Phase != "reserved" || reservation.Version != 1 || reservation.Owner != runner.Nonce || reservation.Receipt != nil {
 		t.Fatalf("lost reservation on restart: %+v %v", reservation, err)
 	}
-	receipt := []byte("observed-test-launch")
+	receipt := []byte("observed-test-checks")
 	wrong := key
 	wrong.Version++
 	if err := c.ObserveOperatorStep(ctx, wrong, receipt); !errors.Is(err, ErrOperatorConflict) {
