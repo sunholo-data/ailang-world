@@ -421,3 +421,19 @@ func TestExecToolUnknownProjectRefuses(t *testing.T) {
 		t.Fatalf("unknown project: %s, %v", out, err)
 	}
 }
+
+func TestExecToolRegisterProfileResolves(t *testing.T) {
+	m := newMovingExec(t, execFixtureOpts{})
+	m.state.mu.Lock()
+	orig := m.state.profiles["proj"]
+	delete(m.state.profiles, "proj")
+	delete(m.state.cfg.Profiles, "proj")
+	m.state.mu.Unlock()
+	if err := m.state.RegisterProfile(orig); err != nil {
+		t.Fatalf("RegisterProfile: %v", err)
+	}
+	sb, prof, why, err := m.state.resolve(boundedTestContext(t), "proj", t.TempDir())
+	if err != nil || why != "" || sb == nil || prof == nil || prof.Project != "proj" {
+		t.Fatalf("resolve after RegisterProfile: sb=%v prof=%v why=%q err=%v", sb, prof, why, err)
+	}
+}
