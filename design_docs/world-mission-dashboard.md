@@ -1,25 +1,27 @@
-# World mission dashboard — iteration 443 (2026-11-27)
+# World mission dashboard — iteration 444 (2026-11-27)
 
-- **Done this fire:** **row 267 LANDED** (PR #691, merge `6447e776`): the CI race job's timeout headroom. The judge gave **FAIL 74**, then **FAIL 77**, then **PASS 79**, with 0 blocking findings at the end.
-  - **Why it was picked:** dev's tip `6420426e` went red at attempt 1 on the race job's 480 s per-package bound. It was a docs-only merge, so the code had no defect. D-WORLD-121's default B makes row 267 the pick whenever dev's tip is red.
-  - **What changed:**
-    - Bounds: per-package 900 s (was 8 min), leg 2000 s (was 1500 s), CI step 40 min (was 35).
-    - A guard refuses any leg bound below per-package + 60 s (Go's backup kill) + the 995 s start allowance.
-    - On a leg timeout, the wrapper now lists what is still running, then kills the whole process group.
-    - New tests: shell arms R1–R7 run first in the race leg, plus `TestRaceBoundsAreOrdered`.
-  - **Derivation:** the bounds come from 51 race-job attempts across 40 CI runs. 18 hit the cap, all on slow runners.
-  - 379 lines. No package left `-race`, and nothing retries the gate.
-- **Why two rounds failed:** the new hang-arm test was itself load-sensitive (2–4% failures under CPU contention). Two mechanisms were involved: a fixed 2 s bound, and a probe written as a fresh file, which macOS execs slowly under load.
-  - The fix retries an arm only when its probe never became ready. Every real assertion still fails at once.
-  - Result: 0/40 failures under contention.
-- **⚠ Side effect, repaired:** the round-1 judge SIGKILLed two helper loops of an unrelated GPU finetune run (`ailang/tools/finetune/pilot5_run.sh`: its loss-divergence watchdog and its rig-lock heartbeat). Training kept running, and I restored both loops verbatim. Whoever owns that run should check it. A new charter rule says roles kill only PIDs they started.
-- **DECISIONS FOR MARK:** **D-WORLD-121** is now moot, because row 267 has landed. Nothing else is asked.
-- **Next loop work:** row 243 **V4 S6, launch** (spawn reservation, launch receipt and launch recovery), carrying judge-442's budget-pin notes.
+- **Done this fire:** **row 243 V4 S6 (launch) LANDED** (PR #695, merge `00b4ec55`). The judge gave **PASS 73**, then **PASS 80**, with 0 blocking findings. PR and merge CI were both 3/3 at attempt 1 on the final head.
+  - **What changed:** the installed operator runner now takes a prepared start all the way to a running agent.
+    - Under the episode lock, it reserves the launch while holding lifecycle exclusion.
+    - At dispatch it rechecks the session, the approver, the signed binary and the launch directory.
+    - It then runs **one** supervised, confined headless agent. The agent gets a process receipt with birth identity, a bounded cap and scrubbed output in the episode history.
+    - New command: `service runner launch-status ACTION-ID`.
+  - **Round 2:** PR CI went red on the repo's subprocess guard. The new worker re-exec was an undriven `exec.Command` in `cmd/` that inherited the runner's full environment. It moved to `host/agentrun.StartWorker` with a scrubbed env, and tests were added for the four pre-exec checks the judge found unpinned.
+  - **Size:** 1,888 lines, past the 1,650 safe-unit exception because of round 2 (FLAGGED).
+- **Not live yet:** nothing in production creates a confirmed start (`ConfirmOperatorAction` has no non-test caller). Launch therefore stays dormant until S7 adds the confirmation routes.
+- **Carried into S7 (judge-444):**
+  - The real worker entry `runOperatorLaunchWorker` and the supervisor cap are not yet executed by any test.
+  - A stuck launch row has no attended settle command.
+  - The agent child inherits the runner's lock fds 3/4.
+  - J06.
+- **Process fix:** controller sweeps now always run whole `host/verifygate` plus the `host/broker` subprocess guard. This is the third landing in a row that was caught by a guard outside the touched packages.
+- **DECISIONS FOR MARK:** none new. D-WORLD-121 is moot because row 267 has landed.
+- **Next loop work:** row 243 **V4 S7**: inert request and guarded confirmation routes, plus the status projection.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Goal unmoved.
 - **Routing this fire:**
-  - Designer `claude:claude-opus-5-5`.
-  - Planner and executor `codex:gpt-6.2-sol`: 398k tokens for the planner; 56k + 86k + 77k + 80k for the executor.
-  - Judge: Agent `sonnet`, a different vendor, at 96k / 58k / 74k tokens.
-  - Metered: $0.74 (two quorum rounds).
+  - Planner: `codex:gpt-6.2-sol`, 657k tokens.
+  - Executor: `codex:gpt-6.2-sol`, 77k + 156k tokens.
+  - Judge: Agent `sonnet` (a different vendor), 161k → 179k tokens.
+  - No designer. Metered spend: $0.00.
 - **Open PRs:** #617 is attended UI work that the loop does not touch.
 - **Bookkeeping thread:** #635 (next rotation Monday 2026-11-30 07:00 local).
