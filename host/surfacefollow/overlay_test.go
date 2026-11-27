@@ -552,3 +552,49 @@ func TestReconcileDeadline(t *testing.T) {
 	clock.advance(OverlayTimeout + time.Nanosecond)
 	until(t, func() bool { o := p.Snapshot().Envelope.Open; return o != nil && o.Status == surface.OpenUnavailable })
 }
+
+func TestBuildOverlayAnchorsToNearestIndexedAncestor(t *testing.T) {
+	now := time.Date(2026, 11, 27, 19, 0, 0, 0, time.UTC)
+	parts := []surface.FollowPartition{{
+		ID: "world",
+		Index: surface.Index{
+			States: []surface.State{
+				{ID: sha(1), Kind: surface.KindShared, At: now.Add(-2 * time.Hour).Format(time.RFC3339)},
+				{ID: sha(2), Kind: surface.KindShared, At: now.Add(-1 * time.Hour).Format(time.RFC3339)},
+			},
+		},
+	}}
+	squashBase := sha(9) // single-parent squash commit not in parts
+	facts := &EpisodeFacts{
+		ReadAt: now,
+		Sessions: []SessionFact{{
+			Episode:   "w-squash",
+			CreatedAt: now.Add(-10 * time.Minute).Unix(),
+			ExpiresAt: now.Add(time.Hour).Unix(),
+		}},
+		Starts: []StartFact{{
+			Episode:    "w-squash",
+			RepoID:     "world",
+			StartedAt:  now.Add(-10 * time.Minute).Format(time.RFC3339),
+			BaseSHA:    squashBase,
+			Branch:     "world/w-squash",
+			Agent:      "agy",
+			LastExpiry: now.Add(time.Hour).Unix(),
+		}},
+		BaseAncestors: map[string][]string{
+			"world:" + squashBase: {sha(8), sha(2), sha(1)},
+		},
+	}
+	o := BuildOverlay(parts, facts, false)
+	if len(o.Episodes) != 1 {
+		t.Fatalf("got %d episodes, want 1", len(o.Episodes))
+	}
+	ep := o.Episodes[0]
+	if ep.Base != squashBase || ep.Anchor != "world:commit:"+sha(2) || ep.BaseOutsideWindow {
+		t.Fatalf("got base=%s anchor=%s outside=%v, want base=%s anchor=world:commit:%s outside=false",
+			ep.Base, ep.Anchor, ep.BaseOutsideWindow, squashBase, sha(2))
+	}
+	if err := surface.ValidateFollowOpen(*o, parts); err != nil {
+		t.Fatalf("ValidateFollowOpen rejected nearest-ancestor anchor: %v", err)
+	}
+}

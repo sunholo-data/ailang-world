@@ -263,10 +263,16 @@ func ValidateFollowOpen(o FollowOpen, parts []FollowPartition) error {
 			if !e.BaseOutsideWindow {
 				return fail("episodes[%d] %s: an unanchored base must be marked outside the window", i, e.ID)
 			}
-		} else if e.BaseOutsideWindow || e.Base == "" || e.Anchor != e.Repo+":commit:"+e.Base {
+		} else if e.BaseOutsideWindow || e.Base == "" {
 			return fail("episodes[%d] %s: anchor must qualify the recorded base", i, e.ID)
-		} else if _, ok := byID[e.Repo][e.Base]; !ok {
-			return fail("episodes[%d] %s: anchor does not resolve in the repo's window", i, e.ID)
+		} else {
+			arepo, akind, alocal, err := ParseQualifiedID(e.Anchor)
+			if err != nil || arepo != e.Repo || akind != "commit" || !commitHash.MatchString(alocal) {
+				return fail("episodes[%d] %s: anchor must qualify a commit in the same repo", i, e.ID)
+			}
+			if _, ok := byID[e.Repo][alocal]; !ok {
+				return fail("episodes[%d] %s: anchor does not resolve in the repo's window", i, e.ID)
+			}
 		}
 		if !safeOpenText(e.Task, openTextBound, true) || !safeOpenText(e.Agent, 64, true) ||
 			!safeOpenText(e.Model, 64, true) || !safeOpenText(e.Branch, openTextBound, true) {

@@ -85,6 +85,11 @@ type EpisodeFacts struct {
 	// EndObserved is when the follower first saw each episode not live. The
 	// follower fills it; a source leaves it nil.
 	EndObserved map[string]time.Time
+	// BaseAncestors maps "<repoID>:<baseSHA>" to first-parent ancestor commit
+	// SHAs (nearest first) so an episode based on an unindexed single-parent
+	// commit (e.g. a squash merge on dev) still anchors to its nearest indexed
+	// ancestor commit in the repo's window.
+	BaseAncestors map[string][]string
 }
 
 // EpisodeSource reads facts at the host boundary. It must not write.
@@ -262,6 +267,13 @@ func BuildOverlay(parts []surface.FollowPartition, facts *EpisodeFacts, failed b
 			e.Base = start.BaseSHA
 			if _, ok := states[start.RepoID][e.Base]; ok {
 				e.Anchor = start.RepoID + ":commit:" + e.Base
+			} else if facts.BaseAncestors != nil {
+				for _, anc := range facts.BaseAncestors[start.RepoID+":"+e.Base] {
+					if _, ok := states[start.RepoID][anc]; ok {
+						e.Anchor = start.RepoID + ":commit:" + anc
+						break
+					}
+				}
 			}
 		}
 		e.BaseOutsideWindow = e.Anchor == ""
