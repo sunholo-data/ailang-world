@@ -1,0 +1,1280 @@
+{
+  "sprint_id": "w-world-address-bar-verbs-v4s7",
+  "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+  "design_revision": "r1, quorum r2 PROCEED 3/3, no absent seats",
+  "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s7-sprint-plan.md",
+  "previous_sprint": "S6 #695, merge 00b4ec55",
+  "base_commit": "a83d40a6f5bb7d2cfe4f3183ea1061b8f983853b",
+  "design_measured_at": "a83d40a6f5bb7d2cfe4f3183ea1061b8f983853b",
+  "queue_row": 243,
+  "iteration": 445,
+  "phase": "V4",
+  "sprint_number": "7",
+  "sprint": "S7 browser admission and projection",
+  "authority": [
+    "D-WORLD-119=A and D-WORLD-120=A, attended 82f05004"
+  ],
+  "executor_lane": "codex:gpt-6.2-sol",
+  "cut": {
+    "outcome": "B",
+    "cap_loc": 1400,
+    "safe_unit_cap_loc": 1650,
+    "complete_safe_unit_loc": 1892,
+    "selected_loc": 1399,
+    "unfiltered_product": 1399,
+    "raw_loc": 870,
+    "calibrated_loc": 1175,
+    "measure": "git diff -M --numstat a83d40a6f5bb7d2cfe4f3183ea1061b8f983853b HEAD -- cmd host docs app"
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Pre-reachability worker, cap and birth pins",
+      "added": 158,
+      "deleted": 15,
+      "expected_cumulative_numstat": 173,
+      "increment": 173,
+      "unfiltered_product": 173,
+      "accept_parts": [
+        "TestOperatorLaunchWorker",
+        "TestOperatorStartedRequiresBirth",
+        "TestOperatorSupervisorCap",
+        "TestOperatorLaunchReceiptLaw"
+      ],
+      "expected_snapshot": {
+        "path": "$STATE/snap/M1",
+        "status": 5,
+        "deleted": 0,
+        "manifest": 5
+      },
+      "commit_test": "export AILANG_BIN=\"$HOME/.pinned-ailang/ailang\" WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=\"$HOME/.pinned-ailang-tools/v0.54.15/ailang\"; /bin/bash \"$S/accept.sh\" \"$W\" M1 fast"
+    },
+    {
+      "id": "M2",
+      "title": "Inert request, stable card, status and Needs you",
+      "added": 1344,
+      "deleted": 55,
+      "expected_cumulative_numstat": 1399,
+      "increment": 1226,
+      "unfiltered_product": 1399,
+      "accept_parts": [
+        "TestOperatorLaunchWorker/catalogue",
+        "TestOperatorAdmissionHTTP (outside)",
+        "TestOperatorLinksProjection",
+        "TestOperatorNeverDispatch",
+        "TestDaemonCredentialWriterSites",
+        "TestSurfaceVerbIsReadOnly"
+      ],
+      "expected_snapshot": {
+        "path": "$STATE/snap/M2",
+        "status": 29,
+        "deleted": 2,
+        "manifest": 27
+      },
+      "commit_test": "export AILANG_BIN=\"$HOME/.pinned-ailang/ailang\" WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=\"$HOME/.pinned-ailang-tools/v0.54.15/ailang\"; /bin/bash \"$S/accept.sh\" \"$W\" M2 outside && /bin/bash \"$S/commit-guards.sh\" \"$W\" \"$S/commit-M2-guards-1\""
+    }
+  ],
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter445-row243-v4s7",
+  "branch": "sprint/world-iter445-row243-v4s7",
+  "estimate_loc": 1399,
+  "behaviour": "Serve an inert headless operator review, durable request and status. Pin the worker and keep confirmation unregistered until S7b.",
+  "executor_form": "Extract exact Appendix P M1 and M2 fences. Apply with /usr/bin/patch -p1 -E. Accept and snapshot. The controller commits.",
+  "scope": {
+    "in": [
+      "M1 actual worker and inherited-lock/cap/birth pins",
+      "M2 review, inert request, card, status, shared Needs you and runbook"
+    ],
+    "out": [
+      "S7b confirm (compiled M3)",
+      "S8 app bar, Chrome, viewport and reconnect",
+      "S9–S11 finish and F1",
+      "S12 herdr",
+      "AILANG/schema changes"
+    ]
+  },
+  "follow_up": {
+    "sprint": "S7b",
+    "id": "M3",
+    "expected_cumulative_numstat": 1892,
+    "increment": 517,
+    "stage": "$STATE/plan-scratch/st-M3",
+    "diff_fence": "M3",
+    "activation_gates": [
+      "TestOperatorConfirmHTTP outside sandbox",
+      "M1 pins",
+      "outside race budgets",
+      "broker/verifygate and selected mutations"
+    ]
+  },
+  "verification": {
+    "base": "$STATE/base",
+    "base_done": "$STATE/baseline.done",
+    "gates": "$S/gates.sh",
+    "outside": "$S/outside.sh",
+    "real_loopback_status": "UNINFORMATIVE UNDER SANDBOX",
+    "roundtrip": "$S/roundtrip-final.raw",
+    "mutations": {
+      "diff": "$S/mutant-diff-ids.txt",
+      "carried": "$S/mutant-carried-ids.txt",
+      "whole": "$S/whole-mutant-ids.txt",
+      "ledgers": "$S/mutants-*/ledger.jsonl"
+    },
+    "named_added_cli_total_seconds": 7.23,
+    "named_added_race_seconds": {
+      "cmd/ailang-worldd": {
+        "TestOperatorLaunchWorker": 7.21,
+        "TestOperatorLaunchWorker/catalogue (included)": 0.41,
+        "TestOperatorStartedRequiresBirth": 0.0,
+        "TestOperatorSupervisorCap": 0.02
+      },
+      "host/daemon": {
+        "TestOperatorLinksProjection": 0.0,
+        "TestOperatorAdmissionHTTP": null,
+        "TestOperatorConfirmHTTP (S7b)": null
+      }
+    },
+    "baseline_completion": "ALL_DONE",
+    "branch_audit": "$S/branch-audit.tsv",
+    "pending_anchor_inventory": "$S/remaining-anchors.tsv"
+  },
+  "expected_snapshots": {
+    "M1": {
+      "path": "$STATE/snap/M1",
+      "status": 5,
+      "deleted": 0,
+      "manifest": 5
+    },
+    "M2": {
+      "path": "$STATE/snap/M2",
+      "status": 29,
+      "deleted": 2,
+      "manifest": 27
+    }
+  },
+  "planner_decisions": [
+    "Reuse one guarded credentials writer",
+    "Publish frozen runner snapshots before HTTP review",
+    "Document the launch fence",
+    "Schedule the measured confirmation activation in S7b"
+  ],
+  "design_premises_found_false": [
+    "Seven production OperatorAction call expressions at base, with six in cmd and one in host/store.",
+    "Some inherited daemon approval route tests use httptest.ResponseRecorder and bind no socket. The new HTTP selectors require a real listener."
+  ],
+  "existing_tests_edited": [
+    {
+      "path": "host/store/operator_launch_test.go",
+      "test": "TestOperatorLaunchReceiptLaw",
+      "before": "RecordOperatorLaunch receipt law",
+      "after": "Same law plus a direct empty birth guard",
+      "mutations": [
+        "J06"
+      ]
+    },
+    {
+      "path": "host/daemon/surface_approve_post_guard_test.go",
+      "test": "TestDaemonCredentialWriterSites",
+      "before": "V3 direct writer site",
+      "after": "Shared bounded writer open plus existing V3 callers",
+      "mutations": [
+        "D-REG-REQUEST",
+        "K-NO-CAS"
+      ]
+    },
+    {
+      "path": "host/daemon/surface_verb_test.go",
+      "test": "TestSurfaceVerbIsReadOnly",
+      "before": "Existing read-only bar inventory",
+      "after": "One additional read-only review adapter",
+      "mutations": [
+        "D-REVIEW",
+        "D-FORBIDDEN"
+      ]
+    },
+    {
+      "path": "host/store/start_task_title_test.go",
+      "test": "TestTaskTitle",
+      "before": "CLI taskTitle utility",
+      "after": "Shared StartTaskTitle utility, same cases",
+      "mutations": [
+        "C-TITLE-BEHAVIOUR",
+        "C-TITLE-REUSE"
+      ]
+    }
+  ],
+  "existing_tests_deleted": [],
+  "existing_test_moves": {
+    "cmd/ailang-worldd/task_title_test.go": "host/store/start_task_title_test.go"
+  },
+  "existing_production_edited": [
+    "cmd/ailang-worldd/episode_preset.go",
+    "cmd/ailang-worldd/main.go",
+    "cmd/ailang-worldd/operator_launch.go",
+    "cmd/ailang-worldd/operator_runner.go",
+    "cmd/ailang-worldd/service.go",
+    "cmd/ailang-worldd/task_title.go",
+    "docs/QUICKSTART.md",
+    "host/approval/operator_action.go",
+    "host/daemon/daemon.go",
+    "host/daemon/surface_approve.go",
+    "host/daemon/surface_confirm.go",
+    "host/daemon/surface_home_summary.go",
+    "host/daemon/surface_verb.go",
+    "host/store/operator_actions.go",
+    "host/surfacepage/approve_model.go"
+  ],
+  "new_files": [
+    "cmd/ailang-worldd/operator_catalogue.go",
+    "cmd/ailang-worldd/operator_catalogue_test.go",
+    "cmd/ailang-worldd/operator_worker_test.go",
+    "host/daemon/surface_operator.go",
+    "host/daemon/surface_operator_read.go",
+    "host/daemon/surface_operator_test.go",
+    "host/store/operator_review.go",
+    "host/store/start_task_title.go",
+    "host/store/start_task_title_test.go",
+    "host/surfacepage/operator.go"
+  ],
+  "not_touched": [
+    "host/surfacepage/app/",
+    "world/",
+    "tools/launchd/",
+    "host/authority/",
+    "credentials schema"
+  ],
+  "production_caller_census": {
+    "base": {
+      "request": 0,
+      "store_confirm": 0,
+      "judge": 0,
+      "operator_action": 7
+    },
+    "M1": {
+      "request": 0,
+      "store_confirm": 0,
+      "judge": 0,
+      "operator_action": 7
+    },
+    "M2": {
+      "request": 1,
+      "store_confirm": 0,
+      "judge": 0,
+      "operator_action": 9
+    },
+    "M3": {
+      "request": 1,
+      "store_confirm": 1,
+      "judge": 1,
+      "operator_action": 10
+    }
+  },
+  "gates_script": "§6 exact gates.sh fence",
+  "controller_decisions_requested": [
+    "Outside listener, caller timing, whole fail-set and prioritized mutation measurements"
+  ],
+  "roundtrip": {
+    "receipt": "$S/roundtrip-final.raw",
+    "result": "ROUNDTRIP_OK",
+    "reported_stages": [
+      "M1",
+      "M2",
+      "M3 follow-up"
+    ]
+  },
+  "mutants": [
+    {
+      "id": "J06",
+      "path": "host/store/operator_launch.go",
+      "line": 234,
+      "before": "r.PID > 0 && r.Birth != \"\" && history == nil:",
+      "after": "r.PID > 0 && history == nil:",
+      "killer": "TestOperatorLaunchReceiptLaw",
+      "test": "TestOperatorLaunchReceiptLaw",
+      "stage": "M1",
+      "pkg": "host/store",
+      "kind": "carried"
+    },
+    {
+      "id": "J17",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 233,
+      "before": "timer(job.wall + time.Minute)",
+      "after": "timer(job.wall + 1000*time.Hour)",
+      "killer": "TestOperatorSupervisorCap",
+      "test": "TestOperatorSupervisorCap",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "carried"
+    },
+    {
+      "id": "J18",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 519,
+      "before": "\tif r.Birth == \"\" {\n\t\treturn errors.New(\"process birth unavailable\")\n\t}\n",
+      "after": "",
+      "killer": "TestOperatorStartedRequiresBirth",
+      "test": "TestOperatorStartedRequiresBirth",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "carried"
+    },
+    {
+      "id": "W-SAMEFILE",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 308,
+      "before": "!os.SameFile(st, path) || syscall.Flock",
+      "after": "(!os.SameFile(st, path) && false) || syscall.Flock",
+      "killer": "TestOperatorLaunchWorker",
+      "test": "TestOperatorLaunchWorker",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "W-FLOCK",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 308,
+      "before": "syscall.Flock(int(fd.Fd()), syscall.LOCK_EX|syscall.LOCK_NB) != nil {",
+      "after": "(syscall.Flock(int(fd.Fd()), syscall.LOCK_EX|syscall.LOCK_NB) != nil && false) {",
+      "killer": "TestOperatorLaunchWorker",
+      "test": "TestOperatorLaunchWorker",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "W-STDIN",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 314,
+      "before": "if _, err := io.ReadFull(input.handoff, job.secret[:]); err != nil {",
+      "after": "if _, err := io.ReadFull(input.handoff, make([]byte, len(job.secret))); err != nil {",
+      "killer": "TestOperatorLaunchWorker",
+      "test": "TestOperatorLaunchWorker",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "W-FDS",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 447,
+      "before": "agentrun.LaunchHooks{Files: job.locks[:2],",
+      "after": "agentrun.LaunchHooks{Files: nil,",
+      "killer": "TestOperatorLaunchWorker",
+      "test": "TestOperatorLaunchWorker",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "W-PID",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 517,
+      "before": "r.PID = pid\n",
+      "after": "r.PID = 0\n",
+      "killer": "TestOperatorStartedRequiresBirth",
+      "test": "TestOperatorStartedRequiresBirth",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "W-TIMER-STOP",
+      "path": "cmd/ailang-worldd/operator_launch.go",
+      "line": 234,
+      "before": "defer stopCap()",
+      "after": "_ = stopCap",
+      "killer": "TestOperatorSupervisorCap",
+      "test": "TestOperatorSupervisorCap",
+      "stage": "M1",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "D-HOST-ORDER",
+      "path": "host/daemon/surface_operator.go",
+      "line": 82,
+      "before": "operator(w, r)\n",
+      "after": "_, _ = io.Copy(io.Discard, r.Body)\n\t\t\toperator(w, r)\n",
+      "killer": "TestOperatorAdmissionHTTP/Misdirected",
+      "test": "TestOperatorAdmissionHTTP/Misdirected",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-FAMILY-CLEAN",
+      "path": "host/daemon/surface_operator.go",
+      "line": 81,
+      "before": "family(r.URL.Path) || family(path.Clean(r.URL.Path))",
+      "after": "family(r.URL.Path) || (family(path.Clean(r.URL.Path)) && false)",
+      "killer": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "test": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-HOST",
+      "path": "host/daemon/surface_operator.go",
+      "line": 79,
+      "before": "operator := d.approvalRoute(d.handleOperatorRoutes)",
+      "after": "operator := func(w http.ResponseWriter, r *http.Request) { d.handleOperatorRoutes(w, r, []string{\"http://localhost:7644\"}) }",
+      "killer": "TestOperatorAdmissionHTTP/Misdirected",
+      "test": "TestOperatorAdmissionHTTP/Misdirected",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-ORIGIN-COUNT",
+      "path": "host/daemon/surface_operator.go",
+      "line": 125,
+      "before": "len(origin) != 1 || !allowedApprovalOrigin",
+      "after": "len(origin) == 0 || !allowedApprovalOrigin",
+      "killer": "TestOperatorAdmissionHTTP/CrossOrigin",
+      "test": "TestOperatorAdmissionHTTP/CrossOrigin",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-ORIGIN-EXACT",
+      "path": "host/daemon/surface_operator.go",
+      "line": 125,
+      "before": "!allowedApprovalOrigin(r.Header.Get(\"Origin\"), origins)",
+      "after": "(!allowedApprovalOrigin(r.Header.Get(\"Origin\"), origins) && false)",
+      "killer": "TestOperatorAdmissionHTTP/CrossOrigin",
+      "test": "TestOperatorAdmissionHTTP/CrossOrigin",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-FETCH-COUNT",
+      "path": "host/daemon/surface_operator.go",
+      "line": 127,
+      "before": "len(fetch) > 1 || !sameOriginFetch",
+      "after": "len(fetch) > 2 || !sameOriginFetch",
+      "killer": "TestOperatorAdmissionHTTP/FetchSite",
+      "test": "TestOperatorAdmissionHTTP/FetchSite",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-FETCH-EXACT",
+      "path": "host/daemon/surface_operator.go",
+      "line": 127,
+      "before": "!sameOriginFetch(r.Header.Get(\"Sec-Fetch-Site\"))",
+      "after": "(!sameOriginFetch(r.Header.Get(\"Sec-Fetch-Site\")) && false)",
+      "killer": "TestOperatorAdmissionHTTP/FetchSite",
+      "test": "TestOperatorAdmissionHTTP/FetchSite",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-MEDIA-COUNT",
+      "path": "host/daemon/surface_operator.go",
+      "line": 129,
+      "before": "len(media) != 1 || !jsonMediaType",
+      "after": "len(media) == 0 || !jsonMediaType",
+      "killer": "TestOperatorAdmissionHTTP/MediaAndBody",
+      "test": "TestOperatorAdmissionHTTP/MediaAndBody",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-MEDIA-TYPE",
+      "path": "host/daemon/surface_operator.go",
+      "line": 129,
+      "before": "!jsonMediaType(r.Header.Get(\"Content-Type\"))",
+      "after": "(!jsonMediaType(r.Header.Get(\"Content-Type\")) && false)",
+      "killer": "TestOperatorAdmissionHTTP/MediaAndBody",
+      "test": "TestOperatorAdmissionHTTP/MediaAndBody",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-BODY-CAP",
+      "path": "host/daemon/surface_operator.go",
+      "line": 132,
+      "before": "http.MaxBytesReader(w, r.Body, cap)",
+      "after": "http.MaxBytesReader(w, r.Body, cap+1)",
+      "killer": "TestOperatorAdmissionHTTP/MediaAndBody",
+      "test": "TestOperatorAdmissionHTTP/MediaAndBody",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-SESSION",
+      "path": "host/daemon/surface_operator.go",
+      "line": 123,
+      "before": "len(r.Header.Values(\"Authorization\")) != 0 ||",
+      "after": "len(r.Header.Values(\"Authorization\")) < 0 ||",
+      "killer": "TestOperatorAdmissionHTTP/ExplicitHold",
+      "test": "TestOperatorAdmissionHTTP/ExplicitHold",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-COOKIE",
+      "path": "host/daemon/surface_operator.go",
+      "line": 123,
+      "before": "len(r.Header.Values(\"Cookie\")) != 0:",
+      "after": "len(r.Header.Values(\"Cookie\")) < 0:",
+      "killer": "TestOperatorAdmissionHTTP/ExplicitHold",
+      "test": "TestOperatorAdmissionHTTP/ExplicitHold",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-ESCAPE",
+      "path": "host/daemon/surface_operator.go",
+      "line": 90,
+      "before": "r.URL.Path != r.URL.EscapedPath() ||",
+      "after": "(r.URL.Path != r.URL.EscapedPath() && false) ||",
+      "killer": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "test": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-CLEAN",
+      "path": "host/daemon/surface_operator.go",
+      "line": 90,
+      "before": "path.Clean(r.URL.Path) != r.URL.Path ||",
+      "after": "(path.Clean(r.URL.Path) != r.URL.Path && false) ||",
+      "killer": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "test": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-QUERY",
+      "path": "host/daemon/surface_operator.go",
+      "line": 90,
+      "before": "r.URL.RawQuery != \"\" {",
+      "after": "r.URL.RawQuery != \"\" && false {",
+      "killer": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "test": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-ID",
+      "path": "host/daemon/surface_operator.go",
+      "line": 101,
+      "before": "!verbs.ValidOperatorActionID(id) {",
+      "after": "!verbs.ValidOperatorActionID(id) && false {",
+      "killer": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "test": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-REG-REQUEST",
+      "path": "host/daemon/surface_operator.go",
+      "line": 96,
+      "before": "d.handleOperatorRequest(w, r, origins)",
+      "after": "writeApprovalRefusal(w, http.StatusNotFound, \"NotFound\", \"unregistered\")",
+      "killer": "TestOperatorAdmissionHTTP",
+      "test": "TestOperatorAdmissionHTTP",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-REG-CARD",
+      "path": "host/daemon/surface_operator.go",
+      "line": 107,
+      "before": "if r.Method == http.MethodGet {",
+      "after": "if r.Method == http.MethodGet && hasSuffix {",
+      "killer": "TestOperatorAdmissionHTTP/Status",
+      "test": "TestOperatorAdmissionHTTP/Status",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-REG-STATUS",
+      "path": "host/daemon/surface_operator.go",
+      "line": 107,
+      "before": "if r.Method == http.MethodGet {",
+      "after": "if r.Method == http.MethodGet && !hasSuffix {",
+      "killer": "TestOperatorAdmissionHTTP/Status",
+      "test": "TestOperatorAdmissionHTTP/Status",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-METHOD-POST",
+      "path": "host/daemon/surface_operator.go",
+      "line": 95,
+      "before": "if r.Method == http.MethodPost {",
+      "after": "if r.Method == http.MethodPost || r.Method == http.MethodOptions {",
+      "killer": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "test": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-METHOD-GET",
+      "path": "host/daemon/surface_operator.go",
+      "line": 107,
+      "before": "if r.Method == http.MethodGet {",
+      "after": "if r.Method == http.MethodGet || r.Method == http.MethodOptions {",
+      "killer": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "test": "TestOperatorAdmissionHTTP/UnsupportedMethodAndPath",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-REVIEW",
+      "path": "host/daemon/surface_operator.go",
+      "line": 46,
+      "before": "if action, err := entry.Action(a.Intent.Episode, \"\", h.CatalogueGeneration); err == nil {",
+      "after": "if action, err := entry.Action(a.Intent.Episode, \"\", h.CatalogueGeneration); err == nil && false {",
+      "killer": "TestOperatorAdmissionHTTP",
+      "test": "TestOperatorAdmissionHTTP",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-FORBIDDEN",
+      "path": "host/daemon/surface_operator.go",
+      "line": 31,
+      "before": "case verbs.OperatorNever, verbs.OperatorUsage:",
+      "after": "case verbs.OperatorUsage:",
+      "killer": "TestOperatorAdmissionHTTP",
+      "test": "TestOperatorAdmissionHTTP",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-TASK-EMPTY",
+      "path": "host/daemon/surface_operator.go",
+      "line": 160,
+      "before": "len(body.Task) == 0 ||",
+      "after": "len(body.Task) < 0 ||",
+      "killer": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "test": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-TASK-MAX",
+      "path": "host/daemon/surface_operator.go",
+      "line": 160,
+      "before": "len(body.Task) > approval.MaxOperatorTaskBytes ||",
+      "after": "len(body.Task) > approval.MaxOperatorTaskBytes+1 ||",
+      "killer": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "test": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-TASK-NUL",
+      "path": "host/daemon/surface_operator.go",
+      "line": 160,
+      "before": "strings.ContainsRune(body.Task, 0) {",
+      "after": "(strings.ContainsRune(body.Task, 0) && false) {",
+      "killer": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "test": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-HEARTBEAT",
+      "path": "host/daemon/surface_operator.go",
+      "line": 64,
+      "before": "!h.Available(build, \"start\", now)",
+      "after": "(!h.Available(build, \"start\", now) && false)",
+      "killer": "TestOperatorAdmissionHTTP",
+      "test": "TestOperatorAdmissionHTTP",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-GENERATION",
+      "path": "host/daemon/surface_operator.go",
+      "line": 207,
+      "before": "if err == nil && h.CatalogueGeneration != body.CatalogueGeneration {",
+      "after": "if err == nil && h.CatalogueGeneration != body.CatalogueGeneration && false {",
+      "killer": "TestOperatorAdmissionHTTP",
+      "test": "TestOperatorAdmissionHTTP",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-OP-REPLAY-TASK",
+      "path": "host/daemon/surface_operator.go",
+      "line": 191,
+      "before": "frozen.Task != body.Task ||",
+      "after": "(frozen.Task != body.Task && false) ||",
+      "killer": "TestOperatorAdmissionHTTP",
+      "test": "TestOperatorAdmissionHTTP",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-OP-REPLAY-EARLY",
+      "path": "host/daemon/surface_operator.go",
+      "line": 185,
+      "before": "if row, err := ro.OperatorActionForOperation(ctx, body.OperationID, now); !errors.Is(err, store.ErrOperatorMissing) {",
+      "after": "if row, err := ro.OperatorActionForOperation(ctx, body.OperationID, now); !errors.Is(err, store.ErrOperatorMissing) && false {",
+      "killer": "TestOperatorAdmissionHTTP",
+      "test": "TestOperatorAdmissionHTTP",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "S-NEEDS-SHARED",
+      "path": "host/daemon/surface_home_summary.go",
+      "line": 31,
+      "before": "needs += len(reqs.Decisions) + len(reqs.OperatorActions)",
+      "after": "needs += len(reqs.Decisions)",
+      "killer": "TestOperatorAdmissionHTTP/Status",
+      "test": "TestOperatorAdmissionHTTP/Status",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "S-NEEDS-READ",
+      "path": "host/daemon/surface_approve.go",
+      "line": 150,
+      "before": "actions, err := ro.PendingOperatorActions(ctx, now)",
+      "after": "actions, err := ro.PendingOperatorActions(ctx, now)\n\tactions = nil",
+      "killer": "TestOperatorAdmissionHTTP/Status",
+      "test": "TestOperatorAdmissionHTTP/Status",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "S-LINK-ACTION",
+      "path": "host/daemon/surface_operator_read.go",
+      "line": 42,
+      "before": "!verbs.ValidOperatorActionID(row.ID) ||",
+      "after": "(!verbs.ValidOperatorActionID(row.ID) && false) ||",
+      "killer": "TestOperatorLinksProjection",
+      "test": "TestOperatorLinksProjection",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "S-LINK-EPISODE",
+      "path": "host/daemon/surface_operator_read.go",
+      "line": 42,
+      "before": "!verbs.EpisodeIDPattern.MatchString(row.Episode) ||",
+      "after": "(!verbs.EpisodeIDPattern.MatchString(row.Episode) && false) ||",
+      "killer": "TestOperatorLinksProjection",
+      "test": "TestOperatorLinksProjection",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "S-LINK-KIND",
+      "path": "host/daemon/surface_operator_read.go",
+      "line": 43,
+      "before": "(row.Kind != \"start\" && row.Kind != \"finish\") {",
+      "after": "(row.Kind != \"start\" && row.Kind != \"finish\" && false) {",
+      "killer": "TestOperatorLinksProjection",
+      "test": "TestOperatorLinksProjection",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "S-LINK-STATE",
+      "path": "host/daemon/surface_operator_read.go",
+      "line": 37,
+      "before": "case \"requested\", \"confirmed\", \"claimed\", \"running\", \"awaiting-pr-confirmation\", \"succeeded\", \"failed\", \"expired\", \"cancelled\", \"uncertain\":",
+      "after": "case \"other\", \"requested\", \"confirmed\", \"claimed\", \"running\", \"awaiting-pr-confirmation\", \"succeeded\", \"failed\", \"expired\", \"cancelled\", \"uncertain\":",
+      "killer": "TestOperatorLinksProjection",
+      "test": "TestOperatorLinksProjection",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "S-STATUS-STALE",
+      "path": "host/daemon/surface_operator_read.go",
+      "line": 82,
+      "before": "&& status.Reason == \"\" {",
+      "after": "&& status.Reason == \"\" && false {",
+      "killer": "TestOperatorAdmissionHTTP/Status",
+      "test": "TestOperatorAdmissionHTTP/Status",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "S-CARD-ESCAPE",
+      "path": "host/daemon/surface_operator_read.go",
+      "line": 125,
+      "before": "_ = operatorCard.Execute(w, card)",
+      "after": "_ = operatorCard.Execute(w, card)\n\t_, _ = w.Write([]byte(card.Task))",
+      "killer": "TestOperatorAdmissionHTTP/Status",
+      "test": "TestOperatorAdmissionHTTP/Status",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "S-CARD-CSP",
+      "path": "host/daemon/surface_operator_read.go",
+      "line": 124,
+      "before": "setSurfaceHeaders(w)",
+      "after": "_ = w.Header()",
+      "killer": "TestOperatorAdmissionHTTP/Status",
+      "test": "TestOperatorAdmissionHTTP/Status",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "JSON-UTF8",
+      "path": "host/approval/operator_action.go",
+      "line": 240,
+      "before": "if !utf8.Valid(b) {\n\t\treturn ErrOperatorUTF8",
+      "after": "if !utf8.Valid(b) && false {\n\t\treturn ErrOperatorUTF8",
+      "killer": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "test": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "JSON-RAWNUL",
+      "path": "host/approval/operator_action.go",
+      "line": 243,
+      "before": "if bytes.IndexByte(b, 0) >= 0 {\n\t\treturn ErrOperatorNUL",
+      "after": "if bytes.IndexByte(b, 0) >= 0 && false {\n\t\treturn ErrOperatorNUL",
+      "killer": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "test": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "JSON-TOP-KEYS",
+      "path": "host/approval/operator_action.go",
+      "line": 254,
+      "before": "if !slices.Contains(keys, name) {",
+      "after": "if !slices.Contains(keys, name) && false {",
+      "killer": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "test": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "JSON-DUP",
+      "path": "host/approval/operator_action.go",
+      "line": 280,
+      "before": "if seen[k] { // D5",
+      "after": "if seen[k] && false { // D5",
+      "killer": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "test": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "JSON-TAIL",
+      "path": "host/approval/operator_action.go",
+      "line": 303,
+      "before": "if _, err := dec.Token(); err != io.EOF { // D6",
+      "after": "if _, err := dec.Token(); err != io.EOF && false { // D6",
+      "killer": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "test": "TestOperatorAdmissionHTTP/StrictJSONAndLimits",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "S-PENDING-EXPIRES",
+      "path": "host/store/operator_actions.go",
+      "line": 96,
+      "before": "created_at <= ? AND expires_at > ? ORDER BY created_at, id LIMIT 16",
+      "after": "created_at <= ? AND expires_at >= ? ORDER BY created_at, id LIMIT 16",
+      "killer": "TestOperatorAdmissionHTTP/Status",
+      "test": "TestOperatorAdmissionHTTP/Status",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "S-PENDING-STATE",
+      "path": "host/store/operator_actions.go",
+      "line": 96,
+      "before": "WHERE state = 'requested' AND created_at <= ?",
+      "after": "WHERE state IN ('requested','cancelled') AND created_at <= ?",
+      "killer": "TestOperatorAdmissionHTTP",
+      "test": "TestOperatorAdmissionHTTP",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "S-PENDING-CREATED",
+      "path": "host/store/operator_actions.go",
+      "line": 96,
+      "before": "created_at <= ? AND expires_at > ? ORDER BY created_at, id LIMIT 16",
+      "after": "created_at <= (? + 1) AND expires_at > ? ORDER BY created_at, id LIMIT 16",
+      "killer": "TestOperatorAdmissionHTTP/Status",
+      "test": "TestOperatorAdmissionHTTP/Status",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "C-PUB",
+      "path": "cmd/ailang-worldd/operator_runner.go",
+      "line": 164,
+      "before": "if e.operatorCatalogue != nil {",
+      "after": "if e.operatorCatalogue != nil && false {",
+      "killer": "TestOperatorLaunchWorker/catalogue",
+      "test": "TestOperatorLaunchWorker/catalogue",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "C-RESOLUTION",
+      "path": "host/store/operator_review.go",
+      "line": 53,
+      "before": "Value: v.BinaryDigest",
+      "after": "Value: v.Binary",
+      "killer": "TestOperatorLaunchWorker/catalogue",
+      "test": "TestOperatorLaunchWorker/catalogue",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "C-TITLE-REUSE",
+      "path": "host/store/operator_review.go",
+      "line": 43,
+      "before": "Title: StartTaskTitle([]byte(task)),",
+      "after": "Title: task,",
+      "killer": "TestOperatorLaunchWorker/catalogue",
+      "test": "TestOperatorLaunchWorker/catalogue",
+      "stage": "M2",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "diff"
+    },
+    {
+      "id": "C-TITLE-BEHAVIOUR",
+      "path": "host/store/start_task_title.go",
+      "line": 14,
+      "before": "if strings.HasPrefix(title, \"#\") {",
+      "after": "if strings.HasPrefix(title, \"#\") && false {",
+      "killer": "TestTaskTitle",
+      "test": "TestTaskTitle",
+      "stage": "M2",
+      "pkg": "host/store",
+      "kind": "diff"
+    },
+    {
+      "id": "C-GRAMMAR-NEVER",
+      "path": "host/verbs/operator.go",
+      "line": 131,
+      "before": "if len(argv) > 0 && argv[0] == \"world-publish\" {",
+      "after": "if len(argv) > 0 && argv[0] == \"world-publish\" && false {",
+      "killer": "TestOperatorNeverDispatch",
+      "test": "TestOperatorNeverDispatch",
+      "stage": "M2",
+      "pkg": "host/verbs",
+      "kind": "diff"
+    },
+    {
+      "id": "D-INERT-SPAWN",
+      "path": "host/daemon/surface_operator.go",
+      "line": 229,
+      "before": "action.ID = \"oa-\" + hex.EncodeToString(id[:])",
+      "after": "action.ID = \"oa-\" + hex.EncodeToString(id[:])\n\tif cmd, err := agentrun.StartWorker(entry.Binary, nil, nil, io.Discard, nil); err == nil { _ = cmd.Wait() }",
+      "killer": "TestOperatorAdmissionHTTP",
+      "test": "TestOperatorAdmissionHTTP",
+      "stage": "M2",
+      "pkg": "host/daemon",
+      "kind": "diff"
+    },
+    {
+      "id": "D-RENDER-STATUS-ERR",
+      "path": "host/daemon/surface_operator.go",
+      "line": 248,
+      "before": "store.IsWriterAlreadyActive(err):",
+      "after": "store.IsWriterAlreadyActive(err) && false:",
+      "killer": "TestOperatorConfirmHTTP/MissingAndWriter",
+      "test": "TestOperatorConfirmHTTP/MissingAndWriter",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-REG",
+      "path": "host/daemon/surface_operator.go",
+      "line": 111,
+      "before": "case suffix == \"confirm\":",
+      "after": "case suffix == \"confirm-disabled\":",
+      "killer": "TestOperatorConfirmHTTP/Transport",
+      "test": "TestOperatorConfirmHTTP/Transport",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-METHOD",
+      "path": "host/daemon/surface_operator.go",
+      "line": 111,
+      "before": "case suffix == \"confirm\":\n\t\t\tif r.Method == http.MethodPost {",
+      "after": "case suffix == \"confirm\":\n\t\t\tif r.Method == http.MethodPost || r.Method == http.MethodGet {",
+      "killer": "TestOperatorConfirmHTTP/Transport",
+      "test": "TestOperatorConfirmHTTP/Transport",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-SIZELIMIT",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 49,
+      "before": "surfacepage.MaxApproveBodyBytes)",
+      "after": "surfacepage.MaxApproveBodyBytes+1)",
+      "killer": "TestOperatorConfirmHTTP/Transport",
+      "test": "TestOperatorConfirmHTTP/Transport",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-BODY-EXACT",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 54,
+      "before": "|| len(fields) != 3 {",
+      "after": "|| len(fields) < 3 {",
+      "killer": "TestOperatorConfirmHTTP/Proof",
+      "test": "TestOperatorConfirmHTTP/Proof",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-ONLY-START",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 86,
+      "before": "a.Kind != \"start\" ||",
+      "after": "(a.Kind != \"start\" && false) ||",
+      "killer": "TestOperatorConfirmHTTP/UnsupportedKinds",
+      "test": "TestOperatorConfirmHTTP/UnsupportedKinds",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-ONLY-HEADLESS",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 86,
+      "before": "!a.Options.Headless ||",
+      "after": "(!a.Options.Headless && false) ||",
+      "killer": "TestOperatorConfirmHTTP/UnsupportedKinds",
+      "test": "TestOperatorConfirmHTTP/UnsupportedKinds",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-APPROVED-ARTIFACT",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 92,
+      "before": "if !bytes.Equal(row.Artifact, artifact) {",
+      "after": "if !bytes.Equal(row.Artifact, artifact) && false {",
+      "killer": "TestOperatorConfirmHTTP",
+      "test": "TestOperatorConfirmHTTP",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-APPROVED-RESULT",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 96,
+      "before": "\"already-confirmed\"",
+      "after": "\"confirmed\"",
+      "killer": "TestOperatorConfirmHTTP",
+      "test": "TestOperatorConfirmHTTP",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-JUDGE-CHALLENGE",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 108,
+      "before": "Challenge: [32]byte(row.Challenge),",
+      "after": "Challenge: [32]byte{},",
+      "killer": "TestOperatorConfirmHTTP",
+      "test": "TestOperatorConfirmHTTP",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-JUDGE-AS-SUCCESS",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 120,
+      "before": "writeApprovalRefusal(w, http.StatusUnprocessableEntity, \"NotApproved\", \"the enrolled key did not confirm this exact action\")",
+      "after": "writeApprovalJSON(w, http.StatusOK, operatorStatusFor(row, now))",
+      "killer": "TestOperatorConfirmHTTP/Proof",
+      "test": "TestOperatorConfirmHTTP/Proof",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-NO-CAS",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 131,
+      "before": "row, err = wr.ConfirmOperatorAction(ctx, store.OperatorCAS{ID: id, Digest: digest, Generation: row.Generation}, artifact, proof, now)",
+      "after": "_, _, _ = wr, proof, now",
+      "killer": "TestOperatorConfirmHTTP",
+      "test": "TestOperatorConfirmHTTP",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-BUSY-STATUS",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 124,
+      "before": "wr, err := d.openConfirmationWriter()\n\tif err != nil {\n\t\td.operatorError(w, err)",
+      "after": "wr, err := d.openConfirmationWriter()\n\tif err != nil {\n\t\twriteApprovalJSON(w, http.StatusOK, operatorStatusFor(row, now))",
+      "killer": "TestOperatorConfirmHTTP/MissingAndWriter",
+      "test": "TestOperatorConfirmHTTP/MissingAndWriter",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-CEREMONY-NS",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 38,
+      "before": "approval.OperatorActionNamespace, request.Passkeys",
+      "after": "approval.VerbNamespace, request.Passkeys",
+      "killer": "TestOperatorConfirmHTTP",
+      "test": "TestOperatorConfirmHTTP",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-CEREMONY-CHALLENGE",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 27,
+      "before": "approval.OperatorActionMessage([32]byte(row.Digest), [32]byte(row.Challenge), row.ExpiresAt)",
+      "after": "approval.OperatorActionMessage([32]byte(row.Digest), [32]byte{}, row.ExpiresAt)",
+      "killer": "TestOperatorConfirmHTTP",
+      "test": "TestOperatorConfirmHTTP",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "K-EXPIRE-CLASS",
+      "path": "host/daemon/surface_operator_confirm.go",
+      "line": 113,
+      "before": "case errors.Is(err, approval.ErrOperatorLifetime):",
+      "after": "case errors.Is(err, approval.ErrOperatorLifetime) && false:",
+      "killer": "TestOperatorConfirmHTTP/Expiry",
+      "test": "TestOperatorConfirmHTTP/Expiry",
+      "stage": "M3",
+      "pkg": "host/daemon",
+      "kind": "follow-up"
+    },
+    {
+      "id": "L-ARGV-SPLIT",
+      "path": "cmd/ailang-worldd/episode_launch_text.go",
+      "line": 174,
+      "before": "return append(a, prompt)",
+      "after": "return append(a, strings.Fields(prompt)...)",
+      "killer": "TestOperatorLiteralTaskArgv",
+      "test": "TestOperatorLiteralTaskArgv",
+      "stage": "M3",
+      "pkg": "cmd/ailang-worldd",
+      "kind": "follow-up"
+    }
+  ],
+  "mutants_metrics": {
+    "carried": {
+      "named": {
+        "KILLED": 3
+      },
+      "whole": {
+        "KILLED": 1,
+        "UNMEASURED": 2
+      }
+    },
+    "diff": {
+      "named": {
+        "EQUIVALENT AT THE ROUTE": 2,
+        "KILLED": 15,
+        "UNINFORMATIVE UNDER SANDBOX": 42
+      },
+      "whole": {
+        "KILLED": 2,
+        "UNMEASURED": 57
+      }
+    },
+    "follow-up": {
+      "named": {
+        "EQUIVALENT AT THE ROUTE": 1,
+        "KILLED": 1,
+        "UNINFORMATIVE UNDER SANDBOX": 15
+      },
+      "whole": {
+        "UNMEASURED": 17
+      }
+    },
+    "generated-condition": {
+      "named": {
+        "KILLED": 9
+      },
+      "whole": {
+        "UNMEASURED": 9
+      }
+    }
+  },
+  "unfiltered_branch_with_plan": {
+    "product_lines": 1399,
+    "plan_md_lines": 3295,
+    "sprint_json_lines": 1280,
+    "total": 5974
+  }
+}

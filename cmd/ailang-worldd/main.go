@@ -393,7 +393,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		if addrGiven {
 			return exitUsage
 		}
-		return realServiceEnv().runOperatorLaunchWorker(rest[1:], stderr)
+		return realServiceEnv().runOperatorLaunchWorker(rest[1:], stderr, operatorWorkerInput{daemon.CurrentBuild().ExecutableSHA256, os.Stdin, os.NewFile})
 	}
 	switch verb := rest[0]; verb {
 	case "version":

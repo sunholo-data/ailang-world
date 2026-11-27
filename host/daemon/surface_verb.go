@@ -16,25 +16,26 @@ const VerbSchema = "world/surface-verb/v1"
 // verbAnswer is one answer of the verb route. Every answer carries v, schema, q, argv, verb, class
 // and outcome; the rest belong to their outcome.
 type verbAnswer struct {
-	V       int      `json:"v"`
-	Schema  string   `json:"schema"`
-	Q       string   `json:"q"`
-	Argv    []string `json:"argv"`
-	Verb    string   `json:"verb"`
-	Class   string   `json:"class"`
-	Outcome string   `json:"outcome"`
-	Reason  string   `json:"reason,omitempty"`
-	CLI     string   `json:"cli,omitempty"`
-	Href    string   `json:"href,omitempty"`
-	Text    string   `json:"text,omitempty"`
-	JSON    string   `json:"json,omitempty"`
-	Stderr  string   `json:"stderr,omitempty"`
-	Exit    int      `json:"exit,omitempty"`
+	V                   int      `json:"v"`
+	Schema              string   `json:"schema"`
+	Q                   string   `json:"q"`
+	Argv                []string `json:"argv"`
+	Verb                string   `json:"verb"`
+	Class               string   `json:"class"`
+	Outcome             string   `json:"outcome"`
+	Reason              string   `json:"reason,omitempty"`
+	CLI                 string   `json:"cli,omitempty"`
+	Href                string   `json:"href,omitempty"`
+	Text                string   `json:"text,omitempty"`
+	JSON                string   `json:"json,omitempty"`
+	Stderr              string   `json:"stderr,omitempty"`
+	Exit                int      `json:"exit,omitempty"`
+	CatalogueGeneration int64    `json:"catalogueGeneration,omitempty"`
 }
 
 // handleSurfaceVerb is GET /surface/verb.json?q=<line>, behind approvalRoute: the bar's line through
 // host/verbs' one grammar. It reads (episode report, the /v1 route's own builder; why, host/why's walk) and writes nothing:
-// no store write, no credentials store, no process. An operator's typo is a 200 refusal.
+// no store write or process. An operator's typo is a 200 refusal.
 func (d *Daemon) handleSurfaceVerb(w http.ResponseWriter, r *http.Request, _ []string) {
 	query := r.URL.Query()
 	if !query.Has("q") {
@@ -50,7 +51,13 @@ func (d *Daemon) handleSurfaceVerb(w http.ResponseWriter, r *http.Request, _ []s
 	}
 	v, args := verbs.Lookup(argv)
 	a.Argv, a.Verb, a.Class, a.CLI, a.Reason = argv, v.Words, string(v.Class), v.CLI, v.Reason
+	if d.operatorVerb(r, argv, &a) {
+		return
+	}
 	switch {
+	case len(argv) > 0 && argv[0] == "world-publish":
+		admission := verbs.AdmitOperator(argv, operatorPolicy)
+		a.Outcome, a.Reason, a.CLI = "refused", admission.Reason, admission.CLI
 	case v.Class == verbs.Address:
 		a.Outcome = "address"
 	case v.Words == "episode report":

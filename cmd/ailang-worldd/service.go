@@ -88,9 +88,11 @@ type serviceEnv struct {
 	runnerSleep     func(time.Duration)
 	runnerProcesses func() ([]worldProcess, error)
 
-	operatorDeadline   func(time.Duration, context.Context)
-	operatorSupervisor func(operatorLaunchJob, io.Writer) error
-	operatorAgentRun   operatorAgentRunner
+	operatorDeadline      func(time.Duration, context.Context)
+	operatorSupervisor    func(operatorLaunchJob, io.Writer) error
+	operatorAgentRun      operatorAgentRunner
+	operatorSupervisorCap func(time.Duration) (<-chan time.Time, func())
+	operatorCatalogue     func(runnerConfig) []byte
 }
 
 func realServiceEnv() serviceEnv {

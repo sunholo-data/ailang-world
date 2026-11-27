@@ -1,4 +1,4 @@
-package main
+package store
 
 import (
 	"strings"
@@ -19,7 +19,7 @@ func TestTaskTitle(t *testing.T) {
 		{"paren", "Fix this (details)", "Fix this"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			if got := taskTitle([]byte(tc.input)); got != tc.want {
+			if got := StartTaskTitle([]byte(tc.input)); got != tc.want {
 				t.Fatalf("%q, want %q", got, tc.want)
 			}
 		})

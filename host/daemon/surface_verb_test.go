@@ -128,8 +128,8 @@ func TestSurfaceVerbBoundsAndErrors(t *testing.T) {
 	assertErrorClass(t, requestRecorder(t, s.d, "GET", "/v1/episodes/w1/report", nil), 500, "Internal")
 }
 
-// VS1: host/verbs imports no I/O package; the route's file reaches no store, credentials store or
-// process; approve's id pattern is host/store's.
+// VS1: host/verbs stays pure. The bar delegates operator review to one
+// read-only adapter, and approve's id pattern is host/store's.
 func TestSurfaceVerbIsReadOnly(t *testing.T) {
 	importsOf := func(path string) (map[string]bool, *ast.File) {
 		t.Helper()
@@ -176,7 +176,7 @@ func TestSurfaceVerbIsReadOnly(t *testing.T) {
 		}
 		return true
 	})
-	if want := map[string]bool{"readCtx": true, "episodeReport": true, "writeInternalErrorLog": true, "verbEpisodeReport": true, "readDeadline": true, "verbWhy": true, "verbProfileList": true, "verbPresetList": true}; !reflect.DeepEqual(calls, want) {
+	if want := map[string]bool{"readCtx": true, "episodeReport": true, "writeInternalErrorLog": true, "verbEpisodeReport": true, "readDeadline": true, "verbWhy": true, "verbProfileList": true, "verbPresetList": true, "operatorVerb": true}; !reflect.DeepEqual(calls, want) {
 		t.Errorf("surface_verb.go reaches d.%v, want exactly %v", calls, want)
 	}
 	for _, id := range []string{"mr-0123456789abcdef", "mr-0123456789ABCDEF", "mr-0123456789abcde", "mr-0123456789abcdef0", "xr-0123456789abcdef", "mr-012345678 abcdef"} {

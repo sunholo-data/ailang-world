@@ -28,7 +28,10 @@ func (d *Daemon) handleHomeSummary(w http.ResponseWriter, r *http.Request) {
 		if err := d.readDecisionList(ctx, now, &reqs); err != nil {
 			d.writeInternalErrorLog(r, err)
 		}
-		needs += len(reqs.Decisions)
+		needs += len(reqs.Decisions) + len(reqs.OperatorActions)
+		if reqs.OperatorActionsUnavailable != "" {
+			needs = -1
+		}
 	}
 	var edge *surfacepage.NowEdge
 	if d.follow != nil {

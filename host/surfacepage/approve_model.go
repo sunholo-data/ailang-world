@@ -72,8 +72,10 @@ type RequestsJSON struct {
 	DecisionsTruncated bool              `json:"decisionsTruncated"`
 	// Confirmations are the pending verb requests a confirmation card confirms (row 243 V3 §2.5);
 	// below credentials schema 9, ConfirmationsUnavailable says why there are none.
-	Confirmations            []PendingConfirmation `json:"confirmations"`
-	ConfirmationsUnavailable string                `json:"confirmationsUnavailable"`
+	Confirmations              []PendingConfirmation   `json:"confirmations"`
+	ConfirmationsUnavailable   string                  `json:"confirmationsUnavailable"`
+	OperatorActions            []PendingOperatorAction `json:"operatorActions,omitempty"`
+	OperatorActionsUnavailable string                  `json:"operatorActionsUnavailable,omitempty"`
 }
 
 // PendingConfirmation is one pending verb request: a summary decoded from its stored bytes, or,
