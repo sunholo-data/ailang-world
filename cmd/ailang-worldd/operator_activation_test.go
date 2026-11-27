@@ -2,9 +2,11 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -20,9 +22,19 @@ import (
 	"github.com/sunholo-data/ailang-world/host/store"
 )
 
+const activationTestBudget = 3 * time.Minute
+
+func activationTestContext(t *testing.T) context.Context {
+	t.Helper()
+	ctx, cancel := (serviceEnv{operatorBudget: activationTestBudget}).operatorContext(activationTestBudget)
+	t.Cleanup(cancel)
+	return ctx
+}
+
 func operatorActivationFixture(t *testing.T) (*worktreeStartRig, runnerConfig, store.OperatorHeartbeat, *os.File) {
 	t.Helper()
-	r := newWorktreeStartRig(t, false)
+	r := newWorktreeStartRigWithContext(t, false, activationTestContext(t))
+	r.env.operatorBudget = activationTestBudget
 	c := r.config
 	agent := operatorFileFact(r.action, "launch_binary")
 	c.PresetNames = []string{r.action.Options.Preset}
@@ -63,8 +75,8 @@ func operatorActivationFixture(t *testing.T) (*worktreeStartRig, runnerConfig, s
 	if err != nil {
 		t.Fatal(err)
 	}
-	r.exec(t, "UPDATE operator_runner_state SET build=?, catalogue=?", build, catalogue)
-	h, err := runnerHeartbeat(r.creds, time.Second)
+	r.exec(t, "UPDATE operator_runner_state SET build=?, catalogue=?, seen_at=?", build, catalogue, r.src.clock())
+	h, err := runnerHeartbeat(r.creds, activationTestBudget)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,8 +96,11 @@ func activationEvidence(t *testing.T, r *worktreeStartRig) [5]any {
 }
 
 func TestOperatorFirstManagedEpisodeProcess(t *testing.T) {
+	if operatorPreparationBudget != 22*time.Second {
+		t.Fatalf("production preparation budget = %v, want 22s", operatorPreparationBudget)
+	}
 	r, c, h, runner := operatorActivationFixture(t)
-	ctx := boundedTestContext(t)
+	ctx := activationTestContext(t)
 	prepare := func(acquire func(string, string) (*store.OperatorEpisodeLock, error), stops <-chan os.Signal) error {
 		cursor := ""
 		return r.env.consumeOperatorPreparation(ctx, c, h, r.src, stops, runner, &cursor, acquire)
@@ -93,7 +108,7 @@ func TestOperatorFirstManagedEpisodeProcess(t *testing.T) {
 	snapshot := func() any {
 		return activationEvidence(t, r)
 	}
-	row := candidateRow(t, r.creds, r.src.clock())
+	row := candidateRowWithContext(t, ctx, r.creds, r.src.clock())
 	legacy := r.action
 	legacy.Resolution = nil
 	for _, fact := range r.action.Resolution {
@@ -159,7 +174,7 @@ func TestOperatorFirstManagedEpisodeProcess(t *testing.T) {
 	if err := r.env.recoverOperatorStart(ctx, c, loopHeartbeat, r.src, &cursor, nil); err != nil {
 		t.Fatalf("untouched claim with current signed catalogue: %v", err)
 	}
-	released := candidateRow(t, r.creds, r.src.clock())
+	released := candidateRowWithContext(t, ctx, r.creds, r.src.clock())
 	afterRelease := activationEvidence(t, r)
 	if released.ID != row.ID || released.Owner != "" || released.Generation != row.Generation+2 ||
 		!reflect.DeepEqual(beforeRelease[1:], afterRelease[1:]) {
@@ -213,7 +228,7 @@ func TestOperatorFirstManagedEpisodeProcess(t *testing.T) {
 	paused := false
 	err = prepare(func(path, ep string) (*store.OperatorEpisodeLock, error) {
 		paused = true
-		_, release := operatorProcessWitness(t, "episode", path)
+		_, release := operatorProcessWitnessWithin(t, activationTestBudget, "episode", path)
 		defer release()
 		return store.OpenOperatorEpisodeLock(path, ep)
 	}, nil)
@@ -251,14 +266,21 @@ func TestOperatorFirstManagedEpisodeProcess(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	pending := make(chan time.Time, 1)
+	pending <- time.Unix(r.src.clock(), 0)
+	close(pending)
+	var runLog bytes.Buffer
+	drained := r.env.runOperatorPreparationLoop(&runLog, c, h, r.src, nil, pending, runner)
 	err = prepare(store.OpenOperatorEpisodeLock, nil)
 	lifecycle.Close()
 	if !errors.Is(err, errOperatorDraining) || !reflect.DeepEqual(before, snapshot()) {
 		t.Fatalf("claim crossed lifecycle exclusion: %v", err)
 	}
+	if drained != exitOK || runLog.Len() != 0 || len(pending) != 1 || !reflect.DeepEqual(before, snapshot()) {
+		t.Fatalf("draining loop consumed a retry or changed evidence: code=%d pending ticks=%d log=%q", drained, len(pending), &runLog)
+	}
 	ticks := make(chan time.Time)
 	close(ticks)
-	var runLog bytes.Buffer
 	if code := r.env.runOperatorPreparationLoop(&runLog, c, h, r.src, nil, ticks, runner); code != exitOK || runLog.Len() != 0 {
 		t.Fatalf("production tick failed: %d %s", code, runLog.String())
 	}
@@ -285,7 +307,10 @@ func TestOperatorFirstManagedEpisodeProcess(t *testing.T) {
 	}
 	before = snapshot()
 	var out bytes.Buffer
-	if code := runSessionRevoke([]string{"--db", c.World, s.Session.CredentialID}, &out, &out); code != exitUsage ||
+	acquire := func(path, ep string, held *os.File) (*os.File, error) {
+		return openTerminalEpisodeLock(path, ep, held, os.O_CREATE, activationTestBudget)
+	}
+	if code := sessionRevokeWithLock(ctx, []string{"--db", c.World, s.Session.CredentialID}, &out, &out, acquire); code != exitUsage ||
 		!strings.Contains(out.String(), "active action "+row.ID) {
 		t.Fatalf("terminal could cross prepared ownership: %d %s", code, &out)
 	}
@@ -302,13 +327,52 @@ func TestOperatorFirstManagedEpisodeProcess(t *testing.T) {
 	}
 }
 
-func TestOperatorCurrentOwnerProcessRecovery(t *testing.T) {
+func TestOperatorPreparationRechecksHeartbeatAfterWorktree(t *testing.T) {
 	r, c, h, runner := operatorActivationFixture(t)
-	ctx := boundedTestContext(t)
+	transport := r.env.client.Transport
+	var before [5]any
+	r.env.client.Transport = serviceTransport(func(req *http.Request) (*http.Response, error) {
+		if _, err := os.Stat(r.path()); err == nil && before[0] == nil {
+			r.exec(t, "UPDATE operator_runner_state SET seen_at=?", r.src.clock()-11)
+			before = activationEvidence(t, r)
+		}
+		return transport.RoundTrip(req)
+	})
+	err := r.env.prepareOperatorStart(activationTestContext(t), c, h.Owner, h.Build, r.src, nil, runner, store.OpenOperatorEpisodeLock)
+	if before[0] == nil || !errors.Is(err, store.ErrOperatorRunner) || !reflect.DeepEqual(before, activationEvidence(t, r)) {
+		t.Fatalf("stale heartbeat crossed the post-worktree checkpoint: %v", err)
+	}
+}
+
+func TestOperatorStartMintRecoveryRemedies(t *testing.T) {
+	r, c, h, runner := operatorActivationFixture(t)
+	ctx := activationTestContext(t)
 	if err := r.env.prepareOperatorStart(ctx, c, h.Owner, h.Build, r.src, nil, runner, store.OpenOperatorEpisodeLock); err != nil {
 		t.Fatal(err)
 	}
-	_, release := operatorProcessWitness(t, "owner", r.creds)
+	id := r.action.ID
+	expectRemedy := func(want string) {
+		before := activationEvidence(t, r)
+		cursor := ""
+		err := r.env.recoverOperatorStart(ctx, c, h, r.src, &cursor, nil)
+		var remedy operatorRecoveryNeeded
+		if !errors.As(err, &remedy) || remedy.command != want || !reflect.DeepEqual(before, activationEvidence(t, r)) {
+			t.Fatalf("recovery = %v, want %q with unchanged evidence", err, want)
+		}
+	}
+	r.exec(t, "DELETE FROM operator_action_steps WHERE action_id=? AND kind='files'", id)
+	expectRemedy("ailang-worldd service runner reconcile-mint " + id)
+	r.exec(t, "UPDATE operator_action_steps SET phase='reserved', receipt=NULL, version=1 WHERE action_id=? AND kind='mint'", id)
+	expectRemedy("ailang-worldd service runner reconcile-start " + id)
+}
+
+func TestOperatorCurrentOwnerProcessRecovery(t *testing.T) {
+	r, c, h, runner := operatorActivationFixture(t)
+	ctx := activationTestContext(t)
+	if err := r.env.prepareOperatorStart(ctx, c, h.Owner, h.Build, r.src, nil, runner, store.OpenOperatorEpisodeLock); err != nil {
+		t.Fatal(err)
+	}
+	_, release := operatorProcessWitnessWithin(t, activationTestBudget, "owner", r.creds)
 	observe := func() any {
 		return activationEvidence(t, r)
 	}
@@ -429,7 +493,7 @@ func TestOperatorCurrentOwnerProcessRecovery(t *testing.T) {
 
 func TestOperatorAttendedStartDisposition(t *testing.T) {
 	r, c, h, runner := operatorActivationFixture(t)
-	ctx := boundedTestContext(t)
+	ctx := activationTestContext(t)
 	r.exec(t, `CREATE TRIGGER interrupted_mint BEFORE INSERT ON session_credentials
 		BEGIN SELECT RAISE(ABORT,'fixture mint rollback'); END`)
 	err := r.env.prepareOperatorStart(ctx, c, h.Owner, h.Build, r.src, nil, runner, store.OpenOperatorEpisodeLock)
@@ -460,6 +524,15 @@ func TestOperatorAttendedStartDisposition(t *testing.T) {
 	// A file finalizer must not mask a missing explicit close.
 	defer debug.SetGCPercent(debug.SetGCPercent(-1))
 	terminal := r.env.terminal.openTerminal
+	r.homeJob.runner = true
+	opened := false
+	r.env.terminal.openTerminal = spyEnv(&opened).openTerminal
+	code, output = r.command("reconcile-start", id)
+	if code != exitUsage || !strings.Contains(output, "companion must be unloaded") || opened ||
+		!reflect.DeepEqual(before, activationEvidence(t, r)) {
+		t.Fatalf("loaded companion crossed reconciliation: code=%d prompted=%t %s", code, opened, output)
+	}
+	r.homeJob.runner = false
 	r.env.terminal.openTerminal = func() (io.ReadWriteCloser, error) {
 		return &fakeTerm{r: strings.NewReader("n\n")}, nil
 	}
@@ -467,6 +540,23 @@ func TestOperatorAttendedStartDisposition(t *testing.T) {
 	if code != exitUsage || !reflect.DeepEqual(before, activationEvidence(t, r)) {
 		t.Fatalf("attended disposition crossed typed refusal: %d %s", code, output)
 	}
+	var drifted [5]any
+	term := &hookTerm{lockedTerm: lockedTerm{in: strings.NewReader("y\n")}, hook: func() {
+		info, err := os.Stat(r.path())
+		if err != nil {
+			t.Fatal(err)
+		} else if err := os.Chmod(r.path(), info.Mode().Perm()^0020); err != nil {
+			t.Fatal(err)
+		}
+		drifted = activationEvidence(t, r)
+	}}
+	r.env.terminal.openTerminal = func() (io.ReadWriteCloser, error) { return term, nil }
+	code, output = r.command("reconcile-start", id)
+	if code != exitUsage || !strings.Contains(output, store.ErrOperatorConflict.Error()) || !term.hooked ||
+		reflect.DeepEqual(before, drifted) || !reflect.DeepEqual(drifted, activationEvidence(t, r)) {
+		t.Fatalf("attended disposition crossed worktree drift during the prompt: %d %s", code, output)
+	}
+	before = drifted
 	r.env.terminal.openTerminal = terminal
 	code, output = r.command("reconcile-start", id)
 	after := activationEvidence(t, r)

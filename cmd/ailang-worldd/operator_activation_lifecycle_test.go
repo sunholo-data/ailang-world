@@ -105,7 +105,7 @@ func TestOperatorRevokeStatRefusal(t *testing.T) {
 		t.Fatal(err)
 	}
 	before := pairedUpgradeEvidence(f)
-	ctx := boundedTestContext(t)
+	ctx := activationTestContext(t)
 	id := strings.Repeat("a", 64)
 	if _, ok, err := readSessionRevokeTarget(ctx, f.config.World, path+".absent", id); ok || err != nil {
 		t.Fatalf("missing credentials control: %t %v", ok, err)

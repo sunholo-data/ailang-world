@@ -205,7 +205,7 @@ func (e serviceEnv) reconcileOperatorStart(id string, out, stderr io.Writer) int
 	if err := e.proveOldTerminalQuiet(); err != nil {
 		return refuse(err)
 	}
-	ctx, cancel := budgetContext(5 * time.Second)
+	ctx, cancel := e.operatorContext(5 * time.Second)
 	defer cancel()
 	ro, err := store.OpenCredentialsReadOnly(runnerDB(c.Credentials))
 	if err != nil {
@@ -272,7 +272,7 @@ func (e serviceEnv) reconcileOperatorStart(id string, out, stderr io.Writer) int
 	if !e.confirm(stderr, change) {
 		return exitUsage
 	}
-	ctx, done := budgetContext(5 * time.Second)
+	ctx, done := e.operatorContext(5 * time.Second)
 	defer done()
 	after, err := check(ctx)
 	if err != nil || before != after {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -61,7 +62,7 @@ func TestOperatorProcessWitness(t *testing.T) {
 		}
 		return
 	case "episode":
-		lock, err := terminalEpisodeLock(path, "ep", nil)
+		lock, err := openTerminalEpisodeLock(path, "ep", nil, os.O_CREATE, activationTestBudget)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -82,7 +83,12 @@ func TestOperatorProcessWitness(t *testing.T) {
 
 func operatorProcessWitness(t *testing.T, mode, path string, files ...*os.File) (int, func()) {
 	t.Helper()
-	ctx, cancel := budgetContext(8 * time.Second)
+	return operatorProcessWitnessWithin(t, 8*time.Second, mode, path, files...)
+}
+
+func operatorProcessWitnessWithin(t *testing.T, budget time.Duration, mode, path string, files ...*os.File) (int, func()) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), budget)
 	bin, err := os.Executable()
 	if err != nil {
 		cancel()

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
@@ -15,9 +16,30 @@ import (
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/daemon"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/worktree"
 )
 
-const runnerPoll = 2 * time.Second
+const (
+	runnerPoll                = 2 * time.Second
+	operatorPreparationBudget = 22 * time.Second
+)
+
+type operatorBudgetKey struct{}
+
+func operatorChildBudget(ctx context.Context, budget time.Duration) (context.Context, context.CancelFunc) {
+	if override, ok := ctx.Value(operatorBudgetKey{}).(time.Duration); ok {
+		budget = override
+	}
+	return context.WithTimeout(ctx, budget)
+}
+
+func (e serviceEnv) operatorContext(budget time.Duration) (context.Context, context.CancelFunc) {
+	if e.operatorBudget == 0 {
+		return budgetContext(budget)
+	}
+	ctx, cancel := budgetContext(e.operatorBudget)
+	return context.WithValue(worktree.WithCommandTimeout(ctx, e.operatorBudget), operatorBudgetKey{}, e.operatorBudget), cancel
+}
 
 func runnerKernelLock(path string) (*os.File, error) {
 	return openRunnerLock(path, os.O_CREATE)
@@ -87,7 +109,7 @@ func (e serviceEnv) runOperatorPreparationLoop(errOut io.Writer, c runnerConfig,
 		if err != nil {
 			return serviceMessage(errOut, "runner halted", "service record unavailable", "ailang-worldd service runner status", 2)
 		}
-		ctx, cancel := budgetContext(22 * time.Second)
+		ctx, cancel := e.operatorContext(operatorPreparationBudget)
 		src.workspace = record.Workspace
 		err = e.consumeOperatorPreparation(ctx, c, h, src, stops, lock, &recoveryCursor, store.OpenOperatorEpisodeLock)
 		cancel()
@@ -129,7 +151,7 @@ func (e serviceEnv) runnerTick(c runnerConfig, h *store.OperatorHeartbeat) error
 	// Publish the admitted installed preset names before the start consumer.
 	h.Catalogue, _ = json.Marshal(c.PresetNames)
 	return runnerWrite(c.Credentials, func(db *store.Credentials) error {
-		ctx, cancel := budgetContext(time.Second)
+		ctx, cancel := e.operatorContext(time.Second)
 		defer cancel()
 		generation, err := db.PutOperatorHeartbeat(ctx, *h)
 		if err == nil {

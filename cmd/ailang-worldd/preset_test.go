@@ -27,7 +27,11 @@ func presetTestContext(t *testing.T) context.Context {
 }
 func presetGit(t *testing.T, f episodeFixture, args ...string) string {
 	t.Helper()
-	s, err := worktree.Output(presetTestContext(t), f.git, append([]string{"-C", f.repo}, args...))
+	ctx := f.gitContext
+	if ctx == nil {
+		ctx = presetTestContext(t)
+	}
+	s, err := worktree.Output(ctx, f.git, append([]string{"-C", f.repo}, args...))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,9 +45,12 @@ type presetFixture struct {
 	profile               *broker.ExecProfile
 }
 
-func newPresetFixture(t *testing.T) presetFixture {
+func newPresetFixture(t *testing.T, gitContext ...context.Context) presetFixture {
 	t.Helper()
 	r := newEpisodeRun(t)
+	if len(gitContext) > 0 {
+		r.f.gitContext = gitContext[0]
+	}
 	presetGit(t, r.f, "branch", "dev")
 	base := presetGit(t, r.f, "rev-parse", "dev")
 	presetGit(t, r.f, "checkout", "-q", "-b", "feature")

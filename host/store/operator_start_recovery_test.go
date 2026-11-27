@@ -1,17 +1,26 @@
 package store
 
 import (
+	"context"
 	"errors"
 	"os"
 	"reflect"
 	"testing"
+	"time"
 )
+
+func startRecoveryTestContext(t *testing.T) context.Context {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), 3*time.Minute)
+	t.Cleanup(cancel)
+	return ctx
+}
 
 func TestOperatorStartRecoveryWindows(t *testing.T) {
 	for i, want := range []OperatorStartWindow{OperatorStartUntouched, OperatorStartGitPending,
 		OperatorStartTreeOnly, OperatorStartMintPending, OperatorStartMintOnly, OperatorStartFilesPending, OperatorStartPrepared} {
 		t.Run([]string{"claimed", "reserved_worktree", "observed_worktree", "reserved_mint", "observed_mint", "reserved_files", "prepared"}[i], func(t *testing.T) {
-			f := newOperatorPinFixture(t, false)
+			f := newOperatorPinFixture(t, false, startRecoveryTestContext(t))
 			id := f.in.Attempt.CAS.ID
 			if i >= 4 {
 				f.mint(t)
@@ -165,7 +174,7 @@ func TestOperatorStartDispositionRejectsBlobOwner(t *testing.T) {
 }
 
 func TestOperatorPartialFilesOrphanRevoke(t *testing.T) {
-	f := newOperatorPinFixture(t, false)
+	f := newOperatorPinFixture(t, false, startRecoveryTestContext(t))
 	f.mint(t)
 	id := f.in.Attempt.CAS.ID
 	state, _, err := f.c.ReadOperatorFiles(f.ctx, id)
@@ -208,7 +217,7 @@ func TestOperatorPartialFilesOrphanRevoke(t *testing.T) {
 }
 
 func TestNextOwnedOperatorStart(t *testing.T) {
-	c, ctx := openTestCredentials(t), testCtx(t)
+	c, ctx := openTestCredentials(t), startRecoveryTestContext(t)
 	add := func(n int, episode, kind string, owner bool) OperatorActionRow {
 		t.Helper()
 		req := operatorRequest(t, c, n, episode, kind)
@@ -237,7 +246,7 @@ func TestNextOwnedOperatorStart(t *testing.T) {
 }
 
 func TestOperatorMarkMintUncertain(t *testing.T) {
-	f := newOperatorPinFixture(t, false)
+	f := newOperatorPinFixture(t, false, startRecoveryTestContext(t))
 	id := f.in.Attempt.CAS.ID
 	tree := f.reserveWorktree(t)
 	if err := f.c.ObserveOperatorStep(f.ctx, tree, []byte("created")); err != nil {
