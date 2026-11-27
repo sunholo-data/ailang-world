@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 446 | 2026-11-27 | row 243 V4 sprint 7b LANDED (PR #703, merge `26b6947f`): CONFIRMATION ACTIVATION — `POST /surface/operator-actions/{id}/confirm` behind every `appr... |
 | 445 | 2026-11-27 | row 243 V4 sprint 7 LANDED (PR #700, merge `6836c9a9`): INERT OPERATOR REQUESTS — outcome B, because the whole compiled S7 measured 1,892 lines (> ... |
 | 444 | 2026-11-27 | row 243 V4 sprint 6 LANDED (PR #695, merge `00b4ec55`): LAUNCH — the installed operator runner resumes a durable prepared-awaiting-S6 start under t... |
 | 443 | 2026-11-27 | row 267 LANDED (PR #691, merge `6447e776`): the CI race leg's bounds are derived from the measured slow runners — per-package 900 s (was 8m), start... |
