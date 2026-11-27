@@ -468,8 +468,14 @@ func provisionEpisode(r *mintRequest, held *os.File, stdout, stderr io.Writer, e
 	}
 	if signed { // V2: no prompt; the request and its approver go to stdout
 		fmt.Fprint(stdout, r.presetPrompt)
+		approver := ""
+		if r.consume != nil && r.consume.Signed != nil {
+			approver = r.consume.Signed.ApprovedBy()
+		} else if r.fromAllowance != nil {
+			approver = "standing allowance (" + r.fromAllowance.PresetName + ")"
+		}
 		fmt.Fprintf(stdout, "%s and mint a session for episode %s with %d grant(s) [%s]%s, expiry +%ds: approved by %s\n",
-			action, r.episode, len(grants), grantList(grants), bound, r.ttl, r.consume.Signed.ApprovedBy())
+			action, r.episode, len(grants), grantList(grants), bound, r.ttl, approver)
 	} else {
 		if r.presetPrompt != "" {
 			fmt.Fprint(term, r.presetPrompt)
