@@ -453,6 +453,21 @@ func TestEpisodeFinishHelp(t *testing.T) {
 	}
 }
 
+func TestEpisodeFinishInfersPresetFromStartRecord(t *testing.T) {
+	f := newFinishFixture(t)
+	if err := os.WriteFile(filepath.Join(f.wt, "a.txt"), []byte("hello\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var out, errw bytes.Buffer
+	rc := runEpisodeFinishWith([]string{"ep1", "--presets-dir", f.dir, "--dry-run", "--include-unattributed"}, &out, &errw, testMintEnv("", 1), commitOneObject)
+	if rc != 0 {
+		t.Fatalf("finish without --preset failed rc=%d out=%s err=%s", rc, out.String(), errw.String())
+	}
+	if !strings.Contains(out.String(), "World-Provenance:") || !strings.Contains(out.String(), "episode=ep1") {
+		t.Fatalf("expected provenance dry-run output, got: %s", out.String())
+	}
+}
+
 func countRequests(paths []string, want string) int {
 	n := 0
 	for _, p := range paths {

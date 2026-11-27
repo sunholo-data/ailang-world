@@ -106,6 +106,10 @@ case ${1-} in
       printf '{"episode":"%s","entries":[1810,1820],"total_calls":42,"calls_by_tool":{"ailang-read":30,"ailang-write":12},"budgets":[{"effect":"Workspace.Read","scope":"worktree","minted":200,"used":30,"left":170},{"effect":"Ailang.Check","scope":"worktree","minted":100,"used":91,"left":9},{"effect":"Workspace.Write","scope":"worktree","minted":200,"used":12,"left":188}],"plan_refusals":{"count":0},"handler_refusals":{"count":0}}\n' "$3"
       exit 0
     fi
+    if [ "${2-}" = finish ]; then
+      printf 'finished %s\n' "$3"
+      exit 0
+    fi
     [ "${2-}" = start ] || exit 2
     ep=$3
     sessions=
@@ -401,7 +405,7 @@ run world-event "$T/answers" pane.closed
 check "8 pane.closed exits 0" [ "$CODE" -eq 0 ]
 check "8 the World pane is marked ended" jq -e 'select(.pane == "p-new") | .ended != null' "$T/state/panes.jsonl"
 check "8 a notification says what remains" has "$T/herdr.log" \
-  "notification show ailang-world --body Episode ep8's pane closed. Its worktree and session remain; finish it from the CLI (row 218 will make this one step)"
+  "notification show ailang-world --body Episode ep8's pane closed. Open World panel (prefix+shift+o) and press f, or run: ailang-worldd episode finish ep8"
 export HERDR_PLUGIN_EVENT_JSON='{"pane_id":"p-new"}'
 run world-event "$T/answers" pane.exited
 check "8 pane.exited after pane.closed: no second notification" [ "$(count "$T/herdr.log" "notification show")" -eq 1 ]
@@ -785,7 +789,7 @@ check "20 the selected episode's last entries" has "$T/out" "ep20: last entries 
 check "20 ... the provenance line" has "$T/out" "  World-Provenance: store=/x/world.db episode=ep20 entries=1810-1820"
 check "20 ... and the last entry's index" has "$T/out" "  last entry: #1820 (w, then 1820, prints its why chain)"
 check "20 the surface link" grep -qx 'surface: http://127.0.0.1:47330/surface' "$T/out"
-check "20 the footer names the keys" has "$T/out" "j/k select · n new World agent · l new plain agent · o open surface · w why <entry> · r revoke session · q quit"
+check "20 the footer names the keys" has "$T/out" "j/k select · n new World agent · l new plain agent · o open surface · w why <entry> · f finish · r revoke session · q quit"
 check "20 doctor checks each World pane's session by path" has "$T/worldd.log" "--session $T/sessions/ep20.session --host claude --hosts-dir $T/hosts"
 check "20 the calls come from episode report --json" has "$T/worldd.log" "--addr http://127.0.0.1:47330 episode report ep20 --json"
 refute "20 the token is in no output, argv or state" grep -rqF -- "$FAKE_TOKEN" "$T/out" "$T/err" "$T/herdr.log" "$T/worldd.log" "$T/state"
@@ -824,6 +828,9 @@ panel_keys 'w\nlast\nq\n'
 refute "21 w refuses a non-number" has "$T/worldd.log" " why "
 panel_keys 'o\nq\n'
 check "21 o prints the surface URL" has "$T/out" "surface: http://127.0.0.1:47330/surface (not opened: no terminal)"
+panel_keys 'f\nq\n'
+check "21 f runs episode finish on the selected confined episode" grep -qx -- "episode finish ep20" "$T/worldd.log"
+check "21 f prints finish output" has "$T/out" "finished ep20"
 refute "21 the token is in no output or argv" grep -rqF -- "$FAKE_TOKEN" "$T/out" "$T/err" "$T/herdr.log" "$T/worldd.log"
 unset FAKE_EXPIRED_EP
 

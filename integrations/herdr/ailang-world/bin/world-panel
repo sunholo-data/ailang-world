@@ -62,13 +62,41 @@ SEL=1
 MSG=
 
 # rows: one TSV line per open pane of this repo: level, pane, episode, host.
+# Also includes recently ended confined episodes whose worktree still has
+# uncommitted changes so the operator can finish & PR them from the panel.
 rows() {
   [ -n "$REPO_DIR" ] || return 0
   _p=$HERDR_PLUGIN_STATE_DIR/panes.jsonl
   _a=$HERDR_PLUGIN_STATE_DIR/arms.jsonl
+  _seen=
   if [ -f "$_p" ]; then
-    jq -r --arg repo "$REPO_DIR" 'select(.ended == null and .repo == $repo)
-      | ["confined", (.pane // "" | tostring), (.episode // "-"), (.host // "-")] | @tsv' "$_p" 2>/dev/null
+    _open=$(jq -r --arg repo "$REPO_DIR" 'select(.ended == null and .repo == $repo)
+      | ["confined", (.pane // "" | tostring), (.episode // "-"), (.host // "-")] | @tsv' "$_p" 2>/dev/null)
+    if [ -n "$_open" ]; then
+      printf '%s\n' "$_open"
+      _seen=$(printf '%s\n' "$_open" | awk -F '\t' '{print $3}')
+    fi
+    _ended=$(jq -r --arg repo "$REPO_DIR" 'select(.ended != null and .repo == $repo)
+      | [(.episode // ""), (.host // "-")] | @tsv' "$_p" 2>/dev/null)
+    _tab=$(printf '\t')
+    while IFS=$_tab read -r _ep _host; do
+      [ -n "$_ep" ] || continue
+      case "
+$_seen
+" in
+        *"
+$_ep
+"*) continue ;;
+      esac
+      _wt=$WORLD_WS/$_ep
+      if [ -d "$_wt" ] && [ -n "$(git -C "$_wt" status --porcelain 2>/dev/null)" ]; then
+        printf 'confined\t(exited)\t%s\t%s\n' "$_ep" "$_host"
+        _seen="$_seen
+$_ep"
+      fi
+    done <<EOF
+$_ended
+EOF
   fi
   if [ -f "$_a" ]; then
     jq -r --arg repo "$REPO_DIR" 'select(.ended == null and .repo == $repo)
@@ -137,7 +165,12 @@ frame() {
     mark=' '
     [ "$_i" -ne "$SEL" ] || mark='>'
     if [ "$lvl" = confined ]; then
-      world_check_pane "$ep" "$host"
+      if [ "$pane" = "(exited)" ]; then
+        PANE_STATE=ready-finish
+        PANE_LEFT=-
+      else
+        world_check_pane "$ep" "$host"
+      fi
       report "$ep"
       # shellcheck disable=SC2059
       printf "$FMT" "$mark" "$pane" "$ep" "$host" "$lvl" "$PANE_STATE" "$PANE_LEFT" "$CALLS" "$LOWEST"
@@ -165,7 +198,7 @@ EOF
   fi
   [ -z "$MSG" ] || printf '%s\n' "$MSG"
   MSG=
-  printf 'j/k select · n new World agent · l new plain agent · o open surface · w why <entry> · r revoke session · q quit\n'
+  printf 'j/k select · n new World agent · l new plain agent · o open surface · w why <entry> · f finish · r revoke session · q quit\n'
 }
 
 # say TEXT: in the panel, on the next frame; in --keys mode, now.
@@ -209,6 +242,29 @@ why() {
   fi
 }
 
+finish_ep() {
+  if ! selected || [ "$S_LEVEL" != confined ]; then
+    say "No World pane is selected: only a World episode can be finished."
+    return 0
+  fi
+  if [ "$mode" = tty ]; then
+    stty "$saved" 2>/dev/null
+    printf '\nRunning: %s episode finish %s\n\n' "$WORLDD" "$S_EP"
+    "$WORLDD" episode finish "$S_EP"
+    _rc=$?
+    printf '\nPress Enter to return to World panel...'
+    IFS= read -r _ || :
+    stty -icanon -echo min 0 time 50 2>/dev/null
+    if [ "$_rc" -eq 0 ]; then
+      say "Finished episode $S_EP."
+    else
+      say "episode finish $S_EP exited $_rc."
+    fi
+  else
+    "$WORLDD" episode finish "$S_EP" </dev/null 2>&1
+  fi
+}
+
 revoke() {
   if ! selected || [ "$S_LEVEL" != confined ]; then
     say "No World pane is selected: only a World episode has a session to revoke."
@@ -243,6 +299,7 @@ key() {
     l) invoke plain-agent "New plain agent" ;;
     o) open_url ;;
     w) why ;;
+    f) finish_ep ;;
     r) revoke ;;
     q) return 1 ;;
     *) ;;
