@@ -16,7 +16,7 @@ import (
 
 // Read the configured presets on runner ticks, independent of HTTP input.
 func (e serviceEnv) readOperatorCatalogue(c runnerConfig, src operatorStartSource) []byte {
-	items := make(map[string]store.OperatorStartReview)
+	items := make(map[string]any)
 	r, err := readServiceRecord(e.paths)
 	if err != nil {
 		return []byte("{}")
@@ -35,8 +35,18 @@ func (e serviceEnv) readOperatorCatalogue(c runnerConfig, src operatorStartSourc
 			}
 		}
 	}
+	if len(c.FinishRemotes) != 0 {
+		src.workspace = r.Workspace
+		finishCtx, stop := e.operatorContext(4 * time.Second)
+		items[store.OperatorFinishCatalogueKey] = e.finishCatalogue(finishCtx, c, src)
+		stop()
+	}
 	raw, _ := json.Marshal(items)
-	if ctx.Err() != nil || len(raw) > 16*approval.MaxOperatorActionBytes {
+	if len(raw) > 16*approval.MaxOperatorActionBytes {
+		delete(items, store.OperatorFinishCatalogueKey)
+		raw, _ = json.Marshal(items)
+	}
+	if len(raw) > 16*approval.MaxOperatorActionBytes {
 		return []byte("{}")
 	}
 	return raw

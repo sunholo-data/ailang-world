@@ -14,7 +14,15 @@ import (
 	"github.com/sunholo-data/ailang-world/host/verbs"
 )
 
+type operatorCheckStatus struct {
+	Name   string `json:"name"`
+	Result string `json:"result"`
+}
+
 type operatorStatus struct {
+	Checks      []operatorCheckStatus `json:"checks,omitempty"`
+	LocalCommit string                `json:"localCommit,omitempty"`
+
 	V            int    `json:"v"`
 	ID           string `json:"id"`
 	Episode      string `json:"episode"`
@@ -62,7 +70,7 @@ var operatorCard = template.Must(template.New("operator action").Parse(`<!doctyp
 <h1 id="operator-title" tabindex="-1">Operator action {{.Status.ID}}</h1>
 <p id="operator-state" data-state="{{.Status.State}}">{{.Status.State}}</p>
 <p id="operator-progress" role="status">Status at {{.Status.Now}}{{if .Status.Reason}} · {{.Status.Reason}}{{end}}</p>
-{{if .Review}}<h2>Review</h2><pre>{{.Review}}</pre><h2>Task</h2><pre id="operator-task">{{.Task}}</pre>{{end}}
+{{if .Review}}<h2>Review</h2><pre>{{.Review}}</pre>{{end}}{{if .Task}}<h2>Task</h2><pre id="operator-task">{{.Task}}</pre>{{end}}
 <section id="operator-controls" hidden aria-label="Confirm this action">
 <button id="operator-key" type="button" hidden>Confirm with passkey</button>
 <details><summary>Confirm with SSH signature</summary>
@@ -116,6 +124,31 @@ func (d *Daemon) handleOperatorRead(w http.ResponseWriter, r *http.Request, id s
 			d.operatorError(w, err)
 			return
 		}
+	}
+	if status.Href != "" && row.Kind == "finish" && row.Owner != "" {
+		j, err := ro.ReadOperatorFinishJournal(ctx, store.OperatorCAS{ID: row.ID, Digest: [32]byte(row.Digest), Generation: row.Generation})
+		if err != nil {
+			d.operatorError(w, err)
+			return
+		}
+		for _, check := range j.Checks {
+			status.Checks = append(status.Checks, operatorCheckStatus{Name: check.Name, Result: check.Result})
+		}
+		switch {
+		case j.Commit.State == store.OperatorLocalCommitDone:
+			status.LocalCommit = j.Commit.SHA
+			status.Reason = "Local commit " + j.Commit.SHA + " retained; PR confirmation has not been issued"
+		case j.OpenCheck || j.CommitPhase == "reserved":
+			status.Reason = "Finish outcome uncertain; inspect durable receipts"
+		case j.Commit.State == "commit-failed":
+			status.Reason = "Local commit failed; check receipts retained"
+		case len(j.Checks) > 0:
+			status.Reason = "Sandboxed check results recorded; see Action status (JSON)"
+		}
+	}
+	if row.Kind == "finish" && status.Reason == "runner disconnected; showing durable action status" &&
+		h.Available(CurrentBuild().ExecutableSHA256, "start", now) && !h.Available(CurrentBuild().ExecutableSHA256, "finish", now) {
+		status.Reason = errOperatorFinishAuth.Error()
 	}
 	if statusJSON {
 		writeApprovalJSON(w, http.StatusOK, status)

@@ -46,11 +46,19 @@ func newWorktreeStartRigWithAgent(t *testing.T, claude bool, ctx context.Context
 
 func newWorktreeStartRigWithTask(t *testing.T, claude bool, ctx context.Context, body, task string, ttl ...int64) *worktreeStartRig {
 	t.Helper()
+	return newWorktreeStartRigWithRemote(t, claude, ctx, body, task, "", ttl...)
+}
+
+func newWorktreeStartRigWithRemote(t *testing.T, claude bool, ctx context.Context, body, task, remote string, ttl ...int64) *worktreeStartRig {
+	t.Helper()
 	s := operatorService(t)
 	s.mustInstall(t)
 	s.writes = nil
 	s.env.terminal.now = func() int64 { return 1012 }
 	f := newPresetFixture(t, ctx)
+	if remote != "" {
+		presetGit(t, f.r.f, "remote", "set-url", "origin", remote)
+	}
 	// The runner checks the agent and session directory up to its login home.
 	bin, err := os.MkdirTemp(s.config.Home, "agent-")
 	if err != nil {
@@ -78,6 +86,10 @@ func newWorktreeStartRigWithTask(t *testing.T, claude bool, ctx context.Context,
 			WorkspaceRoot: r.f.r.f.ws, SessionsDir: r.f.r.sessions})
 		if claude {
 			p.Agent = "claude"
+		}
+		if remote != "" {
+			p.Committer = "Fixture Operator <fixture@example.invalid>"
+			p.Checks = p.Checks[:1]
 		}
 		if len(ttl) != 0 {
 			p.TTLS = ttl[0]

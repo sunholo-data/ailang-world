@@ -26,6 +26,12 @@ func TestOperatorFinishManifestCapture(t *testing.T) {
 		!strings.HasPrefix(m.Commit.Message, "Reviewed finish\n\n") || m.Commit.Snapshot.Head != f.before {
 		t.Fatalf("signed snapshot and provenance: %+v %v", m, err)
 	}
+	f.gitOutput("-C", f.wt, "add", "b.go")
+	f.gitOutput("-C", f.wt, "-c", "user.name=Fixture", "-c", "user.email=fixture@invalid", "commit", "-m", "Unattributed fixture")
+	m, err = in.frozen(ctx)
+	if err != nil || !reflect.DeepEqual(m.Unattributed, []string{"b.go"}) || len(m.Commit.Snapshot.Paths) != 2 {
+		t.Fatalf("committed base-to-HEAD changes escaped attribution or changed staging: %+v %v", m, err)
+	}
 	before := serviceFileHash(filepath.Join(g.admin, "index"))
 	in.manifest.Base.SHA = strings.Repeat("d", 40)
 	if _, err := in.frozen(ctx); !errors.Is(err, errOperatorFinishReview) || serviceFileHash(filepath.Join(g.admin, "index")) != before {
@@ -34,6 +40,13 @@ func TestOperatorFinishManifestCapture(t *testing.T) {
 }
 
 func TestOperatorFinishWorldEvidence(t *testing.T) {
+	for _, id := range []string{taskOutcomeSemanticID, "test/wrong-semantic-id/v1"} {
+		t.Run(id, func(t *testing.T) { testOperatorFinishWorldEvidence(t, id) })
+	}
+}
+
+func testOperatorFinishWorldEvidence(t *testing.T, semanticID string) {
+	t.Helper()
 	ctx := activationTestContext(t)
 	path := filepath.Join(t.TempDir(), "world.db")
 	world, err := store.Open(path)
@@ -59,7 +72,7 @@ func TestOperatorFinishWorldEvidence(t *testing.T) {
 	}
 	result := taskOutcomeObject(body)
 	ref := hashref.SumSHA256(result.Payload)
-	obj := store.Object{Hash: ref, InterfaceHash: h("interface"), SemanticID: result.SemanticID, Provenance: result.Provenance, Payload: result.Payload}
+	obj := store.Object{Hash: ref, InterfaceHash: h("interface"), SemanticID: semanticID, Provenance: result.Provenance, Payload: result.Payload}
 	if err := world.PutObject(activationTestContext(t), obj); err != nil {
 		t.Fatal(err)
 	}
@@ -74,8 +87,8 @@ func TestOperatorFinishWorldEvidence(t *testing.T) {
 			EntryHash: next.LogHead, TransitionRef: ref}}); err != nil {
 		t.Fatal(err)
 	}
-	if !finishWorldEvidence(ctx, path, r) {
-		t.Fatal("exact committed outcome was not readable")
+	if finishWorldEvidence(ctx, path, r) != (semanticID == result.SemanticID) {
+		t.Fatalf("committed outcome semantic type was misclassified: %s", semanticID)
 	}
 	for _, wrong := range []store.OperatorFinishCheck{
 		{Name: r.Name, Result: r.Result, Ref: r.Ref, Entry: 2},

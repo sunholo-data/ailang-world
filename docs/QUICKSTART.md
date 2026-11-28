@@ -2185,6 +2185,25 @@ Close the page and reopen the same card URL to read the outcome and **Episode re
 **Refresh status** to reconnect if status reads fail. **Back to World** returns to the World surface.
 If the request response was lost, **Reconnect** in the review panel retries the same frozen request.
 
+### Prepare a local finish in the World app
+
+Use the fake finish preset with its explicit committer and fake GitHub URL.
+The fake Git tools read a bare local repository. With a stopped launch and
+one World-attributed worktree change, enter this fixture command in the bar.
+
+```text
+episode finish ep --preset p
+```
+
+Enter opens the review. Select **Request approval**, review the held inputs on
+the card and confirm with the enrolled fixture passkey or SSH key. Use
+**Action status (JSON)** to read check outcomes and the retained local commit.
+The card reports that PR confirmation has yet to be issued.
+
+If the runner shows `finish blocked: github-auth`, repair its approved PATH,
+GitHub login or Git credential helper in the attended runner setup. The start
+flow remains available.
+
 ## 22. Check and install an app (row 274 M1)
 
 An app is an extension package with an `app.json` manifest (schema `world/app/v1`). It holds a

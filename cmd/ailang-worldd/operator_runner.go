@@ -92,6 +92,18 @@ func runOperatorRunner(args []string, errOut io.Writer, e serviceEnv) int {
 	ticker := time.NewTicker(runnerPoll)
 	defer ticker.Stop()
 	source := operatorStartSource{defaultPresetsDir(), defaultExecProfilesDir(), "", defaultHostsDir(), e.terminal.now}
+	if len(c.FinishRemotes) != 0 {
+		ctx, cancel := e.operatorContext(30 * time.Second)
+		h.Readiness = "both"
+		for _, remote := range c.FinishRemotes {
+			if err := prepareOperatorFinish(ctx, c, remote); err != nil {
+				fmt.Fprintln(errOut, err)
+				h.Readiness = "start"
+				break
+			}
+		}
+		cancel()
+	}
 	e.operatorCatalogue = func(c runnerConfig) []byte { return e.readOperatorCatalogue(c, source) }
 	return e.runOperatorPreparationLoop(errOut, c, h, source, stops, ticker.C, lock)
 }
@@ -142,6 +154,25 @@ func (e serviceEnv) runOperatorPreparationLoop(errOut io.Writer, c runnerConfig,
 				fmt.Fprintln(errOut, "operator start blocked; inspect service runner status and reconcile durable evidence")
 			}
 		}
+		if h.Readiness == "both" {
+			err := e.runFinishTurn(c, &h, src, stops, ticks)
+			var auth operatorGitHubAuth
+			var busy operatorFinishBusy
+			switch {
+			case errors.Is(err, errOperatorDraining):
+				return 0
+			case errors.As(err, &auth):
+				h.Readiness = "start"
+				if err := e.touchRunner(c, &h); err != nil {
+					return serviceMessage(errOut, "runner halted", "heartbeat unavailable", "ailang-worldd service runner status", 2)
+				}
+				fmt.Fprintln(errOut, auth)
+			case errors.As(err, &busy):
+				fmt.Fprintln(errOut, busy.Error())
+			case err != nil && !errors.Is(err, store.ErrOperatorMissing):
+				fmt.Fprintln(errOut, finishRefusal(err))
+			}
+		}
 		select {
 		case _, open := <-ticks:
 			if !open {
@@ -153,6 +184,16 @@ func (e serviceEnv) runOperatorPreparationLoop(errOut io.Writer, c runnerConfig,
 	}
 }
 
+func finishRefusal(err error) string {
+	for _, class := range []error{errOperatorFinishReview, errOperatorFinishEligibility, errOperatorFinishTerminal,
+		errOperatorFinishFence, errOperatorFinishCheck, errOperatorFinishUncertain, errOperatorCommitFailed} {
+		if errors.Is(err, class) {
+			return class.Error()
+		}
+	}
+	return "operator finish blocked; inspect action status and durable evidence"
+}
+
 func (e serviceEnv) runnerTick(c runnerConfig, h *store.OperatorHeartbeat) error {
 	if err := e.checkRunnerConfig(c); err != nil {
 		return err
@@ -160,12 +201,18 @@ func (e serviceEnv) runnerTick(c runnerConfig, h *store.OperatorHeartbeat) error
 	if err := e.checkRunnerPair(c); err != nil {
 		return err
 	}
-	h.Readiness = "start"
+	if h.Readiness == "" {
+		h.Readiness = "start"
+	}
 	if e.operatorCatalogue != nil {
 		h.Catalogue = e.operatorCatalogue(c)
 	} else {
 		h.Catalogue, _ = json.Marshal(c.PresetNames)
 	}
+	return e.touchRunner(c, h)
+}
+
+func (e serviceEnv) touchRunner(c runnerConfig, h *store.OperatorHeartbeat) error {
 	h.SeenAt = e.terminal.now()
 	return runnerWrite(c.Credentials, func(db *store.Credentials) error {
 		ctx, cancel := e.operatorContext(time.Second)
@@ -233,7 +280,9 @@ func (e serviceEnv) runnerStatus(w io.Writer) error {
 	}
 	fmt.Fprintln(w, "start: ready")
 	if !h.Available(build, "finish", now) {
-		fmt.Fprintln(w, "finish blocked: github-auth; repair PATH, GitHub login or Git credential helper in runner setup")
+		fmt.Fprintln(w, "finish blocked: github-auth; "+operatorFinishRemedy)
+	} else {
+		fmt.Fprintln(w, "finish: ready")
 	}
 	return nil
 }
