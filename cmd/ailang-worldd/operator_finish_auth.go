@@ -110,7 +110,7 @@ func (a operatorFinishAuth) prepare(ctx context.Context) error {
 		}
 		args = append(args, "-c", "core.sshCommand=/usr/bin/ssh -F /dev/null -o BatchMode=yes -o StrictHostKeyChecking=yes")
 	}
-	out, err := worktree.OutputIsolated(ctx, a.Git, append(args, "ls-remote", "--symref", "--", a.Remote, "HEAD"), env)
+	out, err := worktree.RunIsolated(ctx, a.Git, append(args, "ls-remote", "--symref", "--", a.Remote, "HEAD"), env, nil)
 	fields := strings.Fields(out)
 	if err != nil || len(fields) != 5 || fields[0] != "ref:" || !strings.HasPrefix(fields[1], "refs/heads/") ||
 		fields[2] != "HEAD" || !operatorFinishSHA.MatchString(fields[3]) || fields[4] != "HEAD" {

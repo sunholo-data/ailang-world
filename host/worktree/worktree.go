@@ -95,15 +95,21 @@ func Output(ctx context.Context, git string, args []string) (string, error) {
 
 type isolatedGitEnvKey struct{}
 
-// OutputIsolated uses a trusted caller's explicit environment at the same
-// bounded Git site. Unlike ambient Git, caller-supplied policy can set GIT_*.
-func OutputIsolated(ctx context.Context, git string, args, env []string) (string, error) {
-	return gitOutput(context.WithValue(ctx, isolatedGitEnvKey{}, childenv.Scrubbed(env)), git, args)
+type isolatedGitInput struct {
+	env   []string
+	stdin io.Reader
 }
 
-func gitOutput(ctx context.Context, git string, args []string) (string, error) {
+// RunIsolated gives the bounded, scrubbed Git seam explicit stdin and an
+// optional inherited episode lock. No child reads from a terminal.
+func RunIsolated(ctx context.Context, git string, args, env []string, stdin io.Reader, inherited ...*os.File) (string, error) {
+	in := isolatedGitInput{childenv.Scrubbed(env), stdin}
+	return gitOutput(context.WithValue(ctx, isolatedGitEnvKey{}, in), git, args, inherited...)
+}
+
+func gitOutput(ctx context.Context, git string, args []string, inherited ...*os.File) (string, error) {
 	out := &capped{max: MaxStdout}
-	if err := runGit(ctx, git, args, out); err != nil {
+	if err := runGit(ctx, git, args, out, inherited...); err != nil {
 		return "", err
 	}
 	if out.over {
@@ -167,12 +173,11 @@ func runGit(ctx context.Context, git string, args []string, stdout *capped, inhe
 	runCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	cmd := exec.CommandContext(runCtx, git, args...)
-	if approved, ok := ctx.Value(isolatedGitEnvKey{}).([]string); ok {
-		cmd.Env = approved
+	if approved, ok := ctx.Value(isolatedGitEnvKey{}).(isolatedGitInput); ok {
+		cmd.Env, cmd.Stdin = approved.env, approved.stdin
 	} else {
 		cmd.Env = Env(os.Environ())
 	}
-	cmd.Stdin = nil
 	cmd.ExtraFiles = inherited
 	cmd.WaitDelay = waitDelay
 	if deadline, ok := runCtx.Deadline(); ok {

@@ -36,8 +36,8 @@ func TestOperatorFinishAuth(t *testing.T) {
 	ctx := boundedTestContext(t)
 	gitRun := func(args ...string) {
 		t.Helper()
-		if _, err := worktree.OutputIsolated(ctx, git, args, []string{"HOME=" + dir, "PATH=" + runnerSystemPath,
-			"GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL=/dev/null"}); err != nil {
+		if _, err := worktree.RunIsolated(ctx, git, args, []string{"HOME=" + dir, "PATH=" + runnerSystemPath,
+			"GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL=/dev/null"}, nil); err != nil {
 			t.Fatal(err)
 		}
 	}
