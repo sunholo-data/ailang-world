@@ -368,7 +368,12 @@ func TestOperatorFinishRouteWorker(t *testing.T) {
 	if _, found, err := world.GetRegistryHead(ctx, "world/episode-finish/"+start.Episode); err != nil || found {
 		t.Fatalf("finish record crossed local finish: %v %v", found, err)
 	}
-	output := request("GET", status.StatusHref, nil, nil) + request("GET", "/surface/requests.json", nil, nil) +
+	var cli, cliErr syncBuffer
+	if rc := runServiceRunner([]string{"finish-status", status.ID}, &cli, &cliErr, f.env); rc != exitOK ||
+		!strings.Contains(cli.String(), j.Commit.SHA) || !strings.Contains(cli.String(), "passed") {
+		t.Fatalf("finish-status did not use the redacted receipt: %d %s %s", rc, &cli, &cliErr)
+	}
+	output := cli.String() + cliErr.String() + request("GET", status.StatusHref, nil, nil) + request("GET", "/surface/requests.json", nil, nil) +
 		request("GET", "/surface/home-summary.json", nil, nil) + log.String() + runnerLog.String()
 	for _, secret := range []string{filename, "private-task-fixture-marker", "BEGIN SSH SIGNATURE", f.token, "finish_manifest", j.Checks[0].Ref} {
 		if strings.Contains(output, secret) {
@@ -381,6 +386,7 @@ func TestOperatorFinishRouteWorker(t *testing.T) {
 	if _, err := os.Lstat(trace); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("remote write call escaped the worker: %v", err)
 	}
+	probe.cli(t, row, j, filename)
 	probe.recovery(t, row, j, func(reason, sha string) {
 		t.Helper()
 		status.Reason, status.LocalCommit, status.Checks = "", "", nil
@@ -392,6 +398,15 @@ func TestOperatorFinishRouteWorker(t *testing.T) {
 		}
 		if card := request("GET", status.Href, nil, nil); !strings.Contains(card, reason) {
 			t.Fatalf("finish card lost the projected reason %q", reason)
+		}
+		want := errOperatorFinishUncertain.Error()
+		if strings.HasPrefix(reason, "Local commit failed") {
+			want = errOperatorCommitFailed.Error()
+		}
+		var out, errOut syncBuffer
+		if rc := runServiceRunner([]string{"finish-status", row.ID}, &out, &errOut, f.env); rc != exitOK ||
+			!strings.Contains(out.String(), want+"\n") || errOut.String() != "" {
+			t.Fatalf("CLI mirror lost journal remedy: rc=%d stdout=%q stderr=%q", rc, &out, &errOut)
 		}
 	})
 }
@@ -964,5 +979,96 @@ func (p finishRechecks) recovery(t *testing.T, row store.OperatorActionRow, comp
 	p.unchanged(t, nil, func() error {
 		status("Local commit failed; check receipts retained", "")
 		return nil
+	})
+}
+
+func (p finishRechecks) cli(t *testing.T, row store.OperatorActionRow, j store.OperatorFinishJournal, filename string) {
+	t.Helper()
+	f := p.f
+	docs := readStartFixtureFile(t, "../../docs/QUICKSTART.md")
+	_, section, found := strings.Cut(string(docs), "### Prepare a local finish in the World app")
+	_, command, marked := strings.Cut(section, "receipts are available from `")
+	command, _, closed := strings.Cut(command, "`")
+	argv := strings.Fields(command)
+	if !found || !marked || !closed || !reflect.DeepEqual(argv, []string{"ailang-worldd", "service", "runner", "finish-status", "ACTION-ID"}) {
+		t.Fatalf("QUICKSTART changed the printed command: %q", command)
+	}
+	args := func(id string) []string { return []string{argv[2], argv[3], id} }
+	call := func(t *testing.T, env serviceEnv, command []string, want int, stdout, stderr string) {
+		t.Helper()
+		before := p.state(t)
+		var out, errOut syncBuffer
+		rc := runServiceWith(command, &out, &errOut, env)
+		for _, secret := range []string{filename, "private-task-fixture-marker", "BEGIN SSH SIGNATURE", f.token, "finish_manifest", j.Checks[0].Ref} {
+			if strings.Contains(out.String(), secret) || strings.Contains(errOut.String(), secret) {
+				t.Fatalf("CLI sink exposed protected fixture information")
+			}
+		}
+		if rc != want || out.String() != stdout || !strings.Contains(errOut.String(), stderr) ||
+			stderr == "" && errOut.String() != "" || before != p.state(t) {
+			t.Fatalf("CLI read lost receipt/refusal or changed state: rc=%d stdout=%q stderr=%q", rc, &out, &errOut)
+		}
+	}
+	line := fmt.Sprintf("finish action %s %s\n", row.ID, row.State)
+	check := fmt.Sprintf("check %q: passed\n", j.Checks[0].Name)
+	commit := fmt.Sprintf("local commit %s retained; PR confirmation has not been issued\n", j.Commit.SHA)
+	t.Run("cli/printed-command", func(t *testing.T) { call(t, f.env, args(row.ID), exitOK, line+check+commit, "") })
+	t.Run("cli/help", func(t *testing.T) {
+		before := p.state(t)
+		var out, errOut syncBuffer
+		if rc := runServiceWith([]string{"runner", "--help"}, &out, &errOut, f.env); rc != exitOK ||
+			!strings.Contains(out.String(), " | finish-status ACTION-ID | ") || errOut.String() != "" || before != p.state(t) {
+			t.Fatal("operator runner help lost the finish-status command")
+		}
+	})
+	for _, tc := range []struct {
+		name   string
+		argv   []string
+		reason string
+	}{
+		{"unknown-action", args("oa-" + strings.Repeat("f", 32)), store.ErrOperatorMissing.Error()},
+		{"non-finish", args(f.action.ID), store.ErrOperatorMissing.Error()},
+		{"invalid-id", args("not-an-action"), "expected finish-status ACTION-ID"},
+		{"extra-argument", append(args(row.ID), "extra"), "expected finish-status ACTION-ID"},
+	} {
+		t.Run("cli/"+tc.name, func(t *testing.T) { call(t, f.env, tc.argv, exitUsage, "", tc.reason) })
+	}
+	t.Run("cli/uninstalled", func(t *testing.T) {
+		e := f.env
+		e.paths.Record = filepath.Join(t.TempDir(), "absent", "service.json")
+		call(t, e, args(row.ID), exitUsage, "", "runner file is absent or inaccessible")
+	})
+	t.Run("cli/unreadable-credentials", func(t *testing.T) {
+		c := f.c
+		dir, err := os.MkdirTemp(c.Home, "fixture-credentials-")
+		if err != nil {
+			t.Fatal(err)
+		}
+		c.Credentials = filepath.Join(dir, "not-sqlite.db")
+		seedStartFixtureFile(t, c.Credentials, []byte("fixture non-database"))
+		paths := f.env.runnerPaths()
+		record, plist := readStartFixtureFile(t, paths.Record), readStartFixtureFile(t, paths.Plist)
+		t.Cleanup(func() {
+			seedStartFixtureFile(t, paths.Record, record)
+			seedStartFixtureFile(t, paths.Plist, plist)
+		})
+		b, _ := json.Marshal(c)
+		seedStartFixtureFile(t, paths.Record, b)
+		seedStartFixtureFile(t, paths.Plist, []byte(runnerPlist(paths, c, b)))
+		call(t, f.env, args(row.ID), exitUsage, "", errOperatorFinishEligibility.Error())
+	})
+	t.Run("cli/open-check", func(t *testing.T) {
+		receipt, _ := json.Marshal(j.Checks[0])
+		const update = "UPDATE operator_action_steps SET phase=?,receipt=? WHERE action_id=? AND kind='checks'"
+		p.exec(t, update, "reserved", nil, row.ID)
+		t.Cleanup(func() { p.exec(t, update, "observed", receipt, row.ID) })
+		call(t, f.env, args(row.ID), exitOK, line+errOperatorFinishUncertain.Error()+"\n"+commit, "")
+	})
+	t.Run("cli/unreadable-journal", func(t *testing.T) {
+		receipt, _ := json.Marshal(j.Commit)
+		const update = "UPDATE operator_action_steps SET receipt=? WHERE action_id=? AND kind='commit'"
+		p.exec(t, update, []byte("{}"), row.ID)
+		t.Cleanup(func() { p.exec(t, update, receipt, row.ID) })
+		call(t, f.env, args(row.ID), exitUsage, "", errOperatorFinishUncertain.Error())
 	})
 }

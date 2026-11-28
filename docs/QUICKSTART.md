@@ -2198,7 +2198,9 @@ episode finish ep --preset p
 Enter opens the review. Select **Request approval**, review the held inputs on
 the card and confirm with the enrolled fixture passkey or SSH key. Use
 **Action status (JSON)** to read check outcomes and the retained local commit.
-The card reports that PR confirmation has yet to be issued.
+The card reports that PR confirmation has yet to be issued. The same
+receipts are available from `ailang-worldd service runner finish-status ACTION-ID`.
+Replace `ACTION-ID` with the action ID shown on the card.
 
 If the runner shows `finish blocked: github-auth`, repair its approved PATH,
 GitHub login or Git credential helper in the attended runner setup. The start
