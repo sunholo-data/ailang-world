@@ -1,6 +1,6 @@
 # w-world-applications (queue row 274): applications on World — r0
 
-**Status:** r0, **filed attended 2026-11-28** (Mark: *"ok lets take this over as we have better
+**Status:** r0 + S0 part 1 (same day: Blender cannot run under srt on macOS; §5 and D-WORLD-123 corrected), **filed attended 2026-11-28** (Mark: *"ok lets take this over as we have better
 context"*, then *"ok proceed"*). Not quorum-reviewed. The loop's pick-time designer re-measures
 §1 and §9 at its base and runs the quorum as usual. Nothing here waives a gate.
 **Upstream companion:** AILANG `design_docs/planned/m-world-os-applications.md` r1
@@ -42,10 +42,12 @@ application itself.
    outputs together, so nothing is shareable or installable.
 2. **No declared outputs.** The episode report counts writes. It does not say "this episode
    produced `exports/commons_kit.glb`, validated". An app's result is the thing a person came for.
-3. **External software only fits in 9-second pieces.** Measured 2026-11-28: headless Blender
-   5.2.1 builds a torus and exports a GLB in 0.61–1.65 s (outside the sandbox), so small
-   operations fit `Workspace.Exec`. Renders and real kit builds do not, and Blender under `srt`
-   on macOS has not been tried.
+3. **External software can't use the exec sandbox if it needs the GPU.** Measured 2026-11-28
+   (S0 part 1, `design_docs/verification/world-row274-s0/readings.md`): headless Blender 5.2.1
+   builds a torus and exports a GLB in 0.61–1.65 s outside the sandbox, but **crashes at startup
+   under srt in every configuration**. srt's macOS profile does not allow the GPU's
+   `AGXDeviceUserClient`, macOS Blender has only the Metal backend, and it segfaults on the
+   missing device instead of falling back.
 
 ## §2 The model: an app is a package with a manifest
 
@@ -66,9 +68,9 @@ An **app** is an AILANG extension package that adds one file, `app.json`, beside
     "grants": [
       { "effect": "Workspace.Read",  "scope": "worktree", "budget": 2000 },
       { "effect": "Workspace.Write", "scope": "worktree", "budget": 500 },
-      { "effect": "Workspace.Exec",  "scope": "worktree", "budget": 300 }
+      { "effect": "Host.Blender",    "scope": "worktree", "budget": 100 }
     ],
-    "exec_profile": "blender-headless",
+    "host_tools": { "Host.Blender": { "scripts": "scripts/**", "timeout_s": 600 } },
     "checks": [ { "name": "validate-glb", "run": "make validate-glb" } ]
   },
   "outputs": [ { "kind": "file", "glob": "exports/**/*.glb", "check": "validate-glb" } ],
@@ -77,7 +79,8 @@ An **app** is an AILANG extension package that adds one file, `app.json`, beside
 ```
 
 - **The preset part is a template, not a preset.** It holds only the portable fields: agent,
-  launch, TTL, grants, exec profile and checks. `repo`, `remote`, `base`, `profile` and `daemon`
+  launch, TTL, grants, host-tool limits and checks. (The `Host.Blender` grant assumes
+  D-WORLD-123 = C1; see §5.) `repo`, `remote`, `base`, `profile` and `daemon`
   come from the operator's repo profile at launch (row 269), so an app never carries a machine
   path or a credential.
 - **Grants never exceed the template.** Launch can narrow them, never widen them. Widening is a new
@@ -124,23 +127,29 @@ exports. stapledons-godot consumes its GLBs (`art/commons-backdrop-pilot/kit-sou
 their bounds and hashes). So the asset pipeline Mark named already exists. It just runs outside
 World.
 
-**Authority options (D-WORLD-123):**
+**Authority options (D-WORLD-123), after S0 part 1:**
 
-| | How Blender runs | New authority | Fits |
+| | How Blender runs | New authority | Status |
 |---|---|---|---|
-| **A** | `Workspace.Exec` with a `blender-headless` exec profile: `blender.sh --background --python-exit-code 1 --python <script>` under `srt`, worktree-only writes, no network, ≤ 9 s | none | generate, inspect, validate, small exports (0.6–1.7 s measured) |
-| **B** | A long-running exec **job**: the same profile and sandbox, started as a job and polled, with a per-profile time limit above 9 s | a longer time limit only | renders, real kit builds |
-| **C** | A host-mediated effect per tool (`Host.Blender`), row 272's pattern: the daemon runs the tool on the host with a fixed script directory | a per-tool host effect | anything the sandbox can't hold (GPU, Metal) |
+| **A** | `Workspace.Exec` with a `blender-headless` profile under srt, ≤ 9 s | none | **ruled out on macOS**: Blender exits 139 in World's startup probe (S0 R2) |
+| **B** | a long-running exec job, same profile and sandbox, longer limit | a longer time limit | **ruled out on macOS**: same sandbox, same crash |
+| **C** | a host-mediated effect (`Host.Blender`, row 272's pattern): World runs a fixed command (`blender.sh --background --factory-startup --python-exit-code 1 --python <script>`) **outside srt**, with the episode worktree as cwd and its only input and output, a fixed script allowlist, no network use by World, a time limit and a receipt | a host effect that runs one named tool unsandboxed | possible now |
+| **D** | a World-rendered macOS sandbox profile: srt's rules plus `iokit-open` for the GPU user client, used only by GPU-tool profiles | the GPU, inside the sandbox | needs an srt GPU setting upstream, or World rendering its own Seatbelt profile; not yet measured |
 
-**Recommendation:** start with A, add B when the probe (S0) shows that a real build exceeds 9 s,
-and use C only if Blender can't run under `srt` at all. A and B keep one authority model for
-every external tool (Blender, Godot export, ffmpeg). C adds a new host effect per tool.
+**Recommendation:** C for the first app, with the tool's argv, scripts and time limit fixed by the
+app's manifest and the operator's grant, and D as the follow-up that brings it back inside the
+sandbox. C trusts Blender plus the repo's own scripts. The agent can write a new script in the
+worktree, so C must either restrict scripts to a protected directory the agent can't write
+(for example `scripts/` protected, the agent's own scripts in `scratch/` refused) or accept
+that the agent can run arbitrary Python inside Blender on the host. That choice is the core of
+the ruling.
 
 ## §6 Sequence
 
 | Step | What | Who |
 |---|---|---|
-| **S0 probe** | Run one real asset task as a World episode with no new code: `preset init blender --repo ~/dev/blender --base main`, an exec profile for `blender.sh --background`, then `episode start --preset blender --launch` with a task such as "add a low-poly crate generator and export a validated GLB". Record what it needed, where it fell back, how long each Blender call took under `srt`, and what the report missed. The record goes in `design_docs/verification/world-row274-s0/` | attended (Mark at the terminal for `y`) |
+| **S0 part 1** | **DONE 2026-11-28**: Blender under World's exec sandbox. A scratch daemon's startup probe and srt alone, at three strictness levels. Result: a crash in every configuration (`AGXDeviceUserClient` denied). See `design_docs/verification/world-row274-s0/readings.md` | attended |
+| **S0 part 2** | After D-WORLD-123: one real asset task as a World episode over `~/dev/blender` under the ruled option (for C, an interim attended run where the operator runs the fixed Blender command between agent turns stands in for the effect). Record grants, fallbacks and report gaps | attended (Mark at the terminal for `y`) |
 | **M1** | `app.json` schema, pure validation in AILANG (template ⊆ grant law, catalog-only views, globs confined to the worktree), `app list` / `app show` read verbs | loop |
 | **M2** | Launch from an app: template + repo profile → resolved preset → row 243 V4's start path; "from an app" in the start flow | loop, after row 243 V4 |
 | **M3** | Episode report v1: `schema`, `app`, `outputs[]` with check results at `finish` | loop |
@@ -152,8 +161,8 @@ machinery. S0 is attended and can run sooner, since it changes no code.
 
 ## §7 Rulings for Mark
 
-- **D-WORLD-123 (external-app authority):** A, A then B, or C (§5). Recommendation and default: A
-  then B, as S0 measures.
+- **D-WORLD-123 (external-app authority):** A and B are ruled out on macOS by S0 part 1. C1, C2
+  or D (§5). Recommendation: C1 now, D later. No default: M4 waits for the ruling.
 - **D-WORLD-124 (first app):** `blender-assets` over `~/dev/blender` (recommended). The
   alternatives are a Godot export app over stapledons-godot, or a non-external first app (a
   document or analysis app) that exercises M1–M3 before any external tool.
@@ -181,7 +190,8 @@ machinery. S0 is attended and can run sooner, since it changes no code.
 | M-7 | Headless Blender timing (outside `srt`) | `Blender -b --factory-startup --python-expr` torus + glTF export: `real 1.65`, then `real 0.61`; 83,280-byte GLB |
 | M-8 | Blender studio repo | `~/dev/blender` (`sunholo-data/blender`, HEAD `e4da963`): `blender.sh`, Makefile targets `doctor init example inspect keyframes render validate-glb open` |
 | M-9 | stapledons consumes Blender output | `stapledons-godot/art/commons-backdrop-pilot/` (`commons_backdrop_kit_v1.glb`, `kit-source.json`, `kit-notes.md`); commit `0549182c` on Blender masters and headless Godot import |
-| M-10 | Not measured | Blender under `srt` on macOS; Metal/GPU inside the sandbox; a real kit build's duration. S0 measures all three |
+| M-10 | Blender under World's exec sandbox (S0 part 1) | scratch daemon probe: `exit 139` (SIGSEGV), startup refused; srt alone with `world`, `open` and all-Mach-lookups settings: crash each time in `MTLBackend::metal_is_supported`; sandbox log `deny(1) iokit-open-user-client AGXDeviceUserClient`; `--gpu-backend` accepts only `metal` |
+| M-11 | Not measured | a real kit build's duration; option D (a GPU-admitting sandbox profile) |
 
 ## §10 Open questions
 
