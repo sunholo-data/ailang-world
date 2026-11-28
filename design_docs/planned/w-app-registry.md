@@ -4,7 +4,7 @@
 was in CI). Not quorum-reviewed. The loop's pick-time designer re-measures §1 at its base and runs
 the quorum as usual. Nothing here waives a gate.
 **Parent:** [`w-world-applications`](w-world-applications.md) §6 (M1b) and §11 (M1's decisions).
-**Rulings:** one, D-WORLD-129 (§6).
+**Rulings:** D-WORLD-129 RESOLVED = A, attended 2026-11-28 (Mark: *"yep merge and default a"*): M2 launches only published apps (§5, §6).
 
 ## §0 Why
 
@@ -115,8 +115,11 @@ manifest object the registry entry names, and the start review shows `docparse-c
 | **M1b-2** | `world-publish apps`: the verb, the attended fence and the typed phrase, transition-ID existence checks, and the same refusal table as `transitions` (`R-STORE`, automation env, no TTY, wrong phrase, CAS race) | ~350 lines with tests |
 | **M1b-3** | `app list|show` and `/surface/apps.json` read the registry first (`source`, `version`, `manifest`), plus a QUICKSTART §22 publish step run verbatim (attended) | ~300 lines with tests |
 
-No AILANG law changes. The manifest law stays M1's. The revision rules (version + 1, parent equals
-the captured head) are small enough for Go table tests, as `transitionreg`'s are.
+The manifest law stays M1's. **The revision rules are an AILANG law too** (M1b-1, PR #715, under
+row 275's D-WORLD-127): `design_docs/sketches/appregistry.ail` holds 9 Z3-verified laws (the
+parent rule, next revision over the captured head, next version, the no-op publish refusal,
+retire, the bounds and manifest-pinned). `host/appregistry/laws.go` mirrors them, and
+`host/appregistry/drift_test.go` parses the sketch through `host/sketchtest`.
 
 ## §8 Non-goals
 
