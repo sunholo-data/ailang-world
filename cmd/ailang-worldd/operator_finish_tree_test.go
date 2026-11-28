@@ -333,6 +333,10 @@ func TestOperatorFinishConfigReplacement(t *testing.T) {
 	if _, _, err := g.snapshot(ctx, f.rep.Start); !errors.Is(err, errOperatorFinishFence) {
 		t.Fatalf("replacement was accepted: %v", err)
 	}
+	spec := store.OperatorLocalCommit{Committer: "Fixture Operator <fixture@example.invalid>"}
+	if err := g.commit(ctx, f.root, spec, nil, "", f.rep.Start); !errors.Is(err, errOperatorFinishReview) {
+		t.Fatalf("unsafe configuration reached commit staging: %v", err)
+	}
 	if _, err := os.Lstat(sentinel); !errors.Is(err, os.ErrNotExist) ||
 		before != serviceFileHash(filepath.Join(g.admin, "index")) || bytes.Equal(body, readStartFixtureFile(t, path)) {
 		t.Fatalf("replacement did not stop before using the live Git configuration: %v", err)

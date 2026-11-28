@@ -1,0 +1,400 @@
+{
+  "sprint_id": "w-world-address-bar-verbs-v4s9c",
+  "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+  "design_revision": "r1",
+  "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s9c-sprint-plan.md",
+  "previous_sprint": "d9635675",
+  "base_commit": "91befdab7fd4081b4dc127cc96cc4eeb1723cffa",
+  "queue_row": 243,
+  "iteration": 450,
+  "phase": "sprint-plan",
+  "sprint_number": "9c",
+  "executor_lane": "codex:gpt-6.2-sol",
+  "cut": {
+    "cap_loc": 1400,
+    "outcome": "B",
+    "complete_safe_unit_loc": 1452,
+    "selected_loc": 1399,
+    "unfiltered_product": 1399,
+    "deferred_loc": 57,
+    "measure": "git diff -M --numstat 91befdab HEAD -- cmd host docs app"
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Activate signed no-terminal local finish",
+      "expected_cumulative_numstat": 1399,
+      "increment": 1399,
+      "added": 1335,
+      "deleted": 64,
+      "unfiltered_product": 1399,
+      "accept_parts": [
+        "TestOperatorFinishReadiness",
+        "TestOperatorFinishResumeEvidence",
+        "TestOperatorCommitFailureInputRecheck",
+        "TestOperatorCommitResumeReserved",
+        "TestOperatorFinishRouteWorker",
+        "TestOperatorFinishAdmission",
+        "TestOperatorFinishBarReview"
+      ],
+      "expected_snapshot": {
+        "path": "$STATE/snap/M1",
+        "status": 21,
+        "deleted": 0,
+        "manifest": 21
+      },
+      "commit_test": "export AILANG_BIN=\"$HOME/.pinned-ailang/ailang\" WORLD_REQUIRE_SSH_KEYGEN=1 WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=\"$HOME/.pinned-ailang-tools/v0.54.15/ailang\"; S=\"$HOME/.ailang/state/world-iter450/plan-scratch\"; bash \"$S/accept.sh\" \"$PWD\" M1 outside && bash \"$S/commit-guards.sh\" \"$PWD\" \"$S/commit-guards-M1-$(date +%s)\""
+    }
+  ],
+  "deferred_milestones": [
+    {
+      "id": "M2",
+      "title": "S9d read-only CLI status mirror",
+      "expected_cumulative_numstat": 1452,
+      "increment": 57,
+      "added": 1386,
+      "deleted": 66,
+      "unfiltered_product": 1452,
+      "expected_snapshot": {
+        "path": "$STATE/snap/M2",
+        "status": 22,
+        "deleted": 0,
+        "manifest": 22
+      },
+      "accept_parts": [
+        "TestOperatorFinishRouteWorker"
+      ],
+      "executable_in_450": false,
+      "commit_test": null
+    }
+  ],
+  "design_measured_at": "91befdab7fd4081b4dc127cc96cc4eeb1723cffa",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter450-row243-v4s9c",
+  "branch": "sprint/world-iter450-row243-v4s9c",
+  "sprint": "S9c",
+  "estimate_loc": 1399,
+  "executor_form": "Extract and execute §7, M1 only, /usr/bin/patch -p1 -E.",
+  "authority": [
+    "D-WORLD-119 = A",
+    "D-WORLD-120 = A",
+    "D-WORLD-122 OPEN, default B (fake presets)"
+  ],
+  "behaviour": "Approved taskless browser finish is claimed by the installed runner, executes the pinned checks and creates one local Git commit. Redacted browser status reads typed local-commit-done with an exact SHA and empty v3_id. No remote-write, V3 put or finish record.",
+  "scope": {
+    "in": [
+      "real-listener admission and approval, taskless review, local proof/review/readiness/eligibility checks",
+      "runner claim, sandboxed checks, per-episode exclusion and local commit journal with resume controls",
+      "redacted checks and localCommit browser projections"
+    ],
+    "out": [
+      "M2 compiled CLI mirror, S9d only",
+      "linked V3 prompt and scope proof, S10",
+      "remote dispatch, record, detach/revoke, real preset, S11",
+      "schema and AILANG changes"
+    ]
+  },
+  "expected_snapshots": {
+    "M1": {
+      "path": "$STATE/snap/M1",
+      "status": 21,
+      "deleted": 0,
+      "manifest": 21
+    }
+  },
+  "production_caller_census": {
+    "RequestOperatorAction": [
+      1,
+      1
+    ],
+    "JudgeOperatorAction": [
+      1,
+      1
+    ],
+    "store.ConfirmOperatorAction": [
+      1,
+      1
+    ],
+    "ClaimOperatorAction": [
+      1,
+      2
+    ],
+    "runEpisodeFinishWithPrep": [
+      0,
+      1
+    ],
+    "private local Git commit": [
+      0,
+      1
+    ],
+    "attended Git commit": [
+      1,
+      1
+    ],
+    "worktree.Push": [
+      1,
+      1
+    ],
+    "dispatch Push": [
+      1,
+      1
+    ],
+    "label": [
+      1,
+      1
+    ],
+    "PR view": [
+      1,
+      1
+    ],
+    "PR create": [
+      1,
+      1
+    ],
+    "PutVerbRequest": [
+      1,
+      1
+    ]
+  },
+  "verification": {
+    "base": "$STATE/base",
+    "base_done": "$STATE/baseline.done",
+    "base_extra": "$S/base-extra",
+    "gates": "$S/gates.sh",
+    "outside": "$S/outside.sh",
+    "whole_mutants": "$S/whole-mutants.sh",
+    "whole_mutant_ids": "$S/whole-mutant-ids.txt",
+    "named_mutant_ids": "$S/named-mutant-ids.txt",
+    "real_loopback_status": "UNINFORMATIVE UNDER SANDBOX",
+    "apply_success": "ACCEPT_OK <M> <mode> / APPLY_ACCEPT_SNAPSHOT_OK <M> / FINAL_APPLY_RC 0",
+    "named_added_race_seconds": {
+      "cmd": {
+        "TestOperatorFinishResumeEvidence": 0.67,
+        "TestOperatorCommitFailureInputRecheck": 1.31,
+        "TestOperatorCommitResumeReserved": 1.85,
+        "TestOperatorFinishReadiness": 2.76
+      },
+      "app": {
+        "TestOperatorFinishBarReview": 0.14
+      }
+    },
+    "race_outside_pending": [
+      "TestOperatorFinishRouteWorker",
+      "TestOperatorFinishAdmission"
+    ],
+    "partial_race_readings": [
+      {
+        "cmd_total": 9.25,
+        "cmd_load": "Sat Nov 28 15:10:19 UTC 2026, 16:10  4 users, load averages: 31.13 27.70 19.50",
+        "app_load": "Sat Nov 28 15:11:18 UTC 2026, 16:11  4 users, load averages: 25.26 26.65 19.66",
+        "per_test": {
+          "cmd": {
+            "TestOperatorFinishResumeEvidence": 0.93,
+            "TestOperatorCommitFailureInputRecheck": 2.88,
+            "TestOperatorCommitResumeReserved": 1.89,
+            "TestOperatorFinishReadiness": 3.55
+          },
+          "app": {
+            "TestOperatorFinishBarReview": 0.11
+          }
+        }
+      },
+      {
+        "cmd_total": 10.37,
+        "cmd_load": "Sat Nov 28 15:13:53 UTC 2026, 16:13  4 users, load averages: 22.13 25.65 20.46",
+        "app_load": "Sat Nov 28 15:14:08 UTC 2026, 16:14  4 users, load averages: 24.70 26.06 20.70",
+        "per_test": {
+          "cmd": {
+            "TestOperatorFinishResumeEvidence": 0.42,
+            "TestOperatorCommitFailureInputRecheck": 1.51,
+            "TestOperatorCommitResumeReserved": 3.9,
+            "TestOperatorFinishReadiness": 4.54
+          },
+          "app": {
+            "TestOperatorFinishBarReview": 0.15
+          }
+        }
+      },
+      {
+        "cmd_total": 6.59,
+        "cmd_load": "Sat Nov 28 15:14:13 UTC 2026, 16:14  4 users, load averages: 24.49 25.99 20.71",
+        "app_load": "Sat Nov 28 15:14:23 UTC 2026, 16:14  4 users, load averages: 21.55 25.32 20.53",
+        "per_test": {
+          "cmd": {
+            "TestOperatorFinishResumeEvidence": 0.67,
+            "TestOperatorCommitFailureInputRecheck": 1.31,
+            "TestOperatorCommitResumeReserved": 1.85,
+            "TestOperatorFinishReadiness": 2.76
+          },
+          "app": {
+            "TestOperatorFinishBarReview": 0.14
+          }
+        }
+      }
+    ],
+    "whole_race_seconds_pending": [
+      "cmd/ailang-worldd",
+      "host/daemon"
+    ],
+    "gate_results": [
+      "LEG gofmt OK 0s",
+      "LEG build OK 2s",
+      "LEG vet OK 1s",
+      "LEG linux-vet OK 4s",
+      "LEG test-compile OK 19s",
+      "LEG inventory-store OK 1s",
+      "LEG inventory-cli OK 1s",
+      "LEG inventory-daemon OK 1s",
+      "LEG inventory-boundary OK 1s",
+      "LEG subprocess-sink OK 1s",
+      "LEG subprocess-sites UNINFORMATIVE UNDER SANDBOX rc=1",
+      "LEG js-syntax OK 0s",
+      "LEG verify-ail OK 56s",
+      "LEG caller-census OK 2s",
+      "LEG accept OK 24s",
+      "LEG accept-race OK 30s",
+      "LEG accept-1777 OK 6s",
+      "LEG cmd-plain SKIPPED (outside.sh whole)",
+      "LEG cmd-race SKIPPED (outside.sh whole)",
+      "LEG daemon-plain SKIPPED (outside.sh whole)",
+      "LEG daemon-race SKIPPED (outside.sh whole)",
+      "LEG verifygate-plain SKIPPED (outside.sh whole)",
+      "LEG broker-plain SKIPPED (outside.sh whole)",
+      "LEG surfacepage-plain recorded rc=0 7s",
+      "LEG surfacepage-race recorded rc=0 7s",
+      "LEG baseline-completion SKIPPED (controller recording pristine legs)",
+      "LEG compare-cmd-plain SKIPPED (stage evidence unavailable)",
+      "LEG compare-cmd-race SKIPPED (stage evidence unavailable)",
+      "LEG compare-daemon-plain SKIPPED (stage evidence unavailable)",
+      "LEG compare-daemon-race SKIPPED (stage evidence unavailable)",
+      "LEG compare-verifygate-plain SKIPPED (stage evidence unavailable)",
+      "LEG compare-broker-plain SKIPPED (stage evidence unavailable)",
+      "LEG compare-surfacepage-plain OK",
+      "LEG compare-surfacepage-race OK",
+      "GATE_RESULT issue=0 pending=1",
+      "ALL_DONE"
+    ]
+  },
+  "existing_tests_edited": [
+    "operatorActivationFixtureWithTask",
+    "newOperatorLaunchRigWithTask",
+    "newWorktreeStartRigWithTask",
+    "TestOperatorFinishManifestCapture",
+    "TestOperatorFinishWorldEvidence",
+    "TestOperatorFinishConfigReplacement",
+    "TestSurfaceAppPure (appHarness export manifest)"
+  ],
+  "controller_decisions_requested": [],
+  "gates_script": "§6 exact gates.sh fence",
+  "existing_tests_deleted": [],
+  "new_files": [
+    "cmd/ailang-worldd/operator_finish_resume_test.go",
+    "cmd/ailang-worldd/operator_finish_route_test.go",
+    "cmd/ailang-worldd/operator_finish_runner.go",
+    "cmd/ailang-worldd/operator_finish_runner_test.go",
+    "host/daemon/surface_operator_finish_test.go"
+  ],
+  "existing_production_edited": [
+    "cmd/ailang-worldd/operator_catalogue.go",
+    "cmd/ailang-worldd/operator_finish_manifest.go",
+    "cmd/ailang-worldd/operator_finish_tree.go",
+    "cmd/ailang-worldd/operator_runner.go",
+    "docs/QUICKSTART.md",
+    "host/daemon/surface_operator.go",
+    "host/daemon/surface_operator_confirm.go",
+    "host/daemon/surface_operator_read.go",
+    "host/surfacepage/app/app.js"
+  ],
+  "not_touched": [
+    ".ail",
+    "credentials schema migration",
+    "tools/launchd",
+    "public F1 and typed terminal dispatch"
+  ],
+  "planner_decisions": [
+    "Keep all execution gates in M1. Compile the CLI status mirror as M2 (S9d).",
+    "Use fake approved remotes, test keys and fake agent only."
+  ],
+  "design_premises_found_false": [
+    "The inherited attribution path ignored already committed base-to-HEAD changes.",
+    "The inherited reserved restart bypassed the private entry.",
+    "Check receipts exposed internal evidence Ref and Entry in status.",
+    "Exporting the executed browser review seam requires updating the exact Node export manifest."
+  ],
+  "mutants": {
+    "named_ids": 124,
+    "named_counts": {
+      "KILLED": 47,
+      "CONTROL_LIVE": 1,
+      "UNINFORMATIVE": 74,
+      "PENDING": 2
+    },
+    "named_survivors": [],
+    "named_instrument_failures": [],
+    "carried_judge449": {
+      "j08": "KILLED TestOperatorFinishResumeEvidence",
+      "j13": "KILLED TestOperatorCommitFailureInputRecheck",
+      "j14": "KILLED TestOperatorCommitResumeReserved",
+      "j16": "KILLED TestOperatorCommitResumeReserved",
+      "j19": "KILLED TestOperatorFinishWorldEvidence"
+    },
+    "outside_compile_count": 74,
+    "in_memory_diagnostic_assertions": 18,
+    "whole_ids": [
+      "j08",
+      "j13",
+      "j14",
+      "j16",
+      "j19",
+      "j35",
+      "ready-before-claim",
+      "git-first-use-config",
+      "git-attribution-base-delta",
+      "runner-loop-turn",
+      "runner-positive-claim",
+      "runner-commit-caller",
+      "runner-lock-busy",
+      "route-finish-admission",
+      "route-confirm-scope",
+      "status-evidence-leak",
+      "js-taskless-dom"
+    ],
+    "whole_results": {
+      "js-taskless-dom": "KILLED TestOperatorFinishBarReview"
+    },
+    "ledgers": {
+      "named": "$S/named-mutants.sh",
+      "whole": "$S/whole-mutants.sh",
+      "anchors": "$S/mutants.json"
+    }
+  },
+  "roundtrip": {
+    "result": "FINAL_APPLY_RC 0",
+    "receipt": "/Users/voightkampff/.ailang/state/world-iter450/plan-scratch/rt-apply.receipt",
+    "stages": [
+      "M1",
+      "M2"
+    ],
+    "diff": {
+      "M1": {
+        "apply": "ok",
+        "diff_r": {
+          "cmd": "ok",
+          "host": "ok",
+          "docs": "ok",
+          "app": "absent",
+          "unfiltered": "ok"
+        }
+      },
+      "M2": {
+        "apply": "ok",
+        "diff_r": {
+          "cmd": "ok",
+          "host": "ok",
+          "docs": "ok",
+          "app": "absent",
+          "unfiltered": "ok"
+        }
+      }
+    }
+  }
+}

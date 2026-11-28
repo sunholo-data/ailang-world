@@ -1437,24 +1437,26 @@
   const taskValid = task => typeof task === 'string' && task.length > 0 && !task.includes('\0') &&
     new TextEncoder().encode(task).length <= 8192;
   function reviewValid(argv, catalogueGeneration) {
-    return Array.isArray(argv) && argv.length === 8 &&
-      argv[0] === 'ailang-worldd' && argv[1] === 'episode' && argv[2] === 'start' &&
-      typeof argv[3] === 'string' && EPISODE_ID.test(argv[3]) && argv[4] === '--preset' &&
-      typeof argv[5] === 'string' && PRESET_ID.test(argv[5]) && argv[5] !== 'se-tools' &&
-      argv[6] === '--launch' && argv[7] === '--headless' &&
-      Number.isSafeInteger(catalogueGeneration) && catalogueGeneration > 0;
+    if (!Array.isArray(argv) || argv[0] !== 'ailang-worldd' || argv[1] !== 'episode' ||
+        typeof argv[3] !== 'string' || !EPISODE_ID.test(argv[3]) || argv[4] !== '--preset' ||
+        typeof argv[5] !== 'string' || !PRESET_ID.test(argv[5]) || argv[5] === 'se-tools' ||
+        !Number.isSafeInteger(catalogueGeneration) || catalogueGeneration <= 0) return false;
+    if (argv[2] === 'start') return argv.length === 8 && argv[6] === '--launch' && argv[7] === '--headless';
+    return argv[2] === 'finish' && argv[6] === '--confirm-on-surface' &&
+      (argv.length === 7 || (argv.length === 8 && argv[7] === '--ready'));
   }
+  const operatorTaskValid = (argv, task) => argv[2] === 'finish' ? task === '' : taskValid(task);
   function operatorDraft(storage) {
     try {
       const d = JSON.parse(storage.getItem(OPERATOR_DRAFT));
       const r = d?.request;
       if (typeof d?.body === 'string' && d.body && r && reviewValid(r.argv, r.catalogueGeneration) &&
-          typeof r.operationId === 'string' && OPERATION_ID.test(r.operationId) && taskValid(r.task)) return d;
+          typeof r.operationId === 'string' && OPERATION_ID.test(r.operationId) && operatorTaskValid(r.argv, r.task)) return d;
     } catch (_) { /* page stays readable */ }
     return null;
   }
-  function operatorCardHref(b, episode) {
-    if (!b || b.v !== 1 || b.kind !== 'start' || b.episode !== episode || typeof b.id !== 'string' || !OPERATOR_ID.test(b.id) ||
+  function operatorCardHref(b, episode, kind = 'start') {
+    if (!b || b.v !== 1 || b.kind !== kind || b.episode !== episode || typeof b.id !== 'string' || !OPERATOR_ID.test(b.id) ||
         !['requested', 'confirmed', 'claimed', 'running', 'succeeded', 'failed', 'expired', 'cancelled', 'uncertain'].includes(b.state) ||
         ![b.now, b.createdAt, b.expiresAt].every(Number.isSafeInteger)) return '';
     const path = OPERATOR_PATH + '/' + b.id;
@@ -1466,7 +1468,7 @@
     return { get request() { return request; }, async submit(task) {
       if (busy || !io.current()) return {};
       if (!request) {
-        if (!taskValid(task)) return { error: 'Enter a task of 1–8192 UTF-8 bytes without NUL.' };
+        if (!operatorTaskValid(panel.argv, task)) return { error: 'Enter a task of 1–8192 UTF-8 bytes without NUL.' };
         const operationId = Array.from(io.random(new Uint8Array(16)), n => n.toString(16).padStart(2, '0')).join('');
         request = { argv: panel.argv, operationId, catalogueGeneration: panel.catalogueGeneration, task };
       }
@@ -1481,7 +1483,7 @@
           redirect: 'error', credentials: 'omit', signal: io.timeout(VERB_ROUTE_BUDGET_MS), body: JSON.stringify(request)});
         const b = await res.json();
         if (!io.current()) return {};
-        const href = res.status === 200 && operatorCardHref(b, request.argv[3]);
+        const href = res.status === 200 && operatorCardHref(b, request.argv[3], request.argv[2]);
         if (!href) {
           const reason = typeof b?.error === 'string' && typeof b?.reason === 'string' ? b.error + ': ' + b.reason + ' ' : '';
           return { error: reason + 'Request outcome unavailable. Use Reconnect to read or retry this request.' };
@@ -1584,7 +1586,7 @@
 
   if (typeof module !== 'undefined') module.exports = { needsYouHTML, decidedHTML, notifications, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, finishMatchesNode, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
     adaptModel, projectHeadsModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, filePath, fileEvidenceHTML, filesTabHTML, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW },
-    VERB_ROUTE_BUDGET_MS, verbOutcome, askVerb, verbAct, verbPanel, goWith, addressGo, operatorDraft, operatorRequestControl, operatorCardHref };
+    VERB_ROUTE_BUDGET_MS, verbOutcome, askVerb, verbAct, verbPanel, goWith, addressGo, operatorDraft, operatorRequestControl, operatorCardHref, showOperatorReview };
   if (typeof document === 'undefined') return;
 
   // ================= The page =================
@@ -3532,27 +3534,31 @@
   }
   let operatorStorage;
   try { operatorStorage = window.sessionStorage; } catch (_) { /* request stays inert */ }
-  function showOperatorReview(panel, current) {
-    const draft = operatorDraft(operatorStorage);
+  function showOperatorReview(panel, current, ui = {
+    doc: document, show: showVerbPanel, storage: operatorStorage, fetch: (...args) => fetch(...args),
+    random: b => crypto.getRandomValues(b), timeout: ms => AbortSignal.timeout(ms), assign: href => location.assign(href),
+  }) {
+    const draft = operatorDraft(ui.storage);
     if (draft) panel = { ...draft.request, body: draft.body };
-    const el = showVerbPanel({ ...panel, head: 'Review ' + panel.argv[3] });
-    const body = el.querySelector('.verb-body'), area = document.createElement('div');
+    const el = ui.show({ ...panel, head: 'Review ' + panel.argv[3] });
+    const body = el.querySelector('.verb-body'), area = ui.doc.createElement('div');
     area.className = body.className;
     area.textContent = body.textContent;
     body.replaceWith(area);
-    const label = document.createElement('label'), task = document.createElement('textarea');
-    const request = document.createElement('button'), info = document.createElement('p');
+    const label = ui.doc.createElement('label'), task = ui.doc.createElement('textarea');
+    const request = ui.doc.createElement('button'), info = ui.doc.createElement('p');
     task.id = 'operator-task'; task.rows = 3; task.cols = 26;
     label.textContent = 'Task (1–8192 UTF-8 bytes)'; label.htmlFor = task.id;
     request.id = 'operator-request'; request.type = 'button';
     info.id = 'operator-request-info'; info.setAttribute('role', 'status');
-    area.append(label, document.createElement('br'), task, document.createElement('br'), request, info);
+    const finish = panel.argv[2] === 'finish';
+    if (!finish) area.append(label, ui.doc.createElement('br'), task, ui.doc.createElement('br'));
+    area.append(request, info);
     const live = () => current() && el.isConnected;
-    const control = operatorRequestControl(panel, {storage: operatorStorage, current: live, fetch: (...args) => fetch(...args),
-      random: b => crypto.getRandomValues(b), timeout: ms => AbortSignal.timeout(ms)});
+    const control = operatorRequestControl(panel, {...ui, current: live});
     const repaint = () => {
       task.readOnly = !!control.request;
-      request.textContent = control.request ? 'Reconnect' : 'Request action';
+      request.textContent = control.request ? 'Reconnect' : finish ? 'Request approval' : 'Request action';
     };
     task.value = control.request?.task || '';
     repaint();
@@ -3561,14 +3567,14 @@
       task.readOnly = true;
       await control.submit(task.value).then(result => {
         if (!live()) return;
-        if (result.href) return location.assign(result.href);
+        if (result.href) return ui.assign(result.href);
         info.textContent = result.error || '';
       });
       repaint();
       request.disabled = false;
       if (live()) (task.readOnly ? request : task).focus();
     });
-    (task.readOnly ? request : task).focus();
+    (finish || task.readOnly ? request : task).focus();
   }
   const outstandingOperatorRequest = operatorDraft(operatorStorage);
   if (outstandingOperatorRequest) {

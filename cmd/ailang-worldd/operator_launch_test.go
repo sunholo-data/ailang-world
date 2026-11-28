@@ -43,7 +43,12 @@ func newOperatorLaunchRig(t *testing.T, script string) *operatorLaunchRig {
 
 func newOperatorLaunchRigWithTask(t *testing.T, script, task string) *operatorLaunchRig {
 	t.Helper()
-	r, c, h, runner := operatorActivationFixtureWithTask(t, script, task)
+	return newOperatorLaunchRigWithRemote(t, script, task, "")
+}
+
+func newOperatorLaunchRigWithRemote(t *testing.T, script, task, remote string) *operatorLaunchRig {
+	t.Helper()
+	r, c, h, runner := operatorActivationFixtureWithRemote(t, script, task, remote)
 	f := &operatorLaunchRig{worktreeStartRig: r, c: c, h: h, runner: runner, ctx: activationTestContext(t), now: r.src.clock()}
 	r.src.clock = func() int64 { return f.now }
 	r.env.terminal.now = r.src.clock

@@ -21,7 +21,44 @@ import (
 const operatorPath = "/surface/operator-actions"
 const operatorUnavailable = "runner or reviewed preset unavailable; inspect ailang-worldd service runner status or start at a terminal"
 
-var operatorPolicy = verbs.OperatorPolicy{Start: "A", Finish: "A"} // Headless start is the only installed S7 backend.
+var operatorPolicy = verbs.OperatorPolicy{Start: "A", Finish: "A"}
+
+var errOperatorFinishChanges = errors.New("protected or unattributed changes need terminal finish")
+
+var errOperatorFinishAuth = errors.New("finish blocked: github-auth; repair PATH, GitHub login or Git credential helper in attended service-runner setup and re-run readiness")
+
+func supportedOperatorAction(in *verbs.OperatorIntent) bool {
+	return in != nil && (in.Kind == "start" && in.Headless || in.Kind == "finish")
+}
+
+func (d *Daemon) operatorActionForIntent(ctx context.Context, db *store.Credentials, in *verbs.OperatorIntent, task string, now int64) (store.OperatorHeartbeat, approval.OperatorAction, error) {
+	if in.Kind == "start" {
+		h, entry, err := d.operatorReview(ctx, db, in.Preset, now)
+		if err != nil {
+			return h, approval.OperatorAction{}, err
+		}
+		a, err := entry.Action(in.Episode, task, h.CatalogueGeneration)
+		return h, a, err
+	}
+	h, err := db.OperatorHeartbeat(ctx)
+	build := CurrentBuild().ExecutableSHA256
+	if err != nil || build == "" || !h.Available(build, "start", now) || h.CatalogueGeneration <= 0 {
+		return h, approval.OperatorAction{}, store.ErrOperatorRunner
+	}
+	if !h.Available(build, "finish", now) {
+		return h, approval.OperatorAction{}, errOperatorFinishAuth
+	}
+	entry, err := h.FinishReview(in.Episode, in.Preset)
+	served, pathErr := store.CanonicalPath(d.credentialsPath)
+	if err != nil || pathErr != nil || entry.Store != served {
+		return h, approval.OperatorAction{}, store.ErrOperatorRunner
+	}
+	if len(entry.Protected) != 0 || len(entry.Unattributed) != 0 {
+		return h, approval.OperatorAction{}, errOperatorFinishChanges
+	}
+	a, err := entry.Action(h.CatalogueGeneration, in.Ready)
+	return h, a, err
+}
 
 func (d *Daemon) operatorVerb(r *http.Request, argv []string, out *verbAnswer) bool {
 	a := verbs.AdmitOperator(argv, operatorPolicy)
@@ -29,24 +66,30 @@ func (d *Daemon) operatorVerb(r *http.Request, argv []string, out *verbAnswer) b
 	case verbs.OperatorNever:
 		return out.Class == string(verbs.Never) // Lookup already supplied the refusal.
 	case verbs.OperatorReview:
-		if a.Intent.Kind == "start" && a.Intent.Headless {
-			out.Outcome, out.Reason, out.CLI = "terminal", operatorUnavailable, a.CLI
-			ctx, cancel := d.readCtx(r)
-			defer cancel()
-			ro, err := store.OpenCredentialsReadOnly(d.credentialsPath)
-			if err != nil {
+		if !supportedOperatorAction(a.Intent) {
+			return false
+		}
+		ctx, cancel := d.readCtx(r)
+		defer cancel()
+		ro, err := store.OpenCredentialsReadOnly(d.credentialsPath)
+		if err == nil {
+			defer ro.Close()
+			h, action, err := d.operatorActionForIntent(ctx, ro, a.Intent, "", d.approveNow())
+			switch {
+			case err == nil:
+				out.Outcome, out.Reason, out.Argv, out.Text = "review", "", action.Argv, action.Review
+				out.CatalogueGeneration = h.CatalogueGeneration
+				return true
+			case errors.Is(err, errOperatorFinishAuth), errors.Is(err, errOperatorFinishChanges):
+				out.Outcome, out.Reason, out.CLI = "terminal", err.Error(), a.CLI
 				return true
 			}
-			defer ro.Close()
-			h, entry, err := d.operatorReview(ctx, ro, a.Intent.Preset, d.approveNow())
-			if err == nil {
-				if action, err := entry.Action(a.Intent.Episode, "", h.CatalogueGeneration); err == nil {
-					out.Outcome, out.Reason, out.Argv, out.Text = "review", "", action.Argv, action.Review
-					out.CatalogueGeneration = h.CatalogueGeneration
-				}
-			}
-			return true
 		}
+		if a.Intent.Kind == "finish" {
+			return false // The existing route supplies its terminal fallback.
+		}
+		out.Outcome, out.Reason, out.CLI = "terminal", operatorUnavailable, a.CLI
+		return true
 	}
 	return false
 }
@@ -158,13 +201,13 @@ func (d *Daemon) handleOperatorRequest(w http.ResponseWriter, r *http.Request, o
 	}
 	var body operatorRequestBody
 	if approval.DecodeOperatorObject(raw, &body, "argv", "operationId", "catalogueGeneration", "task") != nil ||
-		len(body.Task) == 0 || len(body.Task) > approval.MaxOperatorTaskBytes || strings.ContainsRune(body.Task, 0) {
+		len(body.Task) > approval.MaxOperatorTaskBytes || strings.ContainsRune(body.Task, 0) {
 		writeApprovalRefusal(w, http.StatusBadRequest, "BadRequest", "send argv, operationId, catalogueGeneration and a task of 1–8192 UTF-8 bytes")
 		return
 	}
 	a := verbs.AdmitOperator(body.Argv, operatorPolicy)
-	if a.Class != verbs.OperatorReview || a.Intent.Kind != "start" || !a.Intent.Headless {
-		writeApprovalRefusal(w, http.StatusBadRequest, "BadRequest", "review a supported headless start first")
+	if a.Class != verbs.OperatorReview || !supportedOperatorAction(a.Intent) || (a.Intent.Kind == "start") != (body.Task != "") {
+		writeApprovalRefusal(w, http.StatusBadRequest, "BadRequest", "review a supported headless start with a task or a finish without a task")
 		return
 	}
 	if body.CatalogueGeneration <= 0 || !store.ValidOperatorOperationID(body.OperationID) {
@@ -189,8 +232,13 @@ func (d *Daemon) handleOperatorRequest(w http.ResponseWriter, r *http.Request, o
 			return
 		}
 		frozen, err := approval.DecodeOperatorAction(row.Action)
-		if err != nil || !slices.Equal(frozen.Argv, a.Intent.Argv) || frozen.Task != body.Task ||
-			!slices.Contains(frozen.Resolution, approval.OperatorResolved{Name: "mint_catalogue", Value: strconv.FormatInt(body.CatalogueGeneration, 10)}) {
+		argv, fact := a.Intent.Argv, "mint_catalogue"
+		if a.Intent.Kind == "finish" {
+			argv = approval.OperatorArgv("finish", a.Intent.Episode, approval.OperatorOptions{Preset: a.Intent.Preset, ConfirmOnSurface: true, Ready: a.Intent.Ready})
+			fact = "finish_catalogue"
+		}
+		if err != nil || !slices.Equal(frozen.Argv, argv) || frozen.Task != body.Task ||
+			!slices.Contains(frozen.Resolution, approval.OperatorResolved{Name: fact, Value: strconv.FormatInt(body.CatalogueGeneration, 10)}) {
 			d.operatorError(w, store.ErrOperatorConflict)
 			return
 		}
@@ -204,15 +252,10 @@ func (d *Daemon) handleOperatorRequest(w http.ResponseWriter, r *http.Request, o
 	}
 	defer wr.Close()
 	now = d.approveNow()
-	h, entry, err := d.operatorReview(ctx, wr, a.Intent.Preset, now)
+	h, action, err := d.operatorActionForIntent(ctx, wr, a.Intent, body.Task, now)
 	if err == nil && h.CatalogueGeneration != body.CatalogueGeneration {
 		err = store.ErrOperatorRunner
 	}
-	if err != nil {
-		d.operatorError(w, err)
-		return
-	}
-	action, err := entry.Action(a.Intent.Episode, body.Task, h.CatalogueGeneration)
 	if err != nil {
 		d.operatorError(w, err)
 		return
@@ -239,6 +282,8 @@ func (d *Daemon) handleOperatorRequest(w http.ResponseWriter, r *http.Request, o
 
 func (d *Daemon) operatorError(w http.ResponseWriter, err error) {
 	switch {
+	case errors.Is(err, errOperatorFinishAuth), errors.Is(err, errOperatorFinishChanges):
+		writeApprovalRefusal(w, http.StatusConflict, "RunnerUnavailable", err.Error())
 	case isOlderStore(err), errors.Is(err, store.ErrOperatorRunner):
 		writeApprovalRefusal(w, http.StatusServiceUnavailable, "RunnerUnavailable", operatorUnavailable+"; review again")
 	case store.IsWriterAlreadyActive(err):

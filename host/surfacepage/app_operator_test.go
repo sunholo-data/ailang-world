@@ -186,3 +186,39 @@ for (const [k,v] of Object.entries({v:'1',episode:'other',kind:'finish',state:'i
   assert.equal(pick({...result,[k]:v}),'',k);
 `)
 }
+
+func TestOperatorFinishBarReview(t *testing.T) {
+	runOperatorBar(t, `
+const finishArgv = ['ailang-worldd','episode','finish','s8','--preset','p','--confirm-on-surface'];
+for(const bad of [finishArgv.slice(0,6), [...finishArgv.slice(0,6), "--dry-run"], finishArgv.concat('--title'), finishArgv.concat('--ready','--ready')])
+  assert.equal(review({argv:bad}).review, undefined);
+const admitted = review({argv:finishArgv.concat('--ready')}).review;
+assert.deepEqual(admitted.argv, finishArgv.concat('--ready'));
+assert.equal(posts.length,0);
+const startCase = app.operatorRequestControl(admitted,io);
+assert.ok((await startCase.submit('not a task')).error);
+assert.equal(posts.length,0);
+assert.ok((await startCase.submit('')).error); // A start card answers a finish request.
+assert.deepEqual(posts[0].argv, finishArgv.concat('--ready'));
+assert.equal(posts[0].task,'');
+response = reply({...result, kind:'finish'});
+const reconnected = app.operatorRequestControl(admitted,io);
+assert.equal((await reconnected.submit('')).href,href);
+assert.deepEqual(posts[0],posts[1]);
+assert.equal(slot,null);
+const mounted = [], clicked = [];
+let focus, link;
+const el = { isConnected:true, querySelector:()=>({replaceWith(){}}) };
+const fakeDoc = {createElement:tag=>({tag, append(...children){ mounted.push(...children); },
+  setAttribute(){}, focus(){ focus=this; }, addEventListener(name,fn){ if(name==='click') clicked.push(fn); }})};
+app.showOperatorReview(admitted, () => true, {...io, doc:fakeDoc, show:()=>el, assign:x=>{link=x;}});
+assert.equal(mounted.some(n=>n.tag==='textarea'||n.tag==='label'),false);
+assert.equal(focus.textContent,'Request approval');
+assert.equal(posts.length,2);
+await clicked[0]();
+assert.equal(posts.length,3);
+assert.equal(posts[2].task,'');
+assert.equal(focus.id,'operator-request');
+assert.equal(link,href);
+`)
+}

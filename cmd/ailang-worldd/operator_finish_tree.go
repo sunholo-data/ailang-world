@@ -345,6 +345,9 @@ func operatorFinishCommitMatches(raw string, spec store.OperatorLocalCommit, tre
 }
 
 func (g operatorFinishGit) commit(ctx context.Context, spool string, spec store.OperatorLocalCommit, contents [][]byte, tree string, start *store.EpisodeStart) error {
+	if config, err := g.config(ctx, start); err != nil || config != spec.Snapshot.Config {
+		return errOperatorFinishReview
+	}
 	name, email, err := worktree.ParseCommitter(spec.Committer)
 	if err != nil || name == "" || strings.ContainsAny(start.Agent, "\r\n<>") {
 		return errOperatorCommitNoRef

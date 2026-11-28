@@ -36,9 +36,24 @@ func (i operatorFinishInputs) frozen(ctx context.Context) (store.OperatorFinishR
 	if err := validateFinishChecks(v.Checks, nil, i.git.dir); err != nil {
 		return v, errOperatorFinishFence
 	}
+	committed, err := i.git.git(ctx, nil, nil, "diff", "--name-only", "-z", "--no-renames",
+		"--no-ext-diff", "--no-textconv", v.Base.SHA, tree.Head, "--")
+	if err != nil {
+		return v, errOperatorFinishFence
+	}
 	var paths []string
+	for path := range strings.SplitSeq(strings.TrimSuffix(committed, "\x00"), "\x00") {
+		if path != "" {
+			paths = append(paths, path)
+		}
+	}
 	for _, p := range tree.Paths {
 		paths = append(paths, p.Path)
+	}
+	slices.Sort(paths)
+	paths = slices.Compact(paths)
+	if len(paths) > 257 {
+		return v, errOperatorFinishFence
 	}
 	v.Protected = finishProtectedPaths(i.profile, paths)
 	v.Unattributed = finishUnattributed(paths, i.report)

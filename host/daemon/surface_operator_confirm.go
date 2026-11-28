@@ -93,7 +93,8 @@ func (d *Daemon) handleOperatorConfirm(w http.ResponseWriter, r *http.Request, i
 		d.operatorError(w, pathErr)
 		return
 	}
-	if err != nil || a.Kind != "start" || !a.Options.Headless || a.ID != id || a.Episode != row.Episode || a.Kind != row.Kind || a.Store != served ||
+	supported := a.Kind == "start" && a.Options.Headless || a.Kind == "finish" && a.Options.ConfirmOnSurface
+	if err != nil || !supported || a.ID != id || a.Episode != row.Episode || a.Kind != row.Kind || a.Store != served ||
 		!bytes.Equal(row.Digest, digest[:]) || body.Digest != hex.EncodeToString(row.Digest) || len(row.Challenge) != 32 {
 		d.operatorError(w, store.ErrOperatorConflict)
 		return
