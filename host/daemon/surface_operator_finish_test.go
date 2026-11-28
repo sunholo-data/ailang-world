@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -8,6 +9,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -78,6 +80,48 @@ func TestOperatorFinishAdmission(t *testing.T) {
 		t.Fatalf("stale catalogue changed state: %+v", got)
 	}
 
+	for _, tc := range []struct {
+		name, class string
+		code        int
+		edit        func(*store.OperatorFinishReview)
+	}{
+		{"other-store", "RunnerUnavailable", http.StatusServiceUnavailable, func(m *store.OperatorFinishReview) {
+			m.Store = filepath.Join(filepath.Dir(path), "other-fixture.db")
+		}},
+		{"protected", "RunnerUnavailable", http.StatusConflict, func(m *store.OperatorFinishReview) { m.Protected = []string{"protected.txt"} }},
+		{"unattributed", "RunnerUnavailable", http.StatusConflict, func(m *store.OperatorFinishReview) { m.Unattributed = []string{"unattributed.txt"} }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			m := manifest
+			tc.edit(&m)
+			current := f.h.Catalogue
+			catalogue[store.OperatorFinishCatalogueKey] = opJSON(map[string]store.OperatorFinishReview{"ep": m})
+			f.h.Catalogue = opJSON(catalogue)
+			f.publish()
+			t.Cleanup(func() {
+				f.h.Catalogue = current
+				f.publish()
+			})
+			ro, err := store.OpenCredentialsReadOnly(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer ro.Close()
+			h, err := ro.OperatorHeartbeat(boundedTestContext(t))
+			if err != nil {
+				t.Fatal(err)
+			}
+			attempt := req
+			attempt.CatalogueGeneration = h.CatalogueGeneration
+			before := f.evidence()
+			got := post(operatorPath, opJSON(attempt))
+			if got.Code != tc.code || !strings.Contains(got.Body.String(), tc.class) || before != f.evidence() {
+				t.Fatalf("request refusal lost class or changed durable state: HTTP %d %s", got.Code, got.Body.String())
+			}
+		})
+	}
+	review = get(query)
+	req.CatalogueGeneration = review.CatalogueGeneration
 	key := approvaltest.NewPasskey(approval.AlgEdDSA, 43)
 	f.enrolPasskey("finish-key", key, opOrigin)
 	var requested operatorStatus
@@ -100,6 +144,32 @@ func TestOperatorFinishAdmission(t *testing.T) {
 	if got := post(operatorPath, opJSON(req)); got.Code != 200 || !strings.Contains(got.Body.String(), requested.ID) {
 		t.Fatalf("retry lost same request: %+v", got)
 	}
+	t.Run("existing-operation/other-generation", func(t *testing.T) {
+		other := req
+		other.CatalogueGeneration++
+		before := f.evidence()
+		got := post(operatorPath, opJSON(other))
+		if got.Code != http.StatusConflict || !strings.Contains(got.Body.String(), `"Conflict"`) ||
+			f.evidence() != before || !reflect.DeepEqual(row, f.row(row.ID)) {
+			t.Fatalf("retry at another catalogue generation changed state or lacked conflict: HTTP %d %s", got.Code, got.Body.String())
+		}
+	})
+	t.Run("status/start-only-runner", func(t *testing.T) {
+		f.h.Readiness = "start"
+		f.publish()
+		t.Cleanup(func() { f.h.Readiness = "both"; f.publish() })
+		before := f.evidence()
+		resp := f.do("GET", requested.StatusHref, nil, nil)
+		var read operatorStatus
+		const reason = "finish blocked: github-auth; repair PATH, GitHub login or Git credential helper in attended service-runner setup and re-run readiness"
+		if resp.Code != http.StatusOK || json.Unmarshal(resp.Body.Bytes(), &read) != nil ||
+			read.Reason != reason || read.State != "requested" || read.Kind != "finish" || read.ID != row.ID ||
+			read.RunnerSeenAt != f.h.SeenAt || read.LocalCommit != "" || len(read.Checks) != 0 ||
+			!strings.Contains(f.do("GET", requested.Href, nil, nil).Body.String(), reason) || f.evidence() != before ||
+			!reflect.DeepEqual(row, f.row(row.ID)) {
+			t.Fatalf("start-only runner lost finish remedy or changed evidence: %+v", read)
+		}
+	})
 	artifact := approveBody(hex.EncodeToString(row.Digest),
 		key.Assert(opOrigin, "localhost", sha256.Sum256(opMessage(t, [32]byte(row.Digest), [32]byte(row.Challenge), row.ExpiresAt)), 2))
 	before = f.evidence()
@@ -121,4 +191,35 @@ func TestOperatorFinishAdmission(t *testing.T) {
 			t.Fatal("confirmed status exposed prep data or issued a V3 prompt")
 		}
 	}
+
+	t.Run("confirm/without-surface-option", func(t *testing.T) {
+		other := manifest
+		other.Episode = "finish-elsewhere"
+		a, err := other.Action(req.CatalogueGeneration, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+		a.ID = "oa-" + strings.Repeat("b", 32)
+		a.Options.ConfirmOnSurface = false
+		a.Argv = approval.OperatorArgv(a.Kind, a.Episode, a.Options)
+		challenge := sha256.Sum256([]byte(t.Name()))
+		var pending store.OperatorActionRow
+		f.write(func(ctx context.Context, c *store.Credentials) error {
+			var err error
+			pending, err = c.RequestOperatorAction(ctx, store.OperatorRequest{
+				Action: a, OperationID: opRequest(55).OperationID, Challenge: challenge,
+				CreatedAt: apT0, ExpiresAt: apT0 + 600,
+			}, apT0)
+			return err
+		})
+		digest := hex.EncodeToString(pending.Digest)
+		msg := opMessage(t, [32]byte(pending.Digest), challenge, pending.ExpiresAt)
+		proof := approveBody(digest, key.Assert(opOrigin, "localhost", sha256.Sum256(msg), 3))
+		before := f.evidence()
+		got := post(operatorPath+"/"+pending.ID+"/confirm", proof)
+		if got.Code != http.StatusConflict || !strings.Contains(got.Body.String(), `"Conflict"`) ||
+			f.evidence() != before || !reflect.DeepEqual(pending, f.row(pending.ID)) {
+			t.Fatalf("signed non-surface finish crossed confirm: HTTP %d %s", got.Code, got.Body.String())
+		}
+	})
 }

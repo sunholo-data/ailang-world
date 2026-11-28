@@ -315,6 +315,42 @@ func TestOperatorFinishConfigReplacement(t *testing.T) {
 	g := operatorFinishGitFixture(t, f)
 	ctx := activationTestContext(t)
 	path := filepath.Join(g.common, "config")
+	t.Run("valid-config-with-different-digest", func(t *testing.T) {
+		snap, contents, err := g.snapshot(ctx, f.rep.Start)
+		if err != nil {
+			t.Fatal(err)
+		}
+		spec := store.OperatorLocalCommit{Snapshot: snap, Message: "fixture commit\n", Committer: "Fixture Operator <fixture@example.invalid>"}
+		tree, err := g.planTree(ctx, f.root, spec, contents)
+		if err != nil {
+			t.Fatal(err)
+		}
+		body := readStartFixtureFile(t, path)
+		// A harmless comment changes the pin without making the config invalid.
+		seedStartFixtureFile(t, path, append(bytes.Clone(body), []byte("\n# changed fixture digest\n")...))
+		t.Cleanup(func() { seedStartFixtureFile(t, path, body) })
+		if hash, err := g.config(ctx, f.rep.Start); err != nil || hash == snap.Config {
+			t.Fatalf("fixture config did not remain valid while changing its digest: %v", err)
+		}
+		marker := filepath.Join(f.root, "unexpected-commit-object")
+		bin := filepath.Join(f.root, "observe-commit-object")
+		write := "#!/bin/sh\nfor arg; do if [ \"$arg\" = commit-tree ]; then touch " + shellQuote(marker) +
+			"; fi; done\nexec " + shellQuote(f.git) + " \"$@\"\n"
+		if err := os.WriteFile(bin, []byte(write), 0700); err != nil {
+			t.Fatal(err)
+		}
+		attempt := g
+		attempt.bin = bin
+		if err := attempt.commit(ctx, f.root, spec, contents, tree, f.rep.Start); !errors.Is(err, errOperatorFinishReview) {
+			t.Fatalf("digest mismatch lost review refusal: %v", err)
+		}
+		if _, err := os.Lstat(marker); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("digest mismatch reached commit-tree: %v", err)
+		}
+		if after, _, err := g.snapshot(ctx, f.rep.Start); err != nil || after.Head != snap.Head || after.Index != snap.Index {
+			t.Fatalf("digest mismatch changed the ref or index: %v", err)
+		}
+	})
 	if _, err := g.config(ctx, f.rep.Start); err != nil {
 		t.Fatal(err)
 	}
