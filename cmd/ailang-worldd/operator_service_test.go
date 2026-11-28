@@ -50,7 +50,9 @@ func operatorService(t *testing.T) *operatorServiceFixture {
 	world, creds := r.Store, r.Credentials // fixture paths are physically named
 	f.env.runnerLogin = func() (int, string, error) { return os.Getuid(), f.home, nil }
 	o := &operatorServiceFixture{serviceFixture: f, homeJob: f.ctl, configFile: filepath.Join(f.home, "proposed.json"),
-		config:    runnerConfig{f.home, os.Getuid(), r.Address, world, creds, map[string]string{r.Binary: r.BinarySHA256}, []string{"sol"}, []string{filepath.Dir(r.Binary)}, "headless"},
+		config: runnerConfig{Home: f.home, UID: os.Getuid(), Address: r.Address, World: world, Credentials: creds,
+			Executables: map[string]string{r.Binary: r.BinarySHA256}, PresetNames: []string{"sol"},
+			ToolDirs: []string{filepath.Dir(r.Binary)}, Backend: "headless"},
 		heartbeat: store.OperatorHeartbeat{Owner: store.OperatorOwner{Nonce: "fake-runner"}, Protocol: store.OperatorRunnerProtocol, Build: r.BinarySHA256},
 		health:    daemon.HealthResponse{Status: "ok", DBPath: world, CredentialsDB: creds, Build: daemon.BuildIdentity{ExecutableSHA256: r.BinarySHA256}}}
 	f.ctl = &fakeServiceController{runner: true, binary: r.Binary}

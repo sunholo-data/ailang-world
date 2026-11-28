@@ -90,6 +90,18 @@ func AddExisting(ctx context.Context, git, repo, dir, branch string) error {
 // Output runs `git args...` and returns its standard output. Stderr is kept
 // only for the error message; stdout over MaxStdout is an error.
 func Output(ctx context.Context, git string, args []string) (string, error) {
+	return gitOutput(ctx, git, args)
+}
+
+type isolatedGitEnvKey struct{}
+
+// OutputIsolated uses a trusted caller's explicit environment at the same
+// bounded Git site. Unlike ambient Git, caller-supplied policy can set GIT_*.
+func OutputIsolated(ctx context.Context, git string, args, env []string) (string, error) {
+	return gitOutput(context.WithValue(ctx, isolatedGitEnvKey{}, childenv.Scrubbed(env)), git, args)
+}
+
+func gitOutput(ctx context.Context, git string, args []string) (string, error) {
 	out := &capped{max: MaxStdout}
 	if err := runGit(ctx, git, args, out); err != nil {
 		return "", err
@@ -155,7 +167,11 @@ func runGit(ctx context.Context, git string, args []string, stdout *capped, inhe
 	runCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	cmd := exec.CommandContext(runCtx, git, args...)
-	cmd.Env = Env(os.Environ())
+	if approved, ok := ctx.Value(isolatedGitEnvKey{}).([]string); ok {
+		cmd.Env = approved
+	} else {
+		cmd.Env = Env(os.Environ())
+	}
 	cmd.Stdin = nil
 	cmd.ExtraFiles = inherited
 	cmd.WaitDelay = waitDelay

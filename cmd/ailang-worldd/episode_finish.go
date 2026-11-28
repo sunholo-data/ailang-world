@@ -77,6 +77,21 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	if episodeFlagSetSeen != nil {
 		episodeFlagSetSeen(fs)
 	}
+	fail := func(what, why, next string) int {
+		fmt.Fprintln(stderr, presetRefusal(what, why, next))
+		return exitUsage
+	}
+	// Standalone help only describes the flags. Every attempt to finish
+	// meets F1 before consulting flags, ambient inputs, or the worktree.
+	var tty io.ReadWriteCloser
+	if len(args) != 1 || (args[0] != "--help" && args[0] != "-help" && args[0] != "-h" && args[0] != "--h") {
+		var err error
+		tty, err = env.openTerminal()
+		if err != nil {
+			return fail("refusing: no controlling terminal", "finish is an attended act", "run it in a terminal (an agent or CI can't finish an episode)")
+		}
+		defer tty.Close()
+	}
 	pos, err := verbs.ParseInterleaved(fs, args)
 	if errors.Is(err, flag.ErrHelp) {
 		fmt.Fprint(stdout, episodeFinishHelp)
@@ -85,16 +100,6 @@ func runEpisodeFinishWith(args []string, stdout, stderr io.Writer, env sessionEn
 	if err != nil {
 		return exitUsage
 	}
-	fail := func(what, why, next string) int {
-		fmt.Fprintln(stderr, presetRefusal(what, why, next))
-		return exitUsage
-	}
-	// F1 precedes even bad preset/episode validation, and all IO beyond flags.
-	tty, err := env.openTerminal()
-	if err != nil {
-		return fail("refusing: no controlling terminal", "finish is an attended act", "run it in a terminal (an agent or CI can't finish an episode)")
-	}
-	defer tty.Close()
 	if *onSurface && *dry { // row 243 V3 §2.7 step 1
 		return fail("--confirm-on-surface cannot be combined with --dry-run", "a dry run opens no pull request", "drop one of them")
 	}
