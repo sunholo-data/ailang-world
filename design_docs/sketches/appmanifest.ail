@@ -1,0 +1,247 @@
+module sketches/appmanifest
+
+-- The World app manifest law (queue row 274 M1, design_docs/planned/w-world-applications.md
+-- §2). An app is an extension package with an `app.json` manifest (schema world/app/v1): a
+-- portable preset template of EXISTING effects only, declared outputs, and views drawn only
+-- from row 151's closed catalog. This sketch is the semantic source of truth. Go mirrors each
+-- law in host/appmanifest/manifest.go, and host/appmanifest/drift_test.go replays every
+-- inline test row below through the Go mirror of the same name. A law without a mirror, a
+-- mirror without a law, or a row the mirror disagrees with turns that test red.
+--
+-- Why a sketch and not a package (coding-standards S3): the manifest is validated at the
+-- host boundary, before any episode exists, exactly as the Workspace.Exec argument law
+-- (sketches/execargs.ail) and the effect-plan law (sketches/effectplan.ail) are. Go executes
+-- it; AILANG states and proves it. Nothing here enters the world/ kernel.
+--
+-- Every law is pure, non-recursive and first-order, so Z3 proves each `ensures`. The list
+-- walks (each grant, each output, duplicate names, the check an output names) are Go's,
+-- applying these per-element laws.
+
+import std/string (length as strLength, startsWith, endsWith, contains)
+
+-- ── Identity ──────────────────────────────────────────────────────────────
+
+-- The manifest names its own schema.
+export func schemaOk(s: string) -> bool ! {}
+ensures { result == (s == "world/app/v1") }
+tests [
+  ("world/app/v1", true),
+  ("world/app/v2", false),
+  ("world/preset/v1", false),
+  ("", false)
+]
+{ s == "world/app/v1" }
+
+-- An app name is a preset name (it names the preset it resolves to): the episode grammar
+-- ^[a-z0-9][a-z0-9-]{0,63}$, at most 51 characters (host/verbs MaxPresetName), so
+-- <name>-<yymmddhhmm>-9 fits the 64-character episode id. This is the length half.
+export func nameLenOk(n: int) -> bool ! {}
+ensures { result == (n >= 1 && n <= 51) }
+tests [(0, false), (1, true), (51, true), (52, false)]
+{ n >= 1 && n <= 51 }
+
+-- The byte half: a lowercase letter or digit anywhere, a hyphen anywhere but first.
+export func nameByteOk(b: int, first: bool) -> bool ! {}
+ensures { result == ((b >= 97 && b <= 122) || (b >= 48 && b <= 57) || (not first && b == 45)) }
+tests [
+  ((97, true), true),
+  ((122, false), true),
+  ((48, true), true),
+  ((57, false), true),
+  ((45, false), true),
+  ((45, true), false),
+  ((65, false), false),
+  ((95, false), false),
+  ((46, false), false)
+]
+{ (b >= 97 && b <= 122) || (b >= 48 && b <= 57) || (not first && b == 45) }
+
+-- `se-tools` names the existing grant set, so no app may take it.
+export func nameReserved(s: string) -> bool ! {}
+ensures { result == (s == "se-tools") }
+tests [("se-tools", true), ("se-tools-2", false), ("docparse-convert", false)]
+{ s == "se-tools" }
+
+-- Title and summary are what a person reads in the app list.
+export func titleLenOk(n: int) -> bool ! {}
+ensures { result == (n >= 1 && n <= 80) }
+tests [(0, false), (1, true), (80, true), (81, false)]
+{ n >= 1 && n <= 80 }
+
+export func summaryLenOk(n: int) -> bool ! {}
+ensures { result == (n >= 1 && n <= 280) }
+tests [(0, false), (1, true), (280, true), (281, false)]
+{ n >= 1 && n <= 280 }
+
+-- ── The preset template ───────────────────────────────────────────────────
+
+-- The agent hosts World launches today (preset init --agent codex|claude|agy).
+export func agentOk(a: string) -> bool ! {}
+ensures { result == (a == "claude" || a == "codex" || a == "agy") }
+tests [("claude", true), ("codex", true), ("agy", true), ("pi", false), ("", false)]
+{ a == "claude" || a == "codex" || a == "agy" }
+
+export func modeOk(m: string) -> bool ! {}
+ensures { result == (m == "headless" || m == "interactive") }
+tests [("headless", true), ("interactive", true), ("detached", false), ("", false)]
+{ m == "headless" || m == "interactive" }
+
+-- A launch deadline between one minute and one day.
+export func deadlineOk(s: int) -> bool ! {}
+ensures { result == (s >= 60 && s <= 86400) }
+tests [(59, false), (60, true), (86400, true), (86401, false)]
+{ s >= 60 && s <= 86400 }
+
+-- A credential lifetime between one minute and one week.
+export func ttlOk(s: int) -> bool ! {}
+ensures { result == (s >= 60 && s <= 604800) }
+tests [(59, false), (60, true), (604800, true), (604801, false)]
+{ s >= 60 && s <= 604800 }
+
+-- EXISTING effects only: the ten broker effects an episode preset grants today
+-- (host/broker handlers_ailang.go and handlers_exec.go). An app cannot invent an effect;
+-- device grants arrive only when row 210 defines them, as an edit to this law.
+export func effectAllowed(e: string) -> bool ! {}
+ensures { result == (e == "Workspace.Read" || e == "Workspace.Write" || e == "Workspace.Delete"
+  || e == "Workspace.Exec" || e == "Ailang.Check" || e == "Ailang.Run" || e == "Ailang.RunEnv"
+  || e == "Ailang.RunNet" || e == "Ailang.Discover" || e == "Ailang.CLI") }
+tests [
+  ("Workspace.Read", true),
+  ("Workspace.Write", true),
+  ("Workspace.Delete", true),
+  ("Workspace.Exec", true),
+  ("Ailang.Check", true),
+  ("Ailang.Run", true),
+  ("Ailang.RunEnv", true),
+  ("Ailang.RunNet", true),
+  ("Ailang.Discover", true),
+  ("Ailang.CLI", true),
+  ("Model.Infer", false),
+  ("Human.Approve", false),
+  ("FS.Write", false),
+  ("Host.Blender", false),
+  ("workspace.read", false),
+  ("", false)
+]
+{
+  e == "Workspace.Read" || e == "Workspace.Write" || e == "Workspace.Delete"
+    || e == "Workspace.Exec" || e == "Ailang.Check" || e == "Ailang.Run" || e == "Ailang.RunEnv"
+    || e == "Ailang.RunNet" || e == "Ailang.Discover" || e == "Ailang.CLI"
+}
+
+-- An app runs inside its episode's worktree, so that is the only scope it may ask for.
+export func scopeOk(s: string) -> bool ! {}
+ensures { result == (s == "worktree") }
+tests [("worktree", true), ("/tmp", false), ("repo", false), ("", false)]
+{ s == "worktree" }
+
+export func budgetOk(n: int) -> bool ! {}
+ensures { result == (n >= 1 && n <= 100000) }
+tests [(0, false), (1, true), (100000, true), (100001, false), (-1, false)]
+{ n >= 1 && n <= 100000 }
+
+-- Launch can narrow a template grant, never widen it: the requested budget is at least one
+-- and at most the template's. A request for an effect or scope the template lacks is refused
+-- by Go before this law applies.
+export func grantNarrows(templateBudget: int, requested: int) -> bool ! {}
+requires { templateBudget >= 1 }
+ensures { result == (requested >= 1 && requested <= templateBudget) }
+tests [((5000, 5000), true), ((5000, 1), true), ((5000, 5001), false), ((5000, 0), false)]
+{ requested >= 1 && requested <= templateBudget }
+
+-- How many grants, checks, outputs and views a manifest may carry.
+export func grantCountOk(n: int) -> bool ! {}
+ensures { result == (n >= 1 && n <= 16) }
+tests [(0, false), (1, true), (16, true), (17, false)]
+{ n >= 1 && n <= 16 }
+
+export func listCountOk(n: int) -> bool ! {}
+ensures { result == (n >= 0 && n <= 16) }
+tests [(-1, false), (0, true), (16, true), (17, false)]
+{ n >= 0 && n <= 16 }
+
+-- A check name is a short identifier an output can name.
+export func checkNameLenOk(n: int) -> bool ! {}
+ensures { result == (n >= 1 && n <= 40) }
+tests [(0, false), (1, true), (40, true), (41, false)]
+{ n >= 1 && n <= 40 }
+
+-- A check's timeout, in seconds (the preset grader shape; 0 there means the 900 s default,
+-- so a manifest states its timeout or omits it, and Go supplies 900 before this law).
+-- An app check has no `unsandboxed` field: the closed decoder refuses it, so an app cannot
+-- ask for a check outside the sandbox.
+export func checkTimeoutOk(s: int) -> bool ! {}
+ensures { result == (s >= 1 && s <= 3600) }
+tests [(0, false), (1, true), (900, true), (3600, true), (3601, false)]
+{ s >= 1 && s <= 3600 }
+
+-- ── Outputs and views ─────────────────────────────────────────────────────
+
+export func outputKindOk(k: string) -> bool ! {}
+ensures { result == (k == "file") }
+tests [("file", true), ("pr", false), ("", false)]
+{ k == "file" }
+
+-- No path segment is "..", as in sketches/execargs.ail and the se-tools modules.
+export func noDotDotSegment(p: string) -> bool ! {}
+ensures { result == (p != ".." && not startsWith(p, "../") && not endsWith(p, "/..")
+  && not contains(p, "/../")) }
+tests [
+  ("out/a.md", true),
+  ("..", false),
+  ("../x", false),
+  ("a/..", false),
+  ("a/../b", false),
+  ("..a/b", true)
+]
+{ p != ".." && not startsWith(p, "../") && not endsWith(p, "/..") && not contains(p, "/../") }
+
+-- An output glob stays inside the worktree: relative, 1 to 256 bytes, no leading "-", no
+-- ".." segment, no backslash. Go then checks the glob compiles as a path pattern.
+export func outputGlobOk(g: string) -> bool ! {}
+ensures { result == (strLength(g) >= 1 && strLength(g) <= 256 && not startsWith(g, "/")
+  && not startsWith(g, "-") && not contains(g, "\\") && g != ".." && not startsWith(g, "../")
+  && not endsWith(g, "/..") && not contains(g, "/../")) }
+tests [
+  ("out/**/*.md", true),
+  ("report.md", true),
+  ("", false),
+  ("/etc/*", false),
+  ("-x", false),
+  ("../*.md", false),
+  ("out/../../x", false),
+  ("out\\x.md", false)
+]
+{
+  strLength(g) >= 1 && strLength(g) <= 256 && not startsWith(g, "/") && not startsWith(g, "-")
+    && not contains(g, "\\") && noDotDotSegment(g)
+}
+
+-- Row 151's closed catalog (w-agent-generated-projections §3): an app may only name these.
+export func viewOk(v: string) -> bool ! {}
+ensures { result == (v == "text" || v == "row" || v == "column" || v == "list" || v == "table"
+  || v == "card" || v == "checklist" || v == "timeline" || v == "chart" || v == "media"
+  || v == "output-link" || v == "object-link" || v == "grade-badge" || v == "choice"
+  || v == "action-button") }
+tests [
+  ("text", true),
+  ("table", true),
+  ("object-link", true),
+  ("action-button", true),
+  ("checklist", true),
+  ("modal", false),
+  ("tabs", false),
+  ("html", false),
+  ("state-graph", false),
+  ("", false)
+]
+{
+  v == "text" || v == "row" || v == "column" || v == "list" || v == "table" || v == "card"
+    || v == "checklist" || v == "timeline" || v == "chart" || v == "media" || v == "output-link"
+    || v == "object-link" || v == "grade-badge" || v == "choice" || v == "action-button"
+}
+
+export func viewCountOk(n: int) -> bool ! {}
+ensures { result == (n >= 0 && n <= 8) }
+tests [(-1, false), (0, true), (8, true), (9, false)]
+{ n >= 0 && n <= 8 }

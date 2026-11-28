@@ -1,0 +1,26 @@
+{
+  "schema": "world/app/v1",
+  "name": "docparse-convert",
+  "title": "Convert documents",
+  "summary": "Convert the documents in a folder to Markdown with AILANG Parse, then check the result with the package's own tests.",
+  "repo_kind": "docparse",
+  "preset": {
+    "agent": "claude",
+    "launch": { "mode": "headless", "deadline_s": 3600 },
+    "ttl_s": 14400,
+    "grants": [
+      { "effect": "Workspace.Read", "scope": "worktree", "budget": 2000 },
+      { "effect": "Workspace.Write", "scope": "worktree", "budget": 500 },
+      { "effect": "Ailang.Run", "scope": "worktree", "budget": 500 },
+      { "effect": "Workspace.Exec", "scope": "worktree", "budget": 100 }
+    ],
+    "exec_profile": "docparse",
+    "checks": [
+      { "name": "ailang-test", "argv": ["ailang", "test"], "timeout_s": 900 }
+    ]
+  },
+  "outputs": [
+    { "kind": "file", "glob": "out/**/*.md", "check": "ailang-test" }
+  ],
+  "views": ["table", "object-link"]
+}

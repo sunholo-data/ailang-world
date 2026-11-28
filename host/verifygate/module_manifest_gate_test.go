@@ -93,8 +93,8 @@ func buildIsolatedGateRoot(root string) error {
 	if err != nil {
 		return err
 	}
-	if files != 28 || ailFiles != 26 {
-		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 28 / 26", files, ailFiles)
+	if files != 29 || ailFiles != 27 {
+		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 29 / 27", files, ailFiles)
 	}
 	return nil
 }
@@ -218,7 +218,7 @@ func requirePristineControl(t *testing.T, root string) string {
 	return out
 }
 
-const pristineMarker = "✓ 16/16 required world/ identities verified across 26 module(s)"
+const pristineMarker = "✓ 16/16 required world/ identities verified across 27 module(s)"
 
 // pristineControlCovers is requirePristineControl's contract as a predicate: it returns the shared
 // control's output only when that run carries the marker AND root is digest-identical to the root
@@ -228,8 +228,8 @@ func pristineControlCovers(root string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("shared pristine control could not run: %v", err)
 	}
-	if files != 28 {
-		return "", "", fmt.Errorf("shared pristine control digested %d files, want 28", files)
+	if files != 29 {
+		return "", "", fmt.Errorf("shared pristine control digested %d files, want 29", files)
 	}
 	mine, mineFiles, err := isolatedTreeDigest(root)
 	if err != nil {
@@ -332,8 +332,8 @@ func TestModuleManifestRejectsStrayModule(t *testing.T) {
 	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	control := requirePristineControl(t, root)
-	if got := strings.Count(control, "\n   ai-check "); got != 26 {
-		t.Fatalf("pristine control emitted %d ai-check lines, want 26", got)
+	if got := strings.Count(control, "\n   ai-check "); got != 27 {
+		t.Fatalf("pristine control emitted %d ai-check lines, want 27", got)
 	}
 	probe := filepath.Join(root, "world", "_stray_manifest_probe.ail")
 	const source = "module world/_stray_manifest_probe\n\nexport func strayId(x: int) -> int = x\n"
@@ -492,6 +492,7 @@ func TestSeToolsGateArmsAreLoadBearing(t *testing.T) {
 // reds Leg 1 on the vanished identity by name; (sketch tests) changing one of
 // the sketch's matchArgs expectations reds Leg 2c on that test by name, so the
 // sketch's own AILANG body is executed, not only its expectations through Go.
+// Row 274 M1 adds the same two arms for design_docs/sketches/appmanifest.ail (Leg 1, Leg 2d).
 func TestExecGateArmsAreLoadBearing(t *testing.T) {
 	// Parallel-safe: this arm runs the gate only in its OWN t.TempDir() copy (own .ailang compile
 	// cache), never on the live tree; see sharedPristineControl for the CI budget rationale.
@@ -505,6 +506,12 @@ func TestExecGateArmsAreLoadBearing(t *testing.T) {
 			"argsOk) MISSING from verify.results[]"},
 		{"sketch tests", "design_docs/sketches/execargs.ail", `["--", "./..."]), "refused 0 dash-dash"),`,
 			`["--", "./..."]), "ok []"),`, "execargs sketch test leg: required named tests missing/failing: matchArgs_test_9="},
+		// Row 274 M1: the app manifest sketch, gated the same two ways (Leg 1 by identity,
+		// Leg 2d by named test), so its AILANG bodies run under the pinned binary.
+		{"app sketch contract", "design_docs/sketches/appmanifest.ail", "ensures { result == (s == \"worktree\") }\n", "",
+			"scopeOk) MISSING from verify.results[]"},
+		{"app sketch tests", "design_docs/sketches/appmanifest.ail", `("modal", false),`, `("modal", true),`,
+			"app manifest sketch test leg: required named tests missing/failing: viewOk_test_6="},
 	}
 	for _, arm := range arms {
 		t.Run(arm.name, func(t *testing.T) {
@@ -562,6 +569,7 @@ func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
 	root := newIsolatedGateRoot(t)
 	requirePristineControl(t, root)
 	const old = `LEG1_MODULES=(
+  design_docs/sketches/appmanifest.ail
   design_docs/sketches/decisionpacket.ail
   design_docs/sketches/effectbroker.ail
   design_docs/sketches/effectplan.ail

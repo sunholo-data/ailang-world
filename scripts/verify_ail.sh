@@ -153,8 +153,9 @@ command -v python3 >/dev/null 2>&1 || {
 # The manifest is keyed by (repo-relative module file, bare function name): ai-check emits BARE
 # names in verify.results[].function (V17). Sketches are excluded from the world/ total, so a
 # contracted sketch can neither mask a required identity nor perturb the total. Sketches carry EMPTY
-# required sets except design_docs/sketches/effectplan.ail, design_docs/sketches/execargs.ail and
-# design_docs/sketches/decisionpacket.ail, whose law proofs are gated by name.
+# required sets except design_docs/sketches/effectplan.ail, design_docs/sketches/execargs.ail,
+# design_docs/sketches/decisionpacket.ail and design_docs/sketches/appmanifest.ail, whose law
+# proofs are gated by name.
 # The packages/se-tools transitions (row 134 M5) are likewise outside world/: their contracts are
 # gated by name per module, and they never count toward the world/ total (the S8 floor).
 GATE_LEG_TIMEOUT_S=120   # wall-clock cap per ai-check module leg (Standing Rule 6, V26)
@@ -172,6 +173,7 @@ ROOTS=(
 # add/remove is a ONE-LINE edit here, in the SAME commit. Repo-relative paths, matching
 # the sweep's $mod key.
 LEG1_MODULES=(
+  design_docs/sketches/appmanifest.ail
   design_docs/sketches/decisionpacket.ail
   design_docs/sketches/effectbroker.ail
   design_docs/sketches/effectplan.ail
@@ -346,6 +348,14 @@ REQUIRED_VERIFIED = {
     # The decision-packet law (queue row 172 M1): Go mirrors in host/coordinator/decisionpacket.go,
     # bound by host/coordinator/decisionpacket_drift_test.go. A sketch, so excluded from the world/
     # total: gated by name without moving the S8 floor.
+    # The World app manifest law (queue row 274 M1): Go mirrors in host/appmanifest/manifest.go,
+    # bound by host/appmanifest/drift_test.go. A sketch, so excluded from the world/ total: gated
+    # by name without moving the S8 floor.
+    "design_docs/sketches/appmanifest.ail": {
+        "schemaOk", "nameLenOk", "nameByteOk", "nameReserved", "titleLenOk", "summaryLenOk",
+        "agentOk", "modeOk", "deadlineOk", "ttlOk", "effectAllowed", "scopeOk", "budgetOk",
+        "grantNarrows", "grantCountOk", "listCountOk", "checkNameLenOk", "checkTimeoutOk",
+        "outputKindOk", "noDotDotSegment", "outputGlobOk", "viewOk", "viewCountOk"},
     "design_docs/sketches/decisionpacket.ail": {
         "policyCode", "scheduleWellFormed", "mintable", "mintedScheduleWellFormed",
         "producerFieldsOk", "sameRef", "packetRefusal", "samePair", "lifecycleOk"},
@@ -469,6 +479,52 @@ if len(tests) != len(required):
     sys.stderr.write("✗ execargs sketch test leg: expected exactly %d named tests[], got %d\n"
                      % (len(required), len(tests))); sys.exit(1)
 print("   ✓ all %d execargs sketch named tests pass" % len(required))
+PY
+
+# ── Leg 2d — the app manifest sketch's named inline tests (queue row 274 M1) ─────────────
+# host/appmanifest/drift_test.go checks the sketch's EXPECTED values against the Go mirror; this
+# leg runs the sketch's own AILANG bodies against the same rows with the pinned binary, so a law
+# whose body and ensures moved together (still verified, still mirrored) but now disagrees with
+# its rows is caught. Exact name set, as in Leg 2c. Run from design_docs/, the sketch base.
+echo "── Leg 2d: app manifest sketch named inline tests"
+( cd design_docs && run_bounded "$GATE_TEST_TIMEOUT_S" "$tmp_test_json" "$AILANG_BIN" test --format json sketches/appmanifest.ail )
+rc=$?
+if [ "$rc" -eq 124 ]; then
+  echo "✗ ailang test TIMEOUT on sketches/appmanifest.ail (>${GATE_TEST_TIMEOUT_S}s)" >&2
+  [ -s "$tmp_test_json.err" ] && { echo "   stderr tail:" >&2; tail -5 "$tmp_test_json.err" >&2; }
+  exit 1
+fi
+# other exit codes advisory — the JSON parse below is authoritative
+python3 - "$tmp_test_json" <<'PY' || exit 1
+import json, sys
+APPMANIFEST_TESTS = {  # function -> number of named inline tests
+    "schemaOk": 4, "nameLenOk": 4, "nameByteOk": 9, "nameReserved": 3, "titleLenOk": 4,
+    "summaryLenOk": 4, "agentOk": 5, "modeOk": 4, "deadlineOk": 4, "ttlOk": 4,
+    "effectAllowed": 16, "scopeOk": 4, "budgetOk": 5, "grantNarrows": 4, "grantCountOk": 4,
+    "listCountOk": 4, "checkNameLenOk": 4, "checkTimeoutOk": 5, "outputKindOk": 3,
+    "noDotDotSegment": 6, "outputGlobOk": 8, "viewOk": 10, "viewCountOk": 4,
+}
+required = {"%s_test_%d" % (f, i) for f, n in APPMANIFEST_TESTS.items() for i in range(1, n + 1)}
+raw = open(sys.argv[1], "rb").read().decode("utf-8", "replace")
+i = raw.find("{")
+if i < 0:
+    sys.stderr.write("✗ app manifest sketch test leg: no JSON object in output\n"); sys.exit(1)
+try:
+    d = json.loads(raw[i:])
+except Exception as e:
+    sys.stderr.write("✗ app manifest sketch test leg: could not parse test JSON (%s)\n" % e); sys.exit(1)
+tests = d.get("tests", [])
+by_name = {t.get("name"): t.get("status") for t in tests}
+bad = ["%s=%s" % (n, "MISSING" if by_name.get(n) is None else by_name.get(n))
+       for n in sorted(required) if by_name.get(n) != "pass"]
+if bad:
+    sys.stderr.write("✗ app manifest sketch test leg: required named tests missing/failing: %s\n" % ", ".join(bad)); sys.exit(1)
+if d.get("failed_tests", 0):
+    sys.stderr.write("✗ app manifest sketch test leg: failed_tests == %s\n" % d.get("failed_tests")); sys.exit(1)
+if len(tests) != len(required):
+    sys.stderr.write("✗ app manifest sketch test leg: expected exactly %d named tests[], got %d\n"
+                     % (len(required), len(tests))); sys.exit(1)
+print("   ✓ all %d app manifest sketch named tests pass" % len(required))
 PY
 
 # ── Leg 2 — named inline tests (directory mode, V18/V22) ──────────────────────

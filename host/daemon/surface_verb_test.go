@@ -176,7 +176,7 @@ func TestSurfaceVerbIsReadOnly(t *testing.T) {
 		}
 		return true
 	})
-	if want := map[string]bool{"readCtx": true, "episodeReport": true, "writeInternalErrorLog": true, "verbEpisodeReport": true, "readDeadline": true, "verbWhy": true, "verbProfileList": true, "verbPresetList": true, "operatorVerb": true}; !reflect.DeepEqual(calls, want) {
+	if want := map[string]bool{"readCtx": true, "episodeReport": true, "writeInternalErrorLog": true, "verbEpisodeReport": true, "readDeadline": true, "verbWhy": true, "verbProfileList": true, "verbPresetList": true, "verbAppList": true, "operatorVerb": true}; !reflect.DeepEqual(calls, want) {
 		t.Errorf("surface_verb.go reaches d.%v, want exactly %v", calls, want)
 	}
 	for _, id := range []string{"mr-0123456789abcdef", "mr-0123456789ABCDEF", "mr-0123456789abcde", "mr-0123456789abcdef0", "xr-0123456789abcdef", "mr-012345678 abcdef"} {

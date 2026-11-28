@@ -32,6 +32,8 @@ var lookupCases = []struct {
 	{"profile list --json", "profile list", Read, "", true, []string{"--json"}},
 	{"preset list", "preset list", Read, "", true, []string{}},
 	{"preset list --json", "preset list", Read, "", true, []string{"--json"}},
+	{"app list", "app list", Read, "", true, []string{}},
+	{"app list --json", "app list", Read, "", true, []string{"--json"}},
 	{"approve mr-0123456789abcdef", "approve", Navigate, "", true, []string{"mr-0123456789abcdef"}},
 	{"episode start w1", "episode start", Mutate, "episode start changes World. The app cannot run it yet.", true, []string{"w1"}},
 	{"episode finish w1 --preset p", "episode finish", Mutate, "episode finish changes World. The app cannot run it yet; at a terminal, --confirm-on-surface lets you approve its pull request here with your key.", true, []string{"w1", "--preset", "p"}},
@@ -70,10 +72,10 @@ func TestLookup(t *testing.T) {
 			t.Errorf("Lookup(%q) = %+v, %q", c.line, v, rest)
 		}
 	}
-	// The shadow set: every one of the 30 words is a verb, bare and with an argument; never an address.
+	// The shadow set: every one of the 31 words is a verb, bare and with an argument; never an address.
 	all := append(append(append([]string{}, OperatorWords...), NeverWords...), OtherWords...)
-	if len(all) != 30 {
-		t.Fatalf("shadow set has %d words, want 30", len(all))
+	if len(all) != 31 {
+		t.Fatalf("shadow set has %d words, want 31", len(all))
 	}
 	for _, w := range all {
 		for _, argv := range [][]string{{w}, {w, "zzz"}, {Binary, w, "zzz"}} {
