@@ -4,7 +4,7 @@
 was in CI). Not quorum-reviewed. The loop's pick-time designer re-measures §1 at its base and runs
 the quorum as usual. Nothing here waives a gate.
 **Parent:** [`w-world-applications`](w-world-applications.md) §6 (M1b) and §11 (M1's decisions).
-**Rulings:** one, D-WORLD-126 (§6).
+**Rulings:** one, D-WORLD-129 (§6).
 
 ## §0 Why
 
@@ -92,7 +92,7 @@ Every refusal says what failed, why, and the next command, as M1's `app check` d
 
 ## §5 What M2 may launch
 
-This is D-WORLD-126 (§6). The recommendation is **published apps only**. M2 resolves the
+This is D-WORLD-129 (§6). The recommendation is **published apps only**. M2 resolves the
 manifest object the registry entry names, and the start review shows `docparse-convert v2
 (sha256:…)`. The episode start records that ref, so the episode report's `app` field
 (D-WORLD-125) names an exact, immutable manifest. Local catalog files stay a draft area for
@@ -100,7 +100,7 @@ manifest object the registry entry names, and the start review shows `docparse-c
 
 ## §6 Ruling for Mark
 
-- **D-WORLD-126 (what M2 may launch):**
+- **D-WORLD-129 (what M2 may launch):**
   - **A:** only published apps (registry entries). The start pins the manifest object ref.
   - **B:** published apps, plus local catalog files labelled `local` in the review.
   - **Recommendation:** A. A launch should name something World recorded and an operator
