@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -169,5 +170,41 @@ func TestAppsVerbFences(t *testing.T) {
 	}
 	if got := appsPublishPhrase("docparse-convert", 1, storePath); got != "publish app docparse-convert version 1 to "+storePath {
 		t.Fatalf("phrase oracle = %q", got)
+	}
+}
+
+// slowReader returns its line only after a pause, like an operator who takes a while to
+// type the confirmation.
+type slowReader struct {
+	line  string
+	pause time.Duration
+	done  bool
+}
+
+func (r *slowReader) Read(p []byte) (int, error) {
+	if r.done {
+		return 0, io.EOF
+	}
+	time.Sleep(r.pause)
+	r.done = true
+	return copy(p, r.line), nil
+}
+
+// TestAppsVerbSlowConfirmation pins that no store budget runs across the typed
+// confirmation: with each phase capped at 50 ms and the phrase arriving after 150 ms, the
+// publish still succeeds (a single context created before the gate would expire).
+func TestAppsVerbSlowConfirmation(t *testing.T) {
+	saved := appsStepBudget
+	appsStepBudget = 50 * time.Millisecond
+	t.Cleanup(func() { appsStepBudget = saved })
+	dir := t.TempDir()
+	storePath := filepath.Join(dir, "world.db")
+	flags := map[string]string{"store": storePath, "manifest": appsExample(t, dir)}
+	var out, errw bytes.Buffer
+	in := &slowReader{line: appsPublishPhrase("docparse-convert", 1, storePath) + "\n", pause: 150 * time.Millisecond}
+	code := run(invocation{verb: "apps", flags: flags}.args(t), in, &out, &errw,
+		environment{getenv: noEnv, probe: func() ttyProbe { return satisfiedProbe(t) }})
+	if code != exitOK || !strings.Contains(out.String(), "published app docparse-convert version 1") {
+		t.Fatalf("a slow confirmation = (%d, %q, %q), want the publish to succeed", code, out.String(), errw.String())
 	}
 }

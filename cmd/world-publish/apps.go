@@ -48,9 +48,12 @@ func runApps(opts options, in io.Reader, out, errw io.Writer, env environment) i
 	}
 	defer func() { _ = db.Close() }()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	snap, err := appregistry.Read(ctx, db)
+	// Two bounded contexts, never one across the gate: the operator may take any time to
+	// type the phrase, so the publish gets its own budget, created after the gate (as
+	// `transitions` does). The compare-and-set against snap.Head keeps the two reads honest.
+	readCtx, cancelRead := context.WithTimeout(context.Background(), appsStepBudget)
+	defer cancelRead()
+	snap, err := appregistry.Read(readCtx, db)
 	if err != nil {
 		fmt.Fprintln(errw, "world-publish apps: "+err.Error())
 		return exitError
@@ -111,7 +114,9 @@ func runApps(opts options, in io.Reader, out, errw io.Writer, env environment) i
 		return report(errw, serr)
 	}
 
-	head, err := appregistry.Publish(ctx, db, snap.Head, next, manifest)
+	writeCtx, cancelWrite := context.WithTimeout(context.Background(), appsStepBudget)
+	defer cancelWrite()
+	head, err := appregistry.Publish(writeCtx, db, snap.Head, next, manifest)
 	if err != nil {
 		if store.IsRegistryCASConflict(err) {
 			fmt.Fprintln(errw, "world-publish apps: the app registry moved while you confirmed; nothing was written — re-run the command")
@@ -123,6 +128,10 @@ func runApps(opts options, in io.Reader, out, errw io.Writer, env environment) i
 	fmt.Fprintf(out, "%s: app registry revision %d (head %s)\n", done, next.Revision, head)
 	return exitOK
 }
+
+// appsStepBudget bounds each of runApps' two store phases (the pre-gate read and the
+// post-gate publish). A var only so TestAppsVerbSlowConfirmation can shrink it.
+var appsStepBudget = 30 * time.Second
 
 // appsPublishPhrase and appsRetirePhrase name the app, the version or the retire, and
 // the store, so a confirmation cannot be reused for another app, another version or
