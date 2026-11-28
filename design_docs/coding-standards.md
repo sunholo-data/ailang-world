@@ -35,6 +35,17 @@ proposed addition to `world/` or `host/` must answer, in its design doc: **"why 
 package?"** Kernel growth without that answer is the OS gravity well (DESIGN.md §12.4) — the
 named failure mode of this project.
 
+**Laws have an `.ail` source (D-WORLD-127, attended 2026-11-28).** A *law* is a pure decision
+over already-decoded facts: a refusal order, a state transition, admission or eligibility, a
+validation rule, a canonical key's render/parse round trip, an outcome classification. Every
+design doc that adds a law to Go must also answer: **"where is its `.ail` law?"** The answer is
+either a sketch or package path with `requires`/`ensures` plus a drift test that **parses** that
+source (the execargs/effectplan/decisionpacket pattern, not rows restated by hand), or a reason
+the pinned verifier cannot express it, with the upstream issue number. Effects, I/O, crypto
+codecs and decoders stay Go (S2). The steering measure is **law coverage** against the law
+inventory, with line share a secondary column
+([`w-ailang-semantic-share`](planned/w-ailang-semantic-share.md) §1.1, §2).
+
 
 ### S3 ledger — language split & kernel size (dated; drift must be visible)
 
@@ -48,6 +59,7 @@ kernel that grows without "why is this not a package?" answers is drift against 
 | Date | `.ail` core (world/) | `.ail` checked docs | Go host (non-test) | Go tests | Note |
 |---|---|---|---|---|---|
 | 2026-08-04 | 434 | 809 | 6,773 | 10,506 | Post M1–M3+4b/4c: the Go-host build phase, as planned. All 4 core modules carry Z3-proven contracts; the broker's decision law is authored in `.ail` (7/7 verified) and transcribed to Go under a byte-verbatim drift test — AILANG is the semantic source of truth even where Go executes. Tests exceed production 1.55:1. |
+| 2026-11-28 | 696 | 1,749 | 89,283 | 170,967 | At `ffd70358`, attended. **Drift against S3:** like-for-like `.ail` share 15.5% → 2.7%. Not in these columns: 4,096 unique package `.ail` lines (excluding the 725-line `world-core` copy), so 6.8% of all unique `.ail` vs all 91,359 non-test Go. Since 2026-09-01: 2 commits touch `world/*.ail`, 594 touch host/cmd Go. All 156 contracts verify identically on v0.41.0, v0.54.15 and v0.64.1, so the AILANG that exists is sound; new laws went to Go (operator-action lifecycle, approval laws). Realistic law-shaped Go is 3–5k lines. Row 275 / [`w-ailang-semantic-share`](planned/w-ailang-semantic-share.md); D-WORLD-126/127/128. |
 
 *Watch-item (not yet built): S3 is evaluator-scored, not machine-checked — a kernel-surface
 manifest gate (pin `world/` exports the way the required-check manifest pins contracts) would
