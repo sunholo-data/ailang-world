@@ -1171,6 +1171,8 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/confirm/{id}", d.approvalRoute(d.handleSurfaceConfirmPage))
 	mux.HandleFunc("POST /surface/confirm/{id}", d.approvalRoute(d.handleSurfaceConfirm))
 	mux.HandleFunc("GET /surface/confirm.js", d.approvalRoute(d.handleSurfaceConfirmScript))
+	mux.HandleFunc("GET /surface/operator-card.js", d.approvalRoute(operatorScript))
+	mux.HandleFunc("GET /surface/operator-card.css", d.approvalRoute(operatorStyle))
 	mux.HandleFunc("GET /surface/confirmations/{id}", d.approvalRoute(d.handleSurfaceConfirmation))
 	mux.HandleFunc("GET /surface/verb.json", d.approvalRoute(d.handleSurfaceVerb))         // row 243 V1: the bar's verbs, read-only
 	mux.HandleFunc("GET /surface/profiles.json", d.approvalRoute(d.handleSurfaceProfiles)) // row 269 Phase 1: read-only exec profiles

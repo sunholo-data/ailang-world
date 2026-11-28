@@ -8,10 +8,14 @@ import (
 
 // ProcessIdentity reads kernel birth time and excludes a reused PID.
 func ProcessIdentity(pid int) (string, bool) {
+	return darwinProcessIdentity(pid, unix.SysctlKinfoProc)
+}
+
+func darwinProcessIdentity(pid int, read func(string, ...int) (*unix.KinfoProc, error)) (string, bool) {
 	if pid <= 0 {
 		return "", false
 	}
-	row, err := unix.SysctlKinfoProc("kern.proc.pid", pid)
+	row, err := read("kern.proc.pid", pid)
 	if err != nil || int(row.Proc.P_pid) != pid {
 		return "", false
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/sunholo-data/ailang-world/host/agentrun"
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/store"
+	"github.com/sunholo-data/ailang-world/host/surfacepage"
 	"github.com/sunholo-data/ailang-world/host/verbs"
 )
 
@@ -55,14 +56,25 @@ func operatorStatusFor(row store.OperatorActionRow, now int64) operatorStatus {
 }
 
 var operatorCard = template.Must(template.New("operator action").Parse(`<!doctype html>
-<html lang="en"><meta charset="utf-8"><title>Operator action</title>
-<body><h1>{{.Status.ID}}</h1><p>{{.Status.State}}</p>{{if .Status.Reason}}<p>{{.Status.Reason}}</p>{{end}}
-{{if .Review}}<h2>Review</h2><pre>{{.Review}}</pre><h2>Task</h2><pre>{{.Task}}</pre>{{end}}
-{{if .Ceremony}}<h2>Confirm this action</h2>
-<p>Verify the exact review and task. Submit a passkey assertion or SSH signature over this action using the ceremony below.</p>
-<pre id="operator-ceremony">{{.Ceremony}}</pre>{{end}}
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Operator action</title><link rel="stylesheet" href="/surface/operator-card.css">
+<script defer src="/surface/operator-card.js"></script></head><body>
+<h1 id="operator-title" tabindex="-1">Operator action {{.Status.ID}}</h1>
+<p id="operator-state" data-state="{{.Status.State}}">{{.Status.State}}</p>
+<p id="operator-progress" role="status">Status at {{.Status.Now}}{{if .Status.Reason}} · {{.Status.Reason}}{{end}}</p>
+{{if .Review}}<h2>Review</h2><pre>{{.Review}}</pre><h2>Task</h2><pre id="operator-task">{{.Task}}</pre>{{end}}
+<section id="operator-controls" hidden aria-label="Confirm this action">
+<button id="operator-key" type="button" hidden>Confirm with passkey</button>
+<details><summary>Confirm with SSH signature</summary>
+<p>Review the action and sign the exact message with an enrolled SSH key in the ceremony's namespace.</p>
+{{if .Ceremony}}<pre id="operator-ceremony">{{.Ceremony}}</pre>{{end}}
+<label for="operator-signature">Armored signature</label><textarea id="operator-signature" rows="4"></textarea>
+<button id="operator-sign" type="button">Submit signature</button></details></section>
+<p id="operator-answer" role="status" tabindex="-1"></p>
+<button id="operator-refresh" type="button">Refresh status</button>
 {{if .Status.StatusHref}}<p><a href="{{.Status.StatusHref}}">Action status (JSON)</a></p>{{end}}
-{{if .Status.ReportHref}}<p><a href="{{.Status.ReportHref}}">Episode report</a></p>{{end}}
+<p><a id="operator-report" {{if .Status.ReportHref}}href="{{.Status.ReportHref}}"{{else}}hidden{{end}}>Episode report</a></p>
+<p><a id="operator-back" href="/surface">Back to World</a></p>
 </body></html>`))
 
 func (d *Daemon) handleOperatorRead(w http.ResponseWriter, r *http.Request, id string, statusJSON bool) {
@@ -131,4 +143,12 @@ func (d *Daemon) handleOperatorRead(w http.ResponseWriter, r *http.Request, id s
 	}
 	setSurfaceHeaders(w)
 	_ = operatorCard.Execute(w, card)
+}
+
+func operatorScript(w http.ResponseWriter, _ *http.Request, _ []string) {
+	writeSurfaceAsset(w, "text/javascript; charset=utf-8", surfacepage.OperatorScript)
+}
+
+func operatorStyle(w http.ResponseWriter, _ *http.Request, _ []string) {
+	writeSurfaceAsset(w, "text/css; charset=utf-8", surfacepage.OperatorStyle)
 }

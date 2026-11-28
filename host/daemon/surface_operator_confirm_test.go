@@ -608,13 +608,13 @@ func requireOperatorCeremony(t *testing.T, card *httptest.ResponseRecorder, s op
 }
 
 func TestOperatorConfirmProjection(t *testing.T) {
-	f := newOperatorSurface(t, nil, time.Minute)
-	raw := f.postOperator(opRequest(1))
+	f := newOperatorHTTP(t, time.Minute)
+	raw := f.do("POST", operatorPath, opJSON(opRequest(1)), nil)
 	var s operatorStatus
 	if err := json.Unmarshal(raw.Body.Bytes(), &s); err != nil || raw.Code != 200 || s.ID == "" {
 		t.Fatalf("projection request fixture: %d %s", raw.Code, raw.Body)
 	}
-	read := func(path string) *httptest.ResponseRecorder { return f.serve("GET", path, apLoopback, nil) }
+	read := func(path string) *httptest.ResponseRecorder { return f.do("GET", path, nil, nil) }
 	original := f.row(s.ID).Digest
 	f.confirmSQL("UPDATE operator_actions SET digest=zeroblob(32) WHERE id=?", s.ID)
 	f.refuse(f.evidence(), read(s.Href), 409, "Conflict")
@@ -659,23 +659,29 @@ func TestOperatorConfirmProjection(t *testing.T) {
 
 func TestOperatorConfirmationAdmissionNeighbours(t *testing.T) {
 	f := newOperatorSurface(t, nil, time.Minute)
-	checked := 0
+	var checked atomic.Int64
+	var checking atomic.Bool
+	checking.Store(true)
 	f.d.approveNow = func() int64 {
-		checked++
-		if f.d.humanMu.TryLock() {
-			f.d.humanMu.Unlock()
-			t.Error("request reached its store read outside the human writer lock")
+		if checking.Load() {
+			checked.Add(1)
+			if f.d.humanMu.TryLock() {
+				f.d.humanMu.Unlock()
+				t.Error("request reached its store read outside the human writer lock")
+			}
 		}
 		return apT0
 	}
+	f.server = httptest.NewServer(f.handler)
+	t.Cleanup(f.server.Close)
 	bad := opRequest(1)
 	bad.CatalogueGeneration = 0
 	before := f.evidence()
-	f.refuse(before, f.postOperator(bad), 400, "BadRequest")
-	if r := f.postOperator(opRequest(1)); r.Code != 200 || checked < 2 {
-		t.Fatalf("request positive control did not exercise lock: %d (%d checks)", r.Code, checked)
+	f.refuse(before, f.do("POST", operatorPath, opJSON(bad), nil), 400, "BadRequest")
+	if r := f.do("POST", operatorPath, opJSON(opRequest(1)), nil); r.Code != 200 || checked.Load() < 2 {
+		t.Fatalf("request positive control did not exercise lock: %d (%d checks)", r.Code, checked.Load())
 	}
-	f.d.approveNow = f.now.Load
+	checking.Store(false)
 	ctx := boundedTestContext(t)
 	ro, err := store.OpenCredentialsReadOnly(f.d.credentialsPath)
 	if err != nil {
@@ -686,16 +692,16 @@ func TestOperatorConfirmationAdmissionNeighbours(t *testing.T) {
 		t.Fatalf("catalogue control: %v", err)
 	}
 	f.confirmSQL("UPDATE operator_runner_state SET catalogue_generation=0")
+	bar := "/surface/verb.json?q=" + url.QueryEscape("episode start ep-2 --preset sol --launch --headless")
+	if r := f.do("GET", bar, nil, nil); r.Code != 200 || !strings.Contains(r.Body.String(), `"outcome":"terminal"`) {
+		t.Fatalf("invalid generation reached the bar review: %d %s", r.Code, r.Body)
+	}
 	if h, _, err := f.d.operatorReview(ctx, ro, "sol", apT0); !errors.Is(err, store.ErrOperatorRunner) || h.CatalogueGeneration != 0 {
 		t.Fatalf("invalid generation crossed review: %v, %v", h, err)
 	}
-	bar := "/surface/verb.json?q=" + url.QueryEscape("episode start ep-2 --preset sol --launch --headless")
-	if r := f.serve("GET", bar, apLoopback, nil); r.Code != 200 || !strings.Contains(r.Body.String(), `"outcome":"terminal"`) {
-		t.Fatalf("invalid generation reached the bar review: %d %s", r.Code, r.Body)
-	}
 	summary := func() surfacepage.HomeSummary {
 		t.Helper()
-		r := f.serve("GET", "/surface/home-summary.json", apLoopback, nil)
+		r := f.do("GET", "/surface/home-summary.json", nil, nil)
 		var out surfacepage.HomeSummary
 		if r.Code != 200 || json.Unmarshal(r.Body.Bytes(), &out) != nil || len(out.Items) != 1 || out.Items[0].Label != "Needs you" {
 			t.Fatalf("home summary: %d %s", r.Code, r.Body)
@@ -707,7 +713,7 @@ func TestOperatorConfirmationAdmissionNeighbours(t *testing.T) {
 	}
 	f.confirmSQL("UPDATE operator_actions SET expires_at='unreadable' WHERE episode_id='ep-1'")
 	before = f.evidence()
-	r := f.serve("GET", "/surface/requests.json", apLoopback, nil)
+	r := f.do("GET", "/surface/requests.json", nil, nil)
 	var requests surfacepage.RequestsJSON
 	if r.Code != 200 || json.Unmarshal(r.Body.Bytes(), &requests) != nil || requests.Unavailable != "" || requests.OperatorActionsUnavailable == "" {
 		t.Fatalf("fixture must fail only the operator pending read: %d %s", r.Code, r.Body)

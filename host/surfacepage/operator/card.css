@@ -1,0 +1,5 @@
+body { font: 1rem/1.5 system-ui, sans-serif; margin: 1rem auto; padding: 0 1rem; max-width: 48rem; overflow-wrap: anywhere; }
+pre { white-space: pre-wrap; padding: .6rem; background: #f1f3f5; color: #17202a; }
+textarea { box-sizing: border-box; width: 100%; }
+button, summary, a { min-height: 2.75rem; }
+button { margin: .25rem 0; }
