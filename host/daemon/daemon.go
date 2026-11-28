@@ -335,6 +335,9 @@ type Config struct {
 	// on that stream were measured deadlocking Run against an io.Pipe.
 	ErrorLog io.Writer
 
+	// ApprovalClock supplies Unix seconds to the approval routes. Nil uses the system clock.
+	ApprovalClock func() int64
+
 	// templateRebuildGate is a test seam (row 153 AC3.7): when non-nil, the
 	// background template rebuild awaits a receive on it before each rebuild.
 	// Production leaves it nil.
@@ -831,6 +834,10 @@ func newDaemon(ctx, phaseParent context.Context, registryBudget time.Duration, c
 		_ = s.Close()
 		return nil, &StartupError{Stage: StageConfig, Detail: err.Error()}
 	}
+	approveNow := cfg.ApprovalClock
+	if approveNow == nil {
+		approveNow = func() int64 { return time.Now().Unix() }
+	}
 	d := &Daemon{
 		follow:    follow,
 		startedAt: time.Now().Unix(),
@@ -838,7 +845,7 @@ func newDaemon(ctx, phaseParent context.Context, registryBudget time.Duration, c
 		aguiBudget: aguiRunBudget, aguiBodyBound: aguiBodyBound, aguiTick: aguiTick,
 		aguiStop: make(chan struct{}), aguiSlots: make(chan struct{}, aguiCap),
 		readDeadline: readDeadline, errLog: resolveErrorLog(cfg.ErrorLog), finishNow: func() int64 { return time.Now().Unix() },
-		approveNow:   func() int64 { return time.Now().Unix() },
+		approveNow:   approveNow,
 		scanPageSize: integrityScanPageSize, scanRowBudget: integrityScanRowBudget,
 		scanTimeBudget: integrityScanTimeBudget, workspace: workspace,
 		resolver: authority.New(authority.ReadOnlyAt(credPath)), credentialsPath: credPath,
@@ -1171,6 +1178,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/confirm/{id}", d.approvalRoute(d.handleSurfaceConfirmPage))
 	mux.HandleFunc("POST /surface/confirm/{id}", d.approvalRoute(d.handleSurfaceConfirm))
 	mux.HandleFunc("GET /surface/confirm.js", d.approvalRoute(d.handleSurfaceConfirmScript))
+	mux.HandleFunc("GET /surface/operator-card.js", d.approvalRoute(operatorScript))
 	mux.HandleFunc("GET /surface/confirmations/{id}", d.approvalRoute(d.handleSurfaceConfirmation))
 	mux.HandleFunc("GET /surface/verb.json", d.approvalRoute(d.handleSurfaceVerb))         // row 243 V1: the bar's verbs, read-only
 	mux.HandleFunc("GET /surface/profiles.json", d.approvalRoute(d.handleSurfaceProfiles)) // row 269 Phase 1: read-only exec profiles
