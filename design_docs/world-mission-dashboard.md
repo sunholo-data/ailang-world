@@ -1,18 +1,22 @@
-# World mission dashboard — iteration 446 (2026-11-27)
+# World mission dashboard — iteration 447 (2026-11-28)
 
-- **Done this fire:** **row 243 V4 S7b (key confirmation) LANDED** (PR #703, merge `26b6947f`). The judge gave **PASS 76** with 0 blocking findings. PR CI was 3/3 at attempt 1; merge CI 3/3 at attempt 1.
-  - **What changed:** `POST /surface/operator-actions/{id}/confirm` now exists behind every approval-route guard. The pending card shows the exact key ceremony. A valid, fresh proof from an enrolled key confirms the action in one transaction. An exact retry answers `already-confirmed` without spending the counter twice. Every refusal leaves the pending row and counters unchanged. Status reads the launched process's birth identity to show `launched`, `spawn-refused` or `uncertain`.
-  - **Live now:** the S6 launch is reachable from a browser for the first time. A confirmed start becomes claimable by the installed operator runner, which still owns the claim, mint, worktree and process. The HTTP handler starts nothing.
-  - **Size:** one milestone, 1,263 lines (cap 1,400).
-  - **Judge's open notes (non-blocking):** the store's `BackupEligible` drift refusal and the darwin zombie-birth check have no test; five other survivors are shadowed or near-equivalent.
-- **Rig note:** an attended `ailang-worldd service upgrade` ran in a herdr pane around 20:43–21:00 and rewrote the real `~/.ailang-world/service.json` at 20:46. The loop did not touch it.
-- **DECISIONS FOR MARK:** none. The ledger has 0 OPEN rows.
-- **Next loop work:** row 243 **V4 S8**: the app bar bindings and Chrome (design §8). Your no-terminal exit episode stays attended.
+- **Done this fire:** **row 243 V4 S8 (the first browser slice) LANDED** (PR #705, merge `85ed2234`). The judge gave **PASS 85** with 0 blocking findings. PR CI passed 3/3 at attempt 3: attempts 1–2 failed on one A2A flake, and a base control run in the same window was green. Merge CI: 3/3 at attempt 1 (run 46106233909).
+  - **What changed:** the address bar now leads an operator from a supported start command, through a read-only review, to one explicit **Request action**. That opens a card with **Confirm with passkey** or **Confirm with SSH signature**. A lost reply offers **Reconnect** with the same frozen request, and only exact typed links navigate.
+  - **Proof:** a live-Chrome test runs the QUICKSTART walkthrough verbatim at phone size (390 × 844). It ends with one start, one worktree, one credential and one confined fake launch.
+  - **What the first real browser run found:** six defects the planner's and executor's sandboxes could not see, fixed before landing:
+    - the card stylesheet was blocked by the page's CSP, so it is now inlined and the CSP is unchanged;
+    - focus jumped off Reconnect after a reload;
+    - four were in the test harness.
+  - **Size:** 1,268 lines across two milestones (cap 1,400).
+  - **Judge's open notes (non-blocking):** a delayed auto-click on reload would not be caught by the walkthrough (the product has no such code; this is a test gap). Some Chrome-only DOM wiring is untested.
+- **DECISIONS FOR MARK:** **D-WORLD-122** — which preset file is your approved Sol preset (`V4_PRESET_FILE`)? **A:** name the path, and the loop runs the read-only E5 probe (counts and mode only). **B:** none yet; S9–S10 continue on fakes and S11's real-preset step waits. Default B.
+- **Next loop work:** row 243 **V4 S9**: verified private finish entry and auth readiness (design §8). Your no-terminal exit episode stays attended.
 - **Bar:** 1.0 clauses 1–7 MET; no UNMET clause. Goal unmoved.
 - **Routing this fire:**
-  - Planner: `codex:gpt-6.2-sol`, 625k tokens.
-  - Executor: `codex:gpt-6.2-sol`, 74k + 74k tokens. Round 1 stopped on a quoting defect in the plan's own apply block; round 2 applied it.
-  - Judge: Agent `sonnet` (a different vendor), 84k tokens.
+  - Planner: `codex:gpt-6.2-sol`, 728k tokens.
+  - Executor: `codex:gpt-6.2-sol`, 49k + 90k + 45k tokens across three rounds.
+  - Judge: Agent `sonnet` (a different vendor), 124k tokens.
   - No designer. Metered spend: $0.00.
-- **Open PRs:** none from the loop.
+- **Rig note:** a Chrome left over from a 16-day-old `TestPasskeyPageRecordsTheFixtures` run is still alive. It is not the loop's, so the loop did not kill it.
+- **Open PRs:** none from the loop after the record merges.
 - **Bookkeeping thread:** #635 (next rotation Monday 2026-11-30 07:00 local).

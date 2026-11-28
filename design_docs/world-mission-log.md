@@ -9,78 +9,6 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 427 — 2026-11-23 — no pick: rule (d) block report, the eighteenth in a row; inputs identical to 423's–426's (driver snapshot `1ac80c01…` at 04:16, 08:16, 12:17, 16:16 and 20:16); the fire is undegraded (codex `state=ok`, 39.0% used vs 42.9% allowed), so Gate 5 records the idle fingerprint and row 263's count stays 14; dev green at `ef3d1476` [ADMIN]
-
-**Kind:** no-pick iteration. Nothing is loop-routable without an answer from Mark, so standing rule (d) applies. The deliverable is this record: the STATUS stamp (424 moved to the archive), the Current route line, row 263's iteration-427 note, this entry, the regenerated index, the dashboard and `design_docs/verification/world-iter427/gate1-2-readings.txt`. An independent judge reviews the commit before merge. Gate 5 records the idle fingerprint (undegraded fire, no lane park) and does not rotate (#635 is this week's thread).
-
-**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at 2 of 12 sprints; every remaining V4 sprint waits on D-WORLD-119.
-
-**Pick and why:** none. Clause map at `ef3d1476`: clauses 1–7 MET, so no UNMET clause and no critical-path row.
-- **Since iteration 426's Gate-1 base `062782fd`:** 3 commits (`0b6656ab`, `88c2343d`, merge `ef3d1476` of #637), all iteration 426 record commits; 0 of 6 changed files outside `design_docs/`; 0 `| D-WORLD` lines changed. Local `dev` is 11 behind `origin/dev` and 0 ahead; the record is written in a worktree on `origin/dev`.
-- **Ledger:** `--check` valid (rc 0), 107 rows; `--open` → D-WORLD-119, D-WORLD-120.
-- **Row 150:** subjects in range matching `row ?150|A1|marketing` → 0; control `record|iteration 42` → 3.
-- **Row 151:** subjects since 2026-10-01 matching `N2d|N4a` → 1 raw (423's record subject quoting the predicate), non-record → 0 (control non-record `N2c` 1). Non-test `.go` files naming `/surface/blob` → 0 (control `/surface/stack.json` 5); `/surface/file.json` → 1 (unchanged). Row 151 stays behind row 188 N2d and N4a.
-- **Rows 217–219** attended-track; **258, 259, 261, 265, 266** under rule (d). No external predicate is routable; row 263 waits on the fleet, and no `harness-resolved` reply arrived (0 unread).
-
-**Gate 0:**
-- Stamped first. Kill switch armed (`mission-world.disabled` absent). `gh` is `sunholo-voight-kampff`. Billing CLEAN. The env was read by name, then specific non-secret values.
-- Directives: 0 allowlisted on #635 (4 comments, all the fleet account's reports; the watermark file is a legacy bare timestamp, read from 2026-08-17). Nothing to `--mark`.
-- Step 6a (prescribed form): **rc 0**. #635 4 comments, #574 44, all from the fleet account, 0 crash and 0 transcript notices; control 107:4 ok. `mission-574-last-seen` is absent, so the read was single-watermark (DEGRADED in the script's own words), as at 425 and 426.
-- Weekly external-issue sweep: not due (424 ran it for this week).
-- Open PRs: #617 only (`ui/live-branch-heads`, untouched since 2026-11-19) — attended UI work, left alone.
-- Inbox: 0 unread on `mission-world`.
-- Skill drift: 28 files compared (`SKILL.md` and every `resources/*.md`, at both the resolved symlink target and the pin `$MISSION_DRIVER_ROOT`) against ailang `origin/dev`, 0 `DRIFT` lines.
-- Dev CI at `ef3d1476`: 3/3 check-runs success.
-
-**Gate 1:** Gate-1 base `ef3d1476f5242bf72f1f19ea8687d8cf95f556d6@2026-11-23T19:17:43Z`, recorded from the World clone with the pin's `mission-base.sh` (the World clone has no `tools/launchd/`).
-
-**Died-mid-flight:** none. 0 worktrees and 0 remote branches name `iter427` (control `iter426` 1 each). The 16:16 fire (426) ended `COMPLETED rc=0` at 16:48, and no fire ran between it and this one. The main checkout's five untracked paths are the same attended residue as at 426.
-
-**Row 263 — this fire is undegraded, so the idle record runs:** codex window `used=39.0% allowed=42.9%` (`state=ok`; headroom 3.9 points against the 2.0-point start margin). 426 projected about 42.9 for this fire; it read 42.9. The driver's preflight for this fire carries 0 `LANE DEGRADED` and 0 `unusable` lines (control: 1 `LANE DEGRADED` at 16:16:33); `MISSION_ROUTING_NOTE` is empty; every role resolved to its configured lane (designer and controller `claude:claude-opus-5-5`, planner and executor `codex:gpt-6.2-sol`, evaluator `sonnet`). The ration gate lists `anthropic` among blocked-or-unknown buckets because its quota is UNREADABLE; the driver probed the lanes instead of refusing them, and the probes passed — the same reading 422 treated as undegraded. No occurrence filed; count stays **14**. This is the second undegraded no-pick fire since the row was filed (422 the first).
-
-**Designer / planner / executor:** not spawned. A no-pick iteration has no doc, plan or code, so the routing table sends them nothing. No spawn was attempted, so none failed.
-
-**Independent evaluator (record):** REQUIRED. Agent `sonnet` (`MISSION_EVALUATOR_RESOLVED=sonnet`, `MISSION_EVALUATOR_PATH=agent-tool`), fresh foreground read-only context, judging this record commit before merge. Result in the follow-through below.
-
-**Routing evidence:** base=ef3d1476f5242bf72f1f19ea8687d8cf95f556d6@2026-11-23T19:17:43Z (Gate 1).
-- Controller `claude:claude-opus-5-5` (tok: not reported to the controller). Designer `claude:claude-opus-5-5`, planner `codex:gpt-6.2-sol`, executor `codex:gpt-6.2-sol`: not spawned (0 tok).
-- Evaluator: Agent `sonnet` (tokens in the follow-through). Generator ≠ judge: opus controller, sonnet judge.
-- Quorum: none (no doc). Metered $0.
-
-**Ruled out:**
-- Picking 150, 151, 217–219, 243, 258, 259, 261, 265 or 266: measured reasons above.
-- Filing a row-263 occurrence: the bar did not apply this fire (no failed probe, no fallback).
-- Reading the `/surface/file.json` count as a change: an unescaped `file.json` regex also matches `cmd/ailang-worldd/doctor.go`, at both `062782fd` and `ef3d1476`; the fixed-string count is 1, as at 424–426.
-- Rotating the log: 38 live entries with this one, below ~40; index regenerated with `--index-only`.
-
-**Retro:**
-- One instrument slip, caught before recording: the first readings script grepped `file.json` as a regex and printed 2. The same regex at 426's base also printed 2, so it was the pattern, not the code; the readings file now uses fixed strings for all three route greps.
-- Harness share (2b): **0/20** over entries 408–427 (20 rows, 20 tagged). Bar-moving landings (2c): no UNMET clause, so the drift alarm does not apply.
-- No skill edit.
-
-**Next:** with D-WORLD-119 = A or B, row 243 V4 sprint 3 planner (schema 10 `operator_actions`, receipts and CAS). Unanswered, the next fire on unchanged inputs exits at the idle pre-check (the record expires after 24 h and forces a full fire). A dev red outranks either way.
-
-**Gate 5 bookkeeping:** rotation not due (#635 is this week's thread; next Monday 2026-11-30 07:00 local). Idle record: RUN after the reports (undegraded fire, no lane park).
-
-**Judge follow-through (iteration 427):** Agent `sonnet` (`MISSION_EVALUATOR_PATH=agent-tool`), fresh foreground read-only context, judged `30536c46`. Verdict **PASS 94/100, zero blocking** (correctness 38/40, integrity 24/25, traceability 19/20, completeness 13/15). It used 47,613 subagent tokens, 8 tool uses and 38 s. Generator ≠ judge: opus controller, sonnet judge. The directive gave it the files and eleven checks, not the controller's numbers.
-- **What it re-measured:** 6 files, all `design_docs/`; charter 6361 lines before and after; three stamps 427/426/425; 424's stamp once in the archive, byte-identical to the parent's line (`grep -Fx`), 423 still there; `--check` 107 rows, `--open` 119 and 120, 0 `| D-WORLD` lines changed; range 3 commits, 0 files outside `design_docs/`; every 2026-11-23 snapshot line carries the full `1ac80c01…aaf` with `head=95a8775`; this fire's codex line `state=ok used=39.0% allowed=42.9% start_margin=2.0pp`, 0 `LANE DEGRADED` and 0 `unusable` lines, roles as configured; 422's entry treats the same UNREADABLE anthropic reading as undegraded; ticket `slots_lost` 14 with `last_seen` at 426's filing; dev CI 3/3 at `ef3d1476`; #635 4 comments; `/surface/blob` 0, control 5; the index diff is one row; no addresses, closing keywords or secrets.
-- **Non-blocking notes, checked by the controller:**
-  1. It found a sixth identical snapshot at 00:17 that the stamp does not list. That fire (`world-1795389471-77635`) ended `PAUSED-NO-CAPACITY at=fired rc=1` at 00:18:22 and produced no iteration; the stamp lists the five iteration fires. No edit.
-  2. It could not verify the Gate-5 `--record`, which runs after the reports and outside a read-only judge's reach. Its rc is in the report. No edit.
-  3. The step 6a read is single-watermark (`mission-574-last-seen` absent), as the entry already says. No edit.
-- **What it did not check:** skill drift, the open-PR line, the died-mid-flight traces, the kill switch and billing tripwire, and the full row-263 note text.
-
-**Gate 3b (iteration 427):** record PR #638, head `bd79f488`, run 45248255013. Attempt 1 went red on two jobs, one known flake in each, with no code in the diff (6 `design_docs/` files; the same code at `ef3d1476` is 3/3 green on dev):
-- `go race gate`: `TestFinishConfirmOnSurfaceDispatchesTheNamedDecision`, "1 decisions (1 named sha256:bb84936e…)". This is row 266's fourth instance.
-- `go host build + test gate`: `TestMarketingCaptureFakeChromeSixShots/scheme` hit its fixed 120 s deadline (`rc=-1`) after both six-shot passes printed 6/6. This is a further row 247 instance, folded into 258.
-- Each job had exactly one `FAIL` package line. The `WARNING: DATA RACE` lines in both come from the intentional `racecontrol` positive control.
-
-`gh run rerun --failed` gave attempt 2: 3/3 success. Both rows got an instance note. Neither is routable (rule (d)). Evidence: `design_docs/verification/world-iter427/ci-flakes.txt`.
-
-**Judge follow-through (Gate 3b delta, iteration 427):** fresh Agent `sonnet`, foreground, read-only, judged `d2bb6028`. Verdict **PASS 86/100, zero blocking** (correctness 32/40, integrity 25/25, traceability 18/20, completeness 11/15). It used 35,204 subagent tokens, 6 tool uses and 36 s. It re-derived the six-file `design_docs/`-only diff, `ef3d1476` 3/3 green, each job's single `--- FAIL` and single package `FAIL`, the racecontrol origin of every `DATA RACE` line, attempt 2 3/3 success, and charter integrity (6361 lines, 107 rows, only rows 247 and 266 appended).
-- **Non-blocking note 1, reproduced and fixed:** the controller wrote "5 of 6 shots done" for the `scheme` deadline. The stderr at `capture_test.go:458` shows `progress: 1/6`…`6/6` twice, so both passes finished before the 120 s deadline fired. Row 247's note and the Gate 3b paragraph are corrected in the next commit.
-- **Not checked:** row 266's earlier instances against their original runs; attempt-2 job logs (conclusions only).
-
 ## 428 — 2026-11-24 — row 243 V4 sprint 3 LANDED (PR #643, merge `e83d1717`): credentials schema 10 (`operator_actions`, `operator_runner_state`, `operator_action_steps`, finish shape included) and the unregistered operator-action store law — admission/dedup/cap/expiry/prune, confirm CAS consuming the `host/authority` proof, claim CAS; 1,396 lines; judge PASS 86; unblocked by attended D-WORLD-119 = A and D-WORLD-120 = A [PRODUCT]
 
 **Pick:** row 243 V4 sprint 3, the Next named in records 409–427 for the case "D-WORLD-119 = A or B".
@@ -1405,3 +1333,81 @@ The planner must re-measure `world-iter441/plan-scratch/M4.patch` on `a50b0d72` 
 - Rotation is not due (#635 opened 2026-11-23; next 2026-11-30 07:00 local). The weekly external-issue sweep is not due.
 - Harness share over the last 20 headlines: 1/20 HARNESS (row 267, iteration 443), 20/20 tagged.
 - The last 3 landings move no clause, and no clause is UNMET, so there is no DRIFT line.
+
+## 447 — 2026-11-28 — row 243 V4 sprint 8 LANDED (PR #705, merge `85ed2234`): THE FIRST BROWSER SLICE — the standalone operator-action card (key gestures, read-only status reconnect, typed links) and the app bar bindings (read-only Enter review, explicit request, frozen-request reconnect, link allowlist), with a live-Chrome fake Sol start at 390 × 844 that runs the QUICKSTART walkthrough verbatim; the walkthrough's first real run found six defects the sandboxes could not see, fixed in rounds 2–3; 1,268 lines; judge sonnet PASS 85 [PRODUCT]
+
+**Pick:** row 243 V4 S8, the record-446 Next.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET.
+- **Ledger:** valid, 108 rows, 0 OPEN at pick; this record adds D-WORLD-122 (OPEN).
+- **Design:** V4 r1 reviewed (quorum reader rc 0, r2 `…T10-24-51Z` PROCEED 3/3, `absent_reviewers` `[]`).
+- **S8's design gates (§8 "119 A/B, S7, E5 and #604 sequencing"), re-measured:** 119 = A; S7/S7b landed; PR #604 MERGED 2026-11-18 (`65108353`), so sequencing is resolved against post-merge dev; **E5 needs Mark's chosen preset and has never run.** The loop cannot choose it, so S8 ran on a FAKE Sol preset with E5's loop-runnable half (W25/W32) in planning, and D-WORLD-122 asks Mark for the preset before S11.
+- **Re-measured at `0e32a8d7`:** `app.js` had 0 `operator-actions` references; no S8 plan, branch, PR or worktree.
+
+**Gate 0:** stamped first; `gh` = `sunholo-voight-kampff`; billing CLEAN; kill switch absent.
+- 0 allowlisted directives on #635 (33 comments; LEGACY watermark) and none since the mission-scoped watermark.
+- Step 6a rc 0: 0 crash notices (control 107:4). The 3 transcript-scan notices in the window are the three iteration 446 reported (fires `world-1795730668-41608`, `world-1795769251-75944`, `world-1795786215-30397`); none new.
+- `mission-world` inbox: nothing addressed to this mission. Weekly sweep not due (424 ran it); no rotation (#635 created after Monday's boundary, 33 comments).
+
+**Gate 1:** local `dev` = `origin/dev` = `0e32a8d7`. Skill drift: the pin matched origin on all 14 files; the symlinked copy differed on `resources/gate-5-retro.md` only (one line, the idle-fingerprint input list) — Gate 5 followed origin. Dev CI 3/3 green. No open own-account PRs.
+
+**Routing evidence:**
+- Resolver followed verbatim: planner `recipe codex:gpt-6.2-sol declared:planner-lane-default-pin` (`derive-planner-lane.sh` the same); executor `recipe codex:gpt-6.2-sol declared:provider-pin`; evaluator `agent-tool sonnet declared:alias-pin`; no designer. Codex probe rc 0; codex 14.0% used / 25.9% allowed.
+- The standing request asked for every role through the Agent tool "exactly as the routing table specifies". The table returned `recipe` for the planner and executor, so they ran as `codex exec` recipes; the REQUIRED judge ran on the Agent tool (`sonnet`, background, polled in-turn). No role failed to spawn.
+- Token use: controller `claude-opus-5-5` (session; tok: not reported) · planner `codex:gpt-6.2-sol` 727,578 · executor `codex:gpt-6.2-sol` 48,945 (r1) + 90,445 (r2) + 44,953 (r3) · evaluator Agent `sonnet` 124,233.
+- Judge independence: cross-vendor. Metered: $0.00.
+- Base `0e32a8d7de0bb524678a3c443400cf05d6ec47eb` (Gate 1 and Gate 3 snap agree). Sprint and base worktrees via `mission-worktree.sh` (7,485 files each = `git ls-tree`, clean); the judge's detached worktree via a backgrounded plain add (7,495 files, clean).
+
+**Baseline** (controller, pristine `0e32a8d7`, outside the sandbox, isolated `AILANG_STATE_DIR`, while the planner ran): store/authority/agentrun plain+race, verifygate and verbs 0 fails; broker 4; cmd 14; daemon-plain 14; daemon-race 10.
+
+**Planner** (~77 min, rc 0). Plan + JSON `cc16e985`, outcome A: M1 510, M1+M2 1,269 (cap 1,400).
+- It **executed its own §7 apply block verbatim** against a fresh archive (`APPLY_ACCEPT_SNAPSHOT_OK M1 fast` / `M2 fast`, six `ROUNDTRIP_OK`), the iteration-446 carry.
+- Planner-reported (not first-party): census 1 → 1 → 1 for the four operator CAS/judge entry points; 171 diff mutants (145 named kills, 26 outside-only); E15/E19 killed; every route and Chrome result UNINFORMATIVE UNDER SANDBOX.
+- Controller round trip on a fresh `git archive 0e32a8d7`: `diff -r` rc 0 for cmd, host and docs at both stages.
+
+**Executor round 1** (~6 min): the §7 block verbatim with `TOOLS=$STATE/exec-tools` (the block's own parameter, so planner scratch stayed untouched: 17/17 hashes unchanged). `ACCEPT_OK M1 fast`, `ACCEPT_OK M2 fast`; snapshots 11/0/11 and 16/0/16, all `cmp`-equal to the planner's stages.
+
+**Commit gate:** M1 `ACCEPT_OK M1 outside` → **M1 `86f40c81`** (510). M2 attempt 1 REFUSED: `TestOperatorStartWalkthroughInChrome` `operator_browser_chrome_test.go:193: EOF`, `driver: signal: killed` at 120 s, reproduced alone on a quiet rig. The existing Chrome controls passed at base and on the M2 tree, so the harness and page load were fine.
+
+**Diagnosis (controller, scratch copy, outside the sandbox):** the walkthrough had never run anywhere — both sandboxes deny Chrome.
+- **F1 (harness):** the test set `HOME` to an empty temp dir BEFORE starting Chrome; CDP `Page.navigate` then never returned (traced), while the server answered `/surface` in 1.5 ms.
+- **F2 (product):** after a lost POST and reload the restore worked (Reconnect, task read-only, request in sessionStorage), but `boot()`'s last line (`app.js:4022`) took focus to `#root`.
+- **F3 (product):** the card's external stylesheet was blocked by the inherited `surfaceCSP` (`style-src 'unsafe-inline'` only; violation recorded); the card was 1,025 px wide at 390 px. Fix as the app shell does: inline one `<style>`; the CSS route removed; `surfaceCSP` unchanged.
+- **F4/F5 (harness):** two card checks wanted `scrollWidth===390`; a vertical scrollbar gives 375 with nothing overflowing → `<=innerWidth`.
+- **F6 (harness):** the driver JSON-stringifies a Promise to `{}`; read the fetch result in two steps.
+- With F1–F6 the walkthrough PASSED in scratch (15.2 s).
+
+**Executor rounds 2–3:** round 2 applied F1–F6 as specified (the controller's diff of the snapshot vs the plan's M2: exactly those six, 60 lines, 5 files). **The controller's own F2 spec was wrong** — `#verb` is absent on an ordinary load, so `$('verb').contains` would throw at the end of every `boot()` — caught on review; round 3 changed that one token to `$('verb')?.contains`.
+
+**M2 final gate:** `ACCEPT_OK M2 outside`, `CHROME operator-chrome RAN=1 SKIP=0`, `CHROME chrome-controls RAN=2 SKIP=0`; `commit-guards.sh` refused on two verifygate names (`TestFixtureDiscrimination`, `TestMissionConfigDefaultFlowIntegration`; broker no new fails). Verifygate imports no other World package and S8 touches no script; alone, head PASS (57 s) and base FAIL 3 (80 s) — load. Committed on the outside receipts (the 445/446 precedent): **M2 `8e341d9b`**, NUMSTAT 1,268.
+
+**Controller sweep** (fresh archive of `8e341d9b`; whole-package record legs skipped for time, left to CI and `commit-guards`): every cheap leg and inventory OK, verify_ail OK; `accept` rc 1 only because Chrome did not START within the driver's 30 s wait (load ≈4.8), while `accept-race` and the 1777 leg (same walkthrough) passed. That failed start orphaned a Chrome, which the controller identified by profile path and stopped. E15/E19 killed named and whole; the rest of `whole-mutants.sh` stopped (each id runs whole `host/daemon`, ~19 min).
+
+**Judge** (Agent `sonnet`, ~54 min): **PASS 85** (27/22/18/9/9), 0 blocking.
+- Reachability sound: no page path creates or confirms an action without an explicit click; the census adds no caller; every new navigation passes the anchored allowlist.
+- 24 of its own mutants killed (JS only by executing it), 9 survived; 6/6 planner outside-only ids killed on the walkthrough; E15/E19 and J02/J06/J10/J18/J19 killed on the real listener (J22's original edit no longer compiles; variant J22b killed). Chrome PASS twice, 0 SKIP.
+- Survivors / notes (non-blocking): a DELAYED auto-click on reload or on the card (C-09/C-10/C-10b) survives the walkthrough — no such product code, a test gap; Chrome-only DOM wiring (C-01 liveness argument, C-02 draft body); the card's `state !== 'requested'` guard (S8-14) is defence in depth; an outstanding draft overrides a freshly reviewed panel.
+
+**Gate 3b:** PR #705 on `8e341d9b`:
+- Attempts 1 and 2 RED on `host/daemon TestA2AInvokeDeadlineClosesSocket` only (`invoke_e2e_test.go:412`); it passed 3/3 alone locally.
+- No S8 path: the only daemon production change is a route and an approval-clock seam used only by `surface_approve.go`, and S8's daemon tests sort after the A2A file.
+- **CI negative control:** `gh workflow run CI --ref dev` at base `0e32a8d7` and head attempt 3, same window — both host jobs green. Base 2/2, head 1/3; no other failure in the last 40 runs. Recorded as a flake, instances named below.
+- 3/3 at attempt 3 → MERGEABLE/CLEAN, `origin/dev` unmoved → merged `--match-head-commit` → **`85ed2234`**. Merge CI: 3/3 at attempt 1 (run 46106233909) → **LANDED**.
+
+**Found:**
+- **A browser gate that only runs outside the sandbox is first executed at the commit gate, so a plan can be internally consistent and still fail on first contact.** The planner's 171-mutant ledger, its own verbatim §7 run and the executor's acceptance were all green, while the walkthrough held three product defects (focus, CSP-blocked CSS, overflow) and three harness defects. Process fix below.
+- **The shared CDP driver leaks Chrome when its 30 s start wait expires** (it never learns the PID); a 16-day-old orphan of `TestPasskeyPageRecordsTheFixtures` is the same class. Not ours to kill; reported.
+- `TestA2AInvokeDeadlineClosesSocket` flake instances: 445 (local whole-package, load), 447 CI attempts 1 and 2 at one SHA. Logged per D-WORLD-109 (2); one more instance makes it a row under 258.
+- The judge's own daemon `-race` selector saw `TestWorkspaceProtectedPolicyRequests` fail once (passes alone 4.6 s; no S8 code on its path).
+
+**Progress:** 1.0: clauses 1–7 MET; goal unmoved. Row 243 V4 now has its first browser slice: from the address bar, through review, request and key approval on the card, to one confined fake launch observed in a real Chrome. S9 (verified private F1 entry and auth readiness) is next. D-WORLD-122 (Mark's Sol preset) is owed before S11.
+
+**Ruled out:**
+- Attributing the A2A CI red to S8: no production path; base green twice in the same window; head green at attempt 3.
+- Attributing the verifygate commit-guard fails to S8: no dependency, base fails alone.
+- Landing M1 alone after M2's first red: M1's card page had no Chrome coverage of its own, and the design gates every page change on live Chrome.
+- A CSP change for the card stylesheet: inlining matches the app shell and leaves `surfaceCSP` unchanged.
+
+**Next:** row 243 **V4 S9** — verified private F1 entry and auth readiness, frozen manifest, sandboxed checks and local commit journal (design §8, 1,215 calibrated; waits on 120 = A ✓, E2 read-level PASS (W33), S8 ✓). Carry:
+- judge-447 C-09/C-10/C-10b (delayed auto-click) and C-01/C-02;
+- the process fix (the controller runs the plan's outside-only browser/listener legs on the planner's stage BEFORE the executor);
+- D-WORLD-122 before S11.
