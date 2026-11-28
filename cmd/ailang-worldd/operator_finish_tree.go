@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -65,12 +66,16 @@ func operatorFinishRead(dir, name string, maxBytes int64) ([]byte, os.FileMode, 
 	}
 	file := os.NewFile(uintptr(fd), name)
 	defer file.Close()
+	return readOperatorFinishFile(file, filepath.Join(dir, name), maxBytes)
+}
+
+func readOperatorFinishFile(file *os.File, path string, maxBytes int64) ([]byte, os.FileMode, error) {
 	before, err := file.Stat()
 	if err != nil || !before.Mode().IsRegular() || before.Size() > maxBytes {
 		return nil, 0, errOperatorFinishFence
 	}
 	data, err := io.ReadAll(io.LimitReader(file, maxBytes+1))
-	after, pathErr := os.Lstat(filepath.Join(dir, name))
+	after, pathErr := os.Lstat(path)
 	if err != nil || pathErr != nil || int64(len(data)) != before.Size() || int64(len(data)) > maxBytes ||
 		!os.SameFile(before, after) || before.Mode() != after.Mode() ||
 		before.Size() != after.Size() || before.ModTime() != after.ModTime() {
@@ -151,6 +156,10 @@ func (g operatorFinishGit) config(ctx context.Context, start *store.EpisodeStart
 	if remote != 1 {
 		return "", errOperatorFinishFence
 	}
+	current, _, err := operatorFinishRead(g.common, "config", 64<<10)
+	if err != nil || !bytes.Equal(current, data) {
+		return "", errOperatorFinishFence
+	}
 	return finishSHA(data), nil
 }
 
@@ -194,25 +203,18 @@ func (g operatorFinishGit) snapshot(ctx context.Context, start *store.EpisodeSta
 	if err != nil {
 		return tree, nil, errOperatorFinishFence
 	}
-	names := strings.Split(strings.TrimSuffix(tracked, "\x00"), "\x00")
+	var names []string
+	if tracked != "" {
+		names = strings.Split(strings.TrimSuffix(tracked, "\x00"), "\x00")
+	}
 	root, err := os.OpenRoot(g.dir)
 	if err != nil {
 		return tree, nil, errOperatorFinishFence
 	}
 	defer root.Close()
-	visited := 0
-	err = fs.WalkDir(root.FS(), ".", func(path string, d fs.DirEntry, err error) error {
-		visited++
-		if err != nil || ctx.Err() != nil || visited > 16384 {
-			return errOperatorFinishFence
-		}
-		if path != ".git" && !d.IsDir() && !trackedPaths[path] {
-			names = append(names, path)
-		}
-		return nil
-	})
+	names, err = operatorFinishUntracked(ctx, root.FS(), trackedPaths, names)
 	if err != nil {
-		return tree, nil, errOperatorFinishFence
+		return tree, nil, err
 	}
 	slices.Sort(names)
 	names = slices.Compact(names)
@@ -249,6 +251,24 @@ func (g operatorFinishGit) snapshot(ctx context.Context, start *store.EpisodeSta
 		budget -= int64(len(b))
 	}
 	return tree, contents, nil
+}
+
+func operatorFinishUntracked(ctx context.Context, root fs.FS, trackedPaths map[string]bool, names []string) ([]string, error) {
+	visited := 0
+	err := fs.WalkDir(root, ".", func(path string, d fs.DirEntry, err error) error {
+		visited++
+		if err != nil || ctx.Err() != nil || visited > 16384 {
+			return errOperatorFinishFence
+		}
+		if path != ".git" && !d.IsDir() && !trackedPaths[path] {
+			names = append(names, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, errOperatorFinishFence
+	}
+	return names, nil
 }
 
 func (g operatorFinishGit) stage(ctx context.Context, spec store.OperatorLocalCommit, contents [][]byte, env []string) (string, error) {
@@ -288,7 +308,7 @@ func (g operatorFinishGit) planTree(ctx context.Context, spool string, spec stor
 	return g.stage(ctx, spec, contents, env)
 }
 
-func (g operatorFinishGit) inspectCommit(ctx context.Context, spec store.OperatorLocalCommit, tree string) (string, error) {
+func (g operatorFinishGit) inspectCommit(ctx context.Context, spec store.OperatorLocalCommit, tree, agent string) (string, error) {
 	branch, err := g.git(ctx, nil, nil, "symbolic-ref", "HEAD")
 	if err != nil || strings.TrimSpace(branch) != spec.Snapshot.Branch {
 		return "", errOperatorFinishFence
@@ -299,7 +319,7 @@ func (g operatorFinishGit) inspectCommit(ctx context.Context, spec store.Operato
 		return "", errOperatorFinishFence
 	}
 	raw, err := g.git(ctx, nil, nil, "cat-file", "commit", head)
-	if err != nil || !operatorFinishCommitMatches(raw, spec, tree) {
+	if err != nil || !operatorFinishCommitMatches(raw, spec, tree, agent) {
 		return "", errOperatorFinishFence
 	}
 	index, err := g.git(ctx, nil, nil, "diff", "--cached", "--name-only", "--no-ext-diff", "--no-textconv", head, "--")
@@ -309,11 +329,15 @@ func (g operatorFinishGit) inspectCommit(ctx context.Context, spec store.Operato
 	return head, nil
 }
 
-func operatorFinishCommitMatches(raw string, spec store.OperatorLocalCommit, tree string) bool {
+func operatorFinishCommitMatches(raw string, spec store.OperatorLocalCommit, tree, agent string) bool {
 	header, message, found := strings.Cut(raw, "\n\n")
 	lines := strings.Split(header, "\n")
 	if !found || len(lines) != 4 || lines[0] != "tree "+tree ||
 		lines[1] != "parent "+spec.Snapshot.Head || message != spec.Message {
+		return false
+	}
+	author, authorTime, ok := strings.Cut(lines[2], "> ")
+	if !ok || author+">" != "author "+agent+" via AILANG World <ailang-world@invalid>" || len(strings.Fields(authorTime)) != 2 {
 		return false
 	}
 	committer, timeFields, ok := strings.Cut(lines[3], "> ")

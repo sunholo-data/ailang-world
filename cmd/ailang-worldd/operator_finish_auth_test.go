@@ -156,3 +156,41 @@ func TestOperatorFinishAuthInstall(t *testing.T) {
 		t.Fatalf("status %d: %s", rc, out)
 	}
 }
+
+func TestOperatorFinishToolPins(t *testing.T) {
+	f := operatorService(t)
+	f.config.FinishRemotes = []string{fixtureFinishRemote}
+	tools := f.config.ToolDirs[0]
+	trace := filepath.Join(f.home, "unexpected-readiness")
+	for _, name := range []string{"gh", "git"} {
+		writeFinishTestTool(t, &f.config, tools, name, "exit 17\n")
+	}
+	if err := f.env.checkRunnerConfig(f.config); err != nil {
+		t.Fatalf("pinned configuration: %v", err)
+	}
+	for _, path := range []string{filepath.Join(tools, "git"), f.env.paths.Binary, filepath.Join(tools, "gh")} {
+		b, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte("#!/bin/sh\ntouch "+shellQuote(trace)+"\nexit 1\n"), 0700); err != nil {
+			t.Fatal(err)
+		}
+		if filepath.Base(path) == "gh" {
+			if err := f.env.checkRunnerConfig(f.config); err != nil {
+				t.Fatalf("finish-only gh must leave start available: %v", err)
+			}
+			if err := prepareOperatorFinish(boundedTestContext(t), f.config, fixtureFinishRemote); !errors.Is(err, operatorGitHubAuth(2)) {
+				t.Fatalf("changed readiness executable was accepted: %v", err)
+			}
+		} else if err := f.env.checkRunnerConfig(f.config); err == nil || !strings.Contains(err.Error(), "executable changed") {
+			t.Fatalf("changed shared executable %s: %v", path, err)
+		}
+		if err := os.WriteFile(path, b, 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := os.Lstat(trace); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("a changed tool executed or sentinel could not be read: %v", err)
+	}
+}

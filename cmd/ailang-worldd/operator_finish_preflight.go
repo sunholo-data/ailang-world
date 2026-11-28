@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"errors"
 
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/authority"
 	"github.com/sunholo-data/ailang-world/host/store"
 )
+
+var errOperatorFinishSurface = errors.New("finish prep requires surface confirmation")
 
 // operatorFinishPrep binds a current durable claim to independently resolved
 // inputs. Only the proof returned by the runner's recheck can seal it.
@@ -20,8 +23,11 @@ type operatorFinishPrep struct {
 
 func verifyOperatorFinishPrep(ctx context.Context, ro *store.Credentials, frozen approval.OperatorAction, now int64,
 	cas store.OperatorCAS, owner string) (operatorFinishPrep, error) {
-	if frozen.Kind != "finish" || !frozen.Options.ConfirmOnSurface || frozen.ID != cas.ID {
+	if frozen.Kind != "finish" || frozen.ID != cas.ID {
 		return operatorFinishPrep{}, approval.ErrNotVerified
+	}
+	if !frozen.Options.ConfirmOnSurface {
+		return operatorFinishPrep{}, errOperatorFinishSurface
 	}
 	row, err := ro.OperatorAction(ctx, cas.ID, now)
 	if err != nil {
