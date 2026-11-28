@@ -113,7 +113,7 @@ manifest object the registry entry names, and the start review shows `docparse-c
 |---|---|---|
 | **M1b-1** | `host/appregistry`: revision codec, `BuildNext` (publish, retire), `Publish` with parent/revision/CAS checks, and `ReadSnapshot`, reusing `transitionreg`'s ObjectStore interface | ~400 lines with tests |
 | **M1b-2** | **BUILT attended 2026-11-28.** `world-publish apps`: the verb, the attended fence and the typed phrase, transition-ID existence checks, and the same refusal table as `transitions` (`R-STORE`, automation env, no TTY, wrong phrase, CAS race) | ~350 lines with tests |
-| **M1b-3** | `app list|show` and `/surface/apps.json` read the registry first (`source`, `version`, `manifest`), plus a QUICKSTART §22 publish step run verbatim (attended) | ~300 lines with tests |
+| **M1b-3** | **BUILT attended 2026-11-28**: the merged listing `appregistry.List` over the laws `listingState` and `launchable` (D-WORLD-129 as a law) in `sketches/appregistry.ail`; `app list|show --db` read-only beside the daemon; `/surface/apps.json` and the bar verb through the daemon store (`state`, `launchable`, `version`, `manifest`, `published_at`). Originally: `app list|show` and `/surface/apps.json` read the registry first (`source`, `version`, `manifest`), plus a QUICKSTART §22 publish step run verbatim (attended) | ~300 lines with tests |
 
 The manifest law stays M1's. **The revision rules are an AILANG law too** (M1b-1, PR #715, under
 row 275's D-WORLD-127): `design_docs/sketches/appregistry.ail` holds 9 Z3-verified laws (the

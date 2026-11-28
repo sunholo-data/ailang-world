@@ -27,6 +27,10 @@ func TestAppRegistrySketchDrift(t *testing.T) {
 			return transitionCountOk(int(sketchtest.Int(tb, a, 0)))
 		},
 		"manifestPinned": func(tb testing.TB, a []any) any { return manifestPinned(int(sketchtest.Int(tb, a, 0))) },
-	}, 33)
+		"listingState": func(tb testing.TB, a []any) any {
+			return listingState(sketchtest.Bool(tb, a, 0), sketchtest.Bool(tb, a, 1), sketchtest.Bool(tb, a, 2))
+		},
+		"launchable": func(tb testing.TB, a []any) any { return Launchable(sketchtest.Str(tb, a, 0)) },
+	}, 42)
 	t.Logf("evaluated %d sketch rows", n)
 }

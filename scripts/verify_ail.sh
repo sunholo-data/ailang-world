@@ -361,7 +361,7 @@ REQUIRED_VERIFIED = {
     # host/appregistry/laws.go, bound by host/appregistry/drift_test.go (parses the sketch).
     "design_docs/sketches/appregistry.ail": {
         "revisionParentOk", "nextRevisionOk", "nextVersion", "versionOk", "publishChanges",
-        "retireOk", "appCountOk", "transitionCountOk", "manifestPinned"},
+        "retireOk", "appCountOk", "transitionCountOk", "manifestPinned", "listingState", "launchable"},
     "design_docs/sketches/decisionpacket.ail": {
         "policyCode", "scheduleWellFormed", "mintable", "mintedScheduleWellFormed",
         "producerFieldsOk", "sameRef", "packetRefusal", "samePair", "lifecycleOk"},
@@ -552,7 +552,7 @@ import json, sys
 APPREGISTRY_TESTS = {  # function -> number of named inline tests
     "revisionParentOk": 6, "nextRevisionOk": 5, "nextVersion": 3, "versionOk": 4,
     "publishChanges": 2, "retireOk": 2, "appCountOk": 4, "transitionCountOk": 4,
-    "manifestPinned": 3,
+    "manifestPinned": 3, "listingState": 5, "launchable": 4,
 }
 required = {"%s_test_%d" % (f, i) for f, n in APPREGISTRY_TESTS.items() for i in range(1, n + 1)}
 raw = open(sys.argv[1], "rb").read().decode("utf-8", "replace")
