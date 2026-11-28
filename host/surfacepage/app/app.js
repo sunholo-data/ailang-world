@@ -1427,15 +1427,84 @@
 
   // ---------- The bar's verbs (row 243 V1): GET /surface/verb.json decides; only a schema-valid address navigates ----------
   const VERB_ROUTE_BUDGET_MS = 15000;   // above the daemon's 10 s read deadline; a named constant, not a setting
-  const VERB_NEEDS = { address: [], result: ['cli'], navigate: ['href'], terminal: ['cli', 'reason'], refused: ['reason'] };
-  const UNREADABLE = { say: 'the verb route answered something this page cannot read' };
+  const VERB_NEEDS = { address: [], result: ['cli'], navigate: ['href'], terminal: ['cli', 'reason'], refused: ['reason'], review: ['text'] };
+  const OPERATOR_DRAFT = 'world.operator-request.v1';
+  const OPERATOR_PATH = '/surface/operator-actions';
+  const OPERATOR_ID = /^oa-[0-9a-f]{32}(?![\s\S])/;
+  const EPISODE_ID = /^[a-z0-9][a-z0-9-]{0,63}(?![\s\S])/;
+  const PRESET_ID = /^[a-z0-9][a-z0-9-]{0,50}(?![\s\S])/;
+  const OPERATION_ID = /^[0-9a-f]{32}(?![\s\S])/;
+  const taskValid = task => typeof task === 'string' && task.length > 0 && !task.includes('\0') &&
+    new TextEncoder().encode(task).length <= 8192;
+  function reviewValid(argv, catalogueGeneration) {
+    return Array.isArray(argv) && argv.length === 8 &&
+      argv[0] === 'ailang-worldd' && argv[1] === 'episode' && argv[2] === 'start' &&
+      typeof argv[3] === 'string' && EPISODE_ID.test(argv[3]) && argv[4] === '--preset' &&
+      typeof argv[5] === 'string' && PRESET_ID.test(argv[5]) && argv[5] !== 'se-tools' &&
+      argv[6] === '--launch' && argv[7] === '--headless' &&
+      Number.isSafeInteger(catalogueGeneration) && catalogueGeneration > 0;
+  }
+  function operatorDraft(storage) {
+    try {
+      const d = JSON.parse(storage.getItem(OPERATOR_DRAFT));
+      const r = d?.request;
+      if (typeof d?.body === 'string' && d.body && r && reviewValid(r.argv, r.catalogueGeneration) &&
+          typeof r.operationId === 'string' && OPERATION_ID.test(r.operationId) && taskValid(r.task)) return d;
+    } catch (_) { /* page stays readable */ }
+    return null;
+  }
+  function operatorCardHref(b, episode) {
+    if (!b || b.v !== 1 || b.kind !== 'start' || b.episode !== episode || typeof b.id !== 'string' || !OPERATOR_ID.test(b.id) ||
+        !['requested', 'confirmed', 'claimed', 'running', 'succeeded', 'failed', 'expired', 'cancelled', 'uncertain'].includes(b.state) ||
+        ![b.now, b.createdAt, b.expiresAt].every(Number.isSafeInteger)) return '';
+    const path = OPERATOR_PATH + '/' + b.id;
+    return b.href === path && b.statusHref === path + '/status.json' ? path : '';
+  }
+  function operatorRequestControl(panel, io) {
+    let draft = operatorDraft(io.storage), busy = false;
+    let request = draft?.request;
+    return { get request() { return request; }, async submit(task) {
+      if (busy || !io.current()) return {};
+      if (!request) {
+        if (!taskValid(task)) return { error: 'Enter a task of 1–8192 UTF-8 bytes without NUL.' };
+        const operationId = Array.from(io.random(new Uint8Array(16)), n => n.toString(16).padStart(2, '0')).join('');
+        request = { argv: panel.argv, operationId, catalogueGeneration: panel.catalogueGeneration, task };
+      }
+      try {
+        io.storage.setItem(OPERATOR_DRAFT, JSON.stringify({ body: draft?.body ?? panel.body, request }));
+      } catch (_) {
+        return { error: 'Request could not be saved for reconnect. Restore browser storage and retry.' };
+      }
+      busy = true;
+      try {
+        const res = await io.fetch(OPERATOR_PATH, {method: 'POST', headers: {'Content-Type': 'application/json'},
+          redirect: 'error', credentials: 'omit', signal: io.timeout(VERB_ROUTE_BUDGET_MS), body: JSON.stringify(request)});
+        const b = await res.json();
+        if (!io.current()) return {};
+        const href = res.status === 200 && operatorCardHref(b, request.argv[3]);
+        if (!href) {
+          const reason = typeof b?.error === 'string' && typeof b?.reason === 'string' ? b.error + ': ' + b.reason + ' ' : '';
+          return { error: reason + 'Request outcome unavailable. Use Reconnect to read or retry this request.' };
+        }
+        io.storage.removeItem(OPERATOR_DRAFT);
+        return { href };
+      } catch (_) {
+        return { error: 'Request outcome unavailable. Use Reconnect to read or retry this request.' };
+      } finally {
+        busy = false;
+      }
+    } };
+  }
+  const UNREADABLE = { say: 'the verb route answered something this page cannot read', retry: true };
   // verbOutcome maps the route's answer (HTTP status, body text) to one action; anything else is a refusal.
   function verbOutcome(status, text) {
-    if (status !== 200) return { say: 'the verb route did not answer: HTTP ' + status };
+    if (status !== 200) return { say: 'the verb route did not answer: HTTP ' + status, retry: true };
     let b = null;
     try { b = JSON.parse(text); } catch (_) { return UNREADABLE; }
     const need = b && typeof b === 'object' && b.schema === 'world/surface-verb/v1' && b.v === 1 && Object.prototype.hasOwnProperty.call(VERB_NEEDS, b.outcome) ? VERB_NEEDS[b.outcome] : null;
     if (!need || !need.every(k => typeof b[k] === 'string' && b[k] !== '')) return UNREADABLE;
+    if (b.outcome === 'review') return reviewValid(b.argv, b.catalogueGeneration)
+      ? { review: { argv: b.argv, catalogueGeneration: b.catalogueGeneration, body: b.text } } : UNREADABLE;
     if (b.outcome === 'address') return { address: true };
     if (b.outcome === 'refused') return typeof b.cli === 'string' && b.cli !== '' ? { panel: { head: '$ ' + b.cli, body: b.reason, copy: b.cli } } : { say: b.reason };
     if (b.outcome === 'navigate') return b.href.startsWith('/surface/approve/mr-') || b.href.startsWith('/surface/decide/sha256:') || b.href.startsWith('/surface/confirm/vr-') ? { assign: b.href } : { say: 'refused: unexpected target' };
@@ -1462,8 +1531,8 @@
       return job.superseded ? { superseded: true } : verbOutcome(res.status, text);   // an answer that beat the abort is still dropped
     } catch (e) {
       if (job.superseded) return { superseded: true };
-      if (job.late) return { say: 'the verb route did not answer in time' };
-      return { say: 'the verb route is unreachable: ' + (e && e.message ? e.message : String(e)) };
+      if (job.late) return { say: 'the verb route did not answer in time', retry: true };
+      return { say: 'the verb route is unreachable: ' + (e && e.message ? e.message : String(e)), retry: true };
     } finally {
       io.clearTimeout(timer);
       if (verbJob === job) verbJob = null;
@@ -1473,9 +1542,11 @@
   // a navigation or a panel clears the bar; a refusal says why and leaves the view and the input.
   function verbAct(act, raw, fx) {
     if (act.superseded) return;
+    if (act.review) return fx.review(act.review);
     if (act.address) { fx.clear(); return fx.address(raw); }
     if (act.assign) { fx.clear(); return fx.assign(act.assign); }
     if (act.panel) { fx.clear(); return fx.panel(act.panel); }
+    if (act.retry && fx.retry) return fx.retry(act.say);
     fx.say(act.say);
   }
   // goWith is the bar's Enter over fx (design A4): every Enter owns the bar. An empty line supersedes a pending ask and goes
@@ -1486,7 +1557,7 @@
     if (String(raw == null ? '' : raw).trim() === '') { dropVerb(); return fx.out(); }
     const act = await fx.ask(raw);
     if (!current()) return;
-    return verbAct(act, raw, { ...fx.act, address: r => fx.address(r, current) });
+    return verbAct(act, raw, { ...fx.act, address: r => fx.address(r, current), review: p => fx.act.review(p, current) });
   }
   // addressGo is the address bar's own path (M4a's grammar), reached only through the route's address answer; after the
   // index loads it acts only for the current Enter.
@@ -1513,7 +1584,7 @@
 
   if (typeof module !== 'undefined') module.exports = { needsYouHTML, decidedHTML, notifications, isSharedKey, sourcesHTML, openRunningHTML, fetchCoherent, finishMatchesNode, serviceLineHTML, splitFrames, applyDelta, nextBackoff, liveRequest, liveStatus, esc, cleanTitle, shortTitle, prettyModel, agentLine, summaryOf, rowLabel, verdict, LEVELS, levelXs, blendXS,
     adaptModel, projectHeadsModel, layoutGraph, stackBars, barHTML, frontHTML, railHTML, appPath, stackPath, filePath, fileEvidenceHTML, filesTabHTML, parseAppQuery, addressTarget, lookOf, crumbsHTML, geometry: { PL, PR, PW },
-    VERB_ROUTE_BUDGET_MS, verbOutcome, askVerb, verbAct, verbPanel, goWith, addressGo };
+    VERB_ROUTE_BUDGET_MS, verbOutcome, askVerb, verbAct, verbPanel, goWith, addressGo, operatorDraft, operatorRequestControl, operatorCardHref };
   if (typeof document === 'undefined') return;
 
   // ================= The page =================
@@ -3426,6 +3497,7 @@
   }
   // go is the bar's Enter: empty is home (no fetch); anything else asks the verb route first.
   function go(raw) {
+    if ($('operator-task')) $('verb').remove();
     return goWith(raw, { out, address: goAddress,
       ask: q => askVerb(q, { fetch: (u, o) => fetch(u, o), AbortController, setTimeout: (f, ms) => setTimeout(f, ms), clearTimeout: t => clearTimeout(t) }),
       act: { assign: h => {
@@ -3434,7 +3506,12 @@
           : camera.active ? (location.hash === '#heads/activity' ? '#heads/activity' : '#heads')
           : location.hash === '#activity' ? '#activity' : '';
         location.assign(h + suffix);
-      }, panel: showVerbPanel, say, clear: () => { if ($('addr').value === raw) $('addr').value = ''; } } });
+      }, review: showOperatorReview, panel: showVerbPanel, say,
+      retry: message => {
+        say(message + '. Press Enter to reconnect.');
+        if ($('addr').value === raw) $('addr').focus({preventScroll: true});
+      },
+      clear: () => { if ($('addr').value === raw) $('addr').value = ''; } } });
   }
   function showVerbPanel(p) {
     const old = $('verb'), el = verbPanel(document, p);
@@ -3443,11 +3520,60 @@
     closeBtn.className = 'verb-close';
     closeBtn.textContent = 'Close';
     closeBtn.setAttribute('aria-label', 'Close command output');
-    closeBtn.addEventListener('click', () => el.remove());
+    closeBtn.addEventListener('click', () => {
+      el.remove();
+      if (p.argv) $('addr').focus({preventScroll: true});
+    });
     el.append(closeBtn);
     if (old) old.replaceWith(el); else $('stage').appendChild(el);
     const b = el.querySelector('button[data-copy]');
     if (b) b.addEventListener('click', () => { try { navigator.clipboard.writeText(b.dataset.copy).then(() => say('Copied command'), () => say('Copy it from the panel')); } catch (_) { say('Copy it from the panel'); } });
+    return el;
+  }
+  let operatorStorage;
+  try { operatorStorage = window.sessionStorage; } catch (_) { /* request stays inert */ }
+  function showOperatorReview(panel, current) {
+    const draft = operatorDraft(operatorStorage);
+    if (draft) panel = { ...draft.request, body: draft.body };
+    const el = showVerbPanel({ ...panel, head: 'Review ' + panel.argv[3] });
+    const body = el.querySelector('.verb-body'), area = document.createElement('div');
+    area.className = body.className;
+    area.textContent = body.textContent;
+    body.replaceWith(area);
+    const label = document.createElement('label'), task = document.createElement('textarea');
+    const request = document.createElement('button'), info = document.createElement('p');
+    task.id = 'operator-task'; task.rows = 3; task.cols = 26;
+    label.textContent = 'Task (1–8192 UTF-8 bytes)'; label.htmlFor = task.id;
+    request.id = 'operator-request'; request.type = 'button';
+    info.id = 'operator-request-info'; info.setAttribute('role', 'status');
+    area.append(label, document.createElement('br'), task, document.createElement('br'), request, info);
+    const live = () => current() && el.isConnected;
+    const control = operatorRequestControl(panel, {storage: operatorStorage, current: live, fetch: (...args) => fetch(...args),
+      random: b => crypto.getRandomValues(b), timeout: ms => AbortSignal.timeout(ms)});
+    const repaint = () => {
+      task.readOnly = !!control.request;
+      request.textContent = control.request ? 'Reconnect' : 'Request action';
+    };
+    task.value = control.request?.task || '';
+    repaint();
+    request.addEventListener('click', async () => {
+      request.disabled = true;
+      task.readOnly = true;
+      await control.submit(task.value).then(result => {
+        if (!live()) return;
+        if (result.href) return location.assign(result.href);
+        info.textContent = result.error || '';
+      });
+      repaint();
+      request.disabled = false;
+      if (live()) (task.readOnly ? request : task).focus();
+    });
+    (task.readOnly ? request : task).focus();
+  }
+  const outstandingOperatorRequest = operatorDraft(operatorStorage);
+  if (outstandingOperatorRequest) {
+    const turn = barTurn;
+    showOperatorReview(outstandingOperatorRequest.request, () => turn === barTurn);
   }
   function goAddress(raw, current) { return addressGo(raw, current, { parse: SEAMS.parseAddress, loadIndex, out, openState, say }); }
 
@@ -3804,7 +3930,7 @@
   });
   const onRow = row => Object.keys(DISP).filter(id => DISP[id].row === row).sort((a, b) => DISP[a].x - DISP[b].x);
   document.addEventListener('keydown', e => {
-    if (e.target && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT' || e.target.closest?.('dialog, #compose-btn, .state-branch'))) return;
+    if (e.target && (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT' || e.target.closest?.('dialog, #compose-btn, .state-branch, #verb:has(#operator-task)'))) return;
     const k = e.key; let done = true;
     if (e.target.closest?.('.camera-angles') && k === 'Enter') return;
     if (e.target.closest?.('.stack-disclosure summary, .file-path, .file-evidence button') && k === 'Enter') return;
@@ -3893,7 +4019,7 @@
     }
     $('stage').classList.remove('camera-loading');
     document.documentElement.dataset.ready = '1';
-    if (!(ok && !q?.brane && activity && focusActivity()) && !document.querySelector('dialog[open]')) $('root').focus({ preventScroll: true });
+    if (!(ok && !q?.brane && activity && focusActivity()) && !document.querySelector('dialog[open]') && !$('verb')?.contains(document.activeElement)) $('root').focus({ preventScroll: true });
   }
   boot();
 })();

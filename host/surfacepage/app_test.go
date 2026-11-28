@@ -167,7 +167,8 @@ const stacks = JSON.parse(fs.readFileSync('stacks.json', 'utf8'));
 const index = JSON.parse(fs.readFileSync('index.json', 'utf8'));
 assert.deepEqual(Object.keys(app).sort(), ['LEVELS', 'adaptModel', 'addressTarget', 'agentLine', 'appPath', 'applyDelta', 'barHTML', 'blendXS', 'cleanTitle', 'crumbsHTML', 'decidedHTML', 'esc', 'fetchCoherent', 'finishMatchesNode', 'filePath', 'fileEvidenceHTML', 'filesTabHTML', 'frontHTML',
   'geometry', 'isSharedKey', 'layoutGraph', 'levelXs', 'liveRequest', 'liveStatus', 'lookOf', 'needsYouHTML', 'nextBackoff', 'notifications', 'openRunningHTML', 'parseAppQuery', 'prettyModel', 'projectHeadsModel', 'railHTML', 'rowLabel', 'serviceLineHTML', 'shortTitle', 'sourcesHTML', 'splitFrames', 'stackBars', 'stackPath', 'summaryOf', 'verdict',
-  'VERB_ROUTE_BUDGET_MS', 'askVerb', 'verbAct', 'verbOutcome', 'verbPanel', 'goWith', 'addressGo'].sort());
+  'VERB_ROUTE_BUDGET_MS', 'askVerb', 'verbAct', 'verbOutcome', 'verbPanel', 'goWith', 'addressGo', 'operatorCardHref', 'operatorDraft', 'operatorRequestControl'].sort());
+assert.equal(app.operatorCardHref(null, 'ep'), '');
 
 assert.equal(app.serviceLineHTML(undefined), '');
 // Row 201 A3: Needs you is the pending requests, each a link to its card; a refused row shows why, with no link.

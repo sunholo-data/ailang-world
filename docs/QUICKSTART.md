@@ -2159,3 +2159,28 @@ WORLD_EXEC_NODE=/opt/homebrew/bin/node \
 WORLD_TOOL_AILANG_BIN="$HOME/.pinned-ailang-tools/v0.54.15/ailang" \
 go test -count=1 ./host/daemon/ -run '^TestOperatorConfirmHTTP$'
 ```
+
+### Start one headless episode from the browser
+
+This walkthrough runs on the temporary fixture in `TestOperatorStartWalkthroughInChrome` with a fake
+Sol preset called `p`, a fake launcher and a virtual passkey. Open the fixture's World surface at
+`/surface`. Type the following in the address bar and press Enter.
+
+<!-- operator-browser-fixture -->
+```text
+episode start ep --preset p --launch --headless
+```
+
+Check the **Review ep** panel for the preset, repository, base, worktree, headless model, time cap,
+profile, checks and grants. The task field receives focus. Paste the fixture task into **Task**.
+
+```text
+# Task
+<script>alert(1)</script> ; $(literal) &
+```
+
+Choose **Request action** to open its durable card. Check the signed review and literal task before
+choosing **Confirm with passkey**. The card shows the recorded confirmation and the last read status.
+Close the page and reopen the same card URL to read the outcome and **Episode report**. Use
+**Refresh status** to reconnect if status reads fail. **Back to World** returns to the World surface.
+If the request response was lost, **Reconnect** in the review panel retries the same frozen request.

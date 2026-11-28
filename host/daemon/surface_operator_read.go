@@ -57,7 +57,7 @@ func operatorStatusFor(row store.OperatorActionRow, now int64) operatorStatus {
 
 var operatorCard = template.Must(template.New("operator action").Parse(`<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Operator action</title><link rel="stylesheet" href="/surface/operator-card.css">
+<title>Operator action</title><style>{{.Style}}</style>
 <script defer src="/surface/operator-card.js"></script></head><body>
 <h1 id="operator-title" tabindex="-1">Operator action {{.Status.ID}}</h1>
 <p id="operator-state" data-state="{{.Status.State}}">{{.Status.State}}</p>
@@ -124,7 +124,8 @@ func (d *Daemon) handleOperatorRead(w http.ResponseWriter, r *http.Request, id s
 	card := struct {
 		Status                 operatorStatus
 		Review, Task, Ceremony string
-	}{Status: status}
+		Style                  template.CSS
+	}{Status: status, Style: template.CSS(surfacepage.OperatorStyle)}
 	if len(row.Action) != 0 && status.Href != "" {
 		a, err := approval.DecodeOperatorAction(row.Action)
 		digest := sha256.Sum256(row.Action)
@@ -147,8 +148,4 @@ func (d *Daemon) handleOperatorRead(w http.ResponseWriter, r *http.Request, id s
 
 func operatorScript(w http.ResponseWriter, _ *http.Request, _ []string) {
 	writeSurfaceAsset(w, "text/javascript; charset=utf-8", surfacepage.OperatorScript)
-}
-
-func operatorStyle(w http.ResponseWriter, _ *http.Request, _ []string) {
-	writeSurfaceAsset(w, "text/css; charset=utf-8", surfacepage.OperatorStyle)
 }
