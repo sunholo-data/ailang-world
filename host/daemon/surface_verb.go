@@ -69,7 +69,7 @@ func (d *Daemon) handleSurfaceVerb(w http.ResponseWriter, r *http.Request, _ []s
 	case v.Words == "preset list":
 		d.verbPresetList(args, &a)
 	case v.Words == "app list":
-		d.verbAppList(args, &a)
+		d.verbAppList(r, args, &a)
 	case v.Class == verbs.Navigate:
 		if a.Href, a.Reason = verbs.ApproveTarget(args); a.Href != "" {
 			a.Outcome = "navigate"

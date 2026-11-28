@@ -23,3 +23,24 @@ func appCountOk(n int) bool { return n >= 0 && n <= maxApps }
 func transitionCountOk(n int) bool { return n >= 0 && n <= maxTransitions }
 
 func manifestPinned(entriesNamingIt int) bool { return entriesNamingIt >= 1 }
+
+// listingState and launchable are the M1b-3 listing laws.
+const (
+	StatePublished    = "published"
+	StateLocalDiffers = "published-local-differs"
+	StateLocal        = "local"
+)
+
+func listingState(published, local, sameBytes bool) string {
+	if published {
+		if local && !sameBytes {
+			return StateLocalDiffers
+		}
+		return StatePublished
+	}
+	return StateLocal
+}
+
+// Launchable is D-WORLD-129 = A: only a published app (in either published state) may be
+// launched, and it launches its pinned manifest.
+func Launchable(state string) bool { return state == StatePublished || state == StateLocalDiffers }

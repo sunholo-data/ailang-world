@@ -1,12 +1,14 @@
 package daemon
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/sunholo-data/ailang-world/host/appmanifest"
+	"github.com/sunholo-data/ailang-world/host/appregistry"
 )
 
 // Row 274 M1 (design_docs/planned/w-world-applications.md §2, §4): the read-only app
@@ -22,20 +24,27 @@ type surfaceAppGrant struct {
 }
 
 type surfaceAppEntry struct {
-	Name     string                `json:"name"`
-	Valid    bool                  `json:"valid"`
-	Title    string                `json:"title,omitempty"`
-	Summary  string                `json:"summary,omitempty"`
-	RepoKind string                `json:"repo_kind,omitempty"`
-	Agent    string                `json:"agent,omitempty"`
-	Mode     string                `json:"mode,omitempty"`
-	Grants   []surfaceAppGrant     `json:"grants,omitempty"`
-	Checks   []string              `json:"checks,omitempty"`
-	Outputs  []string              `json:"outputs,omitempty"`
-	Views    []string              `json:"views,omitempty"`
-	Digest   string                `json:"digest,omitempty"`
-	Problems []appmanifest.Problem `json:"problems,omitempty"`
-	Error    string                `json:"error,omitempty"`
+	Name string `json:"name"`
+	// State is the listing law's verdict (published, published-local-differs, local), and
+	// Launchable is D-WORLD-129 = A: only published apps launch (row 274 M1b-3).
+	State       string                `json:"state"`
+	Launchable  bool                  `json:"launchable"`
+	Version     int64                 `json:"version,omitempty"`
+	Manifest    string                `json:"manifest,omitempty"`
+	PublishedAt string                `json:"published_at,omitempty"`
+	Valid       bool                  `json:"valid"`
+	Title       string                `json:"title,omitempty"`
+	Summary     string                `json:"summary,omitempty"`
+	RepoKind    string                `json:"repo_kind,omitempty"`
+	Agent       string                `json:"agent,omitempty"`
+	Mode        string                `json:"mode,omitempty"`
+	Grants      []surfaceAppGrant     `json:"grants,omitempty"`
+	Checks      []string              `json:"checks,omitempty"`
+	Outputs     []string              `json:"outputs,omitempty"`
+	Views       []string              `json:"views,omitempty"`
+	Digest      string                `json:"digest,omitempty"`
+	Problems    []appmanifest.Problem `json:"problems,omitempty"`
+	Error       string                `json:"error,omitempty"`
 }
 
 type surfaceAppsResponse struct {
@@ -43,17 +52,29 @@ type surfaceAppsResponse struct {
 	Apps   []surfaceAppEntry `json:"apps"`
 }
 
-// readSurfaceApps reads the catalog on every call, as readSurfacePresets does. The file
-// path is left out: the surface never shows a machine path.
-func (d *Daemon) readSurfaceApps() ([]surfaceAppEntry, error) {
-	entries, err := appmanifest.ReadCatalog(d.appsDir)
+// readSurfaceApps merges the app registry (the daemon's own store; absent when the daemon
+// has none) with the local catalog, one row per app, through host/appregistry's listing. It
+// reads on every call, as readSurfacePresets does, and never shows a machine path.
+func (d *Daemon) readSurfaceApps(ctx context.Context) ([]surfaceAppEntry, error) {
+	local, err := appmanifest.ReadCatalog(d.appsDir)
 	if err != nil {
 		return nil, err
 	}
-	rows := make([]surfaceAppEntry, 0, len(entries))
-	for _, e := range entries {
-		row := surfaceAppEntry{Name: e.Name, Valid: e.Valid(), Digest: e.Digest, Problems: e.Problems, Error: e.Error}
-		if m := e.Manifest; m != nil {
+	var snap appregistry.Snapshot
+	if d.store != nil {
+		if snap, err = appregistry.Read(ctx, d.store); err != nil {
+			return nil, err
+		}
+	}
+	listing := appregistry.List(ctx, d.store, snap, local)
+	rows := make([]surfaceAppEntry, 0, len(listing))
+	for _, l := range listing {
+		row := surfaceAppEntry{Name: l.Name, State: l.State, Launchable: l.Launchable(), Version: l.Version,
+			Manifest: l.ManifestRef, PublishedAt: l.PublishedAt, Valid: l.Valid(), Problems: l.Problems, Error: l.Error}
+		if l.Local != nil {
+			row.Digest = l.Local.Digest
+		}
+		if m := l.Manifest; m != nil {
 			row.Title, row.Summary, row.RepoKind = m.Title, m.Summary, m.RepoKind
 			row.Agent, row.Mode, row.Views = m.Preset.Agent, m.Preset.Launch.Mode, m.Views
 			for _, g := range m.Preset.Grants {
@@ -77,23 +98,27 @@ func (d *Daemon) handleSurfaceApps(w http.ResponseWriter, r *http.Request, _ []s
 		writeApprovalRefusal(w, http.StatusBadRequest, "BadRequest", unknownSurfaceKeyMessage)
 		return
 	}
-	rows, err := d.readSurfaceApps()
+	ctx, cancel := d.readCtx(r)
+	defer cancel()
+	rows, err := d.readSurfaceApps(ctx)
 	if err != nil {
-		writeApprovalRefusal(w, http.StatusInternalServerError, "AppCatalogUnreadable", "the app catalog could not be read")
+		writeApprovalRefusal(w, http.StatusInternalServerError, "AppCatalogUnreadable", "the app catalog or registry could not be read")
 		return
 	}
 	writeApprovalJSON(w, http.StatusOK, surfaceAppsResponse{Schema: SurfaceAppsSchema, Apps: rows})
 }
 
-func (d *Daemon) verbAppList(args []string, a *verbAnswer) {
+func (d *Daemon) verbAppList(r *http.Request, args []string, a *verbAnswer) {
 	asJSON, reason := parseListJSONFlag("app list", args)
 	if reason != "" {
 		a.Reason = reason
 		return
 	}
-	rows, err := d.readSurfaceApps()
+	ctx, cancel := d.readCtx(r)
+	defer cancel()
+	rows, err := d.readSurfaceApps(ctx)
 	if err != nil {
-		a.Reason = "the app catalog could not be read; at a terminal: ailang-worldd app list"
+		a.Reason = "the app catalog or registry could not be read; at a terminal: ailang-worldd app list"
 		return
 	}
 	a.Outcome = "result"
@@ -107,15 +132,27 @@ func (d *Daemon) verbAppList(args []string, a *verbAnswer) {
 		return
 	}
 	var sb strings.Builder
-	for _, r := range rows {
+	for _, row := range rows {
+		r := row
 		switch {
 		case r.Error != "":
 			fmt.Fprintf(&sb, "%-24s ERROR: %s\n", r.Name, r.Error)
 		case !r.Valid:
 			fmt.Fprintf(&sb, "%-24s INVALID %d problem(s): ailang-worldd app check %s\n", r.Name, len(r.Problems), r.Name)
 		default:
-			fmt.Fprintf(&sb, "%-24s %-6s %-11s grants=%d outputs=%d  %s\n", r.Name, r.Agent, r.Mode, len(r.Grants), len(r.Outputs), r.Title)
+			fmt.Fprintf(&sb, "%-24s %-24s %-6s %-11s grants=%d outputs=%d  %s\n", r.Name, appStateWords(r), r.Agent, r.Mode, len(r.Grants), len(r.Outputs), r.Title)
 		}
 	}
 	a.Text = sb.String()
+}
+
+// appStateWords is a row's state in words, as the CLI prints it.
+func appStateWords(r surfaceAppEntry) string {
+	switch r.State {
+	case appregistry.StatePublished:
+		return fmt.Sprintf("published v%d", r.Version)
+	case appregistry.StateLocalDiffers:
+		return fmt.Sprintf("published v%d (draft differs)", r.Version)
+	}
+	return "local (not published)"
 }

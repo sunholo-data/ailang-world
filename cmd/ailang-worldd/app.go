@@ -7,26 +7,32 @@ package main
 // here launches anything or writes anywhere.
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/sunholo-data/ailang-world/host/appmanifest"
+	"github.com/sunholo-data/ailang-world/host/appregistry"
+	"github.com/sunholo-data/ailang-world/host/store"
 	"github.com/sunholo-data/ailang-world/host/verbs"
 )
 
-const appHelp = `usage: ailang-worldd app list|show|check [name|file.json] [--apps-dir D] [--json]
-  list                       every app in the catalog, valid or not
-  show <name>                one app's manifest, digest and validation
-  check <name|file.json>     validate one manifest; exit 0 only when it is valid
+const appHelp = `usage: ailang-worldd app list|show|check [name|file.json] [--db W] [--apps-dir D] [--json]
+  list                       every app: published (the app registry in --db) and local drafts
+  show <name>                one app's state, pinned manifest, grants and validation
+  check <name|file.json>     validate one local manifest; exit 0 only when it is valid
 
 An app is an extension package with an app.json manifest (schema world/app/v1): a
 preset template of existing effects only, declared outputs and catalog-only views.
-The catalog defaults to ~/.ailang-world/apps, one <name>.json per app. These verbs
-only read it; installing is copying a checked manifest there.
+The app registry (world/app-registry/v1, read-only from --db, default the service store)
+holds published apps; only an attended world-publish apps writes it. The local catalog
+(~/.ailang-world/apps, one <name>.json per app) holds drafts. Only published apps launch.
 Example:
   ailang-worldd app check docs/examples/apps/docparse-convert.json
   mkdir -p ~/.ailang-world/apps
@@ -43,6 +49,7 @@ func runApp(args []string, out, errOut io.Writer) int {
 	fs := flag.NewFlagSet("app "+verb, flag.ContinueOnError)
 	fs.SetOutput(errOut)
 	dir := fs.String("apps-dir", appmanifest.DefaultDir(), "app catalog directory")
+	db := fs.String("db", defaultWorldPaths().db, "the world store whose app registry to read, read-only (default ~/.ailang/world/world.db)")
 	asJSON := fs.Bool("json", false, "JSON output")
 	pos, err := verbs.ParseInterleaved(fs, args[1:])
 	if errors.Is(err, flag.ErrHelp) {
@@ -59,18 +66,21 @@ func runApp(args []string, out, errOut io.Writer) int {
 			fmt.Fprint(errOut, appHelp)
 			return exitUsage
 		}
-		return appList(*dir, *asJSON, out, errOut)
-	case "show", "check":
+		return appList(*db, *dir, *asJSON, out, errOut)
+	case "show":
 		if len(pos) != 1 {
 			fmt.Fprint(errOut, appHelp)
 			return exitUsage
 		}
-		e, ok := appEntry(*dir, pos[0], verb == "check", errOut)
-		if !ok {
+		return appShow(*db, *dir, pos[0], *asJSON, out, errOut)
+	case "check":
+		if len(pos) != 1 {
+			fmt.Fprint(errOut, appHelp)
 			return exitUsage
 		}
-		if verb == "show" {
-			return appShow(e, *asJSON, out)
+		e, ok := appEntry(*dir, pos[0], true, errOut)
+		if !ok {
+			return exitUsage
 		}
 		return appCheck(e, *asJSON, out)
 	}
@@ -107,43 +117,164 @@ func appEntry(dir, arg string, allowFile bool, errOut io.Writer) (appmanifest.En
 	return appmanifest.Entry{}, false
 }
 
-func appList(dir string, asJSON bool, out, errOut io.Writer) int {
-	entries, err := appmanifest.ReadCatalog(dir)
+// appListing reads the merged view: the app registry in db (read-only, no writer lock, so it
+// works beside a running daemon; a missing store file is an empty registry) and the local
+// catalog in dir.
+func appListing(db, dir string, errOut io.Writer) ([]appregistry.Listing, string, bool) {
+	local, err := appmanifest.ReadCatalog(dir)
 	if err != nil {
-		fmt.Fprintf(errOut, "cannot read the app catalog %s: %v\n  why: app list reads one <name>.json per app there\n  next: check the directory's permissions, or pass --apps-dir\n", dir, err)
+		fmt.Fprintf(errOut, "cannot read the app catalog %s: %v\n  why: app verbs read one <name>.json per app there\n  next: check the directory's permissions, or pass --apps-dir\n", dir, err)
+		return nil, "", false
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if _, err := os.Stat(db); errors.Is(err, os.ErrNotExist) {
+		return appregistry.List(ctx, nil, appregistry.Snapshot{}, local), fmt.Sprintf("no world store at %s, so no published apps", db), true
+	}
+	ro, err := store.OpenReadOnly(db)
+	if err != nil {
+		fmt.Fprintf(errOut, "cannot read the world store %s: %v\n  why: published apps live in its app registry\n  next: pass --db <world.db>, or ailang-worldd doctor\n", db, err)
+		return nil, "", false
+	}
+	defer func() { _ = ro.Close() }()
+	snap, err := appregistry.Read(ctx, ro)
+	if err != nil {
+		fmt.Fprintf(errOut, "cannot read the app registry in %s: %v\n  next: ailang-worldd doctor\n", db, err)
+		return nil, "", false
+	}
+	note := fmt.Sprintf("app registry: none yet in %s", db)
+	if snap.Present {
+		note = fmt.Sprintf("app registry: revision %d in %s", snap.Revision.Revision, db)
+	}
+	return appregistry.List(ctx, ro, snap, local), note, true
+}
+
+// appStateLabel is the listing state in words.
+func appStateLabel(l appregistry.Listing) string {
+	switch l.State {
+	case appregistry.StatePublished:
+		return fmt.Sprintf("published v%d", l.Version)
+	case appregistry.StateLocalDiffers:
+		return fmt.Sprintf("published v%d, local copy differs", l.Version)
+	}
+	return "local (not published)"
+}
+
+// appRow is the JSON shape of one listing row (no file paths beyond the local file's).
+type appRow struct {
+	Name        string                `json:"name"`
+	State       string                `json:"state"`
+	Launchable  bool                  `json:"launchable"`
+	Valid       bool                  `json:"valid"`
+	Version     int64                 `json:"version,omitempty"`
+	Manifest    string                `json:"manifest,omitempty"`
+	PublishedAt string                `json:"published_at,omitempty"`
+	Title       string                `json:"title,omitempty"`
+	Agent       string                `json:"agent,omitempty"`
+	Mode        string                `json:"mode,omitempty"`
+	LocalFile   string                `json:"local_file,omitempty"`
+	LocalDigest string                `json:"local_digest,omitempty"`
+	Problems    []appmanifest.Problem `json:"problems,omitempty"`
+	Error       string                `json:"error,omitempty"`
+}
+
+func toAppRow(l appregistry.Listing) appRow {
+	r := appRow{Name: l.Name, State: l.State, Launchable: l.Launchable(), Valid: l.Valid(), Version: l.Version,
+		Manifest: l.ManifestRef, PublishedAt: l.PublishedAt, Problems: l.Problems, Error: l.Error}
+	if m := l.Manifest; m != nil {
+		r.Title, r.Agent, r.Mode = m.Title, m.Preset.Agent, m.Preset.Launch.Mode
+	}
+	if l.Local != nil {
+		r.LocalFile, r.LocalDigest = l.Local.File, l.Local.Digest
+	}
+	return r
+}
+
+func appList(db, dir string, asJSON bool, out, errOut io.Writer) int {
+	rows, note, ok := appListing(db, dir, errOut)
+	if !ok {
 		return exitFatal
 	}
 	if asJSON {
-		return writeAppJSON(out, entries)
+		js := make([]appRow, 0, len(rows))
+		for _, l := range rows {
+			js = append(js, toAppRow(l))
+		}
+		return writeAppJSON(out, js)
 	}
-	if len(entries) == 0 {
-		fmt.Fprintf(out, "no apps in %s\n", dir)
+	fmt.Fprintln(out, note)
+	if len(rows) == 0 {
+		fmt.Fprintf(out, "no apps (catalog %s)\n", dir)
 		return exitOK
 	}
-	for _, e := range entries {
+	for _, l := range rows {
 		switch {
-		case e.Error != "":
-			fmt.Fprintf(out, "%-24s ERROR %s\n", e.Name, e.Error)
-		case !e.Valid():
-			fmt.Fprintf(out, "%-24s INVALID %d problem(s): ailang-worldd app check %s\n", e.Name, len(e.Problems), e.Name)
+		case l.Error != "":
+			fmt.Fprintf(out, "%-24s %-34s ERROR %s\n", l.Name, appStateLabel(l), l.Error)
+		case !l.Valid():
+			fmt.Fprintf(out, "%-24s %-34s INVALID %d problem(s): ailang-worldd app check %s\n", l.Name, appStateLabel(l), len(l.Problems), l.Name)
 		default:
-			m := e.Manifest
-			fmt.Fprintf(out, "%-24s %-6s %-11s %s %s\n", e.Name, m.Preset.Agent, m.Preset.Launch.Mode, e.Digest[7:19], m.Title)
+			m := l.Manifest
+			fmt.Fprintf(out, "%-24s %-34s %-6s %-11s %s\n", l.Name, appStateLabel(l), m.Preset.Agent, m.Preset.Launch.Mode, m.Title)
 		}
 	}
 	return exitOK
 }
 
-func appShow(e appmanifest.Entry, asJSON bool, out io.Writer) int {
-	if asJSON {
-		return writeAppJSON(out, e)
+func appShow(db, dir, name string, asJSON bool, out, errOut io.Writer) int {
+	if !appmanifest.NameOk(name) {
+		fmt.Fprintf(errOut, "invalid app name %q\n  why: app names use the preset grammar ^[a-z0-9][a-z0-9-]*$, 1 to 51 characters\n  next: ailang-worldd app list\n", name)
+		return exitUsage
 	}
-	fmt.Fprintf(out, "app %s\n  file    %s\n  digest  %s\n", e.Name, e.File, e.Digest)
-	if e.Error != "" {
-		fmt.Fprintf(out, "  error   %s\n", e.Error)
+	rows, _, ok := appListing(db, dir, errOut)
+	if !ok {
+		return exitFatal
+	}
+	var names []string
+	for _, l := range rows {
+		names = append(names, l.Name)
+		if l.Name != name {
+			continue
+		}
+		if asJSON {
+			return writeAppJSON(out, toAppRow(l))
+		}
+		fmt.Fprintf(out, "app %s\n  state   %s\n", l.Name, appStateLabel(l))
+		if l.ManifestRef != "" {
+			fmt.Fprintf(out, "  pinned  %s (published %s)\n", l.ManifestRef, l.PublishedAt)
+		}
+		if l.Local != nil {
+			fmt.Fprintf(out, "  local   %s (%s)\n", l.Local.File, l.Local.Digest)
+		}
+		if l.Error != "" {
+			fmt.Fprintf(out, "  error   %s\n", l.Error)
+			return exitOK
+		}
+		writeManifestDetails(out, l.Manifest)
+		if len(l.Problems) > 0 {
+			fmt.Fprintf(out, "INVALID %s: %d problem(s)\n", l.Name, len(l.Problems))
+			for _, p := range l.Problems {
+				fmt.Fprintf(out, "  %s\n", p)
+			}
+		} else if appregistry.Launchable(l.State) {
+			fmt.Fprintf(out, "LAUNCHABLE %s v%d\n", l.Name, l.Version)
+		} else {
+			fmt.Fprintf(out, "NOT PUBLISHED %s: only published apps launch (D-WORLD-129)\n  next: world-publish apps --store %s --manifest %s\n", l.Name, db, l.Local.File)
+		}
 		return exitOK
 	}
-	m := e.Manifest
+	have := "none"
+	if len(names) > 0 {
+		have = strings.Join(names, ", ")
+	}
+	fmt.Fprintf(errOut, "no app %s in the registry or %s (have: %s)\n  next: ailang-worldd app check <file.json>, then copy it into %s or publish it with world-publish apps\n", name, dir, have, dir)
+	return exitUsage
+}
+
+func writeManifestDetails(out io.Writer, m *appmanifest.Manifest) {
+	if m == nil {
+		return
+	}
 	fmt.Fprintf(out, "  title   %s\n  summary %s\n  agent   %s, %s, deadline %ds, ttl %ds\n", m.Title, m.Summary, m.Preset.Agent, m.Preset.Launch.Mode, m.Preset.Launch.DeadlineS, m.Preset.TTLS)
 	for _, g := range m.Preset.Grants {
 		fmt.Fprintf(out, "  grant   %s=%s:%d\n", g.Effect, g.Scope, g.Budget)
@@ -164,8 +295,6 @@ func appShow(e appmanifest.Entry, asJSON bool, out io.Writer) int {
 	if len(m.Views) > 0 {
 		fmt.Fprintf(out, "  views   %s\n", strings.Join(m.Views, ", "))
 	}
-	writeAppVerdict(out, e)
-	return exitOK
 }
 
 func appCheck(e appmanifest.Entry, asJSON bool, out io.Writer) int {

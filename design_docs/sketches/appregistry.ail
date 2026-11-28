@@ -76,3 +76,28 @@ export func manifestPinned(entriesNamingIt: int) -> bool ! {}
 ensures { result == (entriesNamingIt >= 1) }
 tests [(0, false), (1, true), (2, true)]
 { entriesNamingIt >= 1 }
+
+-- ── The listing (M1b-3) ──────────────────────────────────────────────────
+
+-- One app name's state in a listing that merges the registry with the local catalog
+-- (~/.ailang-world/apps). A published app is listed as published; when a local file of the
+-- same name exists with different bytes, the listing says so (the local copy is a draft).
+-- A name only in the catalog is local.
+export func listingState(published: bool, local: bool, sameBytes: bool) -> string ! {}
+requires { published || local }
+ensures { result == (if published then (if local && not sameBytes then "published-local-differs" else "published") else "local") }
+tests [
+  ((true, false, false), "published"),
+  ((true, true, true), "published"),
+  ((true, true, false), "published-local-differs"),
+  ((false, true, false), "local"),
+  ((false, true, true), "local")
+]
+{ if published then (if local && not sameBytes then "published-local-differs" else "published") else "local" }
+
+-- D-WORLD-129 = A: M2 launches only published apps. A local draft never launches, and a
+-- published app launches its pinned manifest even when a local copy differs.
+export func launchable(state: string) -> bool ! {}
+ensures { result == (state == "published" || state == "published-local-differs") }
+tests [("published", true), ("published-local-differs", true), ("local", false), ("", false)]
+{ state == "published" || state == "published-local-differs" }

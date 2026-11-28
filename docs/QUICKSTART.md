@@ -2224,6 +2224,13 @@ ailang-worldd app list
 ailang-worldd app show docparse-convert
 ```
 
+`app list` and `app show` merge two sources. One is the **app registry** in the world store
+(`--db`, default `~/.ailang/world/world.db`). It is read-only and safe beside a running daemon,
+and only `world-publish apps` writes it. The other is the **local catalog** of drafts. Each app is
+`published vN`, `published vN, local copy differs` (the pinned manifest is what counts), or
+`local (not published)`. Only published apps can be launched (D-WORLD-129). Until you publish one,
+the walkthrough above lists `docparse-convert` as local.
+
 `app check` prints `VALID docparse-convert (sha256:…)` and exits 0. For an invalid manifest it
 prints `INVALID`, one line per problem (the field, then why), and the command to run again, and it
 exits 1. `app list` shows each installed app with its agent, launch mode, a short digest and its

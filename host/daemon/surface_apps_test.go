@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +10,11 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/sunholo-data/ailang-world/host/appregistry"
+	"github.com/sunholo-data/ailang-world/host/hashref"
+	"github.com/sunholo-data/ailang-world/host/store"
 )
 
 // Row 274 M1: GET /surface/apps.json and the `app list` bar verb read the local app
@@ -101,5 +107,63 @@ func TestSurfaceAppsCatalog(t *testing.T) {
 	empty.handleSurfaceApps(rec, httptest.NewRequest(http.MethodGet, "http://127.0.0.1:7644/surface/apps.json", nil), nil)
 	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"apps":[]`) {
 		t.Fatalf("missing catalog = %d %s, want 200 with an empty list", rec.Code, rec.Body.String())
+	}
+}
+
+// Row 274 M1b-3: the surface reads the app registry through the daemon's own store and
+// marks each row's state and whether it may launch (D-WORLD-129 = A).
+func TestSurfaceAppsReadsTheRegistry(t *testing.T) {
+	example, err := os.ReadFile(filepath.Join("..", "..", "docs", "examples", "apps", "docparse-convert.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := store.Open(":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	obj, _, err := appregistry.ManifestObject(example)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rev, _ := appregistry.BuildPublish(nil, hashref.HashRef{}, "docparse-convert", obj.Hash, nil, time.Now())
+	if _, err := appregistry.Publish(ctx, s, hashref.HashRef{}, rev, &obj); err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	draft := strings.Replace(strings.Replace(string(example), `"docparse-convert"`, `"draft-only"`, 1), `"budget": 2000`, `"budget": 7`, 1)
+	if err := os.WriteFile(filepath.Join(dir, "draft-only.json"), []byte(draft), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	d := &Daemon{store: s, appsDir: dir, readDeadline: 5 * time.Second}
+	rec := httptest.NewRecorder()
+	d.handleSurfaceApps(rec, httptest.NewRequest(http.MethodGet, "http://127.0.0.1:7644/surface/apps.json", nil), nil)
+	if rec.Code != http.StatusOK || strings.Contains(rec.Body.String(), dir) {
+		t.Fatalf("apps = %d %s (and never a machine path)", rec.Code, rec.Body.String())
+	}
+	var resp surfaceAppsResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.Apps) != 2 {
+		t.Fatalf("apps = %+v", resp.Apps)
+	}
+	pub, loc := resp.Apps[0], resp.Apps[1]
+	if pub.Name != "docparse-convert" || pub.State != "published" || !pub.Launchable || pub.Version != 1 ||
+		pub.Manifest != obj.Hash.String() || pub.PublishedAt == "" || pub.Agent != "claude" {
+		t.Errorf("published row = %+v", pub)
+	}
+	if loc.Name != "draft-only" || loc.State != "local" || loc.Launchable || loc.Version != 0 || !loc.Valid {
+		t.Errorf("local row = %+v (a valid draft still never launches)", loc)
+	}
+	req := httptest.NewRequest(http.MethodGet, "http://127.0.0.1:7644/surface/verb.json?q="+url.QueryEscape("app list"), nil)
+	rec = httptest.NewRecorder()
+	d.handleSurfaceVerb(rec, req, nil)
+	var ans verbAnswer
+	_ = json.Unmarshal(rec.Body.Bytes(), &ans)
+	if ans.Outcome != "result" || !strings.Contains(ans.Text, "published v1") || !strings.Contains(ans.Text, "local (not published)") {
+		t.Errorf("app list verb = %+v", ans)
 	}
 }

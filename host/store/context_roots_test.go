@@ -58,6 +58,7 @@ var contextRootPins = map[string]int{
 	"cmd/ailang-worldd/setup.go|runSetup|Background":                         1, // row 138 M3: setup's whole-command budget (12 min); no Store call
 	"cmd/ailang-worldd/profile_init.go|runProfileInit|Background":            1, // row 189 M4: profile init's toolchain probes (75 s); no Store call
 	"cmd/ailang-worldd/surface_index.go|runSurfaceIndex|Background":          1, // row 188 M0a: surface-index's git reads; no Store call
+	"cmd/ailang-worldd/app.go|appListing|Background":                         1, // row 274 M1b-3: app list/show's read-only registry read (10 s)
 	"cmd/world-publish/main.go|runApprove|Background":                        1,
 	"cmd/world-publish/main.go|runPublish|Background":                        1,
 	"cmd/world-publish/main.go|runReconcile|Background":                      1,
