@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -350,6 +351,41 @@ func finishReviewInputsMatch(current, frozen store.OperatorFinishReview) bool {
 	return current.Remote == frozen.Remote && current.Base == frozen.Base && current.PresetDigest == frozen.PresetDigest &&
 		current.Profile == frozen.Profile && current.Sessions == frozen.Sessions && current.Launch == frozen.Launch &&
 		reflect.DeepEqual(current.Checks, frozen.Checks)
+}
+
+func (e serviceEnv) printFinishStatus(id string, out io.Writer) error {
+	c, _, err := e.installedRunner()
+	if err != nil {
+		return err
+	}
+	ro, err := store.OpenCredentialsReadOnly(runnerDB(c.Credentials))
+	if err != nil {
+		return errOperatorFinishEligibility
+	}
+	defer ro.Close()
+	ctx, cancel := e.operatorContext(time.Second)
+	defer cancel()
+	row, err := ro.OperatorAction(ctx, id, e.terminal.now())
+	if err != nil || row.Kind != "finish" {
+		return store.ErrOperatorMissing
+	}
+	j, err := ro.ReadOperatorFinishJournal(ctx, operatorPreparationCAS(row))
+	if err != nil {
+		return errOperatorFinishUncertain
+	}
+	fmt.Fprintln(out, "finish action", row.ID, row.State)
+	for _, check := range j.Checks {
+		fmt.Fprintf(out, "check %q: %s\n", check.Name, check.Result)
+	}
+	if j.OpenCheck || j.CommitPhase == "reserved" {
+		fmt.Fprintln(out, errOperatorFinishUncertain)
+	}
+	if j.Commit.State == store.OperatorLocalCommitDone {
+		fmt.Fprintln(out, "local commit", j.Commit.SHA, "retained; PR confirmation has not been issued")
+	} else if j.Commit.State == "commit-failed" {
+		fmt.Fprintln(out, errOperatorCommitFailed)
+	}
+	return nil
 }
 
 // An admitted check may outlast the heartbeat's admission window. The runner
