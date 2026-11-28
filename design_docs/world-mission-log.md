@@ -9,58 +9,6 @@ Append-only. One entry per outer-loop iteration. Newest at the bottom.
 > the thing to grep before picking work, so the loop never repeats itself — is in
 > `world-mission-index.md`.
 
-## 428 — 2026-11-24 — row 243 V4 sprint 3 LANDED (PR #643, merge `e83d1717`): credentials schema 10 (`operator_actions`, `operator_runner_state`, `operator_action_steps`, finish shape included) and the unregistered operator-action store law — admission/dedup/cap/expiry/prune, confirm CAS consuming the `host/authority` proof, claim CAS; 1,396 lines; judge PASS 86; unblocked by attended D-WORLD-119 = A and D-WORLD-120 = A [PRODUCT]
-
-**Pick:** row 243 V4 sprint 3, the Next named in records 409–427 for the case "D-WORLD-119 = A or B".
-- **Input change:** Mark's attended commit `82f05004` (2026-11-24 09:20 +0100) flipped **D-WORLD-119 → RESOLVED A** and **D-WORLD-120 → RESOLVED A** in the ledger and audited rows 217/218/219/223/228. `mission_ledger_provenance.sh` → `verdict=attended` for both (flip `82f05004`, creation `933a4dab`). Acknowledged as an attended ruling; nothing re-asked. The driver's idle pre-check saw it: `inputs changed … open=0 — proceeding with a full fire`.
-- **Re-measured at pick** (`origin/dev` `92e1c44e`): no S3 plan, branch or worktree; quorum reader rc 0 (r2 PROCEED 3/3, no re-quorum); open PRs #641 (attended agy) and #617 (attended UI) share no file with S3's eventual §5 list.
-- **Clause map:** 1.0 clauses 1–7 MET, none UNMET. Row 243 serves D-WORLD-94 and moves no clause; it is the only loop-routable build row.
-- Claim sent to `controlplane` before routing (`inbox_1795519180647_a007e085`).
-
-**Gate 0:** stamped first; `gh` = `sunholo-voight-kampff`; billing CLEAN; kill switch absent. 0 allowlisted directives on #635 (5 comments). Step 6a rc 0 (0 crash, 0 transcript notices on #635/#574; `-prev` watermark absent → single-watermark read, as before). 0 unread on `mission-world`. Main checkout is on attended branch `feat/agy-transcript-and-surface` with Mark's untracked drafts — untouched (Principle 0); all work in worktrees.
-
-**Gate 1:** `origin/dev` = local `dev` = `92e1c44e`; dev CI 3/3 green. Skill drift 0 of 28 files (resolved symlink target and driver pin vs the driver clone's `origin/dev` `16d168f19`; negative control fired) — run late, at Gate 4, not at Gate 1 (see Retro).
-
-**Planner** (`codex:gpt-6.2-sol`, workspace-write, background with a 90-min cap, 58 min, **479,146 tok**; resolver `recipe codex:gpt-6.2-sol declared:planner-lane-default-pin`, `derive-planner-lane.sh` → same; probe rc 0; directive `~/.ailang/state/world-iter428/planner-directive.md`, the 409 directive adapted to S3 and to a sandboxed lane). Plan `w-world-address-bar-verbs-v4s3-sprint-plan.md` + JSON, committed `bcc8ac69`. **Cut by measurement:** full draft 1,528 lines; S3 = M1 schema 10 + parity (241), M2 admission/dedup/cap/expiry/prune/episode exclusion (738), M3 confirm/claim CAS + claimed-row recheck + fd silence (1,396 of 1,400); **S3b** (132 lines: step reserve/observe/restart) compiled and carried in Appendix C/P. 138 mutants: 129 killed by named test + whole package, 9 named equivalents, 0 survivors.
-- **Decisions:** S3-D2 schema 10 carries the finish shape (kind `finish`, `awaiting-pr-confirmation`, unique finish-only V3 link, finish step kinds; 15 DDL lines) because D-WORLD-120 = A and a start-only v10 would force a second one-way bump. S3-D3: `host/authority` already imports `host/store`, so the store takes the sealed proof through an `OperatorConfirmation()` transport and re-binds enrolment, key and counter inside its writer transaction.
-- **Premises found false (§1.4):** no kernel episode lock exists at HEAD, so `TestOperatorTerminalExclusion` proves only the store half and the terminal/runner half moves to S4 (F2); the existing `service upgrade` rollback cannot safely restore a v9 build after a v10 migration (F4); S2b's route inventory said 47, HEAD has 50 (F5); the schema version constant doubled as the v9 bound-write floor at `episode_preset.go:241` / `session_new.go:381`, now split out (F6); S2b's fd capture missed builtin `println` (F7); historical fixtures that step a store back to v8/v6 must drop the v10 tables (F9).
-- **Controller round trip (independent):** `ctl_roundtrip.sh` (loop `M1 M2 M3`) on a fresh `git archive 92e1c44e`: every `diff -r` against `st-M*` rc 0.
-
-**Executor** (`codex:gpt-6.2-sol`, workspace-write, 45-min cap, 3 min, **80,255 tok**; resolver `recipe codex:gpt-6.2-sol declared:provider-pin`). M1→M3 in one run, each `ACCEPT_OK` (PASS 6/18/55, 0 FAIL, 0 SKIP, 0 sandbox bind denials), snapshots 19/0/19, 21/0/21, 28/0/28. Controller: each MANIFEST `shasum -c` ok; snapshot M3 `cmp`-equal to `st-M3` (28/28); `commit_ms.sh` → `7281c090` (241), `1e088583` (738), `786f6743` (1,396) = plan; committed tree = snapshot (0 differ). Out-of-worktree write scan of the diff: the only file create is under `t.TempDir()`.
-
-**Gates** (plan §6 `gates.sh` final on `786f6743`, background, 2,080 s, before the judge ran Go — held on the `ALL_DONE` file): gofmt, build, vet, fence, verify_ail, plain and race of all 6 touched packages, 7 inventory legs rc 0. Its summary `FAILS: routes_changed caller_fence verify_go` adjudicated: the first two are an **instrument failure** — `rg` is not on bash's PATH, so the route counts printed empty and the positive control read 0; re-measured with grep: routes 50 = base, `POST /surface/` 3, new production callers none, control `authority.RecheckVerb(` 1, fresh negative literal 0. `verify_go`: 63 ok, 1 FAIL = `host/broker` `TestExecProtectedCheckTimeout/reserve-after-before`, package byte-identical to base, passes alone (34.7 s).
-
-**Evaluator** (Agent `sonnet`, foreground, 55.7 min, **136,633 tok**; resolver `agent-tool sonnet declared:alias-pin`; own worktree `.wt-world-iter428-row243-v4s3-eval`; directive asked open questions, no controller findings supplied): **PASS 86/100**, 0 blocking (correctness 26/30, tests 23/30, security 19/20, standards 9/10, scope 9/10). 45 own mutants (`comm -12` vs plan ids 0), must-die killed, must-live survived, every kill named and behavioural. Forgery of the confirm CAS — zero, nil, typed-nil proof, a recheck passed as a confirmation, a genuine `approval.ConfirmOperatorAction` object from a rogue key — all refused with state unchanged; genuine path confirms. Judge-409 (a): `println("x")` in `JudgeOperatorAction` survives at base, killed at head by `TestOperatorJudgesWriteNothing`. Report copied to `verification/world-iter428/evaluator-r1.md`.
-- **Non-blocking, carried to S4:** 8 non-control survivors — confirmed rows vs the pending cap (`J-REQ-PENDING-CONF`), schema-level cross-action step identity (`J-DDL-STEPS-PK`), id-collision class (`J-REQ-ACTIVE-ID`), confirm artifact-size cap (`J-CONF-ARTSIZE`), the v9 floor at the cmd sites (`J-FLOOR-PRESET-REVERT`, `J-FLOOR-MINT`), `J-FK-INMEM`, and a likely-equivalent ORDER BY. **Controller-verified:** the replay branch `host/store/operator_cas.go:58` returns an already-confirmed row after only a digest check — the judge showed a replay with a different artifact also succeeds (no state change; carried: require the same artifact bytes, and S7's route must not read a replay as a new approval); `go.mod:17` marks `golang.org/x/sys` `// indirect` though a test now imports it directly (cosmetic, no tidy gate).
-- **Deployment risk (plan §8, judge-measured RIGHT):** after a home-service upgrade migrates to v10, `service upgrade`'s automatic rollback restores the v9 binary, which refuses the v10 store — the service stops, data intact, candidate kept as `.failed`. Non-blocking for dev (upgrade is manual `--binary`; nothing deploys on merge). Carried to S4's upgrade seam; reported to Mark.
-
-**Gate 3b:** PR #643 head `786f6743`: CI 3/3 green first time. `origin/dev` had moved to `58e47002` (attended #641 + #642 merged mid-sprint, 0 files shared with S3); PR `MERGEABLE CLEAN`; merged with `--match-head-commit` at `e83d1717`; merge commit CI 3/3 green. **LANDED.**
-
-**Routing evidence:** base=92e1c44ebd8dbbdb2b962ef54aed0dd9a0bf2456@2026-11-24T11:17:30Z (Gate 1; sprint worktree SAME at 11:19:44Z). Gate 4 base e83d171754ab036af5218d62f98e6f8206fd7868@2026-11-24T13:36:58Z (drift from Gate 1 = attended #641/#642 and this sprint's merge).
-- Controller `claude:claude-opus-5-5` (tok: not reported) · designer not spawned (plan fire; the doc is reviewed; rotation pointer unchanged) · planner `codex:gpt-6.2-sol` (479,146 tok) · executor `codex:gpt-6.2-sol` (80,255 tok) · evaluator Agent `sonnet` (136,633 tok). **Every required role spawned; none failed to spawn.**
-- The run prompt asked for the Agent tool for every role "exactly as the skill's routing table specifies"; the resolver named the cross-provider codex recipe for planner and executor (the Agent tool is not a valid path for a `recipe` role), so those two ran under the codex recipe and only the evaluator used the Agent tool. No role ran inline.
-- Judge independence: **cross-vendor** (OpenAI planner + executor, Anthropic judge).
-- Metered: **$0.00** (no quorum, no metered lane). Codex window at fire start `used=41.0% allowed=56.3%` (`state=ok`).
-
-**Progress:** 1.0 clauses 1–7 MET; goal unmoved. Row 243 V4 is at S3 of 12 (S1, S2, S2b, S3 landed): the durable store law the start and finish runners will use now exists, unregistered. Both V4 ledger asks are answered, so S4–S12 are loop-routable in design §8 order.
-
-**Ruled out:**
-- **Treating the gate's `routes_changed`/`caller_fence` as real:** `rg` was absent from bash's PATH; grep re-measurement with controls is clean.
-- **Treating the `verify_go` red as the sprint's:** `host/broker` is byte-identical to the base; the test passes alone.
-- **Holding the merge for the rollback risk:** `service upgrade` is a manual `--binary` step, so merging deploys nothing; the risk is the next attended upgrade's, and S4 owns the upgrade seam.
-- **A re-quorum at pick:** r2 PROCEED 3/3, no absent seat; the rulings answered the doc's own §10 asks.
-
-**Retro:**
-- **The codex lane handled the plan role at this sprint's size**: 58 min for a 1,396-line, 138-mutant plan with compiled patches, inside a 90-min cap — against 27.6 min for opus on S2b's 526 lines. A 30-min cap would have killed it; the planner cap needs to scale with sprint size.
-- **Instance 1 of `gates.sh` using `rg` under `/bin/bash`**, where `rg` is not on PATH: two fences read empty and the positive control read 0, so a planner-authored gate script reported `FAILS` that were the instrument. The rule-3a pairing (a positive control in the same leg) is what exposed it. Carry to the S4 planner directive: gate scripts use `grep`/`git grep`, or assert `command -v rg` first.
-- **Skill drift check run late** (at Gate 4 instead of Gate 1). It was clean, so nothing ran on stale rules, but the order matters; run the gate-1 snippet in the Gate-1 breath.
-- **`origin/dev` moved mid-sprint** (attended agy PRs). The PR stayed `MERGEABLE CLEAN`; the merge-commit CI is the verdict that covers the combination.
-
-**Next:** V4 sprint 4 planner — runner install, isolated process/status/upgrade seam, heartbeat and inert catalogue fixture (E1/E3), with S3b, a v10-safe rollback, and judge-428's test gaps carried.
-
-**Gate 5 bookkeeping:** rotation not due (#635 opened 2026-11-23; next Monday 2026-11-30). Weekly external-issue sweep not due (424 ran it for this week). Idle fingerprint NOT recorded (this fire picked and landed).
-- **Record judge** (Agent `sonnet`, 1 min, 62,892 tok): **PASS 96**, 0 blocking (facts 38/40, rotation 25/25, judge fidelity 15/15, hygiene 18/20). Follow-through: its note that a replay with a different artifact also succeeds is now carried explicitly in row 243 and above. Not acted on: the controller token count stays "not reported" (the harness does not expose it).
-
 ## 429 — 2026-11-24 — row 243 V4 sprint 4 LANDED (PR #651, merge `ee8ef1c0`): the opt-in operator-runner companion (typed `service runner` lifecycle, liveness-only heartbeat, inert catalogue) and a schema-compatible home rollback guard; nothing executes; 1,539 lines; judge sonnet FAIL 72 → PASS 81 → PASS 81 [PRODUCT]
 
 **Pick:** row 243 V4 sprint 4, the Next named by record 428.
@@ -1410,4 +1358,72 @@ The planner must re-measure `world-iter441/plan-scratch/M4.patch` on `a50b0d72` 
 **Next:** row 243 **V4 S9** — verified private F1 entry and auth readiness, frozen manifest, sandboxed checks and local commit journal (design §8, 1,215 calibrated; waits on 120 = A ✓, E2 read-level PASS (W33), S8 ✓). Carry:
 - judge-447 C-09/C-10/C-10b (delayed auto-click) and C-01/C-02;
 - the process fix (the controller runs the plan's outside-only browser/listener legs on the planner's stage BEFORE the executor);
+- D-WORLD-122 before S11.
+
+## 448 — 2026-11-28 — row 243 V4 sprint 9 LANDED (PR #707, merge `c1869819`), outcome B: THE FIRST FINISH SLICE — public finish keeps F1 first and its typed tty path unchanged, a sealed prep-proof preflight guards the NEW private finish entry, the runner's attended install gains the E2-equivalent finish readiness probe, and the frozen finish manifest, no-follow worktree digest, repo-config fence and exact local-commit readback land with no caller yet; S9b (1,400 lines) compiled in the plan; 1,399 lines; judge sonnet PASS 74 [PRODUCT]
+
+**Pick:** row 243 V4 S9, the record-447 Next.
+- **Clause map:** 1.0 clauses 1–7 MET, none UNMET.
+- **Ledger:** valid, 109 rows, 1 OPEN (D-WORLD-122, Mark's Sol preset for E5 — an S11 input, not S9's).
+- **Design:** V4 r1 reviewed (quorum reader rc 0, r2 `…T10-24-51Z` PROCEED 3/3, `absent_reviewers` `[]`).
+- **S9's design gates (§8 "119 A/B and 120 A/B, E2, S8"), re-measured:** D-WORLD-119 and D-WORLD-120 RESOLVED (A); E2 read-level PASS (W33); S8 landed (`85ed2234`). No S9 plan, branch, PR or worktree existed.
+- **Verified at `9a40fe68`:** `runEpisodeFinishWith` at `episode_finish.go:63`, the F1 comment at `:92`; `cmd host docs app` byte-identical to `85ed2234`.
+
+**Gate 0:** stamped first; `gh` = `sunholo-voight-kampff`; billing CLEAN; kill switch absent.
+- 0 allowlisted directives on #635 (34 comments; LEGACY watermark), none since the mission-scoped watermark.
+- Step 6a rc 0: 0 crash notices (control 107:4). The 3 transcript-scan notices in the window are the three iterations 446 and 447 reported; none new.
+- `mission-world` inbox: nothing unread. Weekly sweep not due; no rotation (next Monday 2026-11-30).
+
+**Gate 1:** local `dev` = `origin/dev` = `9a40fe68`. Skill drift: the pin matched origin; the symlinked copy differed on `resources/gate-5-retro.md` only (the idle-fingerprint input list) — Gate 5 followed origin. Dev CI 3/3 green. No open own-account PRs.
+
+**Routing evidence:**
+- Resolver followed verbatim: planner `recipe codex:gpt-6.2-sol declared:planner-lane-default-pin` (`derive-planner-lane.sh` the same); executor `recipe codex:gpt-6.2-sol declared:provider-pin`; evaluator `agent-tool sonnet declared:alias-pin`; no designer. Codex probe rc 0; codex 15.0% used / 25.9% allowed.
+- The standing request asked for every role through the Agent tool "exactly as the routing table specifies". The table returned `recipe` for the planner and executor, so they ran as `codex exec` recipes; the REQUIRED judge ran on the Agent tool (`sonnet`, foreground). No role failed to spawn.
+- Token use: controller `claude-opus-5-5` (session; tok: not reported) · planner `codex:gpt-6.2-sol` 819,311 · executor `codex:gpt-6.2-sol` 133,203 · evaluator Agent `sonnet` 120,903.
+- Judge independence: cross-vendor. Metered: $0.00.
+- Base `9a40fe68e45cd9b5c787aecd716b047327bddb22` (Gate 1 and Gate 3 snap agree). Sprint, base, judge and record worktrees via `mission-worktree.sh`.
+
+**Baseline** (controller, pristine `9a40fe68`, outside the sandbox, isolated `AILANG_STATE_DIR`, while the planner ran): store/authority/agentrun plain+race, verifygate and verbs 0 fails; broker 6; cmd 13; daemon-plain 4; daemon-race 14. Base-extra: checkrun/worktree/surfacepage plain+race 0; whole `cmd -race` timed out (the known local limit).
+
+**Planner** (~96 min, rc 0). Plan + JSON `a1a08bae`, **outcome B**: compiled whole 2,799 lines; S9 = M1 621 → M2 1,399 (cap 1,400); M3 = S9b, 1,400 incremental, compiled in Appendix P with its activation gates listed.
+- Executed its own §7 block verbatim on a fresh export (`APPLY_ACCEPT_SNAPSHOT_OK` M1/M2/M3, `FINAL_APPLY_RC 0`).
+- S9/S10 boundary: S9b ends at a `local-commit-done` receipt with an empty `v3_id`; S10 issues the V3 `VerbRequest`.
+- Controller round trip on a fresh `git archive 9a40fe68`: `diff -r` rc 0 for cmd, host and docs at both stages. Destructive-write scan of the plan scripts: clean.
+
+**Outside legs on the planner's stage, before the executor (the iteration-447 process fix, first use):** M2 `outside`, `outside-race` (cmd added 8.35 s, cap 15 s) and `outside-1777` all `ACCEPT_OK`. M1: one fail, `TestOperatorFinishAuthInstall` in the 1777 leg (3.30 s, "could not bootstrap the companion"); alone 3/3 and in its leg 2/2 PASS. Not reproduced, so the executor started and the judge got it as a mandatory question.
+
+**Executor** (~9 min): the §7 block verbatim with `TOOLS=$STATE/exec-tools`, M1 and M2 only. `ACCEPT_OK` ×2; snapshots 9/0/9 and 15/0/15, `cmp`-equal to the planner's stages.
+
+**Commit gates:**
+- **M1 `9a04073e`** on `ACCEPT_OK M1 outside` (621).
+- M2 attempt 1 REFUSED: `INSTRUMENT FAILURE cmd-finish-stems truncated` at the 240 s bound in an EXISTING finish test, while the controller's own whole `cmd -race` base leg ran beside it. The controller stopped its own sweep driver.
+- M2 attempt 2 (quiet rig): `ACCEPT_OK M2 outside`, then `commit-guards.sh` REFUSED `truncated commit guard` — it runs whole verifygate+broker with no `-timeout`, so broker hit Go's 10 m default (pristine 730 s). Verifygate's two fails (`TestMissionConfigDefaultFlowIntegration`, `TestProtectedGitCandidateEquivalence`) are unreachable from S9: `go list -deps ./host/verifygate` has none of the touched packages. Whole broker with `-timeout 20m` at the stage: 3 fails outside the base 6, each PASS 2/2 alone at head and at base.
+- **M2 `c9cabdfd`** on `ACCEPT_OK M2 outside` (the 445–447 precedent), NUMSTAT 1,399.
+
+**Controller sweep** on `c9cabdfd` (outside the sandbox): gofmt, build, vet, linux vet, `go test -run '^$' ./...`, every guard inventory (store, CLI writer sites/session roots/production deadlines, boundary, daemon, `TestSubprocessSinkGate`, the broker subprocess-site guard), `CALLER_CENSUS_OK`, `verify_ail.sh`, checkrun/worktree/store race (store 44.6 s vs base 43 s) — all rc 0.
+
+**Judge** (Agent `sonnet`, ~66 min): **PASS 74** (25/18/16/6/9), 0 blocking.
+- Reachability sound: no production caller of the private entry or the local-commit primitive; push/PR/label/V3 put unchanged. F1 now precedes flag parsing (exact `--help`/`-h` exempt): a bad flag with no tty now gets the F1 refusal — stricter; no existing assertion weakened.
+- 66 own mutants + 9 planner ids; all 8 re-run planner mutants died; no static-only kill.
+- Survivors / notes (non-blocking): ~290 M2 lines have no test or caller until S9b; the install pinning-skip scope (skipping `git` or everything when `finish_remotes` is set survives); the private-entry `Kind=="finish"` and `ConfirmOnSurface` checks (controller-reproduced: removing the kind check, `cmp`-confirmed, leaves `TestOperatorFinishNoProof|F1|TTYParity` ok); digest content, walk/name/byte bounds, `config.worktree`/alternates fence; commit branch check, post-commit recheck, update-ref CAS, author line.
+- O1: the new test passed 25/25 under 32 CPU hogs; the EXISTING `TestOperatorServiceStartup` failed 8/25 under the same load with the identical message — a 1 s real-time heartbeat-write budget in `runnerTick` shared by every `start` test. O3: store race base 109.2 s vs head 40.3 s — contention, no S9 delta.
+
+**Gate 3b:** PR #707 on `c9cabdfd`: CI 3/3 at attempt 1 → MERGEABLE/CLEAN, `origin/dev` unmoved → merged `--match-head-commit` → **`c1869819`**. Merge CI: 3/3 at attempt 1 (run 46129639435) → **LANDED**.
+
+**Found:**
+- **The iteration-447 process fix worked as designed on first use:** the outside legs ran on the planner's stage before any executor round; the only red was attributed before the executor started, at no round cost.
+- **The controller's own sweeps contended with its commit gate** (instance 3 after 446/447), and the plan's `commit-guards.sh` lacks `-timeout` for a package that needs 12 minutes here. Process fix below.
+- **A shared 1 s real-time heartbeat budget in `runnerTick`** makes every `start`-path service test load-sensitive (judge: `TestOperatorServiceStartup` 8/25 under load). Pre-existing; the S9 test inherits it. Candidate row under 258 if it reaches CI.
+- `TestA2AInvokeDeadlineClosesSocket` did not recur this iteration.
+
+**Progress:** 1.0: clauses 1–7 MET; goal unmoved. Row 243 V4 now has its first finish slice: F1 is pinned for every public finish, the runner can tell an operator at install that finish is blocked on GitHub auth while start still works, and the evidence primitives a no-terminal local commit needs exist. S9b, compiled, activates them.
+
+**Ruled out:**
+- Attributing the M2 commit-gate refusals to S9: attempt 1 was the controller's own contention (passes on a quiet rig); attempt 2 was a missing `-timeout`, verifygate cannot reach S9, and the three broker fails pass alone at head and at base.
+- A planner round 2 for `TestOperatorFinishAuthInstall`: not reproduced in 5 alone runs and 2 leg runs; the judge attributed it to a pre-existing shared budget.
+- Landing M3 (S9b) in this sprint: it would take the sprint to 2,799 lines, and the plan lists open activation gates.
+
+**Next:** row 243 **V4 S9b** — apply the plan's compiled Appendix P M3 (re-measure on `c1869819`): prep admission and claim, pinned sandboxed checks with reservations, commit reservation and reconcile, redacted status and the taskless prep review. Carry:
+- judge-448 survivors as named pins (private-entry `Kind=="finish"`/`ConfirmOnSurface`, install pinning-skip scope, digest content and bounds, commit branch/CAS/author);
+- give `commit-guards.sh` and every whole-package plan leg an explicit `-timeout` (process fix);
 - D-WORLD-122 before S11.
