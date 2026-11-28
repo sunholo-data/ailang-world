@@ -1,0 +1,553 @@
+{
+  "sprint_id": "w-world-address-bar-verbs-v4s9d",
+  "design_doc": "design_docs/planned/w-world-address-bar-verbs-v4.md",
+  "design_revision": "r1",
+  "sprint_plan": "design_docs/planned/w-world-address-bar-verbs-v4s9d-sprint-plan.md",
+  "previous_sprint": "9b11c617",
+  "base_commit": "db8601b0fc8d7ee70eba7d08692f8686f6b5e707",
+  "queue_row": 243,
+  "iteration": 451,
+  "phase": "sprint-plan",
+  "sprint_number": "9d",
+  "executor_lane": "codex:gpt-6.2-sol",
+  "cut": {
+    "cap_loc": 1400,
+    "outcome": "A",
+    "complete_safe_unit_loc": 908,
+    "selected_loc": 908,
+    "unfiltered_product": 908,
+    "deferred_loc": 0,
+    "measure": "git diff -M --numstat db8601b0fc8d7ee70eba7d08692f8686f6b5e707 HEAD -- cmd host docs app",
+    "projected_unfiltered_with_plan": {
+      "M1": 6182,
+      "M2": 6340
+    }
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Behavioural survivor tests",
+      "expected_cumulative_numstat": 750,
+      "increment": 750,
+      "added": 747,
+      "deleted": 3,
+      "unfiltered_product": 750,
+      "accept_parts": [
+        "TestOperatorFinishRouteWorker",
+        "TestOperatorFinishAdmission",
+        "TestOperatorFinishConfigReplacement"
+      ],
+      "expected_snapshot": {
+        "path": "$STATE/snap/M1",
+        "status": 3,
+        "deleted": 0,
+        "manifest": 3
+      },
+      "commit_test": "export AILANG_BIN=\"$HOME/.pinned-ailang/ailang\" WORLD_REQUIRE_SSH_KEYGEN=1; export WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=\"$HOME/.pinned-ailang-tools/v0.54.15/ailang\"; S=\"$HOME/.ailang/state/world-iter451/plan-scratch\"; /bin/bash \"$S/accept.sh\" \"$PWD\" M1 outside && /bin/bash \"$S/commit-guards.sh\" \"$PWD\" \"$S/commit-guards-M1-$(date +%s)\""
+    },
+    {
+      "id": "M2",
+      "title": "Read-only finish status mirror",
+      "expected_cumulative_numstat": 908,
+      "increment": 158,
+      "added": 901,
+      "deleted": 7,
+      "unfiltered_product": 908,
+      "accept_parts": [
+        "TestOperatorFinishRouteWorker",
+        "TestOperatorFinishAdmission",
+        "TestOperatorFinishConfigReplacement"
+      ],
+      "expected_snapshot": {
+        "path": "$STATE/snap/M2",
+        "status": 6,
+        "deleted": 0,
+        "manifest": 6
+      },
+      "commit_test": "export AILANG_BIN=\"$HOME/.pinned-ailang/ailang\" WORLD_REQUIRE_SSH_KEYGEN=1; export WORLD_EXEC_NODE=/opt/homebrew/bin/node WORLD_TOOL_AILANG_BIN=\"$HOME/.pinned-ailang-tools/v0.54.15/ailang\"; S=\"$HOME/.ailang/state/world-iter451/plan-scratch\"; /bin/bash \"$S/accept.sh\" \"$PWD\" M2 outside && /bin/bash \"$S/commit-guards.sh\" \"$PWD\" \"$S/commit-guards-M2-$(date +%s)\""
+    }
+  ],
+  "deferred_milestones": [],
+  "design_measured_at": "db8601b0fc8d7ee70eba7d08692f8686f6b5e707",
+  "worktree": "/Users/voightkampff/dev/sunholo-data/.wt-world-iter451-row243-v4s9d",
+  "branch": "sprint/world-iter451-row243-v4s9d",
+  "sprint": "S9d",
+  "estimate_loc": 908,
+  "executor_form": "Extract verbatim \u00a77 bash apply and use /usr/bin/patch -p1 -E",
+  "authority": [
+    "D-WORLD-119 = A",
+    "D-WORLD-120 = A",
+    "D-WORLD-122 OPEN, default B (fake presets)"
+  ],
+  "behaviour": "M1 behavioural refusal/recovery gate on S10. M2 read-only CLI mirror of redacted status.",
+  "scope": {
+    "in": [
+      "M1 behavioural tests",
+      "M2 inherited local receipt mirror"
+    ],
+    "out": [
+      "remote dispatch or registry put",
+      "launch of real model",
+      "new protocol, schema or AILANG laws"
+    ]
+  },
+  "expected_snapshots": {
+    "M1": {
+      "path": "$STATE/snap/M1",
+      "status": 3,
+      "deleted": 0,
+      "manifest": 3
+    },
+    "M2": {
+      "path": "$STATE/snap/M2",
+      "status": 6,
+      "deleted": 0,
+      "manifest": 6
+    }
+  },
+  "production_caller_census": {
+    "RequestOperatorAction": [
+      1,
+      1
+    ],
+    "JudgeOperatorAction": [
+      1,
+      1
+    ],
+    "store.ConfirmOperatorAction": [
+      1,
+      1
+    ],
+    "ClaimOperatorAction": [
+      2,
+      2
+    ],
+    "runEpisodeFinishWithPrep": [
+      1,
+      1
+    ],
+    "private local Git commit": [
+      1,
+      1
+    ],
+    "attended Git commit": [
+      1,
+      1
+    ],
+    "worktree.Push": [
+      1,
+      1
+    ],
+    "dispatch Push": [
+      1,
+      1
+    ],
+    "label": [
+      1,
+      1
+    ],
+    "PR view": [
+      1,
+      1
+    ],
+    "PR create": [
+      1,
+      1
+    ],
+    "PutVerbRequest": [
+      1,
+      1
+    ],
+    "production test hooks": [
+      0,
+      0
+    ]
+  },
+  "verification": {
+    "base": "$STATE/base",
+    "base_done": "$STATE/baseline.done",
+    "base_extra": "$S/base-extra",
+    "gates": "$S/gates.sh",
+    "outside": "$S/outside.sh",
+    "named": "$S/named-mutants.sh",
+    "whole_mutants": "$S/whole-mutants.sh",
+    "named_mutant_ids": "$S/named-mutant-ids.txt",
+    "real_loopback_status": "UNINFORMATIVE UNDER SANDBOX",
+    "apply_success": "ACCEPT_OK <M> <mode> / APPLY_ACCEPT_SNAPSHOT_OK <M> / FINAL_APPLY_RC 0",
+    "named_added_race_caps": {
+      "cmd/ailang-worldd": 15,
+      "host/daemon": 12
+    },
+    "race_outside_pending": [
+      "cmd/ailang-worldd",
+      "host/daemon"
+    ],
+    "race_diagnostic_only": {
+      "base-tree": {
+        "cmd": {
+          "uptime": "Sat Nov 28 18:50:26 UTC 2026\n19:50  4 users, load averages: 61.19 37.38 20.96",
+          "tests": {
+            "TestOperatorFinishRouteWorker": 21.37,
+            "TestOperatorFinishConfigReplacement": 1.11
+          }
+        },
+        "daemon": {
+          "uptime": "Sat Nov 28 18:51:44 UTC 2026\n19:51  4 users, load averages: 50.54 40.54 23.62",
+          "tests": {
+            "TestOperatorFinishAdmission": 1.53
+          }
+        }
+      },
+      "st-M1": {
+        "cmd": {
+          "uptime": "Sat Nov 28 18:52:03 UTC 2026\n19:52  4 users, load averages: 40.36 38.86 23.41",
+          "tests": {
+            "TestOperatorFinishRouteWorker": 40.78,
+            "TestOperatorFinishConfigReplacement": 2.6
+          }
+        },
+        "daemon": {
+          "uptime": "Sat Nov 28 18:53:15 UTC 2026\n19:53  4 users, load averages: 27.07 35.27 23.28",
+          "tests": {
+            "TestOperatorFinishAdmission": 2.63
+          }
+        }
+      },
+      "st-M2": {
+        "cmd": {
+          "uptime": "Sat Nov 28 18:53:47 UTC 2026\n19:53  4 users, load averages: 34.34 36.18 24.09",
+          "tests": {
+            "TestOperatorFinishRouteWorker": 55.42,
+            "TestOperatorFinishConfigReplacement": 2.43
+          }
+        },
+        "daemon": {
+          "uptime": "Sat Nov 28 18:55:11 UTC 2026\n19:55  4 users, load averages: 29.72 34.08 24.42",
+          "tests": {
+            "TestOperatorFinishAdmission": 7.55
+          }
+        }
+      }
+    },
+    "earlier_race_diagnostic_only": {
+      "base-tree": {
+        "uptime": "Sat Nov 28 19:14:20 UTC 2026\n20:14  4 users, load averages: 16.73 21.93 25.24",
+        "tests": {
+          "TestOperatorFinishRouteWorker": 14.78,
+          "TestOperatorFinishConfigReplacement": 0.91,
+          "TestOperatorFinishAdmission": 2.7
+        }
+      },
+      "st-M1": {
+        "uptime": "Sat Nov 28 19:14:48 UTC 2026\n20:14  4 users, load averages: 16.70 21.40 24.93",
+        "tests": {
+          "TestOperatorFinishRouteWorker": 34.66,
+          "TestOperatorFinishConfigReplacement": 1.92,
+          "TestOperatorFinishAdmission": 2.72
+        }
+      },
+      "st-M2": {
+        "uptime": "Sat Nov 28 19:16:15 UTC 2026\n20:16  4 users, load averages: 20.95 22.17 24.92",
+        "tests": {
+          "TestOperatorFinishRouteWorker": 44.49,
+          "TestOperatorFinishConfigReplacement": 2.18,
+          "TestOperatorFinishAdmission": 3.23
+        }
+      }
+    },
+    "final_byte_race_diagnostic_only": {
+      "base-tree": {
+        "uptime": "Sat Nov 28 19:29:01 UTC 2026\n20:29  4 users, load averages: 13.17 15.13 19.62",
+        "tests": {
+          "TestOperatorFinishRouteWorker": 13.62,
+          "TestOperatorFinishConfigReplacement": 0.5,
+          "TestOperatorFinishAdmission": 2.62
+        }
+      },
+      "st-M1": {
+        "uptime": "Sat Nov 28 19:29:28 UTC 2026\n20:29  4 users, load averages: 12.83 14.86 19.37",
+        "tests": {
+          "TestOperatorFinishRouteWorker": 20.92,
+          "TestOperatorFinishConfigReplacement": 1.16,
+          "TestOperatorFinishAdmission": 2.26
+        }
+      },
+      "st-M2": {
+        "uptime": "Sat Nov 28 19:29:58 UTC 2026\n20:29  4 users, load averages: 13.06 14.75 19.17",
+        "tests": {
+          "TestOperatorFinishRouteWorker": 16.55,
+          "TestOperatorFinishConfigReplacement": 0.99,
+          "TestOperatorFinishAdmission": 1.75
+        }
+      }
+    },
+    "bash_3_2_runtime": [
+      "env.sh syntax=0",
+      "selectors.sh syntax=0",
+      "accept.sh syntax=0",
+      "gates.sh syntax=0",
+      "snapshot.sh syntax=0",
+      "callers.sh syntax=0",
+      "outside.sh syntax=0",
+      "commit-guards.sh syntax=0",
+      "named-mutants.sh syntax=0",
+      "whole-mutants.sh syntax=0",
+      "apply.sh syntax=0",
+      "commit-M1.sh syntax=0",
+      "commit-M2.sh syntax=0",
+      "env.sh runtime=0",
+      "selectors.sh runtime=0",
+      "outside.sh-focused runtime=77",
+      "outside.sh-whole runtime=77",
+      "outside.sh-chrome runtime=77",
+      "whole-mutants.sh runtime=0",
+      "callers.sh runtime=0",
+      "commit-M1.sh runtime=77",
+      "commit-M2.sh runtime=77",
+      "commit-guards.sh runtime=77",
+      "gates.sh-M2 runtime=2",
+      "gates.sh-sealed-M2 runtime=77",
+      "accept.sh-fast-M1 runtime=0",
+      "accept.sh-fast-M2 runtime=0",
+      "snapshot.sh-M1 runtime=0",
+      "snapshot.sh-M2 runtime=0",
+      "apply.sh-final runtime=0",
+      "named-mutants.sh runtime=77",
+      "race-bound-control.sh runtime=0",
+      "gates.sh-M1-earlier runtime=2"
+    ]
+  },
+  "existing_tests_edited": [
+    "TestOperatorFinishRouteWorker",
+    "TestOperatorFinishAdmission",
+    "TestOperatorFinishConfigReplacement"
+  ],
+  "existing_tests_deleted": [],
+  "new_files": [],
+  "existing_production_edited": [
+    "cmd/ailang-worldd/operator_finish_runner.go",
+    "cmd/ailang-worldd/operator_service.go",
+    "docs/QUICKSTART.md"
+  ],
+  "planner_decisions": [
+    "Use the existing verified claim and worker seams, with zero production hooks",
+    "Replay the exact old version gate, preset-name gate and claimant ownership overlaps as doubles",
+    "Preserve the installed CLI mirror and exercise redaction with journal fixtures"
+  ],
+  "design_premises_found_false": [
+    "Wrong-store POST is 503 RunnerUnavailable on this base, not 409",
+    "Existing claim construction seam supports the post-claim perturbation without a hook",
+    "Pristine iter451 command list omits cmd race, which needs a comparable skip-11 base-extra leg"
+  ],
+  "mutants": {
+    "named_ids": 166,
+    "controller_s9c_survivors": [
+      "runner-elig-resumes",
+      "runner-elig-preset-allowlist",
+      "runner-elig-remote-allowlist",
+      "runner-elig-launch-version",
+      "runner-elig-health-status",
+      "runner-elig-build",
+      "runner-elig-report-read",
+      "runner-elig-report-episode",
+      "runner-elig-report-intents",
+      "runner-elig-recorded-finish",
+      "runner-elig-report-start",
+      "runner-drift-preset-decode",
+      "runner-drift-workspace",
+      "runner-drift-world",
+      "runner-drift-store",
+      "runner-drift-profile",
+      "runner-drift-pinned-check",
+      "runner-elig-sessions",
+      "runner-elig-project",
+      "runner-elig-session-file",
+      "runner-elig-token-mode",
+      "runner-elig-commit-identity",
+      "runner-manifest-protected",
+      "runner-catalogue-fresh",
+      "runner-heartbeat-owner",
+      "runner-heartbeat-ready",
+      "runner-life-quiet",
+      "runner-life-pair",
+      "runner-effect-clock",
+      "runner-effect-inputs",
+      "runner-effect-key",
+      "runner-observe-after-expiry",
+      "runner-old-observation",
+      "runner-catalogue-approve-size",
+      "runner-catalogue-bound",
+      "route-finish-store",
+      "route-protected-and-unattributed",
+      "route-operation-generation-conflict",
+      "route-confirm-without-surface",
+      "status-definite-failure",
+      "status-finish-auth"
+    ],
+    "judge_ids": [
+      "e01",
+      "e04",
+      "e06",
+      "e07",
+      "e08",
+      "e09",
+      "e12",
+      "e13",
+      "e14",
+      "e16",
+      "e17",
+      "e20",
+      "e22",
+      "e23",
+      "e24",
+      "e25",
+      "e21b"
+    ],
+    "pending_outside": [
+      "runner-elig-resumes",
+      "runner-elig-preset-allowlist",
+      "runner-elig-remote-allowlist",
+      "runner-elig-launch-version",
+      "runner-elig-health-status",
+      "runner-elig-build",
+      "runner-elig-report-read",
+      "runner-elig-report-episode",
+      "runner-elig-report-intents",
+      "runner-elig-recorded-finish",
+      "runner-elig-report-start",
+      "runner-drift-preset-decode",
+      "runner-drift-workspace",
+      "runner-drift-world",
+      "runner-drift-store",
+      "runner-drift-profile",
+      "runner-drift-pinned-check",
+      "runner-elig-sessions",
+      "runner-elig-project",
+      "runner-elig-session-file",
+      "runner-elig-token-mode",
+      "runner-elig-commit-identity",
+      "runner-manifest-protected",
+      "runner-catalogue-fresh",
+      "runner-heartbeat-owner",
+      "runner-heartbeat-ready",
+      "runner-life-quiet",
+      "runner-life-pair",
+      "runner-effect-clock",
+      "runner-effect-inputs",
+      "runner-effect-key",
+      "runner-observe-after-expiry",
+      "runner-old-observation",
+      "runner-catalogue-approve-size",
+      "runner-catalogue-bound",
+      "route-finish-store",
+      "route-protected-and-unattributed",
+      "route-operation-generation-conflict",
+      "route-confirm-without-surface",
+      "status-definite-failure",
+      "status-finish-auth",
+      "s9d-cli-dispatch",
+      "s9d-cli-sha",
+      "e01",
+      "e04",
+      "e06",
+      "e07",
+      "e08",
+      "e09",
+      "e12",
+      "e13",
+      "e16",
+      "e17",
+      "e20",
+      "e22",
+      "e23",
+      "e24",
+      "e25",
+      "e21b",
+      "m1-sibling-completed-launch",
+      "m1-sibling-finish-preset-name",
+      "m1-sibling-cas-heartbeat-owner",
+      "double-runner-elig-launch-version",
+      "double-e20",
+      "double-runner-drift-preset-decode",
+      "double-runner-heartbeat-owner",
+      "s9d-cli-help",
+      "s9d-cli-verb",
+      "s9d-cli-id-grammar",
+      "s9d-cli-arity",
+      "s9d-cli-branch",
+      "s9d-cli-dispatch-error",
+      "s9d-cli-installed-remedy",
+      "s9d-cli-read-store-remedy",
+      "s9d-cli-unknown-action",
+      "s9d-cli-non-finish",
+      "s9d-cli-missing-id-remedy",
+      "s9d-cli-journal-remedy",
+      "s9d-cli-redact-stderr",
+      "s9d-cli-redact-stdout",
+      "s9d-cli-open-check",
+      "s9d-cli-reserved",
+      "s9d-cli-done-state",
+      "s9d-cli-failed-state"
+    ],
+    "local_named_kills": [
+      "e14",
+      "j27",
+      "git-first-use-config"
+    ],
+    "double_ids": [
+      "double-runner-elig-launch-version",
+      "double-e20",
+      "double-runner-drift-preset-decode",
+      "double-runner-heartbeat-owner"
+    ],
+    "m2_ids": [
+      "s9d-cli-dispatch",
+      "s9d-cli-sha",
+      "s9d-cli-help",
+      "s9d-cli-verb",
+      "s9d-cli-id-grammar",
+      "s9d-cli-arity",
+      "s9d-cli-branch",
+      "s9d-cli-dispatch-error",
+      "s9d-cli-installed-remedy",
+      "s9d-cli-read-store-remedy",
+      "s9d-cli-unknown-action",
+      "s9d-cli-non-finish",
+      "s9d-cli-missing-id-remedy",
+      "s9d-cli-journal-remedy",
+      "s9d-cli-redact-stderr",
+      "s9d-cli-redact-stdout",
+      "s9d-cli-open-check",
+      "s9d-cli-reserved",
+      "s9d-cli-done-state",
+      "s9d-cli-failed-state"
+    ],
+    "ledger": "$S/named-mutant-ids.txt",
+    "anchors": "$S/mutants.json",
+    "s10_precondition": "M1 landed and every required stage row resolved by outside evidence"
+  },
+  "roundtrip": {
+    "result": "FINAL_APPLY_RC 0",
+    "receipt": "$S/rt-31/section7.raw",
+    "stages": [
+      "M1",
+      "M2"
+    ],
+    "diff": {
+      "M1": {
+        "cmd": "ok",
+        "host": "ok",
+        "docs": "ok",
+        "app": "absent",
+        "unfiltered": "ok"
+      },
+      "M2": {
+        "cmd": "ok",
+        "host": "ok",
+        "docs": "ok",
+        "app": "absent",
+        "unfiltered": "ok"
+      }
+    }
+  }
+}
