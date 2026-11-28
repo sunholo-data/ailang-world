@@ -90,8 +90,26 @@ func AddExisting(ctx context.Context, git, repo, dir, branch string) error {
 // Output runs `git args...` and returns its standard output. Stderr is kept
 // only for the error message; stdout over MaxStdout is an error.
 func Output(ctx context.Context, git string, args []string) (string, error) {
+	return gitOutput(ctx, git, args)
+}
+
+type isolatedGitEnvKey struct{}
+
+type isolatedGitInput struct {
+	env   []string
+	stdin io.Reader
+}
+
+// RunIsolated gives the bounded, scrubbed Git seam explicit stdin and an
+// optional inherited episode lock. No child reads from a terminal.
+func RunIsolated(ctx context.Context, git string, args, env []string, stdin io.Reader, inherited ...*os.File) (string, error) {
+	in := isolatedGitInput{childenv.Scrubbed(env), stdin}
+	return gitOutput(context.WithValue(ctx, isolatedGitEnvKey{}, in), git, args, inherited...)
+}
+
+func gitOutput(ctx context.Context, git string, args []string, inherited ...*os.File) (string, error) {
 	out := &capped{max: MaxStdout}
-	if err := runGit(ctx, git, args, out); err != nil {
+	if err := runGit(ctx, git, args, out, inherited...); err != nil {
 		return "", err
 	}
 	if out.over {
@@ -155,8 +173,11 @@ func runGit(ctx context.Context, git string, args []string, stdout *capped, inhe
 	runCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	cmd := exec.CommandContext(runCtx, git, args...)
-	cmd.Env = Env(os.Environ())
-	cmd.Stdin = nil
+	if approved, ok := ctx.Value(isolatedGitEnvKey{}).(isolatedGitInput); ok {
+		cmd.Env, cmd.Stdin = approved.env, approved.stdin
+	} else {
+		cmd.Env = Env(os.Environ())
+	}
 	cmd.ExtraFiles = inherited
 	cmd.WaitDelay = waitDelay
 	if deadline, ok := runCtx.Deadline(); ok {

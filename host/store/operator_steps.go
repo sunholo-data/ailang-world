@@ -34,9 +34,10 @@ func reserveOperatorStep(ctx context.Context, db operatorStepWriter, key Operato
 		SELECT ?, ?, id, 'reserved', ?, owner, ? FROM operator_actions
 		WHERE id = ? AND digest = ? AND generation = ? AND owner = ?
 		AND state IN ('claimed', 'running') AND expires_at > ? AND created_at <= ?
+		AND (? <> 'commit' OR NOT EXISTS (SELECT 1 FROM operator_action_steps WHERE action_id = ? AND kind = 'commit'))
 		AND (SELECT count(*) FROM operator_action_steps WHERE action_id = ? AND kind <> 'operation') < 32
 		ON CONFLICT(kind, identity) DO NOTHING`, key.Kind, key.Identity, key.Version, now,
-		key.Action.ID, key.Action.Digest[:], key.Action.Generation, key.Owner, now, now, key.Action.ID)
+		key.Action.ID, key.Action.Digest[:], key.Action.Generation, key.Owner, now, now, key.Kind, key.Action.ID, key.Action.ID)
 	return operatorChangedOne(result, err)
 }
 

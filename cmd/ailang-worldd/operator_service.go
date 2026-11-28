@@ -24,19 +24,23 @@ const runnerSystemPath = "/usr/bin:/bin:/usr/sbin:/sbin"
 const runnerHelp = `usage: ailang-worldd service runner install --config FILE | start | stop | status | cancel ACTION-ID | reconcile-mint ACTION-ID | reconcile-worktree ACTION-ID | reconcile-files ACTION-ID | reconcile-start ACTION-ID | launch-status ACTION-ID | uninstall
 Install, stop, cancel, orphan mint revocation, worktree and file disposition and uninstall require typed y. Start uses the approved configuration.
 Config JSON keys: home, uid, address, world, credentials, executables (absolute path to sha256 digest), preset_names, tool_dirs, backend ("headless").
+Optional finish readiness keys: finish_remotes (approved GitHub URLs), finish_ssh_socket (approved login agent socket), finish_https_helper ("gh" or "osxkeychain"). Pin gh, git and any separate HTTPS helper.
 The World service must already be running. Use absolute, canonical paths and include its installed binary in executables.
 `
 
 type runnerConfig struct {
-	Home        string            `json:"home"`
-	UID         int               `json:"uid"`
-	Address     string            `json:"address"`
-	World       string            `json:"world"`
-	Credentials string            `json:"credentials"`
-	Executables map[string]string `json:"executables"`
-	PresetNames []string          `json:"preset_names"`
-	ToolDirs    []string          `json:"tool_dirs"`
-	Backend     string            `json:"backend"`
+	Home              string            `json:"home"`
+	UID               int               `json:"uid"`
+	Address           string            `json:"address"`
+	World             string            `json:"world"`
+	Credentials       string            `json:"credentials"`
+	Executables       map[string]string `json:"executables"`
+	PresetNames       []string          `json:"preset_names"`
+	ToolDirs          []string          `json:"tool_dirs"`
+	Backend           string            `json:"backend"`
+	FinishRemotes     []string          `json:"finish_remotes,omitempty"`
+	FinishHTTPSHelper string            `json:"finish_https_helper,omitempty"`
+	FinishSSHSocket   string            `json:"finish_ssh_socket,omitempty"`
 }
 
 func (e serviceEnv) runnerPaths() servicePaths {
@@ -142,10 +146,25 @@ func (e serviceEnv) checkRunnerConfig(c runnerConfig) error {
 			return errors.New("invalid runner preset name")
 		}
 	}
+	if c.FinishHTTPSHelper != "" && c.FinishHTTPSHelper != "gh" && c.FinishHTTPSHelper != "osxkeychain" {
+		return errors.New("invalid approved finish HTTPS helper")
+	}
+	if len(c.FinishRemotes) > 16 || c.FinishSSHSocket != "" && (!filepath.IsAbs(c.FinishSSHSocket) || filepath.Clean(c.FinishSSHSocket) != c.FinishSSHSocket) {
+		return errors.New("invalid finish readiness configuration")
+	}
+	for _, remote := range c.FinishRemotes {
+		if _, err := finishRepository(remote); err != nil || len(remote) > 512 {
+			return errors.New("invalid approved finish remote")
+		}
+	}
 	if c.Executables[e.paths.Binary] == "" {
 		return errors.New("missing installed World executable")
 	}
 	for path, sum := range c.Executables {
+		name := filepath.Base(path)
+		if len(c.FinishRemotes) != 0 && (name == "gh" || name == "git-credential-osxkeychain") {
+			continue // The per-verb readiness gate pins finish tools.
+		}
 		if err := runnerPath(home, path, uid, false, 0); err != nil {
 			return err
 		}
@@ -325,6 +344,14 @@ func runServiceRunner(args []string, out, errOut io.Writer, e serviceEnv) int {
 			if !e.confirm(errOut, change) {
 				return 1
 			}
+			ctx, done := e.operatorContext(30 * time.Second)
+			for _, remote := range c.FinishRemotes {
+				if err := prepareOperatorFinish(ctx, c, remote); err != nil {
+					fmt.Fprintln(out, err)
+					break
+				}
+			}
+			done()
 			lock, err := runnerLifecycleLock(filepath.Dir(p.Record))
 			if err != nil {
 				return refuse(errors.New("runner lifecycle is busy or unavailable"))

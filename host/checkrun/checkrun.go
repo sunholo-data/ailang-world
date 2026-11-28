@@ -89,6 +89,15 @@ func Run(ctx context.Context, argv []string, dir string, timeout time.Duration) 
 
 // RunEnv overlays the pinned profile on the scrubbed inherited environment.
 func RunEnv(ctx context.Context, argv []string, dir string, timeout time.Duration, env map[string]string, pathPrefix []string) (Result, error) {
+	return run(ctx, argv, dir, timeout, checkEnv(os.Environ(), env, pathPrefix))
+}
+
+// RunIsolated uses only the approved child environment.
+func RunIsolated(ctx context.Context, argv []string, dir string, timeout time.Duration, env []string) (Result, error) {
+	return run(ctx, argv, dir, timeout, checkEnv(env, nil, nil))
+}
+
+func run(ctx context.Context, argv []string, dir string, timeout time.Duration, env []string) (Result, error) {
 	r := Result{ExitCode: -1}
 	if len(argv) == 0 || timeout <= 0 {
 		return r, fmt.Errorf("checkrun: argv and a positive wall cap are required")
@@ -97,7 +106,7 @@ func RunEnv(ctx context.Context, argv []string, dir string, timeout time.Duratio
 	defer cancel()
 	cmd := exec.CommandContext(runCtx, argv[0], argv[1:]...)
 	cmd.Dir = dir
-	cmd.Env = checkEnv(os.Environ(), env, pathPrefix)
+	cmd.Env = env
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	cmd.Cancel = func() error { return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL) }
 	cmd.WaitDelay = 100 * time.Millisecond
