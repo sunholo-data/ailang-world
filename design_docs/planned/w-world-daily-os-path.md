@@ -1,6 +1,6 @@
 # w-world-daily-os-path: the shortest path to using World as your OS for agent work — r0 (regroom proposal)
 
-**Status:** r0, **attended 2026-11-28**, a regroom proposal for Mark. It files no new work row.
+**Status:** r0, **ADOPTED attended 2026-11-28** (Mark: *"yees 130. yes 131"*; D-WORLD-130 = A, D-WORLD-131 = A, applied to rows 274, 188 and 145). Originally a regroom proposal for Mark. It files no new work row.
 It orders rows that already exist, names one milestone, and asks two rulings (D-WORLD-130,
 D-WORLD-131, §5). Nothing moves until Mark rules. The loop may not reorder an attended groom
 (Gate 2 rule (c)).
