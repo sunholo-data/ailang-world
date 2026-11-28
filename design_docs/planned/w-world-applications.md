@@ -1,6 +1,6 @@
 # w-world-applications (queue row 274): applications on World — r1
 
-**Status:** r1, **attended 2026-11-28**. r0 was filed that morning (Mark: *"ok lets take this over
+**Status:** r1 + M1 built (attended 2026-11-28; §6 and §11 record what M1 decided), **attended 2026-11-28**. r0 was filed that morning (Mark: *"ok lets take this over
 as we have better context"*, then *"ok proceed"*). r1 follows the same day's S0 part 1
 measurement and Mark's direction on it (§0). It narrows the row to the part that works on any
 host OS. External GPU and device programs (r0's §5 and M4) move to the existing post-1.x rows
@@ -85,7 +85,7 @@ An **app** is an AILANG extension package that adds one file, `app.json`, beside
       { "effect": "Workspace.Exec",  "scope": "worktree", "budget": 100 }
     ],
     "exec_profile": "docparse",
-    "checks": [ { "name": "ailang-test", "run": "ailang test" } ]
+    "checks": [ { "name": "ailang-test", "argv": ["ailang", "test"], "timeout_s": 900 } ]
   },
   "outputs": [ { "kind": "file", "glob": "out/**/*.md", "check": "ailang-test" } ],
   "views": [ "table", "object-link" ]
@@ -105,7 +105,7 @@ An **app** is an AILANG extension package that adds one file, `app.json`, beside
   named check, and records the result in the report (§3).
 - **`views`** draws only from row 151's closed catalog. An app can't bring its own UI kit.
 
-**Install** = publish the package through the existing registry path. **Launch** = row 243 V4's
+**Install** = publish the package through the registry path (M1b; until then, the local catalog in §11). **Launch** = row 243 V4's
 start path, with the preset built from the template plus the chosen repo profile. The review
 panel shows the resolved grants exactly as it does for any start. An app adds no new runtime,
 no new authority path and no new process model. Nothing in it depends on the host OS.
@@ -169,7 +169,8 @@ adds nothing that would run a program unsandboxed to cover the Mac (D-WORLD-123)
 | Step | What | Who |
 |---|---|---|
 | **S0 part 1** | **DONE 2026-11-28**: Blender under World's exec sandbox, measured. Its evidence moves to rows 210/214 | attended |
-| **M1** | `app.json` schema, pure validation in AILANG (template ⊆ grant law, existing effects only, catalog-only views, globs confined to the worktree), `app list` / `app show` read verbs | loop |
+| **M1** | **BUILT attended 2026-11-28** (§11): `app.json` schema, the law as `design_docs/sketches/appmanifest.ail` (23 Z3-proven laws, 122 named tests) mirrored in `host/appmanifest` under a drift test, a local catalog `~/.ailang-world/apps`, `app list` / `app show` / `app check`, `GET /surface/apps.json` and the `app list` bar verb | attended |
+| **M1b** | Install through a registry identity: a `world/app-registry/v1` head (name, version, `app.json` digest, the descriptor ids the app's package publishes), written by an attended `world-publish apps` verb and read by M1's verbs in place of the local catalog. Nothing in World groups descriptors by package today, so this needs its own short design | loop or attended |
 | **M2** | Launch from an app: template + repo profile → resolved preset → row 243 V4's start path; "from an app" in the start flow | loop, after row 243 V4 |
 | **M3** | Episode report v1: `schema`, `app`, `outputs[]` with check results at `finish` | loop |
 | **M4** | The first app, per D-WORLD-124 (recommended: `docparse-convert`), with an attended exit run: install, launch from the surface, finish, outputs checked in the report | loop + attended exit run |
@@ -213,6 +214,7 @@ landed work, and M2 depends on row 243 V4. Moving the row up is Mark's call.
 | M-8 | Blender under World's exec sandbox (S0 part 1) | scratch daemon probe `exit 139`, startup refused; srt alone (`world`, `open`, all Mach lookups): a crash each time in `MTLBackend::metal_is_supported`; sandbox log `deny(1) iokit-open-user-client AGXDeviceUserClient`; `--gpu-backend` accepts only `metal` |
 | M-9 | Linux tooling on the Studio | none of `docker`, `orb`, `limactl`, `colima`, `podman`, `tart`, `utmctl`, `qemu-system-aarch64`, `multipass`; no OrbStack, Docker, UTM or Parallels app |
 | M-10 | Not measured | Blender under bubblewrap on Linux, with and without a render-node bind (row 211's spike) |
+| M-11 | M1 law and gate | pinned v0.41.0: `ailang verify sketches/appmanifest.ail` → 23 exported functions, 23 verified; `ailang test --format json` → 122 named tests pass; `verify_ail.sh` with an isolated `AILANG_STATE_DIR` → PASSED with Leg 2d "all 122 app manifest sketch named tests pass" and 27 swept modules; mutants killed: a Go budget bound (drift red), an extra Go effect (4 tests red), a body that disagrees with its ensures (Z3 VIOLATION), a flipped row (drift red) |
 
 ## §10 Open questions
 
@@ -222,3 +224,26 @@ landed work, and M2 depends on row 243 V4. Moving the row up is Mark's call.
    r1 has files only.
 3. Should several apps be chainable as one goal (A's output → B's input)? That is row 188's
    "change from here" and is deliberately out of r1.
+
+## §11 What M1 decided (attended 2026-11-28)
+
+1. **The law is a sketch, not a package** (S3's question). Manifests are validated at the host
+   boundary before any episode exists, as the exec-argument law (`sketches/execargs.ail`) and the
+   effect-plan law are. AILANG states and proves it, Go runs it, and a drift test replays every
+   inline row through the Go mirror. A package root would also have moved the isolated-copy
+   census in `host/verifygate`. The app's own runtime parts (transitions, views) stay package code.
+2. **Install is a local catalog for now.** Neither registry path has a package identity: only
+   `world/core` goes to the AILANG registry, and the transition registry is a flat descriptor set.
+   M1 reads `~/.ailang-world/apps/<name>.json` the way presets are read. M1b replaces it with a
+   registry head.
+3. **Checks use the preset grader shape without `unsandboxed`.** The closed decoder refuses that
+   field, so an app cannot ask for a check outside the sandbox. A missing `timeout_s` means the
+   preset default of 900 s, and the law caps it at 3600 s.
+4. **Effects are the ten episode effects**, bound three ways: the sketch's `ensures`, the Go set,
+   and the broker's effect constants (`TestAllowedEffectsAreBrokerEffects`). `Model.Infer`,
+   `Human.Approve` and the `FS.*` effects are refused. Adding one is an edit to the law.
+5. **The surface never shows a file path.** `/surface/apps.json` rows carry the name, validity,
+   template summary, digest and problems. The CLI's `app show` prints the path.
+6. **`NarrowGrants` exists now** (same effect and scope, budget 1 to the template's), so M2 can
+   build launch on a tested law.
+

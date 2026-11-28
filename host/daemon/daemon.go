@@ -290,7 +290,10 @@ type Config struct {
 	ExecProfilesDir string
 	// PresetsDir (row 269) is a read-only directory of <name>.json launch
 	// presets surfaced on GET /surface/presets.json; World never writes here.
-	PresetsDir          string
+	PresetsDir string
+	// AppsDir (row 274 M1) is the read-only local app catalog of <name>.json manifests
+	// surfaced on GET /surface/apps.json; World never writes here.
+	AppsDir             string
 	ExecEpisodeProjects []string
 	ExecSandbox         string
 	ExecNode            string
@@ -421,6 +424,7 @@ type Daemon struct {
 	// on GET /surface/profiles.json and GET /surface/presets.json (row 269).
 	execProfilesDir string
 	presetsDir      string
+	appsDir         string // row 274 M1: GET /surface/apps.json
 
 	// resolver maps an inbound Authorization: Bearer session credential to a
 	// binding (w-session-authority D5/D6). New wires it to authority.New over
@@ -870,6 +874,7 @@ func newDaemon(ctx, phaseParent context.Context, registryBudget time.Duration, c
 	}
 	d.execProfilesDir = cfg.ExecProfilesDir
 	d.presetsDir = cfg.PresetsDir
+	d.appsDir = cfg.AppsDir
 	if (cfg.WorkspaceRoot == "") != (cfg.ToolAilangBin == "") {
 		fmt.Fprintln(d.errLog, "ailang-worldd: workspace tools disabled: --workspace-root and --tool-ailang-bin must both be set; "+
 			"every effect-declaring transition is refused")
@@ -1183,6 +1188,7 @@ func (d *Daemon) Handler() http.Handler {
 	mux.HandleFunc("GET /surface/verb.json", d.approvalRoute(d.handleSurfaceVerb))         // row 243 V1: the bar's verbs, read-only
 	mux.HandleFunc("GET /surface/profiles.json", d.approvalRoute(d.handleSurfaceProfiles)) // row 269 Phase 1: read-only exec profiles
 	mux.HandleFunc("GET /surface/presets.json", d.approvalRoute(d.handleSurfacePresets))   // row 269 Phase 1: read-only launch presets
+	mux.HandleFunc("GET /surface/apps.json", d.approvalRoute(d.handleSurfaceApps))         // row 274 M1: read-only app catalog
 	mux.HandleFunc("GET /surface/repos", d.approvalRoute(d.handleSurfaceReposPage))        // row 269 Phase 1: Repos & Presets UI
 	mux.HandleFunc("GET /surface/repos.js", d.approvalRoute(d.handleSurfaceReposScript))   // row 269 Phase 1: Repos & Presets script
 	// The two A2A projection routes (w-a2a-session-projection P6.B-A2A-CARD)

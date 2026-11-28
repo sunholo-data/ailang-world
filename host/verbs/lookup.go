@@ -35,7 +35,7 @@ const Binary = "ailang-worldd"
 var (
 	OperatorWords = []string{"why", "episode", "approve"}
 	NeverWords    = []string{"allowance", "approver", "session", "service", "serve", "setup"}
-	OtherWords    = []string{"commit", "outcome", "call", "demo", "doctor", "head", "health", "help", "hosts", "log", "mcp-stdio", "object",
+	OtherWords    = []string{"app", "commit", "outcome", "call", "demo", "doctor", "head", "health", "help", "hosts", "log", "mcp-stdio", "object",
 		"preset", "profile", "provenance", "registry", "run", "surface-index", "tools", "version", "whoami"}
 )
 
@@ -104,6 +104,9 @@ func Lookup(argv []string) (Verb, []string) {
 	}
 	if first == "preset" && len(argv) > 1 && argv[1] == "list" { // row 269 Phase 1: read-only
 		return Verb{Words: "preset list", Class: Read, CLI: cli}, argv[2:]
+	}
+	if first == "app" && len(argv) > 1 && argv[1] == "list" { // row 274 M1: read-only
+		return Verb{Words: "app list", Class: Read, CLI: cli}, argv[2:]
 	}
 	switch { // 4: the one-word rows
 	case first == "why":

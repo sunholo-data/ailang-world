@@ -2184,3 +2184,39 @@ choosing **Confirm with passkey**. The card shows the recorded confirmation and 
 Close the page and reopen the same card URL to read the outcome and **Episode report**. Use
 **Refresh status** to reconnect if status reads fail. **Back to World** returns to the World surface.
 If the request response was lost, **Reconnect** in the review panel retries the same frozen request.
+
+## 22. Check and install an app (row 274 M1)
+
+An app is an extension package with an `app.json` manifest (schema `world/app/v1`). It holds a
+preset template that uses only existing episode effects, the outputs the app is for, and views
+from row 151's catalog. The law it must pass is `design_docs/sketches/appmanifest.ail`, which
+Z3 proves and `host/appmanifest` mirrors. M1 only reads and checks apps. Launching one comes in
+M2, through the same start review as any preset. The design is
+`design_docs/planned/w-world-applications.md`.
+
+Run these from the repository root. `TestQuickstartSection22RunsVerbatim` runs the same block.
+
+<!-- app-catalog-walkthrough -->
+```bash
+ailang-worldd app check docs/examples/apps/docparse-convert.json
+mkdir -p ~/.ailang-world/apps
+cp docs/examples/apps/docparse-convert.json ~/.ailang-world/apps/
+ailang-worldd app list
+ailang-worldd app show docparse-convert
+```
+
+`app check` prints `VALID docparse-convert (sha256:…)` and exits 0. For an invalid manifest it
+prints `INVALID`, one line per problem (the field, then why), and the command to run again, and it
+exits 1. `app list` shows each installed app with its agent, launch mode, a short digest and its
+title, and marks invalid ones with the `app check` command to run. `app show` prints the grants,
+exec profile, checks, outputs and views. Add `--json` to any of the three for machine output, and
+`--apps-dir <dir>` to read another catalog.
+
+The surface reads the same catalog. `GET /surface/apps.json` returns `world/surface-apps/v1` rows
+(no file paths), and typing `app list` in the address bar answers in place.
+
+A manifest is refused when it names an effect outside the ten episode effects (for example
+`Model.Infer` or a made-up `Host.Blender`), a scope other than `worktree`, a budget outside 1 to
+100000, an output glob that leaves the worktree, a view outside the catalog, or a check with an
+`unsandboxed` field. Programs that need a GPU or other devices are not apps yet; they wait for
+rows 210 and 214 (D-WORLD-123).

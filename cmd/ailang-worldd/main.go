@@ -64,6 +64,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sunholo-data/ailang-world/host/appmanifest"
 	"github.com/sunholo-data/ailang-world/host/approval"
 	"github.com/sunholo-data/ailang-world/host/broker"
 	"github.com/sunholo-data/ailang-world/host/daemon"
@@ -146,6 +147,7 @@ Usage:
   ailang-worldd episode finish <episode> --preset <name> [--presets-dir D] [--title TEXT]
                         [--allow-failing CHECK]... [--include-unattributed] [--dry-run]
   ailang-worldd preset list|show|check|init [name] [--presets-dir <dir>]
+  ailang-worldd app list|show|check [name|file.json] [--apps-dir <dir>] [--json]
   ailang-worldd episode launch <episode> --preset <name> [--presets-dir <dir>] [--headless]
   ailang-worldd episode start [episode] --preset <name> [--presets-dir <dir>] [--task <file>] [--launch] [--headless] [--from-allowance]
   ailang-worldd run <preset> [<task-text>...] [--task <file>] [--episode <id>] [--interactive] [--prompt]
@@ -530,6 +532,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 	case "preset":
 		return runPreset(rest[1:], stdout, stderr)
 
+	case "app": // row 274 M1: app.go
+		return runApp(rest[1:], stdout, stderr)
+
 	case "profile": // row 189 M4: profile_init.go
 		return runProfile(rest[1:], stdout, stderr)
 
@@ -680,6 +685,7 @@ func runServe(args []string, stdout, stderr io.Writer) int {
 		RunAllowCaps:   runAllowCaps, RunNetAllow: runNetAllow, RunNetAllowHTTP: *runNetAllowHTTP,
 		ExecProfiles: execProfiles, ExecProfilesDir: resolveProfilesDirDefault(*execProfilesDir, execProfiles, *execSandbox),
 		PresetsDir:          defaultPresetsDir(),
+		AppsDir:             appmanifest.DefaultDir(),
 		ExecEpisodeProjects: execEpisodeProjects, ExecSandbox: *execSandbox,
 		ExecNode: *execNode, ExecMaxOutputBytes: execMaxOutput,
 		WorkspaceModuleRoot: moduleRoot, WorkspaceEpisodeModuleRoots: episodeModuleRoots, WorkspacePackageCache: *packageCache,
