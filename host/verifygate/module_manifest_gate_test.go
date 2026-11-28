@@ -93,8 +93,8 @@ func buildIsolatedGateRoot(root string) error {
 	if err != nil {
 		return err
 	}
-	if files != 29 || ailFiles != 27 {
-		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 29 / 27", files, ailFiles)
+	if files != 30 || ailFiles != 28 {
+		return fmt.Errorf("isolated copy landed %d files / %d .ail files, want 30 / 28", files, ailFiles)
 	}
 	return nil
 }
@@ -218,7 +218,7 @@ func requirePristineControl(t *testing.T, root string) string {
 	return out
 }
 
-const pristineMarker = "✓ 16/16 required world/ identities verified across 27 module(s)"
+const pristineMarker = "✓ 16/16 required world/ identities verified across 28 module(s)"
 
 // pristineControlCovers is requirePristineControl's contract as a predicate: it returns the shared
 // control's output only when that run carries the marker AND root is digest-identical to the root
@@ -228,8 +228,8 @@ func pristineControlCovers(root string) (string, string, error) {
 	if err != nil {
 		return "", "", fmt.Errorf("shared pristine control could not run: %v", err)
 	}
-	if files != 29 {
-		return "", "", fmt.Errorf("shared pristine control digested %d files, want 29", files)
+	if files != 30 {
+		return "", "", fmt.Errorf("shared pristine control digested %d files, want 30", files)
 	}
 	mine, mineFiles, err := isolatedTreeDigest(root)
 	if err != nil {
@@ -332,8 +332,8 @@ func TestModuleManifestRejectsStrayModule(t *testing.T) {
 	t.Parallel()
 	root := newIsolatedGateRoot(t)
 	control := requirePristineControl(t, root)
-	if got := strings.Count(control, "\n   ai-check "); got != 27 {
-		t.Fatalf("pristine control emitted %d ai-check lines, want 27", got)
+	if got := strings.Count(control, "\n   ai-check "); got != 28 {
+		t.Fatalf("pristine control emitted %d ai-check lines, want 28", got)
 	}
 	probe := filepath.Join(root, "world", "_stray_manifest_probe.ail")
 	const source = "module world/_stray_manifest_probe\n\nexport func strayId(x: int) -> int = x\n"
@@ -512,6 +512,11 @@ func TestExecGateArmsAreLoadBearing(t *testing.T) {
 			"scopeOk) MISSING from verify.results[]"},
 		{"app sketch tests", "design_docs/sketches/appmanifest.ail", `("modal", false),`, `("modal", true),`,
 			"app manifest sketch test leg: required named tests missing/failing: viewOk_test_6="},
+		// Row 274 M1b: the app registry sketch, the same two ways (Leg 1, Leg 2e).
+		{"registry sketch contract", "design_docs/sketches/appregistry.ail", "ensures { result == (v >= 1) }\n", "",
+			"versionOk) MISSING from verify.results[]"},
+		{"registry sketch tests", "design_docs/sketches/appregistry.ail", `((1, true), false),`, `((1, true), true),`,
+			"app registry sketch test leg: required named tests missing/failing: revisionParentOk_test_2="},
 	}
 	for _, arm := range arms {
 		t.Run(arm.name, func(t *testing.T) {
@@ -570,6 +575,7 @@ func TestModuleManifestEmptyAllowlistFailsLoudly(t *testing.T) {
 	requirePristineControl(t, root)
 	const old = `LEG1_MODULES=(
   design_docs/sketches/appmanifest.ail
+  design_docs/sketches/appregistry.ail
   design_docs/sketches/decisionpacket.ail
   design_docs/sketches/effectbroker.ail
   design_docs/sketches/effectplan.ail
