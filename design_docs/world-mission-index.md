@@ -12,6 +12,7 @@ confidently and wrongly is worse than none.
 
 | # | date | what happened |
 |---|---|---|
+| 450 | 2026-11-28 | row 243 V4 sprint 9c LANDED (PR #716, merge `9b11c617`), outcome B: THE NO-TERMINAL LOCAL FINISH IS SWITCHED ON — bar review → Request approval → s... |
 | 449 | 2026-11-28 | row 243 V4 sprint 9b LANDED (PR #709, merge `d9635675`), outcome B: the finish proof scope, the install tool pins and the local Git boundary are pi... |
 | 448 | 2026-11-28 | row 243 V4 sprint 9 LANDED (PR #707, merge `c1869819`), outcome B: THE FIRST FINISH SLICE — public finish keeps F1 first and its typed tty path unc... |
 | 447 | 2026-11-28 | row 243 V4 sprint 8 LANDED (PR #705, merge `85ed2234`): THE FIRST BROWSER SLICE — the standalone operator-action card (key gestures, read-only stat... |
