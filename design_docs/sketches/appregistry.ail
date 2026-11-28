@@ -1,0 +1,78 @@
+module sketches/appregistry
+
+-- The World app registry's revision law (queue row 274 M1b, design_docs/planned/w-app-registry.md
+-- §2-§3). The registry head world/app-registry/v1 moves through immutable revisions; each entry
+-- pins an app's exact app.json bytes with a registry-owned version. This sketch is the semantic
+-- source of truth for every pure decision the publisher makes. Go mirrors each law in
+-- host/appregistry/laws.go, and host/appregistry/drift_test.go PARSES this file and replays every
+-- inline test row through the mirror of the same name (coding-standards S3, D-WORLD-127).
+--
+-- What stays Go (S2): decoding and canonical encoding, the RFC 3339 time check, sorting and
+-- uniqueness walks over lists, hashing, and the store's compare-and-set.
+
+-- ── The revision chain (host/transitionreg's rule) ───────────────────────
+
+-- Revisions start at 1, and exactly revision 1 has no parent.
+export func revisionParentOk(revision: int, hasParent: bool) -> bool ! {}
+ensures { result == (revision >= 1 && ((revision == 1) == (not hasParent))) }
+tests [
+  ((1, false), true),
+  ((1, true), false),
+  ((2, true), true),
+  ((2, false), false),
+  ((0, false), false),
+  ((-1, true), false)
+]
+{ revision >= 1 && ((revision == 1) == (not hasParent)) }
+
+-- A publish lands on the head it captured: the next revision is that head's + 1 (an empty
+-- registry counts as revision 0, so its first revision is 1).
+export func nextRevisionOk(captured: int, next: int) -> bool ! {}
+requires { captured >= 0 }
+ensures { result == (next == captured + 1) }
+tests [((0, 1), true), ((1, 2), true), ((1, 1), false), ((1, 3), false), ((5, 6), true)]
+{ next == captured + 1 }
+
+-- ── Versions ─────────────────────────────────────────────────────────────
+
+-- An app's next version is its published version + 1, or 1 when it has none (previous = 0).
+export func nextVersion(previous: int) -> int ! {}
+requires { previous >= 0 }
+ensures { result == previous + 1, result >= 1 }
+tests [(0, 1), (1, 2), (41, 42)]
+{ previous + 1 }
+
+export func versionOk(v: int) -> bool ! {}
+ensures { result == (v >= 1) }
+tests [(0, false), (1, true), (7, true), (-3, false)]
+{ v >= 1 }
+
+-- Publishing the manifest the app already pins would mint a version that changes nothing.
+export func publishChanges(samePinnedManifest: bool) -> bool ! {}
+ensures { result == (not samePinnedManifest) }
+tests [(true, false), (false, true)]
+{ not samePinnedManifest }
+
+-- Retire needs the app to be published.
+export func retireOk(present: bool) -> bool ! {}
+ensures { result == present }
+tests [(true, true), (false, false)]
+{ present }
+
+-- ── Bounds ───────────────────────────────────────────────────────────────
+
+export func appCountOk(n: int) -> bool ! {}
+ensures { result == (n >= 0 && n <= 256) }
+tests [(-1, false), (0, true), (256, true), (257, false)]
+{ n >= 0 && n <= 256 }
+
+export func transitionCountOk(n: int) -> bool ! {}
+ensures { result == (n >= 0 && n <= 64) }
+tests [(-1, false), (0, true), (64, true), (65, false)]
+{ n >= 0 && n <= 64 }
+
+-- The pinned manifest object must be the one an entry of the next revision names.
+export func manifestPinned(entriesNamingIt: int) -> bool ! {}
+ensures { result == (entriesNamingIt >= 1) }
+tests [(0, false), (1, true), (2, true)]
+{ entriesNamingIt >= 1 }
