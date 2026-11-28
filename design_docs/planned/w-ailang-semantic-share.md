@@ -3,8 +3,8 @@
 **Status:** r0, **attended 2026-11-28**. Not quorum-reviewed. The loop's pick-time designer
 re-measures §1 and §4 at its base and runs the quorum as usual. Nothing here waives a gate.
 **Queue row:** 275. **Rulings:** D-WORLD-126 = A (gate-primary and the teaching prompt to
-v0.64.1), D-WORLD-127 = A (measure now, ratchet after S5), D-WORLD-128 = A (S1 next, ahead of row
-243 V4 S9c; S2–S5 after row 243 V4), all RESOLVED attended 2026-11-28 — see §7.
+v0.64.1), D-WORLD-127 = A (measure now, ratchet after S5), D-WORLD-128 = A (S1 next, ahead of the
+next row 243 V4 sprint: S9d, since S9c landed in iteration 450 first; S2–S5 after row 243 V4), all RESOLVED attended 2026-11-28 — see §7.
 
 ## §0 What Mark asked (2026-11-28)
 
