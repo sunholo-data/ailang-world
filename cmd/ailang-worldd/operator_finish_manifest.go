@@ -75,11 +75,26 @@ func finishManifestForRow(c runnerConfig, row store.OperatorActionRow) (approval
 
 func finishWorldEvidence(bound context.Context, path string, receipt store.OperatorFinishCheck) bool {
 	hash, err := hashref.Parse(receipt.Ref)
+	if err != nil || receipt.Entry < 1 {
+		return false
+	}
 	world, openErr := store.OpenReadOnly(path)
 	if openErr != nil {
 		return false
 	}
 	defer world.Close()
 	object, found, readErr := world.GetObject(bound, hash)
-	return err == nil && readErr == nil && found && hashref.SumSHA256(object.Payload) == hash
+	if readErr != nil || !found || object.SemanticID != taskOutcomeSemanticID || hashref.SumSHA256(object.Payload) != hash {
+		return false
+	}
+	_, outcome, err := parseTaskOutcome(object.Payload)
+	wantClass := "PASS"
+	if receipt.Result == "failed" {
+		wantClass = "FAIL"
+	}
+	if err != nil || outcome.Label != "episode-finish" || outcome.Task != receipt.Name || outcome.Outcome.Class != wantClass {
+		return false
+	}
+	entries, err := world.ObjectCommits(bound, hash, receipt.Entry-1, 1)
+	return err == nil && len(entries) == 1 && entries[0] == receipt.Entry
 }

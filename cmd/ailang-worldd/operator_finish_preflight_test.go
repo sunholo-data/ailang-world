@@ -175,3 +175,67 @@ func TestOperatorFinishNoProof(t *testing.T) {
 		t.Fatal("daemon's confirmation proof skipped independent runner recheck")
 	}
 }
+
+func TestOperatorFinishProofScope(t *testing.T) {
+	for _, tc := range []struct {
+		kind, task string
+		want       error
+	}{
+		{"start", "reviewed task", approval.ErrNotVerified},
+		{"finish", "", errOperatorFinishSurface},
+	} {
+		t.Run(tc.kind, func(t *testing.T) {
+			dir, err := filepath.EvalSymlinks(t.TempDir())
+			if err != nil {
+				t.Fatal(err)
+			}
+			path := filepath.Join(dir, "credentials.db")
+			db, err := store.OpenCredentials(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer db.Close()
+			ctx := boundedTestContext(t)
+			const now = 1000
+			key := approvaltest.NewSigner(51)
+			if err := db.EnrolApprover(activationTestContext(t), store.ApproverRow{Name: "fixture", Format: "ssh", PublicKey: key.PublicKey().Blob, EnrolledAt: now - 1}); err != nil {
+				t.Fatal(err)
+			}
+			a := approval.OperatorAction{Schema: approval.OperatorActionSchema, ID: fixtureActionID, Kind: tc.kind,
+				Episode: "ep1", Store: path, Task: tc.task, Options: approval.OperatorOptions{Preset: "fixture"},
+				Review: "scope fixture", Resolution: []approval.OperatorResolved{{Name: "manifest", Value: "fixture"}}}
+			a.Argv = approval.OperatorArgv(a.Kind, a.Episode, a.Options)
+			req := store.OperatorRequest{Action: a, OperationID: strings.Repeat("2", 32),
+				Challenge: sha256.Sum256([]byte(t.Name())), CreatedAt: now, ExpiresAt: now + 600}
+			row, err := db.RequestOperatorAction(activationTestContext(t), req, now)
+			if err != nil {
+				t.Fatal(err)
+			}
+			cas := operatorPreparationCAS(row)
+			msg, err := approval.OperatorActionMessage(cas.Digest, req.Challenge, req.ExpiresAt)
+			if err != nil {
+				t.Fatal(err)
+			}
+			sig := key.Sign(approval.OperatorActionNamespace, msg)
+			proof, err := authority.JudgeOperatorAction(ctx, db, authority.OperatorJudgeInput{Action: a, Digest: cas.Digest,
+				BytesDigest: sha256.Sum256(row.Action), Challenge: req.Challenge, CreatedAt: now, ExpiresAt: req.ExpiresAt, Now: now + 1}, sig)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := db.ConfirmOperatorAction(activationTestContext(t), cas, sig, proof, now+1); err != nil {
+				t.Fatal(err)
+			}
+			before, err := db.OperatorAction(ctx, row.ID, now+1)
+			if err != nil || before.State != "confirmed" {
+				t.Fatalf("signed control: %s %v", before.State, err)
+			}
+			digest := serviceFileHash(path)
+			got, err := verifyOperatorFinishPrep(ctx, db, a, now+1, cas, "")
+			seen, readErr := db.OperatorAction(ctx, row.ID, now+1)
+			if !errors.Is(err, tc.want) || got.authority != nil || readErr != nil ||
+				!reflect.DeepEqual(before, seen) || digest != serviceFileHash(path) {
+				t.Fatalf("scope refusal changed evidence: %v, row %s (%v)", err, seen.State, readErr)
+			}
+		})
+	}
+}
