@@ -2239,3 +2239,28 @@ A manifest is refused when it names an effect outside the ten episode effects (f
 100000, an output glob that leaves the worktree, a view outside the catalog, or a check with an
 `unsandboxed` field. Programs that need a GPU or other devices are not apps yet; they wait for
 rows 210 and 214 (D-WORLD-123).
+
+### Publish an app into the registry *(attended — pending first verbatim run)*
+
+The catalog above is a draft area. Installing an app means publishing it into World's app
+registry (row 274 M1b, `design_docs/planned/w-app-registry.md`). The head
+`world/app-registry/v1` pins the manifest's exact bytes as an immutable object with a version
+the registry owns. Only `world-publish apps` writes it, and only at a terminal: it refuses CI
+environments, needs a controlling terminal, and asks you to type a phrase that names this write.
+
+```bash
+go build -o /tmp/world-publish ./cmd/world-publish
+/tmp/world-publish apps --store ~/.ailang/world/world.db --manifest docs/examples/apps/docparse-convert.json
+```
+
+It checks the manifest against the law first (as `app check` does), and the file must be named
+after the app. It prints the manifest's ref and asks you to type exactly
+`publish app docparse-convert version 1 to <store>`. Publishing changed bytes later asks for
+version 2. Publishing the bytes the app already pins is refused before any prompt. To retire an
+app, so that it can no longer be launched (its history stays in the registry's parent chain):
+
+```bash
+/tmp/world-publish apps --store ~/.ailang/world/world.db --retire docparse-convert
+```
+
+If another write lands while you are typing, nothing is written. Run the command again.
