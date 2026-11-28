@@ -32,6 +32,8 @@ has one row (2026-08-04) and S3 is scored by the evaluator rather than checked b
 Activity since 2026-09-01: **2** commits touch `world/*.ail`, **19** touch package or sketch
 `.ail`, **594** touch `host/` or `cmd/` Go.
 
+**Landed after this measurement:** row 274 M1 (`8acbb393`) added `design_docs/sketches/appmanifest.ail`, 247 lines and 23 contracted laws, with `host/appmanifest/drift_test.go` reading the sketch. That is the pattern §2 asks for. The loop's designer re-measures §1 at its base.
+
 The `.ail` that exists is in good shape. Every contract gives the same result on v0.41.0,
 v0.54.15 and v0.64.1: 156 verified (70 in `world/` and the sketches, 16 in `world-core`, 70 in
 `se-tools`) and 41 uncontracted. So the problem is not rotting AILANG. New decision logic has
