@@ -103,6 +103,7 @@ type options struct {
 	now            int64
 	expires        int64
 	manifest       string
+	retire         string
 	interpreterRef string
 	ailangBin      string
 	dryRun         bool
@@ -148,6 +149,7 @@ var flagNames = []string{
 	"registry-origin",
 	"release",
 	"requester",
+	"retire",
 	"store",
 }
 
@@ -175,7 +177,8 @@ func newFlagSet(opts *options) *flag.FlagSet {
 	fs.BoolVar(&opts.dryRun, "dry-run", false, "rehearse the publish: every fence, no request")
 	fs.BoolVar(&opts.live, "live", false, "PERFORM THE IRREVERSIBLE PUBLIC WRITE")
 	fs.BoolVar(&opts.probe, "probe", false, "reconcile: issue the read-only metadata GETs")
-	fs.StringVar(&opts.manifest, "manifest", "", "transitions: descriptor manifest file (JSON array)")
+	fs.StringVar(&opts.manifest, "manifest", "", "transitions: descriptor manifest file (JSON array); apps: the app.json to publish")
+	fs.StringVar(&opts.retire, "retire", "", "apps: the app name to retire from the app registry")
 	fs.StringVar(&opts.interpreterRef, "interpreter-ref", "", "transitions: archived interpreter HashRef pinned into every descriptor")
 	fs.StringVar(&opts.ailangBin, "ailang-bin", "", "transitions: interpreter binary to archive now, as the daemon does at startup")
 	fs.StringVar(&opts.release, "release", "", "epoch nominate: the AILANG release to nominate (vX.Y.Z)")
@@ -196,6 +199,7 @@ const usageText = `world-publish — the attended entrypoint for an IRREVERSIBLE
                            --credential-file C --approval-ref R --now N --expires E (--live | --dry-run)
   world-publish reconcile  --store S [--registry-origin O] [--probe]
   world-publish transitions --store S --manifest M (--ailang-bin B | --interpreter-ref R)  [local registry write]
+  world-publish apps       --store S (--manifest APP.json | --retire NAME)  [local app-registry write; ATTENDED]
   world-publish epoch nominate --store S --release vX.Y.Z (--candidate | --new-epoch) --gate-verdict V
                            --binary B  [local epoch-registry write; --new-epoch is ATTENDED]
 
@@ -237,6 +241,8 @@ func run(args []string, in io.Reader, out, errw io.Writer, env environment) int 
 		return runReconcile(opts, out, errw)
 	case "transitions":
 		return runTransitions(opts, in, out, errw, env)
+	case "apps":
+		return runApps(opts, in, out, errw, env)
 	case "epoch nominate":
 		return runEpochNominate(opts, in, out, errw, env)
 	default:
