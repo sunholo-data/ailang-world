@@ -82,15 +82,21 @@ only") allows `iokit-open` only for `IOSurfaceRootUserClient`, `RootDomainUserCl
 IOKit or GPU setting. Without `AGXDeviceUserClient` there is no Metal device. Blender reads the
 missing device's name without a null check and segfaults, even in `--background`.
 
-## What this changes
+## What this changed (ruled the same day)
 
-- **D-WORLD-123:** A and B are ruled out on macOS by measurement. Remaining are **C**, a
-  host-mediated effect (`Host.Blender`, row 272's pattern), where World runs a fixed command
-  outside srt with worktree-only inputs and outputs, and **D**, a World-authored sandbox profile
-  that adds the GPU user client to srt's rules. D needs either an upstream srt setting or World
-  rendering its own Seatbelt profile.
+Mark, attended: *"yeah its not just blender but all apps, and of course all operating systems -
+but perhaps this is something for when we are running ailang world OS as a layer on top of our
+linux boot up image that is on the roadmap. what do you suggest?"*, then *"yes please proceed"*.
+
+- **D-WORLD-123 RESOLVED, deferred.** Device programs leave row 274 for rows 210
+  (`w-device-effects`) and 214 (`w-program-exec-profiles`), sequenced with row 211
+  (`w-world-os-image`), Linux first. Both rows now carry this evidence. No unsandboxed host
+  effect is built.
+- **Row 274 is narrowed** to the OS-independent app layer (manifest, launch, report v1 with
+  outputs). Its first app needs no devices (D-WORLD-124, recommended `docparse-convert`).
+- **For row 211's spike, unmeasured:** whether bubblewrap with a render-node bind
+  (`/dev/dri/renderD*`) gives Blender the GPU, and whether Linux Blender runs headless scripts and
+  CPU renders with no GPU. The Studio has no Linux VM or container tooling to measure this now.
 - **Not filed:** a Blender bug (a crash instead of a fallback when no Metal device exists) and an
   srt feature request (a GPU/IOKit setting). Both are external projects. Filing either is Mark's
   call.
-- **S0 part 2** (a real attended episode in `~/dev/blender`) waits for the D-WORLD-123 ruling.
-  Under the old plan it would only hit this wall again.
